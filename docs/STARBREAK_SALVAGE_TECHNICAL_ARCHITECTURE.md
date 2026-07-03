@@ -191,6 +191,52 @@ Use object pools only after profiling. Keep the initial code readable.
 6. Save migration.
 7. E2E smoke.
 
+## Phase 2 architecture priorities
+
+Phase 2 should deepen systems without turning the codebase into a framework. Prefer explicit content data and small pure helpers over hidden engine magic.
+
+### Sector objectives and waves
+
+- Add objective and wave definitions as content data, not hard-coded scene thresholds.
+- Keep generation deterministic by passing seeded RNG/fork labels into objective, wave, boss, reward, and shop generation.
+- Separate generated run plans from mutable run/session progress.
+- Store only durable progress in save data; do not persist transient combat entities.
+
+Recommended module direction:
+
+```text
+src/content/objectives.ts
+src/content/waves.ts
+src/game/SectorObjectives.ts
+src/game/WaveDirector.ts
+```
+
+### Player verbs
+
+- Keep input actions abstract: gameplay reads `special`, `bomb`, and movement actions, not raw keys.
+- Put charge/cooldown math in pure systems that can be tested without DOM/canvas.
+- Ship stats should be content data validated in tests before they affect combat state.
+- Bomb/special/graze should emit feedback cues through the existing feedback path rather than directly touching audio/VFX.
+
+### Combat feedback and presentation
+
+- Gameplay may report semantic feedback events such as `playerHit`, `bossWarning`, or `sectorClear`.
+- Audio, screen shake, particles, and hit flashes should subscribe at the app/presentation layer.
+- Reduced motion, performance mode, mute, and master volume must remain respected by default.
+- Do not add external audio/art dependencies without documenting license and bundle impact.
+
+### Content growth
+
+- New content tables should keep stable string IDs and explicit exports.
+- Validation should fail on duplicate IDs, invalid references, invalid stat ranges, empty reward pools, and hooks with no implementation path.
+- If a content type grows too large, split by domain (`itemsCombat.ts`, `itemsEconomy.ts`, etc.) only when it improves readability.
+
+### Unlock gating
+
+- Treat unlocks as pool filters over content generation.
+- Fresh saves must retain enough baseline ships/items/routes for complete runs.
+- Any save shape change requires migration tests and import/export compatibility tests.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

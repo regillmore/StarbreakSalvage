@@ -262,3 +262,207 @@ Acceptance:
 Acceptance:
 
 - README/license/credits/changelog/browser smoke documented.
+
+## Phase 2 backlog additions
+
+Phase 2 starts after M10 and the first-pass procedural audio/VFX follow-up. The goal is a cohesive public playtest slice, not just a scaffold.
+
+## Epic I - Run arc and sector objectives
+
+### I1 - Wave director
+
+Acceptance:
+
+- Sector waves are generated from data.
+- Wave completion and boss gates replace the one-kill clear.
+- Known seeds reproduce wave timing and major wave labels.
+
+### I2 - Sector objectives
+
+Acceptance:
+
+- Objective types exist for clear waves, survive timer, defeat boss, collect salvage, and elite encounter.
+- HUD shows objective progress.
+- Objective completion is tested.
+
+### I3 - Victory and loss flow
+
+Acceptance:
+
+- Final boss defeat produces a victory summary.
+- Death, abandon, debug, sector complete, and victory have distinct result reasons.
+- Save records preserve win/loss summary data.
+
+## Epic J - Player verbs and contract identity
+
+### J1 - Special ability
+
+Acceptance:
+
+- Special action has charge/cooldown state.
+- At least three contracts have distinct special behavior or modifiers.
+- HUD and tests cover special charge.
+
+### J2 - Bomb
+
+Acceptance:
+
+- Bomb action clears or mitigates danger.
+- Bomb charges are limited and visible.
+- Bomb respects reduced motion and audio settings.
+
+### J3 - Graze
+
+Acceptance:
+
+- Near-miss detection exists for enemy bullets.
+- Graze rewards charge or salvage without using `Math.random()`.
+- Graze is readable and tested.
+
+### J4 - Ship stats
+
+Acceptance:
+
+- Ship content controls hull, speed, hit radius, pickup pull, special rate, bomb count, and starting economy.
+- Content validation rejects invalid stat ranges.
+- Contract selection preview shows key stats.
+
+## Epic K - Bosses, factions, and encounter pressure
+
+### K1 - Boss phases
+
+Acceptance:
+
+- Five bosses have at least two phases or phase-like behavior.
+- Phase transitions are deterministic and readable.
+- Boss tests cover phase thresholds.
+
+### K2 - Faction expansion
+
+Acceptance:
+
+- At least four factions exist.
+- Each faction has distinct movement, projectile, and visual behavior.
+- Sector generation references factions deterministically.
+
+### K3 - Encounter roles
+
+Acceptance:
+
+- Basic, elite, ambush, and boss encounters have distinct pressure.
+- Debug shortcuts can launch representative encounters.
+- Performance notes document projectile budgets.
+
+## Epic L - Content and build crafting
+
+### L1 - Item expansion
+
+Acceptance:
+
+- At least 30 items exist.
+- Every item has tags, rarity, effect text, reward-pool placement, and hook behavior where needed.
+- Validation catches missing hook implementations.
+
+### L2 - Build archetypes
+
+Acceptance:
+
+- At least 6 archetypes are supported: laser/split, missile/overkill, drone/copy, shield/revenge, credit/shop, curse/relic.
+- Reward generation can bias toward contract item tags.
+- Summary displays active build identity or key items.
+
+### L3 - Route events
+
+Acceptance:
+
+- Shop, elite, vault, repair, glitch, and faction ambush routes have distinct outcomes.
+- Route events are deterministic and logged in summary.
+- Tests cover known-seed route outcomes.
+
+## Epic M - Meta progression and replay
+
+### M1 - Unlock gating
+
+Acceptance:
+
+- Unlocks alter future ship/item/faction/boss/challenge pools.
+- Fresh saves still have enough content for complete runs.
+- Archive explains what each unlock adds.
+
+### M2 - Challenge seeds
+
+Acceptance:
+
+- Challenge seed definitions exist and are unlockable.
+- Challenge modifiers are deterministic and visible before launch.
+- Challenge runs record summary metadata.
+
+### M3 - Save migration resilience
+
+Acceptance:
+
+- Any save shape changes include migration tests.
+- Import/export remains compatible across Phase 2 save versions.
+- Corrupted save/settings data never crashes boot.
+
+## Epic N - UX, onboarding, and accessibility
+
+### N1 - Seed entry
+
+Acceptance:
+
+- Main menu supports seed entry.
+- Blank/default/random/known seeds are handled clearly.
+- E2E covers seed entry and shared-seed launch.
+
+### N2 - HUD pass
+
+Acceptance:
+
+- HUD shows objective progress, hull, weapon state, special/bomb charge, credits/salvage, boss state, and compact build info.
+- HUD text does not overlap on mobile.
+- High-contrast bullet mode remains readable.
+
+### N3 - Onboarding hints
+
+Acceptance:
+
+- First-run hints explain movement, fire, special, bomb, graze, routes, rewards, and shops.
+- Hints can be dismissed or reduced.
+- Keyboard-only flow remains usable.
+
+## Epic O - Audio/VFX/presentation
+
+### O1 - Feedback polish
+
+Acceptance:
+
+- Hit flashes, particles, and screen shake are readable and respect reduced motion/performance settings.
+- Audio cue mix respects mute/master volume.
+- Effects remain original/generated.
+
+### O2 - Music prototype
+
+Acceptance:
+
+- A tiny original/generated music loop or ambient bed exists.
+- Music can be muted or volume-controlled.
+- Audio starts only after user gesture.
+
+## Epic P - Playtest release hardening
+
+### P1 - Performance scenarios
+
+Acceptance:
+
+- Dense combat and boss debug scenarios are documented.
+- Debug overlay includes projectile and particle counts.
+- Normal play remains near 60 FPS on dev machine.
+
+### P2 - Playtest checklist
+
+Acceptance:
+
+- README, changelog, credits, release checklist, and browser smoke matrix are updated.
+- `npm run check`, E2E smoke, and production preview smoke pass.
+- Known severe blockers are fixed or documented.

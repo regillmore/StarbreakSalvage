@@ -39,6 +39,19 @@ Use for:
 - settings persistence;
 - forced death to run summary.
 
+## Phase 2 QA focus
+
+Phase 2 introduces deeper run flow and more content. Add tests closest to the risk:
+
+- sector objective completion and wave director sequencing;
+- known-seed snapshots for objectives, waves, boss timing, route outcomes, rewards, and shops;
+- special/bomb/graze charge math and input remapping;
+- ship stat validation and weapon-family projectile behavior;
+- boss phase thresholds and final victory summary;
+- unlock-gated generation for fresh saves and progressed saves;
+- seed entry from the main menu and copy/share from summary;
+- performance/debug scenarios for dense combat and boss patterns.
+
 ## Known seed tests
 
 - `STARBREAK-SMOKE` — stable forgiving smoke path.
@@ -47,7 +60,16 @@ Use for:
 - `VOID-CORSAIR-7` — shop/convoy route.
 - `BLOOM-ENGINE-ALPHA` — bio-machine boss test.
 
+Phase 2 should add these seed fixtures:
+
+- `PHASE-COURIER-GRAZE` - special/graze validation.
+- `BOMB-REFUND-STRESS` - bomb and projectile-clear validation.
+- `CORE-WRECK-VICTORY` - final boss and victory summary validation.
+- `FRESH-SAVE-LOCKED-POOL` - unlock gating validation for new saves.
+
 ## Content validation checklist
+
+Phase 2 should extend this checklist as systems become real. In addition to the existing entries, content validation should cover ship stat ranges, objective references, wave references, implemented hook coverage, and unlock-gated pools for fresh and progressed saves.
 
 - [ ] No duplicate IDs.
 - [ ] Every item tag is registered.
@@ -62,13 +84,15 @@ Use for:
 
 ## Manual browser smoke matrix
 
-| Browser | Load | Start run | Combat | Pause | Settings | Summary | Notes |
-|---|---|---|---|---|---|---|---|
-| Chrome/Edge |  |  |  |  |  |  |  |
-| Firefox |  |  |  |  |  |  |  |
-| Safari/WebKit |  |  |  |  |  |  |  |
+| Browser       | Load | Start run | Combat | Pause | Settings | Summary | Notes |
+| ------------- | ---- | --------- | ------ | ----- | -------- | ------- | ----- |
+| Chrome/Edge   |      |           |        |       |          |         |       |
+| Firefox       |      |           |        |       |          |         |       |
+| Safari/WebKit |      |           |        |       |          |         |       |
 
 ## Performance checklist
+
+Phase 2 performance checks should include wave/objective count, projectile count, particle count, audio cue load, and dense boss-pattern scenarios.
 
 - [ ] FPS overlay available behind debug flag.
 - [ ] Projectile count visible in debug mode.
@@ -78,6 +102,8 @@ Use for:
 - [ ] Screen shake and particles respect reduced motion/performance settings.
 
 ## Accessibility checklist
+
+Phase 2 accessibility checks should cover seed entry, summary sharing, special/bomb/graze HUD readability, reduced motion, mute, and keyboard-only route/reward/shop flows.
 
 - [ ] Keyboard-only menu navigation.
 - [ ] Remappable controls.
@@ -112,23 +138,23 @@ Use for:
 
 ## Highlights
 
-- 
+-
 
 ## New content
 
-- 
+-
 
 ## Gameplay changes
 
-- 
+-
 
 ## Fixes
 
-- 
+-
 
 ## Known issues
 
-- 
+-
 
 ## Testing
 

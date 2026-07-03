@@ -151,6 +151,150 @@ Acceptance criteria:
 - No severe known blockers.
 - Release checklist is complete.
 
+## Phase 2 work orders
+
+Phase 2 work orders continue after the M10 release and first-pass procedural audio/VFX. They assume the game is deployed and playable, but still needs a cohesive complete-run arc. Keep each task focused, preserve deterministic content generation, and update docs/tests with every player-facing change.
+
+## Work order 011 - Phase 2 planning refresh
+
+Goal: close Phase 1 and establish the Phase 2 roadmap.
+
+Prompt:
+
+> Read `AGENTS.md` first. Then read the current project plan, backlog, architecture, QA plan, and release checklist. Conclude Phase 1 in the docs and establish Phase 2 planning: product goal, pillars, milestones, updated backlog, new work orders, architecture notes, QA focus, and README pointers. Do not change gameplay code. Run formatting/checks appropriate for docs-only changes and summarize.
+
+Acceptance criteria:
+
+- Phase 2 plan exists and is linked from README/project docs.
+- Work orders 012+ are documented.
+- Backlog and QA docs reflect the new direction.
+
+## Work order 012 - Sector objectives and wave director
+
+Goal: replace the one-kill alpha clear with a real sector progression model.
+
+Prompt:
+
+> Implement data-driven sector objectives and a wave director. Replace the temporary one-enemy sector clear with sector progress, wave completion, optional boss gates, and five-sector advancement. Preserve deterministic generation: same seed must reproduce sector objectives, major wave schedule, boss timing, route choices, rewards, and shop inventory. Add tests for objective completion, wave sequencing, boss gate behavior, and known-seed snapshots. Update README/debug notes. Run checks.
+
+Acceptance criteria:
+
+- A normal run can progress through all five sectors without debug shortcuts.
+- Sector completion is driven by objective data rather than a hard-coded one-kill threshold.
+- Known seeds reproduce objectives and wave schedules.
+
+## Work order 013 - Special, bomb, and graze
+
+Goal: make the full control set real.
+
+Prompt:
+
+> Add special ability, bomb, and graze mechanics. Implement charge/cooldown state, HUD readouts, keyboard input through the existing action abstraction, and readable combat effects. Bomb should cancel or reduce danger without trivializing bosses. Graze should reward near-misses deterministically without using `Math.random()`. Add tests for charge gain, bomb effects, graze detection, remapped controls, and reduced-motion behavior. Run checks.
+
+Acceptance criteria:
+
+- Special and bomb controls visibly affect gameplay.
+- Graze grants charge or rewards from near-misses.
+- HUD explains special/bomb/graze state.
+
+## Work order 014 - Ship stats and weapon identity
+
+Goal: make contracts mechanically distinct.
+
+Prompt:
+
+> Add explicit ship stats and weapon-family behavior. Ship definitions should affect max hull, speed, hit radius, pickup pull, special charge, bomb capacity, and starting economy where appropriate. Weapon definitions should express cooldown, damage, projectile pattern, heat/reload behavior, and tags. Update content validation so ships cannot reference invalid weapons/stats. Add tests proving at least three contracts produce distinct combat state and that weapon families alter projectiles. Run checks.
+
+Acceptance criteria:
+
+- Contract choice materially changes movement, durability, and weapon feel.
+- Ship and weapon stats are data-driven and validated.
+- Existing settings/remapping still work.
+
+## Work order 015 - Boss phases and victory path
+
+Goal: create readable escalation and a true win condition.
+
+Prompt:
+
+> Add phase behavior for all five bosses and a final-sector victory path. Bosses should change attacks or cadence by health threshold, preserve readable telegraphs, and respect projectile budgets. Defeating the final boss should produce a victory summary distinct from debug/sector-complete summaries. Add deterministic tests for boss phase transitions, final victory, and summary save records. Update performance notes. Run checks.
+
+Acceptance criteria:
+
+- All five bosses have at least two phases or phase-like state changes.
+- Final boss defeat ends the run as a win.
+- Boss phases remain readable in high-contrast mode.
+
+## Work order 016 - Route and event depth
+
+Goal: make every route card type matter.
+
+Prompt:
+
+> Implement deeper route outcomes for shop, elite, vault, repair, glitch, and faction ambush. Each route should have deterministic rewards/costs/risks, a distinct UI state where needed, and a clear reason to choose it. Repair should affect hull. Vault/glitch should support curse/relic tradeoffs. Elite/faction ambush should alter combat or rewards. Add known-seed tests for route outcomes and update run summary route history if needed. Run checks.
+
+Acceptance criteria:
+
+- Every existing route type has a meaningful outcome.
+- Route choices affect future build, economy, risk, or rewards.
+- Same seed and choices reproduce the same outcomes.
+
+## Work order 017 - Content expansion pack
+
+Goal: increase build variety without losing validation.
+
+Prompt:
+
+> Expand content toward Phase 2 targets: at least 30 total items, 4 factions, and 6 build archetypes. Add content in small data modules or tables matching existing patterns. Every new item needs tags, rarity, effect text, reward-pool placement, hook behavior when applicable, and validation coverage. Every new faction needs distinct visuals/behavior notes and sector/boss references where applicable. Add tests for duplicate IDs, invalid references, empty pools, and missing hook implementations. Run checks.
+
+Acceptance criteria:
+
+- At least 30 items and 4 factions are defined.
+- At least 6 archetypes are represented in item tags/rewards.
+- Content validation fails on broken fixtures.
+
+## Work order 018 - Unlock gating and meta variety
+
+Goal: make permanent progression widen the toy box.
+
+Prompt:
+
+> Connect unlocks to actual run generation. Locked ships, items, factions, bosses, music flags, and challenge seeds should be excluded or marked until earned, while the starter pool remains sufficient for fresh saves. Add archive UI affordances showing what unlocks do. Add migrations if save shape changes. Add tests for fresh-save pools, unlocked pools, import/export, corrupted save repair, and unlock-trigger summaries. Run checks.
+
+Acceptance criteria:
+
+- Unlocks alter future run options without breaking fresh saves.
+- Archive explains unlocked content.
+- Save migration/import/export tests pass.
+
+## Work order 019 - Onboarding, HUD, and seed entry
+
+Goal: help a new player understand and replay runs.
+
+Prompt:
+
+> Add in-menu seed entry, lightweight onboarding hints, improved gameplay HUD, and richer run summary. The HUD should show sector objective progress, hull, weapon state, special/bomb charge, credits/salvage, boss state, and compact build info. Seed entry should accept blank/random/default and known seed labels. Summary should show route history, items, unlock reasons, win/loss reason, and copyable seed. Add E2E coverage for seed entry and keyboard-only start. Run checks.
+
+Acceptance criteria:
+
+- Seed can be entered from the menu.
+- HUD communicates current objective and key resources.
+- Summary is useful after win, death, and abandoned runs.
+
+## Work order 020 - Balance, performance, and playtest release
+
+Goal: harden Phase 2 into a public playtest candidate.
+
+Prompt:
+
+> Audit the Phase 2 game loop for balance, performance, accessibility, deterministic integrity, browser load, and release docs. Add debug/performance scenarios for dense combat and boss testing. Update performance notes, QA matrix, changelog, README, and release checklist. Fix blockers only. Run `npm run check`, Playwright smoke, and a production preview smoke. Summarize known balance risks and manual test gaps.
+
+Acceptance criteria:
+
+- Full checks and E2E smoke pass.
+- Production preview loads assets correctly.
+- Release checklist documents browser smoke, performance notes, known issues, and follow-up risks.
+
 ## Review subagent prompt
 
 Use after a feature PR:

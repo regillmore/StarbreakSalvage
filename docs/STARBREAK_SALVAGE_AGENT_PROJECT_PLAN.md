@@ -21,6 +21,14 @@ Ship a complete, static, browser-playable vertical roguelike shooter on GitHub P
 
 The project is successful when a player can open the GitHub Pages URL, start a seeded run, choose from randomized contracts, complete multiple sectors, collect synergistic items, die or win, see a run summary, unlock new content, and replay or share the seed.
 
+## Phase status
+
+Phase 1 is complete as of the M10 release and first-pass audio/VFX follow-up. The project has a deployed alpha foundation: build/release workflow, deterministic generation, combat MVP, route/reward/shop screens, save/unlock data, settings/accessibility basics, seed sharing, and original procedural feedback.
+
+Phase 2 begins from this deployed alpha. Its goal is to make Starbreak Salvage cohesive and durable rather than merely scaffolded: full-run structure, real sector objectives, special/bomb/graze verbs, boss phases, expanded content, unlock gating, onboarding, balance, and playtest-ready QA.
+
+See `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md` for the active Phase 2 roadmap.
+
 ## Milestones
 
 ### M0 — Seed and scaffold
@@ -151,6 +159,84 @@ Exit criteria:
 - Production URL playable.
 - Reproducible build.
 
+## Phase 2 milestones
+
+### P2.1 - Run Arc Foundation
+
+Scope:
+
+- Replace the one-kill sector clear with data-driven sector objectives.
+- Add a wave director with sector progress, boss gates, and victory/loss flow.
+- Keep route/reward/shop sequencing deterministic by seed.
+
+Exit criteria:
+
+- A run can progress through all five sectors.
+- Same seed reproduces objectives, waves, boss timing, routes, rewards, and shops.
+
+### P2.2 - Player Verb Pass
+
+Scope:
+
+- Implement special ability, bomb, graze, and charge/cooldown UI.
+- Make ship stats affect hull, speed, hitbox, weapon cadence, and ability bias.
+- Add deterministic tests around charge, bomb clear, and graze detection.
+
+Exit criteria:
+
+- At least three contracts feel mechanically distinct.
+- Special/bomb/graze are usable from keyboard and documented.
+
+### P2.3 - Enemy/Boss Escalation
+
+Scope:
+
+- Add boss phase behavior for all five bosses.
+- Make factions more distinct in movement, bullet shape, and encounter role.
+- Add final sector victory path and summary outcome.
+
+Exit criteria:
+
+- Five bosses can be fought and defeated.
+- Telegraphs remain readable in normal and high-contrast modes.
+
+### P2.4 - Content Expansion
+
+Scope:
+
+- Expand to at least 30 items and 4 factions.
+- Support at least 6 build archetypes.
+- Expand reward pools, route/event content, and content validation.
+
+Exit criteria:
+
+- Content validation covers all new tables and references.
+- New content has deterministic tests where generation is involved.
+
+### P2.5 - Meta and UX Depth
+
+Scope:
+
+- Gate future run options through unlocks.
+- Add in-menu seed entry.
+- Improve HUD, onboarding hints, run summary, and unlock explanation.
+
+Exit criteria:
+
+- New players can understand controls and run flow without reading source docs.
+- Unlocks visibly add future variety.
+
+### P2.6 - Playtest Candidate
+
+Scope:
+
+- Balance pass, performance/debug scenes, browser smoke matrix, docs, and checklist.
+
+Exit criteria:
+
+- Public deployment is suitable for open playtest.
+- Known severe blockers are fixed or documented.
+
 ## Dependency map
 
 ```text
@@ -161,6 +247,12 @@ M0 scaffold
         -> M4 content alpha
           -> M5 polish/accessibility
             -> M6 release
+              -> P2.1 run arc
+                -> P2.2 player verbs
+                  -> P2.3 escalation
+                    -> P2.4 content expansion
+                      -> P2.5 meta/UX depth
+                        -> P2.6 playtest candidate
 ```
 
 Parallelizable:

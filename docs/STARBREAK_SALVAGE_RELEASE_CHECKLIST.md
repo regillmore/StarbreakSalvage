@@ -3,6 +3,8 @@
 Release candidate: `0.10.0`
 Date: 2026-07-03
 
+Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/VFX. Phase 2 planning now lives in `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md`.
+
 ## Automated Checks
 
 | Item                          | Status | Evidence                                             |

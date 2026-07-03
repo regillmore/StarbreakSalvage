@@ -11,6 +11,10 @@
 
 - Added unit coverage for audio cue settings, combat feedback detection, and deterministic screen-shake decay.
 
+### Planning
+
+- Concluded Phase 1 in planning docs and added the Phase 2 roadmap/work orders for complete-run depth, player verbs, content expansion, unlock gating, and playtest hardening.
+
 ## 0.10.0 - 2026-07-03
 
 ### Highlights

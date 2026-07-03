@@ -54,6 +54,8 @@ Projectile budget notes live in `docs/STARBREAK_SALVAGE_PERFORMANCE_NOTES.md`.
 
 Release checklist status lives in `docs/STARBREAK_SALVAGE_RELEASE_CHECKLIST.md`.
 
+Phase 2 planning lives in `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md`; new agent work orders continue from work order 011 in `docs/STARBREAK_SALVAGE_AGENT_WORK_ORDERS.md`.
+
 ## Project Vision
 
 The target game is quick to start, readable at high intensity, and replayable through deterministic seeds. Runs should begin with randomized ship contracts, move through seeded sectors, and reward expressive item synergies. Permadeath ends the run, while salvage unlocks widen future variety rather than simply increasing raw power.
@@ -70,6 +72,7 @@ The core project direction lives in:
 
 - `AGENTS.md`
 - `docs/STARBREAK_SALVAGE_AGENT_SEED.md`
+- `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md`
 - `docs/STARBREAK_SALVAGE_GAME_DESIGN_SEED.md`
 - `docs/STARBREAK_SALVAGE_TECHNICAL_ARCHITECTURE.md`
 - `docs/STARBREAK_SALVAGE_CONTENT_SEED.json`
