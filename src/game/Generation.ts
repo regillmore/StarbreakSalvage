@@ -1,7 +1,8 @@
 import { getBossById, type BossId, type BossPatternId } from '../content/bosses';
 import type { FactionId } from '../content/factions';
 import { SECTORS, type SectorDefinition } from '../content/sectors';
-import { SHIPS, type ShipDefinition, type ShipId, type WeaponId } from '../content/ships';
+import { SHIPS, type ShipDefinition, type ShipId, type ShipStats, type WeaponId } from '../content/ships';
+import { getWeaponById, type WeaponPatternId } from '../content/weapons';
 import { createRng, parseSeedLabel, type Rng, type WeightedChoice } from '../core/rng';
 import { createSectorObjectivePlan, type SectorObjectivePlan } from './SectorObjectives';
 
@@ -14,6 +15,10 @@ export interface StartingContract {
   readonly sponsor: string;
   readonly startingWeaponId: WeaponId;
   readonly startingWeaponName: string;
+  readonly startingWeaponPattern: WeaponPatternId;
+  readonly shipStats: ShipStats;
+  readonly startingCredits: number;
+  readonly startingSalvage: number;
   readonly perk: string;
   readonly drawback: string;
   readonly summary: string;
@@ -125,6 +130,7 @@ function generateStartingContracts(seed: string, rng: Rng): StartingContract[] {
   return selectedShips.map((ship, index) => {
     const sponsorRng = rng.fork(`contract-${index + 1}-${ship.id}-sponsor`);
     const rewardRng = rng.fork(`contract-${index + 1}-${ship.id}-reward`);
+    const weapon = getWeaponById(ship.weapon);
 
     return {
       id: `contract_${index + 1}_${ship.id.replace('ship_', '')}`,
@@ -132,7 +138,11 @@ function generateStartingContracts(seed: string, rng: Rng): StartingContract[] {
       shipName: ship.name,
       sponsor: sponsorRng.choice(ship.sponsors),
       startingWeaponId: ship.weapon,
-      startingWeaponName: ship.weaponName,
+      startingWeaponName: weapon.name,
+      startingWeaponPattern: weapon.pattern,
+      shipStats: ship.stats,
+      startingCredits: ship.stats.startingCredits,
+      startingSalvage: ship.stats.startingSalvage,
       perk: ship.perk,
       drawback: ship.drawback,
       summary: ship.contractSummary,
@@ -249,6 +259,15 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
     contracts: run.contracts.map((contract) => ({
       shipId: contract.shipId,
       sponsor: contract.sponsor,
+      weaponPattern: contract.startingWeaponPattern,
+      stats: {
+        maxHull: contract.shipStats.maxHull,
+        speed: contract.shipStats.speed,
+        hitRadius: contract.shipStats.hitRadius,
+        bombCapacity: contract.shipStats.bombCapacity,
+        startingCredits: contract.startingCredits,
+        startingSalvage: contract.startingSalvage
+      },
       rewardMultiplier: contract.rewardMultiplier
     })),
     sectors: run.sectors.map((sector) => ({

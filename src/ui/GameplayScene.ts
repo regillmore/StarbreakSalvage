@@ -42,6 +42,7 @@ export class GameplayScene implements Scene {
   private readonly economyReadout: HTMLParagraphElement;
   private readonly objectiveReadout: HTMLParagraphElement;
   private readonly verbReadout: HTMLParagraphElement;
+  private readonly weaponReadout: HTMLParagraphElement;
   private readonly combatReadout: HTMLParagraphElement;
   private readonly bossReadout: HTMLParagraphElement;
   private readonly warningReadout: HTMLParagraphElement;
@@ -85,6 +86,10 @@ export class GameplayScene implements Scene {
     this.verbReadout.className = 'hud-pill hud-pill-wide';
     this.verbReadout.dataset.testid = 'verb-readout';
 
+    this.weaponReadout = document.createElement('p');
+    this.weaponReadout.className = 'hud-pill hud-pill-wide';
+    this.weaponReadout.dataset.testid = 'weapon-readout';
+
     this.combatReadout = document.createElement('p');
     this.combatReadout.className = 'hud-pill';
     this.combatReadout.dataset.testid = 'combat-status';
@@ -117,22 +122,18 @@ export class GameplayScene implements Scene {
     contract.className = 'hud-pill';
     contract.textContent = this.contract.shipName;
 
-    const weapon = document.createElement('p');
-    weapon.className = 'hud-pill';
-    weapon.textContent = 'Space: Fire';
-
     hud.append(
       sector,
       this.hullReadout,
       this.economyReadout,
       this.objectiveReadout,
       this.verbReadout,
+      this.weaponReadout,
       this.combatReadout,
       this.bossReadout,
       this.warningReadout,
       this.itemReadout,
       contract,
-      weapon,
       this.positionReadout
     );
     this.uiRoot.replaceChildren(hud);
@@ -262,6 +263,7 @@ export class GameplayScene implements Scene {
 
     this.combatState ??= createCombatState(this.getCombatBounds(), this.getCombatSeed(), {
       weaponId: this.contract.startingWeaponId,
+      shipStats: this.contract.shipStats,
       items: this.itemLoadout,
       bossId: this.run.sectors[this.sectorIndex]?.bossId,
       bossSpawnAtSeconds: wavePlan.bossSpawnAtSeconds,
@@ -305,6 +307,7 @@ export class GameplayScene implements Scene {
     this.economyReadout.textContent = `Credits ${this.startingCredits + state.player.credits} | Salvage ${this.startingSalvage + state.player.salvage}`;
     this.objectiveReadout.textContent = getObjectiveProgress(this.getWavePlan(), state).readout;
     this.verbReadout.textContent = this.getVerbReadout(state);
+    this.weaponReadout.textContent = this.getWeaponReadout(state);
     this.combatReadout.textContent = `Destroyed ${state.stats.enemiesDestroyed} | Shots ${state.stats.shotsFired} | Hooks ${state.stats.itemTriggers}`;
     this.bossReadout.textContent = state.boss
       ? `${state.boss.name} ${Math.max(0, state.boss.hull)}/${state.boss.maxHull}`
@@ -334,6 +337,16 @@ export class GameplayScene implements Scene {
           : `${specialPercent}%`;
 
     return `Special ${specialStatus} | Bombs ${state.player.bombs}/${state.player.maxBombs} | Graze ${state.stats.grazes}`;
+  }
+
+  private getWeaponReadout(state: CombatState): string {
+    const heatPercent = Math.round((state.player.weaponHeat / state.weapon.overheatLimit) * 100);
+    const heatStatus =
+      state.player.weaponOverheatSeconds > 0
+        ? `OVERHEAT ${state.player.weaponOverheatSeconds.toFixed(1)}s`
+        : `Heat ${heatPercent}%`;
+
+    return `${state.weapon.name} | ${state.weapon.pattern} | ${heatStatus}`;
   }
 
   private emitFeedback(cues: readonly CombatFeedbackCue[]): void {

@@ -25,13 +25,11 @@ export interface RunSessionState {
   lastCombatResult: CombatRunResult | null;
 }
 
-const STARTING_CREDITS = 16;
-
 export function createRunSession(run: RunSkeleton, contract: StartingContract): RunSessionState {
   return {
     currentSectorIndex: 0,
-    credits: STARTING_CREDITS,
-    salvage: 0,
+    credits: contract.startingCredits,
+    salvage: contract.startingSalvage,
     itemInstances: generateStartingItemLoadout(run.seed, contract),
     routeHistory: [],
     shopRerollsBySector: {},

@@ -6,13 +6,17 @@ import { validateContent } from '../../src/content/contentValidation';
 import { FACTIONS, type FactionDefinition } from '../../src/content/factions';
 import { ITEMS, type ItemDefinition, type RewardPoolDefinition } from '../../src/content/items';
 import { SECTORS, type SectorDefinition } from '../../src/content/sectors';
+import { SHIPS, type ShipDefinition } from '../../src/content/ships';
 import { UNLOCKS, type UnlockDefinition } from '../../src/content/unlocks';
+import { WEAPONS, type WeaponDefinition } from '../../src/content/weapons';
 
 const baseItem = ITEMS[0] as ItemDefinition;
 const baseFaction = FACTIONS[0] as FactionDefinition;
 const baseBoss = BOSSES[0] as BossDefinition;
 const baseSector = SECTORS[0] as SectorDefinition;
+const baseShip = SHIPS[0] as ShipDefinition;
 const baseUnlock = UNLOCKS[0] as UnlockDefinition;
+const baseWeapon = WEAPONS[0] as WeaponDefinition;
 const baseAchievement = ACHIEVEMENTS[0] as AchievementDefinition;
 
 describe('validateContent', () => {
@@ -102,6 +106,49 @@ describe('validateContent', () => {
     });
 
     expect(errors).toContain(`Duplicate item id: ${baseItem.id}`);
+  });
+
+  it('rejects missing ship weapon references and invalid ship stats', () => {
+    const errors = validateContent({
+      ships: [
+        {
+          ...baseShip,
+          weapon: 'weapon_missing',
+          stats: {
+            ...baseShip.stats,
+            maxHull: 0,
+            specialInitialCharge: 2,
+            bombCapacity: -1
+          }
+        }
+      ] as unknown as readonly ShipDefinition[]
+    });
+
+    expect(errors).toContain(`Ship ${baseShip.id} references missing weapon: weapon_missing`);
+    expect(errors).toContain(`Ship ${baseShip.id} stats must have positive maxHull`);
+    expect(errors).toContain(
+      `Ship ${baseShip.id} stats must have specialInitialCharge between 0 and 1`
+    );
+    expect(errors).toContain(`Ship ${baseShip.id} stats must have non-negative bombCapacity`);
+  });
+
+  it('rejects invalid weapon definitions', () => {
+    const errors = validateContent({
+      weapons: [
+        {
+          ...baseWeapon,
+          pattern: 'spiral',
+          tags: ['not-a-real-tag'],
+          damage: 0,
+          heatVentPerSecond: 0
+        }
+      ] as unknown as readonly WeaponDefinition[]
+    });
+
+    expect(errors).toContain(`Weapon ${baseWeapon.id} has invalid pattern: spiral`);
+    expect(errors).toContain(`Weapon ${baseWeapon.id} has invalid tag: not-a-real-tag`);
+    expect(errors).toContain(`Weapon ${baseWeapon.id} must have positive damage`);
+    expect(errors).toContain(`Weapon ${baseWeapon.id} must have positive heatVentPerSecond`);
   });
 
   it('rejects invalid item tags', () => {

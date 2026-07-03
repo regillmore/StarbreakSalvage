@@ -50,7 +50,15 @@ export class ContractSelectScene implements Scene {
 
       const weapon = document.createElement('p');
       weapon.className = 'contract-detail';
-      weapon.textContent = `Weapon: ${contract.startingWeaponName}`;
+      weapon.textContent = `Weapon: ${contract.startingWeaponName} | ${contract.startingWeaponPattern}`;
+
+      const stats = document.createElement('p');
+      stats.className = 'contract-detail';
+      stats.textContent = `Hull ${contract.shipStats.maxHull} | Speed ${contract.shipStats.speed} | Hit ${contract.shipStats.hitRadius} | Bombs ${contract.shipStats.bombCapacity}`;
+
+      const economy = document.createElement('p');
+      economy.className = 'contract-detail';
+      economy.textContent = `Start: ${contract.startingCredits} credits | ${contract.startingSalvage} salvage`;
 
       const selectButton = document.createElement('button');
       selectButton.className = 'secondary-button contract-select-button';
@@ -58,7 +66,7 @@ export class ContractSelectScene implements Scene {
       selectButton.textContent = index === this.selectedIndex ? 'Selected' : 'Select';
       selectButton.addEventListener('click', () => this.selectContract(index));
 
-      article.append(name, sponsor, summary, weapon, selectButton);
+      article.append(name, sponsor, summary, weapon, stats, economy, selectButton);
       list.append(article);
       this.contractCards.push(article);
     }

@@ -6,6 +6,7 @@
 
 - Added data-driven sector objectives, deterministic directed wave schedules, HUD objective progress, and boss-gated late sectors.
 - Added first-pass special burst fire, bomb danger cancellation, deterministic graze charge, verb HUD readouts, and procedural cues for those verbs.
+- Added contract-specific ship stats, starting economy, weapon projectile patterns, heat/overheat reload behavior, and weapon HUD readouts.
 - Added original procedural Web Audio cues for firing, impacts, pickups, boss warnings, sector clears, and run endings.
 - Added gameplay camera shake that respects reduced motion and screen shake strength settings.
 
@@ -13,6 +14,7 @@
 
 - Added wave director and objective completion tests, including known-seed objective snapshots and boss-gate coverage.
 - Added combat tests for special charge/use, bomb mitigation, graze detection, remapped special/bomb controls, and reduced-motion effect rendering.
+- Added validation and gameplay tests for ship stat contracts, weapon references, weapon patterns, heat/reload behavior, and starting economy.
 - Added unit coverage for audio cue settings, combat feedback detection, and deterministic screen-shake decay.
 
 ### Planning

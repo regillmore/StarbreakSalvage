@@ -1,7 +1,7 @@
 import { getBossById, type BossId, type BossPatternId } from '../content/bosses';
 import { FACTIONS, getFactionById, type FactionId } from '../content/factions';
 import type { ItemTag } from '../content/items';
-import type { WeaponId } from '../content/ships';
+import type { ShipStats, WeaponId } from '../content/ships';
 import { getWeaponById, type WeaponDefinition } from '../content/weapons';
 import { clamp, type Vector2 } from '../core/math';
 import { createRng } from '../core/rng';
@@ -37,14 +37,19 @@ export interface PlayerState {
   x: number;
   y: number;
   readonly radius: number;
+  readonly speed: number;
+  readonly pickupPullRange: number;
   hull: number;
   readonly maxHull: number;
   fireCooldown: number;
+  weaponHeat: number;
+  weaponOverheatSeconds: number;
   invulnerableSeconds: number;
   fireRateMultiplier: number;
   fireRateBoostSeconds: number;
   specialCharge: number;
   readonly maxSpecialCharge: number;
+  readonly specialChargeMultiplier: number;
   specialCooldown: number;
   specialActiveSeconds: number;
   bombs: number;
@@ -202,14 +207,10 @@ export interface CombatRunResult {
   readonly itemNames: readonly string[];
 }
 
-const PLAYER_RADIUS = 18;
-const PLAYER_MAX_HULL = 3;
-const PLAYER_SPEED = 360;
 const ENEMY_PROJECTILE_SPEED = 285;
 const PLAYER_DAMAGE_INVULNERABILITY_SECONDS = 0.55;
 const DEFAULT_BOSS_ID: BossId = 'boss_auditor_drone_xl';
 const SPECIAL_MAX_CHARGE = 1;
-const SPECIAL_INITIAL_CHARGE = 1;
 const SPECIAL_ACTIVE_SECONDS = 2.4;
 const SPECIAL_COOLDOWN_SECONDS = 1.1;
 const SPECIAL_FIRE_RATE_MULTIPLIER = 0.58;
@@ -222,9 +223,21 @@ const BOMB_INVULNERABILITY_SECONDS = 0.35;
 const BOMB_DAMAGE = 2.25;
 const BOMB_BOSS_DAMAGE_RATIO = 0.08;
 const GRAZE_MARGIN = 24;
+const DEFAULT_SHIP_STATS: ShipStats = {
+  maxHull: 3,
+  speed: 360,
+  hitRadius: 18,
+  pickupPullRange: 240,
+  specialChargeMultiplier: 1,
+  specialInitialCharge: 1,
+  bombCapacity: BOMB_INITIAL_CHARGES,
+  startingCredits: 16,
+  startingSalvage: 0
+};
 
 export interface CombatStateOptions {
   readonly weaponId?: WeaponId;
+  readonly shipStats?: ShipStats;
   readonly items?: readonly ItemInstance[];
   readonly bossId?: BossId;
   readonly bossSpawnAtSeconds?: number | null;
@@ -239,6 +252,8 @@ export function createCombatState(
 ): CombatState {
   const weapon = getWeaponById(options.weaponId ?? 'weapon_light_needle_laser');
   const bossDefinition = getBossById(options.bossId ?? DEFAULT_BOSS_ID);
+  const shipStats = options.shipStats ?? DEFAULT_SHIP_STATS;
+  const maxBombs = Math.max(0, Math.floor(shipStats.bombCapacity));
   const state: CombatState = {
     seed,
     bossId: bossDefinition.id,
@@ -250,19 +265,24 @@ export function createCombatState(
     player: {
       x: bounds.width / 2,
       y: bounds.height * 0.78,
-      radius: PLAYER_RADIUS,
-      hull: PLAYER_MAX_HULL,
-      maxHull: PLAYER_MAX_HULL,
+      radius: shipStats.hitRadius,
+      speed: shipStats.speed,
+      pickupPullRange: shipStats.pickupPullRange,
+      hull: shipStats.maxHull,
+      maxHull: shipStats.maxHull,
       fireCooldown: 0,
+      weaponHeat: 0,
+      weaponOverheatSeconds: 0,
       invulnerableSeconds: 0,
       fireRateMultiplier: 1,
       fireRateBoostSeconds: 0,
-      specialCharge: SPECIAL_INITIAL_CHARGE,
+      specialCharge: clamp(shipStats.specialInitialCharge, 0, SPECIAL_MAX_CHARGE),
       maxSpecialCharge: SPECIAL_MAX_CHARGE,
+      specialChargeMultiplier: shipStats.specialChargeMultiplier,
       specialCooldown: 0,
       specialActiveSeconds: 0,
-      bombs: BOMB_INITIAL_CHARGES,
-      maxBombs: BOMB_INITIAL_CHARGES,
+      bombs: maxBombs,
+      maxBombs,
       bombCooldown: 0,
       credits: 0,
       salvage: 0
@@ -425,16 +445,18 @@ function updatePlayer(
   const { player } = state;
 
   player.x = clamp(
-    player.x + input.movement.x * PLAYER_SPEED * dt,
+    player.x + input.movement.x * player.speed * dt,
     bounds.padding + player.radius,
     bounds.width - bounds.padding - player.radius
   );
   player.y = clamp(
-    player.y + input.movement.y * PLAYER_SPEED * dt,
+    player.y + input.movement.y * player.speed * dt,
     bounds.padding + player.radius,
     bounds.height - bounds.padding - player.radius
   );
   player.fireCooldown = Math.max(0, player.fireCooldown - dt);
+  player.weaponOverheatSeconds = Math.max(0, player.weaponOverheatSeconds - dt);
+  ventWeaponHeat(state, dt);
   player.invulnerableSeconds = Math.max(0, player.invulnerableSeconds - dt);
   player.fireRateBoostSeconds = Math.max(0, player.fireRateBoostSeconds - dt);
   player.specialCooldown = Math.max(0, player.specialCooldown - dt);
@@ -453,26 +475,16 @@ function updatePlayer(
     activateBomb(state, bounds);
   }
 
-  if (input.fire && player.fireCooldown <= 0) {
+  if (input.fire && player.fireCooldown <= 0 && player.weaponOverheatSeconds <= 0) {
     state.volleyIndex += 1;
 
-    const baseProjectile: ProjectileBlueprint = {
-      x: player.x,
-      y: player.y - player.radius,
-      vx: 0,
-      vy: -state.weapon.projectileSpeed,
-      radius: state.weapon.projectileRadius,
-      damage: state.weapon.damage,
-      ttl: 1.6,
-      tags: state.weapon.tags,
-      procDepth: 0
-    };
     const firePayload = applyItemHooks('onFire', state.items, {
       volleyIndex: state.volleyIndex,
-      projectiles: [baseProjectile]
+      projectiles: createWeaponProjectiles(state)
     });
 
     spawnPlayerProjectiles(state, firePayload.projectiles);
+    addWeaponHeat(state);
 
     const specialMultiplier =
       player.specialActiveSeconds > 0 ? SPECIAL_FIRE_RATE_MULTIPLIER : 1;
@@ -484,6 +496,98 @@ function updatePlayer(
       itemTriggers: state.stats.itemTriggers + Math.max(0, firePayload.projectiles.length - 1)
     };
   }
+}
+
+function createWeaponProjectiles(state: CombatState): ProjectileBlueprint[] {
+  const { player, weapon } = state;
+  const baseProjectile: ProjectileBlueprint = {
+    x: player.x,
+    y: player.y - player.radius,
+    vx: 0,
+    vy: -weapon.projectileSpeed,
+    radius: weapon.projectileRadius,
+    damage: weapon.damage,
+    ttl: weapon.pattern === 'beam' ? 0.85 : weapon.pattern === 'spread' ? 1.05 : 1.6,
+    tags: weapon.tags,
+    procDepth: 0
+  };
+
+  if (weapon.pattern === 'dual') {
+    return [-8, 8].map((offset) => ({
+      ...baseProjectile,
+      x: baseProjectile.x + offset,
+      damage: baseProjectile.damage * 0.72,
+      radius: Math.max(3, baseProjectile.radius * 0.82)
+    }));
+  }
+
+  if (weapon.pattern === 'spread') {
+    return [-150, 0, 150].map((vx) => ({
+      ...baseProjectile,
+      vx,
+      vy: baseProjectile.vy * (vx === 0 ? 1 : 0.92),
+      damage: baseProjectile.damage * (vx === 0 ? 0.95 : 0.72),
+      radius: Math.max(3, baseProjectile.radius * 0.88)
+    }));
+  }
+
+  if (weapon.pattern === 'split') {
+    return [-115, 0, 115].map((vx) => ({
+      ...baseProjectile,
+      vx,
+      damage: baseProjectile.damage * (vx === 0 ? 0.9 : 0.58),
+      radius: Math.max(3, baseProjectile.radius * 0.78)
+    }));
+  }
+
+  if (weapon.pattern === 'missile') {
+    return [
+      {
+        ...baseProjectile,
+        radius: baseProjectile.radius * 1.18,
+        ttl: 2,
+        damage: baseProjectile.damage * 1.05
+      }
+    ];
+  }
+
+  if (weapon.pattern === 'beam') {
+    return [
+      {
+        ...baseProjectile,
+        vy: -weapon.projectileSpeed * 1.18,
+        radius: baseProjectile.radius * 1.4,
+        damage: baseProjectile.damage * 1.1
+      }
+    ];
+  }
+
+  return [baseProjectile];
+}
+
+function addWeaponHeat(state: CombatState): void {
+  const heatMultiplier = hasItem(state.items, 'item_heat_sink_saint') ? 0.7 : 1;
+  state.player.weaponHeat = clamp(
+    state.player.weaponHeat + state.weapon.heatPerShot * heatMultiplier,
+    0,
+    state.weapon.overheatLimit
+  );
+
+  if (state.player.weaponHeat >= state.weapon.overheatLimit) {
+    state.player.weaponOverheatSeconds = state.weapon.overheatCooldownSeconds;
+    state.player.fireCooldown = Math.max(
+      state.player.fireCooldown,
+      state.weapon.overheatCooldownSeconds
+    );
+  }
+}
+
+function ventWeaponHeat(state: CombatState, dt: number): void {
+  const ventMultiplier = hasItem(state.items, 'item_heat_sink_saint') ? 1.35 : 1;
+  state.player.weaponHeat = Math.max(
+    0,
+    state.player.weaponHeat - state.weapon.heatVentPerSecond * ventMultiplier * dt
+  );
 }
 
 function activateSpecial(state: CombatState): void {
@@ -743,7 +847,9 @@ function updatePickups(state: CombatState, dt: number, bounds: CombatBounds): vo
     const dy = state.player.y - pickup.y;
     const distance = Math.hypot(dx, dy);
 
-    const attractionRange = hasItem(state.items, 'item_salvage_magnet') ? 760 : 240;
+    const attractionRange = hasItem(state.items, 'item_salvage_magnet')
+      ? Math.max(state.player.pickupPullRange, 760)
+      : state.player.pickupPullRange;
 
     if (distance < attractionRange && distance > 0) {
       pickup.vx += (dx / distance) * 460 * dt;
@@ -944,7 +1050,7 @@ function damageBossWithProjectile(
 
 function gainSpecialCharge(state: CombatState, amount: number): void {
   state.player.specialCharge = clamp(
-    state.player.specialCharge + Math.max(0, amount),
+    state.player.specialCharge + Math.max(0, amount) * state.player.specialChargeMultiplier,
     0,
     state.player.maxSpecialCharge
   );
