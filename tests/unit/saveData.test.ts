@@ -88,6 +88,27 @@ describe('saveData', () => {
     expect(importSaveData(exportSaveData(save))).toEqual(save);
   });
 
+  it('preserves victory records through stats and import normalization', () => {
+    const save = applyRunRecordToSave(createDefaultSaveData(), {
+      seed: 'CORE-WRECK-VICTORY',
+      contractId: 'contract_1',
+      contractName: 'Debt Runner',
+      reason: 'victory',
+      survivedSeconds: 184,
+      sectorsCleared: 5,
+      bossesDefeated: 2,
+      enemiesDestroyed: 28,
+      creditsRecovered: 42,
+      salvageRecovered: 9,
+      itemTriggers: 6
+    }).data;
+
+    expect(save.lastRun?.reason).toBe('victory');
+    expect(save.lastRun?.sectorsCleared).toBe(5);
+    expect(save.stats.bestSectorsCleared).toBe(5);
+    expect(importSaveData(exportSaveData(save)).lastRun?.reason).toBe('victory');
+  });
+
   it('applies run records to stats, salvage bank, achievements, and unlocks', () => {
     const update = applyRunRecordToSave(createDefaultSaveData(), {
       seed: 'LASER-TAX-404',

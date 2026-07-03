@@ -1,7 +1,6 @@
 import { CanvasRenderer } from './CanvasRenderer';
 import { Loop, type FrameStats } from './Loop';
 import { SceneManager } from './SceneManager';
-import type { CombatEndReason } from '../game/CombatState';
 import type { CombatRunResult } from '../game/CombatState';
 import {
   applyRunRecordToSave,
@@ -40,6 +39,7 @@ import {
   spendCredits,
   type RunSessionState
 } from '../game/RunSession';
+import { getSaveRecordSectorCount } from '../game/RunOutcome';
 import { SHOP_REROLL_COST } from '../game/Shops';
 import { AudioSystem } from '../systems/AudioSystem';
 import { getFeedbackShakeIntensity, type CombatFeedbackCue } from '../systems/CombatFeedback';
@@ -406,11 +406,13 @@ export class GameApp {
       seed: this.currentRun.seed,
       contractId: this.selectedContract.id,
       contractName: this.selectedContract.shipName,
-      reason: result.reason as CombatEndReason,
+      reason: result.reason,
       survivedSeconds: result.survivedSeconds,
-      sectorsCleared: Math.max(
+      sectorsCleared: getSaveRecordSectorCount(
+        this.currentRun,
         this.runSession.currentSectorIndex,
-        this.runSession.routeHistory.length
+        this.runSession.routeHistory.length,
+        result.reason
       ),
       bossesDefeated: result.bossesDefeated + previousBosses,
       enemiesDestroyed: result.enemiesDestroyed + previousEnemies,

@@ -2,7 +2,7 @@
 
 **Starbreak Salvage** is a browser-first 2D vertical roguelike shooter about disposable pilots, unstable ship contracts, and profitable wreckage. The project is intentionally static: no backend, no accounts, and no runtime network dependency after the page loads.
 
-This repository is in the early playable release-candidate stage. It currently ships a Vite + TypeScript app with a canvas renderer, fixed-step loop, input manager, scene manager, deterministic contract and sector generation, starter item hooks, a combat MVP, route/reward/shop screens, boss/faction alpha content, save/unlock progression, settings, procedural audio/VFX feedback, unit tests, Playwright smoke coverage, CI, and GitHub Pages deployment wiring.
+This repository is in the early playable release-candidate stage. It currently ships a Vite + TypeScript app with a canvas renderer, fixed-step loop, input manager, scene manager, deterministic contract and sector generation, starter item hooks, a combat MVP, route/reward/shop screens, phase-based boss/faction alpha content, a final-sector victory path, save/unlock progression, settings, procedural audio/VFX feedback, unit tests, Playwright smoke coverage, CI, and GitHub Pages deployment wiring.
 
 ## Local Development
 
@@ -38,7 +38,7 @@ Baseline controls:
 - Confirm: Enter or Space
 - Back: Escape or Backspace
 
-The current shell supports the title flow, deterministic contract launch, contract-specific ship stats, weapon patterns with heat/reload behavior, keyboard movement, primary fire, special burst fire, screen-clearing bombs, near-miss graze charge, faction-colored directed waves, objective progress, pickups, pause/resume, hull damage, starter item hooks, route choice, rewards, basic shops with rerolls, sector transition, boss gates, debug boss spawns, run summary stats, and a persistent unlock archive.
+The current shell supports the title flow, deterministic contract launch, contract-specific ship stats, weapon patterns with heat/reload behavior, keyboard movement, primary fire, special burst fire, screen-clearing bombs, near-miss graze charge, faction-colored directed waves, objective progress, pickups, pause/resume, hull damage, starter item hooks, route choice, rewards, basic shops with rerolls, sector transition, boss gates, phase-based boss attacks, final-sector victory summary, debug boss spawns, run summary stats, and a persistent unlock archive.
 
 Special starts charged and spends charge for a short burst/faster-fire window. Bombs cancel enemy bullets and telegraphs while softening enemies and bosses without instantly ending boss fights. Grazing enemy shots at close range grants deterministic special charge and increments the HUD graze counter.
 
@@ -52,7 +52,7 @@ Add `?debug=1` to the local or deployed URL to show the debug overlay with FPS, 
 
 Add `?seed=LASER-TAX-404` or another seed label to preview deterministic contract, route, objective, wave, reward, shop, and boss generation. Blank or missing seeds default to `STARBREAK-SMOKE`. Run summaries include a copy-ready seed link for sharing the same generated contracts, route, rewards, shop inventory, and boss schedule.
 
-With `?debug=1`, press `K` during gameplay to force the MVP summary screen. Press `1`, `2`, or `3` to spawn Auditor Drone XL, Carrier of Unsold Missiles, or The Bloom Engine. The HUD objective pill shows directed wave progress and boss-gate state for the current sector, the verb pill shows special charge/cooldown, bomb stock, and graze count, and the weapon pill shows pattern plus heat/overheat state.
+With `?debug=1`, press `K` during gameplay to force the MVP summary screen. Press `1`, `2`, or `3` to spawn Auditor Drone XL, Carrier of Unsold Missiles, or The Bloom Engine. The HUD objective pill shows directed wave progress and boss-gate state for the current sector, the boss pill names the active boss phase, the verb pill shows special charge/cooldown, bomb stock, and graze count, and the weapon pill shows pattern plus heat/overheat state.
 
 Projectile budget notes live in `docs/STARBREAK_SALVAGE_PERFORMANCE_NOTES.md`.
 

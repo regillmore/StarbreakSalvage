@@ -41,6 +41,39 @@ describe('validateContent', () => {
     );
   });
 
+  it('rejects invalid boss phase definitions', () => {
+    const basePhase = baseBoss.phases[0];
+
+    if (!basePhase) {
+      throw new Error('Boss fixture is missing a phase.');
+    }
+
+    const errors = validateContent({
+      bosses: [
+        {
+          ...baseBoss,
+          phases: [
+            {
+              ...basePhase,
+              startsAtHullRatio: 0.9,
+              telegraphMultiplier: 0.5,
+              patternSequence: []
+            }
+          ]
+        }
+      ] as unknown as readonly BossDefinition[]
+    });
+
+    expect(errors).toContain(`Boss ${baseBoss.id} must define at least two phases`);
+    expect(errors).toContain(`Boss ${baseBoss.id} first phase must start at hull ratio 1`);
+    expect(errors).toContain(
+      `Boss ${baseBoss.id} phase ${basePhase.label} must keep readable telegraph timing`
+    );
+    expect(errors).toContain(
+      `Boss ${baseBoss.id} phase ${basePhase.label} must define a pattern sequence`
+    );
+  });
+
   it('rejects duplicate unlock ids and missing achievement unlock references', () => {
     const errors = validateContent({
       unlocks: [baseUnlock, { ...baseUnlock, name: 'Duplicate Unlock' }],

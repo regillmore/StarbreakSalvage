@@ -289,7 +289,8 @@ function normalizeLastRun(value: unknown): LastRunSummary | null {
     reason !== 'destroyed' &&
     reason !== 'abandoned' &&
     reason !== 'debug' &&
-    reason !== 'sectorComplete'
+    reason !== 'sectorComplete' &&
+    reason !== 'victory'
   ) {
     return null;
   }

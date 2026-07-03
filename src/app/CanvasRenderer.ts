@@ -383,11 +383,13 @@ export class CanvasRenderer {
     const context = this.context;
     const faction = getFactionById(telegraph.factionId);
     const alpha = clamp(telegraph.ttl / telegraph.maxTtl, 0.2, 0.85);
+    const warningColor =
+      this.settings.bulletContrast === 'high' ? '#ffef5f' : faction.palette.warning;
 
     context.save();
     context.globalAlpha = alpha;
-    context.strokeStyle = faction.palette.warning;
-    context.fillStyle = faction.palette.warning;
+    context.strokeStyle = warningColor;
+    context.fillStyle = warningColor;
     context.lineWidth = 3;
     context.font = '700 12px "Cascadia Mono", Consolas, monospace';
     context.textAlign = 'center';

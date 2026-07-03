@@ -47,7 +47,7 @@ Phase 2 introduces deeper run flow and more content. Add tests closest to the ri
 - known-seed snapshots for objectives, waves, boss timing, route outcomes, rewards, and shops;
 - special/bomb/graze charge math and input remapping;
 - ship stat validation and weapon-family projectile behavior;
-- boss phase thresholds and final victory summary;
+- boss phase thresholds, high-contrast boss telegraphs, final victory routing, and victory summary saves;
 - unlock-gated generation for fresh saves and progressed saves;
 - seed entry from the main menu and copy/share from summary;
 - performance/debug scenarios for dense combat and boss patterns.

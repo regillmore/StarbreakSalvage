@@ -25,7 +25,7 @@ The project is successful when a player can open the GitHub Pages URL, start a s
 
 Phase 1 is complete as of the M10 release and first-pass audio/VFX follow-up. The project has a deployed alpha foundation: build/release workflow, deterministic generation, combat MVP, route/reward/shop screens, save/unlock data, settings/accessibility basics, seed sharing, and original procedural feedback.
 
-Phase 2 begins from this deployed alpha. Its goal is to make Starbreak Salvage cohesive and durable rather than merely scaffolded: full-run structure, real sector objectives, special/bomb/graze verbs, boss phases, expanded content, unlock gating, onboarding, balance, and playtest-ready QA.
+Phase 2 begins from this deployed alpha. Its goal is to make Starbreak Salvage cohesive and durable rather than merely scaffolded: full-run structure, real sector objectives, special/bomb/graze verbs, boss escalation, expanded content, unlock gating, onboarding, balance, and playtest-ready QA.
 
 See `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md` for the active Phase 2 roadmap.
 
@@ -199,6 +199,8 @@ Exit criteria:
 
 - Five bosses can be fought and defeated.
 - Telegraphs remain readable in normal and high-contrast modes.
+
+Status: first-pass boss phase behavior and final victory summary are implemented; faction encounter depth still needs expansion.
 
 ### P2.4 - Content Expansion
 

@@ -37,10 +37,10 @@ Turn the Phase 1 alpha into a cohesive vertical slice that can support repeated 
 - Ships/contracts: 8 defined.
 - Items: 15 defined.
 - Factions: 3 defined.
-- Bosses: 5 defined, with 3 active attack patterns.
+- Bosses: 5 defined, each with phase behavior across 3 active attack patterns.
 - Sectors: 5 defined.
 - Unlocks: 10 defined.
-- Major gaps: boss phases, limited content volume, no unlock gating, no in-menu seed entry, no real tutorial/onboarding. Sector objectives/wave direction, first-pass special/bomb/graze verbs, and contract-specific ship/weapon identity now exist, but still need balance and content depth.
+- Major gaps: limited content volume, no unlock gating, no in-menu seed entry, no real tutorial/onboarding, and shallow route/event outcomes. Sector objectives/wave direction, first-pass special/bomb/graze verbs, contract-specific ship/weapon identity, boss phases, and final victory summary now exist, but still need balance and content depth.
 
 ## Phase 2 Milestones
 
@@ -73,6 +73,8 @@ Exit criteria:
 - Five bosses have at least two phases or phase-like behavior.
 - Faction behavior changes are visible and tested.
 - Final sector has a distinct final-boss flow and victory summary.
+
+Status: first-pass boss phases and victory summary are implemented; faction behavior depth remains a follow-up.
 
 ### P2.4 - Content Expansion
 

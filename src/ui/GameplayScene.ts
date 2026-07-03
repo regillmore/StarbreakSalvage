@@ -14,6 +14,7 @@ import type { BossId } from '../content/bosses';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import { describeItemLoadout } from '../game/ItemHooks';
 import type { ItemInstance } from '../game/Rewards';
+import { getSectorCompletionReason } from '../game/RunOutcome';
 import {
   createWaveDirectorPlan,
   getObjectiveProgress,
@@ -169,11 +170,20 @@ export class GameplayScene implements Scene {
     }
 
     const progress = getObjectiveProgress(this.getWavePlan(), state);
+    const completionReason = getSectorCompletionReason(this.run, this.sectorIndex, progress);
 
-    if (!this.sectorCompleted && progress.complete) {
+    if (!this.sectorCompleted && completionReason) {
       this.sectorCompleted = true;
+      const completionResult = forceCombatEnd(state, completionReason);
+
+      if (completionReason === 'victory') {
+        this.emitFeedback(['sectorClear', 'runEnd']);
+        this.onGameOver(completionResult);
+        return;
+      }
+
       this.emitFeedback(['sectorClear']);
-      this.onSectorComplete(forceCombatEnd(state, 'sectorComplete'));
+      this.onSectorComplete(completionResult);
     }
   }
 
@@ -310,7 +320,9 @@ export class GameplayScene implements Scene {
     this.weaponReadout.textContent = this.getWeaponReadout(state);
     this.combatReadout.textContent = `Destroyed ${state.stats.enemiesDestroyed} | Shots ${state.stats.shotsFired} | Hooks ${state.stats.itemTriggers}`;
     this.bossReadout.textContent = state.boss
-      ? `${state.boss.name} ${Math.max(0, state.boss.hull)}/${state.boss.maxHull}`
+      ? `${state.boss.name} ${Math.max(0, state.boss.hull)}/${state.boss.maxHull} | ${
+          state.boss.phaseLabel
+        }`
       : `Boss ${this.getCurrentBossName()}`;
     this.warningReadout.textContent = state.telegraphs[0]?.label ?? 'Warning clear';
     this.itemReadout.textContent = describeItemLoadout(state.items);

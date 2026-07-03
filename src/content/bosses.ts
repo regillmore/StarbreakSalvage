@@ -9,6 +9,16 @@ export type BossId =
 
 export type BossPatternId = 'auditFan' | 'missileCurtain' | 'sporeSpiral';
 
+export interface BossPhaseDefinition {
+  readonly label: string;
+  readonly startsAtHullRatio: number;
+  readonly attackCadenceMultiplier: number;
+  readonly telegraphMultiplier: number;
+  readonly projectileBudgetMultiplier: number;
+  readonly patternSequence: readonly BossPatternId[];
+  readonly warningLabel: string;
+}
+
 export interface BossDefinition {
   readonly id: BossId;
   readonly name: string;
@@ -19,6 +29,7 @@ export interface BossDefinition {
   readonly telegraphSeconds: number;
   readonly attackCadenceSeconds: number;
   readonly warningLabel: string;
+  readonly phases: readonly BossPhaseDefinition[];
 }
 
 export const BOSSES: readonly BossDefinition[] = [
@@ -31,7 +42,27 @@ export const BOSSES: readonly BossDefinition[] = [
     radius: 46,
     telegraphSeconds: 0.62,
     attackCadenceSeconds: 1.55,
-    warningLabel: 'AUDIT FAN'
+    warningLabel: 'AUDIT FAN',
+    phases: [
+      {
+        label: 'Compliance Sweep',
+        startsAtHullRatio: 1,
+        attackCadenceMultiplier: 1,
+        telegraphMultiplier: 1,
+        projectileBudgetMultiplier: 1,
+        patternSequence: ['auditFan'],
+        warningLabel: 'AUDIT FAN'
+      },
+      {
+        label: 'Expedited Audit',
+        startsAtHullRatio: 0.55,
+        attackCadenceMultiplier: 0.86,
+        telegraphMultiplier: 1.05,
+        projectileBudgetMultiplier: 1.08,
+        patternSequence: ['auditFan', 'missileCurtain'],
+        warningLabel: 'EXPEDITED AUDIT'
+      }
+    ]
   },
   {
     id: 'boss_bloom_engine',
@@ -42,7 +73,27 @@ export const BOSSES: readonly BossDefinition[] = [
     radius: 50,
     telegraphSeconds: 0.7,
     attackCadenceSeconds: 1.35,
-    warningLabel: 'SPORE RING'
+    warningLabel: 'SPORE RING',
+    phases: [
+      {
+        label: 'Root Bloom',
+        startsAtHullRatio: 1,
+        attackCadenceMultiplier: 1,
+        telegraphMultiplier: 1,
+        projectileBudgetMultiplier: 1,
+        patternSequence: ['sporeSpiral'],
+        warningLabel: 'SPORE RING'
+      },
+      {
+        label: 'Pollination Spiral',
+        startsAtHullRatio: 0.55,
+        attackCadenceMultiplier: 0.88,
+        telegraphMultiplier: 1.05,
+        projectileBudgetMultiplier: 1.1,
+        patternSequence: ['sporeSpiral', 'auditFan'],
+        warningLabel: 'POLLEN SURGE'
+      }
+    ]
   },
   {
     id: 'boss_unsold_missiles_carrier',
@@ -53,7 +104,27 @@ export const BOSSES: readonly BossDefinition[] = [
     radius: 52,
     telegraphSeconds: 0.78,
     attackCadenceSeconds: 1.85,
-    warningLabel: 'MISSILE LANES'
+    warningLabel: 'MISSILE LANES',
+    phases: [
+      {
+        label: 'Launch Queue',
+        startsAtHullRatio: 1,
+        attackCadenceMultiplier: 1,
+        telegraphMultiplier: 1,
+        projectileBudgetMultiplier: 1,
+        patternSequence: ['missileCurtain'],
+        warningLabel: 'MISSILE LANES'
+      },
+      {
+        label: 'Clearance Salvo',
+        startsAtHullRatio: 0.58,
+        attackCadenceMultiplier: 0.82,
+        telegraphMultiplier: 1.08,
+        projectileBudgetMultiplier: 1.25,
+        patternSequence: ['missileCurtain', 'auditFan'],
+        warningLabel: 'FINAL INVENTORY'
+      }
+    ]
   },
   {
     id: 'boss_warranty_void_seraph',
@@ -64,7 +135,36 @@ export const BOSSES: readonly BossDefinition[] = [
     radius: 54,
     telegraphSeconds: 0.58,
     attackCadenceSeconds: 1.3,
-    warningLabel: 'VOID AUDIT'
+    warningLabel: 'VOID AUDIT',
+    phases: [
+      {
+        label: 'Void Ledger',
+        startsAtHullRatio: 1,
+        attackCadenceMultiplier: 1,
+        telegraphMultiplier: 1,
+        projectileBudgetMultiplier: 1,
+        patternSequence: ['auditFan'],
+        warningLabel: 'VOID AUDIT'
+      },
+      {
+        label: 'Clause Collapse',
+        startsAtHullRatio: 0.62,
+        attackCadenceMultiplier: 0.86,
+        telegraphMultiplier: 1.1,
+        projectileBudgetMultiplier: 1.12,
+        patternSequence: ['auditFan', 'sporeSpiral'],
+        warningLabel: 'CLAUSE COLLAPSE'
+      },
+      {
+        label: 'Null Signature',
+        startsAtHullRatio: 0.3,
+        attackCadenceMultiplier: 0.78,
+        telegraphMultiplier: 1.15,
+        projectileBudgetMultiplier: 1.16,
+        patternSequence: ['sporeSpiral', 'auditFan', 'missileCurtain'],
+        warningLabel: 'NULL SIGNATURE'
+      }
+    ]
   },
   {
     id: 'boss_core_wreck',
@@ -75,7 +175,36 @@ export const BOSSES: readonly BossDefinition[] = [
     radius: 60,
     telegraphSeconds: 0.72,
     attackCadenceSeconds: 1.45,
-    warningLabel: 'CORE SALVO'
+    warningLabel: 'CORE SALVO',
+    phases: [
+      {
+        label: 'Outer Hull',
+        startsAtHullRatio: 1,
+        attackCadenceMultiplier: 1,
+        telegraphMultiplier: 1,
+        projectileBudgetMultiplier: 1,
+        patternSequence: ['missileCurtain'],
+        warningLabel: 'CORE SALVO'
+      },
+      {
+        label: 'Reactor Breach',
+        startsAtHullRatio: 0.66,
+        attackCadenceMultiplier: 0.88,
+        telegraphMultiplier: 1.08,
+        projectileBudgetMultiplier: 1.22,
+        patternSequence: ['missileCurtain', 'auditFan'],
+        warningLabel: 'REACTOR BREACH'
+      },
+      {
+        label: 'Core Unsealed',
+        startsAtHullRatio: 0.32,
+        attackCadenceMultiplier: 0.78,
+        telegraphMultiplier: 1.12,
+        projectileBudgetMultiplier: 1.18,
+        patternSequence: ['sporeSpiral', 'missileCurtain', 'auditFan'],
+        warningLabel: 'CORE UNSEALED'
+      }
+    ]
   }
 ];
 

@@ -47,6 +47,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const tagRegistry = new Set<string>(ITEM_TAGS);
   const hookRegistry = new Set<string>(ITEM_HOOKS);
   const weaponPatterns = new Set(['single', 'dual', 'spread', 'split', 'missile', 'beam']);
+  const bossPatterns = new Set(['auditFan', 'missileCurtain', 'sporeSpiral']);
 
   for (const unlock of unlocks) {
     if (unlockIds.has(unlock.id)) {
@@ -96,6 +97,81 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     if (!Number.isFinite(boss.maxHull) || boss.maxHull <= 0) {
       errors.push(`Boss ${boss.id} must have positive maxHull`);
     }
+
+    if (!bossPatterns.has(boss.patternId)) {
+      errors.push(`Boss ${boss.id} has invalid pattern: ${boss.patternId}`);
+    }
+
+    const bossPhases = Array.isArray(boss.phases) ? boss.phases : [];
+
+    if (bossPhases.length < 2) {
+      errors.push(`Boss ${boss.id} must define at least two phases`);
+    }
+
+    if (bossPhases[0]?.startsAtHullRatio !== 1) {
+      errors.push(`Boss ${boss.id} first phase must start at hull ratio 1`);
+    }
+
+    let previousPhaseRatio = 1.01;
+
+    for (const phase of bossPhases) {
+      if (!phase.label.trim()) {
+        errors.push(`Boss ${boss.id} phase must have a label`);
+      }
+
+      if (
+        !Number.isFinite(phase.startsAtHullRatio) ||
+        phase.startsAtHullRatio <= 0 ||
+        phase.startsAtHullRatio > 1
+      ) {
+        errors.push(`Boss ${boss.id} phase ${phase.label} must start between hull ratios 0 and 1`);
+      }
+
+      if (phase.startsAtHullRatio >= previousPhaseRatio) {
+        errors.push(`Boss ${boss.id} phase ${phase.label} thresholds must descend`);
+      }
+
+      previousPhaseRatio = phase.startsAtHullRatio;
+
+      validatePositiveNumber(
+        errors,
+        `Boss ${boss.id} phase ${phase.label}`,
+        'attackCadenceMultiplier',
+        phase.attackCadenceMultiplier
+      );
+      validatePositiveNumber(
+        errors,
+        `Boss ${boss.id} phase ${phase.label}`,
+        'telegraphMultiplier',
+        phase.telegraphMultiplier
+      );
+      validatePositiveNumber(
+        errors,
+        `Boss ${boss.id} phase ${phase.label}`,
+        'projectileBudgetMultiplier',
+        phase.projectileBudgetMultiplier
+      );
+
+      if (phase.telegraphMultiplier < 0.85) {
+        errors.push(`Boss ${boss.id} phase ${phase.label} must keep readable telegraph timing`);
+      }
+
+      if (!phase.warningLabel.trim()) {
+        errors.push(`Boss ${boss.id} phase ${phase.label} must have a warning label`);
+      }
+
+      if (phase.patternSequence.length === 0) {
+        errors.push(`Boss ${boss.id} phase ${phase.label} must define a pattern sequence`);
+      }
+
+      for (const patternId of phase.patternSequence) {
+        if (!bossPatterns.has(patternId)) {
+          errors.push(
+            `Boss ${boss.id} phase ${phase.label} references invalid pattern: ${patternId}`
+          );
+        }
+      }
+    }
   }
 
   for (const item of items) {
@@ -140,8 +216,18 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     }
 
     validatePositiveNumber(errors, `Weapon ${weapon.id}`, 'damage', weapon.damage);
-    validatePositiveNumber(errors, `Weapon ${weapon.id}`, 'projectileSpeed', weapon.projectileSpeed);
-    validatePositiveNumber(errors, `Weapon ${weapon.id}`, 'projectileRadius', weapon.projectileRadius);
+    validatePositiveNumber(
+      errors,
+      `Weapon ${weapon.id}`,
+      'projectileSpeed',
+      weapon.projectileSpeed
+    );
+    validatePositiveNumber(
+      errors,
+      `Weapon ${weapon.id}`,
+      'projectileRadius',
+      weapon.projectileRadius
+    );
     validatePositiveNumber(
       errors,
       `Weapon ${weapon.id}`,
@@ -196,7 +282,12 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
       'specialInitialCharge',
       ship.stats.specialInitialCharge
     );
-    validateNonNegativeInteger(errors, `Ship ${ship.id} stats`, 'bombCapacity', ship.stats.bombCapacity);
+    validateNonNegativeInteger(
+      errors,
+      `Ship ${ship.id} stats`,
+      'bombCapacity',
+      ship.stats.bombCapacity
+    );
     validateNonNegativeInteger(
       errors,
       `Ship ${ship.id} stats`,
@@ -306,12 +397,7 @@ function validateNonNegativeInteger(
   }
 }
 
-function validateUnitNumber(
-  errors: string[],
-  owner: string,
-  field: string,
-  value: number
-): void {
+function validateUnitNumber(errors: string[], owner: string, field: string, value: number): void {
   if (!Number.isFinite(value) || value < 0 || value > 1) {
     errors.push(`${owner} must have ${field} between 0 and 1`);
   }

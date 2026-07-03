@@ -182,13 +182,17 @@ async function writeSeedLinkToClipboard(
   }
 }
 
-function getSummaryTitle(result: CombatRunResult | null): string {
+export function getSummaryTitle(result: CombatRunResult | null): string {
   if (result?.reason === 'destroyed') {
     return 'Ship Destroyed';
   }
 
   if (result?.reason === 'debug') {
     return 'Debug Run Ended';
+  }
+
+  if (result?.reason === 'victory') {
+    return 'Victory Confirmed';
   }
 
   if (result?.reason === 'sectorComplete') {
@@ -198,7 +202,7 @@ function getSummaryTitle(result: CombatRunResult | null): string {
   return 'Contract Suspended';
 }
 
-function getOutcomeLabel(result: CombatRunResult | null): string {
+export function getOutcomeLabel(result: CombatRunResult | null): string {
   if (!result) {
     return 'pending';
   }
@@ -209,6 +213,10 @@ function getOutcomeLabel(result: CombatRunResult | null): string {
 
   if (result.reason === 'debug') {
     return 'forced test';
+  }
+
+  if (result.reason === 'victory') {
+    return 'final boss salvaged';
   }
 
   if (result.reason === 'sectorComplete') {

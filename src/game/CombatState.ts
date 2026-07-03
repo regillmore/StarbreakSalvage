@@ -1,4 +1,9 @@
-import { getBossById, type BossId, type BossPatternId } from '../content/bosses';
+import {
+  getBossById,
+  type BossDefinition,
+  type BossId,
+  type BossPatternId
+} from '../content/bosses';
 import { FACTIONS, getFactionById, type FactionId } from '../content/factions';
 import type { ItemTag } from '../content/items';
 import type { ShipStats, WeaponId } from '../content/ships';
@@ -17,7 +22,7 @@ import { getItemNames, type ItemInstance } from './Rewards';
 
 export type ProjectileOwner = 'player' | 'enemy';
 export type PickupKind = 'credit' | 'salvage';
-export type CombatEndReason = 'destroyed' | 'abandoned' | 'debug' | 'sectorComplete';
+export type CombatEndReason = 'destroyed' | 'abandoned' | 'debug' | 'sectorComplete' | 'victory';
 export type TelegraphKind = 'fan' | 'lane' | 'ring';
 
 export interface CombatBounds {
@@ -102,6 +107,14 @@ export interface BossState {
   readonly telegraphDuration: number;
   readonly attackCadenceSeconds: number;
   readonly warningLabel: string;
+  phaseIndex: number;
+  phaseLabel: string;
+  phaseStartedAtHullRatio: number;
+  currentPatternId: BossPatternId;
+  currentTelegraphDuration: number;
+  currentAttackCadenceSeconds: number;
+  currentWarningLabel: string;
+  projectileBudgetMultiplier: number;
   attackCooldown: number;
   telegraphSeconds: number;
   pendingAttack: BossPatternId | null;
@@ -379,6 +392,7 @@ export function spawnBoss(
     state.nextSpawnIndex = state.spawnSchedule.length;
   }
 
+  const initialPhase = getBossPhaseForHull(bossDefinition, bossDefinition.maxHull).phase;
   const boss: BossState = {
     id: getNextEntityId(state),
     bossId: bossDefinition.id,
@@ -394,6 +408,15 @@ export function spawnBoss(
     telegraphDuration: bossDefinition.telegraphSeconds,
     attackCadenceSeconds: bossDefinition.attackCadenceSeconds,
     warningLabel: bossDefinition.warningLabel,
+    phaseIndex: 0,
+    phaseLabel: initialPhase.label,
+    phaseStartedAtHullRatio: initialPhase.startsAtHullRatio,
+    currentPatternId: initialPhase.patternSequence[0] ?? bossDefinition.patternId,
+    currentTelegraphDuration: bossDefinition.telegraphSeconds * initialPhase.telegraphMultiplier,
+    currentAttackCadenceSeconds:
+      bossDefinition.attackCadenceSeconds * initialPhase.attackCadenceMultiplier,
+    currentWarningLabel: initialPhase.warningLabel,
+    projectileBudgetMultiplier: initialPhase.projectileBudgetMultiplier,
     attackCooldown: 0.45,
     telegraphSeconds: 0,
     pendingAttack: null,
@@ -486,8 +509,7 @@ function updatePlayer(
     spawnPlayerProjectiles(state, firePayload.projectiles);
     addWeaponHeat(state);
 
-    const specialMultiplier =
-      player.specialActiveSeconds > 0 ? SPECIAL_FIRE_RATE_MULTIPLIER : 1;
+    const specialMultiplier = player.specialActiveSeconds > 0 ? SPECIAL_FIRE_RATE_MULTIPLIER : 1;
     player.fireCooldown =
       state.weapon.fireCooldownSeconds * player.fireRateMultiplier * specialMultiplier;
     state.stats = {
@@ -646,10 +668,7 @@ function activateBomb(state: CombatState, bounds: CombatBounds): void {
 
   player.bombs -= 1;
   player.bombCooldown = BOMB_COOLDOWN_SECONDS;
-  player.invulnerableSeconds = Math.max(
-    player.invulnerableSeconds,
-    BOMB_INVULNERABILITY_SECONDS
-  );
+  player.invulnerableSeconds = Math.max(player.invulnerableSeconds, BOMB_INVULNERABILITY_SECONDS);
   state.projectiles = state.projectiles.filter((projectile) => projectile.owner !== 'enemy');
   state.telegraphs = [];
   state.effects.push({
@@ -688,6 +707,7 @@ function activateBomb(state: CombatState, bounds: CombatBounds): void {
   if (boss && boss.hull > 1) {
     const damage = Math.min(boss.hull - 1, Math.max(1, boss.maxHull * BOMB_BOSS_DAMAGE_RATIO));
     boss.hull = applyDamage(boss.hull, damage).hull;
+    refreshBossPhase(state, boss);
     boss.attackCooldown = Math.max(boss.attackCooldown, 0.75);
     boss.pendingAttack = null;
     boss.telegraphSeconds = 0;
@@ -783,12 +803,18 @@ function updateBoss(state: CombatState, dt: number, bounds: CombatBounds): void 
     return;
   }
 
+  refreshBossPhase(state, boss);
+
   if (boss.y < boss.targetY) {
     boss.y = Math.min(boss.targetY, boss.y + 88 * dt);
   } else {
     const sway =
-      boss.patternId === 'sporeSpiral' ? 78 : boss.patternId === 'missileCurtain' ? 42 : 58;
-    const speed = boss.patternId === 'missileCurtain' ? 0.72 : 0.9;
+      boss.currentPatternId === 'sporeSpiral'
+        ? 78
+        : boss.currentPatternId === 'missileCurtain'
+          ? 42
+          : 58;
+    const speed = boss.currentPatternId === 'missileCurtain' ? 0.72 : 0.9;
     boss.x = clamp(
       bounds.width / 2 + Math.sin(state.timeSeconds * speed + boss.id) * sway,
       bounds.padding + boss.radius,
@@ -796,13 +822,15 @@ function updateBoss(state: CombatState, dt: number, bounds: CombatBounds): void 
     );
   }
 
-  if (boss.pendingAttack) {
+  const pendingAttack = boss.pendingAttack;
+
+  if (pendingAttack) {
     boss.telegraphSeconds = Math.max(0, boss.telegraphSeconds - dt);
 
     if (boss.telegraphSeconds <= 0) {
-      fireBossAttack(state, boss);
+      fireBossAttack(state, boss, pendingAttack);
       boss.pendingAttack = null;
-      boss.attackCooldown = boss.attackCadenceSeconds;
+      boss.attackCooldown = boss.currentAttackCadenceSeconds;
     }
 
     return;
@@ -811,10 +839,75 @@ function updateBoss(state: CombatState, dt: number, bounds: CombatBounds): void 
   boss.attackCooldown -= dt;
 
   if (boss.attackCooldown <= 0) {
-    createBossTelegraphs(state, boss, bounds);
-    boss.pendingAttack = boss.patternId;
-    boss.telegraphSeconds = boss.telegraphDuration;
+    const attackPattern = selectBossAttackPattern(boss);
+    boss.currentPatternId = attackPattern;
+    createBossTelegraphs(state, boss, bounds, attackPattern);
+    boss.pendingAttack = attackPattern;
+    boss.telegraphSeconds = boss.currentTelegraphDuration;
   }
+}
+
+function refreshBossPhase(state: CombatState, boss: BossState): void {
+  const bossDefinition = getBossById(boss.bossId);
+  const { phase, phaseIndex } = getBossPhaseForHull(bossDefinition, boss.hull);
+
+  if (phaseIndex === boss.phaseIndex) {
+    return;
+  }
+
+  boss.phaseIndex = phaseIndex;
+  boss.phaseLabel = phase.label;
+  boss.phaseStartedAtHullRatio = phase.startsAtHullRatio;
+  boss.currentPatternId = phase.patternSequence[0] ?? bossDefinition.patternId;
+  boss.currentTelegraphDuration = boss.telegraphDuration * phase.telegraphMultiplier;
+  boss.currentAttackCadenceSeconds = boss.attackCadenceSeconds * phase.attackCadenceMultiplier;
+  boss.currentWarningLabel = phase.warningLabel;
+  boss.projectileBudgetMultiplier = phase.projectileBudgetMultiplier;
+  boss.pendingAttack = null;
+  boss.telegraphSeconds = 0;
+  boss.attackSequence = 0;
+  boss.attackCooldown = Math.max(
+    boss.attackCooldown,
+    Math.min(0.65, boss.currentAttackCadenceSeconds * 0.5)
+  );
+  state.telegraphs = [];
+}
+
+function getBossPhaseForHull(
+  bossDefinition: BossDefinition,
+  hull: number
+): { readonly phase: BossDefinition['phases'][number]; readonly phaseIndex: number } {
+  const hullRatio = clamp(hull / bossDefinition.maxHull, 0, 1);
+  let phaseIndex = 0;
+  let phase = bossDefinition.phases[0];
+
+  for (let index = 0; index < bossDefinition.phases.length; index += 1) {
+    const candidate = bossDefinition.phases[index];
+
+    if (candidate && hullRatio <= candidate.startsAtHullRatio) {
+      phaseIndex = index;
+      phase = candidate;
+    }
+  }
+
+  if (!phase) {
+    throw new Error(`Boss ${bossDefinition.id} does not define any phases.`);
+  }
+
+  return { phase, phaseIndex };
+}
+
+function selectBossAttackPattern(boss: BossState): BossPatternId {
+  const bossDefinition = getBossById(boss.bossId);
+  const phase = bossDefinition.phases[boss.phaseIndex] ?? bossDefinition.phases[0];
+
+  if (!phase || phase.patternSequence.length === 0) {
+    return boss.patternId;
+  }
+
+  return (
+    phase.patternSequence[boss.attackSequence % phase.patternSequence.length] ?? boss.patternId
+  );
 }
 
 function updateProjectiles(state: CombatState, dt: number, bounds: CombatBounds): void {
@@ -873,7 +966,10 @@ function resolveGraze(state: CombatState): void {
     const grazeDistance = hitDistance + GRAZE_MARGIN;
     const distanceSquared = getDistanceSquared(projectile, state.player);
 
-    if (distanceSquared <= hitDistance * hitDistance || distanceSquared > grazeDistance * grazeDistance) {
+    if (
+      distanceSquared <= hitDistance * hitDistance ||
+      distanceSquared > grazeDistance * grazeDistance
+    ) {
       continue;
     }
 
@@ -1025,6 +1121,7 @@ function damageBossWithProjectile(
   boss.hull = applyDamage(boss.hull, projectile.damage).hull;
 
   if (boss.hull > 0) {
+    refreshBossPhase(state, boss);
     return;
   }
 
@@ -1161,21 +1258,42 @@ function fireEnemyPattern(
   });
 }
 
-function createBossTelegraphs(state: CombatState, boss: BossState, bounds: CombatBounds): void {
-  if (boss.patternId === 'missileCurtain') {
-    for (const offset of [-72, 0, 72]) {
+function getBossProjectileCount(baseCount: number, boss: BossState): number {
+  return Math.min(12, Math.max(1, Math.round(baseCount * boss.projectileBudgetMultiplier)));
+}
+
+function getBossLaneOffsets(count: number): number[] {
+  if (count <= 1) {
+    return [0];
+  }
+
+  const spread = 144;
+  return Array.from({ length: count }, (_value, index) => {
+    const ratio = index / (count - 1);
+    return (ratio - 0.5) * spread;
+  });
+}
+
+function createBossTelegraphs(
+  state: CombatState,
+  boss: BossState,
+  bounds: CombatBounds,
+  patternId: BossPatternId
+): void {
+  if (patternId === 'missileCurtain') {
+    for (const offset of getBossLaneOffsets(getBossProjectileCount(3, boss))) {
       state.telegraphs.push({
         id: getNextEntityId(state),
         kind: 'lane',
         factionId: boss.factionId,
-        label: boss.warningLabel,
+        label: boss.currentWarningLabel,
         x: clamp(boss.x + offset, bounds.padding + 20, bounds.width - bounds.padding - 20),
         y: boss.y + boss.radius,
         radius: 0,
         width: 34,
         height: bounds.height,
-        ttl: boss.telegraphDuration,
-        maxTtl: boss.telegraphDuration
+        ttl: boss.currentTelegraphDuration,
+        maxTtl: boss.currentTelegraphDuration
       });
     }
     return;
@@ -1183,23 +1301,26 @@ function createBossTelegraphs(state: CombatState, boss: BossState, bounds: Comba
 
   state.telegraphs.push({
     id: getNextEntityId(state),
-    kind: boss.patternId === 'sporeSpiral' ? 'ring' : 'fan',
+    kind: patternId === 'sporeSpiral' ? 'ring' : 'fan',
     factionId: boss.factionId,
-    label: boss.warningLabel,
+    label: boss.currentWarningLabel,
     x: boss.x,
     y: boss.y + boss.radius * 0.5,
-    radius: boss.patternId === 'sporeSpiral' ? 128 : 158,
+    radius: patternId === 'sporeSpiral' ? 128 : 158,
     width: 0,
     height: 0,
-    ttl: boss.telegraphDuration,
-    maxTtl: boss.telegraphDuration
+    ttl: boss.currentTelegraphDuration,
+    maxTtl: boss.currentTelegraphDuration
   });
 }
 
-function fireBossAttack(state: CombatState, boss: BossState): void {
-  if (boss.patternId === 'auditFan') {
-    for (let index = -3; index <= 3; index += 1) {
-      const angle = Math.PI / 2 + index * 0.18;
+function fireBossAttack(state: CombatState, boss: BossState, patternId: BossPatternId): void {
+  if (patternId === 'auditFan') {
+    const bulletCount = getBossProjectileCount(7, boss);
+    const centerIndex = (bulletCount - 1) / 2;
+
+    for (let index = 0; index < bulletCount; index += 1) {
+      const angle = Math.PI / 2 + (index - centerIndex) * 0.18;
       spawnEnemyProjectile(state, {
         x: boss.x,
         y: boss.y + boss.radius,
@@ -1212,12 +1333,15 @@ function fireBossAttack(state: CombatState, boss: BossState): void {
         factionId: boss.factionId
       });
     }
-  } else if (boss.patternId === 'missileCurtain') {
-    for (const [index, offset] of [-72, 0, 72].entries()) {
+  } else if (patternId === 'missileCurtain') {
+    const offsets = getBossLaneOffsets(getBossProjectileCount(3, boss));
+    const centerIndex = (offsets.length - 1) / 2;
+
+    for (const [index, offset] of offsets.entries()) {
       spawnEnemyProjectile(state, {
         x: boss.x + offset,
         y: boss.y + boss.radius,
-        vx: (index - 1) * 18,
+        vx: (index - centerIndex) * 18,
         vy: 235,
         radius: 9,
         damage: 1,
@@ -1227,7 +1351,7 @@ function fireBossAttack(state: CombatState, boss: BossState): void {
       });
     }
   } else {
-    const bulletCount = 10;
+    const bulletCount = getBossProjectileCount(10, boss);
     const baseAngle = boss.attackSequence * 0.43;
     for (let index = 0; index < bulletCount; index += 1) {
       const angle = baseAngle + (Math.PI * 2 * index) / bulletCount;
