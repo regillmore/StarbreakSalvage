@@ -1,3 +1,5 @@
+import { getBossById, type BossId } from '../content/bosses';
+import { getFactionById, type FactionId } from '../content/factions';
 import { clamp } from '../core/math';
 import { generateStarfield, type Star, starCountForViewport } from '../core/starfield';
 
@@ -18,6 +20,17 @@ export interface PlayerRenderState {
 }
 
 export interface EnemyRenderState {
+  readonly factionId: FactionId;
+  readonly x: number;
+  readonly y: number;
+  readonly radius: number;
+  readonly hull: number;
+  readonly maxHull: number;
+}
+
+export interface BossRenderState {
+  readonly bossId: BossId;
+  readonly factionId: FactionId;
   readonly x: number;
   readonly y: number;
   readonly radius: number;
@@ -30,6 +43,20 @@ export interface ProjectileRenderState {
   readonly y: number;
   readonly radius: number;
   readonly owner: 'player' | 'enemy';
+  readonly factionId?: FactionId;
+}
+
+export interface TelegraphRenderState {
+  readonly kind: 'fan' | 'lane' | 'ring';
+  readonly factionId: FactionId;
+  readonly label: string;
+  readonly x: number;
+  readonly y: number;
+  readonly radius: number;
+  readonly width: number;
+  readonly height: number;
+  readonly ttl: number;
+  readonly maxTtl: number;
 }
 
 export interface PickupRenderState {
@@ -163,28 +190,169 @@ export class CanvasRenderer {
   public paintEnemy(enemy: EnemyRenderState): void {
     const context = this.context;
     const healthRatio = clamp(enemy.hull / enemy.maxHull, 0, 1);
+    const faction = getFactionById(enemy.factionId);
 
     context.save();
     context.translate(enemy.x, enemy.y);
 
-    context.fillStyle = '#ff6b6b';
-    context.strokeStyle = '#ffd166';
+    context.fillStyle = faction.palette.hull;
+    context.strokeStyle = faction.palette.trim;
     context.lineWidth = 2;
-    context.beginPath();
-    context.moveTo(0, enemy.radius);
-    context.lineTo(enemy.radius * 0.86, -enemy.radius * 0.48);
-    context.lineTo(enemy.radius * 0.28, -enemy.radius * 0.25);
-    context.lineTo(0, -enemy.radius);
-    context.lineTo(-enemy.radius * 0.28, -enemy.radius * 0.25);
-    context.lineTo(-enemy.radius * 0.86, -enemy.radius * 0.48);
-    context.closePath();
-    context.fill();
-    context.stroke();
+
+    if (faction.visualShape === 'diamond') {
+      context.beginPath();
+      context.moveTo(0, -enemy.radius);
+      context.lineTo(enemy.radius, 0);
+      context.lineTo(0, enemy.radius);
+      context.lineTo(-enemy.radius, 0);
+      context.closePath();
+      context.fill();
+      context.stroke();
+      context.strokeRect(
+        -enemy.radius * 0.44,
+        -enemy.radius * 0.44,
+        enemy.radius * 0.88,
+        enemy.radius * 0.88
+      );
+    } else if (faction.visualShape === 'organic') {
+      for (let index = 0; index < 5; index += 1) {
+        const angle = (Math.PI * 2 * index) / 5;
+        context.beginPath();
+        context.arc(
+          Math.cos(angle) * enemy.radius * 0.42,
+          Math.sin(angle) * enemy.radius * 0.38,
+          enemy.radius * 0.46,
+          0,
+          Math.PI * 2
+        );
+        context.fill();
+        context.stroke();
+      }
+    } else {
+      context.beginPath();
+      context.moveTo(0, enemy.radius);
+      context.lineTo(enemy.radius * 0.86, -enemy.radius * 0.48);
+      context.lineTo(enemy.radius * 0.28, -enemy.radius * 0.25);
+      context.lineTo(0, -enemy.radius);
+      context.lineTo(-enemy.radius * 0.28, -enemy.radius * 0.25);
+      context.lineTo(-enemy.radius * 0.86, -enemy.radius * 0.48);
+      context.closePath();
+      context.fill();
+      context.stroke();
+    }
 
     context.fillStyle = '#19101f';
     context.fillRect(-enemy.radius, enemy.radius + 6, enemy.radius * 2, 4);
-    context.fillStyle = '#7cf7ff';
+    context.fillStyle = faction.palette.trim;
     context.fillRect(-enemy.radius, enemy.radius + 6, enemy.radius * 2 * healthRatio, 4);
+
+    context.restore();
+  }
+
+  public paintBoss(boss: BossRenderState): void {
+    const context = this.context;
+    const healthRatio = clamp(boss.hull / boss.maxHull, 0, 1);
+    const bossDefinition = getBossById(boss.bossId);
+    const faction = getFactionById(boss.factionId);
+
+    context.save();
+    context.translate(boss.x, boss.y);
+    context.shadowBlur = 20;
+    context.shadowColor = faction.palette.hull;
+    context.fillStyle = faction.palette.hull;
+    context.strokeStyle = faction.palette.trim;
+    context.lineWidth = 3;
+
+    if (bossDefinition.patternId === 'sporeSpiral') {
+      for (let index = 0; index < 7; index += 1) {
+        const angle = (Math.PI * 2 * index) / 7;
+        context.beginPath();
+        context.ellipse(
+          Math.cos(angle) * boss.radius * 0.36,
+          Math.sin(angle) * boss.radius * 0.24,
+          boss.radius * 0.42,
+          boss.radius * 0.28,
+          angle,
+          0,
+          Math.PI * 2
+        );
+        context.fill();
+        context.stroke();
+      }
+    } else if (bossDefinition.patternId === 'missileCurtain') {
+      context.beginPath();
+      context.moveTo(0, -boss.radius);
+      context.lineTo(boss.radius, -boss.radius * 0.15);
+      context.lineTo(boss.radius * 0.72, boss.radius);
+      context.lineTo(0, boss.radius * 0.62);
+      context.lineTo(-boss.radius * 0.72, boss.radius);
+      context.lineTo(-boss.radius, -boss.radius * 0.15);
+      context.closePath();
+      context.fill();
+      context.stroke();
+    } else {
+      context.beginPath();
+      context.rect(-boss.radius, -boss.radius * 0.62, boss.radius * 2, boss.radius * 1.24);
+      context.fill();
+      context.stroke();
+      context.beginPath();
+      context.arc(0, 0, boss.radius * 0.5, 0, Math.PI * 2);
+      context.stroke();
+    }
+
+    context.shadowBlur = 0;
+    context.fillStyle = '#060912';
+    context.fillRect(-boss.radius, boss.radius + 12, boss.radius * 2, 7);
+    context.fillStyle = faction.palette.warning;
+    context.fillRect(-boss.radius, boss.radius + 12, boss.radius * 2 * healthRatio, 7);
+    context.restore();
+  }
+
+  public paintTelegraph(telegraph: TelegraphRenderState): void {
+    const context = this.context;
+    const faction = getFactionById(telegraph.factionId);
+    const alpha = clamp(telegraph.ttl / telegraph.maxTtl, 0.2, 0.85);
+
+    context.save();
+    context.globalAlpha = alpha;
+    context.strokeStyle = faction.palette.warning;
+    context.fillStyle = faction.palette.warning;
+    context.lineWidth = 3;
+    context.font = '700 12px "Cascadia Mono", Consolas, monospace';
+    context.textAlign = 'center';
+
+    if (telegraph.kind === 'lane') {
+      context.globalAlpha = alpha * 0.22;
+      context.fillRect(
+        telegraph.x - telegraph.width / 2,
+        telegraph.y,
+        telegraph.width,
+        telegraph.height
+      );
+      context.globalAlpha = alpha;
+      context.strokeRect(
+        telegraph.x - telegraph.width / 2,
+        telegraph.y,
+        telegraph.width,
+        telegraph.height
+      );
+      context.fillText(telegraph.label, telegraph.x, Math.max(32, telegraph.y - 8));
+    } else {
+      context.beginPath();
+      context.arc(telegraph.x, telegraph.y, telegraph.radius, 0, Math.PI * 2);
+      context.stroke();
+
+      if (telegraph.kind === 'fan') {
+        context.beginPath();
+        context.moveTo(telegraph.x, telegraph.y);
+        context.lineTo(telegraph.x - telegraph.radius * 0.92, telegraph.y + telegraph.radius);
+        context.moveTo(telegraph.x, telegraph.y);
+        context.lineTo(telegraph.x + telegraph.radius * 0.92, telegraph.y + telegraph.radius);
+        context.stroke();
+      }
+
+      context.fillText(telegraph.label, telegraph.x, telegraph.y + 4);
+    }
 
     context.restore();
   }
@@ -199,8 +367,9 @@ export class CanvasRenderer {
       context.fillStyle = '#7cf7ff';
       context.shadowColor = '#7cf7ff';
     } else {
-      context.fillStyle = '#ff6bd6';
-      context.shadowColor = '#ff6bd6';
+      const faction = projectile.factionId ? getFactionById(projectile.factionId) : null;
+      context.fillStyle = faction?.palette.projectile ?? '#ff6bd6';
+      context.shadowColor = faction?.palette.projectile ?? '#ff6bd6';
     }
 
     context.shadowBlur = 10;

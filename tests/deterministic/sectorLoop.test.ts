@@ -105,6 +105,7 @@ describe('sector route, reward, and shop loop generation', () => {
       credits: 2,
       salvage: 1,
       enemiesDestroyed: 1,
+      bossesDefeated: 0,
       shotsFired: 12,
       pickupsCollected: 1,
       damageTaken: 0,

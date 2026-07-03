@@ -62,6 +62,9 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.getByRole('button', { name: 'Enter Sector' }).click();
   await expect(page.getByText('Trade War Corridor')).toBeVisible();
 
+  await page.keyboard.press('1');
+  await expect(page.getByTestId('boss-readout')).toContainText('Auditor Drone XL');
+
   await page.keyboard.press('K');
   await expect(page.getByRole('heading', { name: 'Debug Run Ended' })).toBeVisible();
   await expect(page.getByText('forced test')).toBeVisible();

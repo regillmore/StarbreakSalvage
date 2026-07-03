@@ -1,4 +1,5 @@
-import { getBossById, type BossId } from '../content/bosses';
+import { getBossById, type BossId, type BossPatternId } from '../content/bosses';
+import type { FactionId } from '../content/factions';
 import { SECTORS, type SectorDefinition } from '../content/sectors';
 import { SHIPS, type ShipDefinition, type ShipId, type WeaponId } from '../content/ships';
 import { createRng, parseSeedLabel, type Rng, type WeightedChoice } from '../core/rng';
@@ -32,6 +33,8 @@ export interface SectorRoute {
   readonly sectorName: string;
   readonly bossId: BossId;
   readonly bossName: string;
+  readonly bossFactionId: FactionId;
+  readonly bossPatternId: BossPatternId;
   readonly routeOptions: readonly RouteOption[];
   readonly majorWaves: readonly string[];
   readonly rewardPoolSeed: string;
@@ -148,6 +151,8 @@ function generateSectorRoute(sector: SectorDefinition, index: number, rng: Rng):
     sectorName: sector.name,
     bossId: boss.id,
     bossName: boss.name,
+    bossFactionId: boss.factionId,
+    bossPatternId: boss.patternId,
     routeOptions,
     majorWaves: waveRng.shuffle(sector.majorWavePool).slice(0, 3),
     rewardPoolSeed: rng.fork('reward-pool').seedLabel,
@@ -245,6 +250,8 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
     sectors: run.sectors.map((sector) => ({
       sectorId: sector.sectorId,
       bossId: sector.bossId,
+      bossFactionId: sector.bossFactionId,
+      bossPatternId: sector.bossPatternId,
       routes: sector.routeOptions.map((route) => route.kind),
       majorWaves: sector.majorWaves
     }))

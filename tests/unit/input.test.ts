@@ -21,6 +21,7 @@ describe('input helpers', () => {
     expect(actionsForKey('Enter')).toEqual(['confirm']);
     expect(primaryActionForKey(' ')).toBe('confirm');
     expect(primaryActionForKey('Escape')).toBe('pause');
+    expect(primaryActionForKey('1')).toBe('debugBossOne');
   });
 
   it('normalizes diagonal movement speed', () => {

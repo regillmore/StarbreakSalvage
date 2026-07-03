@@ -4,17 +4,24 @@ import {
   createCombatState,
   forceCombatEnd,
   getCombatEntityCount,
+  spawnBoss,
   updateCombatState,
   type CombatBounds,
   type CombatRunResult,
   type CombatState
 } from '../game/CombatState';
+import type { BossId } from '../content/bosses';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import { describeItemLoadout } from '../game/ItemHooks';
 import type { ItemInstance } from '../game/Rewards';
 import type { InputSystem, InputAction } from '../systems/InputSystem';
 
 const SECTOR_CLEAR_DESTROYED_GOAL = 1;
+const DEBUG_BOSS_SHORTCUTS: Partial<Record<InputAction, BossId>> = {
+  debugBossOne: 'boss_auditor_drone_xl',
+  debugBossTwo: 'boss_unsold_missiles_carrier',
+  debugBossThree: 'boss_bloom_engine'
+};
 
 export class GameplayScene implements Scene {
   public readonly id = 'gameplay';
@@ -24,6 +31,8 @@ export class GameplayScene implements Scene {
   private readonly hullReadout: HTMLParagraphElement;
   private readonly economyReadout: HTMLParagraphElement;
   private readonly combatReadout: HTMLParagraphElement;
+  private readonly bossReadout: HTMLParagraphElement;
+  private readonly warningReadout: HTMLParagraphElement;
   private readonly itemReadout: HTMLParagraphElement;
   private sectorCompleted = false;
 
@@ -57,6 +66,14 @@ export class GameplayScene implements Scene {
     this.combatReadout.className = 'hud-pill';
     this.combatReadout.dataset.testid = 'combat-status';
 
+    this.bossReadout = document.createElement('p');
+    this.bossReadout.className = 'hud-pill';
+    this.bossReadout.dataset.testid = 'boss-readout';
+
+    this.warningReadout = document.createElement('p');
+    this.warningReadout.className = 'hud-pill';
+    this.warningReadout.dataset.testid = 'boss-warning';
+
     this.itemReadout = document.createElement('p');
     this.itemReadout.className = 'hud-pill hud-pill-wide';
     this.itemReadout.dataset.testid = 'item-readout';
@@ -86,6 +103,8 @@ export class GameplayScene implements Scene {
       this.hullReadout,
       this.economyReadout,
       this.combatReadout,
+      this.bossReadout,
+      this.warningReadout,
       this.itemReadout,
       contract,
       weapon,
@@ -130,8 +149,16 @@ export class GameplayScene implements Scene {
       renderer.paintPickup(pickup);
     }
 
+    for (const telegraph of state.telegraphs) {
+      renderer.paintTelegraph(telegraph);
+    }
+
     for (const enemy of state.enemies) {
       renderer.paintEnemy(enemy);
+    }
+
+    if (state.boss) {
+      renderer.paintBoss(state.boss);
     }
 
     for (const projectile of state.projectiles) {
@@ -158,6 +185,13 @@ export class GameplayScene implements Scene {
     if (action === 'debugGameOver' && this.debugEnabled) {
       this.onGameOver(forceCombatEnd(this.getCombatState(), 'debug'));
     }
+
+    const debugBossId = DEBUG_BOSS_SHORTCUTS[action];
+    if (debugBossId && this.debugEnabled) {
+      spawnBoss(this.getCombatState(), debugBossId, this.getCombatBounds(), { clearField: true });
+      this.sectorCompleted = false;
+      this.syncReadouts();
+    }
   }
 
   public getRunResult(reason: 'abandoned' | 'debug' = 'abandoned'): CombatRunResult {
@@ -171,7 +205,8 @@ export class GameplayScene implements Scene {
   private getCombatState(): CombatState {
     this.combatState ??= createCombatState(this.getCombatBounds(), this.getCombatSeed(), {
       weaponId: this.contract.startingWeaponId,
-      items: this.itemLoadout
+      items: this.itemLoadout,
+      bossId: this.run.sectors[this.sectorIndex]?.bossId
     });
     return this.combatState;
   }
@@ -189,12 +224,20 @@ export class GameplayScene implements Scene {
     this.hullReadout.textContent = `Hull ${state.player.hull}/${state.player.maxHull}`;
     this.economyReadout.textContent = `Credits ${this.startingCredits + state.player.credits} | Salvage ${this.startingSalvage + state.player.salvage}`;
     this.combatReadout.textContent = `Destroyed ${state.stats.enemiesDestroyed} | Shots ${state.stats.shotsFired} | Hooks ${state.stats.itemTriggers}`;
+    this.bossReadout.textContent = state.boss
+      ? `${state.boss.name} ${Math.max(0, state.boss.hull)}/${state.boss.maxHull}`
+      : `Boss ${this.getCurrentBossName()}`;
+    this.warningReadout.textContent = state.telegraphs[0]?.label ?? 'Warning clear';
     this.itemReadout.textContent = describeItemLoadout(state.items);
   }
 
   private getCombatSeed(): string {
     const sector = this.run.sectors[this.sectorIndex];
     return `${this.run.seed}:combat:${sector?.sectorId ?? this.sectorIndex + 1}`;
+  }
+
+  private getCurrentBossName(): string {
+    return this.run.sectors[this.sectorIndex]?.bossName ?? 'unassigned';
   }
 
   private getCombatBounds(): CombatBounds {

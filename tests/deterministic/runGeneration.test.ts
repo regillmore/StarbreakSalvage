@@ -43,6 +43,8 @@ describe('generateRunSkeleton', () => {
       expect(sector.majorWaves).toHaveLength(3);
       expect(sector.rewardPoolSeed).toContain(run.seed);
       expect(sector.shopSeed).toContain(run.seed);
+      expect(sector.bossFactionId).toMatch(/^faction_/);
+      expect(['auditFan', 'missileCurtain', 'sporeSpiral']).toContain(sector.bossPatternId);
     }
   });
 

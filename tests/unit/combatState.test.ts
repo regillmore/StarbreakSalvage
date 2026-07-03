@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createCombatState,
   forceCombatEnd,
+  spawnBoss,
   updateCombatState,
   type CombatBounds
 } from '../../src/game/CombatState';
@@ -81,5 +82,73 @@ describe('CombatState', () => {
 
     expect(result.reason).toBe('debug');
     expect(state.ended).toBe(true);
+  });
+
+  it('spawns faction-coded enemies in deterministic schedules', () => {
+    const first = createCombatState(bounds, 'STARBREAK-SMOKE', {
+      bossId: 'boss_bloom_engine'
+    });
+    const second = createCombatState(bounds, 'STARBREAK-SMOKE', {
+      bossId: 'boss_bloom_engine'
+    });
+
+    expect(first.spawnSchedule.map((spawn) => spawn.factionId)).toEqual(
+      second.spawnSchedule.map((spawn) => spawn.factionId)
+    );
+    expect(new Set(first.spawnSchedule.map((spawn) => spawn.factionId)).size).toBeGreaterThan(1);
+  });
+
+  it.each([
+    ['boss_auditor_drone_xl', 'fan'],
+    ['boss_unsold_missiles_carrier', 'lane'],
+    ['boss_bloom_engine', 'ring']
+  ] as const)('telegraphs and fires %s with a %s warning', (bossId, telegraphKind) => {
+    const state = createCombatState(bounds, `BOSS-${bossId}`, {
+      bossId,
+      bossSpawnAtSeconds: 0,
+      skipEnemyWaves: true
+    });
+
+    for (let frame = 0; frame < 35; frame += 1) {
+      updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
+    }
+
+    expect(state.boss?.bossId).toBe(bossId);
+    expect(state.telegraphs.some((telegraph) => telegraph.kind === telegraphKind)).toBe(true);
+
+    for (let frame = 0; frame < 55; frame += 1) {
+      updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
+    }
+
+    expect(state.projectiles.some((projectile) => projectile.owner === 'enemy')).toBe(true);
+  });
+
+  it('lets direct boss spawns be defeated by player projectiles', () => {
+    const state = createCombatState(bounds, 'DEBUG-BOSS', {
+      skipEnemyWaves: true
+    });
+    const boss = spawnBoss(state, 'boss_auditor_drone_xl', bounds);
+    boss.hull = 1;
+
+    state.projectiles.push({
+      id: 9001,
+      owner: 'player',
+      x: boss.x,
+      y: boss.y,
+      vx: 0,
+      vy: 0,
+      radius: 8,
+      damage: 1,
+      ttl: 1,
+      tags: ['laser'],
+      procDepth: 0
+    });
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
+
+    expect(state.boss).toBeNull();
+    expect(state.stats.bossesDefeated).toBe(1);
+    expect(state.stats.enemiesDestroyed).toBe(1);
+    expect(state.pickups.length).toBeGreaterThan(0);
   });
 });

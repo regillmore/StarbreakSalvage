@@ -1,13 +1,51 @@
 import { describe, expect, it } from 'vitest';
 
+import { BOSSES, type BossDefinition } from '../../src/content/bosses';
 import { validateContent } from '../../src/content/contentValidation';
+import { FACTIONS, type FactionDefinition } from '../../src/content/factions';
 import { ITEMS, type ItemDefinition, type RewardPoolDefinition } from '../../src/content/items';
+import { SECTORS, type SectorDefinition } from '../../src/content/sectors';
 
 const baseItem = ITEMS[0] as ItemDefinition;
+const baseFaction = FACTIONS[0] as FactionDefinition;
+const baseBoss = BOSSES[0] as BossDefinition;
+const baseSector = SECTORS[0] as SectorDefinition;
 
 describe('validateContent', () => {
   it('accepts the shipped item and reward content', () => {
     expect(validateContent()).toEqual([]);
+  });
+
+  it('rejects duplicate faction ids and missing boss faction references', () => {
+    const errors = validateContent({
+      factions: [baseFaction, { ...baseFaction, name: 'Duplicate Court' }],
+      bosses: [
+        {
+          ...baseBoss,
+          factionId: 'faction_missing'
+        } as unknown as BossDefinition
+      ]
+    });
+
+    expect(errors).toContain(`Duplicate faction id: ${baseFaction.id}`);
+    expect(errors).toContain(
+      'Boss boss_auditor_drone_xl references missing faction: faction_missing'
+    );
+  });
+
+  it('rejects missing sector boss references', () => {
+    const errors = validateContent({
+      sectors: [
+        {
+          ...baseSector,
+          bossCandidates: ['boss_missing']
+        }
+      ] as unknown as readonly SectorDefinition[]
+    });
+
+    expect(errors).toContain(
+      'Sector sector_outer_debris_field references missing boss: boss_missing'
+    );
   });
 
   it('rejects duplicate item ids', () => {

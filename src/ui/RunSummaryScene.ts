@@ -38,6 +38,7 @@ export class RunSummaryScene implements Scene {
       ['Outcome', getOutcomeLabel(this.result)],
       ['Survived', `${Math.floor(this.result?.survivedSeconds ?? 0)}s`],
       ['Destroyed', `${this.result?.enemiesDestroyed ?? 0}`],
+      ['Bosses', `${this.result?.bossesDefeated ?? 0}`],
       ['Credits', `${this.result?.credits ?? 0}`],
       ['Salvage', `${this.result?.salvage ?? 0} kg`],
       ['Damage Taken', `${this.result?.damageTaken ?? 0}`],

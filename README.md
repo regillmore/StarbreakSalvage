@@ -2,7 +2,7 @@
 
 **Starbreak Salvage** is a browser-first 2D vertical roguelike shooter about disposable pilots, unstable ship contracts, and profitable wreckage. The project is intentionally static: no backend, no accounts, and no runtime network dependency after the page loads.
 
-This repository is in the early playable scaffold stage. It currently ships a Vite + TypeScript app with a canvas renderer, fixed-step loop, input manager, scene manager, deterministic contract and sector generation, starter item hooks, a combat MVP, route/reward/shop screens, unit tests, Playwright smoke coverage, CI, and GitHub Pages deployment wiring.
+This repository is in the early playable scaffold stage. It currently ships a Vite + TypeScript app with a canvas renderer, fixed-step loop, input manager, scene manager, deterministic contract and sector generation, starter item hooks, a combat MVP, route/reward/shop screens, boss/faction alpha content, unit tests, Playwright smoke coverage, CI, and GitHub Pages deployment wiring.
 
 ## Local Development
 
@@ -38,13 +38,15 @@ Planned baseline controls:
 - Confirm: Enter or Space
 - Back: Escape or Backspace
 
-The current shell supports the title flow, deterministic contract launch, keyboard movement, primary fire, simple enemy waves, pickups, pause/resume, hull damage, starter item hooks, route choice, rewards, basic shops with rerolls, sector transition, and a run summary placeholder. Bosses and save progression arrive in later slices.
+The current shell supports the title flow, deterministic contract launch, keyboard movement, primary fire, faction-colored enemy waves, pickups, pause/resume, hull damage, starter item hooks, route choice, rewards, basic shops with rerolls, sector transition, debug boss spawns, and a run summary placeholder. Save progression arrives in a later slice.
 
 Add `?debug=1` to the local or deployed URL to show the debug overlay with FPS, scene, seed, and entity count.
 
 Add `?seed=LASER-TAX-404` or another seed label to preview deterministic contract and route generation. Blank or missing seeds default to `STARBREAK-SMOKE`.
 
-With `?debug=1`, press `K` during gameplay to force the MVP summary screen.
+With `?debug=1`, press `K` during gameplay to force the MVP summary screen. Press `1`, `2`, or `3` to spawn Auditor Drone XL, Carrier of Unsold Missiles, or The Bloom Engine.
+
+Projectile budget notes live in `docs/STARBREAK_SALVAGE_PERFORMANCE_NOTES.md`.
 
 ## Project Vision
 
