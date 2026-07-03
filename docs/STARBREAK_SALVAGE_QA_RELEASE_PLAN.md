@@ -45,6 +45,7 @@ Phase 2 introduces deeper run flow and more content. Add tests closest to the ri
 
 - sector objective completion and wave director sequencing;
 - known-seed snapshots for objectives, waves, boss timing, route outcomes, rewards, and shops;
+- route event effects for shop discounts, repair hull patches, vault curses/relics, glitch variance, elite rewards, and faction ambush combat pressure;
 - special/bomb/graze charge math and input remapping;
 - ship stat validation and weapon-family projectile behavior;
 - boss phase thresholds, high-contrast boss telegraphs, final victory routing, and victory summary saves;

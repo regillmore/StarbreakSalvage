@@ -5,6 +5,7 @@ import type { RunSkeleton, StartingContract } from '../game/Generation';
 import {
   getCurrentSector,
   getOwnedItemIds,
+  getShopModifiersForSector,
   getShopRerollCount,
   type RunSessionState
 } from '../game/RunSession';
@@ -27,12 +28,18 @@ export class ShopScene implements Scene {
   public enter(): void {
     const sector = getCurrentSector(this.run, this.session);
     const rerollCount = getShopRerollCount(this.session, sector.index);
+    const shopModifiers = getShopModifiersForSector(this.session, sector.index);
+    const priceDiscount = shopModifiers.reduce((total, modifier) => total + modifier.discount, 0);
+    const stockBonus = shopModifiers.reduce((total, modifier) => total + modifier.stockBonus, 0);
+    const shopBiasTags = shopModifiers.flatMap((modifier) => modifier.biasTags);
     const inventory = generateShopInventory({
       seed: sector.shopSeed,
       sectorIndex: sector.index,
       rerollCount,
-      biasTags: this.contract.itemBias,
-      excludeItemIds: getOwnedItemIds(this.session)
+      biasTags: [...this.contract.itemBias, ...shopBiasTags],
+      excludeItemIds: getOwnedItemIds(this.session),
+      priceDiscount,
+      count: 4 + stockBonus
     });
     const shell = document.createElement('main');
     shell.className = 'scene-panel scene-panel-wide shop-panel';
@@ -40,7 +47,7 @@ export class ShopScene implements Scene {
 
     const eyebrow = document.createElement('p');
     eyebrow.className = 'eyebrow';
-    eyebrow.textContent = `${sector.sectorName} Market | Credits ${this.session.credits}`;
+    eyebrow.textContent = `${sector.sectorName} Market | Credits ${this.session.credits}${priceDiscount > 0 ? ` | Permit -${priceDiscount} prices` : ''}`;
 
     const title = document.createElement('h1');
     title.id = 'shop-title';

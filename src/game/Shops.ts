@@ -25,6 +25,7 @@ export function generateShopInventory(options: {
   readonly rerollCount: number;
   readonly biasTags?: readonly string[];
   readonly excludeItemIds?: readonly ItemId[];
+  readonly priceDiscount?: number;
   readonly count?: number;
 }): ShopInventoryItem[] {
   const shopSeed = `${options.seed}:sector-${options.sectorIndex}:reroll-${options.rerollCount}`;
@@ -40,7 +41,11 @@ export function generateShopInventory(options: {
   return rewardChoices.map((choice, slot) => ({
     slot,
     item: choice.item,
-    price: getShopPrice(choice.item, options.sectorIndex, priceRng.int(-1, 2))
+    price: Math.max(
+      2,
+      getShopPrice(choice.item, options.sectorIndex, priceRng.int(-1, 2)) -
+        (options.priceDiscount ?? 0)
+    )
   }));
 }
 

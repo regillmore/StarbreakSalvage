@@ -11,10 +11,12 @@ import {
   type CombatState
 } from '../game/CombatState';
 import type { BossId } from '../content/bosses';
+import type { ShipStats } from '../content/ships';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import { describeItemLoadout } from '../game/ItemHooks';
 import type { ItemInstance } from '../game/Rewards';
 import { getSectorCompletionReason } from '../game/RunOutcome';
+import type { RouteCombatModifier } from '../game/RouteEvents';
 import {
   createWaveDirectorPlan,
   getObjectiveProgress,
@@ -57,6 +59,8 @@ export class GameplayScene implements Scene {
     private readonly input: InputSystem,
     private readonly run: RunSkeleton,
     private readonly contract: StartingContract,
+    private readonly shipStats: ShipStats,
+    private readonly combatModifiers: readonly RouteCombatModifier[],
     private readonly sectorIndex: number,
     private readonly itemLoadout: readonly ItemInstance[],
     private readonly startingCredits: number,
@@ -273,11 +277,14 @@ export class GameplayScene implements Scene {
 
     this.combatState ??= createCombatState(this.getCombatBounds(), this.getCombatSeed(), {
       weaponId: this.contract.startingWeaponId,
-      shipStats: this.contract.shipStats,
+      shipStats: this.shipStats,
       items: this.itemLoadout,
       bossId: this.run.sectors[this.sectorIndex]?.bossId,
       bossSpawnAtSeconds: wavePlan.bossSpawnAtSeconds,
-      spawnSchedule: wavePlan.spawnSchedule
+      spawnSchedule: wavePlan.spawnSchedule,
+      enemyHullBonus: this.getEnemyHullBonus(),
+      enemyFireDelayMultiplier: this.getEnemyFireDelayMultiplier(),
+      bossHullBonus: this.getBossHullBonus()
     });
     return this.combatState;
   }
@@ -359,6 +366,21 @@ export class GameplayScene implements Scene {
         : `Heat ${heatPercent}%`;
 
     return `${state.weapon.name} | ${state.weapon.pattern} | ${heatStatus}`;
+  }
+
+  private getEnemyHullBonus(): number {
+    return this.combatModifiers.reduce((total, modifier) => total + modifier.enemyHullBonus, 0);
+  }
+
+  private getEnemyFireDelayMultiplier(): number {
+    return this.combatModifiers.reduce(
+      (multiplier, modifier) => multiplier * modifier.enemyFireDelayMultiplier,
+      1
+    );
+  }
+
+  private getBossHullBonus(): number {
+    return this.combatModifiers.reduce((total, modifier) => total + modifier.bossHullBonus, 0);
   }
 
   private emitFeedback(cues: readonly CombatFeedbackCue[]): void {

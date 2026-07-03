@@ -379,6 +379,11 @@ Acceptance:
 - Route events are deterministic and logged in summary.
 - Tests cover known-seed route outcomes.
 
+Status:
+
+- First pass implemented with deterministic economy, reward, shop, hull, curse/relic, and next-sector combat modifiers.
+- Follow-up balance should tune costs, risks, reward weights, and event copy after playtesting.
+
 ## Epic M - Meta progression and replay
 
 ### M1 - Unlock gating

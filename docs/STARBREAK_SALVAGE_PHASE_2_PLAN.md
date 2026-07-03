@@ -40,7 +40,7 @@ Turn the Phase 1 alpha into a cohesive vertical slice that can support repeated 
 - Bosses: 5 defined, each with phase behavior across 3 active attack patterns.
 - Sectors: 5 defined.
 - Unlocks: 10 defined.
-- Major gaps: limited content volume, no unlock gating, no in-menu seed entry, no real tutorial/onboarding, and shallow route/event outcomes. Sector objectives/wave direction, first-pass special/bomb/graze verbs, contract-specific ship/weapon identity, boss phases, and final victory summary now exist, but still need balance and content depth.
+- Major gaps: limited content volume, no unlock gating, no in-menu seed entry, no real tutorial/onboarding, and route/event balance depth. Sector objectives/wave direction, first-pass special/bomb/graze verbs, contract-specific ship/weapon identity, boss phases, deterministic route outcomes, and final victory summary now exist, but still need balance and content depth.
 
 ## Phase 2 Milestones
 
@@ -85,6 +85,8 @@ Exit criteria:
 - At least 30 items and 4 factions ship.
 - At least 6 build archetypes are supported.
 - Content validation catches duplicate IDs, invalid references, invalid pools, and missing implementation hooks.
+
+Status: first-pass route outcomes are implemented for all existing route kinds; content volume and broader archetype support remain follow-ups.
 
 ### P2.5 - Meta and UX Depth
 

@@ -4,6 +4,7 @@ import { getUnlockById } from '../content/unlocks';
 import type { SaveData, SaveUpdateResult } from '../core/saveData';
 import type { CombatRunResult } from '../game/CombatState';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
+import type { RouteHistoryEntry } from '../game/RunSession';
 import type { InputAction } from '../systems/InputSystem';
 
 export class RunSummaryScene implements Scene {
@@ -14,6 +15,7 @@ export class RunSummaryScene implements Scene {
     private readonly run: RunSkeleton,
     private readonly contract: StartingContract,
     private readonly result: CombatRunResult | null,
+    private readonly routeHistory: readonly RouteHistoryEntry[],
     private readonly saveData: SaveData,
     private readonly saveUpdate: SaveUpdateResult | null,
     private readonly onBackToMenu: () => void
@@ -47,6 +49,7 @@ export class RunSummaryScene implements Scene {
       ['Salvage', `${this.result?.salvage ?? 0} kg`],
       ['Damage Taken', `${this.result?.damageTaken ?? 0}`],
       ['Item Hooks', `${this.result?.itemTriggers ?? 0}`],
+      ['Routes', formatRouteHistory(this.routeHistory)],
       ['Banked Salvage', `${this.saveData.salvageBank} kg`],
       ['Items', this.result?.itemNames.join(', ') ?? 'none']
     ];
@@ -224,4 +227,14 @@ export function getOutcomeLabel(result: CombatRunResult | null): string {
   }
 
   return 'abandoned';
+}
+
+function formatRouteHistory(routeHistory: readonly RouteHistoryEntry[]): string {
+  if (routeHistory.length === 0) {
+    return 'none';
+  }
+
+  return routeHistory
+    .map((entry) => `S${entry.sectorIndex} ${entry.routeLabel}: ${entry.outcomeTitle ?? 'routed'}`)
+    .join(' | ');
 }

@@ -3,7 +3,7 @@ import type { Scene } from '../app/Scene';
 import type { ItemId } from '../content/items';
 import type { RouteOption, RunSkeleton, StartingContract } from '../game/Generation';
 import { generateSectorRewardChoices } from '../game/SectorRewards';
-import { getCurrentSector, type RunSessionState } from '../game/RunSession';
+import { getCurrentSector, getRouteCreditReward, type RunSessionState } from '../game/RunSession';
 import type { InputAction } from '../systems/InputSystem';
 
 export class RewardScene implements Scene {
@@ -21,6 +21,7 @@ export class RewardScene implements Scene {
 
   public enter(): void {
     const sector = getCurrentSector(this.run, this.session);
+    const creditReward = getRouteCreditReward(this.session, sector.index);
     const rewardChoices = generateSectorRewardChoices({
       run: this.run,
       session: this.session,
@@ -68,7 +69,7 @@ export class RewardScene implements Scene {
     const creditsButton = document.createElement('button');
     creditsButton.className = 'choice-card reward-card';
     creditsButton.type = 'button';
-    creditsButton.textContent = 'Take 6 Credits';
+    creditsButton.textContent = `Take ${creditReward} Credits`;
     creditsButton.addEventListener('click', this.onTakeCredits);
     rewardGrid.append(creditsButton);
 

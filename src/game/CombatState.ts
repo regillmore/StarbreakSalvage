@@ -175,6 +175,9 @@ export interface CombatState {
   readonly seed: string;
   readonly bossId: BossId;
   readonly bossSpawnAtSeconds: number | null;
+  readonly enemyHullBonus: number;
+  readonly enemyFireDelayMultiplier: number;
+  readonly bossHullBonus: number;
   timeSeconds: number;
   nextId: number;
   nextSpawnIndex: number;
@@ -256,6 +259,9 @@ export interface CombatStateOptions {
   readonly bossSpawnAtSeconds?: number | null;
   readonly spawnSchedule?: readonly EnemySpawn[];
   readonly skipEnemyWaves?: boolean;
+  readonly enemyHullBonus?: number;
+  readonly enemyFireDelayMultiplier?: number;
+  readonly bossHullBonus?: number;
 }
 
 export function createCombatState(
@@ -271,6 +277,9 @@ export function createCombatState(
     seed,
     bossId: bossDefinition.id,
     bossSpawnAtSeconds: options.bossSpawnAtSeconds ?? null,
+    enemyHullBonus: Math.max(0, Math.floor(options.enemyHullBonus ?? 0)),
+    enemyFireDelayMultiplier: clamp(options.enemyFireDelayMultiplier ?? 1, 0.5, 1.5),
+    bossHullBonus: Math.max(0, Math.floor(options.bossHullBonus ?? 0)),
     timeSeconds: 0,
     nextId: 1,
     nextSpawnIndex: 0,
@@ -392,7 +401,8 @@ export function spawnBoss(
     state.nextSpawnIndex = state.spawnSchedule.length;
   }
 
-  const initialPhase = getBossPhaseForHull(bossDefinition, bossDefinition.maxHull).phase;
+  const maxHull = bossDefinition.maxHull + state.bossHullBonus;
+  const initialPhase = getBossPhaseForHull(bossDefinition, maxHull, maxHull).phase;
   const boss: BossState = {
     id: getNextEntityId(state),
     bossId: bossDefinition.id,
@@ -402,8 +412,8 @@ export function spawnBoss(
     x: bounds.width / 2,
     y: -bossDefinition.radius,
     radius: bossDefinition.radius,
-    hull: bossDefinition.maxHull,
-    maxHull: bossDefinition.maxHull,
+    hull: maxHull,
+    maxHull,
     targetY: Math.max(92, bounds.height * 0.18),
     telegraphDuration: bossDefinition.telegraphSeconds,
     attackCadenceSeconds: bossDefinition.attackCadenceSeconds,
@@ -743,17 +753,19 @@ function spawnDueEnemies(state: CombatState, bounds: CombatBounds): void {
       return;
     }
 
+    const maxHull = spawn.hull + state.enemyHullBonus;
+
     state.enemies.push({
       id: getNextEntityId(state),
       factionId: spawn.factionId,
       x: clamp(spawn.xRatio, 0.1, 0.9) * bounds.width,
       y: -24,
       radius: 17,
-      hull: spawn.hull,
-      maxHull: spawn.hull,
+      hull: maxHull,
+      maxHull,
       drift: (spawn.xRatio - 0.5) * 32,
       targetY: spawn.targetY,
-      fireCooldown: spawn.fireDelay
+      fireCooldown: Math.max(0.35, spawn.fireDelay * state.enemyFireDelayMultiplier)
     });
     state.nextSpawnIndex += 1;
   }
@@ -849,7 +861,7 @@ function updateBoss(state: CombatState, dt: number, bounds: CombatBounds): void 
 
 function refreshBossPhase(state: CombatState, boss: BossState): void {
   const bossDefinition = getBossById(boss.bossId);
-  const { phase, phaseIndex } = getBossPhaseForHull(bossDefinition, boss.hull);
+  const { phase, phaseIndex } = getBossPhaseForHull(bossDefinition, boss.hull, boss.maxHull);
 
   if (phaseIndex === boss.phaseIndex) {
     return;
@@ -875,9 +887,10 @@ function refreshBossPhase(state: CombatState, boss: BossState): void {
 
 function getBossPhaseForHull(
   bossDefinition: BossDefinition,
-  hull: number
+  hull: number,
+  maxHull: number
 ): { readonly phase: BossDefinition['phases'][number]; readonly phaseIndex: number } {
-  const hullRatio = clamp(hull / bossDefinition.maxHull, 0, 1);
+  const hullRatio = clamp(hull / maxHull, 0, 1);
   let phaseIndex = 0;
   let phase = bossDefinition.phases[0];
 

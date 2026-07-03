@@ -31,15 +31,19 @@ import {
   addCredits,
   addItemToSession,
   advanceSector,
+  applyRouteOutcome,
   createRunSession,
+  getCombatModifiersForSector,
   getCurrentSector,
+  getEffectiveShipStats,
+  getRouteCreditReward,
   incrementShopRerollCount,
-  recordRouteChoice,
   recordSectorCombatResult,
   spendCredits,
   type RunSessionState
 } from '../game/RunSession';
 import { getSaveRecordSectorCount } from '../game/RunOutcome';
+import { generateRouteOutcome, type AppliedRouteOutcome } from '../game/RouteEvents';
 import { SHOP_REROLL_COST } from '../game/Shops';
 import { AudioSystem } from '../systems/AudioSystem';
 import { getFeedbackShakeIntensity, type CombatFeedbackCue } from '../systems/CombatFeedback';
@@ -49,6 +53,7 @@ import { GameplayScene } from '../ui/GameplayScene';
 import { MainMenuScene } from '../ui/MainMenuScene';
 import { PauseScene } from '../ui/PauseScene';
 import { RewardScene } from '../ui/RewardScene';
+import { RouteEventScene } from '../ui/RouteEventScene';
 import { RouteScene } from '../ui/RouteScene';
 import { RunSummaryScene } from '../ui/RunSummaryScene';
 import { SettingsScene } from '../ui/SettingsScene';
@@ -224,6 +229,8 @@ export class GameApp {
         this.input,
         this.currentRun,
         this.selectedContract,
+        getEffectiveShipStats(this.selectedContract, this.runSession),
+        getCombatModifiersForSector(this.runSession, this.runSession.currentSectorIndex),
         this.runSession.currentSectorIndex,
         this.runSession.itemInstances,
         this.runSession.credits,
@@ -262,14 +269,29 @@ export class GameApp {
 
   private handleRouteChoice(route: RouteOption): void {
     const sector = getCurrentSector(this.currentRun, this.runSession);
-    recordRouteChoice(this.runSession, sector, route);
+    const outcome = generateRouteOutcome({
+      run: this.currentRun,
+      sector,
+      route,
+      availableCredits: this.runSession.credits
+    });
+
+    applyRouteOutcome(this.runSession, sector, route, outcome);
 
     if (route.kind === 'shop') {
       this.showShop(route);
       return;
     }
 
-    this.showReward(route);
+    this.showRouteEvent(route, outcome);
+  }
+
+  private showRouteEvent(route: RouteOption, outcome: AppliedRouteOutcome): void {
+    this.sceneManager.switchTo(
+      new RouteEventScene(this.uiRoot, outcome, () => {
+        this.showReward(route);
+      })
+    );
   }
 
   private showShop(route: RouteOption): void {
@@ -301,7 +323,8 @@ export class GameApp {
           this.advanceAfterReward();
         },
         () => {
-          addCredits(this.runSession, 6);
+          const sector = getCurrentSector(this.currentRun, this.runSession);
+          addCredits(this.runSession, getRouteCreditReward(this.runSession, sector.index));
           this.advanceAfterReward();
         }
       )
@@ -371,6 +394,7 @@ export class GameApp {
         this.currentRun,
         this.selectedContract,
         this.lastRunResult,
+        this.runSession.routeHistory,
         this.saveData,
         this.lastSaveUpdate,
         () => {

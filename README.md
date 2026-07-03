@@ -38,11 +38,13 @@ Baseline controls:
 - Confirm: Enter or Space
 - Back: Escape or Backspace
 
-The current shell supports the title flow, deterministic contract launch, contract-specific ship stats, weapon patterns with heat/reload behavior, keyboard movement, primary fire, special burst fire, screen-clearing bombs, near-miss graze charge, faction-colored directed waves, objective progress, pickups, pause/resume, hull damage, starter item hooks, route choice, rewards, basic shops with rerolls, sector transition, boss gates, phase-based boss attacks, final-sector victory summary, debug boss spawns, run summary stats, and a persistent unlock archive.
+The current shell supports the title flow, deterministic contract launch, contract-specific ship stats, weapon patterns with heat/reload behavior, keyboard movement, primary fire, special burst fire, screen-clearing bombs, near-miss graze charge, faction-colored directed waves, objective progress, pickups, pause/resume, hull damage, starter item hooks, route choice, route events, rewards, basic shops with rerolls, sector transition, boss gates, phase-based boss attacks, final-sector victory summary, debug boss spawns, run summary stats, and a persistent unlock archive.
 
 Special starts charged and spends charge for a short burst/faster-fire window. Bombs cancel enemy bullets and telegraphs while softening enemies and bosses without instantly ending boss fights. Grazing enemy shots at close range grants deterministic special charge and increments the HUD graze counter.
 
 Contract stats now affect hull, speed, hit radius, pickup pull, special charge rate, bomb capacity, and starting credits/salvage. Weapon families define projectile pattern, damage, cooldown, heat buildup, vent rate, and overheat reload behavior.
+
+Route choices now apply deterministic outcomes. Shops can gain discounts and extra stock, elite and faction ambush routes can increase reward value while pressuring the next sector, vaults trade curse for relic-biased rewards, repair routes add future max hull, and glitch routes distort rewards and next-sector danger.
 
 The Unlock Archive stores versioned local save data in `localStorage`, including salvage bank, achievements, unlocks, last-run summary, export/import, and reset.
 

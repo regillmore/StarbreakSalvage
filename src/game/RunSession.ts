@@ -1,4 +1,5 @@
 import type { ItemId } from '../content/items';
+import type { ShipStats } from '../content/ships';
 import type { CombatRunResult } from './CombatState';
 import type {
   RouteKind,
@@ -8,19 +9,31 @@ import type {
   StartingContract
 } from './Generation';
 import { generateStartingItemLoadout, type ItemInstance } from './Rewards';
+import type {
+  AppliedRouteOutcome,
+  RouteCombatModifier,
+  RouteRewardModifier,
+  RouteShopModifier
+} from './RouteEvents';
 
 export interface RouteHistoryEntry {
   readonly sectorIndex: number;
   readonly routeKind: RouteKind;
   readonly routeLabel: string;
+  readonly outcomeTitle?: string;
+  readonly outcomeSummary?: string;
 }
 
 export interface RunSessionState {
   currentSectorIndex: number;
   credits: number;
   salvage: number;
+  hullPatch: number;
+  curse: number;
+  relicsRecovered: number;
   itemInstances: ItemInstance[];
   routeHistory: RouteHistoryEntry[];
+  routeOutcomes: AppliedRouteOutcome[];
   shopRerollsBySector: Record<number, number>;
   lastCombatResult: CombatRunResult | null;
 }
@@ -30,8 +43,12 @@ export function createRunSession(run: RunSkeleton, contract: StartingContract): 
     currentSectorIndex: 0,
     credits: contract.startingCredits,
     salvage: contract.startingSalvage,
+    hullPatch: 0,
+    curse: 0,
+    relicsRecovered: 0,
     itemInstances: generateStartingItemLoadout(run.seed, contract),
     routeHistory: [],
+    routeOutcomes: [],
     shopRerollsBySector: {},
     lastCombatResult: null
   };
@@ -60,13 +77,80 @@ export function recordSectorCombatResult(session: RunSessionState, result: Comba
 export function recordRouteChoice(
   session: RunSessionState,
   sector: SectorRoute,
-  route: RouteOption
+  route: RouteOption,
+  outcome?: AppliedRouteOutcome
 ): void {
   session.routeHistory.push({
     sectorIndex: sector.index,
     routeKind: route.kind,
-    routeLabel: route.label
+    routeLabel: route.label,
+    outcomeTitle: outcome?.title,
+    outcomeSummary: outcome?.summary
   });
+}
+
+export function applyRouteOutcome(
+  session: RunSessionState,
+  sector: SectorRoute,
+  route: RouteOption,
+  outcome: AppliedRouteOutcome
+): void {
+  recordRouteChoice(session, sector, route, outcome);
+
+  session.credits = Math.max(0, session.credits + outcome.effects.creditsDelta);
+  session.salvage = Math.max(0, session.salvage + outcome.effects.salvageDelta);
+  session.hullPatch = Math.max(0, session.hullPatch + outcome.effects.hullPatchDelta);
+  session.curse = Math.max(0, session.curse + outcome.effects.curseDelta);
+  session.relicsRecovered = Math.max(0, session.relicsRecovered + outcome.effects.relicDelta);
+  session.routeOutcomes = [...session.routeOutcomes, outcome];
+}
+
+export function getEffectiveShipStats(
+  contract: StartingContract,
+  session: RunSessionState
+): ShipStats {
+  return {
+    ...contract.shipStats,
+    maxHull: contract.shipStats.maxHull + session.hullPatch
+  };
+}
+
+export function getCombatModifiersForSector(
+  session: RunSessionState,
+  sectorIndex: number
+): RouteCombatModifier[] {
+  return session.routeOutcomes.flatMap((outcome) => {
+    const modifier = outcome.effects.combat;
+    return modifier && modifier.targetSectorIndex === sectorIndex ? [modifier] : [];
+  });
+}
+
+export function getRewardModifiersForSector(
+  session: RunSessionState,
+  sectorIndex: number
+): RouteRewardModifier[] {
+  return session.routeOutcomes
+    .filter((outcome) => outcome.sectorIndex === sectorIndex)
+    .map((outcome) => outcome.effects.reward);
+}
+
+export function getShopModifiersForSector(
+  session: RunSessionState,
+  sectorIndex: number
+): RouteShopModifier[] {
+  return session.routeOutcomes.flatMap((outcome) => {
+    const modifier = outcome.effects.shop;
+    return modifier && outcome.sectorIndex === sectorIndex ? [modifier] : [];
+  });
+}
+
+export function getRouteCreditReward(session: RunSessionState, sectorIndex: number): number {
+  const bonus = getRewardModifiersForSector(session, sectorIndex).reduce(
+    (total, modifier) => total + modifier.creditBonus,
+    0
+  );
+
+  return 6 + bonus;
 }
 
 export function addItemToSession(session: RunSessionState, itemId: ItemId): ItemInstance {

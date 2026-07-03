@@ -30,7 +30,7 @@ export class SectorTransitionScene implements Scene {
 
     const routeLine = document.createElement('p');
     routeLine.className = 'transition-copy';
-    routeLine.textContent = `Credits ${this.session.credits} | Salvage ${this.session.salvage}`;
+    routeLine.textContent = `Credits ${this.session.credits} | Salvage ${this.session.salvage} | Hull Patch +${this.session.hullPatch} | Curse ${this.session.curse}`;
 
     const objectiveLine = document.createElement('p');
     objectiveLine.className = 'transition-copy';
