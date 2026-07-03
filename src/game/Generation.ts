@@ -1,0 +1,239 @@
+import { getBossById, type BossId } from '../content/bosses';
+import { SECTORS, type SectorDefinition } from '../content/sectors';
+import { SHIPS, type ShipDefinition, type ShipId } from '../content/ships';
+import { createRng, parseSeedLabel, type Rng, type WeightedChoice } from '../core/rng';
+
+export type RouteKind = 'shop' | 'elite' | 'vault' | 'repair' | 'glitch' | 'factionAmbush';
+
+export interface StartingContract {
+  readonly id: string;
+  readonly shipId: ShipId;
+  readonly shipName: string;
+  readonly sponsor: string;
+  readonly startingWeaponId: string;
+  readonly startingWeaponName: string;
+  readonly perk: string;
+  readonly drawback: string;
+  readonly summary: string;
+  readonly itemBias: readonly string[];
+  readonly rewardMultiplier: number;
+}
+
+export interface RouteOption {
+  readonly kind: RouteKind;
+  readonly label: string;
+  readonly risk: number;
+  readonly rewardHint: string;
+}
+
+export interface SectorRoute {
+  readonly index: number;
+  readonly sectorId: string;
+  readonly sectorName: string;
+  readonly bossId: BossId;
+  readonly bossName: string;
+  readonly routeOptions: readonly RouteOption[];
+  readonly majorWaves: readonly string[];
+  readonly rewardPoolSeed: string;
+  readonly shopSeed: string;
+}
+
+export interface RunSkeleton {
+  readonly seed: string;
+  readonly contracts: readonly StartingContract[];
+  readonly sectors: readonly SectorRoute[];
+}
+
+const ROUTE_OPTIONS: Readonly<Record<RouteKind, Omit<RouteOption, 'risk'>>> = {
+  shop: {
+    kind: 'shop',
+    label: 'Shop',
+    rewardHint: 'spend credits for controlled upgrades'
+  },
+  elite: {
+    kind: 'elite',
+    label: 'Elite',
+    rewardHint: 'harder fight with rarer salvage'
+  },
+  vault: {
+    kind: 'vault',
+    label: 'Vault',
+    rewardHint: 'cursed relic or secret unlock chance'
+  },
+  repair: {
+    kind: 'repair',
+    label: 'Repair',
+    rewardHint: 'patch hull and bias safer rewards'
+  },
+  glitch: {
+    kind: 'glitch',
+    label: 'Glitch',
+    rewardHint: 'high-variance seed disturbance'
+  },
+  factionAmbush: {
+    kind: 'factionAmbush',
+    label: 'Faction Ambush',
+    rewardHint: 'harder faction fight with focused drops'
+  }
+};
+
+const SEED_TAG_HINTS: ReadonlyArray<readonly [string, readonly string[]]> = [
+  ['LASER', ['credit', 'speed']],
+  ['TAX', ['credit', 'overkill']],
+  ['ORBITAL', ['drone', 'relic']],
+  ['JUNK', ['scrap', 'drone']],
+  ['PROPHET', ['relic', 'curse']],
+  ['VOID', ['phase', 'curse']],
+  ['CORSAIR', ['credit', 'missile']],
+  ['SMOKE', ['credit', 'drone', 'missile']]
+];
+
+export function generateRunSkeleton(seedInput: string | null | undefined): RunSkeleton {
+  const seed = parseSeedLabel(seedInput);
+  const rootRng = createRng(seed);
+
+  return {
+    seed,
+    contracts: generateStartingContracts(seed, rootRng.fork('contracts')),
+    sectors: SECTORS.map((sector, index) => generateSectorRoute(sector, index + 1, rootRng.fork(`sector-${index + 1}`)))
+  };
+}
+
+function generateStartingContracts(seed: string, rng: Rng): StartingContract[] {
+  const selectedShips: ShipDefinition[] = [];
+  const availableShips = [...SHIPS];
+
+  for (let slot = 0; slot < 3; slot += 1) {
+    const ship = rng.weightedChoice(
+      availableShips.map((candidate) => ({
+        item: candidate,
+        weight: getShipWeight(seed, candidate)
+      }))
+    );
+
+    selectedShips.push(ship);
+    availableShips.splice(availableShips.indexOf(ship), 1);
+  }
+
+  return selectedShips.map((ship, index) => {
+    const sponsorRng = rng.fork(`contract-${index + 1}-${ship.id}-sponsor`);
+    const rewardRng = rng.fork(`contract-${index + 1}-${ship.id}-reward`);
+
+    return {
+      id: `contract_${index + 1}_${ship.id.replace('ship_', '')}`,
+      shipId: ship.id,
+      shipName: ship.name,
+      sponsor: sponsorRng.choice(ship.sponsors),
+      startingWeaponId: ship.weapon,
+      startingWeaponName: ship.weaponName,
+      perk: ship.perk,
+      drawback: ship.drawback,
+      summary: ship.contractSummary,
+      itemBias: ship.itemBias,
+      rewardMultiplier: rewardRng.int(100, 130) / 100
+    };
+  });
+}
+
+function generateSectorRoute(sector: SectorDefinition, index: number, rng: Rng): SectorRoute {
+  const boss = getBossById(rng.choice(sector.bossCandidates));
+  const routeOptions = generateRouteOptions(rng.fork('routes'), index);
+  const waveRng = rng.fork('major-waves');
+
+  return {
+    index,
+    sectorId: sector.id,
+    sectorName: sector.name,
+    bossId: boss.id,
+    bossName: boss.name,
+    routeOptions,
+    majorWaves: waveRng.shuffle(sector.majorWavePool).slice(0, 3),
+    rewardPoolSeed: rng.fork('reward-pool').seedLabel,
+    shopSeed: rng.fork('shop').seedLabel
+  };
+}
+
+function generateRouteOptions(rng: Rng, sectorIndex: number): RouteOption[] {
+  const routeKinds = selectUniqueWeighted<RouteKind>(
+    rng,
+    [
+      { item: 'shop', weight: sectorIndex === 1 ? 2 : 4 },
+      { item: 'elite', weight: 3 + sectorIndex },
+      { item: 'vault', weight: sectorIndex >= 2 ? 3 : 1 },
+      { item: 'repair', weight: sectorIndex >= 3 ? 3 : 2 },
+      { item: 'glitch', weight: sectorIndex >= 3 ? 2 : 1 },
+      { item: 'factionAmbush', weight: sectorIndex >= 2 ? 3 : 1 }
+    ],
+    3
+  );
+
+  return routeKinds.map((kind) => ({
+    ...ROUTE_OPTIONS[kind],
+    risk: calculateRouteRisk(kind, sectorIndex)
+  }));
+}
+
+function selectUniqueWeighted<T>(rng: Rng, choices: readonly WeightedChoice<T>[], count: number): T[] {
+  const available = choices.map((choice) => ({ ...choice }));
+  const selected: T[] = [];
+
+  while (selected.length < count && available.length > 0) {
+    const item = rng.weightedChoice(available);
+    selected.push(item);
+
+    const index = available.findIndex((candidate) => candidate.item === item);
+    if (index >= 0) {
+      available.splice(index, 1);
+    }
+  }
+
+  return selected;
+}
+
+function calculateRouteRisk(kind: RouteKind, sectorIndex: number): number {
+  const baseRisk: Record<RouteKind, number> = {
+    shop: 1,
+    repair: 1,
+    vault: 3,
+    glitch: 4,
+    elite: 4,
+    factionAmbush: 4
+  };
+
+  return baseRisk[kind] + Math.floor((sectorIndex - 1) / 2);
+}
+
+function getShipWeight(seed: string, ship: ShipDefinition): number {
+  let weight = 10;
+
+  for (const [token, tags] of SEED_TAG_HINTS) {
+    if (!seed.includes(token)) {
+      continue;
+    }
+
+    for (const tag of tags) {
+      if (ship.tags.some((shipTag) => shipTag === tag) || ship.itemBias.includes(tag)) {
+        weight += 8;
+      }
+    }
+  }
+
+  return weight;
+}
+
+export function summarizeRunSkeleton(run: RunSkeleton): unknown {
+  return {
+    seed: run.seed,
+    contracts: run.contracts.map((contract) => ({
+      shipId: contract.shipId,
+      sponsor: contract.sponsor,
+      rewardMultiplier: contract.rewardMultiplier
+    })),
+    sectors: run.sectors.map((sector) => ({
+      sectorId: sector.sectorId,
+      bossId: sector.bossId,
+      routes: sector.routeOptions.map((route) => route.kind),
+      majorWaves: sector.majorWaves
+    }))
+  };
+}

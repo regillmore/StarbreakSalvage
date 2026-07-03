@@ -1,11 +1,11 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene } from '../app/Scene';
 import { clamp } from '../core/math';
+import type { RunSkeleton, StartingContract } from '../game/Generation';
 import type { InputSystem, InputAction } from '../systems/InputSystem';
 
 const PLAYER_RADIUS = 18;
 const PLAYER_SPEED = 360;
-const PLACEHOLDER_SEED = 'STARBREAK-SMOKE';
 
 export class GameplayScene implements Scene {
   public readonly id = 'gameplay';
@@ -18,6 +18,8 @@ export class GameplayScene implements Scene {
   public constructor(
     private readonly uiRoot: HTMLElement,
     private readonly input: InputSystem,
+    private readonly run: RunSkeleton,
+    private readonly contract: StartingContract,
     private readonly onPause: (scene: GameplayScene) => void
   ) {
     this.positionReadout = document.createElement('p');
@@ -36,7 +38,7 @@ export class GameplayScene implements Scene {
 
     const sector = document.createElement('p');
     sector.className = 'hud-pill';
-    sector.textContent = 'Outer Debris Field';
+    sector.textContent = this.getCurrentSectorName();
 
     const hull = document.createElement('p');
     hull.className = 'hud-pill';
@@ -44,7 +46,7 @@ export class GameplayScene implements Scene {
 
     const contract = document.createElement('p');
     contract.className = 'hud-pill';
-    contract.textContent = 'Debt Runner';
+    contract.textContent = this.contract.shipName;
 
     hud.append(sector, hull, contract, this.positionReadout);
     this.uiRoot.replaceChildren(hud);
@@ -79,7 +81,11 @@ export class GameplayScene implements Scene {
   }
 
   public getDebugState(): { seed: string; entityCount: number } {
-    return { seed: PLACEHOLDER_SEED, entityCount: 1 };
+    return { seed: this.run.seed, entityCount: 1 };
+  }
+
+  private getCurrentSectorName(): string {
+    return this.run.sectors[0]?.sectorName ?? 'Outer Debris Field';
   }
 
   private syncPositionReadout(): void {

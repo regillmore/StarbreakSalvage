@@ -1,6 +1,7 @@
 import { CanvasRenderer } from './CanvasRenderer';
 import { Loop, type FrameStats } from './Loop';
 import { SceneManager } from './SceneManager';
+import { generateRunSkeleton, type RunSkeleton, type StartingContract } from '../game/Generation';
 import { InputSystem } from '../systems/InputSystem';
 import { ContractSelectScene } from '../ui/ContractSelectScene';
 import { GameplayScene } from '../ui/GameplayScene';
@@ -17,6 +18,8 @@ export class GameApp {
   private readonly sceneManager = new SceneManager();
   private readonly loop: Loop;
   private readonly debugEnabled: boolean;
+  private readonly currentRun: RunSkeleton;
+  private selectedContract: StartingContract;
   private frameStats: FrameStats = {
     fps: 0,
     steps: 0,
@@ -36,6 +39,8 @@ export class GameApp {
     this.renderer = new CanvasRenderer(this.canvas);
     this.input = new InputSystem(window);
     this.debugEnabled = isDebugEnabled(window);
+    this.currentRun = generateRunSkeleton(getInitialSeed(window));
+    this.selectedContract = getFirstContract(this.currentRun);
     this.loop = new Loop({
       update: (dt) => this.update(dt),
       render: (alpha) => this.render(alpha),
@@ -90,7 +95,9 @@ export class GameApp {
     this.sceneManager.switchTo(
       new ContractSelectScene(
         this.uiRoot,
-        () => {
+        this.currentRun,
+        (contract) => {
+          this.selectedContract = contract;
           this.showGameplay();
         },
         () => {
@@ -103,7 +110,7 @@ export class GameApp {
   private showGameplay(existingScene?: GameplayScene): void {
     const gameplayScene =
       existingScene ??
-      new GameplayScene(this.uiRoot, this.input, (pausedScene) => {
+      new GameplayScene(this.uiRoot, this.input, this.currentRun, this.selectedContract, (pausedScene) => {
         this.showPause(pausedScene);
       });
 
@@ -127,7 +134,7 @@ export class GameApp {
 
   private showRunSummary(): void {
     this.sceneManager.switchTo(
-      new RunSummaryScene(this.uiRoot, () => {
+      new RunSummaryScene(this.uiRoot, this.currentRun, this.selectedContract, () => {
         this.showMainMenu();
       })
     );
@@ -146,6 +153,20 @@ export class GameApp {
       `Entities ${debugState.entityCount}`
     ].join(' | ');
   }
+}
+
+function getInitialSeed(ownerWindow: Window): string | null {
+  return new URLSearchParams(ownerWindow.location.search).get('seed');
+}
+
+function getFirstContract(run: RunSkeleton): StartingContract {
+  const contract = run.contracts[0];
+
+  if (!contract) {
+    throw new Error('Generated run skeleton did not include any starting contracts.');
+  }
+
+  return contract;
 }
 
 function isDebugEnabled(ownerWindow: Window): boolean {

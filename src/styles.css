@@ -198,6 +198,11 @@ button {
   background: rgba(10, 14, 34, 0.72);
 }
 
+.contract-card[data-selected="true"] {
+  border-color: rgba(255, 209, 102, 0.8);
+  box-shadow: 0 0 0 1px rgba(255, 209, 102, 0.24) inset;
+}
+
 .contract-card h2 {
   margin: 0 0 0.45rem;
   color: #7cf7ff;
@@ -209,6 +214,19 @@ button {
   margin: 0.75rem 0 0;
   color: #dbe8ee;
   line-height: 1.45;
+}
+
+.contract-detail {
+  margin: 0.7rem 0;
+  color: #f8fbff;
+  font-size: 0.92rem;
+  font-weight: 750;
+}
+
+.contract-select-button {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.6rem;
 }
 
 .button-row {

@@ -1,5 +1,6 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene } from '../app/Scene';
+import type { RunSkeleton, StartingContract } from '../game/Generation';
 import type { InputAction } from '../systems/InputSystem';
 
 export class RunSummaryScene implements Scene {
@@ -7,6 +8,8 @@ export class RunSummaryScene implements Scene {
 
   public constructor(
     private readonly uiRoot: HTMLElement,
+    private readonly run: RunSkeleton,
+    private readonly contract: StartingContract,
     private readonly onBackToMenu: () => void
   ) {}
 
@@ -27,8 +30,9 @@ export class RunSummaryScene implements Scene {
     stats.className = 'summary-stats';
 
     const statEntries: ReadonlyArray<readonly [string, string]> = [
-      ['Seed', 'STARBREAK-SMOKE'],
-      ['Sector', 'Outer Debris Field'],
+      ['Seed', this.run.seed],
+      ['Contract', this.contract.shipName],
+      ['Sector', this.run.sectors[0]?.sectorName ?? 'Outer Debris Field'],
       ['Salvage', '0 kg']
     ];
 
@@ -66,6 +70,6 @@ export class RunSummaryScene implements Scene {
   }
 
   public getDebugState(): { seed: string; entityCount: number } {
-    return { seed: 'STARBREAK-SMOKE', entityCount: 0 };
+    return { seed: this.run.seed, entityCount: 0 };
   }
 }

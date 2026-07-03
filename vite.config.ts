@@ -4,6 +4,6 @@ export default defineConfig({
   base: '/StarbreakSalvage/',
   test: {
     environment: 'node',
-    include: ['tests/unit/**/*.test.ts']
+    include: ['tests/unit/**/*.test.ts', 'tests/deterministic/**/*.test.ts']
   }
 });

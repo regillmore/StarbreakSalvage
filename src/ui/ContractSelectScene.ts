@@ -1,37 +1,17 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene } from '../app/Scene';
+import type { RunSkeleton, StartingContract } from '../game/Generation';
 import type { InputAction } from '../systems/InputSystem';
-
-interface ContractOption {
-  readonly name: string;
-  readonly sponsor: string;
-  readonly summary: string;
-}
-
-const PLACEHOLDER_CONTRACTS: readonly ContractOption[] = [
-  {
-    name: 'Debt Runner',
-    sponsor: 'Redline Credit Union',
-    summary: 'Fast economy hull with thin armor and aggressive collection magnets.'
-  },
-  {
-    name: 'Drone Chaplain',
-    sponsor: 'Choir of Useful Debris',
-    summary: 'Support hull with two micro-drones and reduced direct weapon output.'
-  },
-  {
-    name: 'Missile Accountant',
-    sponsor: 'Explosive Receivables',
-    summary: 'Armored burst hull that turns overkill into future paperwork.'
-  }
-];
 
 export class ContractSelectScene implements Scene {
   public readonly id = 'contract-select';
+  private selectedIndex = 0;
+  private readonly contractCards: HTMLElement[] = [];
 
   public constructor(
     private readonly uiRoot: HTMLElement,
-    private readonly onLaunch: () => void,
+    private readonly run: RunSkeleton,
+    private readonly onLaunch: (contract: StartingContract) => void,
     private readonly onBack: () => void
   ) {}
 
@@ -42,7 +22,7 @@ export class ContractSelectScene implements Scene {
 
     const eyebrow = document.createElement('p');
     eyebrow.className = 'eyebrow';
-    eyebrow.textContent = 'Contract Board';
+    eyebrow.textContent = `Contract Board | Seed ${this.run.seed}`;
 
     const title = document.createElement('h1');
     title.id = 'contract-title';
@@ -51,12 +31,15 @@ export class ContractSelectScene implements Scene {
     const list = document.createElement('div');
     list.className = 'contract-list';
 
-    for (const contract of PLACEHOLDER_CONTRACTS) {
+    this.contractCards.length = 0;
+
+    for (const [index, contract] of this.run.contracts.entries()) {
       const article = document.createElement('article');
       article.className = 'contract-card';
+      article.dataset.selected = index === this.selectedIndex ? 'true' : 'false';
 
       const name = document.createElement('h2');
-      name.textContent = contract.name;
+      name.textContent = contract.shipName;
 
       const sponsor = document.createElement('p');
       sponsor.className = 'contract-sponsor';
@@ -65,8 +48,19 @@ export class ContractSelectScene implements Scene {
       const summary = document.createElement('p');
       summary.textContent = contract.summary;
 
-      article.append(name, sponsor, summary);
+      const weapon = document.createElement('p');
+      weapon.className = 'contract-detail';
+      weapon.textContent = `Weapon: ${contract.startingWeaponName}`;
+
+      const selectButton = document.createElement('button');
+      selectButton.className = 'secondary-button contract-select-button';
+      selectButton.type = 'button';
+      selectButton.textContent = index === this.selectedIndex ? 'Selected' : 'Select';
+      selectButton.addEventListener('click', () => this.selectContract(index));
+
+      article.append(name, sponsor, summary, weapon, selectButton);
       list.append(article);
+      this.contractCards.push(article);
     }
 
     const controls = document.createElement('div');
@@ -76,7 +70,7 @@ export class ContractSelectScene implements Scene {
     launchButton.className = 'primary-button';
     launchButton.type = 'button';
     launchButton.textContent = 'Launch Contract';
-    launchButton.addEventListener('click', this.onLaunch);
+    launchButton.addEventListener('click', () => this.launchSelectedContract());
 
     const backButton = document.createElement('button');
     backButton.className = 'secondary-button';
@@ -98,7 +92,7 @@ export class ContractSelectScene implements Scene {
 
   public handleAction(action: InputAction): void {
     if (action === 'confirm') {
-      this.onLaunch();
+      this.launchSelectedContract();
     }
 
     if (action === 'back' || action === 'pause') {
@@ -107,6 +101,29 @@ export class ContractSelectScene implements Scene {
   }
 
   public getDebugState(): { seed: string; entityCount: number } {
-    return { seed: 'STARBREAK-SMOKE', entityCount: 0 };
+    return { seed: this.run.seed, entityCount: 0 };
+  }
+
+  private selectContract(index: number): void {
+    this.selectedIndex = index;
+
+    for (const [cardIndex, card] of this.contractCards.entries()) {
+      card.dataset.selected = cardIndex === this.selectedIndex ? 'true' : 'false';
+      const button = card.querySelector('button');
+
+      if (button) {
+        button.textContent = cardIndex === this.selectedIndex ? 'Selected' : 'Select';
+      }
+    }
+  }
+
+  private launchSelectedContract(): void {
+    const selectedContract = this.run.contracts[this.selectedIndex];
+
+    if (!selectedContract) {
+      throw new Error('No generated contract is selected.');
+    }
+
+    this.onLaunch(selectedContract);
   }
 }

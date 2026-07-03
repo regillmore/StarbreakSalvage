@@ -42,6 +42,8 @@ The current shell supports the title flow, placeholder contract launch, keyboard
 
 Add `?debug=1` to the local or deployed URL to show the debug overlay with FPS, scene, seed, and entity count.
 
+Add `?seed=LASER-TAX-404` or another seed label to preview deterministic contract and route generation. Blank or missing seeds default to `STARBREAK-SMOKE`.
+
 ## Project Vision
 
 The target game is quick to start, readable at high intensity, and replayable through deterministic seeds. Runs should begin with randomized ship contracts, move through seeded sectors, and reward expressive item synergies. Permadeath ends the run, while salvage unlocks widen future variety rather than simply increasing raw power.
