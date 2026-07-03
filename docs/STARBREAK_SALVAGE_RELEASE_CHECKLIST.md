@@ -43,6 +43,6 @@ Date: 2026-07-03
 
 ## Known Issues
 
-- Audio is not implemented yet. Mute and volume settings are persisted and ready for the future audio layer.
-- Screen shake strength is persisted and exposed, but gameplay VFX do not yet apply shake.
+- Audio is currently procedural cue feedback only; music and a fuller mix are not implemented yet.
+- Screen shake is implemented for gameplay feedback, but particle effects and flash-reduction polish remain future work.
 - Manual cross-browser smoke outside Chromium remains pending.

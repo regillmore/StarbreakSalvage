@@ -41,6 +41,8 @@ import {
   type RunSessionState
 } from '../game/RunSession';
 import { SHOP_REROLL_COST } from '../game/Shops';
+import { AudioSystem } from '../systems/AudioSystem';
+import { getFeedbackShakeIntensity, type CombatFeedbackCue } from '../systems/CombatFeedback';
 import { InputSystem } from '../systems/InputSystem';
 import { ContractSelectScene } from '../ui/ContractSelectScene';
 import { GameplayScene } from '../ui/GameplayScene';
@@ -60,6 +62,7 @@ export class GameApp {
   private readonly uiRoot: HTMLDivElement;
   private readonly debugOverlay: HTMLDivElement;
   private readonly renderer: CanvasRenderer;
+  private readonly audio: AudioSystem;
   private readonly input: InputSystem;
   private readonly sceneManager = new SceneManager();
   private readonly loop: Loop;
@@ -92,6 +95,8 @@ export class GameApp {
     this.settingsData = loadOrRepairSettings(window);
     this.renderer = new CanvasRenderer(this.canvas);
     this.renderer.setSettings(this.settingsData);
+    this.audio = new AudioSystem(window);
+    this.audio.setSettings(this.settingsData);
     this.input = new InputSystem(window, settingsToKeyBindingMap(this.settingsData));
     this.currentRun = generateRunSkeleton(getInitialSeed(window));
     this.saveData = loadOrRepairSave(window);
@@ -115,6 +120,7 @@ export class GameApp {
 
     this.root.replaceChildren(...children);
     this.applyDocumentSettings();
+    this.audio.start();
     this.input.start();
     this.showMainMenu();
     this.loop.start();
@@ -123,10 +129,13 @@ export class GameApp {
   public stop(): void {
     this.loop.stop();
     this.input.stop();
+    this.audio.stop();
     this.root.replaceChildren();
   }
 
   private update(dt: number): void {
+    this.renderer.updateEffects(dt);
+
     for (const action of this.input.drainPressedActions()) {
       this.sceneManager.handleAction(action);
     }
@@ -220,6 +229,9 @@ export class GameApp {
         this.runSession.credits,
         this.runSession.salvage,
         this.debugEnabled,
+        (cues) => {
+          this.handleCombatFeedback(cues);
+        },
         (pausedScene) => {
           this.showPause(pausedScene);
         },
@@ -426,7 +438,15 @@ export class GameApp {
     writeSettingsData(window.localStorage, settings);
     this.input.setBindings(settingsToKeyBindingMap(settings));
     this.renderer.setSettings(settings);
+    this.audio.setSettings(settings);
     this.applyDocumentSettings();
+  }
+
+  private handleCombatFeedback(cues: readonly CombatFeedbackCue[]): void {
+    for (const cue of cues) {
+      this.audio.playCue(cue);
+      this.renderer.triggerShake(getFeedbackShakeIntensity(cue));
+    }
   }
 
   private applyDocumentSettings(): void {

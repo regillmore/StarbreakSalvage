@@ -2,6 +2,13 @@ import { getBossById, type BossId } from '../content/bosses';
 import { getFactionById, type FactionId } from '../content/factions';
 import type { BulletContrast } from '../core/settingsData';
 import { clamp } from '../core/math';
+import {
+  advanceScreenShake,
+  getScreenShakeOffset,
+  IDLE_SCREEN_SHAKE,
+  triggerScreenShake,
+  type ScreenShakeState
+} from '../core/screenShake';
 import { generateStarfield, type Star, starCountForViewport } from '../core/starfield';
 
 const BACKGROUND_SEED = 'STARBREAK-SALVAGE-SHELL';
@@ -69,6 +76,7 @@ export interface PickupRenderState {
 
 export interface RendererSettings {
   readonly reducedMotion: boolean;
+  readonly screenShake: number;
   readonly bulletContrast: BulletContrast;
   readonly performanceMode: boolean;
 }
@@ -78,8 +86,10 @@ export class CanvasRenderer {
   private size: RenderSize = { width: 1, height: 1, dpr: 1 };
   private starCache: Star[] = [];
   private starCacheKey = '';
+  private shakeState: ScreenShakeState = IDLE_SCREEN_SHAKE;
   private settings: RendererSettings = {
     reducedMotion: false,
+    screenShake: 0.35,
     bulletContrast: 'standard',
     performanceMode: false
   };
@@ -104,6 +114,29 @@ export class CanvasRenderer {
   public setSettings(settings: RendererSettings): void {
     this.settings = settings;
     this.starCacheKey = '';
+
+    if (settings.reducedMotion || settings.screenShake <= 0) {
+      this.shakeState = IDLE_SCREEN_SHAKE;
+    }
+  }
+
+  public updateEffects(dt: number): void {
+    this.shakeState = advanceScreenShake(this.shakeState, dt);
+  }
+
+  public triggerShake(intensity: number): void {
+    this.shakeState = triggerScreenShake(this.shakeState, this.settings, intensity);
+  }
+
+  public beginGameplayLayer(): void {
+    const offset = getScreenShakeOffset(this.shakeState);
+
+    this.context.save();
+    this.context.translate(offset.x, offset.y);
+  }
+
+  public endGameplayLayer(): void {
+    this.context.restore();
   }
 
   public resizeToDisplay(): void {

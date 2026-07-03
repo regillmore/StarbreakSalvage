@@ -14,6 +14,11 @@ import type { BossId } from '../content/bosses';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import { describeItemLoadout } from '../game/ItemHooks';
 import type { ItemInstance } from '../game/Rewards';
+import {
+  createCombatFeedbackSnapshot,
+  diffCombatFeedback,
+  type CombatFeedbackCue
+} from '../systems/CombatFeedback';
 import type { InputSystem, InputAction } from '../systems/InputSystem';
 
 const SECTOR_CLEAR_DESTROYED_GOAL = 1;
@@ -46,6 +51,7 @@ export class GameplayScene implements Scene {
     private readonly startingCredits: number,
     private readonly startingSalvage: number,
     private readonly debugEnabled: boolean,
+    private readonly onFeedback: (cues: readonly CombatFeedbackCue[]) => void,
     private readonly onPause: (scene: GameplayScene) => void,
     private readonly onGameOver: (result: CombatRunResult) => void,
     private readonly onSectorComplete: (result: CombatRunResult) => void
@@ -116,6 +122,7 @@ export class GameplayScene implements Scene {
 
   public update(dt: number): void {
     const state = this.getCombatState();
+    const feedbackBefore = createCombatFeedbackSnapshot(state);
     const result = updateCombatState(
       state,
       {
@@ -125,16 +132,19 @@ export class GameplayScene implements Scene {
       dt,
       this.getCombatBounds()
     );
+    this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
 
     this.syncReadouts();
 
     if (result) {
+      this.emitFeedback(['runEnd']);
       this.onGameOver(result);
       return;
     }
 
     if (!this.sectorCompleted && state.stats.enemiesDestroyed >= SECTOR_CLEAR_DESTROYED_GOAL) {
       this.sectorCompleted = true;
+      this.emitFeedback(['sectorClear']);
       this.onSectorComplete(forceCombatEnd(state, 'sectorComplete'));
     }
   }
@@ -143,6 +153,7 @@ export class GameplayScene implements Scene {
     const state = this.getCombatState();
 
     renderer.paintBackground();
+    renderer.beginGameplayLayer();
     renderer.paintGameplayFrame();
 
     for (const pickup of state.pickups) {
@@ -175,6 +186,7 @@ export class GameplayScene implements Scene {
       ),
       invulnerable: state.player.invulnerableSeconds > 0
     });
+    renderer.endGameplayLayer();
   }
 
   public handleAction(action: InputAction): void {
@@ -183,12 +195,16 @@ export class GameplayScene implements Scene {
     }
 
     if (action === 'debugGameOver' && this.debugEnabled) {
+      this.emitFeedback(['runEnd']);
       this.onGameOver(forceCombatEnd(this.getCombatState(), 'debug'));
     }
 
     const debugBossId = DEBUG_BOSS_SHORTCUTS[action];
     if (debugBossId && this.debugEnabled) {
-      spawnBoss(this.getCombatState(), debugBossId, this.getCombatBounds(), { clearField: true });
+      const state = this.getCombatState();
+      const feedbackBefore = createCombatFeedbackSnapshot(state);
+      spawnBoss(state, debugBossId, this.getCombatBounds(), { clearField: true });
+      this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
       this.sectorCompleted = false;
       this.syncReadouts();
     }
@@ -238,6 +254,12 @@ export class GameplayScene implements Scene {
 
   private getCurrentBossName(): string {
     return this.run.sectors[this.sectorIndex]?.bossName ?? 'unassigned';
+  }
+
+  private emitFeedback(cues: readonly CombatFeedbackCue[]): void {
+    if (cues.length > 0) {
+      this.onFeedback(cues);
+    }
   }
 
   private getCombatBounds(): CombatBounds {

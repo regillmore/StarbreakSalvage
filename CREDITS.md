@@ -11,8 +11,9 @@ Starbreak Salvage is built from original project code, text, and placeholder vis
 
 - Current game visuals are original Canvas 2D shape rendering and procedural starfield placeholders.
 - `public/favicon.svg` is an original vector placeholder created for this project.
+- Current audio is generated at runtime with original procedural Web Audio oscillator cues.
 - No commercial game sprites, names, music, characters, UI, or proprietary data are included.
-- Audio systems are not yet implemented; future audio must remain original, generated, or license-compatible.
+- Future audio assets must remain original, generated, or license-compatible.
 
 ## Tooling
 

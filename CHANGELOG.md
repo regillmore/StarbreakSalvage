@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Gameplay and UX
+
+- Added original procedural Web Audio cues for firing, impacts, pickups, boss warnings, sector clears, and run endings.
+- Added gameplay camera shake that respects reduced motion and screen shake strength settings.
+
+### Testing
+
+- Added unit coverage for audio cue settings, combat feedback detection, and deterministic screen-shake decay.
+
 ## 0.10.0 - 2026-07-03
 
 ### Highlights
