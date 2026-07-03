@@ -1,7 +1,20 @@
 import { CanvasRenderer } from './CanvasRenderer';
 import { Loop, type FrameStats } from './Loop';
 import { SceneManager } from './SceneManager';
+import type { CombatEndReason } from '../game/CombatState';
 import type { CombatRunResult } from '../game/CombatState';
+import {
+  applyRunRecordToSave,
+  exportSaveData,
+  getSaveSummary,
+  importSaveData,
+  loadSaveData,
+  resetSaveData,
+  writeSaveData,
+  type RunSaveRecord,
+  type SaveData,
+  type SaveUpdateResult
+} from '../core/saveData';
 import {
   generateRunSkeleton,
   type RouteOption,
@@ -31,6 +44,7 @@ import { RouteScene } from '../ui/RouteScene';
 import { RunSummaryScene } from '../ui/RunSummaryScene';
 import { SectorTransitionScene } from '../ui/SectorTransitionScene';
 import { ShopScene } from '../ui/ShopScene';
+import { UnlockArchiveScene } from '../ui/UnlockArchiveScene';
 import type { ItemId } from '../content/items';
 
 export class GameApp {
@@ -43,9 +57,12 @@ export class GameApp {
   private readonly loop: Loop;
   private readonly debugEnabled: boolean;
   private readonly currentRun: RunSkeleton;
+  private saveData: SaveData;
   private selectedContract: StartingContract;
   private runSession: RunSessionState;
   private lastRunResult: CombatRunResult | null = null;
+  private lastSaveUpdate: SaveUpdateResult | null = null;
+  private summarySaved = false;
   private frameStats: FrameStats = {
     fps: 0,
     steps: 0,
@@ -66,6 +83,7 @@ export class GameApp {
     this.input = new InputSystem(window);
     this.debugEnabled = isDebugEnabled(window);
     this.currentRun = generateRunSkeleton(getInitialSeed(window));
+    this.saveData = loadOrRepairSave(window);
     this.selectedContract = getFirstContract(this.currentRun);
     this.runSession = createRunSession(this.currentRun, this.selectedContract);
     this.loop = new Loop({
@@ -112,9 +130,33 @@ export class GameApp {
 
   private showMainMenu(): void {
     this.sceneManager.switchTo(
-      new MainMenuScene(this.uiRoot, () => {
-        this.showContractSelect();
-      })
+      new MainMenuScene(
+        this.uiRoot,
+        getSaveSummary(this.saveData),
+        () => {
+          this.showContractSelect();
+        },
+        () => {
+          this.showUnlockArchive();
+        }
+      )
+    );
+  }
+
+  private showUnlockArchive(): void {
+    this.sceneManager.switchTo(
+      new UnlockArchiveScene(
+        this.uiRoot,
+        () => this.saveData,
+        () => exportSaveData(this.saveData),
+        (serialized) => this.importSave(serialized),
+        () => {
+          this.saveData = resetSaveData(window.localStorage);
+        },
+        () => {
+          this.showMainMenu();
+        }
+      )
     );
   }
 
@@ -127,6 +169,8 @@ export class GameApp {
           this.selectedContract = contract;
           this.runSession = createRunSession(this.currentRun, contract);
           this.lastRunResult = null;
+          this.lastSaveUpdate = null;
+          this.summarySaved = false;
           this.showGameplay();
         },
         () => {
@@ -278,17 +322,73 @@ export class GameApp {
 
   private showRunSummary(result?: CombatRunResult): void {
     this.lastRunResult = result ?? this.lastRunResult;
+    this.lastSaveUpdate = this.saveRunSummary(this.lastRunResult);
     this.sceneManager.switchTo(
       new RunSummaryScene(
         this.uiRoot,
         this.currentRun,
         this.selectedContract,
         this.lastRunResult,
+        this.saveData,
+        this.lastSaveUpdate,
         () => {
           this.showMainMenu();
         }
       )
     );
+  }
+
+  private saveRunSummary(result: CombatRunResult | null): SaveUpdateResult | null {
+    if (!result || this.summarySaved) {
+      return this.lastSaveUpdate;
+    }
+
+    const update = applyRunRecordToSave(this.saveData, this.createSaveRecord(result));
+    this.saveData = update.data;
+    this.lastSaveUpdate = update;
+    this.summarySaved = true;
+    writeSaveData(window.localStorage, this.saveData);
+    return update;
+  }
+
+  private createSaveRecord(result: CombatRunResult): RunSaveRecord {
+    const previousCombat = this.runSession.lastCombatResult;
+    const previousEnemies =
+      previousCombat && previousCombat !== result ? previousCombat.enemiesDestroyed : 0;
+    const previousBosses =
+      previousCombat && previousCombat !== result ? previousCombat.bossesDefeated : 0;
+    const previousTriggers =
+      previousCombat && previousCombat !== result ? previousCombat.itemTriggers : 0;
+
+    return {
+      seed: this.currentRun.seed,
+      contractId: this.selectedContract.id,
+      contractName: this.selectedContract.shipName,
+      reason: result.reason as CombatEndReason,
+      survivedSeconds: result.survivedSeconds,
+      sectorsCleared: Math.max(
+        this.runSession.currentSectorIndex,
+        this.runSession.routeHistory.length
+      ),
+      bossesDefeated: result.bossesDefeated + previousBosses,
+      enemiesDestroyed: result.enemiesDestroyed + previousEnemies,
+      creditsRecovered: Math.max(result.credits, this.runSession.credits),
+      salvageRecovered: Math.max(result.salvage, this.runSession.salvage),
+      itemTriggers: result.itemTriggers + previousTriggers
+    };
+  }
+
+  private importSave(serialized: string): { ok: boolean; message: string } {
+    try {
+      this.saveData = importSaveData(serialized);
+      writeSaveData(window.localStorage, this.saveData);
+      return { ok: true, message: 'Save imported.' };
+    } catch (error) {
+      return {
+        ok: false,
+        message: error instanceof Error ? error.message : 'Save import failed.'
+      };
+    }
   }
 
   private updateDebugOverlay(): void {
@@ -332,4 +432,14 @@ function isDebugEnabled(ownerWindow: Window): boolean {
   } catch {
     return false;
   }
+}
+
+function loadOrRepairSave(ownerWindow: Window): SaveData {
+  const loaded = loadSaveData(ownerWindow.localStorage);
+
+  if (loaded.repaired) {
+    writeSaveData(ownerWindow.localStorage, loaded.data);
+  }
+
+  return loaded.data;
 }

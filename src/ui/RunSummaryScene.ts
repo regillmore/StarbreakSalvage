@@ -1,5 +1,7 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene } from '../app/Scene';
+import { getUnlockById } from '../content/unlocks';
+import type { SaveData, SaveUpdateResult } from '../core/saveData';
 import type { CombatRunResult } from '../game/CombatState';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import type { InputAction } from '../systems/InputSystem';
@@ -12,6 +14,8 @@ export class RunSummaryScene implements Scene {
     private readonly run: RunSkeleton,
     private readonly contract: StartingContract,
     private readonly result: CombatRunResult | null,
+    private readonly saveData: SaveData,
+    private readonly saveUpdate: SaveUpdateResult | null,
     private readonly onBackToMenu: () => void
   ) {}
 
@@ -43,6 +47,7 @@ export class RunSummaryScene implements Scene {
       ['Salvage', `${this.result?.salvage ?? 0} kg`],
       ['Damage Taken', `${this.result?.damageTaken ?? 0}`],
       ['Item Hooks', `${this.result?.itemTriggers ?? 0}`],
+      ['Banked Salvage', `${this.saveData.salvageBank} kg`],
       ['Items', this.result?.itemNames.join(', ') ?? 'none']
     ];
 
@@ -62,7 +67,12 @@ export class RunSummaryScene implements Scene {
     menuButton.textContent = 'Back to Menu';
     menuButton.addEventListener('click', this.onBackToMenu);
 
-    shell.append(eyebrow, title, stats, menuButton);
+    const unlockSummary = document.createElement('p');
+    unlockSummary.className = 'summary-note';
+    unlockSummary.dataset.testid = 'unlock-summary';
+    unlockSummary.textContent = this.getUnlockSummaryText();
+
+    shell.append(eyebrow, title, stats, unlockSummary, menuButton);
     this.uiRoot.replaceChildren(shell);
     menuButton.focus();
   }
@@ -81,6 +91,19 @@ export class RunSummaryScene implements Scene {
 
   public getDebugState(): { seed: string; entityCount: number } {
     return { seed: this.run.seed, entityCount: 0 };
+  }
+
+  private getUnlockSummaryText(): string {
+    if (!this.saveUpdate) {
+      return 'Archive unchanged.';
+    }
+
+    if (this.saveUpdate.newUnlockIds.length === 0) {
+      return `Recovered ${this.saveUpdate.salvageEarned} kg for the archive.`;
+    }
+
+    const names = this.saveUpdate.newUnlockIds.map((unlockId) => getUnlockById(unlockId).name);
+    return `Unlocked: ${names.join(', ')}`;
   }
 }
 

@@ -1,4 +1,5 @@
 import { BOSSES, type BossDefinition } from './bosses';
+import { ACHIEVEMENTS, type AchievementDefinition } from './achievements';
 import { FACTIONS, type FactionDefinition } from './factions';
 import {
   ITEM_HOOKS,
@@ -9,27 +10,60 @@ import {
   type RewardPoolDefinition
 } from './items';
 import { SECTORS, type SectorDefinition } from './sectors';
+import { UNLOCKS, type UnlockDefinition } from './unlocks';
 
 export interface ContentValidationInput {
+  readonly achievements?: readonly AchievementDefinition[];
   readonly bosses?: readonly BossDefinition[];
   readonly factions?: readonly FactionDefinition[];
   readonly items?: readonly ItemDefinition[];
   readonly rewardPools?: readonly RewardPoolDefinition[];
   readonly sectors?: readonly SectorDefinition[];
+  readonly unlocks?: readonly UnlockDefinition[];
 }
 
 export function validateContent(input: ContentValidationInput = {}): string[] {
+  const achievements = input.achievements ?? ACHIEVEMENTS;
   const bosses = input.bosses ?? BOSSES;
   const factions = input.factions ?? FACTIONS;
   const items = input.items ?? ITEMS;
   const rewardPools = input.rewardPools ?? REWARD_POOLS;
   const sectors = input.sectors ?? SECTORS;
+  const unlocks = input.unlocks ?? UNLOCKS;
   const errors: string[] = [];
+  const achievementIds = new Set<string>();
   const bossIds = new Set<string>();
   const factionIds = new Set<string>();
   const itemIds = new Set<string>();
+  const unlockIds = new Set<string>();
   const tagRegistry = new Set<string>(ITEM_TAGS);
   const hookRegistry = new Set<string>(ITEM_HOOKS);
+
+  for (const unlock of unlocks) {
+    if (unlockIds.has(unlock.id)) {
+      errors.push(`Duplicate unlock id: ${unlock.id}`);
+    }
+
+    unlockIds.add(unlock.id);
+  }
+
+  for (const achievement of achievements) {
+    if (achievementIds.has(achievement.id)) {
+      errors.push(`Duplicate achievement id: ${achievement.id}`);
+    }
+
+    achievementIds.add(achievement.id);
+
+    if (achievement.unlockIds.length === 0) {
+      errors.push(`Achievement ${achievement.id} must grant at least one unlock`);
+    }
+
+    for (const unlockId of achievement.unlockIds) {
+      if (!unlockIds.has(unlockId)) {
+        errors.push(`Achievement ${achievement.id} references missing unlock: ${unlockId}`);
+      }
+    }
+  }
 
   for (const faction of factions) {
     if (factionIds.has(faction.id)) {

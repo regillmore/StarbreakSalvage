@@ -1,0 +1,133 @@
+import { describe, expect, it } from 'vitest';
+
+import {
+  applyRunRecordToSave,
+  createDefaultSaveData,
+  exportSaveData,
+  importSaveData,
+  loadSaveData,
+  resetSaveData,
+  SAVE_SCHEMA_VERSION,
+  SAVE_STORAGE_KEY,
+  writeSaveData,
+  type StorageLike
+} from '../../src/core/saveData';
+
+class MemoryStorage implements StorageLike {
+  private readonly entries = new Map<string, string>();
+
+  public getItem(key: string): string | null {
+    return this.entries.get(key) ?? null;
+  }
+
+  public setItem(key: string, value: string): void {
+    this.entries.set(key, value);
+  }
+
+  public removeItem(key: string): void {
+    this.entries.delete(key);
+  }
+}
+
+describe('saveData', () => {
+  it('creates a versioned default save', () => {
+    const save = createDefaultSaveData();
+
+    expect(save.version).toBe(SAVE_SCHEMA_VERSION);
+    expect(save.salvageBank).toBe(0);
+    expect(save.unlockedIds).toEqual([]);
+  });
+
+  it('loads corrupted localStorage safely as a repaired default', () => {
+    const storage = new MemoryStorage();
+    storage.setItem(SAVE_STORAGE_KEY, '{not json');
+
+    const loaded = loadSaveData(storage);
+
+    expect(loaded.repaired).toBe(true);
+    expect(loaded.data).toEqual(createDefaultSaveData());
+    expect(loaded.error).toContain('JSON');
+  });
+
+  it('migrates v1 saves into the current schema', () => {
+    const migrated = importSaveData(
+      JSON.stringify({
+        version: 1,
+        salvage: 12,
+        unlockedIds: ['unlock_ship_scrap_monk'],
+        stats: {
+          runs: 3,
+          sectorsCleared: 2,
+          bossesDefeated: 1
+        }
+      })
+    );
+
+    expect(migrated.version).toBe(SAVE_SCHEMA_VERSION);
+    expect(migrated.salvageBank).toBe(12);
+    expect(migrated.stats.runsEnded).toBe(3);
+    expect(migrated.stats.bossesDefeated).toBe(1);
+    expect(migrated.unlockedIds).toContain('unlock_ship_scrap_monk');
+  });
+
+  it('round-trips through export and import', () => {
+    const save = applyRunRecordToSave(createDefaultSaveData(), {
+      seed: 'STARBREAK-SMOKE',
+      contractId: 'contract_1',
+      contractName: 'Debt Runner',
+      reason: 'sectorComplete',
+      survivedSeconds: 9,
+      sectorsCleared: 1,
+      bossesDefeated: 0,
+      enemiesDestroyed: 2,
+      creditsRecovered: 14,
+      salvageRecovered: 3,
+      itemTriggers: 1
+    }).data;
+
+    expect(importSaveData(exportSaveData(save))).toEqual(save);
+  });
+
+  it('applies run records to stats, salvage bank, achievements, and unlocks', () => {
+    const update = applyRunRecordToSave(createDefaultSaveData(), {
+      seed: 'LASER-TAX-404',
+      contractId: 'contract_1',
+      contractName: 'Missile Accountant',
+      reason: 'debug',
+      survivedSeconds: 6,
+      sectorsCleared: 1,
+      bossesDefeated: 0,
+      enemiesDestroyed: 1,
+      creditsRecovered: 16,
+      salvageRecovered: 2,
+      itemTriggers: 2
+    });
+
+    expect(update.salvageEarned).toBe(2);
+    expect(update.data.salvageBank).toBe(2);
+    expect(update.data.stats.runsEnded).toBe(1);
+    expect(update.data.achievementIds).toEqual([
+      'achievement_first_contract',
+      'achievement_salvage_receipt',
+      'achievement_route_surveyor',
+      'achievement_credit_float',
+      'achievement_build_crafter'
+    ]);
+    expect(update.newUnlockIds).toContain('unlock_ship_phase_courier');
+    expect(update.newUnlockIds).toContain('unlock_music_outer_debris');
+  });
+
+  it('writes and resets save data through storage', () => {
+    const storage = new MemoryStorage();
+    const save = {
+      ...createDefaultSaveData(),
+      salvageBank: 4
+    };
+
+    writeSaveData(storage, save);
+    expect(loadSaveData(storage).data.salvageBank).toBe(4);
+
+    expect(resetSaveData(storage)).toEqual(createDefaultSaveData());
+    expect(storage.getItem(SAVE_STORAGE_KEY)).toBeNull();
+  });
+});

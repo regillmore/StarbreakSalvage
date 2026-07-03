@@ -38,7 +38,9 @@ Planned baseline controls:
 - Confirm: Enter or Space
 - Back: Escape or Backspace
 
-The current shell supports the title flow, deterministic contract launch, keyboard movement, primary fire, faction-colored enemy waves, pickups, pause/resume, hull damage, starter item hooks, route choice, rewards, basic shops with rerolls, sector transition, debug boss spawns, and a run summary placeholder. Save progression arrives in a later slice.
+The current shell supports the title flow, deterministic contract launch, keyboard movement, primary fire, faction-colored enemy waves, pickups, pause/resume, hull damage, starter item hooks, route choice, rewards, basic shops with rerolls, sector transition, debug boss spawns, run summary stats, and a persistent unlock archive.
+
+The Unlock Archive stores versioned local save data in `localStorage`, including salvage bank, achievements, unlocks, last-run summary, export/import, and reset.
 
 Add `?debug=1` to the local or deployed URL to show the debug overlay with FPS, scene, seed, and entity count.
 

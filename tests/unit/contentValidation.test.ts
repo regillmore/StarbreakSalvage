@@ -1,15 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
+import { ACHIEVEMENTS, type AchievementDefinition } from '../../src/content/achievements';
 import { BOSSES, type BossDefinition } from '../../src/content/bosses';
 import { validateContent } from '../../src/content/contentValidation';
 import { FACTIONS, type FactionDefinition } from '../../src/content/factions';
 import { ITEMS, type ItemDefinition, type RewardPoolDefinition } from '../../src/content/items';
 import { SECTORS, type SectorDefinition } from '../../src/content/sectors';
+import { UNLOCKS, type UnlockDefinition } from '../../src/content/unlocks';
 
 const baseItem = ITEMS[0] as ItemDefinition;
 const baseFaction = FACTIONS[0] as FactionDefinition;
 const baseBoss = BOSSES[0] as BossDefinition;
 const baseSector = SECTORS[0] as SectorDefinition;
+const baseUnlock = UNLOCKS[0] as UnlockDefinition;
+const baseAchievement = ACHIEVEMENTS[0] as AchievementDefinition;
 
 describe('validateContent', () => {
   it('accepts the shipped item and reward content', () => {
@@ -30,6 +34,23 @@ describe('validateContent', () => {
     expect(errors).toContain(`Duplicate faction id: ${baseFaction.id}`);
     expect(errors).toContain(
       'Boss boss_auditor_drone_xl references missing faction: faction_missing'
+    );
+  });
+
+  it('rejects duplicate unlock ids and missing achievement unlock references', () => {
+    const errors = validateContent({
+      unlocks: [baseUnlock, { ...baseUnlock, name: 'Duplicate Unlock' }],
+      achievements: [
+        {
+          ...baseAchievement,
+          unlockIds: ['unlock_missing']
+        } as unknown as AchievementDefinition
+      ]
+    });
+
+    expect(errors).toContain(`Duplicate unlock id: ${baseUnlock.id}`);
+    expect(errors).toContain(
+      'Achievement achievement_first_contract references missing unlock: unlock_missing'
     );
   });
 

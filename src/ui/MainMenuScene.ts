@@ -1,13 +1,18 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene } from '../app/Scene';
+import type { getSaveSummary } from '../core/saveData';
 import type { InputAction } from '../systems/InputSystem';
+
+type SaveSummary = ReturnType<typeof getSaveSummary>;
 
 export class MainMenuScene implements Scene {
   public readonly id = 'main-menu';
 
   public constructor(
     private readonly uiRoot: HTMLElement,
-    private readonly onStartRun: () => void
+    private readonly saveSummary: SaveSummary,
+    private readonly onStartRun: () => void,
+    private readonly onOpenArchive: () => void
   ) {}
 
   public enter(): void {
@@ -29,12 +34,18 @@ export class MainMenuScene implements Scene {
     startButton.textContent = 'Start Run';
     startButton.addEventListener('click', this.onStartRun);
 
+    const archiveButton = document.createElement('button');
+    archiveButton.className = 'secondary-button title-button';
+    archiveButton.type = 'button';
+    archiveButton.textContent = 'Unlock Archive';
+    archiveButton.addEventListener('click', this.onOpenArchive);
+
     const status = document.createElement('p');
     status.className = 'boot-status';
     status.dataset.testid = 'boot-status';
-    status.textContent = 'Awaiting salvage contract.';
+    status.textContent = `Bank ${this.saveSummary.salvageBank} kg | Unlocks ${this.saveSummary.unlockCount} | Runs ${this.saveSummary.runsEnded}`;
 
-    shell.append(title, tagline, startButton, status);
+    shell.append(title, tagline, startButton, archiveButton, status);
     this.uiRoot.replaceChildren(shell);
     startButton.focus();
   }

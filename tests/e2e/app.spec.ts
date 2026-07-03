@@ -68,6 +68,32 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.keyboard.press('K');
   await expect(page.getByRole('heading', { name: 'Debug Run Ended' })).toBeVisible();
   await expect(page.getByText('forced test')).toBeVisible();
+  await expect(page.getByTestId('unlock-summary')).toContainText('Unlocked:');
+
+  await page.getByRole('button', { name: 'Back to Menu' }).click();
+  await expect(page.getByRole('heading', { name: 'Starbreak Salvage' })).toBeVisible();
+  await expect(page.getByTestId('boot-status')).toContainText(/Bank [1-9]\d* kg/);
+
+  await page.getByRole('button', { name: 'Unlock Archive' }).click();
+  await expect(page.getByRole('heading', { name: 'Unlock Archive' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Export Save' }).click();
+  const exportedSave = await page.getByTestId('save-import-box').inputValue();
+  expect(exportedSave).toContain('"version": 2');
+
+  await page.getByRole('button', { name: 'Reset Save' }).click();
+  await expect(page.getByTestId('save-status')).toContainText('Save reset.');
+  await expect(page.getByText('Salvage Bank 0 kg | Unlocks 0/10')).toBeVisible();
+
+  await page.getByTestId('save-import-box').fill(exportedSave);
+  await page.getByRole('button', { name: 'Import Save' }).click();
+  await expect(page.getByTestId('save-status')).toContainText('Save imported.');
+  await expect(page.getByText('Phase Courier')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Back' }).click();
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Starbreak Salvage' })).toBeVisible();
+  await expect(page.getByTestId('boot-status')).toContainText(/Bank [1-9]\d* kg/);
 
   expect(browserErrors).toEqual([]);
 });
