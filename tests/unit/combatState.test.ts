@@ -151,4 +151,148 @@ describe('CombatState', () => {
     expect(state.stats.enemiesDestroyed).toBe(1);
     expect(state.pickups.length).toBeGreaterThan(0);
   });
+
+  it('activates special with charge, burst shots, active time, and cooldown', () => {
+    const state = createCombatState(bounds, 'SPECIAL-TEST', {
+      skipEnemyWaves: true
+    });
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false, special: true }, 1 / 60, bounds);
+
+    expect(state.stats.specialsUsed).toBe(1);
+    expect(state.player.specialCharge).toBe(0);
+    expect(state.player.specialActiveSeconds).toBeGreaterThan(0);
+    expect(state.player.specialCooldown).toBeGreaterThan(0);
+    expect(state.projectiles.filter((projectile) => projectile.owner === 'player')).toHaveLength(3);
+    expect(state.effects.some((effect) => effect.kind === 'special')).toBe(true);
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false, special: true }, 1 / 60, bounds);
+
+    expect(state.stats.specialsUsed).toBe(1);
+  });
+
+  it('uses bomb charges to clear danger and soften enemies without trivializing bosses', () => {
+    const state = createCombatState(bounds, 'BOMB-TEST', {
+      skipEnemyWaves: true
+    });
+    state.enemies.push({
+      id: 100,
+      factionId: 'faction_scrap_court',
+      x: state.player.x,
+      y: state.player.y - 160,
+      radius: 17,
+      hull: 3,
+      maxHull: 3,
+      drift: 0,
+      targetY: 120,
+      fireCooldown: 1
+    });
+    state.projectiles.push({
+      id: 101,
+      owner: 'enemy',
+      x: state.player.x + 80,
+      y: state.player.y - 80,
+      vx: 0,
+      vy: 0,
+      radius: 7,
+      damage: 1,
+      ttl: 2,
+      tags: ['missile'],
+      procDepth: 0
+    });
+    state.telegraphs.push({
+      id: 102,
+      kind: 'lane',
+      factionId: 'faction_scrap_court',
+      label: 'TEST LANE',
+      x: state.player.x,
+      y: 120,
+      radius: 0,
+      width: 32,
+      height: 400,
+      ttl: 1,
+      maxTtl: 1
+    });
+    const boss = spawnBoss(state, 'boss_auditor_drone_xl', bounds);
+    boss.hull = 10;
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false, bomb: true }, 1 / 60, bounds);
+
+    expect(state.player.bombs).toBe(1);
+    expect(state.stats.bombsUsed).toBe(1);
+    expect(state.stats.enemyProjectilesCancelled).toBe(1);
+    expect(state.projectiles.some((projectile) => projectile.owner === 'enemy')).toBe(false);
+    expect(state.telegraphs).toHaveLength(0);
+    expect(state.enemies[0]?.hull).toBeLessThan(3);
+    expect(state.boss?.hull).toBeLessThan(10);
+    expect(state.boss?.hull).toBeGreaterThan(0);
+    expect(state.effects.some((effect) => effect.kind === 'bomb')).toBe(true);
+  });
+
+  it('grants deterministic special charge for near-miss grazes once per projectile', () => {
+    const state = createCombatState(bounds, 'GRAZE-TEST', {
+      skipEnemyWaves: true
+    });
+    state.player.specialCharge = 0;
+    state.projectiles.push({
+      id: 501,
+      owner: 'enemy',
+      x: state.player.x + state.player.radius + 16,
+      y: state.player.y,
+      vx: 0,
+      vy: 0,
+      radius: 5,
+      damage: 1,
+      ttl: 2,
+      tags: ['plasma'],
+      procDepth: 0
+    });
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
+
+    expect(state.stats.grazes).toBe(1);
+    expect(state.player.specialCharge).toBeGreaterThan(0);
+    expect(state.effects.some((effect) => effect.kind === 'graze')).toBe(true);
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
+
+    expect(state.stats.grazes).toBe(1);
+  });
+
+  it('charges special from enemy kills', () => {
+    const state = createCombatState(bounds, 'KILL-CHARGE-TEST', {
+      skipEnemyWaves: true
+    });
+    state.player.specialCharge = 0;
+    state.enemies.push({
+      id: 701,
+      factionId: 'faction_corporate_ledger',
+      x: state.player.x,
+      y: state.player.y - 120,
+      radius: 17,
+      hull: 1,
+      maxHull: 1,
+      drift: 0,
+      targetY: 120,
+      fireCooldown: 1
+    });
+    state.projectiles.push({
+      id: 702,
+      owner: 'player',
+      x: state.player.x,
+      y: state.player.y - 120,
+      vx: 0,
+      vy: 0,
+      radius: 8,
+      damage: 1,
+      ttl: 1,
+      tags: ['laser'],
+      procDepth: 0
+    });
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
+
+    expect(state.stats.enemiesDestroyed).toBe(1);
+    expect(state.player.specialCharge).toBeGreaterThan(0);
+  });
 });

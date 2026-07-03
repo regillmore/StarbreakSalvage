@@ -11,6 +11,9 @@ describe('AudioSystem helpers', () => {
     expect(getAudioCueDefinition('bossDefeated').durationSeconds).toBeGreaterThan(
       getAudioCueDefinition('enemyDestroyed').durationSeconds
     );
+    expect(getAudioCueDefinition('bombUsed').gain).toBeGreaterThan(
+      getAudioCueDefinition('graze').gain
+    );
   });
 
   it('applies mute and master volume to cue gain', () => {

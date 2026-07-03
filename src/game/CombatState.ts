@@ -29,6 +29,8 @@ export interface CombatBounds {
 export interface CombatInput {
   readonly movement: Vector2;
   readonly fire: boolean;
+  readonly special?: boolean;
+  readonly bomb?: boolean;
 }
 
 export interface PlayerState {
@@ -41,6 +43,13 @@ export interface PlayerState {
   invulnerableSeconds: number;
   fireRateMultiplier: number;
   fireRateBoostSeconds: number;
+  specialCharge: number;
+  readonly maxSpecialCharge: number;
+  specialCooldown: number;
+  specialActiveSeconds: number;
+  bombs: number;
+  readonly maxBombs: number;
+  bombCooldown: number;
   credits: number;
   salvage: number;
 }
@@ -119,6 +128,18 @@ export interface PickupState {
   readonly value: number;
 }
 
+export type CombatEffectKind = 'special' | 'bomb' | 'graze';
+
+export interface CombatEffectState {
+  readonly id: number;
+  readonly kind: CombatEffectKind;
+  readonly x: number;
+  readonly y: number;
+  readonly radius: number;
+  ttl: number;
+  readonly maxTtl: number;
+}
+
 export interface CombatStats {
   readonly enemiesDestroyed: number;
   readonly bossesDefeated: number;
@@ -126,6 +147,10 @@ export interface CombatStats {
   readonly pickupsCollected: number;
   readonly damageTaken: number;
   readonly itemTriggers: number;
+  readonly specialsUsed: number;
+  readonly bombsUsed: number;
+  readonly grazes: number;
+  readonly enemyProjectilesCancelled: number;
 }
 
 export interface CombatState {
@@ -142,6 +167,8 @@ export interface CombatState {
   boss: BossState | null;
   telegraphs: TelegraphState[];
   pickups: PickupState[];
+  effects: CombatEffectState[];
+  grazedProjectileIds: Set<number>;
   spawnSchedule: readonly EnemySpawn[];
   readonly weapon: WeaponDefinition;
   readonly items: readonly ItemInstance[];
@@ -181,6 +208,20 @@ const PLAYER_SPEED = 360;
 const ENEMY_PROJECTILE_SPEED = 285;
 const PLAYER_DAMAGE_INVULNERABILITY_SECONDS = 0.55;
 const DEFAULT_BOSS_ID: BossId = 'boss_auditor_drone_xl';
+const SPECIAL_MAX_CHARGE = 1;
+const SPECIAL_INITIAL_CHARGE = 1;
+const SPECIAL_ACTIVE_SECONDS = 2.4;
+const SPECIAL_COOLDOWN_SECONDS = 1.1;
+const SPECIAL_FIRE_RATE_MULTIPLIER = 0.58;
+const SPECIAL_CHARGE_PER_KILL = 0.24;
+const SPECIAL_CHARGE_PER_BOSS = 0.55;
+const SPECIAL_CHARGE_PER_GRAZE = 0.09;
+const BOMB_INITIAL_CHARGES = 2;
+const BOMB_COOLDOWN_SECONDS = 0.8;
+const BOMB_INVULNERABILITY_SECONDS = 0.35;
+const BOMB_DAMAGE = 2.25;
+const BOMB_BOSS_DAMAGE_RATIO = 0.08;
+const GRAZE_MARGIN = 24;
 
 export interface CombatStateOptions {
   readonly weaponId?: WeaponId;
@@ -216,6 +257,13 @@ export function createCombatState(
       invulnerableSeconds: 0,
       fireRateMultiplier: 1,
       fireRateBoostSeconds: 0,
+      specialCharge: SPECIAL_INITIAL_CHARGE,
+      maxSpecialCharge: SPECIAL_MAX_CHARGE,
+      specialCooldown: 0,
+      specialActiveSeconds: 0,
+      bombs: BOMB_INITIAL_CHARGES,
+      maxBombs: BOMB_INITIAL_CHARGES,
+      bombCooldown: 0,
       credits: 0,
       salvage: 0
     },
@@ -224,6 +272,8 @@ export function createCombatState(
     boss: null,
     telegraphs: [],
     pickups: [],
+    effects: [],
+    grazedProjectileIds: new Set<number>(),
     spawnSchedule:
       options.spawnSchedule ??
       (options.skipEnemyWaves ? [] : createEnemySpawnSchedule(seed, bossDefinition.factionId)),
@@ -236,7 +286,11 @@ export function createCombatState(
       shotsFired: 0,
       pickupsCollected: 0,
       damageTaken: 0,
-      itemTriggers: 0
+      itemTriggers: 0,
+      specialsUsed: 0,
+      bombsUsed: 0,
+      grazes: 0,
+      enemyProjectilesCancelled: 0
     },
     ended: false
   };
@@ -267,7 +321,9 @@ export function updateCombatState(
   updateBoss(state, safeDt, bounds);
   updateProjectiles(state, safeDt, bounds);
   updateTelegraphs(state, safeDt);
+  updateCombatEffects(state, safeDt);
   updatePickups(state, safeDt, bounds);
+  resolveGraze(state);
   resolveCombatCollisions(state);
   cleanupEntities(state, bounds);
 
@@ -336,7 +392,8 @@ export function getCombatEntityCount(state: CombatState): number {
     state.enemies.length +
     state.projectiles.length +
     state.pickups.length +
-    state.telegraphs.length
+    state.telegraphs.length +
+    state.effects.length
   );
 }
 
@@ -380,9 +437,20 @@ function updatePlayer(
   player.fireCooldown = Math.max(0, player.fireCooldown - dt);
   player.invulnerableSeconds = Math.max(0, player.invulnerableSeconds - dt);
   player.fireRateBoostSeconds = Math.max(0, player.fireRateBoostSeconds - dt);
+  player.specialCooldown = Math.max(0, player.specialCooldown - dt);
+  player.specialActiveSeconds = Math.max(0, player.specialActiveSeconds - dt);
+  player.bombCooldown = Math.max(0, player.bombCooldown - dt);
 
   if (player.fireRateBoostSeconds <= 0) {
     player.fireRateMultiplier = 1;
+  }
+
+  if (input.special) {
+    activateSpecial(state);
+  }
+
+  if (input.bomb) {
+    activateBomb(state, bounds);
   }
 
   if (input.fire && player.fireCooldown <= 0) {
@@ -404,21 +472,142 @@ function updatePlayer(
       projectiles: [baseProjectile]
     });
 
-    for (const projectile of firePayload.projectiles) {
-      const spawnPayload = applyItemHooks('onProjectileSpawn', state.items, { projectile });
-      state.projectiles.push({
-        id: getNextEntityId(state),
-        owner: 'player',
-        ...spawnPayload.projectile
-      });
-    }
+    spawnPlayerProjectiles(state, firePayload.projectiles);
 
-    player.fireCooldown = state.weapon.fireCooldownSeconds * player.fireRateMultiplier;
+    const specialMultiplier =
+      player.specialActiveSeconds > 0 ? SPECIAL_FIRE_RATE_MULTIPLIER : 1;
+    player.fireCooldown =
+      state.weapon.fireCooldownSeconds * player.fireRateMultiplier * specialMultiplier;
     state.stats = {
       ...state.stats,
       shotsFired: state.stats.shotsFired + firePayload.projectiles.length,
       itemTriggers: state.stats.itemTriggers + Math.max(0, firePayload.projectiles.length - 1)
     };
+  }
+}
+
+function activateSpecial(state: CombatState): void {
+  const { player } = state;
+
+  if (player.specialCharge < player.maxSpecialCharge || player.specialCooldown > 0) {
+    return;
+  }
+
+  player.specialCharge = 0;
+  player.specialCooldown = SPECIAL_COOLDOWN_SECONDS;
+  player.specialActiveSeconds = SPECIAL_ACTIVE_SECONDS;
+  state.effects.push({
+    id: getNextEntityId(state),
+    kind: 'special',
+    x: player.x,
+    y: player.y,
+    radius: 96,
+    ttl: 0.42,
+    maxTtl: 0.42
+  });
+
+  spawnPlayerProjectiles(
+    state,
+    [-130, 0, 130].map((vx) => ({
+      x: player.x,
+      y: player.y - player.radius,
+      vx,
+      vy: -820,
+      radius: 6,
+      damage: 1.25,
+      ttl: 1.35,
+      tags: ['phase', 'laser'],
+      procDepth: 1
+    }))
+  );
+
+  state.stats = {
+    ...state.stats,
+    shotsFired: state.stats.shotsFired + 3,
+    specialsUsed: state.stats.specialsUsed + 1
+  };
+}
+
+function activateBomb(state: CombatState, bounds: CombatBounds): void {
+  const { player } = state;
+
+  if (player.bombs <= 0 || player.bombCooldown > 0) {
+    return;
+  }
+
+  const cancelledProjectiles = state.projectiles.filter(
+    (projectile) => projectile.owner === 'enemy'
+  ).length;
+  const enemyIdsToRemove = new Set<number>();
+
+  player.bombs -= 1;
+  player.bombCooldown = BOMB_COOLDOWN_SECONDS;
+  player.invulnerableSeconds = Math.max(
+    player.invulnerableSeconds,
+    BOMB_INVULNERABILITY_SECONDS
+  );
+  state.projectiles = state.projectiles.filter((projectile) => projectile.owner !== 'enemy');
+  state.telegraphs = [];
+  state.effects.push({
+    id: getNextEntityId(state),
+    kind: 'bomb',
+    x: player.x,
+    y: player.y,
+    radius: Math.max(bounds.width, bounds.height) * 0.55,
+    ttl: 0.58,
+    maxTtl: 0.58
+  });
+
+  for (const enemy of state.enemies) {
+    damageEnemyWithProjectile(
+      state,
+      enemy,
+      {
+        id: 0,
+        owner: 'player',
+        x: enemy.x,
+        y: enemy.y,
+        vx: 0,
+        vy: 0,
+        radius: enemy.radius,
+        damage: BOMB_DAMAGE,
+        ttl: 0,
+        tags: ['bomb', 'plasma'],
+        procDepth: 1
+      },
+      enemyIdsToRemove
+    );
+  }
+
+  const boss = state.boss;
+
+  if (boss && boss.hull > 1) {
+    const damage = Math.min(boss.hull - 1, Math.max(1, boss.maxHull * BOMB_BOSS_DAMAGE_RATIO));
+    boss.hull = applyDamage(boss.hull, damage).hull;
+    boss.attackCooldown = Math.max(boss.attackCooldown, 0.75);
+    boss.pendingAttack = null;
+    boss.telegraphSeconds = 0;
+  }
+
+  state.enemies = state.enemies.filter((enemy) => !enemyIdsToRemove.has(enemy.id));
+  state.stats = {
+    ...state.stats,
+    bombsUsed: state.stats.bombsUsed + 1,
+    enemyProjectilesCancelled: state.stats.enemyProjectilesCancelled + cancelledProjectiles
+  };
+}
+
+function spawnPlayerProjectiles(
+  state: CombatState,
+  projectiles: readonly ProjectileBlueprint[]
+): void {
+  for (const projectile of projectiles) {
+    const spawnPayload = applyItemHooks('onProjectileSpawn', state.items, { projectile });
+    state.projectiles.push({
+      id: getNextEntityId(state),
+      owner: 'player',
+      ...spawnPayload.projectile
+    });
   }
 }
 
@@ -542,6 +731,12 @@ function updateTelegraphs(state: CombatState, dt: number): void {
   }
 }
 
+function updateCombatEffects(state: CombatState, dt: number): void {
+  for (const effect of state.effects) {
+    effect.ttl -= dt;
+  }
+}
+
 function updatePickups(state: CombatState, dt: number, bounds: CombatBounds): void {
   for (const pickup of state.pickups) {
     const dx = state.player.x - pickup.x;
@@ -559,6 +754,44 @@ function updatePickups(state: CombatState, dt: number, bounds: CombatBounds): vo
     pickup.y = clamp(pickup.y + pickup.vy * dt, bounds.padding, bounds.height - bounds.padding);
     pickup.vx *= 0.97;
     pickup.vy *= 0.97;
+  }
+}
+
+function resolveGraze(state: CombatState): void {
+  for (const projectile of state.projectiles) {
+    if (projectile.owner !== 'enemy' || state.grazedProjectileIds.has(projectile.id)) {
+      continue;
+    }
+
+    const hitDistance = state.player.radius + projectile.radius;
+    const grazeDistance = hitDistance + GRAZE_MARGIN;
+    const distanceSquared = getDistanceSquared(projectile, state.player);
+
+    if (distanceSquared <= hitDistance * hitDistance || distanceSquared > grazeDistance * grazeDistance) {
+      continue;
+    }
+
+    state.grazedProjectileIds.add(projectile.id);
+    gainSpecialCharge(
+      state,
+      hasItem(state.items, 'item_phase_grazer')
+        ? SPECIAL_CHARGE_PER_GRAZE * 1.55
+        : SPECIAL_CHARGE_PER_GRAZE
+    );
+    state.effects.push({
+      id: getNextEntityId(state),
+      kind: 'graze',
+      x: projectile.x,
+      y: projectile.y,
+      radius: 34,
+      ttl: 0.26,
+      maxTtl: 0.26
+    });
+    state.stats = {
+      ...state.stats,
+      grazes: state.stats.grazes + 1,
+      itemTriggers: state.stats.itemTriggers + Number(hasItem(state.items, 'item_phase_grazer'))
+    };
   }
 }
 
@@ -674,6 +907,7 @@ function damageEnemyWithProjectile(
       Number(killPayload.blastDamage > 0) +
       Number(killPayload.arcDamage > 0)
   };
+  gainSpecialCharge(state, SPECIAL_CHARGE_PER_KILL);
 }
 
 function damageBossWithProjectile(
@@ -705,6 +939,15 @@ function damageBossWithProjectile(
     bossesDefeated: state.stats.bossesDefeated + 1,
     itemTriggers: state.stats.itemTriggers + Number(killPayload.bonusSalvage > 0)
   };
+  gainSpecialCharge(state, SPECIAL_CHARGE_PER_BOSS);
+}
+
+function gainSpecialCharge(state: CombatState, amount: number): void {
+  state.player.specialCharge = clamp(
+    state.player.specialCharge + Math.max(0, amount),
+    0,
+    state.player.maxSpecialCharge
+  );
 }
 
 function cleanupEntities(state: CombatState, bounds: CombatBounds): void {
@@ -718,6 +961,15 @@ function cleanupEntities(state: CombatState, bounds: CombatBounds): void {
   );
   state.enemies = state.enemies.filter((enemy) => enemy.y < bounds.height + enemy.radius * 2);
   state.telegraphs = state.telegraphs.filter((telegraph) => telegraph.ttl > 0);
+  state.effects = state.effects.filter((effect) => effect.ttl > 0);
+
+  const activeProjectileIds = new Set(state.projectiles.map((projectile) => projectile.id));
+
+  for (const projectileId of state.grazedProjectileIds) {
+    if (!activeProjectileIds.has(projectileId)) {
+      state.grazedProjectileIds.delete(projectileId);
+    }
+  }
 }
 
 function damagePlayer(state: CombatState, damage: number): void {

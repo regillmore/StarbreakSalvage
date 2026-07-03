@@ -2,6 +2,9 @@ import type { CombatState } from '../game/CombatState';
 
 export type CombatFeedbackCue =
   | 'playerFire'
+  | 'specialActivated'
+  | 'bombUsed'
+  | 'graze'
   | 'enemyDestroyed'
   | 'bossDefeated'
   | 'pickupCollected'
@@ -13,6 +16,9 @@ export type CombatFeedbackCue =
 
 export interface CombatFeedbackSnapshot {
   readonly shotsFired: number;
+  readonly specialsUsed: number;
+  readonly bombsUsed: number;
+  readonly grazes: number;
   readonly enemiesDestroyed: number;
   readonly bossesDefeated: number;
   readonly pickupsCollected: number;
@@ -23,6 +29,9 @@ export interface CombatFeedbackSnapshot {
 
 const SHAKE_INTENSITY_BY_CUE: Readonly<Record<CombatFeedbackCue, number>> = {
   playerFire: 0.08,
+  specialActivated: 0.24,
+  bombUsed: 0.7,
+  graze: 0.04,
   enemyDestroyed: 0.2,
   bossDefeated: 0.72,
   pickupCollected: 0,
@@ -36,6 +45,9 @@ const SHAKE_INTENSITY_BY_CUE: Readonly<Record<CombatFeedbackCue, number>> = {
 export function createCombatFeedbackSnapshot(state: CombatState): CombatFeedbackSnapshot {
   return {
     shotsFired: state.stats.shotsFired,
+    specialsUsed: state.stats.specialsUsed,
+    bombsUsed: state.stats.bombsUsed,
+    grazes: state.stats.grazes,
     enemiesDestroyed: state.stats.enemiesDestroyed,
     bossesDefeated: state.stats.bossesDefeated,
     pickupsCollected: state.stats.pickupsCollected,
@@ -53,6 +65,18 @@ export function diffCombatFeedback(
 
   if (after.shotsFired > before.shotsFired) {
     cues.push('playerFire');
+  }
+
+  if (after.specialsUsed > before.specialsUsed) {
+    cues.push('specialActivated');
+  }
+
+  if (after.bombsUsed > before.bombsUsed) {
+    cues.push('bombUsed');
+  }
+
+  if (after.grazes > before.grazes) {
+    cues.push('graze');
   }
 
   if (after.damageTaken > before.damageTaken) {

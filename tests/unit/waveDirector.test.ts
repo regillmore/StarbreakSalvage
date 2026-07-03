@@ -276,7 +276,11 @@ function makeProgressState(
       shotsFired: 0,
       pickupsCollected: 0,
       damageTaken: 0,
-      itemTriggers: 0
+      itemTriggers: 0,
+      specialsUsed: 0,
+      bombsUsed: 0,
+      grazes: 0,
+      enemyProjectilesCancelled: 0
     }
   };
 }

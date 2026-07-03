@@ -74,11 +74,32 @@ export interface PickupRenderState {
   readonly kind: 'credit' | 'salvage';
 }
 
+export interface CombatEffectRenderState {
+  readonly kind: 'special' | 'bomb' | 'graze';
+  readonly x: number;
+  readonly y: number;
+  readonly radius: number;
+  readonly ttl: number;
+  readonly maxTtl: number;
+}
+
 export interface RendererSettings {
   readonly reducedMotion: boolean;
   readonly screenShake: number;
   readonly bulletContrast: BulletContrast;
   readonly performanceMode: boolean;
+}
+
+export function getCombatEffectRenderRadius(
+  effect: Pick<CombatEffectRenderState, 'radius' | 'ttl' | 'maxTtl'>,
+  reducedMotion: boolean
+): number {
+  if (reducedMotion) {
+    return effect.radius * 0.72;
+  }
+
+  const progress = 1 - clamp(effect.ttl / effect.maxTtl, 0, 1);
+  return effect.radius * (0.38 + progress * 0.62);
 }
 
 export class CanvasRenderer {
@@ -446,6 +467,40 @@ export class CanvasRenderer {
     context.lineWidth = 1.5;
     context.fillRect(-pickup.radius, -pickup.radius, pickup.radius * 2, pickup.radius * 2);
     context.strokeRect(-pickup.radius, -pickup.radius, pickup.radius * 2, pickup.radius * 2);
+    context.restore();
+  }
+
+  public paintCombatEffect(effect: CombatEffectRenderState): void {
+    const context = this.context;
+    const alpha = clamp(effect.ttl / effect.maxTtl, 0, 1);
+    const radius = getCombatEffectRenderRadius(effect, this.settings.reducedMotion);
+    const color =
+      effect.kind === 'bomb' ? '#ffd166' : effect.kind === 'special' ? '#7cf7ff' : '#ff6bd6';
+
+    context.save();
+    context.translate(effect.x, effect.y);
+    context.globalAlpha = effect.kind === 'graze' ? alpha * 0.78 : alpha * 0.62;
+    context.strokeStyle = color;
+    context.fillStyle = color;
+    context.lineWidth = effect.kind === 'bomb' ? 4 : 2;
+    context.shadowColor = color;
+    context.shadowBlur = this.settings.reducedMotion ? 0 : 14;
+    context.beginPath();
+    context.arc(0, 0, radius, 0, Math.PI * 2);
+    context.stroke();
+
+    if (effect.kind === 'graze') {
+      context.globalAlpha = alpha;
+      context.beginPath();
+      context.arc(0, 0, 3.5, 0, Math.PI * 2);
+      context.fill();
+    } else if (effect.kind === 'special') {
+      context.globalAlpha = alpha * 0.28;
+      context.beginPath();
+      context.arc(0, 0, Math.max(8, radius * 0.42), 0, Math.PI * 2);
+      context.fill();
+    }
+
     context.restore();
   }
 

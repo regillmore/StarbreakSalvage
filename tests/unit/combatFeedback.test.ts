@@ -8,6 +8,9 @@ import {
 
 const emptySnapshot: CombatFeedbackSnapshot = {
   shotsFired: 0,
+  specialsUsed: 0,
+  bombsUsed: 0,
+  grazes: 0,
   enemiesDestroyed: 0,
   bossesDefeated: 0,
   pickupsCollected: 0,
@@ -21,6 +24,9 @@ describe('CombatFeedback', () => {
     expect(
       diffCombatFeedback(emptySnapshot, {
         shotsFired: 2,
+        specialsUsed: 1,
+        bombsUsed: 1,
+        grazes: 1,
         enemiesDestroyed: 1,
         bossesDefeated: 0,
         pickupsCollected: 1,
@@ -30,6 +36,9 @@ describe('CombatFeedback', () => {
       })
     ).toEqual([
       'playerFire',
+      'specialActivated',
+      'bombUsed',
+      'graze',
       'playerHit',
       'enemyDestroyed',
       'pickupCollected',
@@ -50,6 +59,9 @@ describe('CombatFeedback', () => {
 
   it('keeps nonzero shake for impact cues and no shake for pickups', () => {
     expect(getFeedbackShakeIntensity('playerHit')).toBeGreaterThan(0);
+    expect(getFeedbackShakeIntensity('bombUsed')).toBeGreaterThan(
+      getFeedbackShakeIntensity('playerHit')
+    );
     expect(getFeedbackShakeIntensity('pickupCollected')).toBe(0);
   });
 });

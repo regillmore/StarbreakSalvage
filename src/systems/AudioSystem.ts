@@ -28,6 +28,27 @@ const CUE_DEFINITIONS: Readonly<Record<CombatFeedbackCue, AudioCueDefinition>> =
     durationSeconds: 0.045,
     gain: 0.045
   },
+  specialActivated: {
+    waveform: 'triangle',
+    frequency: 520,
+    endFrequency: 1180,
+    durationSeconds: 0.16,
+    gain: 0.07
+  },
+  bombUsed: {
+    waveform: 'sawtooth',
+    frequency: 92,
+    endFrequency: 34,
+    durationSeconds: 0.28,
+    gain: 0.105
+  },
+  graze: {
+    waveform: 'triangle',
+    frequency: 980,
+    endFrequency: 1320,
+    durationSeconds: 0.055,
+    gain: 0.032
+  },
   enemyDestroyed: {
     waveform: 'sawtooth',
     frequency: 180,

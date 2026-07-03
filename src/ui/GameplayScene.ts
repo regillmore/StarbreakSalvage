@@ -41,11 +41,14 @@ export class GameplayScene implements Scene {
   private readonly hullReadout: HTMLParagraphElement;
   private readonly economyReadout: HTMLParagraphElement;
   private readonly objectiveReadout: HTMLParagraphElement;
+  private readonly verbReadout: HTMLParagraphElement;
   private readonly combatReadout: HTMLParagraphElement;
   private readonly bossReadout: HTMLParagraphElement;
   private readonly warningReadout: HTMLParagraphElement;
   private readonly itemReadout: HTMLParagraphElement;
   private sectorCompleted = false;
+  private queuedSpecial = false;
+  private queuedBomb = false;
 
   public constructor(
     private readonly uiRoot: HTMLElement,
@@ -77,6 +80,10 @@ export class GameplayScene implements Scene {
     this.objectiveReadout = document.createElement('p');
     this.objectiveReadout.className = 'hud-pill hud-pill-wide';
     this.objectiveReadout.dataset.testid = 'objective-readout';
+
+    this.verbReadout = document.createElement('p');
+    this.verbReadout.className = 'hud-pill hud-pill-wide';
+    this.verbReadout.dataset.testid = 'verb-readout';
 
     this.combatReadout = document.createElement('p');
     this.combatReadout.className = 'hud-pill';
@@ -119,6 +126,7 @@ export class GameplayScene implements Scene {
       this.hullReadout,
       this.economyReadout,
       this.objectiveReadout,
+      this.verbReadout,
       this.combatReadout,
       this.bossReadout,
       this.warningReadout,
@@ -134,11 +142,17 @@ export class GameplayScene implements Scene {
   public update(dt: number): void {
     const state = this.getCombatState();
     const feedbackBefore = createCombatFeedbackSnapshot(state);
+    const special = this.queuedSpecial;
+    const bomb = this.queuedBomb;
+    this.queuedSpecial = false;
+    this.queuedBomb = false;
     const result = updateCombatState(
       state,
       {
         movement: this.input.getMovementAxis(),
-        fire: this.input.isActionPressed('fire')
+        fire: this.input.isActionPressed('fire'),
+        special,
+        bomb
       },
       dt,
       this.getCombatBounds()
@@ -177,6 +191,10 @@ export class GameplayScene implements Scene {
       renderer.paintTelegraph(telegraph);
     }
 
+    for (const effect of state.effects) {
+      renderer.paintCombatEffect(effect);
+    }
+
     for (const enemy of state.enemies) {
       renderer.paintEnemy(enemy);
     }
@@ -203,6 +221,14 @@ export class GameplayScene implements Scene {
   }
 
   public handleAction(action: InputAction): void {
+    if (action === 'special') {
+      this.queuedSpecial = true;
+    }
+
+    if (action === 'bomb') {
+      this.queuedBomb = true;
+    }
+
     if (action === 'pause' || action === 'back') {
       this.onPause(this);
     }
@@ -278,6 +304,7 @@ export class GameplayScene implements Scene {
     this.hullReadout.textContent = `Hull ${state.player.hull}/${state.player.maxHull}`;
     this.economyReadout.textContent = `Credits ${this.startingCredits + state.player.credits} | Salvage ${this.startingSalvage + state.player.salvage}`;
     this.objectiveReadout.textContent = getObjectiveProgress(this.getWavePlan(), state).readout;
+    this.verbReadout.textContent = this.getVerbReadout(state);
     this.combatReadout.textContent = `Destroyed ${state.stats.enemiesDestroyed} | Shots ${state.stats.shotsFired} | Hooks ${state.stats.itemTriggers}`;
     this.bossReadout.textContent = state.boss
       ? `${state.boss.name} ${Math.max(0, state.boss.hull)}/${state.boss.maxHull}`
@@ -293,6 +320,20 @@ export class GameplayScene implements Scene {
 
   private getCurrentBossName(): string {
     return this.run.sectors[this.sectorIndex]?.bossName ?? 'unassigned';
+  }
+
+  private getVerbReadout(state: CombatState): string {
+    const specialPercent = Math.round(
+      (state.player.specialCharge / state.player.maxSpecialCharge) * 100
+    );
+    const specialStatus =
+      state.player.specialActiveSeconds > 0
+        ? `active ${state.player.specialActiveSeconds.toFixed(1)}s`
+        : state.player.specialCooldown > 0
+          ? `cooldown ${state.player.specialCooldown.toFixed(1)}s`
+          : `${specialPercent}%`;
+
+    return `Special ${specialStatus} | Bombs ${state.player.bombs}/${state.player.maxBombs} | Graze ${state.stats.grazes}`;
   }
 
   private emitFeedback(cues: readonly CombatFeedbackCue[]): void {

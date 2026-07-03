@@ -40,7 +40,7 @@ Turn the Phase 1 alpha into a cohesive vertical slice that can support repeated 
 - Bosses: 5 defined, with 3 active attack patterns.
 - Sectors: 5 defined.
 - Unlocks: 10 defined.
-- Major gaps: one-kill sector clear, no real special/bomb/graze loop, limited boss phases, limited content volume, no unlock gating, no in-menu seed entry, no real tutorial/onboarding.
+- Major gaps: boss phases, ship stat identity, limited content volume, no unlock gating, no in-menu seed entry, no real tutorial/onboarding. Sector objectives/wave direction and first-pass special/bomb/graze verbs now exist, but still need balance and content depth.
 
 ## Phase 2 Milestones
 

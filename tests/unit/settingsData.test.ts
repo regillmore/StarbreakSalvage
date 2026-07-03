@@ -82,6 +82,17 @@ describe('settingsData', () => {
     expect(actionsForKey(' ', bindings)).toContain('confirm');
   });
 
+  it('turns remapped special and bomb keys into gameplay actions', () => {
+    const withSpecial = updateKeyBinding(createDefaultSettings(), 'special', 'q');
+    const settings = updateKeyBinding(withSpecial, 'bomb', 'b');
+    const bindings = settingsToKeyBindingMap(settings);
+
+    expect(actionsForKey('q', bindings)).toEqual(['special']);
+    expect(actionsForKey('b', bindings)).toEqual(['bomb']);
+    expect(actionsForKey('Shift', bindings)).not.toContain('special');
+    expect(actionsForKey('X', bindings)).not.toContain('bomb');
+  });
+
   it('writes settings through storage', () => {
     const storage = new MemoryStorage();
     const settings = { ...createDefaultSettings(), muted: true };

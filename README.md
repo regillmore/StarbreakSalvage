@@ -38,7 +38,9 @@ Baseline controls:
 - Confirm: Enter or Space
 - Back: Escape or Backspace
 
-The current shell supports the title flow, deterministic contract launch, keyboard movement, primary fire, faction-colored directed waves, objective progress, pickups, pause/resume, hull damage, starter item hooks, route choice, rewards, basic shops with rerolls, sector transition, boss gates, debug boss spawns, run summary stats, and a persistent unlock archive.
+The current shell supports the title flow, deterministic contract launch, keyboard movement, primary fire, special burst fire, screen-clearing bombs, near-miss graze charge, faction-colored directed waves, objective progress, pickups, pause/resume, hull damage, starter item hooks, route choice, rewards, basic shops with rerolls, sector transition, boss gates, debug boss spawns, run summary stats, and a persistent unlock archive.
+
+Special starts charged and spends charge for a short burst/faster-fire window. Bombs cancel enemy bullets and telegraphs while softening enemies and bosses without instantly ending boss fights. Grazing enemy shots at close range grants deterministic special charge and increments the HUD graze counter.
 
 The Unlock Archive stores versioned local save data in `localStorage`, including salvage bank, achievements, unlocks, last-run summary, export/import, and reset.
 
@@ -48,7 +50,7 @@ Add `?debug=1` to the local or deployed URL to show the debug overlay with FPS, 
 
 Add `?seed=LASER-TAX-404` or another seed label to preview deterministic contract, route, objective, wave, reward, shop, and boss generation. Blank or missing seeds default to `STARBREAK-SMOKE`. Run summaries include a copy-ready seed link for sharing the same generated contracts, route, rewards, shop inventory, and boss schedule.
 
-With `?debug=1`, press `K` during gameplay to force the MVP summary screen. Press `1`, `2`, or `3` to spawn Auditor Drone XL, Carrier of Unsold Missiles, or The Bloom Engine. The HUD objective pill shows directed wave progress and boss-gate state for the current sector.
+With `?debug=1`, press `K` during gameplay to force the MVP summary screen. Press `1`, `2`, or `3` to spawn Auditor Drone XL, Carrier of Unsold Missiles, or The Bloom Engine. The HUD objective pill shows directed wave progress and boss-gate state for the current sector, while the verb pill shows special charge/cooldown, bomb stock, and graze count.
 
 Projectile budget notes live in `docs/STARBREAK_SALVAGE_PERFORMANCE_NOTES.md`.
 
