@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('loads the title screen and arms the placeholder start button', async ({ page }) => {
+test('loads the shell, starts gameplay, moves, pauses, and opens summary', async ({ page }) => {
   const browserErrors: string[] = [];
   page.on('console', (message) => {
     if (message.type() === 'error') {
@@ -12,13 +12,34 @@ test('loads the title screen and arms the placeholder start button', async ({ pa
   await page.goto('./');
 
   await expect(page.getByRole('heading', { name: 'Starbreak Salvage' })).toBeVisible();
-  await expect(page.getByRole('img', { name: 'Starfield flight deck' })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Starbreak Salvage playfield' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Start Run' }).click();
 
-  await expect(page.getByRole('button', { name: 'Contract Armed' })).toBeVisible();
-  await expect(page.getByTestId('boot-status')).toHaveText(
-    'Contract board warming up for the first playable slice.'
+  await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Launch Contract' }).click();
+
+  await expect(page.getByText('Outer Debris Field')).toBeVisible();
+
+  const startPosition = await page.getByTestId('player-position').textContent();
+  await page.keyboard.down('ArrowRight');
+  await page.waitForTimeout(180);
+  await page.keyboard.up('ArrowRight');
+
+  await expect.poll(async () => page.getByTestId('player-position').textContent()).not.toBe(
+    startPosition
   );
+
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('heading', { name: 'Paused' })).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await expect(page.getByText('Outer Debris Field')).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'End Run' }).click();
+  await expect(page.getByRole('heading', { name: 'Contract Suspended' })).toBeVisible();
+
   expect(browserErrors).toEqual([]);
 });
