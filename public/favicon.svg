@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Starbreak Salvage">
+  <rect width="64" height="64" rx="12" fill="#070912"/>
+  <path d="M32 8 44 50 32 43 20 50 32 8Z" fill="#7cf7ff"/>
+  <path d="M32 8 36 43 32 40 28 43 32 8Z" fill="#ffd166"/>
+  <circle cx="16" cy="18" r="2" fill="#ff6bd6"/>
+  <circle cx="49" cy="23" r="1.6" fill="#f4f7fb"/>
+  <circle cx="12" cy="47" r="1.4" fill="#f4f7fb"/>
+</svg>
