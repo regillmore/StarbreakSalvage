@@ -10,7 +10,8 @@ export class PauseScene implements Scene {
     private readonly uiRoot: HTMLElement,
     private readonly gameplayScene: GameplayScene,
     private readonly onResume: (scene: GameplayScene) => void,
-    private readonly onEndRun: () => void
+    private readonly onEndRun: () => void,
+    private readonly onOpenSettings: () => void
   ) {}
 
   public enter(): void {
@@ -40,7 +41,13 @@ export class PauseScene implements Scene {
     endButton.textContent = 'End Run';
     endButton.addEventListener('click', this.onEndRun);
 
-    controls.append(resumeButton, endButton);
+    const settingsButton = document.createElement('button');
+    settingsButton.className = 'secondary-button';
+    settingsButton.type = 'button';
+    settingsButton.textContent = 'Settings';
+    settingsButton.addEventListener('click', this.onOpenSettings);
+
+    controls.append(resumeButton, settingsButton, endButton);
     shell.append(title, status, controls);
     this.uiRoot.replaceChildren(shell);
     resumeButton.focus();

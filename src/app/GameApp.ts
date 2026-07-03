@@ -16,6 +16,13 @@ import {
   type SaveUpdateResult
 } from '../core/saveData';
 import {
+  createDefaultSettings,
+  loadSettingsData,
+  settingsToKeyBindingMap,
+  writeSettingsData,
+  type GameSettings
+} from '../core/settingsData';
+import {
   generateRunSkeleton,
   type RouteOption,
   type RunSkeleton,
@@ -42,6 +49,7 @@ import { PauseScene } from '../ui/PauseScene';
 import { RewardScene } from '../ui/RewardScene';
 import { RouteScene } from '../ui/RouteScene';
 import { RunSummaryScene } from '../ui/RunSummaryScene';
+import { SettingsScene } from '../ui/SettingsScene';
 import { SectorTransitionScene } from '../ui/SectorTransitionScene';
 import { ShopScene } from '../ui/ShopScene';
 import { UnlockArchiveScene } from '../ui/UnlockArchiveScene';
@@ -57,6 +65,7 @@ export class GameApp {
   private readonly loop: Loop;
   private readonly debugEnabled: boolean;
   private readonly currentRun: RunSkeleton;
+  private settingsData: GameSettings;
   private saveData: SaveData;
   private selectedContract: StartingContract;
   private runSession: RunSessionState;
@@ -79,9 +88,11 @@ export class GameApp {
     this.debugOverlay.className = 'debug-overlay';
     this.debugOverlay.setAttribute('aria-live', 'polite');
 
-    this.renderer = new CanvasRenderer(this.canvas);
-    this.input = new InputSystem(window);
     this.debugEnabled = isDebugEnabled(window);
+    this.settingsData = loadOrRepairSettings(window);
+    this.renderer = new CanvasRenderer(this.canvas);
+    this.renderer.setSettings(this.settingsData);
+    this.input = new InputSystem(window, settingsToKeyBindingMap(this.settingsData));
     this.currentRun = generateRunSkeleton(getInitialSeed(window));
     this.saveData = loadOrRepairSave(window);
     this.selectedContract = getFirstContract(this.currentRun);
@@ -103,6 +114,7 @@ export class GameApp {
     }
 
     this.root.replaceChildren(...children);
+    this.applyDocumentSettings();
     this.input.start();
     this.showMainMenu();
     this.loop.start();
@@ -138,7 +150,22 @@ export class GameApp {
         },
         () => {
           this.showUnlockArchive();
+        },
+        () => {
+          this.showSettings(() => this.showMainMenu());
         }
+      )
+    );
+  }
+
+  private showSettings(onBack: () => void): void {
+    this.sceneManager.switchTo(
+      new SettingsScene(
+        this.uiRoot,
+        () => this.settingsData,
+        (settings) => this.applySettings(settings),
+        (settings) => this.toggleFullscreen(settings),
+        onBack
       )
     );
   }
@@ -315,6 +342,9 @@ export class GameApp {
         },
         () => {
           this.showRunSummary(gameplayScene.getRunResult('abandoned'));
+        },
+        () => {
+          this.showSettings(() => this.showPause(gameplayScene));
         }
       )
     );
@@ -391,6 +421,35 @@ export class GameApp {
     }
   }
 
+  private applySettings(settings: GameSettings): void {
+    this.settingsData = settings;
+    writeSettingsData(window.localStorage, settings);
+    this.input.setBindings(settingsToKeyBindingMap(settings));
+    this.renderer.setSettings(settings);
+    this.applyDocumentSettings();
+  }
+
+  private applyDocumentSettings(): void {
+    const documentElement = this.root.ownerDocument.documentElement;
+    documentElement.dataset.reducedMotion = String(this.settingsData.reducedMotion);
+    documentElement.dataset.bulletContrast = this.settingsData.bulletContrast;
+    documentElement.dataset.performanceMode = String(this.settingsData.performanceMode);
+    documentElement.dataset.audioMuted = String(this.settingsData.muted);
+    documentElement.style.setProperty('--screen-shake', `${this.settingsData.screenShake}`);
+  }
+
+  private toggleFullscreen(settings: GameSettings): void {
+    const ownerDocument = this.root.ownerDocument;
+    this.applySettings(settings);
+
+    if (!ownerDocument.fullscreenElement) {
+      void ownerDocument.documentElement.requestFullscreen?.().catch(() => {});
+      return;
+    }
+
+    void ownerDocument.exitFullscreen?.().catch(() => {});
+  }
+
   private updateDebugOverlay(): void {
     if (!this.debugEnabled) {
       return;
@@ -442,4 +501,18 @@ function loadOrRepairSave(ownerWindow: Window): SaveData {
   }
 
   return loaded.data;
+}
+
+function loadOrRepairSettings(ownerWindow: Window): GameSettings {
+  try {
+    const loaded = loadSettingsData(ownerWindow.localStorage);
+
+    if (loaded.repaired) {
+      writeSettingsData(ownerWindow.localStorage, loaded.data);
+    }
+
+    return loaded.data;
+  } catch {
+    return createDefaultSettings();
+  }
 }

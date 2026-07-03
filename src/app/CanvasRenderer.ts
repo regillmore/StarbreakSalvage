@@ -1,5 +1,6 @@
 import { getBossById, type BossId } from '../content/bosses';
 import { getFactionById, type FactionId } from '../content/factions';
+import type { BulletContrast } from '../core/settingsData';
 import { clamp } from '../core/math';
 import { generateStarfield, type Star, starCountForViewport } from '../core/starfield';
 
@@ -66,11 +67,22 @@ export interface PickupRenderState {
   readonly kind: 'credit' | 'salvage';
 }
 
+export interface RendererSettings {
+  readonly reducedMotion: boolean;
+  readonly bulletContrast: BulletContrast;
+  readonly performanceMode: boolean;
+}
+
 export class CanvasRenderer {
   private readonly context: CanvasRenderingContext2D;
   private size: RenderSize = { width: 1, height: 1, dpr: 1 };
   private starCache: Star[] = [];
   private starCacheKey = '';
+  private settings: RendererSettings = {
+    reducedMotion: false,
+    bulletContrast: 'standard',
+    performanceMode: false
+  };
 
   public constructor(private readonly canvas: HTMLCanvasElement) {
     const context = canvas.getContext('2d');
@@ -87,6 +99,11 @@ export class CanvasRenderer {
 
   public getSize(): RenderSize {
     return this.size;
+  }
+
+  public setSettings(settings: RendererSettings): void {
+    this.settings = settings;
+    this.starCacheKey = '';
   }
 
   public resizeToDisplay(): void {
@@ -157,7 +174,7 @@ export class CanvasRenderer {
     context.translate(player.x, player.y);
     context.globalAlpha = player.invulnerable ? 0.62 : 1;
 
-    context.globalAlpha = 0.35 + thrust * 0.45;
+    context.globalAlpha = this.settings.reducedMotion ? 0.28 : 0.35 + thrust * 0.45;
     context.fillStyle = '#ffd166';
     context.beginPath();
     context.moveTo(-player.radius * 0.48, player.radius * 0.68);
@@ -364,12 +381,18 @@ export class CanvasRenderer {
     context.translate(projectile.x, projectile.y);
 
     if (projectile.owner === 'player') {
-      context.fillStyle = '#7cf7ff';
-      context.shadowColor = '#7cf7ff';
+      context.fillStyle = this.settings.bulletContrast === 'high' ? '#ffffff' : '#7cf7ff';
+      context.shadowColor = this.settings.bulletContrast === 'high' ? '#ffffff' : '#7cf7ff';
     } else {
       const faction = projectile.factionId ? getFactionById(projectile.factionId) : null;
-      context.fillStyle = faction?.palette.projectile ?? '#ff6bd6';
-      context.shadowColor = faction?.palette.projectile ?? '#ff6bd6';
+      context.fillStyle =
+        this.settings.bulletContrast === 'high'
+          ? '#ffef5f'
+          : (faction?.palette.projectile ?? '#ff6bd6');
+      context.shadowColor =
+        this.settings.bulletContrast === 'high'
+          ? '#ffef5f'
+          : (faction?.palette.projectile ?? '#ff6bd6');
     }
 
     context.shadowBlur = 10;
@@ -436,13 +459,14 @@ export class CanvasRenderer {
 
   private paintStars(): void {
     const { width, height } = this.size;
-    const cacheKey = `${width}:${height}`;
+    const cacheKey = `${width}:${height}:${this.settings.performanceMode}`;
 
     if (cacheKey !== this.starCacheKey) {
+      const count = starCountForViewport(width, height);
       this.starCache = generateStarfield({
         width,
         height,
-        count: starCountForViewport(width, height),
+        count: this.settings.performanceMode ? Math.max(24, Math.floor(count * 0.55)) : count,
         seed: BACKGROUND_SEED
       });
       this.starCacheKey = cacheKey;

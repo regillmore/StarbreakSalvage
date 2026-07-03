@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   actionsForKey,
+  DEFAULT_KEY_BINDINGS,
   movementAxisFromActions,
   normalizeKey,
   primaryActionForKey
@@ -22,6 +23,10 @@ describe('input helpers', () => {
     expect(primaryActionForKey(' ')).toBe('confirm');
     expect(primaryActionForKey('Escape')).toBe('pause');
     expect(primaryActionForKey('1')).toBe('debugBossOne');
+  });
+
+  it('uses provided binding maps for action lookup', () => {
+    expect(actionsForKey('F', { ...DEFAULT_KEY_BINDINGS, fire: ['F'] })).toEqual(['fire']);
   });
 
   it('normalizes diagonal movement speed', () => {

@@ -60,6 +60,8 @@ button {
   pointer-events: auto;
 }
 
+.ui-layer input,
+.ui-layer select,
 .ui-layer textarea {
   pointer-events: auto;
 }
@@ -371,6 +373,68 @@ button {
     monospace;
 }
 
+.settings-panel {
+  max-height: min(92vh, 820px);
+  overflow: auto;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.settings-group {
+  display: grid;
+  align-content: start;
+  gap: 0.65rem;
+  padding: 0.9rem;
+  border: 1px solid rgba(124, 247, 255, 0.24);
+  border-radius: 8px;
+  background: rgba(10, 14, 34, 0.7);
+}
+
+.settings-group h2 {
+  margin: 0;
+  color: #7cf7ff;
+  font-size: 1rem;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.setting-control {
+  display: flex;
+  min-height: 2.6rem;
+  align-items: center;
+  gap: 0.65rem;
+  color: #f8fbff;
+  font-weight: 750;
+}
+
+.setting-control-stacked {
+  display: grid;
+  align-items: stretch;
+}
+
+.setting-control input,
+.setting-control select {
+  accent-color: #7cf7ff;
+}
+
+.setting-control select {
+  min-height: 2.4rem;
+  border: 1px solid rgba(124, 247, 255, 0.34);
+  border-radius: 6px;
+  color: #f8fbff;
+  background: rgba(2, 4, 10, 0.82);
+}
+
+.binding-button {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.55rem;
+}
+
 .button-row {
   display: flex;
   flex-wrap: wrap;
@@ -476,7 +540,8 @@ button {
   .route-grid,
   .reward-grid,
   .shop-grid,
-  .archive-grid {
+  .archive-grid,
+  .settings-grid {
     grid-template-columns: 1fr;
   }
 

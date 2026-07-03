@@ -89,7 +89,7 @@ export class InputSystem {
 
   public constructor(
     private readonly ownerWindow: Window = window,
-    private readonly bindings: KeyBindingMap = DEFAULT_KEY_BINDINGS
+    private bindings: KeyBindingMap = DEFAULT_KEY_BINDINGS
   ) {}
 
   public start(): void {
@@ -114,6 +114,12 @@ export class InputSystem {
     this.keysDown.clear();
     this.pressedActions.clear();
     this.isStarted = false;
+  }
+
+  public setBindings(bindings: KeyBindingMap): void {
+    this.bindings = bindings;
+    this.keysDown.clear();
+    this.pressedActions.clear();
   }
 
   public isActionPressed(action: InputAction): boolean {

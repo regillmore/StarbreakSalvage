@@ -42,6 +42,8 @@ The current shell supports the title flow, deterministic contract launch, keyboa
 
 The Unlock Archive stores versioned local save data in `localStorage`, including salvage bank, achievements, unlocks, last-run summary, export/import, and reset.
 
+Settings are available from the main menu and pause menu. They persist in `localStorage` and currently cover remappable controls, mute, master volume, reduced motion, screen shake intensity, bullet contrast, fullscreen, and performance mode.
+
 Add `?debug=1` to the local or deployed URL to show the debug overlay with FPS, scene, seed, and entity count.
 
 Add `?seed=LASER-TAX-404` or another seed label to preview deterministic contract and route generation. Blank or missing seeds default to `STARBREAK-SMOKE`.

@@ -12,7 +12,8 @@ export class MainMenuScene implements Scene {
     private readonly uiRoot: HTMLElement,
     private readonly saveSummary: SaveSummary,
     private readonly onStartRun: () => void,
-    private readonly onOpenArchive: () => void
+    private readonly onOpenArchive: () => void,
+    private readonly onOpenSettings: () => void
   ) {}
 
   public enter(): void {
@@ -40,12 +41,18 @@ export class MainMenuScene implements Scene {
     archiveButton.textContent = 'Unlock Archive';
     archiveButton.addEventListener('click', this.onOpenArchive);
 
+    const settingsButton = document.createElement('button');
+    settingsButton.className = 'secondary-button title-button';
+    settingsButton.type = 'button';
+    settingsButton.textContent = 'Settings';
+    settingsButton.addEventListener('click', this.onOpenSettings);
+
     const status = document.createElement('p');
     status.className = 'boot-status';
     status.dataset.testid = 'boot-status';
     status.textContent = `Bank ${this.saveSummary.salvageBank} kg | Unlocks ${this.saveSummary.unlockCount} | Runs ${this.saveSummary.runsEnded}`;
 
-    shell.append(title, tagline, startButton, archiveButton, status);
+    shell.append(title, tagline, startButton, archiveButton, settingsButton, status);
     this.uiRoot.replaceChildren(shell);
     startButton.focus();
   }

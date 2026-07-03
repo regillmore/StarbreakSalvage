@@ -16,6 +16,17 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByRole('heading', { name: 'Starbreak Salvage' })).toBeVisible();
   await expect(page.getByRole('img', { name: 'Starbreak Salvage playfield' })).toBeVisible();
 
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
+  await page.getByRole('checkbox', { name: 'Mute' }).check();
+  await page.getByRole('button', { name: 'Back', exact: true }).click();
+
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Starbreak Salvage' })).toBeVisible();
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await expect(page.getByRole('checkbox', { name: 'Mute' })).toBeChecked();
+  await page.getByRole('button', { name: 'Back', exact: true }).click();
+
   await page.getByRole('button', { name: 'Start Run' }).click();
 
   await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
@@ -38,6 +49,11 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.keyboard.up('ArrowLeft');
 
   await page.keyboard.press('Escape');
+  await expect(page.getByRole('heading', { name: 'Paused' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
+  await page.getByRole('button', { name: 'Back', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Paused' })).toBeVisible();
 
   await page.keyboard.press('Escape');
