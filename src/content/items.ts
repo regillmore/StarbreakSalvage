@@ -12,6 +12,7 @@ export const ITEM_TAGS = [
   'overkill',
   'phase',
   'plasma',
+  'relic',
   'ricochet',
   'revenge',
   'scrap',
@@ -46,7 +47,22 @@ export type ItemId =
   | 'item_vault_parasite'
   | 'item_mirror_turret'
   | 'item_salvage_magnet'
-  | 'item_revenge_beam';
+  | 'item_revenge_beam'
+  | 'item_laser_tax_stamp'
+  | 'item_missile_splinter_warrant'
+  | 'item_scrap_saints_relay'
+  | 'item_plasma_lens_array'
+  | 'item_shield_revenge_contract'
+  | 'item_credit_reroute_fuse'
+  | 'item_phase_anchor_spool'
+  | 'item_curse_eater_gasket'
+  | 'item_bombardier_tithe'
+  | 'item_magnetized_tithe_box'
+  | 'item_overheat_oracle'
+  | 'item_relic_index_codex'
+  | 'item_arc_welder_drone'
+  | 'item_plasma_bloom_filter'
+  | 'item_salvage_dividend_chip';
 
 export interface ItemDefinition {
   readonly id: ItemId;
@@ -62,6 +78,63 @@ export interface RewardPoolDefinition {
   readonly id: 'starter' | 'combat' | 'vault';
   readonly itemIds: readonly ItemId[];
 }
+
+export interface ItemArchetypeDefinition {
+  readonly id:
+    | 'laser-split'
+    | 'missile-overkill'
+    | 'drone-copy'
+    | 'shield-revenge'
+    | 'credit-shop'
+    | 'curse-relic'
+    | 'phase-graze'
+    | 'heat-prototype';
+  readonly label: string;
+  readonly tags: readonly ItemTag[];
+}
+
+export const ITEM_ARCHETYPES: readonly ItemArchetypeDefinition[] = [
+  {
+    id: 'laser-split',
+    label: 'Laser/Split',
+    tags: ['laser', 'split', 'arc']
+  },
+  {
+    id: 'missile-overkill',
+    label: 'Missile/Overkill',
+    tags: ['missile', 'overkill', 'bomb']
+  },
+  {
+    id: 'drone-copy',
+    label: 'Drone/Copy',
+    tags: ['drone', 'arc']
+  },
+  {
+    id: 'shield-revenge',
+    label: 'Shield/Revenge',
+    tags: ['shield', 'revenge']
+  },
+  {
+    id: 'credit-shop',
+    label: 'Credit/Shop',
+    tags: ['credit', 'magnet']
+  },
+  {
+    id: 'curse-relic',
+    label: 'Curse/Relic',
+    tags: ['curse', 'relic']
+  },
+  {
+    id: 'phase-graze',
+    label: 'Phase/Graze',
+    tags: ['phase', 'ricochet']
+  },
+  {
+    id: 'heat-prototype',
+    label: 'Heat/Prototype',
+    tags: ['heat', 'plasma']
+  }
+];
 
 export const ITEMS: readonly ItemDefinition[] = [
   {
@@ -198,6 +271,141 @@ export const ITEMS: readonly ItemDefinition[] = [
     hooks: ['onPlayerHit'],
     effect: 'taking shield damage fires a bright retaliation beam',
     weight: 7
+  },
+  {
+    id: 'item_laser_tax_stamp',
+    name: 'Laser Tax Stamp',
+    rarity: 'uncommon',
+    tags: ['laser', 'credit'],
+    hooks: ['onEnemyKilled'],
+    effect: 'laser kills issue bonus salvage receipts',
+    weight: 8
+  },
+  {
+    id: 'item_missile_splinter_warrant',
+    name: 'Missile Splinter Warrant',
+    rarity: 'uncommon',
+    tags: ['missile', 'split'],
+    hooks: ['onFire'],
+    effect: 'every fourth volley adds two lighter missile shards',
+    weight: 8
+  },
+  {
+    id: 'item_scrap_saints_relay',
+    name: 'Scrap Saints Relay',
+    rarity: 'common',
+    tags: ['scrap', 'drone'],
+    hooks: ['onEnemyKilled'],
+    effect: 'drone-marked kills recover extra salvage',
+    weight: 9
+  },
+  {
+    id: 'item_plasma_lens_array',
+    name: 'Plasma Lens Array',
+    rarity: 'uncommon',
+    tags: ['plasma', 'arc'],
+    hooks: ['onProjectileSpawn'],
+    effect: 'plasma shots gain a wider charged lens',
+    weight: 8
+  },
+  {
+    id: 'item_shield_revenge_contract',
+    name: 'Shield Revenge Contract',
+    rarity: 'rare',
+    tags: ['shield', 'revenge'],
+    hooks: ['onPlayerHit'],
+    effect: 'shield damage launches paired retaliation slugs',
+    weight: 6
+  },
+  {
+    id: 'item_credit_reroute_fuse',
+    name: 'Credit Reroute Fuse',
+    rarity: 'common',
+    tags: ['credit', 'heat'],
+    hooks: ['onPickupCollected'],
+    effect: 'credit pickups briefly vent weapon cadence',
+    weight: 10
+  },
+  {
+    id: 'item_phase_anchor_spool',
+    name: 'Phase Anchor Spool',
+    rarity: 'uncommon',
+    tags: ['phase', 'ricochet'],
+    hooks: ['onProjectileSpawn'],
+    effect: 'phase shots persist longer and drift through lanes',
+    weight: 7
+  },
+  {
+    id: 'item_curse_eater_gasket',
+    name: 'Curse-Eater Gasket',
+    rarity: 'cursed',
+    tags: ['curse', 'armor'],
+    hooks: ['onPlayerHit'],
+    effect: 'taking hits while cursed kicks out a hungry shard',
+    weight: 4
+  },
+  {
+    id: 'item_bombardier_tithe',
+    name: 'Bombardier Tithe',
+    rarity: 'rare',
+    tags: ['bomb', 'missile'],
+    hooks: ['onEnemyKilled'],
+    effect: 'missile and bomb kills spread a modest blast',
+    weight: 6
+  },
+  {
+    id: 'item_magnetized_tithe_box',
+    name: 'Magnetized Tithe Box',
+    rarity: 'common',
+    tags: ['magnet', 'credit'],
+    hooks: ['onPickupCollected'],
+    effect: 'credit collection sharpens the next burst',
+    weight: 10
+  },
+  {
+    id: 'item_overheat_oracle',
+    name: 'Overheat Oracle',
+    rarity: 'prototype',
+    tags: ['heat', 'phase'],
+    hooks: ['onFire'],
+    effect: 'every fifth volley vents a phase omen shot',
+    weight: 5
+  },
+  {
+    id: 'item_relic_index_codex',
+    name: 'Relic Index Codex',
+    rarity: 'prototype',
+    tags: ['relic', 'curse'],
+    hooks: ['onEnemyKilled'],
+    effect: 'cursed or phase kills recover indexed relic scrap',
+    weight: 4
+  },
+  {
+    id: 'item_arc_welder_drone',
+    name: 'Arc Welder Drone',
+    rarity: 'uncommon',
+    tags: ['arc', 'drone'],
+    hooks: ['onFire'],
+    effect: 'arc builds gain a side drone weld every third volley',
+    weight: 8
+  },
+  {
+    id: 'item_plasma_bloom_filter',
+    name: 'Plasma Bloom Filter',
+    rarity: 'rare',
+    tags: ['plasma', 'phase'],
+    hooks: ['onProjectileSpawn'],
+    effect: 'phase and plasma shots bloom into heavier bolts',
+    weight: 6
+  },
+  {
+    id: 'item_salvage_dividend_chip',
+    name: 'Salvage Dividend Chip',
+    rarity: 'common',
+    tags: ['scrap', 'credit'],
+    hooks: ['onEnemyKilled'],
+    effect: 'combat kills pay a small salvage dividend',
+    weight: 11
   }
 ];
 
@@ -213,7 +421,15 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_overkill_ledger',
       'item_shield_dynamo',
       'item_revenge_beam',
-      'item_coin_operated_cannon'
+      'item_coin_operated_cannon',
+      'item_laser_tax_stamp',
+      'item_missile_splinter_warrant',
+      'item_scrap_saints_relay',
+      'item_plasma_lens_array',
+      'item_credit_reroute_fuse',
+      'item_magnetized_tithe_box',
+      'item_arc_welder_drone',
+      'item_salvage_dividend_chip'
     ]
   },
   {
@@ -228,7 +444,20 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_heat_sink_saint',
       'item_phase_grazer',
       'item_salvage_magnet',
-      'item_coin_operated_cannon'
+      'item_coin_operated_cannon',
+      'item_laser_tax_stamp',
+      'item_missile_splinter_warrant',
+      'item_scrap_saints_relay',
+      'item_plasma_lens_array',
+      'item_shield_revenge_contract',
+      'item_credit_reroute_fuse',
+      'item_phase_anchor_spool',
+      'item_bombardier_tithe',
+      'item_magnetized_tithe_box',
+      'item_overheat_oracle',
+      'item_arc_welder_drone',
+      'item_plasma_bloom_filter',
+      'item_salvage_dividend_chip'
     ]
   },
   {
@@ -238,7 +467,13 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_cursed_hull_plate',
       'item_revenge_beam',
       'item_overkill_ledger',
-      'item_phase_grazer'
+      'item_phase_grazer',
+      'item_shield_revenge_contract',
+      'item_phase_anchor_spool',
+      'item_curse_eater_gasket',
+      'item_overheat_oracle',
+      'item_relic_index_codex',
+      'item_plasma_bloom_filter'
     ]
   }
 ];

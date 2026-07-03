@@ -1,6 +1,10 @@
-export type FactionId = 'faction_scrap_court' | 'faction_corporate_ledger' | 'faction_bloom_hive';
-export type FactionEnemyPattern = 'driftShot' | 'laneBurst' | 'sporeSpread';
-export type FactionVisualShape = 'jagged' | 'diamond' | 'organic';
+export type FactionId =
+  | 'faction_scrap_court'
+  | 'faction_corporate_ledger'
+  | 'faction_bloom_hive'
+  | 'faction_void_corsairs';
+export type FactionEnemyPattern = 'driftShot' | 'laneBurst' | 'sporeSpread' | 'phaseSkirmish';
+export type FactionVisualShape = 'jagged' | 'diamond' | 'organic' | 'needle';
 
 export interface FactionPalette {
   readonly hull: string;
@@ -56,6 +60,19 @@ export const FACTIONS: readonly FactionDefinition[] = [
       trim: '#ff6bd6',
       projectile: '#b8ff5f',
       warning: '#87ff9a'
+    }
+  },
+  {
+    id: 'faction_void_corsairs',
+    name: 'Void Corsairs',
+    summary: 'phase raiders that skate sideways and fire crossing needle pairs',
+    enemyPattern: 'phaseSkirmish',
+    visualShape: 'needle',
+    palette: {
+      hull: '#b99cff',
+      trim: '#f4f0ff',
+      projectile: '#5fffd2',
+      warning: '#d8c7ff'
     }
   }
 ];

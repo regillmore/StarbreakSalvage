@@ -4,11 +4,18 @@ import { ACHIEVEMENTS, type AchievementDefinition } from '../../src/content/achi
 import { BOSSES, type BossDefinition } from '../../src/content/bosses';
 import { validateContent } from '../../src/content/contentValidation';
 import { FACTIONS, type FactionDefinition } from '../../src/content/factions';
-import { ITEMS, type ItemDefinition, type RewardPoolDefinition } from '../../src/content/items';
+import {
+  ITEM_ARCHETYPES,
+  ITEMS,
+  REWARD_POOLS,
+  type ItemDefinition,
+  type RewardPoolDefinition
+} from '../../src/content/items';
 import { SECTORS, type SectorDefinition } from '../../src/content/sectors';
 import { SHIPS, type ShipDefinition } from '../../src/content/ships';
 import { UNLOCKS, type UnlockDefinition } from '../../src/content/unlocks';
 import { WEAPONS, type WeaponDefinition } from '../../src/content/weapons';
+import { ITEM_HOOK_IMPLEMENTATIONS } from '../../src/game/ItemHooks';
 
 const baseItem = ITEMS[0] as ItemDefinition;
 const baseFaction = FACTIONS[0] as FactionDefinition;
@@ -22,6 +29,21 @@ const baseAchievement = ACHIEVEMENTS[0] as AchievementDefinition;
 describe('validateContent', () => {
   it('accepts the shipped item and reward content', () => {
     expect(validateContent()).toEqual([]);
+  });
+
+  it('ships the phase 2 content breadth targets', () => {
+    const rewardedItemIds = new Set(REWARD_POOLS.flatMap((pool) => pool.itemIds));
+    const representedArchetypes = ITEM_ARCHETYPES.filter((archetype) =>
+      ITEMS.some(
+        (item) =>
+          rewardedItemIds.has(item.id) && item.tags.some((tag) => archetype.tags.includes(tag))
+      )
+    );
+
+    expect(ITEMS).toHaveLength(30);
+    expect(FACTIONS).toHaveLength(4);
+    expect(representedArchetypes).toHaveLength(ITEM_ARCHETYPES.length);
+    expect(representedArchetypes.length).toBeGreaterThanOrEqual(6);
   });
 
   it('rejects duplicate faction ids and missing boss faction references', () => {
@@ -39,6 +61,23 @@ describe('validateContent', () => {
     expect(errors).toContain(
       'Boss boss_auditor_drone_xl references missing faction: faction_missing'
     );
+  });
+
+  it('rejects invalid faction behavior metadata', () => {
+    const errors = validateContent({
+      factions: [
+        {
+          ...baseFaction,
+          enemyPattern: 'teleportMine',
+          visualShape: 'box',
+          summary: ''
+        } as unknown as FactionDefinition
+      ]
+    });
+
+    expect(errors).toContain(`Faction ${baseFaction.id} has invalid enemy pattern: teleportMine`);
+    expect(errors).toContain(`Faction ${baseFaction.id} has invalid visual shape: box`);
+    expect(errors).toContain(`Faction ${baseFaction.id} must have behavior notes`);
   });
 
   it('rejects invalid boss phase definitions', () => {
@@ -197,6 +236,33 @@ describe('validateContent', () => {
     });
 
     expect(errors).toContain('Item item_split_prism has invalid tag: not-a-real-tag');
+  });
+
+  it('rejects missing item hook implementations', () => {
+    const errors = validateContent({
+      itemHookImplementations: {
+        onFire: ITEM_HOOK_IMPLEMENTATIONS.onFire.filter((itemId) => itemId !== 'item_split_prism')
+      }
+    });
+
+    expect(errors).toContain('Item item_split_prism declares onFire without an implementation');
+  });
+
+  it('rejects item content that is not present in any reward pool', () => {
+    const errors = validateContent({
+      rewardPools: [
+        {
+          id: 'starter',
+          itemIds: ITEMS.filter((item) => item.id !== 'item_salvage_dividend_chip').map(
+            (item) => item.id
+          )
+        }
+      ]
+    });
+
+    expect(errors).toContain(
+      'Item item_salvage_dividend_chip must appear in at least one reward pool'
+    );
   });
 
   it('rejects missing reward pool item references', () => {

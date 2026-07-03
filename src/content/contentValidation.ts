@@ -2,10 +2,13 @@ import { BOSSES, type BossDefinition } from './bosses';
 import { ACHIEVEMENTS, type AchievementDefinition } from './achievements';
 import { FACTIONS, type FactionDefinition } from './factions';
 import {
+  ITEM_ARCHETYPES,
   ITEM_HOOKS,
   ITEMS,
   ITEM_TAGS,
   REWARD_POOLS,
+  type ItemHook,
+  type ItemId,
   type ItemDefinition,
   type RewardPoolDefinition
 } from './items';
@@ -13,12 +16,16 @@ import { SECTORS, type SectorDefinition } from './sectors';
 import { SHIPS, type ShipDefinition } from './ships';
 import { UNLOCKS, type UnlockDefinition } from './unlocks';
 import { WEAPONS, type WeaponDefinition } from './weapons';
+import { ITEM_HOOK_IMPLEMENTATIONS } from '../game/ItemHooks';
+
+export type ItemHookImplementationRegistry = Readonly<Partial<Record<ItemHook, readonly ItemId[]>>>;
 
 export interface ContentValidationInput {
   readonly achievements?: readonly AchievementDefinition[];
   readonly bosses?: readonly BossDefinition[];
   readonly factions?: readonly FactionDefinition[];
   readonly items?: readonly ItemDefinition[];
+  readonly itemHookImplementations?: ItemHookImplementationRegistry;
   readonly rewardPools?: readonly RewardPoolDefinition[];
   readonly sectors?: readonly SectorDefinition[];
   readonly ships?: readonly ShipDefinition[];
@@ -31,6 +38,9 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const bosses = input.bosses ?? BOSSES;
   const factions = input.factions ?? FACTIONS;
   const items = input.items ?? ITEMS;
+  const itemHookImplementations = createItemHookImplementationRegistry(
+    input.itemHookImplementations
+  );
   const rewardPools = input.rewardPools ?? REWARD_POOLS;
   const sectors = input.sectors ?? SECTORS;
   const ships = input.ships ?? SHIPS;
@@ -46,8 +56,19 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const weaponIds = new Set<string>();
   const tagRegistry = new Set<string>(ITEM_TAGS);
   const hookRegistry = new Set<string>(ITEM_HOOKS);
+  const itemRarities = new Set(['common', 'uncommon', 'rare', 'prototype', 'cursed']);
+  const factionPatterns = new Set(['driftShot', 'laneBurst', 'sporeSpread', 'phaseSkirmish']);
+  const factionShapes = new Set(['jagged', 'diamond', 'organic', 'needle']);
   const weaponPatterns = new Set(['single', 'dual', 'spread', 'split', 'missile', 'beam']);
   const bossPatterns = new Set(['auditFan', 'missileCurtain', 'sporeSpiral']);
+
+  if (items.length < 30) {
+    errors.push('Content must define at least 30 items');
+  }
+
+  if (factions.length < 4) {
+    errors.push('Content must define at least 4 factions');
+  }
 
   for (const unlock of unlocks) {
     if (unlockIds.has(unlock.id)) {
@@ -81,6 +102,18 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     }
 
     factionIds.add(faction.id);
+
+    if (!factionPatterns.has(faction.enemyPattern)) {
+      errors.push(`Faction ${faction.id} has invalid enemy pattern: ${faction.enemyPattern}`);
+    }
+
+    if (!factionShapes.has(faction.visualShape)) {
+      errors.push(`Faction ${faction.id} has invalid visual shape: ${faction.visualShape}`);
+    }
+
+    if (!faction.summary.trim()) {
+      errors.push(`Faction ${faction.id} must have behavior notes`);
+    }
   }
 
   for (const boss of bosses) {
@@ -181,6 +214,14 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
 
     itemIds.add(item.id);
 
+    if (!itemRarities.has(item.rarity)) {
+      errors.push(`Item ${item.id} has invalid rarity: ${item.rarity}`);
+    }
+
+    if (item.tags.length === 0) {
+      errors.push(`Item ${item.id} must have at least one tag`);
+    }
+
     for (const tag of item.tags) {
       if (!tagRegistry.has(tag)) {
         errors.push(`Item ${item.id} has invalid tag: ${tag}`);
@@ -190,7 +231,16 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     for (const hook of item.hooks) {
       if (!hookRegistry.has(hook)) {
         errors.push(`Item ${item.id} has invalid hook: ${hook}`);
+        continue;
       }
+
+      if (!itemHookImplementations[hook].has(item.id)) {
+        errors.push(`Item ${item.id} declares ${hook} without an implementation`);
+      }
+    }
+
+    if (!item.effect.trim()) {
+      errors.push(`Item ${item.id} must have effect text`);
     }
 
     if (!Number.isFinite(item.weight) || item.weight <= 0) {
@@ -302,16 +352,37 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     );
   }
 
+  const rewardedItemIds = new Set<string>();
+
   for (const pool of rewardPools) {
     if (pool.itemIds.length === 0) {
       errors.push(`Reward pool ${pool.id} must not be empty`);
     }
 
     for (const itemId of pool.itemIds) {
+      rewardedItemIds.add(itemId);
+
       if (!itemIds.has(itemId)) {
         errors.push(`Reward pool ${pool.id} references missing item: ${itemId}`);
       }
     }
+  }
+
+  for (const item of items) {
+    if (!rewardedItemIds.has(item.id)) {
+      errors.push(`Item ${item.id} must appear in at least one reward pool`);
+    }
+  }
+
+  const representedArchetypeCount = ITEM_ARCHETYPES.filter((archetype) =>
+    items.some(
+      (item) =>
+        rewardedItemIds.has(item.id) && item.tags.some((tag) => archetype.tags.includes(tag))
+    )
+  ).length;
+
+  if (representedArchetypeCount < 6) {
+    errors.push('Content must represent at least 6 build archetypes in reward pools');
   }
 
   for (const sector of sectors) {
@@ -351,6 +422,22 @@ export function assertValidContent(input: ContentValidationInput = {}): void {
   if (errors.length > 0) {
     throw new Error(errors.join('\n'));
   }
+}
+
+function createItemHookImplementationRegistry(
+  overrides: ItemHookImplementationRegistry | undefined
+): Readonly<Record<ItemHook, ReadonlySet<ItemId>>> {
+  return {
+    onFire: new Set(overrides?.onFire ?? ITEM_HOOK_IMPLEMENTATIONS.onFire),
+    onProjectileSpawn: new Set(
+      overrides?.onProjectileSpawn ?? ITEM_HOOK_IMPLEMENTATIONS.onProjectileSpawn
+    ),
+    onEnemyKilled: new Set(overrides?.onEnemyKilled ?? ITEM_HOOK_IMPLEMENTATIONS.onEnemyKilled),
+    onPlayerHit: new Set(overrides?.onPlayerHit ?? ITEM_HOOK_IMPLEMENTATIONS.onPlayerHit),
+    onPickupCollected: new Set(
+      overrides?.onPickupCollected ?? ITEM_HOOK_IMPLEMENTATIONS.onPickupCollected
+    )
+  };
 }
 
 function validatePositiveNumber(

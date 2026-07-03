@@ -129,7 +129,7 @@ export const BOSSES: readonly BossDefinition[] = [
   {
     id: 'boss_warranty_void_seraph',
     name: 'Warranty Void Seraph',
-    factionId: 'faction_corporate_ledger',
+    factionId: 'faction_void_corsairs',
     patternId: 'auditFan',
     maxHull: 24,
     radius: 54,

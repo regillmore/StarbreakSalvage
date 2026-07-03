@@ -98,6 +98,32 @@ describe('CombatState', () => {
     expect(new Set(first.spawnSchedule.map((spawn) => spawn.factionId)).size).toBeGreaterThan(1);
   });
 
+  it('fires the void corsair phase skirmish pattern', () => {
+    const state = createCombatState(bounds, 'VOID-CORSAIR-PATTERN', {
+      skipEnemyWaves: true
+    });
+    state.enemies.push({
+      id: 990,
+      factionId: 'faction_void_corsairs',
+      x: state.player.x,
+      y: 120,
+      radius: 17,
+      hull: 2,
+      maxHull: 2,
+      drift: 0,
+      targetY: 120,
+      fireCooldown: 0.01
+    });
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
+
+    const enemyProjectiles = state.projectiles.filter((projectile) => projectile.owner === 'enemy');
+    expect(state.enemies[0]?.factionId).toBe('faction_void_corsairs');
+    expect(enemyProjectiles).toHaveLength(2);
+    expect(enemyProjectiles.every((projectile) => projectile.tags.includes('phase'))).toBe(true);
+    expect(enemyProjectiles.map((projectile) => projectile.vx)).toEqual([-82, 82]);
+  });
+
   it.each([
     ['boss_auditor_drone_xl', 'fan'],
     ['boss_unsold_missiles_carrier', 'lane'],
@@ -157,7 +183,12 @@ describe('CombatState', () => {
       skipEnemyWaves: true
     });
 
-    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false, special: true }, 1 / 60, bounds);
+    updateCombatState(
+      state,
+      { movement: { x: 0, y: 0 }, fire: false, special: true },
+      1 / 60,
+      bounds
+    );
 
     expect(state.stats.specialsUsed).toBe(1);
     expect(state.player.specialCharge).toBe(0);
@@ -166,7 +197,12 @@ describe('CombatState', () => {
     expect(state.projectiles.filter((projectile) => projectile.owner === 'player')).toHaveLength(3);
     expect(state.effects.some((effect) => effect.kind === 'special')).toBe(true);
 
-    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false, special: true }, 1 / 60, bounds);
+    updateCombatState(
+      state,
+      { movement: { x: 0, y: 0 }, fire: false, special: true },
+      1 / 60,
+      bounds
+    );
 
     expect(state.stats.specialsUsed).toBe(1);
   });

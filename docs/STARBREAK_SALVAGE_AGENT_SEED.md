@@ -1108,7 +1108,7 @@ For the project repository `regillmore/StarbreakSalvage`, configure:
 ```ts
 // vite.config.ts
 export default defineConfig({
-  base: '/StarbreakSalvage/',
+  base: '/StarbreakSalvage/'
 });
 ```
 
@@ -1148,7 +1148,7 @@ If the site is later moved to a custom domain or an owner root site, revisit thi
 - [ ] Playwright smoke tests pass.
 - [ ] Save reset/import/export works.
 - [ ] Reduced motion and mute work.
-- [ ] At least 5 contracts, 30 items, 3 factions, 3 bosses in release candidate.
+- [ ] At least 5 contracts, 30 items, 4 factions, 3 bosses in release candidate.
 - [ ] Seed sharing documented.
 - [ ] Version and changelog updated.
 

@@ -299,6 +299,23 @@ export class CanvasRenderer {
         context.fill();
         context.stroke();
       }
+    } else if (faction.visualShape === 'needle') {
+      context.beginPath();
+      context.moveTo(0, -enemy.radius * 1.16);
+      context.lineTo(enemy.radius * 0.44, -enemy.radius * 0.12);
+      context.lineTo(enemy.radius * 0.9, enemy.radius * 0.46);
+      context.lineTo(enemy.radius * 0.18, enemy.radius * 0.18);
+      context.lineTo(0, enemy.radius);
+      context.lineTo(-enemy.radius * 0.18, enemy.radius * 0.18);
+      context.lineTo(-enemy.radius * 0.9, enemy.radius * 0.46);
+      context.lineTo(-enemy.radius * 0.44, -enemy.radius * 0.12);
+      context.closePath();
+      context.fill();
+      context.stroke();
+      context.beginPath();
+      context.moveTo(0, -enemy.radius * 0.72);
+      context.lineTo(0, enemy.radius * 0.68);
+      context.stroke();
     } else {
       context.beginPath();
       context.moveTo(0, enemy.radius);

@@ -35,12 +35,12 @@ Turn the Phase 1 alpha into a cohesive vertical slice that can support repeated 
 ## Current Alpha Inventory
 
 - Ships/contracts: 8 defined.
-- Items: 15 defined.
-- Factions: 3 defined.
+- Items: 30 defined across 8 archetype targets.
+- Factions: 4 defined.
 - Bosses: 5 defined, each with phase behavior across 3 active attack patterns.
 - Sectors: 5 defined.
 - Unlocks: 10 defined.
-- Major gaps: limited content volume, no unlock gating, no in-menu seed entry, no real tutorial/onboarding, and route/event balance depth. Sector objectives/wave direction, first-pass special/bomb/graze verbs, contract-specific ship/weapon identity, boss phases, deterministic route outcomes, and final victory summary now exist, but still need balance and content depth.
+- Major gaps: no unlock gating, no in-menu seed entry, no real tutorial/onboarding, route/event balance depth, and limited encounter-role depth. Sector objectives/wave direction, first-pass special/bomb/graze verbs, contract-specific ship/weapon identity, boss phases, deterministic route outcomes, content expansion, and final victory summary now exist, but still need balance and UX depth.
 
 ## Phase 2 Milestones
 
@@ -74,7 +74,7 @@ Exit criteria:
 - Faction behavior changes are visible and tested.
 - Final sector has a distinct final-boss flow and victory summary.
 
-Status: first-pass boss phases and victory summary are implemented; faction behavior depth remains a follow-up.
+Status: first-pass boss phases and victory summary are implemented; a fourth faction now has distinct movement, bullets, visuals, and a boss reference. Broader encounter-role depth remains a follow-up.
 
 ### P2.4 - Content Expansion
 
@@ -86,7 +86,7 @@ Exit criteria:
 - At least 6 build archetypes are supported.
 - Content validation catches duplicate IDs, invalid references, invalid pools, and missing implementation hooks.
 
-Status: first-pass route outcomes are implemented for all existing route kinds; content volume and broader archetype support remain follow-ups.
+Status: first-pass route outcomes are implemented for all existing route kinds. The item table now ships 30 items, 4 factions, 8 archetype targets, reward-pool placement checks, and hook-implementation validation; balance tuning remains a follow-up.
 
 ### P2.5 - Meta and UX Depth
 

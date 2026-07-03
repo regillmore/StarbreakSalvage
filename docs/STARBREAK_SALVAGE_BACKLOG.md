@@ -345,6 +345,10 @@ Acceptance:
 - Each faction has distinct movement, projectile, and visual behavior.
 - Sector generation references factions deterministically.
 
+Status:
+
+- First pass implemented with Void Corsairs, phase-skirmish enemy behavior, needle visuals, faction-biased rewards, and a Warranty Void Seraph boss reference.
+
 ### K3 - Encounter roles
 
 Acceptance:
@@ -363,6 +367,10 @@ Acceptance:
 - Every item has tags, rarity, effect text, reward-pool placement, and hook behavior where needed.
 - Validation catches missing hook implementations.
 
+Status:
+
+- First pass implemented with 30 total items, expanded starter/combat/vault pools, effect text, hook behavior, and validation for missing hook implementations.
+
 ### L2 - Build archetypes
 
 Acceptance:
@@ -370,6 +378,10 @@ Acceptance:
 - At least 6 archetypes are supported: laser/split, missile/overkill, drone/copy, shield/revenge, credit/shop, curse/relic.
 - Reward generation can bias toward contract item tags.
 - Summary displays active build identity or key items.
+
+Status:
+
+- First pass supports 8 archetype targets in item validation: laser/split, missile/overkill, drone/copy, shield/revenge, credit/shop, curse/relic, phase/graze, and heat/prototype.
 
 ### L3 - Route events
 

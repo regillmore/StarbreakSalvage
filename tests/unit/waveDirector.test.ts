@@ -191,7 +191,7 @@ describe('WaveDirector', () => {
             "sectorId": "sector_trade_war_corridor",
           },
           {
-            "bossFactionId": "faction_corporate_ledger",
+            "bossFactionId": "faction_void_corsairs",
             "bossId": "boss_warranty_void_seraph",
             "bossPatternId": "auditFan",
             "majorWaves": [

@@ -326,6 +326,10 @@ function getFactionBiasTags(factionId: FactionId): readonly ItemTag[] {
     return ['phase', 'drone'];
   }
 
+  if (factionId === 'faction_void_corsairs') {
+    return ['phase', 'ricochet', 'curse'];
+  }
+
   return ['missile', 'overkill'];
 }
 

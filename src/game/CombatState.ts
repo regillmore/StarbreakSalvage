@@ -4,7 +4,12 @@ import {
   type BossId,
   type BossPatternId
 } from '../content/bosses';
-import { FACTIONS, getFactionById, type FactionId } from '../content/factions';
+import {
+  FACTIONS,
+  getFactionById,
+  type FactionEnemyPattern,
+  type FactionId
+} from '../content/factions';
 import type { ItemTag } from '../content/items';
 import type { ShipStats, WeaponId } from '../content/ships';
 import { getWeaponById, type WeaponDefinition } from '../content/weapons';
@@ -794,6 +799,9 @@ function updateEnemies(state: CombatState, dt: number): void {
     } else if (faction.enemyPattern === 'sporeSpread') {
       enemy.x += Math.sin(state.timeSeconds * 3 + enemy.id) * 28 * dt;
       enemy.y += Math.cos(state.timeSeconds * 2 + enemy.id) * 8 * dt;
+    } else if (faction.enemyPattern === 'phaseSkirmish') {
+      enemy.x += (Math.sin(state.timeSeconds * 4.2 + enemy.id) * 58 + enemy.drift * 0.3) * dt;
+      enemy.y += Math.cos(state.timeSeconds * 2.4 + enemy.id) * 10 * dt;
     } else {
       enemy.x += enemy.drift * dt;
       enemy.y += Math.sin(state.timeSeconds * 2 + enemy.id) * 8 * dt;
@@ -1222,7 +1230,7 @@ function damagePlayer(state: CombatState, damage: number): void {
 function fireEnemyPattern(
   state: CombatState,
   enemy: EnemyState,
-  pattern: 'driftShot' | 'laneBurst' | 'sporeSpread'
+  pattern: FactionEnemyPattern
 ): void {
   if (pattern === 'laneBurst') {
     for (const offset of [-7, 7]) {
@@ -1252,6 +1260,23 @@ function fireEnemyPattern(
         damage: 1,
         ttl: 3.6,
         tags: ['plasma'],
+        factionId: enemy.factionId
+      });
+    }
+    return;
+  }
+
+  if (pattern === 'phaseSkirmish') {
+    for (const vx of [-82, 82]) {
+      spawnEnemyProjectile(state, {
+        x: enemy.x,
+        y: enemy.y + enemy.radius,
+        vx,
+        vy: ENEMY_PROJECTILE_SPEED * 0.82,
+        radius: 4,
+        damage: 1,
+        ttl: 3.4,
+        tags: ['phase'],
         factionId: enemy.factionId
       });
     }
@@ -1397,7 +1422,7 @@ function spawnEnemyProjectile(
   });
 }
 
-function getEnemyEntrySpeed(pattern: 'driftShot' | 'laneBurst' | 'sporeSpread'): number {
+function getEnemyEntrySpeed(pattern: FactionEnemyPattern): number {
   if (pattern === 'laneBurst') {
     return 135;
   }
@@ -1406,16 +1431,24 @@ function getEnemyEntrySpeed(pattern: 'driftShot' | 'laneBurst' | 'sporeSpread'):
     return 98;
   }
 
+  if (pattern === 'phaseSkirmish') {
+    return 124;
+  }
+
   return 115;
 }
 
-function getEnemyFireCooldown(pattern: 'driftShot' | 'laneBurst' | 'sporeSpread'): number {
+function getEnemyFireCooldown(pattern: FactionEnemyPattern): number {
   if (pattern === 'laneBurst') {
     return 1.05;
   }
 
   if (pattern === 'sporeSpread') {
     return 1.45;
+  }
+
+  if (pattern === 'phaseSkirmish') {
+    return 1.18;
   }
 
   return 1.25;

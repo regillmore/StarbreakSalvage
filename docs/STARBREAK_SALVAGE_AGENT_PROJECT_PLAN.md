@@ -200,7 +200,7 @@ Exit criteria:
 - Five bosses can be fought and defeated.
 - Telegraphs remain readable in normal and high-contrast modes.
 
-Status: first-pass boss phase behavior and final victory summary are implemented; faction encounter depth still needs expansion.
+Status: first-pass boss phase behavior and final victory summary are implemented; a fourth faction now adds distinct movement, projectiles, visuals, and a boss reference. Broader encounter-role depth still needs expansion.
 
 ### P2.4 - Content Expansion
 
@@ -214,6 +214,8 @@ Exit criteria:
 
 - Content validation covers all new tables and references.
 - New content has deterministic tests where generation is involved.
+
+Status: first pass implemented with 30 total items, 4 factions, 8 archetype targets, expanded reward pools, and validation for reward placement plus missing hook implementations.
 
 ### P2.5 - Meta and UX Depth
 
