@@ -1,6 +1,6 @@
 import { getBossById, type BossId } from '../content/bosses';
 import { SECTORS, type SectorDefinition } from '../content/sectors';
-import { SHIPS, type ShipDefinition, type ShipId } from '../content/ships';
+import { SHIPS, type ShipDefinition, type ShipId, type WeaponId } from '../content/ships';
 import { createRng, parseSeedLabel, type Rng, type WeightedChoice } from '../core/rng';
 
 export type RouteKind = 'shop' | 'elite' | 'vault' | 'repair' | 'glitch' | 'factionAmbush';
@@ -10,7 +10,7 @@ export interface StartingContract {
   readonly shipId: ShipId;
   readonly shipName: string;
   readonly sponsor: string;
-  readonly startingWeaponId: string;
+  readonly startingWeaponId: WeaponId;
   readonly startingWeaponName: string;
   readonly perk: string;
   readonly drawback: string;

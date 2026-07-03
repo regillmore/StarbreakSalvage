@@ -38,7 +38,7 @@ Planned baseline controls:
 - Confirm: Enter or Space
 - Back: Escape or Backspace
 
-The current shell supports the title flow, deterministic contract launch, keyboard movement, primary fire, simple enemy waves, pickups, pause/resume, hull damage, and a run summary placeholder. Rewards, shops, item synergies, bosses, and save progression arrive in later slices.
+The current shell supports the title flow, deterministic contract launch, keyboard movement, primary fire, simple enemy waves, pickups, pause/resume, hull damage, starter item hooks, and a run summary placeholder. Full reward screens, shops, bosses, and save progression arrive in later slices.
 
 Add `?debug=1` to the local or deployed URL to show the debug overlay with FPS, scene, seed, and entity count.
 

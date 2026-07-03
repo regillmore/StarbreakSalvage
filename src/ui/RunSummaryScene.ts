@@ -40,7 +40,9 @@ export class RunSummaryScene implements Scene {
       ['Destroyed', `${this.result?.enemiesDestroyed ?? 0}`],
       ['Credits', `${this.result?.credits ?? 0}`],
       ['Salvage', `${this.result?.salvage ?? 0} kg`],
-      ['Damage Taken', `${this.result?.damageTaken ?? 0}`]
+      ['Damage Taken', `${this.result?.damageTaken ?? 0}`],
+      ['Item Hooks', `${this.result?.itemTriggers ?? 0}`],
+      ['Items', this.result?.itemNames.join(', ') ?? 'none']
     ];
 
     for (const [label, value] of statEntries) {

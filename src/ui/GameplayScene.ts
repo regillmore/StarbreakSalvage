@@ -10,6 +10,8 @@ import {
   type CombatState
 } from '../game/CombatState';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
+import { describeItemLoadout } from '../game/ItemHooks';
+import { generateStartingItemLoadout, type ItemInstance } from '../game/Rewards';
 import type { InputSystem, InputAction } from '../systems/InputSystem';
 
 export class GameplayScene implements Scene {
@@ -20,6 +22,8 @@ export class GameplayScene implements Scene {
   private readonly hullReadout: HTMLParagraphElement;
   private readonly economyReadout: HTMLParagraphElement;
   private readonly combatReadout: HTMLParagraphElement;
+  private readonly itemReadout: HTMLParagraphElement;
+  private readonly itemLoadout: readonly ItemInstance[];
 
   public constructor(
     private readonly uiRoot: HTMLElement,
@@ -45,10 +49,19 @@ export class GameplayScene implements Scene {
     this.combatReadout = document.createElement('p');
     this.combatReadout.className = 'hud-pill';
     this.combatReadout.dataset.testid = 'combat-status';
+
+    this.itemReadout = document.createElement('p');
+    this.itemReadout.className = 'hud-pill hud-pill-wide';
+    this.itemReadout.dataset.testid = 'item-readout';
+
+    this.itemLoadout = generateStartingItemLoadout(run.seed, contract);
   }
 
   public enter(): void {
-    this.combatState ??= createCombatState(this.getCombatBounds(), this.run.seed);
+    this.combatState ??= createCombatState(this.getCombatBounds(), this.run.seed, {
+      weaponId: this.contract.startingWeaponId,
+      items: this.itemLoadout
+    });
 
     const hud = document.createElement('section');
     hud.className = 'game-hud';
@@ -71,6 +84,7 @@ export class GameplayScene implements Scene {
       this.hullReadout,
       this.economyReadout,
       this.combatReadout,
+      this.itemReadout,
       contract,
       weapon,
       this.positionReadout
@@ -160,7 +174,8 @@ export class GameplayScene implements Scene {
     )}`;
     this.hullReadout.textContent = `Hull ${state.player.hull}/${state.player.maxHull}`;
     this.economyReadout.textContent = `Credits ${state.player.credits} | Salvage ${state.player.salvage}`;
-    this.combatReadout.textContent = `Destroyed ${state.stats.enemiesDestroyed} | Shots ${state.stats.shotsFired}`;
+    this.combatReadout.textContent = `Destroyed ${state.stats.enemiesDestroyed} | Shots ${state.stats.shotsFired} | Hooks ${state.stats.itemTriggers}`;
+    this.itemReadout.textContent = describeItemLoadout(state.items);
   }
 
   private getCombatBounds(): CombatBounds {

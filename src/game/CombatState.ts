@@ -1,7 +1,17 @@
+import type { ItemTag } from '../content/items';
+import { getWeaponById, type WeaponDefinition } from '../content/weapons';
 import { clamp, type Vector2 } from '../core/math';
 import { createRng } from '../core/rng';
+import {
+  applyItemHooks,
+  hasItem,
+  type EnemyKilledPayload,
+  type ProjectileBlueprint
+} from './ItemHooks';
+import { getItemNames, type ItemInstance } from './Rewards';
 import { applyDamage } from '../systems/DamageSystem';
 import { circlesOverlap } from '../systems/CollisionSystem';
+import type { WeaponId } from '../content/ships';
 
 export type ProjectileOwner = 'player' | 'enemy';
 export type PickupKind = 'credit' | 'salvage';
@@ -26,6 +36,8 @@ export interface PlayerState {
   readonly maxHull: number;
   fireCooldown: number;
   invulnerableSeconds: number;
+  fireRateMultiplier: number;
+  fireRateBoostSeconds: number;
   credits: number;
   salvage: number;
 }
@@ -40,6 +52,8 @@ export interface ProjectileState {
   readonly radius: number;
   readonly damage: number;
   ttl: number;
+  readonly tags: readonly ItemTag[];
+  readonly procDepth: number;
 }
 
 export interface EnemyState {
@@ -70,6 +84,7 @@ export interface CombatStats {
   readonly shotsFired: number;
   readonly pickupsCollected: number;
   readonly damageTaken: number;
+  readonly itemTriggers: number;
 }
 
 export interface CombatState {
@@ -82,6 +97,9 @@ export interface CombatState {
   enemies: EnemyState[];
   pickups: PickupState[];
   spawnSchedule: readonly EnemySpawn[];
+  readonly weapon: WeaponDefinition;
+  readonly items: readonly ItemInstance[];
+  volleyIndex: number;
   stats: CombatStats;
   ended: boolean;
 }
@@ -103,17 +121,28 @@ export interface CombatRunResult {
   readonly shotsFired: number;
   readonly pickupsCollected: number;
   readonly damageTaken: number;
+  readonly itemTriggers: number;
+  readonly itemNames: readonly string[];
 }
 
 const PLAYER_RADIUS = 18;
 const PLAYER_MAX_HULL = 3;
 const PLAYER_SPEED = 360;
-const PLAYER_FIRE_COOLDOWN_SECONDS = 0.16;
-const PLAYER_PROJECTILE_SPEED = 740;
 const ENEMY_PROJECTILE_SPEED = 285;
 const PLAYER_DAMAGE_INVULNERABILITY_SECONDS = 0.55;
 
-export function createCombatState(bounds: CombatBounds, seed: string): CombatState {
+export interface CombatStateOptions {
+  readonly weaponId?: WeaponId;
+  readonly items?: readonly ItemInstance[];
+}
+
+export function createCombatState(
+  bounds: CombatBounds,
+  seed: string,
+  options: CombatStateOptions = {}
+): CombatState {
+  const weapon = getWeaponById(options.weaponId ?? 'weapon_light_needle_laser');
+
   return {
     seed,
     timeSeconds: 0,
@@ -127,6 +156,8 @@ export function createCombatState(bounds: CombatBounds, seed: string): CombatSta
       maxHull: PLAYER_MAX_HULL,
       fireCooldown: 0,
       invulnerableSeconds: 0,
+      fireRateMultiplier: 1,
+      fireRateBoostSeconds: 0,
       credits: 0,
       salvage: 0
     },
@@ -134,11 +165,15 @@ export function createCombatState(bounds: CombatBounds, seed: string): CombatSta
     enemies: [],
     pickups: [],
     spawnSchedule: createEnemySpawnSchedule(seed),
+    weapon,
+    items: options.items ?? [],
+    volleyIndex: 0,
     stats: {
       enemiesDestroyed: 0,
       shotsFired: 0,
       pickupsCollected: 0,
-      damageTaken: 0
+      damageTaken: 0,
+      itemTriggers: 0
     },
     ended: false
   };
@@ -197,7 +232,9 @@ export function createCombatRunResult(
     enemiesDestroyed: state.stats.enemiesDestroyed,
     shotsFired: state.stats.shotsFired,
     pickupsCollected: state.stats.pickupsCollected,
-    damageTaken: state.stats.damageTaken
+    damageTaken: state.stats.damageTaken,
+    itemTriggers: state.stats.itemTriggers,
+    itemNames: getItemNames(state.items)
   };
 }
 
@@ -221,23 +258,47 @@ function updatePlayer(
   );
   player.fireCooldown = Math.max(0, player.fireCooldown - dt);
   player.invulnerableSeconds = Math.max(0, player.invulnerableSeconds - dt);
+  player.fireRateBoostSeconds = Math.max(0, player.fireRateBoostSeconds - dt);
+
+  if (player.fireRateBoostSeconds <= 0) {
+    player.fireRateMultiplier = 1;
+  }
 
   if (input.fire && player.fireCooldown <= 0) {
-    state.projectiles.push({
-      id: getNextEntityId(state),
-      owner: 'player',
+    state.volleyIndex += 1;
+
+    const baseProjectile: ProjectileBlueprint = {
       x: player.x,
       y: player.y - player.radius,
       vx: 0,
-      vy: -PLAYER_PROJECTILE_SPEED,
-      radius: 4,
-      damage: 1,
-      ttl: 1.6
+      vy: -state.weapon.projectileSpeed,
+      radius: state.weapon.projectileRadius,
+      damage: state.weapon.damage,
+      ttl: 1.6,
+      tags: state.weapon.tags,
+      procDepth: 0
+    };
+    const firePayload = applyItemHooks('onFire', state.items, {
+      volleyIndex: state.volleyIndex,
+      projectiles: [baseProjectile]
     });
-    player.fireCooldown = PLAYER_FIRE_COOLDOWN_SECONDS;
+
+    for (const projectile of firePayload.projectiles) {
+      const spawnPayload = applyItemHooks('onProjectileSpawn', state.items, { projectile });
+      state.projectiles.push({
+        id: getNextEntityId(state),
+        owner: 'player',
+        ...spawnPayload.projectile
+      });
+    }
+
+    player.fireCooldown = state.weapon.fireCooldownSeconds * player.fireRateMultiplier;
     state.stats = {
       ...state.stats,
-      shotsFired: state.stats.shotsFired + 1
+      shotsFired: state.stats.shotsFired + firePayload.projectiles.length,
+      itemTriggers:
+        state.stats.itemTriggers +
+        Math.max(0, firePayload.projectiles.length - 1)
     };
   }
 }
@@ -286,7 +347,9 @@ function updateEnemies(state: CombatState, dt: number): void {
         vy: ENEMY_PROJECTILE_SPEED,
         radius: 6,
         damage: 1,
-        ttl: 4
+        ttl: 4,
+        tags: ['plasma'],
+        procDepth: 0
       });
       enemy.fireCooldown = 1.15;
     }
@@ -311,7 +374,9 @@ function updatePickups(state: CombatState, dt: number, bounds: CombatBounds): vo
     const dy = state.player.y - pickup.y;
     const distance = Math.hypot(dx, dy);
 
-    if (distance < 620 && distance > 0) {
+    const attractionRange = hasItem(state.items, 'item_salvage_magnet') ? 760 : 240;
+
+    if (distance < attractionRange && distance > 0) {
       pickup.vx += (dx / distance) * 460 * dt;
       pickup.vy += (dy / distance) * 460 * dt;
     }
@@ -335,15 +400,29 @@ function resolveCombatCollisions(state: CombatState): void {
           continue;
         }
 
+        const overkillDamage = Math.max(0, projectile.damage - enemy.hull);
         enemy.hull = applyDamage(enemy.hull, projectile.damage).hull;
         projectileIdsToRemove.add(projectile.id);
 
         if (enemy.hull <= 0) {
           enemyIdsToRemove.add(enemy.id);
-          spawnEnemyDefeatPickups(state, enemy);
+          const killPayload = applyItemHooks('onEnemyKilled', state.items, {
+            projectileTags: projectile.tags,
+            overkillDamage,
+            bonusSalvage: 0,
+            blastDamage: 0,
+            arcDamage: 0
+          });
+          spawnEnemyDefeatPickups(state, enemy, killPayload.bonusSalvage);
+          applyKillSideEffects(state, enemy, killPayload, enemyIdsToRemove);
           state.stats = {
             ...state.stats,
-            enemiesDestroyed: state.stats.enemiesDestroyed + 1
+            enemiesDestroyed: state.stats.enemiesDestroyed + 1,
+            itemTriggers:
+              state.stats.itemTriggers +
+              Number(killPayload.bonusSalvage > 0) +
+              Number(killPayload.blastDamage > 0) +
+              Number(killPayload.arcDamage > 0)
           };
         }
 
@@ -379,9 +458,20 @@ function resolveCombatCollisions(state: CombatState): void {
       state.player.salvage += pickup.value;
     }
 
+    const pickupPayload = applyItemHooks('onPickupCollected', state.items, {
+      kind: pickup.kind,
+      fireRateMultiplier: state.player.fireRateMultiplier
+    });
+    if (pickupPayload.fireRateMultiplier < state.player.fireRateMultiplier) {
+      state.player.fireRateMultiplier = pickupPayload.fireRateMultiplier;
+      state.player.fireRateBoostSeconds = 2.2;
+    }
+
     state.stats = {
       ...state.stats,
-      pickupsCollected: state.stats.pickupsCollected + 1
+      pickupsCollected: state.stats.pickupsCollected + 1,
+      itemTriggers:
+        state.stats.itemTriggers + Number(pickupPayload.fireRateMultiplier < 1)
     };
   }
 
@@ -410,13 +500,34 @@ function damagePlayer(state: CombatState, damage: number): void {
   const outcome = applyDamage(state.player.hull, damage);
   state.player.hull = outcome.hull;
   state.player.invulnerableSeconds = PLAYER_DAMAGE_INVULNERABILITY_SECONDS;
+
+  const hitPayload = applyItemHooks('onPlayerHit', state.items, {
+    damage: outcome.damageApplied,
+    revengeProjectiles: []
+  });
+
+  for (const projectile of hitPayload.revengeProjectiles) {
+    state.projectiles.push({
+      id: getNextEntityId(state),
+      owner: 'player',
+      ...projectile,
+      x: state.player.x + projectile.x,
+      y: state.player.y + projectile.y
+    });
+  }
+
   state.stats = {
     ...state.stats,
-    damageTaken: state.stats.damageTaken + outcome.damageApplied
+    damageTaken: state.stats.damageTaken + outcome.damageApplied,
+    itemTriggers: state.stats.itemTriggers + hitPayload.revengeProjectiles.length
   };
 }
 
-function spawnEnemyDefeatPickups(state: CombatState, enemy: EnemyState): void {
+function spawnEnemyDefeatPickups(
+  state: CombatState,
+  enemy: EnemyState,
+  bonusSalvage: number
+): void {
   state.pickups.push({
     id: getNextEntityId(state),
     kind: 'credit',
@@ -437,6 +548,64 @@ function spawnEnemyDefeatPickups(state: CombatState, enemy: EnemyState): void {
     radius: 6,
     value: 1
   });
+
+  if (bonusSalvage > 0) {
+    state.pickups.push({
+      id: getNextEntityId(state),
+      kind: 'salvage',
+      x: enemy.x,
+      y: enemy.y + 12,
+      vx: 0,
+      vy: 54,
+      radius: 7,
+      value: bonusSalvage
+    });
+  }
+}
+
+function applyKillSideEffects(
+  state: CombatState,
+  defeatedEnemy: EnemyState,
+  payload: EnemyKilledPayload,
+  enemyIdsToRemove: Set<number>
+): void {
+  if (payload.arcDamage > 0) {
+    const nearest = state.enemies
+      .filter((enemy) => enemy.id !== defeatedEnemy.id && !enemyIdsToRemove.has(enemy.id))
+      .sort((a, b) => getDistanceSquared(defeatedEnemy, a) - getDistanceSquared(defeatedEnemy, b))[0];
+
+    if (nearest) {
+      nearest.hull = applyDamage(nearest.hull, payload.arcDamage).hull;
+      if (nearest.hull <= 0) {
+        enemyIdsToRemove.add(nearest.id);
+        spawnEnemyDefeatPickups(state, nearest, 0);
+      }
+    }
+  }
+
+  if (payload.blastDamage > 0) {
+    for (const enemy of state.enemies) {
+      if (enemy.id === defeatedEnemy.id || enemyIdsToRemove.has(enemy.id)) {
+        continue;
+      }
+
+      if (getDistanceSquared(defeatedEnemy, enemy) > 150 * 150) {
+        continue;
+      }
+
+      enemy.hull = applyDamage(enemy.hull, payload.blastDamage).hull;
+      if (enemy.hull <= 0) {
+        enemyIdsToRemove.add(enemy.id);
+        spawnEnemyDefeatPickups(state, enemy, 0);
+      }
+    }
+  }
+}
+
+function getDistanceSquared(a: { readonly x: number; readonly y: number }, b: { readonly x: number; readonly y: number }): number {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return dx * dx + dy * dy;
 }
 
 function getNextEntityId(state: CombatState): number {

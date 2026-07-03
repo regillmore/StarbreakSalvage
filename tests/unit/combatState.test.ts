@@ -58,7 +58,9 @@ describe('CombatState', () => {
       vy: 0,
       radius: 8,
       damage: 1,
-      ttl: 1
+      ttl: 1,
+      tags: ['plasma'],
+      procDepth: 0
     });
 
     const result = updateCombatState(

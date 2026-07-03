@@ -21,6 +21,7 @@ test('loads the shell, starts gameplay, moves, pauses, and opens summary', async
   await page.getByRole('button', { name: 'Launch Contract' }).click();
 
   await expect(page.getByText('Outer Debris Field')).toBeVisible();
+  await expect(page.getByTestId('item-readout')).toContainText('Split Prism');
 
   const startPosition = await page.getByTestId('player-position').textContent();
   await page.keyboard.down('ArrowRight');
