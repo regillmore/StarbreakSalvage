@@ -32,6 +32,10 @@ export class SectorTransitionScene implements Scene {
     routeLine.className = 'transition-copy';
     routeLine.textContent = `Credits ${this.session.credits} | Salvage ${this.session.salvage}`;
 
+    const objectiveLine = document.createElement('p');
+    objectiveLine.className = 'transition-copy';
+    objectiveLine.textContent = `${sector.objective.label} | ${sector.objective.requiredEnemyKills} targets${sector.objective.bossRequired ? ' + boss gate' : ''}`;
+
     const waveLine = document.createElement('p');
     waveLine.className = 'transition-copy';
     waveLine.textContent = sector.majorWaves.join(' | ');
@@ -42,7 +46,7 @@ export class SectorTransitionScene implements Scene {
     enterButton.textContent = 'Enter Sector';
     enterButton.addEventListener('click', this.onEnterSector);
 
-    shell.append(eyebrow, title, routeLine, waveLine, enterButton);
+    shell.append(eyebrow, title, routeLine, objectiveLine, waveLine, enterButton);
     this.uiRoot.replaceChildren(shell);
     enterButton.focus();
   }

@@ -15,13 +15,17 @@ import type { RunSkeleton, StartingContract } from '../game/Generation';
 import { describeItemLoadout } from '../game/ItemHooks';
 import type { ItemInstance } from '../game/Rewards';
 import {
+  createWaveDirectorPlan,
+  getObjectiveProgress,
+  type WaveDirectorPlan
+} from '../game/WaveDirector';
+import {
   createCombatFeedbackSnapshot,
   diffCombatFeedback,
   type CombatFeedbackCue
 } from '../systems/CombatFeedback';
 import type { InputSystem, InputAction } from '../systems/InputSystem';
 
-const SECTOR_CLEAR_DESTROYED_GOAL = 1;
 const DEBUG_BOSS_SHORTCUTS: Partial<Record<InputAction, BossId>> = {
   debugBossOne: 'boss_auditor_drone_xl',
   debugBossTwo: 'boss_unsold_missiles_carrier',
@@ -32,9 +36,11 @@ export class GameplayScene implements Scene {
   public readonly id = 'gameplay';
 
   private combatState: CombatState | null = null;
+  private wavePlan: WaveDirectorPlan | null = null;
   private readonly positionReadout: HTMLParagraphElement;
   private readonly hullReadout: HTMLParagraphElement;
   private readonly economyReadout: HTMLParagraphElement;
+  private readonly objectiveReadout: HTMLParagraphElement;
   private readonly combatReadout: HTMLParagraphElement;
   private readonly bossReadout: HTMLParagraphElement;
   private readonly warningReadout: HTMLParagraphElement;
@@ -67,6 +73,10 @@ export class GameplayScene implements Scene {
     this.economyReadout = document.createElement('p');
     this.economyReadout.className = 'hud-pill';
     this.economyReadout.dataset.testid = 'pickup-readout';
+
+    this.objectiveReadout = document.createElement('p');
+    this.objectiveReadout.className = 'hud-pill hud-pill-wide';
+    this.objectiveReadout.dataset.testid = 'objective-readout';
 
     this.combatReadout = document.createElement('p');
     this.combatReadout.className = 'hud-pill';
@@ -108,6 +118,7 @@ export class GameplayScene implements Scene {
       sector,
       this.hullReadout,
       this.economyReadout,
+      this.objectiveReadout,
       this.combatReadout,
       this.bossReadout,
       this.warningReadout,
@@ -142,7 +153,9 @@ export class GameplayScene implements Scene {
       return;
     }
 
-    if (!this.sectorCompleted && state.stats.enemiesDestroyed >= SECTOR_CLEAR_DESTROYED_GOAL) {
+    const progress = getObjectiveProgress(this.getWavePlan(), state);
+
+    if (!this.sectorCompleted && progress.complete) {
       this.sectorCompleted = true;
       this.emitFeedback(['sectorClear']);
       this.onSectorComplete(forceCombatEnd(state, 'sectorComplete'));
@@ -219,12 +232,37 @@ export class GameplayScene implements Scene {
   }
 
   private getCombatState(): CombatState {
+    const wavePlan = this.getWavePlan();
+
     this.combatState ??= createCombatState(this.getCombatBounds(), this.getCombatSeed(), {
       weaponId: this.contract.startingWeaponId,
       items: this.itemLoadout,
-      bossId: this.run.sectors[this.sectorIndex]?.bossId
+      bossId: this.run.sectors[this.sectorIndex]?.bossId,
+      bossSpawnAtSeconds: wavePlan.bossSpawnAtSeconds,
+      spawnSchedule: wavePlan.spawnSchedule
     });
     return this.combatState;
+  }
+
+  private getWavePlan(): WaveDirectorPlan {
+    if (this.wavePlan) {
+      return this.wavePlan;
+    }
+
+    const sector = this.run.sectors[this.sectorIndex];
+
+    if (!sector) {
+      throw new Error(`No sector exists at index ${this.sectorIndex}.`);
+    }
+
+    this.wavePlan = createWaveDirectorPlan({
+      seed: this.getCombatSeed(),
+      objective: sector.objective,
+      majorWaves: sector.majorWaves,
+      preferredFactionId: sector.bossFactionId
+    });
+
+    return this.wavePlan;
   }
 
   private getCurrentSectorName(): string {
@@ -239,6 +277,7 @@ export class GameplayScene implements Scene {
     )}`;
     this.hullReadout.textContent = `Hull ${state.player.hull}/${state.player.maxHull}`;
     this.economyReadout.textContent = `Credits ${this.startingCredits + state.player.credits} | Salvage ${this.startingSalvage + state.player.salvage}`;
+    this.objectiveReadout.textContent = getObjectiveProgress(this.getWavePlan(), state).readout;
     this.combatReadout.textContent = `Destroyed ${state.stats.enemiesDestroyed} | Shots ${state.stats.shotsFired} | Hooks ${state.stats.itemTriggers}`;
     this.bossReadout.textContent = state.boss
       ? `${state.boss.name} ${Math.max(0, state.boss.hull)}/${state.boss.maxHull}`

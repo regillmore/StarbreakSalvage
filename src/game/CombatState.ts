@@ -152,6 +152,8 @@ export interface CombatState {
 
 export interface EnemySpawn {
   readonly atSeconds: number;
+  readonly waveIndex: number;
+  readonly waveLabel: string;
   readonly xRatio: number;
   readonly targetY: number;
   readonly hull: number;
@@ -185,6 +187,7 @@ export interface CombatStateOptions {
   readonly items?: readonly ItemInstance[];
   readonly bossId?: BossId;
   readonly bossSpawnAtSeconds?: number | null;
+  readonly spawnSchedule?: readonly EnemySpawn[];
   readonly skipEnemyWaves?: boolean;
 }
 
@@ -221,9 +224,9 @@ export function createCombatState(
     boss: null,
     telegraphs: [],
     pickups: [],
-    spawnSchedule: options.skipEnemyWaves
-      ? []
-      : createEnemySpawnSchedule(seed, bossDefinition.factionId),
+    spawnSchedule:
+      options.spawnSchedule ??
+      (options.skipEnemyWaves ? [] : createEnemySpawnSchedule(seed, bossDefinition.factionId)),
     weapon,
     items: options.items ?? [],
     volleyIndex: 0,
@@ -1050,6 +1053,8 @@ function createEnemySpawnSchedule(seed: string, preferredFactionId: FactionId): 
   const schedule: EnemySpawn[] = [
     {
       atSeconds: 0.45,
+      waveIndex: 0,
+      waveLabel: 'combat_mvp_open',
       xRatio: 0.5,
       targetY: 116,
       hull: 2,
@@ -1068,6 +1073,8 @@ function createEnemySpawnSchedule(seed: string, preferredFactionId: FactionId): 
 
     schedule.push({
       atSeconds: 0.45 + index * 1.35,
+      waveIndex: index,
+      waveLabel: `combat_mvp_${index + 1}`,
       xRatio: rng.int(18, 82) / 100,
       targetY: rng.int(86, 190),
       hull: index % 4 === 0 ? 3 : 2,

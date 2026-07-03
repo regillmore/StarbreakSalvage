@@ -45,7 +45,15 @@ describe('generateRunSkeleton', () => {
       expect(sector.shopSeed).toContain(run.seed);
       expect(sector.bossFactionId).toMatch(/^faction_/);
       expect(['auditFan', 'missileCurtain', 'sporeSpiral']).toContain(sector.bossPatternId);
+      expect(sector.objective.requiredWaves).toBeGreaterThanOrEqual(1);
+      expect(sector.objective.requiredEnemyKills).toBe(
+        sector.objective.requiredWaves * sector.objective.spawnsPerWave
+      );
     }
+
+    expect(run.sectors[0]?.objective.requiredEnemyKills).toBeGreaterThan(1);
+    expect(run.sectors[3]?.objective.bossRequired).toBe(true);
+    expect(run.sectors[4]?.objective.bossSpawnAtSeconds).toBe(5.55);
   });
 
   it('normalizes user seed input before generation', () => {
@@ -55,7 +63,12 @@ describe('generateRunSkeleton', () => {
 
 describe('deterministic generation guardrails', () => {
   it('does not call Math.random in RNG or run generation code', () => {
-    const guardedFiles = ['src/core/rng.ts', 'src/game/Generation.ts'];
+    const guardedFiles = [
+      'src/core/rng.ts',
+      'src/game/Generation.ts',
+      'src/game/SectorObjectives.ts',
+      'src/game/WaveDirector.ts'
+    ];
 
     for (const file of guardedFiles) {
       const source = readFileSync(join(process.cwd(), file), 'utf8');

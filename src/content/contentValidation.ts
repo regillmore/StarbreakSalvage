@@ -135,6 +135,22 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
         errors.push(`Sector ${sector.id} references missing boss: ${bossId}`);
       }
     }
+
+    if (sector.objective.kind !== 'clearWaves' && sector.objective.kind !== 'defeatBoss') {
+      errors.push(`Sector ${sector.id} has invalid objective kind: ${sector.objective.kind}`);
+    }
+
+    if (!Number.isInteger(sector.objective.waveCount) || sector.objective.waveCount <= 0) {
+      errors.push(`Sector ${sector.id} objective must have a positive waveCount`);
+    }
+
+    if (!Number.isInteger(sector.objective.spawnsPerWave) || sector.objective.spawnsPerWave <= 0) {
+      errors.push(`Sector ${sector.id} objective must have a positive spawnsPerWave`);
+    }
+
+    if (sector.objective.kind === 'defeatBoss' && !sector.objective.bossGate) {
+      errors.push(`Sector ${sector.id} defeatBoss objective must enable bossGate`);
+    }
   }
 
   return errors;

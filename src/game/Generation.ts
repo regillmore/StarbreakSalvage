@@ -3,6 +3,7 @@ import type { FactionId } from '../content/factions';
 import { SECTORS, type SectorDefinition } from '../content/sectors';
 import { SHIPS, type ShipDefinition, type ShipId, type WeaponId } from '../content/ships';
 import { createRng, parseSeedLabel, type Rng, type WeightedChoice } from '../core/rng';
+import { createSectorObjectivePlan, type SectorObjectivePlan } from './SectorObjectives';
 
 export type RouteKind = 'shop' | 'elite' | 'vault' | 'repair' | 'glitch' | 'factionAmbush';
 
@@ -37,6 +38,7 @@ export interface SectorRoute {
   readonly bossPatternId: BossPatternId;
   readonly routeOptions: readonly RouteOption[];
   readonly majorWaves: readonly string[];
+  readonly objective: SectorObjectivePlan;
   readonly rewardPoolSeed: string;
   readonly shopSeed: string;
 }
@@ -144,6 +146,7 @@ function generateSectorRoute(sector: SectorDefinition, index: number, rng: Rng):
   const boss = getBossById(rng.choice(sector.bossCandidates));
   const routeOptions = generateRouteOptions(rng.fork('routes'), index);
   const waveRng = rng.fork('major-waves');
+  const majorWaves = waveRng.shuffle(sector.majorWavePool).slice(0, 3);
 
   return {
     index,
@@ -154,7 +157,8 @@ function generateSectorRoute(sector: SectorDefinition, index: number, rng: Rng):
     bossFactionId: boss.factionId,
     bossPatternId: boss.patternId,
     routeOptions,
-    majorWaves: waveRng.shuffle(sector.majorWavePool).slice(0, 3),
+    majorWaves,
+    objective: createSectorObjectivePlan(sector, majorWaves),
     rewardPoolSeed: rng.fork('reward-pool').seedLabel,
     shopSeed: rng.fork('shop').seedLabel
   };
@@ -253,7 +257,15 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
       bossFactionId: sector.bossFactionId,
       bossPatternId: sector.bossPatternId,
       routes: sector.routeOptions.map((route) => route.kind),
-      majorWaves: sector.majorWaves
+      majorWaves: sector.majorWaves,
+      objective: {
+        kind: sector.objective.kind,
+        requiredWaves: sector.objective.requiredWaves,
+        spawnsPerWave: sector.objective.spawnsPerWave,
+        requiredEnemyKills: sector.objective.requiredEnemyKills,
+        bossRequired: sector.objective.bossRequired,
+        bossSpawnAtSeconds: sector.objective.bossSpawnAtSeconds
+      }
     }))
   };
 }

@@ -69,6 +69,33 @@ describe('validateContent', () => {
     );
   });
 
+  it('rejects invalid sector objective data', () => {
+    const errors = validateContent({
+      sectors: [
+        {
+          ...baseSector,
+          objective: {
+            ...baseSector.objective,
+            kind: 'defeatBoss',
+            waveCount: 0,
+            spawnsPerWave: -1,
+            bossGate: false
+          }
+        }
+      ] as unknown as readonly SectorDefinition[]
+    });
+
+    expect(errors).toContain(
+      'Sector sector_outer_debris_field objective must have a positive waveCount'
+    );
+    expect(errors).toContain(
+      'Sector sector_outer_debris_field objective must have a positive spawnsPerWave'
+    );
+    expect(errors).toContain(
+      'Sector sector_outer_debris_field defeatBoss objective must enable bossGate'
+    );
+  });
+
   it('rejects duplicate item ids', () => {
     const errors = validateContent({
       items: [baseItem, { ...baseItem, name: 'Duplicate Capacitor' }]

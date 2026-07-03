@@ -4,11 +4,13 @@
 
 ### Gameplay and UX
 
+- Added data-driven sector objectives, deterministic directed wave schedules, HUD objective progress, and boss-gated late sectors.
 - Added original procedural Web Audio cues for firing, impacts, pickups, boss warnings, sector clears, and run endings.
 - Added gameplay camera shake that respects reduced motion and screen shake strength settings.
 
 ### Testing
 
+- Added wave director and objective completion tests, including known-seed objective snapshots and boss-gate coverage.
 - Added unit coverage for audio cue settings, combat feedback detection, and deterministic screen-shake decay.
 
 ### Planning
