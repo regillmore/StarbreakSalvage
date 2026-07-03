@@ -9,7 +9,7 @@ test('loads the shell, starts gameplay, moves, pauses, and opens summary', async
   });
   page.on('pageerror', (error) => browserErrors.push(error.message));
 
-  await page.goto('./');
+  await page.goto('./?debug=1');
 
   await expect(page.getByRole('heading', { name: 'Starbreak Salvage' })).toBeVisible();
   await expect(page.getByRole('img', { name: 'Starbreak Salvage playfield' })).toBeVisible();
@@ -30,6 +30,9 @@ test('loads the shell, starts gameplay, moves, pauses, and opens summary', async
   await expect.poll(async () => page.getByTestId('player-position').textContent()).not.toBe(
     startPosition
   );
+  await page.keyboard.down('ArrowLeft');
+  await page.waitForTimeout(220);
+  await page.keyboard.up('ArrowLeft');
 
   await page.keyboard.press('Escape');
   await expect(page.getByRole('heading', { name: 'Paused' })).toBeVisible();
@@ -37,9 +40,15 @@ test('loads the shell, starts gameplay, moves, pauses, and opens summary', async
   await page.keyboard.press('Escape');
   await expect(page.getByText('Outer Debris Field')).toBeVisible();
 
-  await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: 'End Run' }).click();
-  await expect(page.getByRole('heading', { name: 'Contract Suspended' })).toBeVisible();
+  await page.keyboard.down('Space');
+  await expect
+    .poll(async () => page.getByTestId('combat-status').textContent(), { timeout: 6_000 })
+    .toContain('Destroyed 1');
+  await page.keyboard.up('Space');
+
+  await page.keyboard.press('K');
+  await expect(page.getByRole('heading', { name: 'Debug Run Ended' })).toBeVisible();
+  await expect(page.getByText('forced test')).toBeVisible();
 
   expect(browserErrors).toEqual([]);
 });

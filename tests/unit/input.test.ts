@@ -19,6 +19,7 @@ describe('input helpers', () => {
     expect(actionsForKey('ArrowUp')).toContain('moveUp');
     expect(actionsForKey('a')).toContain('moveLeft');
     expect(actionsForKey('Enter')).toEqual(['confirm']);
+    expect(primaryActionForKey(' ')).toBe('confirm');
     expect(primaryActionForKey('Escape')).toBe('pause');
   });
 

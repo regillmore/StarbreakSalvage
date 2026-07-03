@@ -38,11 +38,13 @@ Planned baseline controls:
 - Confirm: Enter or Space
 - Back: Escape or Backspace
 
-The current shell supports the title flow, placeholder contract launch, keyboard movement in an empty arena, pause/resume, and a run summary placeholder. Combat, rewards, seeded run generation, and save progression arrive in later slices.
+The current shell supports the title flow, deterministic contract launch, keyboard movement, primary fire, simple enemy waves, pickups, pause/resume, hull damage, and a run summary placeholder. Rewards, shops, item synergies, bosses, and save progression arrive in later slices.
 
 Add `?debug=1` to the local or deployed URL to show the debug overlay with FPS, scene, seed, and entity count.
 
 Add `?seed=LASER-TAX-404` or another seed label to preview deterministic contract and route generation. Blank or missing seeds default to `STARBREAK-SMOKE`.
+
+With `?debug=1`, press `K` during gameplay to force the MVP summary screen.
 
 ## Project Vision
 

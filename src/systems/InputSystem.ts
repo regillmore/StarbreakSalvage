@@ -5,12 +5,13 @@ export const INPUT_ACTIONS = [
   'moveDown',
   'moveLeft',
   'moveRight',
+  'confirm',
   'fire',
   'special',
   'bomb',
   'pause',
-  'confirm',
-  'back'
+  'back',
+  'debugGameOver'
 ] as const;
 
 export type InputAction = (typeof INPUT_ACTIONS)[number];
@@ -26,7 +27,8 @@ export const DEFAULT_KEY_BINDINGS: KeyBindingMap = {
   bomb: ['X'],
   pause: ['Escape', 'P'],
   confirm: ['Enter', ' '],
-  back: ['Backspace', 'Escape']
+  back: ['Backspace', 'Escape'],
+  debugGameOver: ['K']
 };
 
 export function normalizeKey(key: string): string {

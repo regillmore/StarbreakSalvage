@@ -1,6 +1,7 @@
 import { CanvasRenderer } from './CanvasRenderer';
 import { Loop, type FrameStats } from './Loop';
 import { SceneManager } from './SceneManager';
+import type { CombatRunResult } from '../game/CombatState';
 import { generateRunSkeleton, type RunSkeleton, type StartingContract } from '../game/Generation';
 import { InputSystem } from '../systems/InputSystem';
 import { ContractSelectScene } from '../ui/ContractSelectScene';
@@ -20,6 +21,7 @@ export class GameApp {
   private readonly debugEnabled: boolean;
   private readonly currentRun: RunSkeleton;
   private selectedContract: StartingContract;
+  private lastRunResult: CombatRunResult | null = null;
   private frameStats: FrameStats = {
     fps: 0,
     steps: 0,
@@ -108,11 +110,25 @@ export class GameApp {
   }
 
   private showGameplay(existingScene?: GameplayScene): void {
+    if (!existingScene) {
+      this.lastRunResult = null;
+    }
+
     const gameplayScene =
       existingScene ??
-      new GameplayScene(this.uiRoot, this.input, this.currentRun, this.selectedContract, (pausedScene) => {
-        this.showPause(pausedScene);
-      });
+      new GameplayScene(
+        this.uiRoot,
+        this.input,
+        this.currentRun,
+        this.selectedContract,
+        this.debugEnabled,
+        (pausedScene) => {
+          this.showPause(pausedScene);
+        },
+        (result) => {
+          this.showRunSummary(result);
+        }
+      );
 
     this.sceneManager.switchTo(gameplayScene);
   }
@@ -126,15 +142,16 @@ export class GameApp {
           this.showGameplay(resumedScene);
         },
         () => {
-          this.showRunSummary();
+          this.showRunSummary(gameplayScene.getRunResult('abandoned'));
         }
       )
     );
   }
 
-  private showRunSummary(): void {
+  private showRunSummary(result?: CombatRunResult): void {
+    this.lastRunResult = result ?? this.lastRunResult;
     this.sceneManager.switchTo(
-      new RunSummaryScene(this.uiRoot, this.currentRun, this.selectedContract, () => {
+      new RunSummaryScene(this.uiRoot, this.currentRun, this.selectedContract, this.lastRunResult, () => {
         this.showMainMenu();
       })
     );

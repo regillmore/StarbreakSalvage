@@ -14,6 +14,29 @@ export interface PlayerRenderState {
   readonly y: number;
   readonly radius: number;
   readonly thrust: number;
+  readonly invulnerable?: boolean;
+}
+
+export interface EnemyRenderState {
+  readonly x: number;
+  readonly y: number;
+  readonly radius: number;
+  readonly hull: number;
+  readonly maxHull: number;
+}
+
+export interface ProjectileRenderState {
+  readonly x: number;
+  readonly y: number;
+  readonly radius: number;
+  readonly owner: 'player' | 'enemy';
+}
+
+export interface PickupRenderState {
+  readonly x: number;
+  readonly y: number;
+  readonly radius: number;
+  readonly kind: 'credit' | 'salvage';
 }
 
 export class CanvasRenderer {
@@ -105,6 +128,7 @@ export class CanvasRenderer {
 
     context.save();
     context.translate(player.x, player.y);
+    context.globalAlpha = player.invulnerable ? 0.62 : 1;
 
     context.globalAlpha = 0.35 + thrust * 0.45;
     context.fillStyle = '#ffd166';
@@ -133,6 +157,70 @@ export class CanvasRenderer {
     context.arc(0, player.radius * 0.2, Math.max(2.5, player.radius * 0.18), 0, Math.PI * 2);
     context.fill();
 
+    context.restore();
+  }
+
+  public paintEnemy(enemy: EnemyRenderState): void {
+    const context = this.context;
+    const healthRatio = clamp(enemy.hull / enemy.maxHull, 0, 1);
+
+    context.save();
+    context.translate(enemy.x, enemy.y);
+
+    context.fillStyle = '#ff6b6b';
+    context.strokeStyle = '#ffd166';
+    context.lineWidth = 2;
+    context.beginPath();
+    context.moveTo(0, enemy.radius);
+    context.lineTo(enemy.radius * 0.86, -enemy.radius * 0.48);
+    context.lineTo(enemy.radius * 0.28, -enemy.radius * 0.25);
+    context.lineTo(0, -enemy.radius);
+    context.lineTo(-enemy.radius * 0.28, -enemy.radius * 0.25);
+    context.lineTo(-enemy.radius * 0.86, -enemy.radius * 0.48);
+    context.closePath();
+    context.fill();
+    context.stroke();
+
+    context.fillStyle = '#19101f';
+    context.fillRect(-enemy.radius, enemy.radius + 6, enemy.radius * 2, 4);
+    context.fillStyle = '#7cf7ff';
+    context.fillRect(-enemy.radius, enemy.radius + 6, enemy.radius * 2 * healthRatio, 4);
+
+    context.restore();
+  }
+
+  public paintProjectile(projectile: ProjectileRenderState): void {
+    const context = this.context;
+
+    context.save();
+    context.translate(projectile.x, projectile.y);
+
+    if (projectile.owner === 'player') {
+      context.fillStyle = '#7cf7ff';
+      context.shadowColor = '#7cf7ff';
+    } else {
+      context.fillStyle = '#ff6bd6';
+      context.shadowColor = '#ff6bd6';
+    }
+
+    context.shadowBlur = 10;
+    context.beginPath();
+    context.arc(0, 0, projectile.radius, 0, Math.PI * 2);
+    context.fill();
+    context.restore();
+  }
+
+  public paintPickup(pickup: PickupRenderState): void {
+    const context = this.context;
+
+    context.save();
+    context.translate(pickup.x, pickup.y);
+    context.rotate(Math.PI / 4);
+    context.fillStyle = pickup.kind === 'credit' ? '#ffd166' : '#7cf7ff';
+    context.strokeStyle = '#f8fbff';
+    context.lineWidth = 1.5;
+    context.fillRect(-pickup.radius, -pickup.radius, pickup.radius * 2, pickup.radius * 2);
+    context.strokeRect(-pickup.radius, -pickup.radius, pickup.radius * 2, pickup.radius * 2);
     context.restore();
   }
 

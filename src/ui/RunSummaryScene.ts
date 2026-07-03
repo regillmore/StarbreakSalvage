@@ -1,5 +1,6 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene } from '../app/Scene';
+import type { CombatRunResult } from '../game/CombatState';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import type { InputAction } from '../systems/InputSystem';
 
@@ -10,6 +11,7 @@ export class RunSummaryScene implements Scene {
     private readonly uiRoot: HTMLElement,
     private readonly run: RunSkeleton,
     private readonly contract: StartingContract,
+    private readonly result: CombatRunResult | null,
     private readonly onBackToMenu: () => void
   ) {}
 
@@ -24,7 +26,7 @@ export class RunSummaryScene implements Scene {
 
     const title = document.createElement('h1');
     title.id = 'summary-title';
-    title.textContent = 'Contract Suspended';
+    title.textContent = getSummaryTitle(this.result);
 
     const stats = document.createElement('dl');
     stats.className = 'summary-stats';
@@ -33,7 +35,12 @@ export class RunSummaryScene implements Scene {
       ['Seed', this.run.seed],
       ['Contract', this.contract.shipName],
       ['Sector', this.run.sectors[0]?.sectorName ?? 'Outer Debris Field'],
-      ['Salvage', '0 kg']
+      ['Outcome', getOutcomeLabel(this.result)],
+      ['Survived', `${Math.floor(this.result?.survivedSeconds ?? 0)}s`],
+      ['Destroyed', `${this.result?.enemiesDestroyed ?? 0}`],
+      ['Credits', `${this.result?.credits ?? 0}`],
+      ['Salvage', `${this.result?.salvage ?? 0} kg`],
+      ['Damage Taken', `${this.result?.damageTaken ?? 0}`]
     ];
 
     for (const [label, value] of statEntries) {
@@ -72,4 +79,32 @@ export class RunSummaryScene implements Scene {
   public getDebugState(): { seed: string; entityCount: number } {
     return { seed: this.run.seed, entityCount: 0 };
   }
+}
+
+function getSummaryTitle(result: CombatRunResult | null): string {
+  if (result?.reason === 'destroyed') {
+    return 'Ship Destroyed';
+  }
+
+  if (result?.reason === 'debug') {
+    return 'Debug Run Ended';
+  }
+
+  return 'Contract Suspended';
+}
+
+function getOutcomeLabel(result: CombatRunResult | null): string {
+  if (!result) {
+    return 'pending';
+  }
+
+  if (result.reason === 'destroyed') {
+    return 'permadeath';
+  }
+
+  if (result.reason === 'debug') {
+    return 'forced test';
+  }
+
+  return 'abandoned';
 }

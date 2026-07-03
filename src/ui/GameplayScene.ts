@@ -1,36 +1,54 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene } from '../app/Scene';
-import { clamp } from '../core/math';
+import {
+  createCombatState,
+  forceCombatEnd,
+  getCombatEntityCount,
+  updateCombatState,
+  type CombatBounds,
+  type CombatRunResult,
+  type CombatState
+} from '../game/CombatState';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import type { InputSystem, InputAction } from '../systems/InputSystem';
-
-const PLAYER_RADIUS = 18;
-const PLAYER_SPEED = 360;
 
 export class GameplayScene implements Scene {
   public readonly id = 'gameplay';
 
-  private playerX = 0;
-  private playerY = 0;
-  private thrust = 0;
+  private combatState: CombatState | null = null;
   private readonly positionReadout: HTMLParagraphElement;
+  private readonly hullReadout: HTMLParagraphElement;
+  private readonly economyReadout: HTMLParagraphElement;
+  private readonly combatReadout: HTMLParagraphElement;
 
   public constructor(
     private readonly uiRoot: HTMLElement,
     private readonly input: InputSystem,
     private readonly run: RunSkeleton,
     private readonly contract: StartingContract,
-    private readonly onPause: (scene: GameplayScene) => void
+    private readonly debugEnabled: boolean,
+    private readonly onPause: (scene: GameplayScene) => void,
+    private readonly onGameOver: (result: CombatRunResult) => void
   ) {
     this.positionReadout = document.createElement('p');
     this.positionReadout.className = 'sr-only';
     this.positionReadout.dataset.testid = 'player-position';
+
+    this.hullReadout = document.createElement('p');
+    this.hullReadout.className = 'hud-pill';
+    this.hullReadout.dataset.testid = 'hull-readout';
+
+    this.economyReadout = document.createElement('p');
+    this.economyReadout.className = 'hud-pill';
+    this.economyReadout.dataset.testid = 'pickup-readout';
+
+    this.combatReadout = document.createElement('p');
+    this.combatReadout.className = 'hud-pill';
+    this.combatReadout.dataset.testid = 'combat-status';
   }
 
   public enter(): void {
-    const size = this.getViewportSize();
-    this.playerX = this.playerX || size.width / 2;
-    this.playerY = this.playerY || size.height * 0.78;
+    this.combatState ??= createCombatState(this.getCombatBounds(), this.run.seed);
 
     const hud = document.createElement('section');
     hud.className = 'game-hud';
@@ -40,37 +58,70 @@ export class GameplayScene implements Scene {
     sector.className = 'hud-pill';
     sector.textContent = this.getCurrentSectorName();
 
-    const hull = document.createElement('p');
-    hull.className = 'hud-pill';
-    hull.textContent = 'Hull 3';
-
     const contract = document.createElement('p');
     contract.className = 'hud-pill';
     contract.textContent = this.contract.shipName;
 
-    hud.append(sector, hull, contract, this.positionReadout);
+    const weapon = document.createElement('p');
+    weapon.className = 'hud-pill';
+    weapon.textContent = 'Space: Fire';
+
+    hud.append(
+      sector,
+      this.hullReadout,
+      this.economyReadout,
+      this.combatReadout,
+      contract,
+      weapon,
+      this.positionReadout
+    );
     this.uiRoot.replaceChildren(hud);
-    this.syncPositionReadout();
+    this.syncReadouts();
   }
 
   public update(dt: number): void {
-    const size = this.getViewportSize();
-    const axis = this.input.getMovementAxis();
+    const state = this.getCombatState();
+    const result = updateCombatState(
+      state,
+      {
+        movement: this.input.getMovementAxis(),
+        fire: this.input.isActionPressed('fire')
+      },
+      dt,
+      this.getCombatBounds()
+    );
 
-    this.playerX = clamp(this.playerX + axis.x * PLAYER_SPEED * dt, PLAYER_RADIUS + 24, size.width - PLAYER_RADIUS - 24);
-    this.playerY = clamp(this.playerY + axis.y * PLAYER_SPEED * dt, PLAYER_RADIUS + 24, size.height - PLAYER_RADIUS - 24);
-    this.thrust = Math.max(Math.abs(axis.x), Math.abs(axis.y));
-    this.syncPositionReadout();
+    this.syncReadouts();
+
+    if (result) {
+      this.onGameOver(result);
+    }
   }
 
   public render(renderer: CanvasRenderer, _alpha: number): void {
+    const state = this.getCombatState();
+
     renderer.paintBackground();
     renderer.paintGameplayFrame();
+
+    for (const pickup of state.pickups) {
+      renderer.paintPickup(pickup);
+    }
+
+    for (const enemy of state.enemies) {
+      renderer.paintEnemy(enemy);
+    }
+
+    for (const projectile of state.projectiles) {
+      renderer.paintProjectile(projectile);
+    }
+
     renderer.paintPlayerShip({
-      x: this.playerX,
-      y: this.playerY,
-      radius: PLAYER_RADIUS,
-      thrust: this.thrust
+      x: state.player.x,
+      y: state.player.y,
+      radius: state.player.radius,
+      thrust: Math.max(Math.abs(this.input.getMovementAxis().x), Math.abs(this.input.getMovementAxis().y)),
+      invulnerable: state.player.invulnerableSeconds > 0
     });
   }
 
@@ -78,26 +129,47 @@ export class GameplayScene implements Scene {
     if (action === 'pause' || action === 'back') {
       this.onPause(this);
     }
+
+    if (action === 'debugGameOver' && this.debugEnabled) {
+      this.onGameOver(forceCombatEnd(this.getCombatState(), 'debug'));
+    }
+  }
+
+  public getRunResult(reason: 'abandoned' | 'debug' = 'abandoned'): CombatRunResult {
+    return forceCombatEnd(this.getCombatState(), reason);
   }
 
   public getDebugState(): { seed: string; entityCount: number } {
-    return { seed: this.run.seed, entityCount: 1 };
+    return { seed: this.run.seed, entityCount: getCombatEntityCount(this.getCombatState()) };
+  }
+
+  private getCombatState(): CombatState {
+    this.combatState ??= createCombatState(this.getCombatBounds(), this.run.seed);
+    return this.combatState;
   }
 
   private getCurrentSectorName(): string {
     return this.run.sectors[0]?.sectorName ?? 'Outer Debris Field';
   }
 
-  private syncPositionReadout(): void {
-    this.positionReadout.textContent = `Player ${Math.round(this.playerX)},${Math.round(this.playerY)}`;
+  private syncReadouts(): void {
+    const state = this.getCombatState();
+
+    this.positionReadout.textContent = `Player ${Math.round(state.player.x)},${Math.round(
+      state.player.y
+    )}`;
+    this.hullReadout.textContent = `Hull ${state.player.hull}/${state.player.maxHull}`;
+    this.economyReadout.textContent = `Credits ${state.player.credits} | Salvage ${state.player.salvage}`;
+    this.combatReadout.textContent = `Destroyed ${state.stats.enemiesDestroyed} | Shots ${state.stats.shotsFired}`;
   }
 
-  private getViewportSize(): { width: number; height: number } {
+  private getCombatBounds(): CombatBounds {
     const ownerWindow = this.uiRoot.ownerDocument.defaultView ?? window;
 
     return {
       width: Math.max(320, ownerWindow.innerWidth),
-      height: Math.max(240, ownerWindow.innerHeight)
+      height: Math.max(240, ownerWindow.innerHeight),
+      padding: 24
     };
   }
 }
