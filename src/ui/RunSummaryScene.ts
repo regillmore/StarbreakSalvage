@@ -61,6 +61,8 @@ export class RunSummaryScene implements Scene {
       stats.append(term, detail);
     }
 
+    const seedShare = this.createSeedShareControl();
+
     const menuButton = document.createElement('button');
     menuButton.className = 'primary-button';
     menuButton.type = 'button';
@@ -72,7 +74,7 @@ export class RunSummaryScene implements Scene {
     unlockSummary.dataset.testid = 'unlock-summary';
     unlockSummary.textContent = this.getUnlockSummaryText();
 
-    shell.append(eyebrow, title, stats, unlockSummary, menuButton);
+    shell.append(eyebrow, title, stats, seedShare, unlockSummary, menuButton);
     this.uiRoot.replaceChildren(shell);
     menuButton.focus();
   }
@@ -104,6 +106,79 @@ export class RunSummaryScene implements Scene {
 
     const names = this.saveUpdate.newUnlockIds.map((unlockId) => getUnlockById(unlockId).name);
     return `Unlocked: ${names.join(', ')}`;
+  }
+
+  private createSeedShareControl(): HTMLElement {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'seed-share';
+
+    const label = document.createElement('label');
+    label.className = 'sr-only';
+    label.htmlFor = 'seed-share-link';
+    label.textContent = 'Shareable seed link';
+
+    const input = document.createElement('input');
+    input.id = 'seed-share-link';
+    input.className = 'seed-share-input';
+    input.dataset.testid = 'seed-share-link';
+    input.readOnly = true;
+    input.value = buildSeedShareUrl(this.getCurrentHref(), this.run.seed);
+
+    const copyButton = document.createElement('button');
+    copyButton.className = 'secondary-button';
+    copyButton.type = 'button';
+    copyButton.textContent = 'Copy Seed Link';
+
+    const status = document.createElement('p');
+    status.className = 'summary-note seed-share-status';
+    status.dataset.testid = 'seed-share-status';
+    status.textContent = 'Seed link ready.';
+
+    copyButton.addEventListener('click', () => {
+      input.select();
+      void writeSeedLinkToClipboard(input.value, this.uiRoot.ownerDocument.defaultView).then(
+        (copied) => {
+          status.textContent = copied ? 'Seed link copied.' : 'Seed link ready.';
+        }
+      );
+    });
+
+    wrapper.append(label, input, copyButton, status);
+    return wrapper;
+  }
+
+  private getCurrentHref(): string {
+    return this.uiRoot.ownerDocument.defaultView?.location.href ?? '';
+  }
+}
+
+export function buildSeedShareUrl(currentHref: string, seed: string): string {
+  try {
+    const url = new URL(currentHref);
+    url.searchParams.delete('debug');
+    url.searchParams.set('seed', seed);
+    url.hash = '';
+    return url.href;
+  } catch {
+    return `?seed=${encodeURIComponent(seed)}`;
+  }
+}
+
+async function writeSeedLinkToClipboard(
+  value: string,
+  ownerWindow: Window | null
+): Promise<boolean> {
+  const clipboard = ownerWindow?.navigator.clipboard;
+
+  if (!clipboard) {
+    return false;
+  }
+
+  try {
+    await clipboard.writeText(value);
+    return true;
+  } catch {
+    return false;
   }
 }
 

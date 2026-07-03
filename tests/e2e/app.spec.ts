@@ -85,6 +85,10 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByRole('heading', { name: 'Debug Run Ended' })).toBeVisible();
   await expect(page.getByText('forced test')).toBeVisible();
   await expect(page.getByTestId('unlock-summary')).toContainText('Unlocked:');
+  await expect(page.getByTestId('seed-share-link')).toHaveValue(/seed=STARBREAK-SMOKE/);
+
+  await page.getByRole('button', { name: 'Copy Seed Link' }).click();
+  await expect(page.getByTestId('seed-share-status')).toContainText(/Seed link/);
 
   await page.getByRole('button', { name: 'Back to Menu' }).click();
   await expect(page.getByRole('heading', { name: 'Starbreak Salvage' })).toBeVisible();
