@@ -1,0 +1,276 @@
+{
+  "project": "Starbreak Salvage",
+  "version": "0.1-seed",
+  "testSeeds": [
+    {
+      "seed": "STARBREAK-SMOKE",
+      "purpose": "stable forgiving smoke path"
+    },
+    {
+      "seed": "LASER-TAX-404",
+      "purpose": "economy and laser route"
+    },
+    {
+      "seed": "ORBITAL-JUNK-PROPHET",
+      "purpose": "relic and curse route"
+    },
+    {
+      "seed": "VOID-CORSAIR-7",
+      "purpose": "shop and convoy route"
+    },
+    {
+      "seed": "BLOOM-ENGINE-ALPHA",
+      "purpose": "bio-machine boss route"
+    }
+  ],
+  "ships": [
+    {
+      "id": "ship_debt_runner",
+      "name": "Debt Runner",
+      "tags": [
+        "credit",
+        "speed"
+      ],
+      "weapon": "weapon_light_needle_laser",
+      "perk": "credits are pulled from farther away",
+      "drawback": "elite bounty ambush can replace normal elite encounters"
+    },
+    {
+      "id": "ship_drone_chaplain",
+      "name": "Drone Chaplain",
+      "tags": [
+        "drone"
+      ],
+      "weapon": "weapon_pulse_cannon",
+      "perk": "starts with two micro-drones",
+      "drawback": "main weapon damage reduced until drones are active"
+    },
+    {
+      "id": "ship_missile_accountant",
+      "name": "Missile Accountant",
+      "tags": [
+        "missile",
+        "overkill"
+      ],
+      "weapon": "weapon_dumbfire_missile_rack",
+      "perk": "overkill damage can produce bonus scrap",
+      "drawback": "slower reload and lower agility"
+    },
+    {
+      "id": "ship_phase_courier",
+      "name": "Phase Courier",
+      "tags": [
+        "phase",
+        "graze"
+      ],
+      "weapon": "weapon_needle_splitter",
+      "perk": "grazing charges special ability",
+      "drawback": "lower max hull"
+    },
+    {
+      "id": "ship_shield_bruiser",
+      "name": "Shield Bruiser",
+      "tags": [
+        "shield"
+      ],
+      "weapon": "weapon_short_range_spread",
+      "perk": "shield damage charges retaliation weapons",
+      "drawback": "large hitbox and slow movement"
+    },
+    {
+      "id": "ship_scrap_monk",
+      "name": "Scrap Monk",
+      "tags": [
+        "scrap"
+      ],
+      "weapon": "weapon_kinetic_popgun",
+      "perk": "destroyed enemy bullets become scrap motes",
+      "drawback": "shops offer fewer items unless purity is broken"
+    },
+    {
+      "id": "ship_corporate_test_pilot",
+      "name": "Corporate Test Pilot",
+      "tags": [
+        "prototype",
+        "heat"
+      ],
+      "weapon": "weapon_prototype_beam",
+      "perk": "starts with a rare experimental item",
+      "drawback": "random malfunction each sector"
+    },
+    {
+      "id": "ship_relic_thief",
+      "name": "Relic Thief",
+      "tags": [
+        "relic",
+        "curse"
+      ],
+      "weapon": "weapon_basic_blaster",
+      "perk": "detects hidden relic rooms",
+      "drawback": "lower max hull and higher curse chance"
+    }
+  ],
+  "items": [
+    {
+      "id": "item_chain_arc_capacitor",
+      "name": "Chain Arc Capacitor",
+      "rarity": "rare",
+      "tags": [
+        "laser",
+        "plasma"
+      ],
+      "effect": "shots can arc to nearby enemies"
+    },
+    {
+      "id": "item_split_prism",
+      "name": "Split Prism",
+      "rarity": "uncommon",
+      "tags": [
+        "split"
+      ],
+      "effect": "shots split into weaker child shots"
+    },
+    {
+      "id": "item_ricochet_license",
+      "name": "Ricochet License",
+      "rarity": "uncommon",
+      "tags": [
+        "ricochet"
+      ],
+      "effect": "eligible shots bounce once off screen edges"
+    },
+    {
+      "id": "item_drone_uplink",
+      "name": "Drone Uplink",
+      "rarity": "rare",
+      "tags": [
+        "drone"
+      ],
+      "effect": "drones copy a reduced primary shot"
+    },
+    {
+      "id": "item_shield_dynamo",
+      "name": "Shield Dynamo",
+      "rarity": "uncommon",
+      "tags": [
+        "shield"
+      ],
+      "effect": "shield damage charges special ability"
+    },
+    {
+      "id": "item_coin_operated_cannon",
+      "name": "Coin-Operated Cannon",
+      "rarity": "uncommon",
+      "tags": [
+        "credit"
+      ],
+      "effect": "collecting credits boosts fire rate briefly"
+    },
+    {
+      "id": "item_overkill_ledger",
+      "name": "Overkill Ledger",
+      "rarity": "rare",
+      "tags": [
+        "overkill",
+        "scrap"
+      ],
+      "effect": "excess damage can become scrap"
+    },
+    {
+      "id": "item_heat_sink_saint",
+      "name": "Heat Sink Saint",
+      "rarity": "uncommon",
+      "tags": [
+        "heat"
+      ],
+      "effect": "reduces heat and makes venting offensive"
+    },
+    {
+      "id": "item_cursed_hull_plate",
+      "name": "Cursed Hull Plate",
+      "rarity": "cursed",
+      "tags": [
+        "curse",
+        "armor"
+      ],
+      "effect": "lower max hull; repairs grant temporary damage"
+    },
+    {
+      "id": "item_bomb_refund_actuator",
+      "name": "Bomb Refund Actuator",
+      "rarity": "rare",
+      "tags": [
+        "bomb"
+      ],
+      "effect": "bomb kills can refund bomb charge"
+    },
+    {
+      "id": "item_phase_grazer",
+      "name": "Phase Grazer",
+      "rarity": "rare",
+      "tags": [
+        "phase"
+      ],
+      "effect": "grazing emits homing shards"
+    },
+    {
+      "id": "item_vault_parasite",
+      "name": "Vault Parasite",
+      "rarity": "prototype",
+      "tags": [
+        "relic",
+        "curse"
+      ],
+      "effect": "stronger relics; cursed shops"
+    }
+  ],
+  "sectors": [
+    {
+      "id": "sector_outer_debris_field",
+      "name": "Outer Debris Field",
+      "role": "intro"
+    },
+    {
+      "id": "sector_trade_war_corridor",
+      "name": "Trade War Corridor",
+      "role": "economy and shields"
+    },
+    {
+      "id": "sector_bio_machine_bloom",
+      "name": "Bio-Machine Bloom",
+      "role": "organic patterns and corrosion"
+    },
+    {
+      "id": "sector_corporate_kill_grid",
+      "name": "Corporate Kill Grid",
+      "role": "lasers, drones, elites"
+    },
+    {
+      "id": "sector_core_wreck",
+      "name": "The Core Wreck",
+      "role": "final exam"
+    }
+  ],
+  "bosses": [
+    {
+      "id": "boss_auditor_drone_xl",
+      "name": "Auditor Drone XL"
+    },
+    {
+      "id": "boss_bloom_engine",
+      "name": "The Bloom Engine"
+    },
+    {
+      "id": "boss_unsold_missiles_carrier",
+      "name": "Carrier of Unsold Missiles"
+    },
+    {
+      "id": "boss_warranty_void_seraph",
+      "name": "Warranty Void Seraph"
+    },
+    {
+      "id": "boss_core_wreck",
+      "name": "The Core Wreck"
+    }
+  ]
+}
