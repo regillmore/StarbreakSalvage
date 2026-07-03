@@ -2,7 +2,13 @@
   color: #f7fbff;
   background: #040612;
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -70,7 +76,7 @@ button {
   position: absolute;
   inset: 0;
   z-index: -1;
-  content: "";
+  content: '';
   background: linear-gradient(90deg, rgba(4, 6, 18, 0.82), rgba(4, 6, 18, 0));
 }
 
@@ -180,6 +186,10 @@ button {
   pointer-events: auto;
 }
 
+.scene-panel-wide {
+  width: min(94vw, 1040px);
+}
+
 .contract-panel {
   align-self: center;
 }
@@ -198,7 +208,7 @@ button {
   background: rgba(10, 14, 34, 0.72);
 }
 
-.contract-card[data-selected="true"] {
+.contract-card[data-selected='true'] {
   border-color: rgba(255, 209, 102, 0.8);
   box-shadow: 0 0 0 1px rgba(255, 209, 102, 0.24) inset;
 }
@@ -227,6 +237,86 @@ button {
   width: 100%;
   min-width: 0;
   min-height: 2.6rem;
+}
+
+.route-grid,
+.reward-grid,
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.shop-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.choice-card {
+  display: grid;
+  min-height: 11.5rem;
+  align-content: start;
+  gap: 0.55rem;
+  padding: 1rem;
+  border: 1px solid rgba(124, 247, 255, 0.3);
+  border-radius: 8px;
+  color: #f8fbff;
+  text-align: left;
+  background: rgba(10, 14, 34, 0.76);
+  cursor: pointer;
+}
+
+.choice-card:hover:not(:disabled) {
+  border-color: rgba(255, 209, 102, 0.74);
+  transform: translateY(-1px);
+}
+
+.choice-card:focus-visible {
+  outline: 3px solid #ff6bd6;
+  outline-offset: 4px;
+}
+
+.choice-card:disabled {
+  color: rgba(248, 251, 255, 0.5);
+  border-color: rgba(219, 232, 238, 0.16);
+  background: rgba(10, 14, 34, 0.48);
+  cursor: not-allowed;
+}
+
+.choice-title,
+.choice-meta,
+.choice-body {
+  display: block;
+}
+
+.choice-title {
+  color: #7cf7ff;
+  font-size: 1.05rem;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.choice-meta {
+  color: #ffd166;
+  font-size: 0.78rem;
+  font-weight: 850;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.choice-body {
+  color: #dbe8ee;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.transition-panel {
+  width: min(90vw, 620px);
+}
+
+.transition-copy {
+  margin: 0;
+  color: #dbe8ee;
+  line-height: 1.45;
 }
 
 .button-row {
@@ -302,7 +392,7 @@ button {
   border-radius: 6px;
   color: #7cf7ff;
   background: rgba(2, 4, 10, 0.82);
-  font-family: "Cascadia Mono", "Consolas", monospace;
+  font-family: 'Cascadia Mono', 'Consolas', monospace;
   font-size: 0.78rem;
 }
 
@@ -319,11 +409,15 @@ button {
 }
 
 @media (max-width: 760px) {
-  .contract-list {
+  .contract-list,
+  .route-grid,
+  .reward-grid,
+  .shop-grid {
     grid-template-columns: 1fr;
   }
 
-  .contract-card {
+  .contract-card,
+  .choice-card {
     min-height: auto;
   }
 }

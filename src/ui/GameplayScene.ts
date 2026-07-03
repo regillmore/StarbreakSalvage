@@ -11,8 +11,10 @@ import {
 } from '../game/CombatState';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import { describeItemLoadout } from '../game/ItemHooks';
-import { generateStartingItemLoadout, type ItemInstance } from '../game/Rewards';
+import type { ItemInstance } from '../game/Rewards';
 import type { InputSystem, InputAction } from '../systems/InputSystem';
+
+const SECTOR_CLEAR_DESTROYED_GOAL = 1;
 
 export class GameplayScene implements Scene {
   public readonly id = 'gameplay';
@@ -23,16 +25,21 @@ export class GameplayScene implements Scene {
   private readonly economyReadout: HTMLParagraphElement;
   private readonly combatReadout: HTMLParagraphElement;
   private readonly itemReadout: HTMLParagraphElement;
-  private readonly itemLoadout: readonly ItemInstance[];
+  private sectorCompleted = false;
 
   public constructor(
     private readonly uiRoot: HTMLElement,
     private readonly input: InputSystem,
     private readonly run: RunSkeleton,
     private readonly contract: StartingContract,
+    private readonly sectorIndex: number,
+    private readonly itemLoadout: readonly ItemInstance[],
+    private readonly startingCredits: number,
+    private readonly startingSalvage: number,
     private readonly debugEnabled: boolean,
     private readonly onPause: (scene: GameplayScene) => void,
-    private readonly onGameOver: (result: CombatRunResult) => void
+    private readonly onGameOver: (result: CombatRunResult) => void,
+    private readonly onSectorComplete: (result: CombatRunResult) => void
   ) {
     this.positionReadout = document.createElement('p');
     this.positionReadout.className = 'sr-only';
@@ -53,15 +60,10 @@ export class GameplayScene implements Scene {
     this.itemReadout = document.createElement('p');
     this.itemReadout.className = 'hud-pill hud-pill-wide';
     this.itemReadout.dataset.testid = 'item-readout';
-
-    this.itemLoadout = generateStartingItemLoadout(run.seed, contract);
   }
 
   public enter(): void {
-    this.combatState ??= createCombatState(this.getCombatBounds(), this.run.seed, {
-      weaponId: this.contract.startingWeaponId,
-      items: this.itemLoadout
-    });
+    this.getCombatState();
 
     const hud = document.createElement('section');
     hud.className = 'game-hud';
@@ -109,6 +111,12 @@ export class GameplayScene implements Scene {
 
     if (result) {
       this.onGameOver(result);
+      return;
+    }
+
+    if (!this.sectorCompleted && state.stats.enemiesDestroyed >= SECTOR_CLEAR_DESTROYED_GOAL) {
+      this.sectorCompleted = true;
+      this.onSectorComplete(forceCombatEnd(state, 'sectorComplete'));
     }
   }
 
@@ -134,7 +142,10 @@ export class GameplayScene implements Scene {
       x: state.player.x,
       y: state.player.y,
       radius: state.player.radius,
-      thrust: Math.max(Math.abs(this.input.getMovementAxis().x), Math.abs(this.input.getMovementAxis().y)),
+      thrust: Math.max(
+        Math.abs(this.input.getMovementAxis().x),
+        Math.abs(this.input.getMovementAxis().y)
+      ),
       invulnerable: state.player.invulnerableSeconds > 0
     });
   }
@@ -158,12 +169,15 @@ export class GameplayScene implements Scene {
   }
 
   private getCombatState(): CombatState {
-    this.combatState ??= createCombatState(this.getCombatBounds(), this.run.seed);
+    this.combatState ??= createCombatState(this.getCombatBounds(), this.getCombatSeed(), {
+      weaponId: this.contract.startingWeaponId,
+      items: this.itemLoadout
+    });
     return this.combatState;
   }
 
   private getCurrentSectorName(): string {
-    return this.run.sectors[0]?.sectorName ?? 'Outer Debris Field';
+    return this.run.sectors[this.sectorIndex]?.sectorName ?? 'Outer Debris Field';
   }
 
   private syncReadouts(): void {
@@ -173,9 +187,14 @@ export class GameplayScene implements Scene {
       state.player.y
     )}`;
     this.hullReadout.textContent = `Hull ${state.player.hull}/${state.player.maxHull}`;
-    this.economyReadout.textContent = `Credits ${state.player.credits} | Salvage ${state.player.salvage}`;
+    this.economyReadout.textContent = `Credits ${this.startingCredits + state.player.credits} | Salvage ${this.startingSalvage + state.player.salvage}`;
     this.combatReadout.textContent = `Destroyed ${state.stats.enemiesDestroyed} | Shots ${state.stats.shotsFired} | Hooks ${state.stats.itemTriggers}`;
     this.itemReadout.textContent = describeItemLoadout(state.items);
+  }
+
+  private getCombatSeed(): string {
+    const sector = this.run.sectors[this.sectorIndex];
+    return `${this.run.seed}:combat:${sector?.sectorId ?? this.sectorIndex + 1}`;
   }
 
   private getCombatBounds(): CombatBounds {

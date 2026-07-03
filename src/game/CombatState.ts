@@ -15,7 +15,7 @@ import type { WeaponId } from '../content/ships';
 
 export type ProjectileOwner = 'player' | 'enemy';
 export type PickupKind = 'credit' | 'salvage';
-export type CombatEndReason = 'destroyed' | 'abandoned' | 'debug';
+export type CombatEndReason = 'destroyed' | 'abandoned' | 'debug' | 'sectorComplete';
 
 export interface CombatBounds {
   readonly width: number;

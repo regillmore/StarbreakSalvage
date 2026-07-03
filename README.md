@@ -2,7 +2,7 @@
 
 **Starbreak Salvage** is a browser-first 2D vertical roguelike shooter about disposable pilots, unstable ship contracts, and profitable wreckage. The project is intentionally static: no backend, no accounts, and no runtime network dependency after the page loads.
 
-This repository is at the early M1 shell stage. It currently ships a Vite + TypeScript app with a canvas renderer, fixed-step loop, input manager, scene manager, placeholder menu/contract/gameplay/pause/summary scenes, deterministic starfield generation, unit tests, Playwright smoke coverage, CI, and GitHub Pages deployment wiring.
+This repository is in the early playable scaffold stage. It currently ships a Vite + TypeScript app with a canvas renderer, fixed-step loop, input manager, scene manager, deterministic contract and sector generation, starter item hooks, a combat MVP, route/reward/shop screens, unit tests, Playwright smoke coverage, CI, and GitHub Pages deployment wiring.
 
 ## Local Development
 
@@ -38,7 +38,7 @@ Planned baseline controls:
 - Confirm: Enter or Space
 - Back: Escape or Backspace
 
-The current shell supports the title flow, deterministic contract launch, keyboard movement, primary fire, simple enemy waves, pickups, pause/resume, hull damage, starter item hooks, and a run summary placeholder. Full reward screens, shops, bosses, and save progression arrive in later slices.
+The current shell supports the title flow, deterministic contract launch, keyboard movement, primary fire, simple enemy waves, pickups, pause/resume, hull damage, starter item hooks, route choice, rewards, basic shops with rerolls, sector transition, and a run summary placeholder. Bosses and save progression arrive in later slices.
 
 Add `?debug=1` to the local or deployed URL to show the debug overlay with FPS, scene, seed, and entity count.
 

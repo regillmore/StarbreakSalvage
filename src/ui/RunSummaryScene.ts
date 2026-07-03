@@ -92,6 +92,10 @@ function getSummaryTitle(result: CombatRunResult | null): string {
     return 'Debug Run Ended';
   }
 
+  if (result?.reason === 'sectorComplete') {
+    return 'Contract Complete';
+  }
+
   return 'Contract Suspended';
 }
 
@@ -106,6 +110,10 @@ function getOutcomeLabel(result: CombatRunResult | null): string {
 
   if (result.reason === 'debug') {
     return 'forced test';
+  }
+
+  if (result.reason === 'sectorComplete') {
+    return 'sector survived';
   }
 
   return 'abandoned';

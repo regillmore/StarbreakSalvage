@@ -95,7 +95,9 @@ export function generateRunSkeleton(seedInput: string | null | undefined): RunSk
   return {
     seed,
     contracts: generateStartingContracts(seed, rootRng.fork('contracts')),
-    sectors: SECTORS.map((sector, index) => generateSectorRoute(sector, index + 1, rootRng.fork(`sector-${index + 1}`)))
+    sectors: SECTORS.map((sector, index) =>
+      generateSectorRoute(sector, index + 1, rootRng.fork(`sector-${index + 1}`))
+    )
   };
 }
 
@@ -154,18 +156,25 @@ function generateSectorRoute(sector: SectorDefinition, index: number, rng: Rng):
 }
 
 function generateRouteOptions(rng: Rng, sectorIndex: number): RouteOption[] {
-  const routeKinds = selectUniqueWeighted<RouteKind>(
-    rng,
-    [
-      { item: 'shop', weight: sectorIndex === 1 ? 2 : 4 },
-      { item: 'elite', weight: 3 + sectorIndex },
-      { item: 'vault', weight: sectorIndex >= 2 ? 3 : 1 },
-      { item: 'repair', weight: sectorIndex >= 3 ? 3 : 2 },
-      { item: 'glitch', weight: sectorIndex >= 3 ? 2 : 1 },
-      { item: 'factionAmbush', weight: sectorIndex >= 2 ? 3 : 1 }
-    ],
-    3
-  );
+  const weightedRoutes: readonly WeightedChoice<RouteKind>[] = [
+    { item: 'shop', weight: sectorIndex === 1 ? 2 : 4 },
+    { item: 'elite', weight: 3 + sectorIndex },
+    { item: 'vault', weight: sectorIndex >= 2 ? 3 : 1 },
+    { item: 'repair', weight: sectorIndex >= 3 ? 3 : 2 },
+    { item: 'glitch', weight: sectorIndex >= 3 ? 2 : 1 },
+    { item: 'factionAmbush', weight: sectorIndex >= 2 ? 3 : 1 }
+  ];
+  const routeKinds =
+    sectorIndex === 1
+      ? [
+          'shop' as const,
+          ...selectUniqueWeighted(
+            rng,
+            weightedRoutes.filter((route) => route.item !== 'shop'),
+            2
+          )
+        ]
+      : selectUniqueWeighted<RouteKind>(rng, weightedRoutes, 3);
 
   return routeKinds.map((kind) => ({
     ...ROUTE_OPTIONS[kind],
@@ -173,7 +182,11 @@ function generateRouteOptions(rng: Rng, sectorIndex: number): RouteOption[] {
   }));
 }
 
-function selectUniqueWeighted<T>(rng: Rng, choices: readonly WeightedChoice<T>[], count: number): T[] {
+function selectUniqueWeighted<T>(
+  rng: Rng,
+  choices: readonly WeightedChoice<T>[],
+  count: number
+): T[] {
   const available = choices.map((choice) => ({ ...choice }));
   const selected: T[] = [];
 

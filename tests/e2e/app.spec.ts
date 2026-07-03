@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 
-test('loads the shell, starts gameplay, moves, pauses, and opens summary', async ({ page }) => {
+test('loads the shell, starts gameplay, moves, pauses, and enters the sector loop', async ({
+  page
+}) => {
   const browserErrors: string[] = [];
   page.on('console', (message) => {
     if (message.type() === 'error') {
@@ -28,9 +30,9 @@ test('loads the shell, starts gameplay, moves, pauses, and opens summary', async
   await page.waitForTimeout(180);
   await page.keyboard.up('ArrowRight');
 
-  await expect.poll(async () => page.getByTestId('player-position').textContent()).not.toBe(
-    startPosition
-  );
+  await expect
+    .poll(async () => page.getByTestId('player-position').textContent())
+    .not.toBe(startPosition);
   await page.keyboard.down('ArrowLeft');
   await page.waitForTimeout(220);
   await page.keyboard.up('ArrowLeft');
@@ -42,10 +44,23 @@ test('loads the shell, starts gameplay, moves, pauses, and opens summary', async
   await expect(page.getByText('Outer Debris Field')).toBeVisible();
 
   await page.keyboard.down('Space');
-  await expect
-    .poll(async () => page.getByTestId('combat-status').textContent(), { timeout: 6_000 })
-    .toContain('Destroyed 1');
+  await expect(page.getByRole('heading', { name: 'Choose Route' })).toBeVisible({
+    timeout: 6_000
+  });
   await page.keyboard.up('Space');
+
+  await page.getByTestId('route-shop').click();
+  await expect(page.getByRole('heading', { name: 'Shop' })).toBeVisible();
+
+  await page.getByRole('button', { name: /Reroll/ }).click();
+  await page.getByRole('button', { name: 'Leave Shop' }).click();
+  await expect(page.getByRole('heading', { name: 'Choose Reward' })).toBeVisible();
+
+  await page.getByRole('button', { name: /Take / }).first().click();
+  await expect(page.getByRole('heading', { name: /Entering Trade War Corridor/ })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Enter Sector' }).click();
+  await expect(page.getByText('Trade War Corridor')).toBeVisible();
 
   await page.keyboard.press('K');
   await expect(page.getByRole('heading', { name: 'Debug Run Ended' })).toBeVisible();

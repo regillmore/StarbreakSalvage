@@ -2,13 +2,36 @@ import { CanvasRenderer } from './CanvasRenderer';
 import { Loop, type FrameStats } from './Loop';
 import { SceneManager } from './SceneManager';
 import type { CombatRunResult } from '../game/CombatState';
-import { generateRunSkeleton, type RunSkeleton, type StartingContract } from '../game/Generation';
+import {
+  generateRunSkeleton,
+  type RouteOption,
+  type RunSkeleton,
+  type StartingContract
+} from '../game/Generation';
+import {
+  addCredits,
+  addItemToSession,
+  advanceSector,
+  createRunSession,
+  getCurrentSector,
+  incrementShopRerollCount,
+  recordRouteChoice,
+  recordSectorCombatResult,
+  spendCredits,
+  type RunSessionState
+} from '../game/RunSession';
+import { SHOP_REROLL_COST } from '../game/Shops';
 import { InputSystem } from '../systems/InputSystem';
 import { ContractSelectScene } from '../ui/ContractSelectScene';
 import { GameplayScene } from '../ui/GameplayScene';
 import { MainMenuScene } from '../ui/MainMenuScene';
 import { PauseScene } from '../ui/PauseScene';
+import { RewardScene } from '../ui/RewardScene';
+import { RouteScene } from '../ui/RouteScene';
 import { RunSummaryScene } from '../ui/RunSummaryScene';
+import { SectorTransitionScene } from '../ui/SectorTransitionScene';
+import { ShopScene } from '../ui/ShopScene';
+import type { ItemId } from '../content/items';
 
 export class GameApp {
   private readonly canvas: HTMLCanvasElement;
@@ -21,6 +44,7 @@ export class GameApp {
   private readonly debugEnabled: boolean;
   private readonly currentRun: RunSkeleton;
   private selectedContract: StartingContract;
+  private runSession: RunSessionState;
   private lastRunResult: CombatRunResult | null = null;
   private frameStats: FrameStats = {
     fps: 0,
@@ -43,6 +67,7 @@ export class GameApp {
     this.debugEnabled = isDebugEnabled(window);
     this.currentRun = generateRunSkeleton(getInitialSeed(window));
     this.selectedContract = getFirstContract(this.currentRun);
+    this.runSession = createRunSession(this.currentRun, this.selectedContract);
     this.loop = new Loop({
       update: (dt) => this.update(dt),
       render: (alpha) => this.render(alpha),
@@ -100,6 +125,8 @@ export class GameApp {
         this.currentRun,
         (contract) => {
           this.selectedContract = contract;
+          this.runSession = createRunSession(this.currentRun, contract);
+          this.lastRunResult = null;
           this.showGameplay();
         },
         () => {
@@ -110,10 +137,6 @@ export class GameApp {
   }
 
   private showGameplay(existingScene?: GameplayScene): void {
-    if (!existingScene) {
-      this.lastRunResult = null;
-    }
-
     const gameplayScene =
       existingScene ??
       new GameplayScene(
@@ -121,16 +144,121 @@ export class GameApp {
         this.input,
         this.currentRun,
         this.selectedContract,
+        this.runSession.currentSectorIndex,
+        this.runSession.itemInstances,
+        this.runSession.credits,
+        this.runSession.salvage,
         this.debugEnabled,
         (pausedScene) => {
           this.showPause(pausedScene);
         },
         (result) => {
           this.showRunSummary(result);
+        },
+        (result) => {
+          this.handleSectorComplete(result);
         }
       );
 
     this.sceneManager.switchTo(gameplayScene);
+  }
+
+  private handleSectorComplete(result: CombatRunResult): void {
+    this.lastRunResult = result;
+    recordSectorCombatResult(this.runSession, result);
+    this.showRouteChoice();
+  }
+
+  private showRouteChoice(): void {
+    this.sceneManager.switchTo(
+      new RouteScene(this.uiRoot, this.currentRun, this.runSession, (route) => {
+        this.handleRouteChoice(route);
+      })
+    );
+  }
+
+  private handleRouteChoice(route: RouteOption): void {
+    const sector = getCurrentSector(this.currentRun, this.runSession);
+    recordRouteChoice(this.runSession, sector, route);
+
+    if (route.kind === 'shop') {
+      this.showShop(route);
+      return;
+    }
+
+    this.showReward(route);
+  }
+
+  private showShop(route: RouteOption): void {
+    this.sceneManager.switchTo(
+      new ShopScene(
+        this.uiRoot,
+        this.currentRun,
+        this.runSession,
+        this.selectedContract,
+        (itemId, price) => this.buyShopItem(itemId, price),
+        () => this.rerollShop(),
+        () => {
+          this.showReward(route);
+        }
+      )
+    );
+  }
+
+  private showReward(route: RouteOption): void {
+    this.sceneManager.switchTo(
+      new RewardScene(
+        this.uiRoot,
+        this.currentRun,
+        this.runSession,
+        this.selectedContract,
+        route,
+        (itemId) => {
+          addItemToSession(this.runSession, itemId);
+          this.advanceAfterReward();
+        },
+        () => {
+          addCredits(this.runSession, 6);
+          this.advanceAfterReward();
+        }
+      )
+    );
+  }
+
+  private buyShopItem(itemId: ItemId, price: number): boolean {
+    if (!spendCredits(this.runSession, price)) {
+      return false;
+    }
+
+    addItemToSession(this.runSession, itemId);
+    return true;
+  }
+
+  private rerollShop(): boolean {
+    if (!spendCredits(this.runSession, SHOP_REROLL_COST)) {
+      return false;
+    }
+
+    const sector = getCurrentSector(this.currentRun, this.runSession);
+    incrementShopRerollCount(this.runSession, sector.index);
+    return true;
+  }
+
+  private advanceAfterReward(): void {
+    if (!advanceSector(this.currentRun, this.runSession)) {
+      this.showRunSummary(this.lastRunResult ?? undefined);
+      return;
+    }
+
+    this.showSectorTransition();
+  }
+
+  private showSectorTransition(): void {
+    this.sceneManager.switchTo(
+      new SectorTransitionScene(this.uiRoot, this.currentRun, this.runSession, () => {
+        this.showGameplay();
+      })
+    );
   }
 
   private showPause(gameplayScene: GameplayScene): void {
@@ -151,9 +279,15 @@ export class GameApp {
   private showRunSummary(result?: CombatRunResult): void {
     this.lastRunResult = result ?? this.lastRunResult;
     this.sceneManager.switchTo(
-      new RunSummaryScene(this.uiRoot, this.currentRun, this.selectedContract, this.lastRunResult, () => {
-        this.showMainMenu();
-      })
+      new RunSummaryScene(
+        this.uiRoot,
+        this.currentRun,
+        this.selectedContract,
+        this.lastRunResult,
+        () => {
+          this.showMainMenu();
+        }
+      )
     );
   }
 
