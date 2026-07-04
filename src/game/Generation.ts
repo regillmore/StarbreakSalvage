@@ -1,10 +1,12 @@
 import { getBossById, type BossId, type BossPatternId } from '../content/bosses';
+import { getBackgroundById } from '../content/backgrounds';
 import type { FactionId } from '../content/factions';
 import { SECTORS, type SectorDefinition } from '../content/sectors';
 import { type ShipDefinition, type ShipId, type ShipStats, type WeaponId } from '../content/ships';
 import type { UnlockId } from '../content/unlocks';
 import { getWeaponById, type WeaponPatternId } from '../content/weapons';
 import { createRng, parseSeedLabel, type Rng, type WeightedChoice } from '../core/rng';
+import { createBackgroundPlan, type BackgroundPlan } from './BackgroundPlan';
 import { createSectorScrollPlan, type SectorScrollPlan } from './ScrollState';
 import { createSectorObjectivePlan, type SectorObjectivePlan } from './SectorObjectives';
 import {
@@ -54,6 +56,7 @@ export interface SectorRoute {
   readonly majorWaves: readonly string[];
   readonly objective: SectorObjectivePlan;
   readonly scroll: SectorScrollPlan;
+  readonly background: BackgroundPlan;
   readonly rewardPoolSeed: string;
   readonly shopSeed: string;
 }
@@ -211,6 +214,10 @@ function generateSectorRoute(
       objective,
       rng: rng.fork('scroll')
     }),
+    background: createBackgroundPlan(
+      getBackgroundById(sector.backgroundId),
+      rng.fork('background')
+    ),
     rewardPoolSeed: rng.fork('reward-pool').seedLabel,
     shopSeed: rng.fork('shop').seedLabel
   };
@@ -331,6 +338,11 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
         length: sector.scroll.length,
         baseSpeed: sector.scroll.baseSpeed,
         startOffset: sector.scroll.startOffset
+      },
+      background: {
+        id: sector.background.id,
+        layerCount: sector.background.layers.length,
+        primitiveCount: sector.background.primitiveCount
       }
     }))
   };

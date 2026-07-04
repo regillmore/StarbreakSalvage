@@ -533,13 +533,18 @@ export class GameApp {
             `Distance ${Math.floor(debugState.distance)}/${Math.floor(debugState.sectorLength)}`,
             `Scroll ${Math.round(debugState.scrollSpeed)}u/s`
           ];
+    const backgroundDebug =
+      debugState.backgroundPrimitives === undefined
+        ? []
+        : [`Bg ${debugState.backgroundPrimitives}`];
 
     this.debugOverlay.textContent = [
       `FPS ${Math.round(this.frameStats.fps)}`,
       `Scene ${this.sceneManager.getSceneId()}`,
       `Seed ${debugState.seed}`,
       `Entities ${debugState.entityCount}`,
-      ...scrollDebug
+      ...scrollDebug,
+      ...backgroundDebug
     ].join(' | ');
   }
 

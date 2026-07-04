@@ -14,6 +14,7 @@
 - Added original procedural Web Audio cues for firing, impacts, pickups, boss warnings, sector clears, and run endings.
 - Added gameplay camera shake that respects reduced motion and screen shake strength settings.
 - Added deterministic sector scroll plans, fixed-step distance tracking, HUD distance/speed readouts, debug distance counters, and subtle reduced-motion-aware starfield drift.
+- Added deterministic procedural parallax background plans for all five sectors, with original canvas-drawn stars, rails, debris, bloom strands, grid lines, and core fractures.
 - Added main-menu seed entry with blank/default/random/known-label handling, compact onboarding HUD hints, richer build/resource HUD readouts, and run summaries with win/loss detail plus unlock reasons.
 - Added five-boss debug spawn shortcuts and a deterministic dense-combat performance pocket behind `?debug=1`.
 - Fixed objective target desyncs where secondary item effects or enemy body collisions could clear enemies without advancing target progress.
@@ -32,6 +33,7 @@
 - Added regression coverage for empty-field objective progress after item side-effect kills and body-collision clears.
 - Added debug-scenario coverage for final boss shortcuts, dense combat budgets, and browser smoke of the debug stress path.
 - Added scroll-state tests for known-seed sector length snapshots, fixed-step advancement, speed clamping, zero-dt pause behavior, and exit completion.
+- Added background-plan determinism tests and content validation for sector background references and strata metadata.
 
 ### Planning
 

@@ -143,6 +143,11 @@ describe('WaveDirector', () => {
         ],
         "sectors": [
           {
+            "background": {
+              "id": "background_outer_debris_field",
+              "layerCount": 4,
+              "primitiveCount": 182,
+            },
             "bossFactionId": "faction_corporate_ledger",
             "bossId": "boss_auditor_drone_xl",
             "bossPatternId": "auditFan",
@@ -172,6 +177,11 @@ describe('WaveDirector', () => {
             "sectorId": "sector_outer_debris_field",
           },
           {
+            "background": {
+              "id": "background_trade_war_corridor",
+              "layerCount": 4,
+              "primitiveCount": 152,
+            },
             "bossFactionId": "faction_corporate_ledger",
             "bossId": "boss_auditor_drone_xl",
             "bossPatternId": "auditFan",
@@ -201,6 +211,11 @@ describe('WaveDirector', () => {
             "sectorId": "sector_trade_war_corridor",
           },
           {
+            "background": {
+              "id": "background_bio_machine_bloom",
+              "layerCount": 4,
+              "primitiveCount": 136,
+            },
             "bossFactionId": "faction_void_corsairs",
             "bossId": "boss_warranty_void_seraph",
             "bossPatternId": "auditFan",
@@ -230,6 +245,11 @@ describe('WaveDirector', () => {
             "sectorId": "sector_bio_machine_bloom",
           },
           {
+            "background": {
+              "id": "background_corporate_kill_grid",
+              "layerCount": 4,
+              "primitiveCount": 150,
+            },
             "bossFactionId": "faction_corporate_ledger",
             "bossId": "boss_auditor_drone_xl",
             "bossPatternId": "auditFan",
@@ -259,6 +279,11 @@ describe('WaveDirector', () => {
             "sectorId": "sector_corporate_kill_grid",
           },
           {
+            "background": {
+              "id": "background_core_wreck",
+              "layerCount": 4,
+              "primitiveCount": 126,
+            },
             "bossFactionId": "faction_scrap_court",
             "bossId": "boss_core_wreck",
             "bossPatternId": "missileCurtain",

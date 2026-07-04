@@ -65,6 +65,7 @@ describe('deterministic generation guardrails', () => {
   it('does not call Math.random in RNG or run generation code', () => {
     const guardedFiles = [
       'src/core/rng.ts',
+      'src/game/BackgroundPlan.ts',
       'src/game/Generation.ts',
       'src/game/ScrollState.ts',
       'src/game/SectorObjectives.ts',

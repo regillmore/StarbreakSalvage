@@ -2,6 +2,11 @@ import { getBossById, type BossId } from '../content/bosses';
 import { getFactionById, type FactionId } from '../content/factions';
 import type { BulletContrast } from '../core/settingsData';
 import { clamp } from '../core/math';
+import type {
+  BackgroundLayerPlan,
+  BackgroundPlan,
+  BackgroundPrimitive
+} from '../game/BackgroundPlan';
 import {
   advanceScreenShake,
   getScreenShakeOffset,
@@ -180,10 +185,16 @@ export class CanvasRenderer {
     this.context.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  public paintBackground(scrollOffset = 0): void {
+  public paintBackground(scrollOffset = 0, backgroundPlan?: BackgroundPlan): void {
     const { width, height } = this.size;
     const context = this.context;
     const effectiveScrollOffset = this.settings.reducedMotion ? 0 : scrollOffset;
+
+    if (backgroundPlan) {
+      this.paintGeneratedBackground(backgroundPlan, effectiveScrollOffset);
+      return;
+    }
+
     const background = context.createLinearGradient(0, 0, width, height);
 
     background.addColorStop(0, '#040612');
@@ -532,6 +543,161 @@ export class CanvasRenderer {
     this.context.fillStyle = '#03050d';
     this.context.fillRect(0, 0, width, height);
     this.context.restore();
+  }
+
+  private paintGeneratedBackground(plan: BackgroundPlan, scrollOffset: number): void {
+    const { width, height } = this.size;
+    const context = this.context;
+    const background = context.createLinearGradient(0, 0, width, height);
+
+    background.addColorStop(0, plan.palette.top);
+    background.addColorStop(0.52, plan.palette.middle);
+    background.addColorStop(1, plan.palette.bottom);
+    context.fillStyle = background;
+    context.fillRect(0, 0, width, height);
+
+    const glow = context.createRadialGradient(
+      width * 0.5,
+      height * 0.34,
+      0,
+      width * 0.5,
+      height * 0.34,
+      width * 0.72
+    );
+    glow.addColorStop(0, plan.palette.glow);
+    glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    context.fillStyle = glow;
+    context.fillRect(0, 0, width, height);
+
+    for (const layer of this.getVisibleBackgroundLayers(plan)) {
+      this.paintBackgroundLayer(layer, scrollOffset);
+    }
+
+    context.globalAlpha = 1;
+  }
+
+  private getVisibleBackgroundLayers(plan: BackgroundPlan): readonly BackgroundLayerPlan[] {
+    const maxPriority = this.settings.performanceMode || this.settings.reducedMotion ? 2 : 3;
+    return plan.layers.filter((layer) => layer.priority <= maxPriority);
+  }
+
+  private paintBackgroundLayer(layer: BackgroundLayerPlan, scrollOffset: number): void {
+    const { width, height } = this.size;
+    const unit = Math.min(width, height);
+    const wrapSpan = height + 160;
+
+    for (const primitive of layer.primitives) {
+      this.paintBackgroundPrimitive(
+        primitive,
+        layer,
+        primitive.x * width,
+        wrapCanvasValue(primitive.y * wrapSpan + scrollOffset * layer.parallax, wrapSpan) - 80,
+        unit,
+        height
+      );
+    }
+  }
+
+  private paintBackgroundPrimitive(
+    primitive: BackgroundPrimitive,
+    layer: BackgroundLayerPlan,
+    x: number,
+    y: number,
+    unit: number,
+    height: number
+  ): void {
+    const context = this.context;
+    const alphaScale =
+      (this.settings.reducedMotion ? 0.68 : 1) * (this.settings.performanceMode ? 0.82 : 1);
+    const alpha = clamp(layer.alpha * primitive.alpha * alphaScale, 0, 0.78);
+    const size = Math.max(0.8, primitive.size * unit);
+    const lineLength = primitive.length * (primitive.kind === 'rail' ? height : unit);
+    const lineWidth = Math.max(1, primitive.width * unit);
+
+    context.save();
+    context.translate(x, y);
+    context.rotate(primitive.rotation);
+    context.globalAlpha = alpha;
+    context.strokeStyle = primitive.color;
+    context.fillStyle = primitive.color;
+    context.lineWidth = lineWidth;
+
+    if (primitive.kind === 'spark') {
+      context.beginPath();
+      context.arc(0, 0, size, 0, Math.PI * 2);
+      context.fill();
+    } else if (primitive.kind === 'streak' || primitive.kind === 'gridLine') {
+      context.beginPath();
+      context.moveTo(-lineLength / 2, 0);
+      context.lineTo(lineLength / 2, 0);
+      context.stroke();
+    } else if (primitive.kind === 'rail') {
+      context.globalAlpha = alpha * 0.68;
+      context.beginPath();
+      context.moveTo(0, -lineLength / 2);
+      context.lineTo(0, lineLength / 2);
+      context.stroke();
+      context.globalAlpha = alpha * 0.28;
+      context.strokeStyle = primitive.accentColor;
+      context.lineWidth = lineWidth + 2;
+      context.beginPath();
+      context.moveTo(0, -lineLength / 2);
+      context.lineTo(0, lineLength / 2);
+      context.stroke();
+    } else if (primitive.kind === 'bloom') {
+      context.beginPath();
+      context.ellipse(0, 0, Math.max(2, primitive.length * unit), size, 0, 0, Math.PI * 2);
+      context.fill();
+      context.globalAlpha = alpha * 0.56;
+      context.strokeStyle = primitive.accentColor;
+      context.stroke();
+    } else if (primitive.kind === 'strand') {
+      context.beginPath();
+      context.moveTo(-lineLength / 2, size * 0.4);
+      context.quadraticCurveTo(0, -size * 1.8, lineLength / 2, size * 0.25);
+      context.stroke();
+      context.globalAlpha = alpha * 0.36;
+      context.strokeStyle = primitive.accentColor;
+      context.beginPath();
+      context.moveTo(-lineLength / 2, -size * 0.2);
+      context.quadraticCurveTo(0, size * 1.2, lineLength / 2, -size * 0.15);
+      context.stroke();
+    } else {
+      this.paintAngularBackgroundShape(primitive, size, lineLength, lineWidth);
+    }
+
+    context.restore();
+  }
+
+  private paintAngularBackgroundShape(
+    primitive: BackgroundPrimitive,
+    size: number,
+    length: number,
+    lineWidth: number
+  ): void {
+    const context = this.context;
+    const halfLength = Math.max(size, length / 2);
+    const halfWidth = Math.max(size * 0.42, lineWidth * 2);
+
+    context.beginPath();
+    if (primitive.kind === 'fracture') {
+      context.moveTo(-halfLength, -halfWidth * 0.2);
+      context.lineTo(-halfLength * 0.18, -halfWidth);
+      context.lineTo(halfLength, -halfWidth * 0.36);
+      context.lineTo(halfLength * 0.28, halfWidth);
+      context.lineTo(-halfLength * 0.72, halfWidth * 0.58);
+    } else {
+      context.moveTo(-halfLength, -halfWidth);
+      context.lineTo(halfLength * 0.72, -halfWidth * 0.58);
+      context.lineTo(halfLength, halfWidth * 0.2);
+      context.lineTo(-halfLength * 0.32, halfWidth);
+      context.lineTo(-halfLength * 0.8, halfWidth * 0.16);
+    }
+    context.closePath();
+    context.fill();
+    context.globalAlpha *= 0.58;
+    context.strokeStyle = primitive.accentColor;
+    context.stroke();
   }
 
   private paintNebula(): void {

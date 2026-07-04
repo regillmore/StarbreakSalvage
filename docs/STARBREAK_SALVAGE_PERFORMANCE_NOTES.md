@@ -15,12 +15,12 @@ The boss/faction alpha keeps projectile counts intentionally small while the sim
 
 Phase 3 adds continuous vertical motion, procedural backgrounds, landmarks, and hazards. Keep the first implementation conservative until profiling proves there is room to expand.
 
-- Normal background rendering should target 3-5 parallax strata per sector.
-- Performance mode should collapse to 1-2 strata and reduce decorative particles without changing encounter timing.
-- Background plans should be generated once per sector and rendered from deterministic data plus scroll offset.
+- Normal background rendering currently uses 4 parallax strata per sector.
+- Performance mode currently collapses rendering to priority 1-2 strata without changing encounter timing.
+- Background plans are generated once per sector and rendered from deterministic data plus scroll offset.
 - Avoid per-frame allocation in background rendering; cache reusable primitives or draw plans when profiling shows pressure.
 - Keep normal Phase 3 combat near the Phase 2 active-field budget until long-scroll profiling is available.
-- Debug counters currently report distance traveled and scroll speed during gameplay. Future counters should add background primitives, active landmarks, active hazards, enemies, enemy bullets, player bullets, pickups, and effects.
+- Debug counters currently report distance traveled, scroll speed, and planned background primitive count during gameplay. Future counters should add active landmarks, active hazards, enemies, enemy bullets, player bullets, pickups, and effects.
 - Long-scroll debug scenarios should test at least one full sector length without requiring a boss defeat.
 - Moving backgrounds must be tested in standard and high-contrast modes before increasing bullet density.
 
@@ -58,6 +58,6 @@ The debug overlay entity count includes player, enemies, boss, bullets, pickups,
 ## Phase 3 Playtest Risks
 
 - Scroll-synced wave thresholds can double-fire or skip if they are not advanced through fixed-step distance crossings.
-- Procedural backgrounds can hide bullets unless palette, contrast, and motion settings are validated per sector.
+- Procedural backgrounds are deliberately low-alpha, but they can still hide bullets unless palette, contrast, and motion settings are validated per sector.
 - Boss scroll locks can strand the player if arena entry, boss defeat, and exit-distance logic do not share one sector-state contract.
 - Rich landmarks and hazards may compete with enemies for attention; telegraphs should stay distinct from background motion.

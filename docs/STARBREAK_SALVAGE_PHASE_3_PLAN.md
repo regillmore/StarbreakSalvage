@@ -31,7 +31,7 @@ The goal is not to copy any specific commercial game. The inspiration is the sen
 The Phase 2 game has deterministic sectors and wave objectives, but the playfield still behaves like a stationary combat box:
 
 - sector completion counts waves/targets rather than traveled distance;
-- backgrounds are not sector-specific or procedurally layered;
+- first-pass backgrounds are now sector-specific and procedurally layered, but landmarks, hazards, and route-conditioned visual motifs remain follow-ups;
 - enemy wave timing is mostly time-based, not tied to scroll markers;
 - bosses spawn into a static field rather than at the end of a traveled sector;
 - route/event choices affect future combat but not the physical feeling of the next sector;
@@ -60,6 +60,8 @@ Exit criteria:
 - Each sector renders at least three parallax strata.
 - Background landmarks and debris fields are seed-stable.
 - Reduced motion/performance mode can simplify scroll visuals.
+
+Status: first pass implemented by work order 022 with deterministic background families, four strata per sector, seed-stable primitives, reduced-motion static offsets, and performance-mode layer reduction. Landmark/hazard scale features remain in P3.5.
 
 ### P3.3 - Scroll-Synced Encounter Director
 

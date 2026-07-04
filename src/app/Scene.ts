@@ -7,6 +7,7 @@ export interface SceneDebugState {
   readonly distance?: number;
   readonly sectorLength?: number;
   readonly scrollSpeed?: number;
+  readonly backgroundPrimitives?: number;
 }
 
 export interface Scene {

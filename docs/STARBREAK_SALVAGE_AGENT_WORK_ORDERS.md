@@ -335,6 +335,8 @@ Acceptance criteria:
 - Reduced motion/performance mode lowers visual intensity.
 - No copied or externally fetched art is introduced.
 
+Status: first pass implemented; each sector has a deterministic generated background plan with four original parallax strata, gameplay rendering consumes the plan plus scroll offset, reduced motion/performance mode simplifies rendering, and content validation covers sector background references.
+
 ## Work order 023 - Scroll-synced wave director
 
 Goal: make encounter pacing depend on distance through the sector.

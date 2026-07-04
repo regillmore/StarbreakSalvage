@@ -101,6 +101,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.locator('.debug-overlay')).toContainText(/Entities [5-9]\d/);
   await expect(page.locator('.debug-overlay')).toContainText(/Distance \d+\/\d+/);
   await expect(page.locator('.debug-overlay')).toContainText(/Scroll \d+u\/s/);
+  await expect(page.locator('.debug-overlay')).toContainText(/Bg \d+/);
 
   await page.keyboard.press('K');
   await expect(page.getByRole('heading', { name: 'Debug Run Ended' })).toBeVisible();

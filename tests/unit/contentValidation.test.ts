@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { ACHIEVEMENTS, type AchievementDefinition } from '../../src/content/achievements';
+import { BACKGROUNDS, type BackgroundDefinition } from '../../src/content/backgrounds';
 import { BOSSES, type BossDefinition } from '../../src/content/bosses';
 import { validateContent } from '../../src/content/contentValidation';
 import { FACTIONS, type FactionDefinition } from '../../src/content/factions';
@@ -18,6 +19,7 @@ import { WEAPONS, type WeaponDefinition } from '../../src/content/weapons';
 import { ITEM_HOOK_IMPLEMENTATIONS } from '../../src/game/ItemHooks';
 
 const baseItem = ITEMS[0] as ItemDefinition;
+const baseBackground = BACKGROUNDS[0] as BackgroundDefinition;
 const baseFaction = FACTIONS[0] as FactionDefinition;
 const baseBoss = BOSSES[0] as BossDefinition;
 const baseSector = SECTORS[0] as SectorDefinition;
@@ -42,6 +44,7 @@ describe('validateContent', () => {
 
     expect(ITEMS).toHaveLength(30);
     expect(FACTIONS).toHaveLength(4);
+    expect(BACKGROUNDS).toHaveLength(5);
     expect(representedArchetypes).toHaveLength(ITEM_ARCHETYPES.length);
     expect(representedArchetypes.length).toBeGreaterThanOrEqual(6);
   });
@@ -162,6 +165,62 @@ describe('validateContent', () => {
     expect(errors).toContain(
       'Sector sector_outer_debris_field references missing boss: boss_missing'
     );
+  });
+
+  it('rejects missing sector background references', () => {
+    const errors = validateContent({
+      sectors: [
+        {
+          ...baseSector,
+          backgroundId: 'background_missing'
+        }
+      ] as unknown as readonly SectorDefinition[]
+    });
+
+    expect(errors).toContain(
+      'Sector sector_outer_debris_field references missing background: background_missing'
+    );
+  });
+
+  it('rejects invalid background strata', () => {
+    const baseLayer = baseBackground.layers[0];
+
+    if (!baseLayer) {
+      throw new Error('Background fixture is missing a layer.');
+    }
+
+    const errors = validateContent({
+      backgrounds: [
+        {
+          ...baseBackground,
+          name: '',
+          layers: [
+            {
+              ...baseLayer,
+              id: '',
+              kind: 'mattePainting',
+              alpha: 1.4,
+              parallax: 0,
+              density: 0,
+              priority: 9
+            }
+          ]
+        }
+      ] as unknown as readonly BackgroundDefinition[]
+    });
+
+    expect(errors).toContain(`Background ${baseBackground.id} must have a name`);
+    expect(errors).toContain(`Background ${baseBackground.id} must define at least three strata`);
+    expect(errors).toContain(`Background ${baseBackground.id} layer must have an id`);
+    expect(errors).toContain(
+      `Background ${baseBackground.id} layer  has invalid kind: mattePainting`
+    );
+    expect(errors).toContain(
+      `Background ${baseBackground.id} layer  must have alpha between 0 and 1`
+    );
+    expect(errors).toContain(`Background ${baseBackground.id} layer  must have positive parallax`);
+    expect(errors).toContain(`Background ${baseBackground.id} layer  must have positive density`);
+    expect(errors).toContain(`Background ${baseBackground.id} layer  has invalid priority`);
   });
 
   it('rejects invalid sector objective data', () => {

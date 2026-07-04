@@ -221,7 +221,7 @@ export class GameplayScene implements Scene {
     const state = this.getCombatState();
     const scroll = this.getScrollState();
 
-    renderer.paintBackground(scroll.cameraOffset);
+    renderer.paintBackground(scroll.cameraOffset, this.getCurrentSector().background);
     renderer.beginGameplayLayer();
     renderer.paintGameplayFrame();
 
@@ -312,7 +312,8 @@ export class GameplayScene implements Scene {
       entityCount: getCombatEntityCount(this.getCombatState()),
       distance: scroll.distance,
       sectorLength: scroll.length,
-      scrollSpeed: scroll.speed
+      scrollSpeed: scroll.speed,
+      backgroundPrimitives: this.getCurrentSector().background.primitiveCount
     };
   }
 
@@ -356,18 +357,22 @@ export class GameplayScene implements Scene {
   }
 
   private getScrollState(): ScrollState {
+    this.scrollState ??= createScrollState(this.getCurrentSector().scroll);
+    return this.scrollState;
+  }
+
+  private getCurrentSectorName(): string {
+    return this.getCurrentSector().sectorName;
+  }
+
+  private getCurrentSector(): RunSkeleton['sectors'][number] {
     const sector = this.run.sectors[this.sectorIndex];
 
     if (!sector) {
       throw new Error(`No sector exists at index ${this.sectorIndex}.`);
     }
 
-    this.scrollState ??= createScrollState(sector.scroll);
-    return this.scrollState;
-  }
-
-  private getCurrentSectorName(): string {
-    return this.run.sectors[this.sectorIndex]?.sectorName ?? 'Outer Debris Field';
+    return sector;
   }
 
   private syncReadouts(): void {

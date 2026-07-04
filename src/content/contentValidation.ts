@@ -1,5 +1,6 @@
 import { BOSSES, type BossDefinition } from './bosses';
 import { ACHIEVEMENTS, type AchievementDefinition } from './achievements';
+import { BACKGROUNDS, BACKGROUND_LAYER_KINDS, type BackgroundDefinition } from './backgrounds';
 import { FACTIONS, type FactionDefinition } from './factions';
 import {
   ITEM_ARCHETYPES,
@@ -22,6 +23,7 @@ export type ItemHookImplementationRegistry = Readonly<Partial<Record<ItemHook, r
 
 export interface ContentValidationInput {
   readonly achievements?: readonly AchievementDefinition[];
+  readonly backgrounds?: readonly BackgroundDefinition[];
   readonly bosses?: readonly BossDefinition[];
   readonly factions?: readonly FactionDefinition[];
   readonly items?: readonly ItemDefinition[];
@@ -35,6 +37,7 @@ export interface ContentValidationInput {
 
 export function validateContent(input: ContentValidationInput = {}): string[] {
   const achievements = input.achievements ?? ACHIEVEMENTS;
+  const backgrounds = input.backgrounds ?? BACKGROUNDS;
   const bosses = input.bosses ?? BOSSES;
   const factions = input.factions ?? FACTIONS;
   const items = input.items ?? ITEMS;
@@ -48,6 +51,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const weapons = input.weapons ?? WEAPONS;
   const errors: string[] = [];
   const achievementIds = new Set<string>();
+  const backgroundIds = new Set<string>();
   const bossIds = new Set<string>();
   const factionIds = new Set<string>();
   const itemIds = new Set<string>();
@@ -59,6 +63,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const itemRarities = new Set(['common', 'uncommon', 'rare', 'prototype', 'cursed']);
   const factionPatterns = new Set(['driftShot', 'laneBurst', 'sporeSpread', 'phaseSkirmish']);
   const factionShapes = new Set(['jagged', 'diamond', 'organic', 'needle']);
+  const backgroundLayerKinds = new Set<string>(BACKGROUND_LAYER_KINDS);
   const unlockKinds = new Set(['ship', 'item', 'faction', 'bossPractice', 'music', 'challenge']);
   const weaponPatterns = new Set(['single', 'dual', 'spread', 'split', 'missile', 'beam']);
   const bossPatterns = new Set(['auditFan', 'missileCurtain', 'sporeSpiral']);
@@ -69,6 +74,57 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
 
   if (factions.length < 4) {
     errors.push('Content must define at least 4 factions');
+  }
+
+  for (const background of backgrounds) {
+    if (backgroundIds.has(background.id)) {
+      errors.push(`Duplicate background id: ${background.id}`);
+    }
+
+    backgroundIds.add(background.id);
+
+    if (!background.name.trim()) {
+      errors.push(`Background ${background.id} must have a name`);
+    }
+
+    if (background.layers.length < 3) {
+      errors.push(`Background ${background.id} must define at least three strata`);
+    }
+
+    for (const layer of background.layers) {
+      if (!layer.id.trim()) {
+        errors.push(`Background ${background.id} layer must have an id`);
+      }
+
+      if (!backgroundLayerKinds.has(layer.kind)) {
+        errors.push(
+          `Background ${background.id} layer ${layer.id} has invalid kind: ${layer.kind}`
+        );
+      }
+
+      validateUnitNumber(
+        errors,
+        `Background ${background.id} layer ${layer.id}`,
+        'alpha',
+        layer.alpha
+      );
+      validatePositiveNumber(
+        errors,
+        `Background ${background.id} layer ${layer.id}`,
+        'parallax',
+        layer.parallax
+      );
+      validatePositiveInteger(
+        errors,
+        `Background ${background.id} layer ${layer.id}`,
+        'density',
+        layer.density
+      );
+
+      if (layer.priority !== 1 && layer.priority !== 2 && layer.priority !== 3) {
+        errors.push(`Background ${background.id} layer ${layer.id} has invalid priority`);
+      }
+    }
   }
 
   for (const unlock of unlocks) {
@@ -403,6 +459,10 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   }
 
   for (const sector of sectors) {
+    if (!backgroundIds.has(sector.backgroundId)) {
+      errors.push(`Sector ${sector.id} references missing background: ${sector.backgroundId}`);
+    }
+
     if (sector.bossCandidates.length === 0) {
       errors.push(`Sector ${sector.id} must have at least one boss candidate`);
     }
