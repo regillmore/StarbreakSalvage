@@ -2,6 +2,13 @@ import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene, SceneDebugState } from '../app/Scene';
 import { getItemById } from '../content/items';
 import {
+  createBossArenaState,
+  formatBossArenaReadout,
+  updateBossArenaState,
+  type BossArenaState,
+  type BossArenaUpdate
+} from '../game/BossArena';
+import {
   createCombatState,
   forceCombatEnd,
   getCombatEntityCount,
@@ -54,6 +61,12 @@ export class GameplayScene implements Scene {
   private combatState: CombatState | null = null;
   private wavePlan: WaveDirectorPlan | null = null;
   private scrollState: ScrollState | null = null;
+  private bossArenaState: BossArenaState | null = null;
+  private bossArenaUpdate: BossArenaUpdate = {
+    phase: 'none',
+    speedOverride: null,
+    shouldSpawnBoss: false
+  };
   private readonly positionReadout: HTMLParagraphElement;
   private readonly distanceReadout: HTMLParagraphElement;
   private readonly hullReadout: HTMLParagraphElement;
@@ -173,10 +186,20 @@ export class GameplayScene implements Scene {
 
   public update(dt: number): void {
     const scrollState = this.getScrollState();
-    advanceScrollState(scrollState, dt);
-
     const state = this.getCombatState();
+    const arenaBeforeScroll = this.updateBossArena(scrollState.distance, state);
+
+    advanceScrollState(scrollState, dt, arenaBeforeScroll.speedOverride ?? undefined);
+
+    const arenaAfterScroll = this.updateBossArena(scrollState.distance, state);
     const feedbackBefore = createCombatFeedbackSnapshot(state);
+
+    if (arenaAfterScroll.shouldSpawnBoss) {
+      spawnBoss(state, this.getCurrentSector().bossId, this.getCombatBounds(), {
+        clearField: true
+      });
+    }
+
     const special = this.queuedSpecial;
     const bomb = this.queuedBomb;
     this.queuedSpecial = false;
@@ -195,7 +218,9 @@ export class GameplayScene implements Scene {
     );
     this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
 
-    if (!result) {
+    this.updateBossArena(scrollState.distance, state);
+
+    if (!result && this.bossArenaUpdate.phase !== 'locked') {
       const hazardFeedbackBefore = createCombatFeedbackSnapshot(state);
       const collisions = resolveSectorHazardCollisions(
         state,
@@ -255,9 +280,12 @@ export class GameplayScene implements Scene {
       )
     );
     renderer.paintGameplayFrame();
-    renderer.paintSectorHazards(
-      getActiveSectorHazards(this.getCurrentSector().features, scroll.distance)
-    );
+
+    if (this.bossArenaUpdate.phase !== 'locked') {
+      renderer.paintSectorHazards(
+        getActiveSectorHazards(this.getCurrentSector().features, scroll.distance)
+      );
+    }
 
     for (const pickup of state.pickups) {
       renderer.paintPickup(pickup);
@@ -347,6 +375,7 @@ export class GameplayScene implements Scene {
       distance: scroll.distance,
       sectorLength: scroll.length,
       scrollSpeed: scroll.speed,
+      arenaPhase: this.bossArenaUpdate.phase,
       backgroundPrimitives: this.getCurrentSector().background.primitiveCount
     };
   }
@@ -359,7 +388,7 @@ export class GameplayScene implements Scene {
       shipStats: this.shipStats,
       items: this.itemLoadout,
       bossId: this.run.sectors[this.sectorIndex]?.bossId,
-      bossSpawnAtSeconds: wavePlan.bossSpawnAtSeconds,
+      bossSpawnAtSeconds: this.getCurrentSector().arena ? null : wavePlan.bossSpawnAtSeconds,
       spawnSchedule: wavePlan.spawnSchedule,
       enemyHullBonus: this.getEnemyHullBonus(),
       enemyFireDelayMultiplier: this.getEnemyFireDelayMultiplier(),
@@ -397,6 +426,28 @@ export class GameplayScene implements Scene {
     return this.scrollState;
   }
 
+  private getBossArenaState(): BossArenaState {
+    this.bossArenaState ??= createBossArenaState(this.getCurrentSector().arena);
+    return this.bossArenaState;
+  }
+
+  private updateBossArena(distance: number, state: CombatState): BossArenaUpdate {
+    const supportProgress = getObjectiveProgress(this.getWavePlan(), {
+      ...state,
+      scrollDistance: distance
+    });
+
+    this.bossArenaUpdate = updateBossArenaState(this.getBossArenaState(), {
+      distance,
+      supportComplete: supportProgress.supportComplete,
+      bossActive: state.boss !== null,
+      bossAlreadySpawned: state.bossSpawned,
+      bossDefeated: state.stats.bossesDefeated > 0
+    });
+
+    return this.bossArenaUpdate;
+  }
+
   private getCurrentSectorName(): string {
     return this.getCurrentSector().sectorName;
   }
@@ -418,7 +469,12 @@ export class GameplayScene implements Scene {
       state.player.y
     )}`;
     this.hullReadout.textContent = `Hull ${state.player.hull}/${state.player.maxHull}`;
-    this.distanceReadout.textContent = formatScrollReadout(this.getScrollState());
+    this.distanceReadout.textContent = [
+      formatScrollReadout(this.getScrollState()),
+      formatBossArenaReadout(this.bossArenaUpdate.phase)
+    ]
+      .filter((part): part is string => Boolean(part))
+      .join(' | ');
     this.economyReadout.textContent = `Credits ${this.startingCredits + state.player.credits} | Salvage ${this.startingSalvage + state.player.salvage}`;
     this.objectiveReadout.textContent = getObjectiveProgress(this.getWavePlan(), state).readout;
     this.verbReadout.textContent = this.getVerbReadout(state);
@@ -433,6 +489,7 @@ export class GameplayScene implements Scene {
       state.telegraphs[0]?.label ??
       getActiveSectorHazards(this.getCurrentSector().features, this.getScrollState().distance)[0]
         ?.hazard.label ??
+      formatBossArenaReadout(this.bossArenaUpdate.phase) ??
       'Warning clear';
     this.itemReadout.textContent = this.getBuildReadout(state);
     this.hintReadout.textContent = this.getOnboardingHint(state);
@@ -486,6 +543,18 @@ export class GameplayScene implements Scene {
   private getOnboardingHint(state: CombatState): string {
     if (state.boss) {
       return `Hint Boss phase ${state.boss.phaseLabel}; watch warnings before crossing lanes.`;
+    }
+
+    if (this.bossArenaUpdate.phase === 'approach') {
+      return 'Hint Boss approach; the sector is narrowing into an arena.';
+    }
+
+    if (this.bossArenaUpdate.phase === 'locked') {
+      return 'Hint Arena locked; clear remaining targets to draw the boss.';
+    }
+
+    if (this.bossArenaUpdate.phase === 'released') {
+      return 'Hint Arena released; push to the sector exit.';
     }
 
     const activeHazard = getActiveSectorHazards(

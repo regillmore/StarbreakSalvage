@@ -3,7 +3,7 @@
 Release candidate: `0.10.0` Phase 2 playtest hardening
 Date: 2026-07-04
 
-Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/VFX. Phase 2 work orders 011-020 are deployed and confirmed. Phase 3 planning now lives in `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`; work orders 021-025 add the first-pass scroll simulation, procedural background, scroll-synced directed-wave, distance-objective, landmark, and hazard foundations, with manual cross-browser playtest still pending.
+Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/VFX. Phase 2 work orders 011-020 are deployed and confirmed. Phase 3 planning now lives in `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`; work orders 021-026 add the first-pass scroll simulation, procedural background, scroll-synced directed-wave, distance-objective, landmark, hazard, and boss-arena foundations, with manual cross-browser playtest still pending.
 
 ## Automated Checks
 
@@ -11,29 +11,29 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 | ----------------------------- | --------------- | -------------------------------------------------------------------------------------------------- |
 | TypeScript typecheck          | Pass            | `npm run check`                                                                                    |
 | ESLint                        | Pass            | `npm run check`                                                                                    |
-| Unit and deterministic tests  | Pass            | `npm run check` - 29 files, 163 tests                                                              |
+| Unit and deterministic tests  | Pass            | `npm run check` - 30 files, 169 tests                                                              |
 | Production build              | Pass            | `npm run check` - Vite build created `dist/`                                                       |
 | Playwright Chromium smoke     | Blocked locally | `npm run test:e2e` attempted; local browser cache is still missing `chromium_headless_shell-1228`. |
 | Production preview asset load | Pass            | Local preview returned HTTP 200 and Pages asset path                                               |
 
 ## Release Audit
 
-| Item                       | Status | Notes                                                                                                                                                        |
-| -------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Public deployment playable | Pass   | Existing Pages deployment confirmed through 019; WO020 keeps the static Vite build.                                                                          |
-| Vite base path             | Pass   | `vite.config.ts` uses `/StarbreakSalvage/`.                                                                                                                  |
-| Pages workflow             | Pass   | `.github/workflows/pages.yml` builds `dist` and deploys Pages artifact.                                                                                      |
-| CI workflow                | Pass   | `.github/workflows/ci.yml` runs checks and Playwright smoke.                                                                                                 |
-| README                     | Pass   | Local dev, controls, settings, save, debug, seed sharing, vision, credits, and license are documented.                                                       |
-| License                    | Pass   | `LICENSE` is present.                                                                                                                                        |
-| Credits                    | Pass   | `CREDITS.md` documents original placeholders and tooling.                                                                                                    |
-| Changelog                  | Pass   | `CHANGELOG.md` has a `0.10.0` entry.                                                                                                                         |
-| Save behavior              | Pass   | Versioned localStorage save, migration, corruption repair, reset, export, and import are tested.                                                             |
-| Settings behavior          | Pass   | Settings persist and E2E covers changing an option.                                                                                                          |
-| Seed sharing               | Pass   | Menu seed entry and summary share links support blank/default/random/known/custom labels.                                                                    |
-| Content validation         | Pass   | Shipped content validates and bad fixtures are covered by tests.                                                                                             |
-| Runtime dependencies       | Pass   | No production dependencies remain.                                                                                                                           |
-| Debug/performance tools    | Pass   | `?debug=1` supports five boss shortcuts, dense combat stress, forced summary, entity-count overlay, distance/speed counters, and background primitive count. |
+| Item                       | Status | Notes                                                                                                                                                              |
+| -------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Public deployment playable | Pass   | Existing Pages deployment confirmed through 019; WO020 keeps the static Vite build.                                                                                |
+| Vite base path             | Pass   | `vite.config.ts` uses `/StarbreakSalvage/`.                                                                                                                        |
+| Pages workflow             | Pass   | `.github/workflows/pages.yml` builds `dist` and deploys Pages artifact.                                                                                            |
+| CI workflow                | Pass   | `.github/workflows/ci.yml` runs checks and Playwright smoke.                                                                                                       |
+| README                     | Pass   | Local dev, controls, settings, save, debug, seed sharing, vision, credits, and license are documented.                                                             |
+| License                    | Pass   | `LICENSE` is present.                                                                                                                                              |
+| Credits                    | Pass   | `CREDITS.md` documents original placeholders and tooling.                                                                                                          |
+| Changelog                  | Pass   | `CHANGELOG.md` has a `0.10.0` entry.                                                                                                                               |
+| Save behavior              | Pass   | Versioned localStorage save, migration, corruption repair, reset, export, and import are tested.                                                                   |
+| Settings behavior          | Pass   | Settings persist and E2E covers changing an option.                                                                                                                |
+| Seed sharing               | Pass   | Menu seed entry and summary share links support blank/default/random/known/custom labels.                                                                          |
+| Content validation         | Pass   | Shipped content validates and bad fixtures are covered by tests.                                                                                                   |
+| Runtime dependencies       | Pass   | No production dependencies remain.                                                                                                                                 |
+| Debug/performance tools    | Pass   | `?debug=1` supports five boss shortcuts, dense combat stress, forced summary, entity-count overlay, distance/speed/arena counters, and background primitive count. |
 
 ## Phase 2 Playtest Audit
 
@@ -58,6 +58,6 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 
 - Audio is procedural cue feedback only; music and a fuller mix are not implemented yet.
 - Route/reward/shop/boss balance is first-pass and needs live playtest tuning.
-- First-pass scroll simulation, procedural sector backgrounds, scroll-synced directed waves, distance objectives, landmarks, and hazards exist, but boss arenas and route-conditioned sector feel remain Phase 3 follow-up work.
+- First-pass scroll simulation, procedural sector backgrounds, scroll-synced directed waves, distance objectives, landmarks, hazards, and boss arenas exist, but route-conditioned sector feel remains Phase 3 follow-up work.
 - The debug overlay reports total entity count plus distance/speed/background primitive count; separate projectile/particle/background timing counters remain future instrumentation.
 - Manual cross-browser smoke outside Chromium remains pending.

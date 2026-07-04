@@ -84,6 +84,24 @@ describe('ScrollState', () => {
     expect(getScrollProgress(state)).toEqual(beforePause);
   });
 
+  it('accepts an explicit zero speed override for arena scroll locks', () => {
+    const state = createScrollState(makePlan({ length: 120, baseSpeed: 60, startOffset: 250 }));
+
+    advanceScrollState(state, 1 / 60);
+    const beforeLock = getScrollProgress(state);
+    const lockResult = advanceScrollState(state, 0.1, 0);
+
+    expect(lockResult.delta).toBe(0);
+    expect(state.speed).toBe(0);
+    expect(getScrollProgress(state)).toEqual({
+      ...beforeLock,
+      speed: 0
+    });
+
+    advanceScrollState(state, 0.1, 60);
+    expect(state.distance).toBeGreaterThan(beforeLock.distance);
+  });
+
   it('clamps scroll speed and stops at the sector exit', () => {
     const state = createScrollState(
       makePlan({ length: 12, baseSpeed: 60, minSpeed: 40, maxSpeed: 80 })

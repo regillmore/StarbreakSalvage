@@ -540,6 +540,10 @@ export class GameApp {
       debugState.backgroundPrimitives === undefined
         ? []
         : [`Bg ${debugState.backgroundPrimitives}`];
+    const arenaDebug =
+      debugState.arenaPhase && debugState.arenaPhase !== 'none'
+        ? [`Arena ${debugState.arenaPhase}`]
+        : [];
 
     this.debugOverlay.textContent = [
       `FPS ${Math.round(this.frameStats.fps)}`,
@@ -547,6 +551,7 @@ export class GameApp {
       `Seed ${debugState.seed}`,
       `Entities ${debugState.entityCount}`,
       ...scrollDebug,
+      ...arenaDebug,
       ...backgroundDebug
     ].join(' | ');
   }

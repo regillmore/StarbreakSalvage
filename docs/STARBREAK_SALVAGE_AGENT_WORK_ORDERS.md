@@ -403,6 +403,8 @@ Acceptance criteria:
 - Final boss victory still produces the correct summary.
 - Debug boss shortcuts remain fast and reliable.
 
+Status: first pass implemented; boss-gated sectors now carry deterministic arena approach/lock/release plans, gameplay slows during approach, locks scroll while the arena boss is active, resumes exit travel after boss defeat, keeps final victory distance-gated, preserves immediate debug boss shortcuts, and includes tests for arena marks, lock state, defeat release, scroll lock, and deterministic summaries.
+
 ## Work order 027 - Route and meta integration for sector conditions
 
 Goal: let route choices and unlocks change the next sector's physical feel.

@@ -18,6 +18,7 @@
 - Moved normal directed wave spawning onto deterministic scroll-distance marks while retaining time-based fallback schedules and boss-gate timing.
 - Added distance-based sector completion so routes open after reaching the exit distance and clearing required wave/boss gates, with distance stats in summaries and save records.
 - Added deterministic sector landmarks and sparse distance-tied hazards with readable telegraph/active phases, collision damage, HUD warnings, and low-alpha canvas rendering that stays under bullets.
+- Added first-pass boss arena approach, scroll-lock, and post-defeat release states for boss-gated sectors, with arena HUD/debug readouts and immediate debug boss shortcuts preserved.
 - Added main-menu seed entry with blank/default/random/known-label handling, compact onboarding HUD hints, richer build/resource HUD readouts, and run summaries with win/loss detail plus unlock reasons.
 - Added five-boss debug spawn shortcuts and a deterministic dense-combat performance pocket behind `?debug=1`.
 - Fixed objective target desyncs where secondary item effects or enemy body collisions could clear enemies without advancing target progress.
@@ -40,6 +41,7 @@
 - Added scroll-synced wave tests for known-seed distance marks, spawn order, time fallback, and frame-stutter duplicate prevention.
 - Added distance objective, run-summary distance, and save-record distance tests, plus a longer E2E route timeout for sector travel.
 - Added sector feature tests for deterministic landmark/hazard plans, feature validation, hazard phase windows, hazard collision damage, and reduced-motion hazard styling.
+- Added boss arena tests for deterministic arena marks, approach/lock/release transitions, boss-spawn gating, scroll-lock behavior, and debug shortcut suppression.
 
 ### Planning
 

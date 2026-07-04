@@ -7,6 +7,7 @@ import type { UnlockId } from '../content/unlocks';
 import { getWeaponById, type WeaponPatternId } from '../content/weapons';
 import { createRng, parseSeedLabel, type Rng, type WeightedChoice } from '../core/rng';
 import { createBackgroundPlan, type BackgroundPlan } from './BackgroundPlan';
+import { createBossArenaPlan, summarizeBossArenaPlan, type BossArenaPlan } from './BossArena';
 import { createSectorScrollPlan, type SectorScrollPlan } from './ScrollState';
 import {
   createSectorFeaturePlan,
@@ -63,6 +64,7 @@ export interface SectorRoute {
   readonly scroll: SectorScrollPlan;
   readonly background: BackgroundPlan;
   readonly features: SectorFeaturePlan;
+  readonly arena: BossArenaPlan | null;
   readonly rewardPoolSeed: string;
   readonly shopSeed: string;
 }
@@ -217,6 +219,11 @@ function generateSectorRoute(
     scroll,
     rng: rng.fork('features')
   });
+  const arena = createBossArenaPlan({
+    sectorId: sector.id,
+    objective,
+    scroll
+  });
 
   return {
     index,
@@ -232,6 +239,7 @@ function generateSectorRoute(
     scroll,
     background,
     features,
+    arena,
     rewardPoolSeed: rng.fork('reward-pool').seedLabel,
     shopSeed: rng.fork('shop').seedLabel
   };
@@ -358,7 +366,8 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
         layerCount: sector.background.layers.length,
         primitiveCount: sector.background.primitiveCount
       },
-      features: summarizeSectorFeaturePlan(sector.features)
+      features: summarizeSectorFeaturePlan(sector.features),
+      ...(sector.arena ? { arena: summarizeBossArenaPlan(sector.arena) } : {})
     }))
   };
 }

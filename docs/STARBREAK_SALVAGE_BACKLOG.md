@@ -616,6 +616,10 @@ Acceptance:
 - Scrolling locks or slows during boss fights.
 - Boss defeat returns to route or victory flow.
 
+Status:
+
+- First pass implemented in work order 026 with deterministic arena approach/lock/release distances, approach slowing, arena scroll locks, and post-defeat exit travel. Visual arena framing and route-conditioned arena variants remain follow-ups.
+
 ### V2 - Debug compatibility
 
 Acceptance:
@@ -623,6 +627,10 @@ Acceptance:
 - Debug boss shortcuts still spawn immediately.
 - Boss arena logic is testable without long manual travel.
 - Final boss victory remains distinct.
+
+Status:
+
+- First pass implemented in work order 026. Debug boss shortcuts still spawn immediately, arena logic has unit coverage, and final victory remains tied to boss defeat plus sector exit distance.
 
 ## Epic W - Route and meta sector conditions
 

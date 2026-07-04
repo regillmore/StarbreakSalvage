@@ -66,6 +66,7 @@ describe('deterministic generation guardrails', () => {
     const guardedFiles = [
       'src/core/rng.ts',
       'src/game/BackgroundPlan.ts',
+      'src/game/BossArena.ts',
       'src/game/Generation.ts',
       'src/game/ScrollState.ts',
       'src/game/SectorFeatures.ts',

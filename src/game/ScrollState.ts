@@ -111,7 +111,10 @@ export function advanceScrollState(
   const previousDistance = state.distance;
   const wasComplete = state.complete;
 
-  state.speed = clamp(speedOverride ?? state.speed, state.plan.minSpeed, state.plan.maxSpeed);
+  state.speed =
+    speedOverride === 0
+      ? 0
+      : clamp(speedOverride ?? state.speed, state.plan.minSpeed, state.plan.maxSpeed);
 
   if (safeDt <= 0 || state.complete) {
     syncOffsets(state);

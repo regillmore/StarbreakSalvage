@@ -398,6 +398,12 @@ describe('WaveDirector', () => {
             "sectorId": "sector_bio_machine_bloom",
           },
           {
+            "arena": {
+              "approachSpeed": 58,
+              "approachStartDistance": 2001.07,
+              "lockDistance": 2203.71,
+              "releaseDistance": 2533,
+            },
             "background": {
               "id": "background_corporate_kill_grid",
               "layerCount": 4,
@@ -461,6 +467,12 @@ describe('WaveDirector', () => {
             "sectorId": "sector_corporate_kill_grid",
           },
           {
+            "arena": {
+              "approachSpeed": 58,
+              "approachStartDistance": 2003.44,
+              "lockDistance": 2206.32,
+              "releaseDistance": 2536,
+            },
             "background": {
               "id": "background_core_wreck",
               "layerCount": 4,

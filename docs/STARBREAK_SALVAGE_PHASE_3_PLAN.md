@@ -30,10 +30,10 @@ The goal is not to copy any specific commercial game. The inspiration is the sen
 
 The Phase 2 game has deterministic sectors and wave objectives, but the playfield still behaves like a stationary combat box:
 
-- first-pass sector completion now requires exit distance plus required wave/boss gates, but route-conditioned exits and boss arenas remain follow-ups;
+- first-pass sector completion now requires exit distance plus required wave/boss gates, and boss-gated sectors now have first-pass arena approach/lock/release behavior; route-conditioned exits remain follow-ups;
 - first-pass backgrounds are now sector-specific and procedurally layered, with deterministic landmarks and sparse hazards now layered on top; route-conditioned visual motifs remain follow-ups;
 - first-pass directed enemy waves are now tied to scroll markers, and first-pass hazards are tied to distance windows; pickup beats and boss approach gates are still follow-ups;
-- bosses spawn into a static field rather than at the end of a traveled sector;
+- bosses now spawn from deterministic arena locks in boss-gated sectors, but arena presentation, intro polish, and route-conditioned boss approaches remain early;
 - route/event choices affect future combat but not the physical feeling of the next sector;
 - debug tools stress entity counts, but not long-scroll rendering or distance progression.
 
@@ -108,6 +108,8 @@ Exit criteria:
 - Boss sectors can scroll to an arena, lock movement framing, and unlock on defeat.
 - Boss intro/exit timing is deterministic and readable.
 - Debug shortcuts still work without requiring long travel.
+
+Status: first pass implemented by work order 026. Boss-gated sectors now generate deterministic arena approach and lock distances, slow during approach, hold scroll while the boss fight is active, release to a short exit drift after boss defeat, and expose arena state in HUD/debug text. Existing debug boss shortcuts still spawn bosses immediately without waiting for travel. Future polish should add stronger arena visual framing and route-conditioned arena variants.
 
 ### P3.7 - Route And Meta Integration
 
