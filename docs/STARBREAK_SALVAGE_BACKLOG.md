@@ -480,6 +480,10 @@ Acceptance:
 - Debug overlay includes projectile and particle counts.
 - Normal play remains near 60 FPS on dev machine.
 
+Status:
+
+- First pass implemented with five boss shortcuts and a deterministic dense-combat debug pocket. The overlay currently reports total entity count; separate projectile/particle counters remain a follow-up.
+
 ### P2 - Playtest checklist
 
 Acceptance:
@@ -487,3 +491,7 @@ Acceptance:
 - README, changelog, credits, release checklist, and browser smoke matrix are updated.
 - `npm run check`, E2E smoke, and production preview smoke pass.
 - Known severe blockers are fixed or documented.
+
+Status:
+
+- First pass implemented with automated checks, browser smoke, production preview smoke, known risks, and manual browser gaps documented.

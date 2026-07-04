@@ -23,6 +23,9 @@ describe('input helpers', () => {
     expect(primaryActionForKey(' ')).toBe('confirm');
     expect(primaryActionForKey('Escape')).toBe('pause');
     expect(primaryActionForKey('1')).toBe('debugBossOne');
+    expect(primaryActionForKey('4')).toBe('debugBossFour');
+    expect(primaryActionForKey('5')).toBe('debugBossFive');
+    expect(primaryActionForKey('0')).toBe('debugDenseCombat');
   });
 
   it('uses provided binding maps for action lookup', () => {

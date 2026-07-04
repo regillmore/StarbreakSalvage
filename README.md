@@ -38,7 +38,7 @@ Baseline controls:
 - Confirm: Enter or Space
 - Back: Escape or Backspace
 
-The current shell supports the title flow, deterministic contract launch, contract-specific ship stats, weapon patterns with heat/reload behavior, keyboard movement, primary fire, special burst fire, screen-clearing bombs, near-miss graze charge, faction-colored directed waves, objective progress, pickups, pause/resume, hull damage, 30 item definitions across 8 archetype targets, route choice, route events, rewards, basic shops with rerolls, sector transition, boss gates, phase-based boss attacks, final-sector victory summary, debug boss spawns, run summary stats, and a persistent unlock archive.
+The current shell supports the title flow, deterministic contract launch, contract-specific ship stats, weapon patterns with heat/reload behavior, keyboard movement, primary fire, special burst fire, screen-clearing bombs, near-miss graze charge, faction-colored directed waves, objective progress, pickups, pause/resume, hull damage, 30 item definitions across 8 archetype targets, route choice, route events, rewards, basic shops with rerolls, sector transition, boss gates, phase-based boss attacks, final-sector victory summary, five-boss debug spawns, dense-combat debug stress, run summary stats, and a persistent unlock archive.
 
 Special starts charged and spends charge for a short burst/faster-fire window. Bombs cancel enemy bullets and telegraphs while softening enemies and bosses without instantly ending boss fights. Grazing enemy shots at close range grants deterministic special charge and increments the HUD graze counter.
 
@@ -54,7 +54,7 @@ Add `?debug=1` to the local or deployed URL to show the debug overlay with FPS, 
 
 The main menu seed field accepts blank/default, `random`, known labels such as `LASER-TAX-404`, or any custom label. Blank/default seeds use `STARBREAK-SMOKE`; `random` resolves to a copyable generated seed when the run starts. You can also add `?seed=LASER-TAX-404` or another seed label to the URL to preview deterministic contract, route, objective, wave, reward, shop, and boss generation. Run summaries include route history, items, unlock reasons, win/loss detail, and a copy-ready seed link for sharing the same generated contracts, route, rewards, shop inventory, and boss schedule.
 
-With `?debug=1`, press `K` during gameplay to force the MVP summary screen. Press `1`, `2`, or `3` to spawn Auditor Drone XL, Carrier of Unsold Missiles, or The Bloom Engine. The HUD objective pill shows directed wave progress and boss-gate state for the current sector, the boss pill names the active boss phase, the verb pill shows special charge/cooldown, bomb stock, and graze count, the weapon pill shows pattern plus heat/overheat state, and the build/hint pills summarize current item hooks and the next practical combat focus.
+With `?debug=1`, press `K` during gameplay to force the MVP summary screen. Press `1`-`5` to spawn Auditor Drone XL, Carrier of Unsold Missiles, The Bloom Engine, Warranty Void Seraph, or The Core Wreck. Press `0` to spawn the dense-combat performance pocket. The HUD objective pill shows directed wave progress and boss-gate state for the current sector, the boss pill names the active boss phase, the verb pill shows special charge/cooldown, bomb stock, and graze count, the weapon pill shows pattern plus heat/overheat state, and the build/hint pills summarize current item hooks and the next practical combat focus.
 
 Projectile budget notes live in `docs/STARBREAK_SALVAGE_PERFORMANCE_NOTES.md`.
 

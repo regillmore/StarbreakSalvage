@@ -14,6 +14,7 @@
 - Added original procedural Web Audio cues for firing, impacts, pickups, boss warnings, sector clears, and run endings.
 - Added gameplay camera shake that respects reduced motion and screen shake strength settings.
 - Added main-menu seed entry with blank/default/random/known-label handling, compact onboarding HUD hints, richer build/resource HUD readouts, and run summaries with win/loss detail plus unlock reasons.
+- Added five-boss debug spawn shortcuts and a deterministic dense-combat performance pocket behind `?debug=1`.
 - Fixed objective target desyncs where secondary item effects or enemy body collisions could clear enemies without advancing target progress.
 
 ### Testing
@@ -28,6 +29,7 @@
 - Added unit coverage for audio cue settings, combat feedback detection, and deterministic screen-shake decay.
 - Added unit coverage for seed entry resolution and run-summary detail helpers, plus E2E coverage for seed entry and keyboard-only start.
 - Added regression coverage for empty-field objective progress after item side-effect kills and body-collision clears.
+- Added debug-scenario coverage for final boss shortcuts, dense combat budgets, and browser smoke of the debug stress path.
 
 ### Planning
 

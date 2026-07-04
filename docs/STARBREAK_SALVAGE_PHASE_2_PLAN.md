@@ -112,6 +112,8 @@ Exit criteria:
 - Performance/debug notes cover dense combat.
 - Known balance risks and follow-up issues are documented.
 
+Status: first-pass playtest hardening is implemented with five-boss debug spawns, a deterministic dense-combat performance pocket, updated QA/release documentation, and automated smoke coverage. Manual cross-browser playtest remains pending.
+
 ## Recommended Phase 2 Sequence
 
 1. Work order 011 - Phase 2 planning refresh.
@@ -123,7 +125,7 @@ Exit criteria:
 7. Work order 017 - Content expansion pack.
 8. Work order 018 - Unlock gating and meta variety.
 9. Work order 019 - Onboarding, HUD, and seed entry.
-10. Work order 020 - Balance, performance, and playtest release.
+10. Work order 020 - Balance, performance, and playtest release. First pass implemented; manual deployment/browser confirmation remains the follow-up gate.
 
 ## Phase 2 Definition of Done
 

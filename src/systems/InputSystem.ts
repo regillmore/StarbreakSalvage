@@ -14,7 +14,10 @@ export const INPUT_ACTIONS = [
   'debugGameOver',
   'debugBossOne',
   'debugBossTwo',
-  'debugBossThree'
+  'debugBossThree',
+  'debugBossFour',
+  'debugBossFive',
+  'debugDenseCombat'
 ] as const;
 
 export type InputAction = (typeof INPUT_ACTIONS)[number];
@@ -34,7 +37,10 @@ export const DEFAULT_KEY_BINDINGS: KeyBindingMap = {
   debugGameOver: ['K'],
   debugBossOne: ['1'],
   debugBossTwo: ['2'],
-  debugBossThree: ['3']
+  debugBossThree: ['3'],
+  debugBossFour: ['4'],
+  debugBossFive: ['5'],
+  debugDenseCombat: ['0']
 };
 
 export function normalizeKey(key: string): string {

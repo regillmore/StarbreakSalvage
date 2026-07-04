@@ -297,6 +297,8 @@ Acceptance criteria:
 - Production preview loads assets correctly.
 - Release checklist documents browser smoke, performance notes, known issues, and follow-up risks.
 
+Status: first pass implemented after work order 019 deployment confirmation; debug performance scenarios, boss shortcuts, docs, and smoke coverage are in place.
+
 ## Review subagent prompt
 
 Use after a feature PR:

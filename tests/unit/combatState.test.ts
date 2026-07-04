@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   createCombatState,
   forceCombatEnd,
+  getCombatEntityCount,
+  spawnDebugDenseCombatScenario,
   spawnBoss,
   updateCombatState,
   type CombatBounds
@@ -177,6 +179,39 @@ describe('CombatState', () => {
     expect(state.stats.bossesDefeated).toBe(1);
     expect(state.stats.enemiesDestroyed).toBe(1);
     expect(state.pickups.length).toBeGreaterThan(0);
+  });
+
+  it('creates a capped deterministic dense debug scenario', () => {
+    const first = createCombatState(bounds, 'DENSE-DEBUG-TEST', {
+      skipEnemyWaves: true
+    });
+    const second = createCombatState(bounds, 'DENSE-DEBUG-TEST', {
+      skipEnemyWaves: true
+    });
+
+    spawnDebugDenseCombatScenario(first, bounds);
+    spawnDebugDenseCombatScenario(second, bounds);
+
+    expect(first.enemies.map((enemy) => [enemy.factionId, enemy.x, enemy.y, enemy.hull])).toEqual(
+      second.enemies.map((enemy) => [enemy.factionId, enemy.x, enemy.y, enemy.hull])
+    );
+    expect(
+      first.projectiles
+        .filter((projectile) => projectile.owner === 'enemy')
+        .map((projectile) => [projectile.x, projectile.y, projectile.vx, projectile.vy])
+    ).toEqual(
+      second.projectiles
+        .filter((projectile) => projectile.owner === 'enemy')
+        .map((projectile) => [projectile.x, projectile.y, projectile.vx, projectile.vy])
+    );
+    expect(first.enemies).toHaveLength(12);
+    expect(first.projectiles.filter((projectile) => projectile.owner === 'enemy')).toHaveLength(42);
+    expect(first.telegraphs.map((telegraph) => telegraph.label)).toEqual([
+      'DENSE PERF LANE',
+      'DENSE PERF LANE',
+      'DENSE PERF LANE'
+    ]);
+    expect(getCombatEntityCount(first)).toBeLessThanOrEqual(80);
   });
 
   it('activates special with charge, burst shots, active time, and cooldown', () => {

@@ -5,6 +5,7 @@ import {
   createCombatState,
   forceCombatEnd,
   getCombatEntityCount,
+  spawnDebugDenseCombatScenario,
   spawnBoss,
   updateCombatState,
   type CombatBounds,
@@ -33,7 +34,9 @@ import type { InputSystem, InputAction } from '../systems/InputSystem';
 const DEBUG_BOSS_SHORTCUTS: Partial<Record<InputAction, BossId>> = {
   debugBossOne: 'boss_auditor_drone_xl',
   debugBossTwo: 'boss_unsold_missiles_carrier',
-  debugBossThree: 'boss_bloom_engine'
+  debugBossThree: 'boss_bloom_engine',
+  debugBossFour: 'boss_warranty_void_seraph',
+  debugBossFive: 'boss_core_wreck'
 };
 
 export class GameplayScene implements Scene {
@@ -265,6 +268,15 @@ export class GameplayScene implements Scene {
       const state = this.getCombatState();
       const feedbackBefore = createCombatFeedbackSnapshot(state);
       spawnBoss(state, debugBossId, this.getCombatBounds(), { clearField: true });
+      this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
+      this.sectorCompleted = false;
+      this.syncReadouts();
+    }
+
+    if (action === 'debugDenseCombat' && this.debugEnabled) {
+      const state = this.getCombatState();
+      const feedbackBefore = createCombatFeedbackSnapshot(state);
+      spawnDebugDenseCombatScenario(state, this.getCombatBounds());
       this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
       this.sectorCompleted = false;
       this.syncReadouts();

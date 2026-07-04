@@ -443,6 +443,90 @@ export function spawnBoss(
   return boss;
 }
 
+export function spawnDebugDenseCombatScenario(state: CombatState, bounds: CombatBounds): void {
+  state.enemies = [];
+  state.projectiles = [];
+  state.telegraphs = [];
+  state.effects = [];
+  state.pickups = [];
+  state.boss = null;
+  state.bossSpawned = true;
+  state.nextSpawnIndex = state.spawnSchedule.length;
+
+  const factionIds: readonly FactionId[] = [
+    'faction_corporate_ledger',
+    'faction_scrap_court',
+    'faction_bloom_hive',
+    'faction_void_corsairs'
+  ];
+  const centerX = bounds.width / 2;
+  const topY = Math.max(86, bounds.height * 0.16);
+
+  for (let index = 0; index < 12; index += 1) {
+    const row = Math.floor(index / 4);
+    const column = index % 4;
+    const factionId = factionIds[index % factionIds.length] ?? 'faction_corporate_ledger';
+    state.enemies.push({
+      id: getNextEntityId(state),
+      factionId,
+      x: centerX + (column - 1.5) * 88,
+      y: topY + row * 48,
+      radius: 17,
+      hull: row === 2 ? 3 : 2,
+      maxHull: row === 2 ? 3 : 2,
+      drift: (column - 1.5) * 24,
+      targetY: topY + row * 48,
+      fireCooldown: 0.45 + index * 0.03
+    });
+  }
+
+  for (let index = 0; index < 42; index += 1) {
+    const column = index % 7;
+    const row = Math.floor(index / 7);
+    const factionId = factionIds[index % factionIds.length] ?? 'faction_corporate_ledger';
+    state.projectiles.push({
+      id: getNextEntityId(state),
+      owner: 'enemy',
+      x: centerX + (column - 3) * 54,
+      y: topY + 120 + row * 28,
+      vx: (column - 3) * 12,
+      vy: 170 + row * 8,
+      radius: 5 + (index % 3),
+      damage: 1,
+      ttl: 3.4,
+      tags: factionId === 'faction_void_corsairs' ? ['phase'] : ['plasma'],
+      procDepth: 0,
+      factionId
+    });
+  }
+
+  for (const offset of [-120, 0, 120]) {
+    state.telegraphs.push({
+      id: getNextEntityId(state),
+      kind: 'lane',
+      factionId: 'faction_corporate_ledger',
+      label: 'DENSE PERF LANE',
+      x: centerX + offset,
+      y: topY + 80,
+      radius: 0,
+      width: 34,
+      height: bounds.height,
+      ttl: 1.2,
+      maxTtl: 1.2
+    });
+  }
+
+  state.effects.push({
+    id: getNextEntityId(state),
+    kind: 'special',
+    x: state.player.x,
+    y: state.player.y,
+    radius: 82,
+    ttl: 0.32,
+    maxTtl: 0.32
+  });
+}
+
 export function getCombatEntityCount(state: CombatState): number {
   return (
     1 +

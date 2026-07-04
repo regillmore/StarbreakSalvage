@@ -92,8 +92,12 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.getByRole('button', { name: 'Enter Sector' }).click();
   await expect(page.getByText('Trade War Corridor')).toBeVisible();
 
-  await page.keyboard.press('1');
-  await expect(page.getByTestId('boss-readout')).toContainText('Auditor Drone XL');
+  await page.keyboard.press('5');
+  await expect(page.getByTestId('boss-readout')).toContainText('The Core Wreck');
+
+  await page.keyboard.press('0');
+  await expect(page.getByTestId('boss-warning')).toContainText('DENSE PERF LANE');
+  await expect(page.locator('.debug-overlay')).toContainText(/Entities [5-9]\d/);
 
   await page.keyboard.press('K');
   await expect(page.getByRole('heading', { name: 'Debug Run Ended' })).toBeVisible();

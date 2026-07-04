@@ -93,6 +93,8 @@ type InputAction =
 
 Store bindings in options. Game systems should read actions/axes, not key codes.
 
+Debug-only actions may exist for local/CI smoke scenarios, but they should stay behind `?debug=1`, keep deterministic setup, and remain outside the visible remapping list.
+
 ## RNG contract
 
 No `Math.random()` in run generation, rewards, shops, waves, boss variants, or procedural content. Use an explicit `Rng` instance.
