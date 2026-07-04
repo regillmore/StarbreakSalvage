@@ -576,6 +576,10 @@ export function createCombatRunResult(
   };
 }
 
+export function applyPlayerDamage(state: CombatState, damage: number): void {
+  damagePlayer(state, damage);
+}
+
 function sanitizeSectorLength(value: number | null | undefined): number | null {
   return Number.isFinite(value) && typeof value === 'number' && value > 0 ? value : null;
 }

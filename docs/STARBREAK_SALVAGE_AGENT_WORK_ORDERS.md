@@ -386,6 +386,8 @@ Acceptance criteria:
 - Telegraphs are readable and do not mask enemy bullets.
 - Landmarks reinforce sector identity without requiring external assets.
 
+Status: first pass implemented; sectors now generate deterministic landmark and hazard feature plans, gameplay renders original canvas landmarks plus low-alpha hazard telegraphs below bullets, active hazards damage through the normal player-hit path, HUD hints/warnings surface hazard state, and tests cover determinism, validation, collision, and reduced-motion hazard styling.
+
 ## Work order 026 - Boss arenas and scroll locks
 
 Goal: make bosses feel like end-of-sector punctuation.

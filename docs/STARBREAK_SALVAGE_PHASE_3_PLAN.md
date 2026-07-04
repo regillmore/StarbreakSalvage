@@ -31,8 +31,8 @@ The goal is not to copy any specific commercial game. The inspiration is the sen
 The Phase 2 game has deterministic sectors and wave objectives, but the playfield still behaves like a stationary combat box:
 
 - first-pass sector completion now requires exit distance plus required wave/boss gates, but route-conditioned exits and boss arenas remain follow-ups;
-- first-pass backgrounds are now sector-specific and procedurally layered, but landmarks, hazards, and route-conditioned visual motifs remain follow-ups;
-- first-pass directed enemy waves are now tied to scroll markers, but pickups, hazards, landmarks, and boss approach gates are still follow-ups;
+- first-pass backgrounds are now sector-specific and procedurally layered, with deterministic landmarks and sparse hazards now layered on top; route-conditioned visual motifs remain follow-ups;
+- first-pass directed enemy waves are now tied to scroll markers, and first-pass hazards are tied to distance windows; pickup beats and boss approach gates are still follow-ups;
 - bosses spawn into a static field rather than at the end of a traveled sector;
 - route/event choices affect future combat but not the physical feeling of the next sector;
 - debug tools stress entity counts, but not long-scroll rendering or distance progression.
@@ -96,6 +96,8 @@ Exit criteria:
 - At least three deterministic landmark/hazard types exist.
 - Hazards have clear telegraphs and collision rules.
 - Landmarks are visual or low-risk unless explicitly marked hazardous.
+
+Status: first pass implemented by work order 025. Generated sector feature plans now add deterministic landmark marks and sparse hazard windows per sector; hazards have telegraph/active phases, collision damage through the normal player-hit path, HUD warnings, reduced-motion-stable styling, and low-alpha canvas rendering below bullets. Route-conditioned landmarks/hazard density remain P3.7 follow-up work.
 
 ### P3.6 - Boss Arenas And Scroll Locks
 

@@ -19,6 +19,8 @@ import { describeItemLoadout } from '../game/ItemHooks';
 import type { ItemInstance } from '../game/Rewards';
 import { getSectorCompletionReason } from '../game/RunOutcome';
 import type { RouteCombatModifier } from '../game/RouteEvents';
+import { resolveSectorHazardCollisions } from '../game/SectorHazards';
+import { getActiveSectorHazards, getVisibleSectorLandmarks } from '../game/SectorFeatures';
 import {
   advanceScrollState,
   createScrollState,
@@ -179,7 +181,7 @@ export class GameplayScene implements Scene {
     const bomb = this.queuedBomb;
     this.queuedSpecial = false;
     this.queuedBomb = false;
-    const result = updateCombatState(
+    let result = updateCombatState(
       state,
       {
         movement: this.input.getMovementAxis(),
@@ -192,6 +194,26 @@ export class GameplayScene implements Scene {
       this.getCombatBounds()
     );
     this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
+
+    if (!result) {
+      const hazardFeedbackBefore = createCombatFeedbackSnapshot(state);
+      const collisions = resolveSectorHazardCollisions(
+        state,
+        this.getCurrentSector().features,
+        scrollState.distance,
+        this.getCombatBounds()
+      );
+
+      if (collisions.hitHazardIds.length > 0) {
+        this.emitFeedback(
+          diffCombatFeedback(hazardFeedbackBefore, createCombatFeedbackSnapshot(state))
+        );
+      }
+
+      if (state.player.hull <= 0) {
+        result = forceCombatEnd(state, 'destroyed');
+      }
+    }
 
     this.syncReadouts();
 
@@ -225,7 +247,17 @@ export class GameplayScene implements Scene {
 
     renderer.paintBackground(scroll.cameraOffset, this.getCurrentSector().background);
     renderer.beginGameplayLayer();
+    renderer.paintSectorLandmarks(
+      getVisibleSectorLandmarks(
+        this.getCurrentSector().features,
+        scroll.distance,
+        renderer.getSize().height
+      )
+    );
     renderer.paintGameplayFrame();
+    renderer.paintSectorHazards(
+      getActiveSectorHazards(this.getCurrentSector().features, scroll.distance)
+    );
 
     for (const pickup of state.pickups) {
       renderer.paintPickup(pickup);
@@ -397,7 +429,11 @@ export class GameplayScene implements Scene {
           state.boss.phaseLabel
         }`
       : `Boss ${this.getCurrentBossName()}`;
-    this.warningReadout.textContent = state.telegraphs[0]?.label ?? 'Warning clear';
+    this.warningReadout.textContent =
+      state.telegraphs[0]?.label ??
+      getActiveSectorHazards(this.getCurrentSector().features, this.getScrollState().distance)[0]
+        ?.hazard.label ??
+      'Warning clear';
     this.itemReadout.textContent = this.getBuildReadout(state);
     this.hintReadout.textContent = this.getOnboardingHint(state);
   }
@@ -450,6 +486,17 @@ export class GameplayScene implements Scene {
   private getOnboardingHint(state: CombatState): string {
     if (state.boss) {
       return `Hint Boss phase ${state.boss.phaseLabel}; watch warnings before crossing lanes.`;
+    }
+
+    const activeHazard = getActiveSectorHazards(
+      this.getCurrentSector().features,
+      this.getScrollState().distance
+    )[0];
+
+    if (activeHazard) {
+      return activeHazard.phase === 'telegraph'
+        ? `Hint ${activeHazard.hazard.label} ahead; shift lanes before it activates.`
+        : `Hint ${activeHazard.hazard.label} active; stay out of the marked lane.`;
     }
 
     if (state.stats.shotsFired === 0) {

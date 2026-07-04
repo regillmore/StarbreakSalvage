@@ -590,6 +590,10 @@ Acceptance:
 - Landmarks reinforce sector theme and route outcomes.
 - Landmarks do not require external art assets.
 
+Status:
+
+- First pass implemented in work order 025 with deterministic wreck, beacon, vault, convoy, repair, and core-machinery landmarks rendered as original canvas primitives. Route-conditioned landmark variants remain a follow-up.
+
 ### U2 - Hazards
 
 Acceptance:
@@ -597,6 +601,10 @@ Acceptance:
 - At least three hazard types have telegraphs and collision behavior.
 - Hazards are sparse enough to preserve bullet readability.
 - Hazard plans are seed-stable.
+
+Status:
+
+- First pass implemented in work order 025 with deterministic debris lane, warning beam, mine belt, salvage storm, and crush gate windows. Hazards telegraph before becoming active, damage through the normal player-hit path, render under bullets at low alpha, and have unit coverage for determinism, validation, collision, and reduced-motion styling.
 
 ## Epic V - Boss arenas
 

@@ -8,6 +8,13 @@ import type {
   BackgroundPrimitive
 } from '../game/BackgroundPlan';
 import {
+  getSectorHazardCollisionRect,
+  getSectorHazardVisualState,
+  type ActiveSectorHazard,
+  type SectorHazardCollisionRect,
+  type VisibleSectorLandmark
+} from '../game/SectorFeatures';
+import {
   advanceScreenShake,
   getScreenShakeOffset,
   IDLE_SCREEN_SHAKE,
@@ -207,6 +214,53 @@ export class CanvasRenderer {
     this.paintNebula();
     this.paintStars(effectiveScrollOffset);
     this.paintHorizonGrid(effectiveScrollOffset);
+  }
+
+  public paintSectorLandmarks(landmarks: readonly VisibleSectorLandmark[]): void {
+    const { width, height } = this.size;
+    const context = this.context;
+    const alphaScale =
+      (this.settings.performanceMode ? 0.78 : 1) * (this.settings.reducedMotion ? 0.82 : 1);
+
+    for (const visible of landmarks) {
+      const landmarkWidth = Math.max(54, visible.landmark.widthRatio * width);
+      const landmarkHeight = Math.max(34, visible.landmark.heightRatio * height);
+
+      context.save();
+      context.translate(visible.landmark.xRatio * width, visible.y);
+      context.globalAlpha = clamp(visible.alpha * alphaScale, 0, 0.68);
+      context.fillStyle = '#263247';
+      context.strokeStyle = '#7cf7ff';
+      context.lineWidth = 1.4;
+      this.paintSectorLandmarkShape(visible.landmark.kind, landmarkWidth, landmarkHeight);
+      context.restore();
+    }
+  }
+
+  public paintSectorHazards(activeHazards: readonly ActiveSectorHazard[]): void {
+    const { width, height } = this.size;
+    const context = this.context;
+    const bounds = { width, height, padding: 24 };
+
+    for (const activeHazard of activeHazards) {
+      const rect = getSectorHazardCollisionRect(activeHazard.hazard, bounds);
+      const style = getSectorHazardVisualState(activeHazard, this.settings.reducedMotion);
+      const color = this.getSectorHazardColor(activeHazard.hazard.kind);
+
+      context.save();
+      context.translate(rect.centerX, height / 2);
+      context.scale(style.pulseScale, 1);
+      context.translate(-rect.centerX, -height / 2);
+      context.fillStyle = color;
+      context.strokeStyle = color;
+      context.lineWidth = style.lineWidth;
+      context.globalAlpha = style.fillAlpha;
+      context.fillRect(rect.left, rect.top, rect.width, rect.height);
+      context.globalAlpha = style.strokeAlpha;
+      context.strokeRect(rect.left, rect.top, rect.width, rect.height);
+      this.paintSectorHazardPattern(activeHazard, rect, color, style);
+      context.restore();
+    }
   }
 
   public paintGameplayFrame(): void {
@@ -543,6 +597,201 @@ export class CanvasRenderer {
     this.context.fillStyle = '#03050d';
     this.context.fillRect(0, 0, width, height);
     this.context.restore();
+  }
+
+  private paintSectorLandmarkShape(
+    kind: VisibleSectorLandmark['landmark']['kind'],
+    width: number,
+    height: number
+  ): void {
+    const context = this.context;
+    const halfWidth = width / 2;
+    const halfHeight = height / 2;
+
+    if (kind === 'wreck_silhouette') {
+      context.beginPath();
+      context.moveTo(-halfWidth, -halfHeight * 0.15);
+      context.lineTo(-halfWidth * 0.54, -halfHeight);
+      context.lineTo(halfWidth * 0.82, -halfHeight * 0.62);
+      context.lineTo(halfWidth, halfHeight * 0.2);
+      context.lineTo(halfWidth * 0.18, halfHeight);
+      context.lineTo(-halfWidth * 0.72, halfHeight * 0.48);
+      context.closePath();
+      context.fill();
+      context.globalAlpha *= 0.78;
+      context.stroke();
+      return;
+    }
+
+    if (kind === 'beacon_line') {
+      context.strokeStyle = '#ffd166';
+      context.lineWidth = 2;
+      for (let index = -2; index <= 2; index += 1) {
+        const x = index * (width / 6);
+        context.beginPath();
+        context.moveTo(x, -halfHeight);
+        context.lineTo(x, halfHeight);
+        context.stroke();
+      }
+      context.fillStyle = '#7cf7ff';
+      context.fillRect(-halfWidth, -3, width, 6);
+      return;
+    }
+
+    if (kind === 'vault_door') {
+      context.fillStyle = '#191827';
+      context.strokeStyle = '#ffd166';
+      context.lineWidth = 2;
+      context.beginPath();
+      context.rect(-halfWidth, -halfHeight, width, height);
+      context.fill();
+      context.stroke();
+      context.beginPath();
+      context.arc(0, 0, Math.min(halfWidth, halfHeight) * 0.52, 0, Math.PI * 2);
+      context.stroke();
+      return;
+    }
+
+    if (kind === 'convoy_shadow') {
+      context.fillStyle = '#151926';
+      context.strokeStyle = '#8aa4b8';
+      for (const offset of [-0.34, 0, 0.34]) {
+        context.beginPath();
+        context.ellipse(offset * width, 0, width * 0.18, height * 0.44, -0.1, 0, Math.PI * 2);
+        context.fill();
+        context.stroke();
+      }
+      return;
+    }
+
+    if (kind === 'repair_platform') {
+      context.fillStyle = '#132829';
+      context.strokeStyle = '#7cf7ff';
+      context.lineWidth = 2;
+      context.strokeRect(-halfWidth, -halfHeight, width, height);
+      context.fillRect(-halfWidth * 0.18, -halfHeight, halfWidth * 0.36, height);
+      context.fillRect(-halfWidth, -halfHeight * 0.18, width, halfHeight * 0.36);
+      return;
+    }
+
+    context.fillStyle = '#251b24';
+    context.strokeStyle = '#ffd166';
+    context.lineWidth = 2;
+    context.beginPath();
+    context.arc(0, 0, Math.min(halfWidth, halfHeight), 0, Math.PI * 2);
+    context.stroke();
+    for (let index = 0; index < 8; index += 1) {
+      const angle = (Math.PI * 2 * index) / 8;
+      context.beginPath();
+      context.moveTo(Math.cos(angle) * halfWidth * 0.28, Math.sin(angle) * halfHeight * 0.28);
+      context.lineTo(Math.cos(angle) * halfWidth, Math.sin(angle) * halfHeight);
+      context.stroke();
+    }
+  }
+
+  private paintSectorHazardPattern(
+    activeHazard: ActiveSectorHazard,
+    rect: SectorHazardCollisionRect,
+    color: string,
+    style: { readonly strokeAlpha: number }
+  ): void {
+    const context = this.context;
+
+    context.strokeStyle = color;
+    context.fillStyle = color;
+    context.globalAlpha = style.strokeAlpha * (activeHazard.phase === 'telegraph' ? 0.7 : 0.84);
+
+    if (activeHazard.phase === 'telegraph') {
+      context.setLineDash([9, 10]);
+    }
+
+    if (activeHazard.hazard.kind === 'warning_beam') {
+      context.beginPath();
+      context.moveTo(rect.centerX, rect.top);
+      context.lineTo(rect.centerX, rect.bottom);
+      context.stroke();
+      context.setLineDash([]);
+      context.globalAlpha *= 0.58;
+      context.beginPath();
+      context.moveTo(rect.centerX - rect.width * 0.24, rect.top);
+      context.lineTo(rect.centerX - rect.width * 0.24, rect.bottom);
+      context.moveTo(rect.centerX + rect.width * 0.24, rect.top);
+      context.lineTo(rect.centerX + rect.width * 0.24, rect.bottom);
+      context.stroke();
+      return;
+    }
+
+    if (activeHazard.hazard.kind === 'mine_belt') {
+      context.setLineDash([]);
+      for (let y = rect.top + 42, index = 0; y < rect.bottom; y += 88, index += 1) {
+        const x = rect.centerX + (index % 2 === 0 ? -rect.width * 0.22 : rect.width * 0.22);
+        context.beginPath();
+        context.arc(x, y, 7, 0, Math.PI * 2);
+        context.stroke();
+        context.beginPath();
+        context.moveTo(x - 12, y);
+        context.lineTo(x + 12, y);
+        context.moveTo(x, y - 12);
+        context.lineTo(x, y + 12);
+        context.stroke();
+      }
+      return;
+    }
+
+    if (activeHazard.hazard.kind === 'salvage_storm') {
+      context.setLineDash([]);
+      for (let y = rect.top + 30, index = 0; y < rect.bottom; y += 46, index += 1) {
+        const x = rect.left + ((index * 37) % Math.max(1, rect.width));
+        context.beginPath();
+        context.moveTo(x - 14, y - 6);
+        context.lineTo(x + 18, y + 8);
+        context.stroke();
+      }
+      return;
+    }
+
+    if (activeHazard.hazard.kind === 'crush_gate') {
+      context.setLineDash([]);
+      const toothWidth = Math.min(28, rect.width * 0.28);
+      for (let y = rect.top + 18; y < rect.bottom; y += 58) {
+        context.beginPath();
+        context.moveTo(rect.left, y);
+        context.lineTo(rect.left + toothWidth, y + 18);
+        context.lineTo(rect.left, y + 36);
+        context.moveTo(rect.right, y);
+        context.lineTo(rect.right - toothWidth, y + 18);
+        context.lineTo(rect.right, y + 36);
+        context.stroke();
+      }
+      return;
+    }
+
+    for (let y = rect.top - rect.width; y < rect.bottom; y += 52) {
+      context.beginPath();
+      context.moveTo(rect.left, y);
+      context.lineTo(rect.right, y + rect.width * 0.52);
+      context.stroke();
+    }
+  }
+
+  private getSectorHazardColor(kind: ActiveSectorHazard['hazard']['kind']): string {
+    if (this.settings.bulletContrast === 'high') {
+      return kind === 'warning_beam' || kind === 'crush_gate' ? '#ffef5f' : '#f8fbff';
+    }
+
+    if (kind === 'warning_beam' || kind === 'crush_gate') {
+      return '#ffd166';
+    }
+
+    if (kind === 'mine_belt') {
+      return '#ff6bd6';
+    }
+
+    if (kind === 'salvage_storm') {
+      return '#7cf7ff';
+    }
+
+    return '#8aa4b8';
   }
 
   private paintGeneratedBackground(plan: BackgroundPlan, scrollOffset: number): void {

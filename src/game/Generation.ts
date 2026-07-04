@@ -8,6 +8,11 @@ import { getWeaponById, type WeaponPatternId } from '../content/weapons';
 import { createRng, parseSeedLabel, type Rng, type WeightedChoice } from '../core/rng';
 import { createBackgroundPlan, type BackgroundPlan } from './BackgroundPlan';
 import { createSectorScrollPlan, type SectorScrollPlan } from './ScrollState';
+import {
+  createSectorFeaturePlan,
+  summarizeSectorFeaturePlan,
+  type SectorFeaturePlan
+} from './SectorFeatures';
 import { createSectorObjectivePlan, type SectorObjectivePlan } from './SectorObjectives';
 import {
   filterUnlockedBossCandidates,
@@ -57,6 +62,7 @@ export interface SectorRoute {
   readonly objective: SectorObjectivePlan;
   readonly scroll: SectorScrollPlan;
   readonly background: BackgroundPlan;
+  readonly features: SectorFeaturePlan;
   readonly rewardPoolSeed: string;
   readonly shopSeed: string;
 }
@@ -196,6 +202,21 @@ function generateSectorRoute(
   const waveRng = rng.fork('major-waves');
   const majorWaves = waveRng.shuffle(sector.majorWavePool).slice(0, 3);
   const objective = createSectorObjectivePlan(sector, majorWaves);
+  const scroll = createSectorScrollPlan({
+    sectorId: sector.id,
+    sectorIndex: index,
+    objective,
+    rng: rng.fork('scroll')
+  });
+  const background = createBackgroundPlan(
+    getBackgroundById(sector.backgroundId),
+    rng.fork('background')
+  );
+  const features = createSectorFeaturePlan({
+    sector,
+    scroll,
+    rng: rng.fork('features')
+  });
 
   return {
     index,
@@ -208,16 +229,9 @@ function generateSectorRoute(
     routeOptions,
     majorWaves,
     objective,
-    scroll: createSectorScrollPlan({
-      sectorId: sector.id,
-      sectorIndex: index,
-      objective,
-      rng: rng.fork('scroll')
-    }),
-    background: createBackgroundPlan(
-      getBackgroundById(sector.backgroundId),
-      rng.fork('background')
-    ),
+    scroll,
+    background,
+    features,
     rewardPoolSeed: rng.fork('reward-pool').seedLabel,
     shopSeed: rng.fork('shop').seedLabel
   };
@@ -343,7 +357,8 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
         id: sector.background.id,
         layerCount: sector.background.layers.length,
         primitiveCount: sector.background.primitiveCount
-      }
+      },
+      features: summarizeSectorFeaturePlan(sector.features)
     }))
   };
 }

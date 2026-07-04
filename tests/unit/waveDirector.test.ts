@@ -229,6 +229,29 @@ describe('WaveDirector', () => {
             "bossFactionId": "faction_corporate_ledger",
             "bossId": "boss_auditor_drone_xl",
             "bossPatternId": "auditFan",
+            "features": {
+              "hazardKinds": [
+                "debris_lane",
+                "salvage_storm",
+              ],
+              "hazardWindows": [
+                [
+                  319.6,
+                  490.6,
+                  714.6,
+                ],
+                [
+                  605.36,
+                  756.36,
+                  951.36,
+                ],
+              ],
+              "landmarkKinds": [
+                "repair_platform",
+                "wreck_silhouette",
+                "beacon_line",
+              ],
+            },
             "majorWaves": [
               "salvage_thief_dive",
               "wreck_gnat_swarm",
@@ -263,6 +286,29 @@ describe('WaveDirector', () => {
             "bossFactionId": "faction_corporate_ledger",
             "bossId": "boss_auditor_drone_xl",
             "bossPatternId": "auditFan",
+            "features": {
+              "hazardKinds": [
+                "mine_belt",
+                "warning_beam",
+              ],
+              "hazardWindows": [
+                [
+                  401.5,
+                  533.5,
+                  722.5,
+                ],
+                [
+                  784.7,
+                  974.7,
+                  1143.7,
+                ],
+              ],
+              "landmarkKinds": [
+                "vault_door",
+                "convoy_shadow",
+                "beacon_line",
+              ],
+            },
             "majorWaves": [
               "barcode_turret_lane",
               "credit_minefield",
@@ -297,6 +343,35 @@ describe('WaveDirector', () => {
             "bossFactionId": "faction_void_corsairs",
             "bossId": "boss_warranty_void_seraph",
             "bossPatternId": "auditFan",
+            "features": {
+              "hazardKinds": [
+                "salvage_storm",
+                "mine_belt",
+                "debris_lane",
+              ],
+              "hazardWindows": [
+                [
+                  404.9,
+                  575.9,
+                  768.9,
+                ],
+                [
+                  1046.74,
+                  1173.74,
+                  1369.74,
+                ],
+                [
+                  1467.46,
+                  1609.46,
+                  1825.46,
+                ],
+              ],
+              "landmarkKinds": [
+                "core_machinery",
+                "repair_platform",
+                "beacon_line",
+              ],
+            },
             "majorWaves": [
               "bloom_lattice",
               "regenerator_pods",
@@ -331,6 +406,35 @@ describe('WaveDirector', () => {
             "bossFactionId": "faction_corporate_ledger",
             "bossId": "boss_auditor_drone_xl",
             "bossPatternId": "auditFan",
+            "features": {
+              "hazardKinds": [
+                "crush_gate",
+                "warning_beam",
+                "mine_belt",
+              ],
+              "hazardWindows": [
+                [
+                  575.9,
+                  755.9,
+                  885.9,
+                ],
+                [
+                  1298.14,
+                  1488.14,
+                  1652.14,
+                ],
+                [
+                  1985.06,
+                  2150.06,
+                  2344.06,
+                ],
+              ],
+              "landmarkKinds": [
+                "beacon_line",
+                "vault_door",
+                "core_machinery",
+              ],
+            },
             "majorWaves": [
               "beam_warning_grid",
               "elite_laser_fan",
@@ -365,6 +469,35 @@ describe('WaveDirector', () => {
             "bossFactionId": "faction_scrap_court",
             "bossId": "boss_core_wreck",
             "bossPatternId": "missileCurtain",
+            "features": {
+              "hazardKinds": [
+                "warning_beam",
+                "salvage_storm",
+                "crush_gate",
+              ],
+              "hazardWindows": [
+                [
+                  553.8,
+                  729.8,
+                  895.8,
+                ],
+                [
+                  1378.88,
+                  1539.88,
+                  1750.88,
+                ],
+                [
+                  1850.52,
+                  2044.52,
+                  2180.52,
+                ],
+              ],
+              "landmarkKinds": [
+                "vault_door",
+                "core_machinery",
+                "wreck_silhouette",
+              ],
+            },
             "majorWaves": [
               "mixed_faction_storm",
               "final_scrap_curtain",
