@@ -20,7 +20,7 @@ Phase 3 adds continuous vertical motion, procedural backgrounds, landmarks, and 
 - Background plans should be generated once per sector and rendered from deterministic data plus scroll offset.
 - Avoid per-frame allocation in background rendering; cache reusable primitives or draw plans when profiling shows pressure.
 - Keep normal Phase 3 combat near the Phase 2 active-field budget until long-scroll profiling is available.
-- Add debug counters for distance traveled, scroll speed, background primitives, active landmarks, active hazards, enemies, enemy bullets, player bullets, pickups, and effects.
+- Debug counters currently report distance traveled and scroll speed during gameplay. Future counters should add background primitives, active landmarks, active hazards, enemies, enemy bullets, player bullets, pickups, and effects.
 - Long-scroll debug scenarios should test at least one full sector length without requiring a boss defeat.
 - Moving backgrounds must be tested in standard and high-contrast modes before increasing bullet density.
 
@@ -36,7 +36,7 @@ Enable debug tools with `?debug=1` on a local, preview, or Pages URL.
 - `0` replaces the current field with the dense-combat performance pocket: 12 enemies, 42 enemy bullets, 3 lane telegraphs, and 1 feedback effect, for 59 total active entities including the player.
 - `K` forces a debug run summary.
 
-The dense pocket is deterministic and intentionally stays below the Phase 2 alpha active-field budget of 80 entities. Use it to confirm the debug overlay remains responsive, bullets remain readable in standard and high-contrast modes, screen shake respects reduced motion, and the round can still be abandoned or summarized.
+The dense pocket is deterministic and intentionally stays below the Phase 2 alpha active-field budget of 80 entities. Use it to confirm the debug overlay remains responsive, bullets remain readable in standard and high-contrast modes, screen shake respects reduced motion, distance/speed counters continue advancing, and the round can still be abandoned or summarized.
 
 ## Current Boss Phase Volleys
 

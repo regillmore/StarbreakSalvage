@@ -318,6 +318,8 @@ Acceptance criteria:
 - Existing gameplay still starts, moves, pauses, and completes sectors.
 - Tests prove scroll progress is fixed-step and reproducible.
 
+Status: first pass implemented; deterministic sector scroll plans, fixed-step scroll state, HUD/debug distance readouts, and reduced-motion-aware starfield offset are in place. Distance-based objectives and scroll-synced waves remain follow-up work.
+
 ## Work order 022 - Procedural parallax backgrounds
 
 Goal: make sectors feel spatially distinct while staying original and lightweight.

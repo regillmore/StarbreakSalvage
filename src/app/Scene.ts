@@ -4,6 +4,9 @@ import type { InputAction } from '../systems/InputSystem';
 export interface SceneDebugState {
   readonly seed: string;
   readonly entityCount: number;
+  readonly distance?: number;
+  readonly sectorLength?: number;
+  readonly scrollSpeed?: number;
 }
 
 export interface Scene {

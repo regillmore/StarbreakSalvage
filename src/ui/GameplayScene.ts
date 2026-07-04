@@ -1,5 +1,5 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
-import type { Scene } from '../app/Scene';
+import type { Scene, SceneDebugState } from '../app/Scene';
 import { getItemById } from '../content/items';
 import {
   createCombatState,
@@ -19,6 +19,13 @@ import { describeItemLoadout } from '../game/ItemHooks';
 import type { ItemInstance } from '../game/Rewards';
 import { getSectorCompletionReason } from '../game/RunOutcome';
 import type { RouteCombatModifier } from '../game/RouteEvents';
+import {
+  advanceScrollState,
+  createScrollState,
+  formatScrollReadout,
+  getScrollProgress,
+  type ScrollState
+} from '../game/ScrollState';
 import {
   createWaveDirectorPlan,
   getObjectiveProgress,
@@ -44,7 +51,9 @@ export class GameplayScene implements Scene {
 
   private combatState: CombatState | null = null;
   private wavePlan: WaveDirectorPlan | null = null;
+  private scrollState: ScrollState | null = null;
   private readonly positionReadout: HTMLParagraphElement;
+  private readonly distanceReadout: HTMLParagraphElement;
   private readonly hullReadout: HTMLParagraphElement;
   private readonly economyReadout: HTMLParagraphElement;
   private readonly objectiveReadout: HTMLParagraphElement;
@@ -79,6 +88,10 @@ export class GameplayScene implements Scene {
     this.positionReadout = document.createElement('p');
     this.positionReadout.className = 'sr-only';
     this.positionReadout.dataset.testid = 'player-position';
+
+    this.distanceReadout = document.createElement('p');
+    this.distanceReadout.className = 'hud-pill';
+    this.distanceReadout.dataset.testid = 'distance-readout';
 
     this.hullReadout = document.createElement('p');
     this.hullReadout.className = 'hud-pill';
@@ -138,6 +151,7 @@ export class GameplayScene implements Scene {
 
     hud.append(
       sector,
+      this.distanceReadout,
       this.hullReadout,
       this.economyReadout,
       this.objectiveReadout,
@@ -156,6 +170,8 @@ export class GameplayScene implements Scene {
   }
 
   public update(dt: number): void {
+    advanceScrollState(this.getScrollState(), dt);
+
     const state = this.getCombatState();
     const feedbackBefore = createCombatFeedbackSnapshot(state);
     const special = this.queuedSpecial;
@@ -203,8 +219,9 @@ export class GameplayScene implements Scene {
 
   public render(renderer: CanvasRenderer, _alpha: number): void {
     const state = this.getCombatState();
+    const scroll = this.getScrollState();
 
-    renderer.paintBackground();
+    renderer.paintBackground(scroll.cameraOffset);
     renderer.beginGameplayLayer();
     renderer.paintGameplayFrame();
 
@@ -287,8 +304,16 @@ export class GameplayScene implements Scene {
     return forceCombatEnd(this.getCombatState(), reason);
   }
 
-  public getDebugState(): { seed: string; entityCount: number } {
-    return { seed: this.run.seed, entityCount: getCombatEntityCount(this.getCombatState()) };
+  public getDebugState(): SceneDebugState {
+    const scroll = getScrollProgress(this.getScrollState());
+
+    return {
+      seed: this.run.seed,
+      entityCount: getCombatEntityCount(this.getCombatState()),
+      distance: scroll.distance,
+      sectorLength: scroll.length,
+      scrollSpeed: scroll.speed
+    };
   }
 
   private getCombatState(): CombatState {
@@ -330,6 +355,17 @@ export class GameplayScene implements Scene {
     return this.wavePlan;
   }
 
+  private getScrollState(): ScrollState {
+    const sector = this.run.sectors[this.sectorIndex];
+
+    if (!sector) {
+      throw new Error(`No sector exists at index ${this.sectorIndex}.`);
+    }
+
+    this.scrollState ??= createScrollState(sector.scroll);
+    return this.scrollState;
+  }
+
   private getCurrentSectorName(): string {
     return this.run.sectors[this.sectorIndex]?.sectorName ?? 'Outer Debris Field';
   }
@@ -341,6 +377,7 @@ export class GameplayScene implements Scene {
       state.player.y
     )}`;
     this.hullReadout.textContent = `Hull ${state.player.hull}/${state.player.maxHull}`;
+    this.distanceReadout.textContent = formatScrollReadout(this.getScrollState());
     this.economyReadout.textContent = `Credits ${this.startingCredits + state.player.credits} | Salvage ${this.startingSalvage + state.player.salvage}`;
     this.objectiveReadout.textContent = getObjectiveProgress(this.getWavePlan(), state).readout;
     this.verbReadout.textContent = this.getVerbReadout(state);

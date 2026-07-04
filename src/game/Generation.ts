@@ -5,6 +5,7 @@ import { type ShipDefinition, type ShipId, type ShipStats, type WeaponId } from 
 import type { UnlockId } from '../content/unlocks';
 import { getWeaponById, type WeaponPatternId } from '../content/weapons';
 import { createRng, parseSeedLabel, type Rng, type WeightedChoice } from '../core/rng';
+import { createSectorScrollPlan, type SectorScrollPlan } from './ScrollState';
 import { createSectorObjectivePlan, type SectorObjectivePlan } from './SectorObjectives';
 import {
   filterUnlockedBossCandidates,
@@ -52,6 +53,7 @@ export interface SectorRoute {
   readonly routeOptions: readonly RouteOption[];
   readonly majorWaves: readonly string[];
   readonly objective: SectorObjectivePlan;
+  readonly scroll: SectorScrollPlan;
   readonly rewardPoolSeed: string;
   readonly shopSeed: string;
 }
@@ -190,6 +192,7 @@ function generateSectorRoute(
   const routeOptions = generateRouteOptions(rng.fork('routes'), index);
   const waveRng = rng.fork('major-waves');
   const majorWaves = waveRng.shuffle(sector.majorWavePool).slice(0, 3);
+  const objective = createSectorObjectivePlan(sector, majorWaves);
 
   return {
     index,
@@ -201,7 +204,13 @@ function generateSectorRoute(
     bossPatternId: boss.patternId,
     routeOptions,
     majorWaves,
-    objective: createSectorObjectivePlan(sector, majorWaves),
+    objective,
+    scroll: createSectorScrollPlan({
+      sectorId: sector.id,
+      sectorIndex: index,
+      objective,
+      rng: rng.fork('scroll')
+    }),
     rewardPoolSeed: rng.fork('reward-pool').seedLabel,
     shopSeed: rng.fork('shop').seedLabel
   };
@@ -317,6 +326,11 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
         requiredEnemyKills: sector.objective.requiredEnemyKills,
         bossRequired: sector.objective.bossRequired,
         bossSpawnAtSeconds: sector.objective.bossSpawnAtSeconds
+      },
+      scroll: {
+        length: sector.scroll.length,
+        baseSpeed: sector.scroll.baseSpeed,
+        startOffset: sector.scroll.startOffset
       }
     }))
   };

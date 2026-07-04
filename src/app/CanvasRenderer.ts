@@ -180,9 +180,10 @@ export class CanvasRenderer {
     this.context.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  public paintBackground(): void {
+  public paintBackground(scrollOffset = 0): void {
     const { width, height } = this.size;
     const context = this.context;
+    const effectiveScrollOffset = this.settings.reducedMotion ? 0 : scrollOffset;
     const background = context.createLinearGradient(0, 0, width, height);
 
     background.addColorStop(0, '#040612');
@@ -193,8 +194,8 @@ export class CanvasRenderer {
     context.fillRect(0, 0, width, height);
 
     this.paintNebula();
-    this.paintStars();
-    this.paintHorizonGrid();
+    this.paintStars(effectiveScrollOffset);
+    this.paintHorizonGrid(effectiveScrollOffset);
   }
 
   public paintGameplayFrame(): void {
@@ -564,9 +565,10 @@ export class CanvasRenderer {
     this.context.fillRect(0, 0, width, height);
   }
 
-  private paintStars(): void {
+  private paintStars(scrollOffset: number): void {
     const { width, height } = this.size;
     const cacheKey = `${width}:${height}:${this.settings.performanceMode}`;
+    const starOffset = wrapCanvasValue(scrollOffset * 0.42, height);
 
     if (cacheKey !== this.starCacheKey) {
       const count = starCountForViewport(width, height);
@@ -583,16 +585,23 @@ export class CanvasRenderer {
       this.context.globalAlpha = star.alpha;
       this.context.fillStyle = star.tint;
       this.context.beginPath();
-      this.context.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+      this.context.arc(
+        star.x,
+        wrapCanvasValue(star.y + starOffset, height),
+        star.radius,
+        0,
+        Math.PI * 2
+      );
       this.context.fill();
     }
 
     this.context.globalAlpha = 1;
   }
 
-  private paintHorizonGrid(): void {
+  private paintHorizonGrid(scrollOffset: number): void {
     const { width, height } = this.size;
     const horizon = height * 0.64;
+    const gridOffset = wrapCanvasValue(scrollOffset * 0.18, 72);
 
     this.context.save();
     this.context.globalAlpha = 0.16;
@@ -600,7 +609,7 @@ export class CanvasRenderer {
     this.context.lineWidth = Math.max(1, width / 1200);
 
     for (let index = 0; index < 9; index += 1) {
-      const y = horizon + index * index * height * 0.008;
+      const y = horizon + index * index * height * 0.008 + gridOffset;
       this.context.beginPath();
       this.context.moveTo(0, y);
       this.context.lineTo(width, y);
@@ -609,4 +618,9 @@ export class CanvasRenderer {
 
     this.context.restore();
   }
+}
+
+function wrapCanvasValue(value: number, span: number): number {
+  const safeSpan = Math.max(1, span);
+  return ((value % safeSpan) + safeSpan) % safeSpan;
 }

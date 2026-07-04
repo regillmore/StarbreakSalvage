@@ -164,6 +164,11 @@ describe('WaveDirector', () => {
               "glitch",
               "repair",
             ],
+            "scroll": {
+              "baseSpeed": 85,
+              "length": 1442,
+              "startOffset": 299,
+            },
             "sectorId": "sector_outer_debris_field",
           },
           {
@@ -188,6 +193,11 @@ describe('WaveDirector', () => {
               "repair",
               "elite",
             ],
+            "scroll": {
+              "baseSpeed": 92,
+              "length": 1665,
+              "startOffset": 10706,
+            },
             "sectorId": "sector_trade_war_corridor",
           },
           {
@@ -212,6 +222,11 @@ describe('WaveDirector', () => {
               "vault",
               "shop",
             ],
+            "scroll": {
+              "baseSpeed": 84,
+              "length": 1953,
+              "startOffset": 20476,
+            },
             "sectorId": "sector_bio_machine_bloom",
           },
           {
@@ -236,6 +251,11 @@ describe('WaveDirector', () => {
               "repair",
               "glitch",
             ],
+            "scroll": {
+              "baseSpeed": 100,
+              "length": 2533,
+              "startOffset": 30175,
+            },
             "sectorId": "sector_corporate_kill_grid",
           },
           {
@@ -260,6 +280,11 @@ describe('WaveDirector', () => {
               "repair",
               "glitch",
             ],
+            "scroll": {
+              "baseSpeed": 96,
+              "length": 2536,
+              "startOffset": 40804,
+            },
             "sectorId": "sector_core_wreck",
           },
         ],

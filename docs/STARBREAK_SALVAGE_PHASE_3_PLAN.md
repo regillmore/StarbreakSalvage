@@ -49,6 +49,8 @@ Exit criteria:
 - Normal sector completion can be driven by distance plus objective gates.
 - Same seed and sector produce the same length and scroll pacing.
 
+Status: first pass implemented by work order 021 with deterministic scroll plans, fixed-step distance state, HUD/debug readouts, and subtle scroll offset for the existing starfield. Distance completion gates move into P3.4.
+
 ### P3.2 - Procedural Background Identity
 
 Add layered, deterministic, original canvas backgrounds for each sector family.

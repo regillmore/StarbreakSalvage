@@ -41,6 +41,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.getByRole('button', { name: 'Launch Contract' }).click();
 
   await expect(page.getByText('Outer Debris Field')).toBeVisible();
+  await expect(page.getByTestId('distance-readout')).toContainText(/Distance \d+\/\d+u/);
   await expect(page.getByTestId('hull-readout')).toContainText('Hull');
   await expect(page.getByTestId('pickup-readout')).toContainText(/Credits .* Salvage/);
   await expect(page.getByTestId('objective-readout')).toContainText(/waves|targets|Boss/i);
@@ -98,6 +99,8 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.keyboard.press('0');
   await expect(page.getByTestId('boss-warning')).toContainText('DENSE PERF LANE');
   await expect(page.locator('.debug-overlay')).toContainText(/Entities [5-9]\d/);
+  await expect(page.locator('.debug-overlay')).toContainText(/Distance \d+\/\d+/);
+  await expect(page.locator('.debug-overlay')).toContainText(/Scroll \d+u\/s/);
 
   await page.keyboard.press('K');
   await expect(page.getByRole('heading', { name: 'Debug Run Ended' })).toBeVisible();

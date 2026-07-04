@@ -2,7 +2,7 @@
 
 **Starbreak Salvage** is a browser-first 2D vertical roguelike shooter about disposable pilots, unstable ship contracts, and profitable wreckage. The project is intentionally static: no backend, no accounts, and no runtime network dependency after the page loads.
 
-This repository is in the early playable release-candidate stage. It currently ships a Vite + TypeScript app with a canvas renderer, fixed-step loop, input manager, scene manager, deterministic contract and sector generation, expanded item hooks, a combat MVP, route/reward/shop screens, four-faction boss alpha content, a final-sector victory path, save/unlock progression, in-menu seed entry, HUD/onboarding affordances, settings, procedural audio/VFX feedback, unit tests, Playwright smoke coverage, CI, and GitHub Pages deployment wiring. Phase 3 planning now focuses on adding true vertical scrolling, procedural sector backgrounds, distance objectives, and scroll-synced encounters.
+This repository is in the early playable release-candidate stage. It currently ships a Vite + TypeScript app with a canvas renderer, fixed-step loop, input manager, scene manager, deterministic contract and sector generation, deterministic sector scroll plans, expanded item hooks, a combat MVP, route/reward/shop screens, four-faction boss alpha content, a final-sector victory path, save/unlock progression, in-menu seed entry, HUD/onboarding affordances, settings, procedural audio/VFX feedback, unit tests, Playwright smoke coverage, CI, and GitHub Pages deployment wiring. Phase 3 implementation now focuses on turning that scroll foundation into procedural sector backgrounds, distance objectives, and scroll-synced encounters.
 
 ## Local Development
 
@@ -38,7 +38,7 @@ Baseline controls:
 - Confirm: Enter or Space
 - Back: Escape or Backspace
 
-The current shell supports the title flow, deterministic contract launch, contract-specific ship stats, weapon patterns with heat/reload behavior, keyboard movement, primary fire, special burst fire, screen-clearing bombs, near-miss graze charge, faction-colored directed waves, objective progress, pickups, pause/resume, hull damage, 30 item definitions across 8 archetype targets, route choice, route events, rewards, basic shops with rerolls, sector transition, boss gates, phase-based boss attacks, final-sector victory summary, five-boss debug spawns, dense-combat debug stress, run summary stats, and a persistent unlock archive.
+The current shell supports the title flow, deterministic contract launch, contract-specific ship stats, weapon patterns with heat/reload behavior, keyboard movement, primary fire, special burst fire, screen-clearing bombs, near-miss graze charge, deterministic sector distance tracking, faction-colored directed waves, objective progress, pickups, pause/resume, hull damage, 30 item definitions across 8 archetype targets, route choice, route events, rewards, basic shops with rerolls, sector transition, boss gates, phase-based boss attacks, final-sector victory summary, five-boss debug spawns, dense-combat debug stress, run summary stats, and a persistent unlock archive.
 
 Special starts charged and spends charge for a short burst/faster-fire window. Bombs cancel enemy bullets and telegraphs while softening enemies and bosses without instantly ending boss fights. Grazing enemy shots at close range grants deterministic special charge and increments the HUD graze counter.
 
@@ -50,11 +50,11 @@ The Unlock Archive stores versioned local save data in `localStorage`, including
 
 Settings are available from the main menu and pause menu. They persist in `localStorage` and currently cover remappable controls, mute, master volume, reduced motion, screen shake intensity, bullet contrast, fullscreen, and performance mode. Audio uses original procedural Web Audio cues after the first user gesture; mute and master volume apply immediately, and reduced motion disables gameplay camera shake.
 
-Add `?debug=1` to the local or deployed URL to show the debug overlay with FPS, scene, seed, and entity count.
+Add `?debug=1` to the local or deployed URL to show the debug overlay with FPS, scene, seed, entity count, distance, and scroll speed during gameplay.
 
 The main menu seed field accepts blank/default, `random`, known labels such as `LASER-TAX-404`, or any custom label. Blank/default seeds use `STARBREAK-SMOKE`; `random` resolves to a copyable generated seed when the run starts. You can also add `?seed=LASER-TAX-404` or another seed label to the URL to preview deterministic contract, route, objective, wave, reward, shop, and boss generation. Run summaries include route history, items, unlock reasons, win/loss detail, and a copy-ready seed link for sharing the same generated contracts, route, rewards, shop inventory, and boss schedule.
 
-With `?debug=1`, press `K` during gameplay to force the MVP summary screen. Press `1`-`5` to spawn Auditor Drone XL, Carrier of Unsold Missiles, The Bloom Engine, Warranty Void Seraph, or The Core Wreck. Press `0` to spawn the dense-combat performance pocket. The HUD objective pill shows directed wave progress and boss-gate state for the current sector, the boss pill names the active boss phase, the verb pill shows special charge/cooldown, bomb stock, and graze count, the weapon pill shows pattern plus heat/overheat state, and the build/hint pills summarize current item hooks and the next practical combat focus.
+With `?debug=1`, press `K` during gameplay to force the MVP summary screen. Press `1`-`5` to spawn Auditor Drone XL, Carrier of Unsold Missiles, The Bloom Engine, Warranty Void Seraph, or The Core Wreck. Press `0` to spawn the dense-combat performance pocket. The HUD distance pill shows fixed-step sector distance and scroll speed, the objective pill shows directed wave progress and boss-gate state for the current sector, the boss pill names the active boss phase, the verb pill shows special charge/cooldown, bomb stock, and graze count, the weapon pill shows pattern plus heat/overheat state, and the build/hint pills summarize current item hooks and the next practical combat focus.
 
 Projectile budget notes live in `docs/STARBREAK_SALVAGE_PERFORMANCE_NOTES.md`.
 

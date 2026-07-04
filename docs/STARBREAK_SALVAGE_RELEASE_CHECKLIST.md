@@ -3,7 +3,7 @@
 Release candidate: `0.10.0` Phase 2 playtest hardening
 Date: 2026-07-04
 
-Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/VFX. Phase 2 work orders 011-020 are deployed and confirmed. Phase 3 planning now lives in `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`, with manual cross-browser playtest still pending.
+Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/VFX. Phase 2 work orders 011-020 are deployed and confirmed. Phase 3 planning now lives in `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`; work order 021 adds the first-pass scroll simulation foundation, with manual cross-browser playtest still pending.
 
 ## Automated Checks
 
@@ -11,7 +11,7 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 | ----------------------------- | ------ | ---------------------------------------------------- |
 | TypeScript typecheck          | Pass   | `npm run check`                                      |
 | ESLint                        | Pass   | `npm run check`                                      |
-| Unit and deterministic tests  | Pass   | `npm run check` - 26 files, 143 tests                |
+| Unit and deterministic tests  | Pass   | `npm run check` - 27 files, 147 tests                |
 | Production build              | Pass   | `npm run check` - Vite build created `dist/`         |
 | Playwright Chromium smoke     | Pass   | `npm run test:e2e` - 1 passed                        |
 | Production preview asset load | Pass   | Local preview returned HTTP 200 and Pages asset path |
@@ -33,7 +33,7 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 | Seed sharing               | Pass   | Menu seed entry and summary share links support blank/default/random/known/custom labels.              |
 | Content validation         | Pass   | Shipped content validates and bad fixtures are covered by tests.                                       |
 | Runtime dependencies       | Pass   | No production dependencies remain.                                                                     |
-| Debug/performance tools    | Pass   | `?debug=1` supports five boss shortcuts, dense combat stress, forced summary, and entity-count overlay. |
+| Debug/performance tools    | Pass   | `?debug=1` supports five boss shortcuts, dense combat stress, forced summary, entity-count overlay, and gameplay distance/speed counters. |
 
 ## Phase 2 Playtest Audit
 
@@ -58,6 +58,6 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 
 - Audio is procedural cue feedback only; music and a fuller mix are not implemented yet.
 - Route/reward/shop/boss balance is first-pass and needs live playtest tuning.
-- True vertical scrolling, distance objectives, and procedural sector backgrounds are planned for Phase 3 and are not implemented yet.
-- The debug overlay reports total entity count; separate projectile/particle timing counters remain future instrumentation.
+- First-pass scroll simulation exists, but distance objectives, scroll-synced encounters, and procedural sector backgrounds remain Phase 3 follow-up work.
+- The debug overlay reports total entity count plus distance/speed; separate projectile/particle/background timing counters remain future instrumentation.
 - Manual cross-browser smoke outside Chromium remains pending.
