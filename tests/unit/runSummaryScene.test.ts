@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildSeedShareUrl, getOutcomeLabel, getSummaryTitle } from '../../src/ui/RunSummaryScene';
+import { createDefaultSaveData, type SaveUpdateResult } from '../../src/core/saveData';
+import {
+  buildSeedShareUrl,
+  formatRouteHistory,
+  formatUnlockReasons,
+  formatUnlockSummary,
+  getOutcomeDetail,
+  getOutcomeLabel,
+  getSummaryTitle
+} from '../../src/ui/RunSummaryScene';
 import type { CombatRunResult } from '../../src/game/CombatState';
 
 describe('buildSeedShareUrl', () => {
@@ -38,5 +47,34 @@ describe('run summary labels', () => {
 
     expect(getSummaryTitle(result)).toBe('Victory Confirmed');
     expect(getOutcomeLabel(result)).toBe('final boss salvaged');
+    expect(getOutcomeDetail(result)).toBe('Win: final boss salvaged.');
+  });
+});
+
+describe('run summary details', () => {
+  it('formats route history compactly', () => {
+    expect(
+      formatRouteHistory([
+        {
+          sectorIndex: 1,
+          routeKind: 'shop',
+          routeLabel: 'Shop',
+          outcomeTitle: 'Coupon Ambush'
+        }
+      ])
+    ).toBe('S1 Shop: Coupon Ambush');
+  });
+
+  it('explains achievement-backed unlock reasons', () => {
+    const update: SaveUpdateResult = {
+      data: createDefaultSaveData(),
+      newUnlockIds: ['unlock_ship_phase_courier'],
+      newAchievementIds: ['achievement_first_contract'],
+      salvageEarned: 4
+    };
+
+    expect(formatUnlockReasons(update)).toContain('Liability Accepted');
+    expect(formatUnlockSummary(update)).toContain('Unlocked: Phase Courier');
+    expect(formatUnlockSummary(update)).toContain('complete any recorded contract outcome');
   });
 });

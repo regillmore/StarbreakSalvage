@@ -1,5 +1,6 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene } from '../app/Scene';
+import { ACHIEVEMENTS } from '../content/achievements';
 import { getUnlockById } from '../content/unlocks';
 import type { SaveData, SaveUpdateResult } from '../core/saveData';
 import type { CombatRunResult } from '../game/CombatState';
@@ -40,9 +41,11 @@ export class RunSummaryScene implements Scene {
     const statEntries: ReadonlyArray<readonly [string, string]> = [
       ['Seed', this.run.seed],
       ['Contract', this.contract.shipName],
-      ['Sector', this.run.sectors[0]?.sectorName ?? 'Outer Debris Field'],
+      ['Reached', getReachedSectorName(this.run, this.routeHistory, this.result)],
       ['Outcome', getOutcomeLabel(this.result)],
+      ['Win/Loss', getOutcomeDetail(this.result)],
       ['Survived', `${Math.floor(this.result?.survivedSeconds ?? 0)}s`],
+      ['Sectors Cleared', `${getSectorsCleared(this.run, this.routeHistory, this.result)}`],
       ['Destroyed', `${this.result?.enemiesDestroyed ?? 0}`],
       ['Bosses', `${this.result?.bossesDefeated ?? 0}`],
       ['Credits', `${this.result?.credits ?? 0}`],
@@ -51,7 +54,8 @@ export class RunSummaryScene implements Scene {
       ['Item Hooks', `${this.result?.itemTriggers ?? 0}`],
       ['Routes', formatRouteHistory(this.routeHistory)],
       ['Banked Salvage', `${this.saveData.salvageBank} kg`],
-      ['Items', this.result?.itemNames.join(', ') ?? 'none']
+      ['Items', this.result?.itemNames.join(', ') ?? 'none'],
+      ['Unlock Reasons', formatUnlockReasons(this.saveUpdate)]
     ];
 
     for (const [label, value] of statEntries) {
@@ -99,16 +103,7 @@ export class RunSummaryScene implements Scene {
   }
 
   private getUnlockSummaryText(): string {
-    if (!this.saveUpdate) {
-      return 'Archive unchanged.';
-    }
-
-    if (this.saveUpdate.newUnlockIds.length === 0) {
-      return `Recovered ${this.saveUpdate.salvageEarned} kg for the archive.`;
-    }
-
-    const names = this.saveUpdate.newUnlockIds.map((unlockId) => getUnlockById(unlockId).name);
-    return `Unlocked: ${names.join(', ')}`;
+    return formatUnlockSummary(this.saveUpdate);
   }
 
   private createSeedShareControl(): HTMLElement {
@@ -153,6 +148,21 @@ export class RunSummaryScene implements Scene {
   private getCurrentHref(): string {
     return this.uiRoot.ownerDocument.defaultView?.location.href ?? '';
   }
+}
+
+export function formatUnlockSummary(saveUpdate: SaveUpdateResult | null): string {
+  if (!saveUpdate) {
+    return 'Archive unchanged.';
+  }
+
+  const reasons = formatUnlockReasons(saveUpdate);
+
+  if (saveUpdate.newUnlockIds.length === 0) {
+    return `Recovered ${saveUpdate.salvageEarned} kg for the archive. ${reasons}`;
+  }
+
+  const names = saveUpdate.newUnlockIds.map((unlockId) => getUnlockById(unlockId).name);
+  return `Unlocked: ${names.join(', ')}. ${reasons}`;
 }
 
 export function buildSeedShareUrl(currentHref: string, seed: string): string {
@@ -229,7 +239,31 @@ export function getOutcomeLabel(result: CombatRunResult | null): string {
   return 'abandoned';
 }
 
-function formatRouteHistory(routeHistory: readonly RouteHistoryEntry[]): string {
+export function getOutcomeDetail(result: CombatRunResult | null): string {
+  if (!result) {
+    return 'Run pending.';
+  }
+
+  if (result.reason === 'victory') {
+    return 'Win: final boss salvaged.';
+  }
+
+  if (result.reason === 'destroyed') {
+    return 'Loss: ship destroyed and contract closed.';
+  }
+
+  if (result.reason === 'debug') {
+    return 'Debug: forced test summary.';
+  }
+
+  if (result.reason === 'sectorComplete') {
+    return 'Sector cleared: route selected for the next leg.';
+  }
+
+  return 'Abandoned: pilot exited before resolution.';
+}
+
+export function formatRouteHistory(routeHistory: readonly RouteHistoryEntry[]): string {
   if (routeHistory.length === 0) {
     return 'none';
   }
@@ -237,4 +271,44 @@ function formatRouteHistory(routeHistory: readonly RouteHistoryEntry[]): string 
   return routeHistory
     .map((entry) => `S${entry.sectorIndex} ${entry.routeLabel}: ${entry.outcomeTitle ?? 'routed'}`)
     .join(' | ');
+}
+
+export function formatUnlockReasons(saveUpdate: SaveUpdateResult | null): string {
+  if (!saveUpdate || saveUpdate.newAchievementIds.length === 0) {
+    return 'No new archive trigger.';
+  }
+
+  return saveUpdate.newAchievementIds
+    .map((achievementId) => {
+      const achievement = ACHIEVEMENTS.find((candidate) => candidate.id === achievementId);
+      return achievement
+        ? `${achievement.name}: ${achievement.summary}`
+        : `${achievementId}: archive trigger`;
+    })
+    .join(' | ');
+}
+
+function getReachedSectorName(
+  run: RunSkeleton,
+  routeHistory: readonly RouteHistoryEntry[],
+  result: CombatRunResult | null
+): string {
+  const index = Math.min(getSectorsCleared(run, routeHistory, result), run.sectors.length - 1);
+  return run.sectors[index]?.sectorName ?? 'Outer Debris Field';
+}
+
+function getSectorsCleared(
+  run: RunSkeleton,
+  routeHistory: readonly RouteHistoryEntry[],
+  result: CombatRunResult | null
+): number {
+  if (result?.reason === 'victory') {
+    return run.sectors.length;
+  }
+
+  if (result?.reason === 'sectorComplete') {
+    return Math.min(run.sectors.length, routeHistory.length + 1);
+  }
+
+  return Math.min(run.sectors.length, routeHistory.length);
 }

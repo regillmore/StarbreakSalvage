@@ -27,6 +27,7 @@ import {
   type RunSkeleton,
   type StartingContract
 } from '../game/Generation';
+import { resolveSeedEntry } from '../game/SeedEntry';
 import {
   addCredits,
   addItemToSession,
@@ -72,7 +73,8 @@ export class GameApp {
   private readonly sceneManager = new SceneManager();
   private readonly loop: Loop;
   private readonly debugEnabled: boolean;
-  private readonly initialSeed: string | null;
+  private seedEntryInput: string;
+  private currentSeedLabel: string;
   private currentRun: RunSkeleton;
   private settingsData: GameSettings;
   private saveData: SaveData;
@@ -104,7 +106,10 @@ export class GameApp {
     this.audio = new AudioSystem(window);
     this.audio.setSettings(this.settingsData);
     this.input = new InputSystem(window, settingsToKeyBindingMap(this.settingsData));
-    this.initialSeed = getInitialSeed(window);
+    const initialSeedInput = getInitialSeed(window) ?? '';
+    const initialSeed = resolveSeedEntry(initialSeedInput);
+    this.seedEntryInput = initialSeed.source === 'random' ? initialSeed.seed : initialSeedInput;
+    this.currentSeedLabel = initialSeed.seed;
     this.saveData = loadOrRepairSave(window);
     this.currentRun = this.createRunSkeleton();
     this.selectedContract = getFirstContract(this.currentRun);
@@ -163,8 +168,9 @@ export class GameApp {
       new MainMenuScene(
         this.uiRoot,
         getSaveSummary(this.saveData),
-        () => {
-          this.showContractSelect();
+        this.seedEntryInput,
+        (seedInput) => {
+          this.startRunFromMenu(seedInput);
         },
         () => {
           this.showUnlockArchive();
@@ -186,6 +192,13 @@ export class GameApp {
         onBack
       )
     );
+  }
+
+  private startRunFromMenu(seedInput: string): void {
+    const seed = resolveSeedEntry(seedInput);
+    this.seedEntryInput = seed.source === 'random' ? seed.seed : seedInput;
+    this.currentSeedLabel = seed.seed;
+    this.showContractSelect();
   }
 
   private showUnlockArchive(): void {
@@ -520,7 +533,7 @@ export class GameApp {
   }
 
   private createRunSkeleton(): RunSkeleton {
-    return generateRunSkeleton(this.initialSeed, {
+    return generateRunSkeleton(this.currentSeedLabel, {
       unlockedIds: this.saveData.unlockedIds
     });
   }

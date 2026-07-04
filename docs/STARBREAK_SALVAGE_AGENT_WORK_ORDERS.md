@@ -281,6 +281,8 @@ Acceptance criteria:
 - HUD communicates current objective and key resources.
 - Summary is useful after win, death, and abandoned runs.
 
+Status: first pass implemented after work order 018 deployment confirmation; menu seed entry, HUD hints/readouts, summary details, and related tests are in place.
+
 ## Work order 020 - Balance, performance, and playtest release
 
 Goal: harden Phase 2 into a public playtest candidate.

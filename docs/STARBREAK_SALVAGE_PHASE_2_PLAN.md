@@ -40,7 +40,7 @@ Turn the Phase 1 alpha into a cohesive vertical slice that can support repeated 
 - Bosses: 5 defined, each with phase behavior across 3 active attack patterns.
 - Sectors: 5 defined.
 - Unlocks: 10 defined.
-- Major gaps: no in-menu seed entry, no real tutorial/onboarding, route/event balance depth, and limited encounter-role depth. Sector objectives/wave direction, first-pass special/bomb/graze verbs, contract-specific ship/weapon identity, boss phases, deterministic route outcomes, content expansion, unlock gating, and final victory summary now exist, but still need balance and UX depth.
+- Major gaps: route/event balance depth, limited encounter-role depth, and public playtest hardening. Sector objectives/wave direction, first-pass special/bomb/graze verbs, contract-specific ship/weapon identity, boss phases, deterministic route outcomes, content expansion, unlock gating, in-menu seed entry, onboarding HUD hints, and final victory/run summaries now exist, but still need balance and UX depth.
 
 ## Phase 2 Milestones
 
@@ -99,7 +99,7 @@ Exit criteria:
 - HUD explains current weapon, special/bomb charge, sector progress, and build summary.
 - Summary explains why unlocks happened.
 
-Status: first-pass unlock gating is implemented for future contract boards, item rewards/shops, faction and boss generation, challenge seed flags, boss-practice flags, and music flags. In-menu seed entry, onboarding, and richer HUD/summary work remain follow-ups.
+Status: first-pass unlock gating is implemented for future contract boards, item rewards/shops, faction and boss generation, challenge seed flags, boss-practice flags, and music flags. In-menu seed entry, lightweight onboarding hints, compact build/resource HUD readouts, and richer run-summary details are implemented; balance and UX polish remain follow-ups.
 
 ### P2.6 - Playtest Candidate
 

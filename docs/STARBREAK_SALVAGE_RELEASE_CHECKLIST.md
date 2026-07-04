@@ -11,7 +11,7 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 | ----------------------------- | ------ | ---------------------------------------------------- |
 | TypeScript typecheck          | Pass   | `npm run check`                                      |
 | ESLint                        | Pass   | `npm run check`                                      |
-| Unit and deterministic tests  | Pass   | `npm run check` - 25 files, 133 tests                |
+| Unit and deterministic tests  | Pass   | `npm run check` - 26 files, 140 tests                |
 | Production build              | Pass   | `npm run check` - Vite build created `dist/`         |
 | Playwright Chromium smoke     | Pass   | `npm run test:e2e` - 1 passed                        |
 | Production preview asset load | Pass   | Local preview returned HTTP 200 and Pages asset path |
@@ -30,7 +30,7 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 | Changelog                  | Pass   | `CHANGELOG.md` has a `0.10.0` entry.                                                                   |
 | Save behavior              | Pass   | Versioned localStorage save, migration, corruption repair, reset, export, and import are tested.       |
 | Settings behavior          | Pass   | Settings persist and E2E covers changing an option.                                                    |
-| Seed sharing               | Pass   | Summary provides a shareable `?seed=` link; URL seed entry is supported.                               |
+| Seed sharing               | Pass   | Menu seed entry and summary share links support blank/default/random/known/custom labels.              |
 | Content validation         | Pass   | Shipped content validates and bad fixtures are covered by tests.                                       |
 | Runtime dependencies       | Pass   | No production dependencies remain.                                                                     |
 

@@ -1,5 +1,6 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene } from '../app/Scene';
+import { getItemById } from '../content/items';
 import {
   createCombatState,
   forceCombatEnd,
@@ -50,6 +51,7 @@ export class GameplayScene implements Scene {
   private readonly bossReadout: HTMLParagraphElement;
   private readonly warningReadout: HTMLParagraphElement;
   private readonly itemReadout: HTMLParagraphElement;
+  private readonly hintReadout: HTMLParagraphElement;
   private sectorCompleted = false;
   private queuedSpecial = false;
   private queuedBomb = false;
@@ -110,6 +112,10 @@ export class GameplayScene implements Scene {
     this.itemReadout = document.createElement('p');
     this.itemReadout.className = 'hud-pill hud-pill-wide';
     this.itemReadout.dataset.testid = 'item-readout';
+
+    this.hintReadout = document.createElement('p');
+    this.hintReadout.className = 'hud-pill hud-pill-wide';
+    this.hintReadout.dataset.testid = 'hint-readout';
   }
 
   public enter(): void {
@@ -121,7 +127,7 @@ export class GameplayScene implements Scene {
 
     const sector = document.createElement('p');
     sector.className = 'hud-pill';
-    sector.textContent = this.getCurrentSectorName();
+    sector.textContent = `Sector ${this.sectorIndex + 1} | ${this.getCurrentSectorName()}`;
 
     const contract = document.createElement('p');
     contract.className = 'hud-pill';
@@ -132,6 +138,7 @@ export class GameplayScene implements Scene {
       this.hullReadout,
       this.economyReadout,
       this.objectiveReadout,
+      this.hintReadout,
       this.verbReadout,
       this.weaponReadout,
       this.combatReadout,
@@ -333,7 +340,8 @@ export class GameplayScene implements Scene {
         }`
       : `Boss ${this.getCurrentBossName()}`;
     this.warningReadout.textContent = state.telegraphs[0]?.label ?? 'Warning clear';
-    this.itemReadout.textContent = describeItemLoadout(state.items);
+    this.itemReadout.textContent = this.getBuildReadout(state);
+    this.hintReadout.textContent = this.getOnboardingHint(state);
   }
 
   private getCombatSeed(): string {
@@ -367,6 +375,42 @@ export class GameplayScene implements Scene {
         : `Heat ${heatPercent}%`;
 
     return `${state.weapon.name} | ${state.weapon.pattern} | ${heatStatus}`;
+  }
+
+  private getBuildReadout(state: CombatState): string {
+    if (state.items.length === 0) {
+      return 'Build no items';
+    }
+
+    const names = state.items.map((item) => getItemById(item.itemId).name);
+    const compactNames = names.slice(0, 3).join(' + ');
+    const overflow = names.length > 3 ? ` +${names.length - 3}` : '';
+    const hookSummary = describeItemLoadout(state.items);
+    return `Build ${compactNames}${overflow} | ${hookSummary}`;
+  }
+
+  private getOnboardingHint(state: CombatState): string {
+    if (state.boss) {
+      return `Hint Boss phase ${state.boss.phaseLabel}; watch warnings before crossing lanes.`;
+    }
+
+    if (state.stats.shotsFired === 0) {
+      return 'Hint Hold fire, move through gaps, and clear waves to open a route.';
+    }
+
+    if (state.player.specialCharge >= state.player.maxSpecialCharge) {
+      return 'Hint Special ready; spend charge for a short burst window.';
+    }
+
+    if (state.player.bombs > 0 && state.projectiles.length >= 24) {
+      return 'Hint Bomb ready; use it when bullets crowd the salvage lane.';
+    }
+
+    if (state.pickups.length > 0) {
+      return 'Hint Pull pickups into the ship to fund shops and permanent salvage.';
+    }
+
+    return `Hint ${getObjectiveProgress(this.getWavePlan(), state).readout}`;
   }
 
   private getEnemyHullBonus(): number {

@@ -14,7 +14,7 @@ export interface Rng {
   fork(label: string): Rng;
 }
 
-const DEFAULT_SEED = 'STARBREAK-SMOKE';
+export const DEFAULT_SEED = 'STARBREAK-SMOKE';
 const UINT32_RANGE = 0x1_0000_0000;
 
 export function parseSeedLabel(input: string | null | undefined, fallback = DEFAULT_SEED): string {

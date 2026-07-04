@@ -27,7 +27,9 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByRole('checkbox', { name: 'Mute' })).toBeChecked();
   await page.getByRole('button', { name: 'Back', exact: true }).click();
 
-  await page.getByRole('button', { name: 'Start Run' }).click();
+  await page.getByTestId('seed-entry').fill('starbreak smoke');
+  await expect(page.getByTestId('seed-status')).toContainText('STARBREAK-SMOKE');
+  await page.keyboard.press('Enter');
 
   await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
   await page
@@ -39,6 +41,13 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.getByRole('button', { name: 'Launch Contract' }).click();
 
   await expect(page.getByText('Outer Debris Field')).toBeVisible();
+  await expect(page.getByTestId('hull-readout')).toContainText('Hull');
+  await expect(page.getByTestId('pickup-readout')).toContainText(/Credits .* Salvage/);
+  await expect(page.getByTestId('objective-readout')).toContainText(/waves|targets|Boss/i);
+  await expect(page.getByTestId('hint-readout')).toContainText('Hint');
+  await expect(page.getByTestId('verb-readout')).toContainText('Special');
+  await expect(page.getByTestId('weapon-readout')).toContainText('Heat');
+  await expect(page.getByTestId('boss-readout')).toContainText('Boss');
   await expect(page.getByTestId('item-readout')).toContainText('Split Prism');
 
   const startPosition = await page.getByTestId('player-position').textContent();
@@ -88,7 +97,8 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
 
   await page.keyboard.press('K');
   await expect(page.getByRole('heading', { name: 'Debug Run Ended' })).toBeVisible();
-  await expect(page.getByText('forced test')).toBeVisible();
+  await expect(page.getByText('forced test', { exact: true })).toBeVisible();
+  await expect(page.getByText('Debug: forced test summary.')).toBeVisible();
   await expect(page.getByTestId('unlock-summary')).toContainText('Unlocked:');
   await expect(page.getByTestId('seed-share-link')).toHaveValue(/seed=STARBREAK-SMOKE/);
 

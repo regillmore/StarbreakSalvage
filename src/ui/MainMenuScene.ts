@@ -1,17 +1,20 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene } from '../app/Scene';
 import type { getSaveSummary } from '../core/saveData';
+import { KNOWN_SEED_LABELS, previewSeedEntry } from '../game/SeedEntry';
 import type { InputAction } from '../systems/InputSystem';
 
 type SaveSummary = ReturnType<typeof getSaveSummary>;
 
 export class MainMenuScene implements Scene {
   public readonly id = 'main-menu';
+  private seedInputElement: HTMLInputElement | null = null;
 
   public constructor(
     private readonly uiRoot: HTMLElement,
     private readonly saveSummary: SaveSummary,
-    private readonly onStartRun: () => void,
+    private readonly seedInput: string,
+    private readonly onStartRun: (seedInput: string) => void,
     private readonly onOpenArchive: () => void,
     private readonly onOpenSettings: () => void
   ) {}
@@ -29,11 +32,59 @@ export class MainMenuScene implements Scene {
     tagline.className = 'tagline';
     tagline.textContent = 'Disposable pilots. Unsafe weapons. Profitable wreckage.';
 
+    const seedForm = document.createElement('form');
+    seedForm.className = 'seed-form';
+
+    const seedLabel = document.createElement('label');
+    seedLabel.className = 'seed-label';
+    seedLabel.htmlFor = 'menu-seed-entry';
+    seedLabel.textContent = 'Seed';
+
+    const seedRow = document.createElement('div');
+    seedRow.className = 'seed-entry-row';
+
+    const seedInput = document.createElement('input');
+    seedInput.id = 'menu-seed-entry';
+    seedInput.className = 'seed-entry-input';
+    seedInput.dataset.testid = 'seed-entry';
+    seedInput.type = 'text';
+    seedInput.autocomplete = 'off';
+    seedInput.spellcheck = false;
+    seedInput.value = this.seedInput;
+    seedInput.placeholder = 'blank, random, default, or seed label';
+    seedInput.setAttribute('list', 'known-seed-labels');
+
+    const seedOptions = document.createElement('datalist');
+    seedOptions.id = 'known-seed-labels';
+    for (const label of ['DEFAULT', 'RANDOM', ...KNOWN_SEED_LABELS]) {
+      const option = document.createElement('option');
+      option.value = label;
+      seedOptions.append(option);
+    }
+
     const startButton = document.createElement('button');
     startButton.className = 'primary-button title-button';
-    startButton.type = 'button';
+    startButton.type = 'submit';
     startButton.textContent = 'Start Run';
-    startButton.addEventListener('click', this.onStartRun);
+
+    const seedStatus = document.createElement('p');
+    seedStatus.className = 'seed-status';
+    seedStatus.dataset.testid = 'seed-status';
+
+    const syncSeedStatus = (): void => {
+      seedStatus.textContent = previewSeedEntry(seedInput.value).status;
+    };
+
+    seedInput.addEventListener('input', syncSeedStatus);
+    seedForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      this.onStartRun(seedInput.value);
+    });
+
+    seedRow.append(seedInput, startButton);
+    seedForm.append(seedLabel, seedRow, seedOptions, seedStatus);
+    this.seedInputElement = seedInput;
+    syncSeedStatus();
 
     const archiveButton = document.createElement('button');
     archiveButton.className = 'secondary-button title-button';
@@ -52,9 +103,9 @@ export class MainMenuScene implements Scene {
     status.dataset.testid = 'boot-status';
     status.textContent = `Bank ${this.saveSummary.salvageBank} kg | Unlocks ${this.saveSummary.unlockCount} | Runs ${this.saveSummary.runsEnded}`;
 
-    shell.append(title, tagline, startButton, archiveButton, settingsButton, status);
+    shell.append(title, tagline, seedForm, archiveButton, settingsButton, status);
     this.uiRoot.replaceChildren(shell);
-    startButton.focus();
+    seedInput.focus();
   }
 
   public update(_dt: number): void {}
@@ -65,7 +116,7 @@ export class MainMenuScene implements Scene {
 
   public handleAction(action: InputAction): void {
     if (action === 'confirm') {
-      this.onStartRun();
+      this.onStartRun(this.seedInputElement?.value ?? this.seedInput);
     }
   }
 

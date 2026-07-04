@@ -2,7 +2,7 @@
 
 **Starbreak Salvage** is a browser-first 2D vertical roguelike shooter about disposable pilots, unstable ship contracts, and profitable wreckage. The project is intentionally static: no backend, no accounts, and no runtime network dependency after the page loads.
 
-This repository is in the early playable release-candidate stage. It currently ships a Vite + TypeScript app with a canvas renderer, fixed-step loop, input manager, scene manager, deterministic contract and sector generation, expanded item hooks, a combat MVP, route/reward/shop screens, four-faction boss alpha content, a final-sector victory path, save/unlock progression, settings, procedural audio/VFX feedback, unit tests, Playwright smoke coverage, CI, and GitHub Pages deployment wiring.
+This repository is in the early playable release-candidate stage. It currently ships a Vite + TypeScript app with a canvas renderer, fixed-step loop, input manager, scene manager, deterministic contract and sector generation, expanded item hooks, a combat MVP, route/reward/shop screens, four-faction boss alpha content, a final-sector victory path, save/unlock progression, in-menu seed entry, HUD/onboarding affordances, settings, procedural audio/VFX feedback, unit tests, Playwright smoke coverage, CI, and GitHub Pages deployment wiring.
 
 ## Local Development
 
@@ -52,9 +52,9 @@ Settings are available from the main menu and pause menu. They persist in `local
 
 Add `?debug=1` to the local or deployed URL to show the debug overlay with FPS, scene, seed, and entity count.
 
-Add `?seed=LASER-TAX-404` or another seed label to preview deterministic contract, route, objective, wave, reward, shop, and boss generation. Blank or missing seeds default to `STARBREAK-SMOKE`. Run summaries include a copy-ready seed link for sharing the same generated contracts, route, rewards, shop inventory, and boss schedule.
+The main menu seed field accepts blank/default, `random`, known labels such as `LASER-TAX-404`, or any custom label. Blank/default seeds use `STARBREAK-SMOKE`; `random` resolves to a copyable generated seed when the run starts. You can also add `?seed=LASER-TAX-404` or another seed label to the URL to preview deterministic contract, route, objective, wave, reward, shop, and boss generation. Run summaries include route history, items, unlock reasons, win/loss detail, and a copy-ready seed link for sharing the same generated contracts, route, rewards, shop inventory, and boss schedule.
 
-With `?debug=1`, press `K` during gameplay to force the MVP summary screen. Press `1`, `2`, or `3` to spawn Auditor Drone XL, Carrier of Unsold Missiles, or The Bloom Engine. The HUD objective pill shows directed wave progress and boss-gate state for the current sector, the boss pill names the active boss phase, the verb pill shows special charge/cooldown, bomb stock, and graze count, and the weapon pill shows pattern plus heat/overheat state.
+With `?debug=1`, press `K` during gameplay to force the MVP summary screen. Press `1`, `2`, or `3` to spawn Auditor Drone XL, Carrier of Unsold Missiles, or The Bloom Engine. The HUD objective pill shows directed wave progress and boss-gate state for the current sector, the boss pill names the active boss phase, the verb pill shows special charge/cooldown, bomb stock, and graze count, the weapon pill shows pattern plus heat/overheat state, and the build/hint pills summarize current item hooks and the next practical combat focus.
 
 Projectile budget notes live in `docs/STARBREAK_SALVAGE_PERFORMANCE_NOTES.md`.
 
