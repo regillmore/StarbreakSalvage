@@ -39,7 +39,8 @@ export class ShopScene implements Scene {
       biasTags: [...this.contract.itemBias, ...shopBiasTags],
       excludeItemIds: getOwnedItemIds(this.session),
       priceDiscount,
-      count: 4 + stockBonus
+      count: 4 + stockBonus,
+      unlockedIds: this.run.unlockedIds
     });
     const shell = document.createElement('main');
     shell.className = 'scene-panel scene-panel-wide shop-panel';

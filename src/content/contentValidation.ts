@@ -59,6 +59,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const itemRarities = new Set(['common', 'uncommon', 'rare', 'prototype', 'cursed']);
   const factionPatterns = new Set(['driftShot', 'laneBurst', 'sporeSpread', 'phaseSkirmish']);
   const factionShapes = new Set(['jagged', 'diamond', 'organic', 'needle']);
+  const unlockKinds = new Set(['ship', 'item', 'faction', 'bossPractice', 'music', 'challenge']);
   const weaponPatterns = new Set(['single', 'dual', 'spread', 'split', 'missile', 'beam']);
   const bossPatterns = new Set(['auditFan', 'missileCurtain', 'sporeSpiral']);
 
@@ -76,6 +77,22 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     }
 
     unlockIds.add(unlock.id);
+
+    if (!unlockKinds.has(unlock.kind)) {
+      errors.push(`Unlock ${unlock.id} has invalid kind: ${unlock.kind}`);
+    }
+
+    if (!unlock.summary.trim()) {
+      errors.push(`Unlock ${unlock.id} must have a summary`);
+    }
+
+    if (!unlock.effect.trim()) {
+      errors.push(`Unlock ${unlock.id} must describe its effect`);
+    }
+
+    if (unlock.grants.length === 0) {
+      errors.push(`Unlock ${unlock.id} must list at least one grant`);
+    }
   }
 
   for (const achievement of achievements) {

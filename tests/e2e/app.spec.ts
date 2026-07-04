@@ -30,6 +30,11 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.getByRole('button', { name: 'Start Run' }).click();
 
   await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
+  await page
+    .locator('article')
+    .filter({ hasText: 'Missile Accountant' })
+    .getByRole('button', { name: 'Select' })
+    .click();
 
   await page.getByRole('button', { name: 'Launch Contract' }).click();
 
@@ -108,7 +113,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.getByTestId('save-import-box').fill(exportedSave);
   await page.getByRole('button', { name: 'Import Save' }).click();
   await expect(page.getByTestId('save-status')).toContainText('Save imported.');
-  await expect(page.getByText('Phase Courier')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Phase Courier' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Back' }).click();
   await page.reload();

@@ -1,5 +1,5 @@
 import { ACHIEVEMENTS, type AchievementId } from '../content/achievements';
-import { getUnlockById, type UnlockId } from '../content/unlocks';
+import { getUnlockById, UNLOCKS, type UnlockId } from '../content/unlocks';
 import type { CombatEndReason } from '../game/CombatState';
 
 export const SAVE_STORAGE_KEY = 'starbreak.save.v2';
@@ -327,18 +327,7 @@ function sanitizeAchievementIds(value: unknown): AchievementId[] {
 }
 
 function getKnownUnlockIds(): UnlockId[] {
-  return [
-    'unlock_ship_phase_courier',
-    'unlock_ship_shield_bruiser',
-    'unlock_ship_scrap_monk',
-    'unlock_ship_corporate_test_pilot',
-    'unlock_ship_relic_thief',
-    'unlock_item_executive_override',
-    'unlock_challenge_debt_ceiling',
-    'unlock_boss_auditor_drill',
-    'unlock_faction_bloom_hive',
-    'unlock_music_outer_debris'
-  ];
+  return UNLOCKS.map((unlock) => unlock.id);
 }
 
 function uniqueStrings(values: readonly unknown[]): string[] {

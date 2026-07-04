@@ -39,21 +39,25 @@ export interface WaveDirectorOptions {
   readonly objective: SectorObjectivePlan;
   readonly majorWaves: readonly string[];
   readonly preferredFactionId: FactionId;
+  readonly availableFactionIds?: readonly FactionId[];
 }
 
 export function createWaveDirectorPlan(options: WaveDirectorOptions): WaveDirectorPlan {
-  const waves = options.majorWaves.slice(0, options.objective.requiredWaves).map((label, index) => ({
-    index,
-    label,
-    startsAtSeconds: getWaveStartSeconds(index),
-    spawnCount: options.objective.spawnsPerWave
-  }));
+  const waves = options.majorWaves
+    .slice(0, options.objective.requiredWaves)
+    .map((label, index) => ({
+      index,
+      label,
+      startsAtSeconds: getWaveStartSeconds(index),
+      spawnCount: options.objective.spawnsPerWave
+    }));
   const rng = createRng(options.seed).fork('wave-director');
   const spawnSchedule = waves.flatMap((wave) =>
     createWaveSpawns({
       rng: rng.fork(`wave-${wave.index + 1}-${wave.label}`),
       wave,
-      preferredFactionId: options.preferredFactionId
+      preferredFactionId: options.preferredFactionId,
+      availableFactionIds: options.availableFactionIds ?? FACTIONS.map((faction) => faction.id)
     })
   );
 
@@ -105,6 +109,7 @@ function createWaveSpawns(options: {
   readonly rng: Rng;
   readonly wave: DirectedWave;
   readonly preferredFactionId: FactionId;
+  readonly availableFactionIds: readonly FactionId[];
 }): EnemySpawn[] {
   const spawns: EnemySpawn[] = [];
 
@@ -117,16 +122,23 @@ function createWaveSpawns(options: {
       targetY: options.rng.int(86, 182),
       hull: options.wave.index >= 2 || spawnIndex > 1 ? 3 : 2,
       fireDelay: options.rng.int(80, 145) / 100,
-      factionId: chooseFaction(options.rng, options.preferredFactionId)
+      factionId: chooseFaction(options.rng, options.preferredFactionId, options.availableFactionIds)
     });
   }
 
   return spawns;
 }
 
-function chooseFaction(rng: Rng, preferredFactionId: FactionId): FactionId {
+function chooseFaction(
+  rng: Rng,
+  preferredFactionId: FactionId,
+  availableFactionIds: readonly FactionId[]
+): FactionId {
+  const availableFactions = FACTIONS.filter((faction) => availableFactionIds.includes(faction.id));
+  const factionPool = availableFactions.length > 0 ? availableFactions : FACTIONS;
+
   return rng.weightedChoice(
-    FACTIONS.map((faction) => ({
+    factionPool.map((faction) => ({
       item: faction.id,
       weight: faction.id === preferredFactionId ? 5 : 2
     }))

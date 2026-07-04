@@ -32,7 +32,8 @@ export function generateSectorRewardChoices(options: {
       ...getRouteBiasTags(options.routeKind),
       ...modifierBiasTags
     ],
-    excludeItemIds: getOwnedItemIds(options.session)
+    excludeItemIds: getOwnedItemIds(options.session),
+    unlockedIds: options.run.unlockedIds
   });
 }
 

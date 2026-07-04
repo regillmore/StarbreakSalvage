@@ -72,7 +72,8 @@ export class GameApp {
   private readonly sceneManager = new SceneManager();
   private readonly loop: Loop;
   private readonly debugEnabled: boolean;
-  private readonly currentRun: RunSkeleton;
+  private readonly initialSeed: string | null;
+  private currentRun: RunSkeleton;
   private settingsData: GameSettings;
   private saveData: SaveData;
   private selectedContract: StartingContract;
@@ -103,10 +104,13 @@ export class GameApp {
     this.audio = new AudioSystem(window);
     this.audio.setSettings(this.settingsData);
     this.input = new InputSystem(window, settingsToKeyBindingMap(this.settingsData));
-    this.currentRun = generateRunSkeleton(getInitialSeed(window));
+    this.initialSeed = getInitialSeed(window);
     this.saveData = loadOrRepairSave(window);
+    this.currentRun = this.createRunSkeleton();
     this.selectedContract = getFirstContract(this.currentRun);
-    this.runSession = createRunSession(this.currentRun, this.selectedContract);
+    this.runSession = createRunSession(this.currentRun, this.selectedContract, {
+      unlockedIds: this.saveData.unlockedIds
+    });
     this.loop = new Loop({
       update: (dt) => this.update(dt),
       render: (alpha) => this.render(alpha),
@@ -193,6 +197,7 @@ export class GameApp {
         (serialized) => this.importSave(serialized),
         () => {
           this.saveData = resetSaveData(window.localStorage);
+          this.refreshRunForCurrentSave();
         },
         () => {
           this.showMainMenu();
@@ -202,13 +207,16 @@ export class GameApp {
   }
 
   private showContractSelect(): void {
+    this.refreshRunForCurrentSave();
     this.sceneManager.switchTo(
       new ContractSelectScene(
         this.uiRoot,
         this.currentRun,
         (contract) => {
           this.selectedContract = contract;
-          this.runSession = createRunSession(this.currentRun, contract);
+          this.runSession = createRunSession(this.currentRun, contract, {
+            unlockedIds: this.saveData.unlockedIds
+          });
           this.lastRunResult = null;
           this.lastSaveUpdate = null;
           this.summarySaved = false;
@@ -450,6 +458,7 @@ export class GameApp {
     try {
       this.saveData = importSaveData(serialized);
       writeSaveData(window.localStorage, this.saveData);
+      this.refreshRunForCurrentSave();
       return { ok: true, message: 'Save imported.' };
     } catch (error) {
       return {
@@ -508,6 +517,20 @@ export class GameApp {
       `Seed ${debugState.seed}`,
       `Entities ${debugState.entityCount}`
     ].join(' | ');
+  }
+
+  private createRunSkeleton(): RunSkeleton {
+    return generateRunSkeleton(this.initialSeed, {
+      unlockedIds: this.saveData.unlockedIds
+    });
+  }
+
+  private refreshRunForCurrentSave(): void {
+    this.currentRun = this.createRunSkeleton();
+    this.selectedContract = getFirstContract(this.currentRun);
+    this.runSession = createRunSession(this.currentRun, this.selectedContract, {
+      unlockedIds: this.saveData.unlockedIds
+    });
   }
 }
 

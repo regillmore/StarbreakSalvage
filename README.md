@@ -46,7 +46,7 @@ Contract stats now affect hull, speed, hit radius, pickup pull, special charge r
 
 Route choices now apply deterministic outcomes. Shops can gain discounts and extra stock, elite and faction ambush routes can increase reward value while pressuring the next sector, vaults trade curse for relic-biased rewards, repair routes add future max hull, and glitch routes distort rewards and next-sector danger.
 
-The Unlock Archive stores versioned local save data in `localStorage`, including salvage bank, achievements, unlocks, last-run summary, export/import, and reset.
+The Unlock Archive stores versioned local save data in `localStorage`, including salvage bank, achievements, unlocks, last-run summary, export/import, and reset. Fresh saves start with three baseline contracts and locked advanced content; earned unlocks widen future contract boards, reward/shop item pools, faction and boss generation, challenge seed flags, boss-practice flags, and music flags.
 
 Settings are available from the main menu and pause menu. They persist in `localStorage` and currently cover remappable controls, mute, master volume, reduced motion, screen shake intensity, bullet contrast, fullscreen, and performance mode. Audio uses original procedural Web Audio cues after the first user gesture; mute and master volume apply immediately, and reduced motion disables gameplay camera shake.
 

@@ -230,6 +230,8 @@ Exit criteria:
 - New players can understand controls and run flow without reading source docs.
 - Unlocks visibly add future variety.
 
+Status: first-pass unlock gating now affects future contracts, item pools, faction/boss generation, challenge flags, practice flags, and music flags; seed entry, onboarding, and summary/HUD depth remain follow-ups.
+
 ### P2.6 - Playtest Candidate
 
 Scope:

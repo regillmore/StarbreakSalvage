@@ -10,6 +10,7 @@
 - Added phase behavior for all five bosses, active boss phase HUD labels, high-contrast boss telegraphs, and a final-sector victory summary.
 - Added deterministic route outcomes for shop, elite, vault, repair, glitch, and faction ambush routes, including route event UI, repair hull patches, curse/relic tradeoffs, shop modifiers, next-sector combat pressure, and route history summaries.
 - Expanded the content table to 30 items, 4 factions, and 8 build archetype targets, including Void Corsair phase-skirmish enemies and new item hook effects.
+- Connected unlocks to future run generation so fresh saves begin with baseline contracts while earned unlocks widen ship, item, faction, boss, challenge, practice, and music availability.
 - Added original procedural Web Audio cues for firing, impacts, pickups, boss warnings, sector clears, and run endings.
 - Added gameplay camera shake that respects reduced motion and screen shake strength settings.
 
@@ -21,6 +22,7 @@
 - Added deterministic tests for boss phase thresholds, late-boss projectile budgets, final victory routing, and victory save records.
 - Added known-seed route outcome tests covering deterministic effects, repair hull patches, shop modifiers, reward modifiers, and next-sector combat pressure.
 - Added content validation coverage for item count, faction count, reward-pool placement, archetype representation, faction behavior metadata, and missing hook implementations.
+- Added unlock-gating tests for fresh-save pools, unlocked pools, faction filtering, challenge/practice flags, and unlock-trigger summaries.
 - Added unit coverage for audio cue settings, combat feedback detection, and deterministic screen-shake decay.
 
 ### Planning

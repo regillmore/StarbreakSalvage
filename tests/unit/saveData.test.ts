@@ -135,6 +135,8 @@ describe('saveData', () => {
       'achievement_build_crafter'
     ]);
     expect(update.newUnlockIds).toContain('unlock_ship_phase_courier');
+    expect(update.newUnlockIds).toContain('unlock_item_executive_override');
+    expect(update.newUnlockIds).toContain('unlock_challenge_debt_ceiling');
     expect(update.newUnlockIds).toContain('unlock_music_outer_debris');
   });
 

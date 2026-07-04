@@ -80,7 +80,15 @@ export class UnlockArchiveScene implements Scene {
       body.className = 'choice-body';
       body.textContent = unlock.summary;
 
-      item.append(name, meta, body);
+      const effect = document.createElement('p');
+      effect.className = 'choice-body';
+      effect.textContent = unlock.effect;
+
+      const grants = document.createElement('p');
+      grants.className = 'choice-meta';
+      grants.textContent = `Adds ${unlock.grants.join(', ')}`;
+
+      item.append(name, meta, body, effect, grants);
       unlockGrid.append(item);
     }
 

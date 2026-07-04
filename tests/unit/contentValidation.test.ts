@@ -130,6 +130,25 @@ describe('validateContent', () => {
     );
   });
 
+  it('rejects invalid unlock archive metadata', () => {
+    const errors = validateContent({
+      unlocks: [
+        {
+          ...baseUnlock,
+          kind: 'coupon',
+          summary: '',
+          effect: '',
+          grants: []
+        } as unknown as UnlockDefinition
+      ]
+    });
+
+    expect(errors).toContain(`Unlock ${baseUnlock.id} has invalid kind: coupon`);
+    expect(errors).toContain(`Unlock ${baseUnlock.id} must have a summary`);
+    expect(errors).toContain(`Unlock ${baseUnlock.id} must describe its effect`);
+    expect(errors).toContain(`Unlock ${baseUnlock.id} must list at least one grant`);
+  });
+
   it('rejects missing sector boss references', () => {
     const errors = validateContent({
       sectors: [

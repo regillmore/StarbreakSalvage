@@ -10,7 +10,7 @@ Phase 1 established a deployed, static, browser-playable alpha foundation:
 - Combat MVP with projectiles, enemies, pickups, damage, bosses, item hooks, unlocks, and first-pass procedural audio/VFX.
 - Release metadata: README, license, credits, changelog, and release checklist.
 
-Phase 1 is complete because the game builds, deploys, loads, starts a run, records progress, and has a maintainable deterministic spine. It is not yet a cohesive game because the run arc, sector objectives, player verbs, boss phases, content volume, unlock gating, and onboarding still need a durable second pass.
+Phase 1 is complete because the game builds, deploys, loads, starts a run, records progress, and has a maintainable deterministic spine. It is not yet a cohesive game because the run arc, sector objectives, player verbs, boss phases, content volume, unlock gating, and onboarding all needed a durable second pass.
 
 ## Phase 2 Product Goal
 
@@ -40,7 +40,7 @@ Turn the Phase 1 alpha into a cohesive vertical slice that can support repeated 
 - Bosses: 5 defined, each with phase behavior across 3 active attack patterns.
 - Sectors: 5 defined.
 - Unlocks: 10 defined.
-- Major gaps: no unlock gating, no in-menu seed entry, no real tutorial/onboarding, route/event balance depth, and limited encounter-role depth. Sector objectives/wave direction, first-pass special/bomb/graze verbs, contract-specific ship/weapon identity, boss phases, deterministic route outcomes, content expansion, and final victory summary now exist, but still need balance and UX depth.
+- Major gaps: no in-menu seed entry, no real tutorial/onboarding, route/event balance depth, and limited encounter-role depth. Sector objectives/wave direction, first-pass special/bomb/graze verbs, contract-specific ship/weapon identity, boss phases, deterministic route outcomes, content expansion, unlock gating, and final victory summary now exist, but still need balance and UX depth.
 
 ## Phase 2 Milestones
 
@@ -98,6 +98,8 @@ Exit criteria:
 - Main menu supports seed entry, not only URL parameters.
 - HUD explains current weapon, special/bomb charge, sector progress, and build summary.
 - Summary explains why unlocks happened.
+
+Status: first-pass unlock gating is implemented for future contract boards, item rewards/shops, faction and boss generation, challenge seed flags, boss-practice flags, and music flags. In-menu seed entry, onboarding, and richer HUD/summary work remain follow-ups.
 
 ### P2.6 - Playtest Candidate
 

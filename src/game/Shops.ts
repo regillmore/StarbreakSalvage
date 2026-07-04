@@ -1,4 +1,5 @@
 import { type ItemDefinition, type ItemId, type ItemRarity } from '../content/items';
+import type { UnlockId } from '../content/unlocks';
 import { createRng } from '../core/rng';
 import { generateRewardChoices } from './Rewards';
 
@@ -27,6 +28,7 @@ export function generateShopInventory(options: {
   readonly excludeItemIds?: readonly ItemId[];
   readonly priceDiscount?: number;
   readonly count?: number;
+  readonly unlockedIds?: readonly UnlockId[];
 }): ShopInventoryItem[] {
   const shopSeed = `${options.seed}:sector-${options.sectorIndex}:reroll-${options.rerollCount}`;
   const priceRng = createRng(shopSeed).fork('prices');
@@ -35,7 +37,8 @@ export function generateShopInventory(options: {
     poolId: 'combat',
     count: options.count ?? SHOP_ITEM_COUNT,
     biasTags: options.biasTags ?? [],
-    excludeItemIds: options.excludeItemIds ?? []
+    excludeItemIds: options.excludeItemIds ?? [],
+    unlockedIds: options.unlockedIds
   });
 
   return rewardChoices.map((choice, slot) => ({

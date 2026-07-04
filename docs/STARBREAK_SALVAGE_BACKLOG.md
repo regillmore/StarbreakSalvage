@@ -406,6 +406,10 @@ Acceptance:
 - Fresh saves still have enough content for complete runs.
 - Archive explains what each unlock adds.
 
+Status:
+
+- First pass implemented with save-aware contract boards, item reward/shop filters, faction and boss generation filters, challenge seed flags, boss-practice flags, music flags, and archive grant/effect copy.
+
 ### M2 - Challenge seeds
 
 Acceptance:

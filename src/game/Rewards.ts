@@ -1,6 +1,7 @@
 import { getItemById, REWARD_POOLS, type ItemDefinition, type ItemId } from '../content/items';
 import type { StartingContract } from './Generation';
 import { createRng, type Rng } from '../core/rng';
+import { filterUnlockedItemIds, type UnlockAccess } from './UnlockGates';
 
 export interface ItemInstance {
   readonly itemId: ItemId;
@@ -20,6 +21,7 @@ export function generateRewardChoices(options: {
   readonly count: number;
   readonly biasTags?: readonly string[];
   readonly excludeItemIds?: readonly ItemId[];
+  readonly unlockedIds?: UnlockAccess['unlockedIds'];
 }): RewardChoice[] {
   const pool = REWARD_POOLS.find((candidate) => candidate.id === options.poolId);
 
@@ -29,22 +31,30 @@ export function generateRewardChoices(options: {
 
   const rng = createRng(options.seed).fork(`reward-${options.poolId}`);
   const excluded = new Set<ItemId>(options.excludeItemIds ?? []);
-  const availableItems = pool.itemIds
+  const availableItems = filterUnlockedItemIds(pool.itemIds, { unlockedIds: options.unlockedIds })
     .filter((itemId) => !excluded.has(itemId))
     .map((itemId) => getItemById(itemId));
 
   return selectUniqueRewards(rng, availableItems, options.count, options.biasTags ?? []);
 }
 
-export function generateStartingItemLoadout(seed: string, contract: StartingContract): ItemInstance[] {
+export function generateStartingItemLoadout(
+  seed: string,
+  contract: StartingContract,
+  options: UnlockAccess = {}
+): ItemInstance[] {
   const rewardChoices = generateRewardChoices({
     seed: `${seed}:${contract.id}:field-kit`,
     poolId: 'starter',
     count: 3,
     biasTags: contract.itemBias,
-    excludeItemIds: DEFAULT_FIELD_KIT
+    excludeItemIds: DEFAULT_FIELD_KIT,
+    unlockedIds: options.unlockedIds
   });
-  const itemIds = [...DEFAULT_FIELD_KIT, ...rewardChoices.map((choice) => choice.item.id)].slice(0, 3);
+  const itemIds = [...DEFAULT_FIELD_KIT, ...rewardChoices.map((choice) => choice.item.id)].slice(
+    0,
+    3
+  );
 
   return itemIds.map((itemId, acquisitionOrder) => ({
     itemId,

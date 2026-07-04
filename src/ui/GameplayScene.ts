@@ -304,7 +304,8 @@ export class GameplayScene implements Scene {
       seed: this.getCombatSeed(),
       objective: sector.objective,
       majorWaves: sector.majorWaves,
-      preferredFactionId: sector.bossFactionId
+      preferredFactionId: sector.bossFactionId,
+      availableFactionIds: this.run.availableFactionIds
     });
 
     return this.wavePlan;

@@ -1,5 +1,6 @@
 import type { ItemId } from '../content/items';
 import type { ShipStats } from '../content/ships';
+import type { UnlockId } from '../content/unlocks';
 import type { CombatRunResult } from './CombatState';
 import type {
   RouteKind,
@@ -38,7 +39,11 @@ export interface RunSessionState {
   lastCombatResult: CombatRunResult | null;
 }
 
-export function createRunSession(run: RunSkeleton, contract: StartingContract): RunSessionState {
+export function createRunSession(
+  run: RunSkeleton,
+  contract: StartingContract,
+  options: { readonly unlockedIds?: readonly UnlockId[] } = {}
+): RunSessionState {
   return {
     currentSectorIndex: 0,
     credits: contract.startingCredits,
@@ -46,7 +51,9 @@ export function createRunSession(run: RunSkeleton, contract: StartingContract): 
     hullPatch: 0,
     curse: 0,
     relicsRecovered: 0,
-    itemInstances: generateStartingItemLoadout(run.seed, contract),
+    itemInstances: generateStartingItemLoadout(run.seed, contract, {
+      unlockedIds: options.unlockedIds ?? run.unlockedIds
+    }),
     routeHistory: [],
     routeOutcomes: [],
     shopRerollsBySector: {},

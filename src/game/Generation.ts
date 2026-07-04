@@ -1,10 +1,18 @@
 import { getBossById, type BossId, type BossPatternId } from '../content/bosses';
 import type { FactionId } from '../content/factions';
 import { SECTORS, type SectorDefinition } from '../content/sectors';
-import { SHIPS, type ShipDefinition, type ShipId, type ShipStats, type WeaponId } from '../content/ships';
+import { type ShipDefinition, type ShipId, type ShipStats, type WeaponId } from '../content/ships';
+import type { UnlockId } from '../content/unlocks';
 import { getWeaponById, type WeaponPatternId } from '../content/weapons';
 import { createRng, parseSeedLabel, type Rng, type WeightedChoice } from '../core/rng';
 import { createSectorObjectivePlan, type SectorObjectivePlan } from './SectorObjectives';
+import {
+  filterUnlockedBossCandidates,
+  getAvailableFactionIds,
+  getAvailableShips,
+  getEffectiveUnlockedIds,
+  type UnlockAccess
+} from './UnlockGates';
 
 export type RouteKind = 'shop' | 'elite' | 'vault' | 'repair' | 'glitch' | 'factionAmbush';
 
@@ -50,9 +58,13 @@ export interface SectorRoute {
 
 export interface RunSkeleton {
   readonly seed: string;
+  readonly unlockedIds: readonly UnlockId[];
+  readonly availableFactionIds: readonly FactionId[];
   readonly contracts: readonly StartingContract[];
   readonly sectors: readonly SectorRoute[];
 }
+
+export type RunGenerationOptions = UnlockAccess;
 
 const ROUTE_OPTIONS: Readonly<Record<RouteKind, Omit<RouteOption, 'risk'>>> = {
   shop: {
@@ -98,22 +110,37 @@ const SEED_TAG_HINTS: ReadonlyArray<readonly [string, readonly string[]]> = [
   ['SMOKE', ['credit', 'drone', 'missile']]
 ];
 
-export function generateRunSkeleton(seedInput: string | null | undefined): RunSkeleton {
+export function generateRunSkeleton(
+  seedInput: string | null | undefined,
+  options: RunGenerationOptions = {}
+): RunSkeleton {
   const seed = parseSeedLabel(seedInput);
   const rootRng = createRng(seed);
+  const unlockedIds = getEffectiveUnlockedIds(options);
+  const unlockAccess = { unlockedIds };
 
   return {
     seed,
-    contracts: generateStartingContracts(seed, rootRng.fork('contracts')),
+    unlockedIds,
+    availableFactionIds: getAvailableFactionIds(unlockAccess),
+    contracts: generateStartingContracts(seed, rootRng.fork('contracts'), unlockAccess),
     sectors: SECTORS.map((sector, index) =>
-      generateSectorRoute(sector, index + 1, rootRng.fork(`sector-${index + 1}`))
+      generateSectorRoute(sector, index + 1, rootRng.fork(`sector-${index + 1}`), unlockAccess)
     )
   };
 }
 
-function generateStartingContracts(seed: string, rng: Rng): StartingContract[] {
+function generateStartingContracts(
+  seed: string,
+  rng: Rng,
+  unlockAccess: UnlockAccess
+): StartingContract[] {
   const selectedShips: ShipDefinition[] = [];
-  const availableShips = [...SHIPS];
+  const availableShips = getAvailableShips(unlockAccess);
+
+  if (availableShips.length < 3) {
+    throw new Error('Unlock gating must leave at least three starter ships available.');
+  }
 
   for (let slot = 0; slot < 3; slot += 1) {
     const ship = rng.weightedChoice(
@@ -152,8 +179,14 @@ function generateStartingContracts(seed: string, rng: Rng): StartingContract[] {
   });
 }
 
-function generateSectorRoute(sector: SectorDefinition, index: number, rng: Rng): SectorRoute {
-  const boss = getBossById(rng.choice(sector.bossCandidates));
+function generateSectorRoute(
+  sector: SectorDefinition,
+  index: number,
+  rng: Rng,
+  unlockAccess: UnlockAccess
+): SectorRoute {
+  const bossCandidates = filterUnlockedBossCandidates(sector.bossCandidates, unlockAccess);
+  const boss = getBossById(rng.choice(bossCandidates));
   const routeOptions = generateRouteOptions(rng.fork('routes'), index);
   const waveRng = rng.fork('major-waves');
   const majorWaves = waveRng.shuffle(sector.majorWavePool).slice(0, 3);
