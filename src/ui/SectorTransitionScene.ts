@@ -2,6 +2,11 @@ import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene } from '../app/Scene';
 import type { RunSkeleton } from '../game/Generation';
 import { getCurrentSector, type RunSessionState } from '../game/RunSession';
+import {
+  applySectorConditionsToScroll,
+  createSectorConditionPlan,
+  formatSectorConditionReadout
+} from '../game/SectorConditions';
 import type { InputAction } from '../systems/InputSystem';
 
 export class SectorTransitionScene implements Scene {
@@ -16,6 +21,12 @@ export class SectorTransitionScene implements Scene {
 
   public enter(): void {
     const sector = getCurrentSector(this.run, this.session);
+    const conditions = createSectorConditionPlan({
+      run: this.run,
+      sectorIndex: this.session.currentSectorIndex,
+      routeOutcomes: this.session.routeOutcomes
+    });
+    const scroll = applySectorConditionsToScroll(sector.scroll, conditions);
     const shell = document.createElement('main');
     shell.className = 'scene-panel transition-panel';
     shell.setAttribute('aria-labelledby', 'transition-title');
@@ -35,10 +46,16 @@ export class SectorTransitionScene implements Scene {
     const objectiveLine = document.createElement('p');
     objectiveLine.className = 'transition-copy';
     objectiveLine.textContent = `${sector.objective.label} | Travel ${Math.floor(
-      sector.scroll.length
+      scroll.length
     )}u | ${sector.objective.requiredEnemyKills} targets${
       sector.objective.bossRequired ? ' + boss gate' : ''
     }`;
+
+    const conditionLine = document.createElement('p');
+    conditionLine.className = 'transition-copy';
+    conditionLine.textContent = `${formatSectorConditionReadout(
+      conditions
+    )} | Cruise ${Math.round(scroll.baseSpeed)}u/s`;
 
     const waveLine = document.createElement('p');
     waveLine.className = 'transition-copy';
@@ -50,7 +67,7 @@ export class SectorTransitionScene implements Scene {
     enterButton.textContent = 'Enter Sector';
     enterButton.addEventListener('click', this.onEnterSector);
 
-    shell.append(eyebrow, title, routeLine, objectiveLine, waveLine, enterButton);
+    shell.append(eyebrow, title, routeLine, objectiveLine, conditionLine, waveLine, enterButton);
     this.uiRoot.replaceChildren(shell);
     enterButton.focus();
   }

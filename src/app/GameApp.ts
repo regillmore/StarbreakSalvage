@@ -45,6 +45,7 @@ import {
 } from '../game/RunSession';
 import { getSaveRecordSectorCount } from '../game/RunOutcome';
 import { generateRouteOutcome, type AppliedRouteOutcome } from '../game/RouteEvents';
+import { createSectorConditionPlan } from '../game/SectorConditions';
 import { SHOP_REROLL_COST } from '../game/Shops';
 import { AudioSystem } from '../systems/AudioSystem';
 import { getFeedbackShakeIntensity, type CombatFeedbackCue } from '../systems/CombatFeedback';
@@ -252,6 +253,11 @@ export class GameApp {
         this.selectedContract,
         getEffectiveShipStats(this.selectedContract, this.runSession),
         getCombatModifiersForSector(this.runSession, this.runSession.currentSectorIndex),
+        createSectorConditionPlan({
+          run: this.currentRun,
+          sectorIndex: this.runSession.currentSectorIndex,
+          routeOutcomes: this.runSession.routeOutcomes
+        }),
         this.runSession.currentSectorIndex,
         this.runSession.itemInstances,
         this.runSession.credits,
@@ -416,6 +422,7 @@ export class GameApp {
         this.selectedContract,
         this.lastRunResult,
         this.runSession.routeHistory,
+        this.runSession.routeOutcomes,
         this.saveData,
         this.lastSaveUpdate,
         () => {

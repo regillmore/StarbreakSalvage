@@ -12,6 +12,15 @@ import {
   getSummaryTitle
 } from '../../src/ui/RunSummaryScene';
 import type { CombatRunResult } from '../../src/game/CombatState';
+import { generateRunSkeleton } from '../../src/game/Generation';
+import {
+  advanceSector,
+  applyRouteOutcome,
+  createRunSession,
+  getCurrentSector
+} from '../../src/game/RunSession';
+import { generateRouteOutcome } from '../../src/game/RouteEvents';
+import { formatSectorConditionTimeline } from '../../src/game/SectorConditions';
 
 describe('buildSeedShareUrl', () => {
   it('creates a clean share link for the active seed', () => {
@@ -104,6 +113,41 @@ describe('run summary details', () => {
         }
       ])
     ).toBe('S1 Shop: Coupon Ambush');
+  });
+
+  it('records physical route effects for run summaries', () => {
+    const run = generateRunSkeleton('STARBREAK-SMOKE');
+    const contract = run.contracts[0];
+
+    if (!contract) {
+      throw new Error('Expected contract.');
+    }
+
+    const session = createRunSession(run, contract);
+    const sector = getCurrentSector(run, session);
+    const route = {
+      kind: 'glitch' as const,
+      label: 'Glitch',
+      risk: 4,
+      rewardHint: 'test route'
+    };
+
+    applyRouteOutcome(
+      session,
+      sector,
+      route,
+      generateRouteOutcome({
+        run,
+        sector,
+        route,
+        availableCredits: session.credits
+      })
+    );
+    advanceSector(run, session);
+
+    expect(formatSectorConditionTimeline(run, session.routeOutcomes)).toBe(
+      'S2 Glitch shear: +12% scroll, +2% distance, +1 hazard, landmark beacon_line, -10% boss approach'
+    );
   });
 
   it('explains achievement-backed unlock reasons', () => {

@@ -6,6 +6,8 @@ import type { SaveData, SaveUpdateResult } from '../core/saveData';
 import type { CombatRunResult } from '../game/CombatState';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import type { RouteHistoryEntry } from '../game/RunSession';
+import type { AppliedRouteOutcome } from '../game/RouteEvents';
+import { formatSectorConditionTimeline } from '../game/SectorConditions';
 import type { InputAction } from '../systems/InputSystem';
 
 export class RunSummaryScene implements Scene {
@@ -17,6 +19,7 @@ export class RunSummaryScene implements Scene {
     private readonly contract: StartingContract,
     private readonly result: CombatRunResult | null,
     private readonly routeHistory: readonly RouteHistoryEntry[],
+    private readonly routeOutcomes: readonly AppliedRouteOutcome[],
     private readonly saveData: SaveData,
     private readonly saveUpdate: SaveUpdateResult | null,
     private readonly onBackToMenu: () => void
@@ -54,6 +57,7 @@ export class RunSummaryScene implements Scene {
       ['Damage Taken', `${this.result?.damageTaken ?? 0}`],
       ['Item Hooks', `${this.result?.itemTriggers ?? 0}`],
       ['Routes', formatRouteHistory(this.routeHistory)],
+      ['Sector Conditions', formatSectorConditionTimeline(this.run, this.routeOutcomes)],
       ['Banked Salvage', `${this.saveData.salvageBank} kg`],
       ['Items', this.result?.itemNames.join(', ') ?? 'none'],
       ['Unlock Reasons', formatUnlockReasons(this.saveUpdate)]

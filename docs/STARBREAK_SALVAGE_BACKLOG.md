@@ -570,7 +570,7 @@ Acceptance:
 
 Status:
 
-- First pass implemented in work order 024. Sector completion now requires exit distance plus combat gates, and summaries/save records include distance reached. Future work can tune exit lengths and route-conditioned distance modifiers.
+- First pass implemented in work order 024. Sector completion now requires exit distance plus combat gates, and summaries/save records include distance reached. Future work can tune exit lengths and condition balance.
 
 ### T2 - Objective variants
 
@@ -592,7 +592,7 @@ Acceptance:
 
 Status:
 
-- First pass implemented in work order 025 with deterministic wreck, beacon, vault, convoy, repair, and core-machinery landmarks rendered as original canvas primitives. Route-conditioned landmark variants remain a follow-up.
+- First pass implemented in work order 025 with deterministic wreck, beacon, vault, convoy, repair, and core-machinery landmarks rendered as original canvas primitives. Route-conditioned landmark variants are now covered by work order 027.
 
 ### U2 - Hazards
 
@@ -618,7 +618,7 @@ Acceptance:
 
 Status:
 
-- First pass implemented in work order 026 with deterministic arena approach/lock/release distances, approach slowing, arena scroll locks, and post-defeat exit travel. Visual arena framing and route-conditioned arena variants remain follow-ups.
+- First pass implemented in work order 026 with deterministic arena approach/lock/release distances, approach slowing, arena scroll locks, and post-defeat exit travel. Route-conditioned boss approach variants are now covered by work order 027; visual arena framing remains a follow-up.
 
 ### V2 - Debug compatibility
 
@@ -642,6 +642,10 @@ Acceptance:
 - The next-sector transition explains important modifiers.
 - Run summary records notable route-driven physical conditions.
 
+Status:
+
+- First pass implemented in work order 027 with deterministic route-derived sector condition plans that adjust next-sector scroll speed, travel distance, hazard density, route landmarks, and boss approach length. Transition and summary copy now surface the notable physical modifiers.
+
 ### W2 - Unlock and challenge sector variants
 
 Acceptance:
@@ -649,6 +653,10 @@ Acceptance:
 - Unlocks can add sector variants without raw power creep.
 - Challenge flags can modify scroll/hazard rules deterministically.
 - Fresh saves remain able to complete runs.
+
+Status:
+
+- First pass implemented in work order 027 for the Debt Ceiling challenge flag and Bloom dossier unlock variant. Conditions are derived from the run seed/unlock list and active route outcomes, so no save schema change was required.
 
 ## Epic X - Velocity presentation and accessibility
 

@@ -293,7 +293,7 @@ Exit criteria:
 - Sector completion depends on surviving forward progress and resolving required gates.
 - Tests cover stuttered fixed-step updates around event thresholds.
 
-Status: directed wave distance markers, fixed-step combat spawn consumption, time fallback, and stutter duplicate tests are implemented by work order 023. Boss approach timing remains follow-up Phase 3 work; distance-based sector completion is covered by work order 024.
+Status: directed wave distance markers, fixed-step combat spawn consumption, time fallback, and stutter duplicate tests are implemented by work order 023. Distance-based sector completion is covered by work order 024, and first-pass boss approach timing is covered by work orders 026-027.
 
 ### P3.4 - Scrolling Playtest Candidate
 
@@ -309,7 +309,7 @@ Exit criteria:
 - Distance objectives, boss locks, route modifiers, and summaries behave deterministically.
 - No severe blockers remain for a Phase 3 playtest release.
 
-Status: first-pass distance objectives are implemented by work order 024. Normal and boss sectors now require exit distance plus required combat gates, HUD/transition/summary copy exposes distance, and save records preserve distance reached. Hazards, boss arenas, route-conditioned sector state, and long-scroll instrumentation remain open Phase 3 work.
+Status: first-pass distance objectives are implemented by work order 024. Normal and boss sectors now require exit distance plus required combat gates, HUD/transition/summary copy exposes distance, and save records preserve distance reached. Hazards, boss arenas, and route-conditioned sector state are implemented by work orders 025-027; velocity presentation and long-scroll instrumentation remain open Phase 3 work.
 
 ## Dependency map
 

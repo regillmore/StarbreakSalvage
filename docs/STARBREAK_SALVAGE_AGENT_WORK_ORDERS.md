@@ -420,6 +420,8 @@ Acceptance criteria:
 - Same seed plus same choices reproduces sector conditions.
 - Summary records notable physical route effects.
 
+Status: first pass implemented; route outcomes now derive deterministic next-sector condition plans that can adjust scroll speed, sector length, hazard density, route landmarks, and boss approach length. Challenge and unlock variants can add physical modifiers, transition screens show the active condition readout before launch, gameplay consumes the conditioned scroll/feature/arena plans, and run summaries record notable sector condition effects.
+
 ## Work order 028 - Velocity presentation and accessibility
 
 Goal: make speed feel good without hurting readability.

@@ -5,6 +5,7 @@ import {
   createBossArenaState,
   formatBossArenaReadout,
   updateBossArenaState,
+  type BossArenaPlan,
   type BossArenaState,
   type BossArenaUpdate
 } from '../game/BossArena';
@@ -26,13 +27,25 @@ import { describeItemLoadout } from '../game/ItemHooks';
 import type { ItemInstance } from '../game/Rewards';
 import { getSectorCompletionReason } from '../game/RunOutcome';
 import type { RouteCombatModifier } from '../game/RouteEvents';
+import {
+  applySectorConditionsToBossArena,
+  applySectorConditionsToFeatures,
+  applySectorConditionsToScroll,
+  formatSectorConditionReadout,
+  type SectorConditionPlan
+} from '../game/SectorConditions';
 import { resolveSectorHazardCollisions } from '../game/SectorHazards';
-import { getActiveSectorHazards, getVisibleSectorLandmarks } from '../game/SectorFeatures';
+import {
+  getActiveSectorHazards,
+  getVisibleSectorLandmarks,
+  type SectorFeaturePlan
+} from '../game/SectorFeatures';
 import {
   advanceScrollState,
   createScrollState,
   formatScrollReadout,
   getScrollProgress,
+  type SectorScrollPlan,
   type ScrollState
 } from '../game/ScrollState';
 import {
@@ -61,6 +74,9 @@ export class GameplayScene implements Scene {
   private combatState: CombatState | null = null;
   private wavePlan: WaveDirectorPlan | null = null;
   private scrollState: ScrollState | null = null;
+  private conditionedScroll: SectorScrollPlan | null = null;
+  private conditionedFeatures: SectorFeaturePlan | null = null;
+  private conditionedArena: BossArenaPlan | null | undefined;
   private bossArenaState: BossArenaState | null = null;
   private bossArenaUpdate: BossArenaUpdate = {
     phase: 'none',
@@ -90,6 +106,7 @@ export class GameplayScene implements Scene {
     private readonly contract: StartingContract,
     private readonly shipStats: ShipStats,
     private readonly combatModifiers: readonly RouteCombatModifier[],
+    private readonly sectorConditions: SectorConditionPlan,
     private readonly sectorIndex: number,
     private readonly itemLoadout: readonly ItemInstance[],
     private readonly startingCredits: number,
@@ -224,7 +241,7 @@ export class GameplayScene implements Scene {
       const hazardFeedbackBefore = createCombatFeedbackSnapshot(state);
       const collisions = resolveSectorHazardCollisions(
         state,
-        this.getCurrentSector().features,
+        this.getCurrentFeatures(),
         scrollState.distance,
         this.getCombatBounds()
       );
@@ -274,7 +291,7 @@ export class GameplayScene implements Scene {
     renderer.beginGameplayLayer();
     renderer.paintSectorLandmarks(
       getVisibleSectorLandmarks(
-        this.getCurrentSector().features,
+        this.getCurrentFeatures(),
         scroll.distance,
         renderer.getSize().height
       )
@@ -283,7 +300,7 @@ export class GameplayScene implements Scene {
 
     if (this.bossArenaUpdate.phase !== 'locked') {
       renderer.paintSectorHazards(
-        getActiveSectorHazards(this.getCurrentSector().features, scroll.distance)
+        getActiveSectorHazards(this.getCurrentFeatures(), scroll.distance)
       );
     }
 
@@ -388,12 +405,12 @@ export class GameplayScene implements Scene {
       shipStats: this.shipStats,
       items: this.itemLoadout,
       bossId: this.run.sectors[this.sectorIndex]?.bossId,
-      bossSpawnAtSeconds: this.getCurrentSector().arena ? null : wavePlan.bossSpawnAtSeconds,
+      bossSpawnAtSeconds: this.getCurrentArenaPlan() ? null : wavePlan.bossSpawnAtSeconds,
       spawnSchedule: wavePlan.spawnSchedule,
       enemyHullBonus: this.getEnemyHullBonus(),
       enemyFireDelayMultiplier: this.getEnemyFireDelayMultiplier(),
       bossHullBonus: this.getBossHullBonus(),
-      sectorLength: this.getCurrentSector().scroll.length
+      sectorLength: this.getCurrentScrollPlan().length
     });
     return this.combatState;
   }
@@ -415,20 +432,51 @@ export class GameplayScene implements Scene {
       majorWaves: sector.majorWaves,
       preferredFactionId: sector.bossFactionId,
       availableFactionIds: this.run.availableFactionIds,
-      scroll: sector.scroll
+      scroll: this.getCurrentScrollPlan()
     });
 
     return this.wavePlan;
   }
 
   private getScrollState(): ScrollState {
-    this.scrollState ??= createScrollState(this.getCurrentSector().scroll);
+    this.scrollState ??= createScrollState(this.getCurrentScrollPlan());
     return this.scrollState;
   }
 
   private getBossArenaState(): BossArenaState {
-    this.bossArenaState ??= createBossArenaState(this.getCurrentSector().arena);
+    this.bossArenaState ??= createBossArenaState(this.getCurrentArenaPlan());
     return this.bossArenaState;
+  }
+
+  private getCurrentScrollPlan(): SectorScrollPlan {
+    this.conditionedScroll ??= applySectorConditionsToScroll(
+      this.getCurrentSector().scroll,
+      this.sectorConditions
+    );
+    return this.conditionedScroll;
+  }
+
+  private getCurrentFeatures(): SectorFeaturePlan {
+    this.conditionedFeatures ??= applySectorConditionsToFeatures(
+      this.getCurrentSector().features,
+      this.getCurrentSector().scroll,
+      this.getCurrentScrollPlan(),
+      this.sectorConditions
+    );
+    return this.conditionedFeatures;
+  }
+
+  private getCurrentArenaPlan(): BossArenaPlan | null {
+    if (this.conditionedArena === undefined) {
+      this.conditionedArena = applySectorConditionsToBossArena(
+        this.getCurrentSector().arena,
+        this.getCurrentSector().scroll,
+        this.getCurrentScrollPlan(),
+        this.sectorConditions
+      );
+    }
+
+    return this.conditionedArena;
   }
 
   private updateBossArena(distance: number, state: CombatState): BossArenaUpdate {
@@ -487,8 +535,8 @@ export class GameplayScene implements Scene {
       : `Boss ${this.getCurrentBossName()}`;
     this.warningReadout.textContent =
       state.telegraphs[0]?.label ??
-      getActiveSectorHazards(this.getCurrentSector().features, this.getScrollState().distance)[0]
-        ?.hazard.label ??
+      getActiveSectorHazards(this.getCurrentFeatures(), this.getScrollState().distance)[0]?.hazard
+        .label ??
       formatBossArenaReadout(this.bossArenaUpdate.phase) ??
       'Warning clear';
     this.itemReadout.textContent = this.getBuildReadout(state);
@@ -558,7 +606,7 @@ export class GameplayScene implements Scene {
     }
 
     const activeHazard = getActiveSectorHazards(
-      this.getCurrentSector().features,
+      this.getCurrentFeatures(),
       this.getScrollState().distance
     )[0];
 
@@ -569,6 +617,10 @@ export class GameplayScene implements Scene {
     }
 
     if (state.stats.shotsFired === 0) {
+      if (this.sectorConditions.modifiers.length > 0) {
+        return formatSectorConditionReadout(this.sectorConditions);
+      }
+
       return 'Hint Hold fire, move through gaps, and survive to the sector exit.';
     }
 
