@@ -53,6 +53,19 @@ Phase 2 introduces deeper run flow and more content. Add tests closest to the ri
 - seed entry from the main menu and copy/share from summary;
 - performance/debug scenarios for dense combat and boss patterns.
 
+## Phase 3 QA focus
+
+Phase 3 introduces true vertical scrolling. Add tests closest to the risk:
+
+- fixed-step scroll state for distance traveled, sector length, scroll speed, camera offset, pause, and frame stutter;
+- known-seed snapshots for sector length, background plan, landmark placement, hazard windows, distance objectives, wave markers, and boss approach timing;
+- scroll-synced encounter thresholds so events cannot double-spawn or skip when a frame crosses multiple distance markers;
+- route, unlock, challenge, and sector-condition effects on scroll speed, hazard density, landmark pools, salvage density, and boss approach length;
+- boss arena transitions, scroll locks, scroll resumes, debug boss shortcuts, and final sector victory flow;
+- HUD distance/objective indicators, route transitions, run summary distance stats, and save migration behavior where distance records are persisted;
+- reduced motion, high-contrast, screen shake, and performance mode readability against moving procedural backgrounds;
+- long-scroll performance scenarios that separate background cost from projectiles, enemies, pickups, effects, and HUD.
+
 ## Known seed tests
 
 - `STARBREAK-SMOKE` — stable forgiving smoke path.
@@ -68,9 +81,16 @@ Phase 2 should add these seed fixtures:
 - `CORE-WRECK-VICTORY` - final boss and victory summary validation.
 - `FRESH-SAVE-LOCKED-POOL` - unlock gating validation for new saves.
 
+Phase 3 should add these seed fixtures:
+
+- `STARBREAK-SCROLL-SMOKE` - forgiving opening route with a short deterministic distance objective.
+- `KILL-GRID-MILEMARKER` - dense scroll-synced wave thresholds and hazard timing.
+- `BLOOM-PARALLAX-LONG` - long procedural background and landmark determinism.
+- `CORE-ARENA-LOCK` - boss approach, scroll lock, boss defeat, scroll resume, and sector completion.
+
 ## Content validation checklist
 
-Phase 2 should extend this checklist as systems become real. In addition to the existing entries, content validation should cover ship stat ranges, objective references, wave references, implemented hook coverage, and unlock-gated pools for fresh and progressed saves.
+Phase 2 should extend this checklist as systems become real. In addition to the existing entries, content validation should cover ship stat ranges, objective references, wave references, implemented hook coverage, and unlock-gated pools for fresh and progressed saves. Phase 3 should extend it again for sector length ranges, scroll-speed modifiers, background-plan references, landmark references, hazard references, and distance marker ordering.
 
 - [ ] No duplicate IDs.
 - [ ] Every item tag is registered.
@@ -95,16 +115,23 @@ Phase 2 should extend this checklist as systems become real. In addition to the 
 
 Phase 2 performance checks should include wave/objective count, projectile count, particle count, audio cue load, and dense boss-pattern scenarios.
 
+Phase 3 performance checks should also include background primitive count, parallax layer count, distance traveled, scroll speed, active distance markers, active landmarks, active hazards, and long-scroll scenarios that run longer than a normal sector.
+
 - [ ] FPS overlay available behind debug flag.
 - [ ] Projectile count visible in debug mode.
 - [ ] Particle count visible in debug mode.
+- [ ] Background/debug counters visible in debug mode.
+- [ ] Distance and scroll speed visible in debug mode.
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [ ] Heavy combat debug scene documented.
+- [ ] Long-scroll debug scene documented.
 - [ ] Screen shake and particles respect reduced motion/performance settings.
 
 ## Accessibility checklist
 
 Phase 2 accessibility checks should cover seed entry, summary sharing, special/bomb/graze HUD readability, reduced motion, mute, and keyboard-only route/reward/shop flows.
+
+Phase 3 accessibility checks should also cover moving-background readability, high-contrast bullets over each sector palette, reduced-motion parallax simplification, distance HUD readability, boss scroll-lock clarity, and keyboard-only continuation after reaching sector exits.
 
 - [ ] Keyboard-only menu navigation.
 - [ ] Remappable controls.
@@ -116,6 +143,8 @@ Phase 2 accessibility checks should cover seed entry, summary sharing, special/b
 - [ ] Bullet contrast option.
 - [ ] Flash reduction.
 - [ ] No essential information conveyed by color alone.
+- [ ] Distance/objective text remains readable over moving backgrounds.
+- [ ] Reduced motion simplifies scrolling effects without hiding gameplay state.
 
 ## Release checklist
 

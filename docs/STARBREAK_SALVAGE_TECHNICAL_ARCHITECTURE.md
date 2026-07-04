@@ -239,6 +239,53 @@ src/game/WaveDirector.ts
 - Fresh saves must retain enough baseline ships/items/routes for complete runs.
 - Any save shape change requires migration tests and import/export compatibility tests.
 
+## Phase 3 architecture priorities
+
+Phase 3 makes scrolling a first-class simulation system. Keep it explicit, deterministic, and separate from rendering.
+
+### Scroll state and distance
+
+- Track scroll distance, sector length, scroll speed, and world/camera offset in gameplay state or a small scroll-system module.
+- Advance scroll state in fixed-step simulation, not inside renderer calls.
+- Sector completion should read scroll/objective state, not infer progress from pixels drawn.
+- Pause, settings, route/reward/shop scenes, and summary scenes must not advance sector distance.
+
+Recommended module direction:
+
+```text
+src/game/ScrollState.ts
+src/game/SectorConditions.ts
+src/game/DistanceObjectives.ts
+src/content/backgrounds.ts
+src/game/BackgroundPlan.ts
+```
+
+### Procedural backgrounds
+
+- Background plans should be generated from seed, sector ID, route modifiers, and explicit RNG fork labels.
+- Rendering should consume a generated background plan plus scroll offset; it should not call random functions.
+- Use original canvas primitives such as stars, debris lines, grids, silhouettes, bloom strands, warning rails, and wreck contours.
+- Performance mode and reduced motion should simplify layers before drawing, not alter deterministic gameplay.
+
+### Scroll-synced encounters
+
+- Wave and hazard schedules should support distance markers as well as time gates.
+- Spawn logic must process all crossed distance markers in order when frame time catches up.
+- Tests should prove no marker is skipped or duplicated under large fixed-step batches.
+- Boss arena transitions should be explicit states: travel, approach, arena lock/slow, defeated/exit.
+
+### Route-conditioned sector state
+
+- Route outcomes should modify generated sector conditions through typed modifiers, not ad hoc scene flags.
+- Good condition examples: scroll speed, length, hazard density, salvage density, landmark set, ambush mark, repair platform mark, boss approach length.
+- Summaries should log notable physical conditions so seed replays and balance reports have context.
+
+### Scrolling performance
+
+- Track background primitive/layer counts separately from combat entities.
+- Add pooling/batching only after long-scroll debug scenarios show need.
+- Keep bullets visually above moving backgrounds with stable contrast and no hidden blending tricks.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

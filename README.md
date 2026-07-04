@@ -2,7 +2,7 @@
 
 **Starbreak Salvage** is a browser-first 2D vertical roguelike shooter about disposable pilots, unstable ship contracts, and profitable wreckage. The project is intentionally static: no backend, no accounts, and no runtime network dependency after the page loads.
 
-This repository is in the early playable release-candidate stage. It currently ships a Vite + TypeScript app with a canvas renderer, fixed-step loop, input manager, scene manager, deterministic contract and sector generation, expanded item hooks, a combat MVP, route/reward/shop screens, four-faction boss alpha content, a final-sector victory path, save/unlock progression, in-menu seed entry, HUD/onboarding affordances, settings, procedural audio/VFX feedback, unit tests, Playwright smoke coverage, CI, and GitHub Pages deployment wiring.
+This repository is in the early playable release-candidate stage. It currently ships a Vite + TypeScript app with a canvas renderer, fixed-step loop, input manager, scene manager, deterministic contract and sector generation, expanded item hooks, a combat MVP, route/reward/shop screens, four-faction boss alpha content, a final-sector victory path, save/unlock progression, in-menu seed entry, HUD/onboarding affordances, settings, procedural audio/VFX feedback, unit tests, Playwright smoke coverage, CI, and GitHub Pages deployment wiring. Phase 3 planning now focuses on adding true vertical scrolling, procedural sector backgrounds, distance objectives, and scroll-synced encounters.
 
 ## Local Development
 
@@ -60,7 +60,7 @@ Projectile budget notes live in `docs/STARBREAK_SALVAGE_PERFORMANCE_NOTES.md`.
 
 Release checklist status lives in `docs/STARBREAK_SALVAGE_RELEASE_CHECKLIST.md`.
 
-Phase 2 planning lives in `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md`; new agent work orders continue from work order 011 in `docs/STARBREAK_SALVAGE_AGENT_WORK_ORDERS.md`.
+Phase 2 planning lives in `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md`. Phase 3 planning lives in `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`; new agent work orders continue from work order 021 in `docs/STARBREAK_SALVAGE_AGENT_WORK_ORDERS.md`.
 
 ## Project Vision
 
@@ -79,6 +79,7 @@ The core project direction lives in:
 - `AGENTS.md`
 - `docs/STARBREAK_SALVAGE_AGENT_SEED.md`
 - `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md`
+- `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`
 - `docs/STARBREAK_SALVAGE_GAME_DESIGN_SEED.md`
 - `docs/STARBREAK_SALVAGE_TECHNICAL_ARCHITECTURE.md`
 - `docs/STARBREAK_SALVAGE_CONTENT_SEED.json`

@@ -299,6 +299,160 @@ Acceptance criteria:
 
 Status: first pass implemented after work order 019 deployment confirmation; debug performance scenarios, boss shortcuts, docs, and smoke coverage are in place.
 
+## Phase 3 work orders
+
+Phase 3 begins after work order 020 deployment confirmation and concludes Phase 2. Its purpose is to make Starbreak Salvage feel like a true vertical scrolling shooter: forward velocity, sector scale, procedural backgrounds, scroll-synced waves, distance-based objectives, hazards, landmarks, and boss arenas. Preserve deterministic content generation: same seed and route should reproduce sector distance, scroll pacing, background landmarks, encounter marks, hazards, boss arena timing, rewards, shops, and summary data.
+
+## Work order 021 - Scrolling simulation foundation
+
+Goal: make forward motion a core simulation concept.
+
+Prompt:
+
+> Read `AGENTS.md` first. Then read the Phase 3 plan, architecture notes, performance notes, and current combat/wave code. Add a deterministic scrolling state for gameplay sectors: distance traveled, sector length, scroll speed, camera/world offset, and completion progress. Keep the fixed-step simulation stable and do not tie gameplay progression to render frames. Add tests for scroll advancement, speed clamping, pause/no-update behavior where practical, and known-seed sector length snapshots. Update HUD/debug notes minimally. Run checks.
+
+Acceptance criteria:
+
+- Gameplay state tracks distance traveled in sector units.
+- Sector length and base scroll speed are deterministic from seed/sector data.
+- Existing gameplay still starts, moves, pauses, and completes sectors.
+- Tests prove scroll progress is fixed-step and reproducible.
+
+## Work order 022 - Procedural parallax backgrounds
+
+Goal: make sectors feel spatially distinct while staying original and lightweight.
+
+Prompt:
+
+> Implement deterministic canvas-rendered parallax background layers for sectors. Use original shape/noise/line/debris motifs, not external assets. Each sector family should have at least three strata such as deep stars, large wreck silhouettes, debris lanes, industrial grids, bloom matter, or core wreckage. Background generation must use explicit seeded RNG and respect reduced motion/performance mode with simpler layers. Add tests for background plan determinism and content validation for sector background references. Update README/performance notes. Run checks.
+
+Acceptance criteria:
+
+- Sectors have visibly different scrolling backgrounds.
+- Background plans are seed-stable.
+- Reduced motion/performance mode lowers visual intensity.
+- No copied or externally fetched art is introduced.
+
+## Work order 023 - Scroll-synced wave director
+
+Goal: make encounter pacing depend on distance through the sector.
+
+Prompt:
+
+> Refactor or extend the wave director so major waves can be scheduled by scroll distance markers instead of only elapsed time. Existing time-based behavior can remain as a fallback, but normal sector waves should trigger as the player reaches deterministic distance marks. Preserve boss-gate behavior and deterministic faction selection. Add known-seed tests for wave distance marks, spawn order, and no duplicate spawns when frames stutter. Update debug/performance notes. Run checks.
+
+Acceptance criteria:
+
+- Normal waves can trigger from distance progress.
+- Frame drops do not skip or duplicate scheduled waves.
+- Known seeds reproduce wave distance marks and spawn order.
+- Existing boss and route flow still works.
+
+## Work order 024 - Distance objectives and HUD
+
+Goal: make surviving through sector distance the default round objective.
+
+Prompt:
+
+> Add distance-based sector objective support. Normal sectors should complete after reaching an exit distance and clearing required gates; boss sectors may require travel plus boss defeat. Update objective progress, HUD copy, sector transition copy, and run summary stats to include distance reached/survived. Add tests for distance objective completion, boss-gated distance completion, abandoned/death summaries, and save records if save shape changes. Include migrations if needed. Run checks.
+
+Acceptance criteria:
+
+- HUD shows distance progress clearly.
+- A sector can complete because the player reached its exit distance.
+- Boss-gated sectors do not complete until the boss condition is satisfied.
+- Summary communicates distance reached.
+
+## Work order 025 - Sector landmarks and hazards
+
+Goal: add non-enemy features that reinforce motion, scale, and risk.
+
+Prompt:
+
+> Add deterministic sector landmarks and hazards tied to scroll distance. Landmarks can be large wrecks, beacon lines, vault doors, convoy shadows, repair platforms, or core machinery. Hazards should be sparse, readable, and original: debris lanes, warning beams, mine belts, salvage storms, or crush gates. Hazards need telegraphs/collision rules and must not visually hide bullets. Add tests for deterministic landmark/hazard plans, hazard collision/damage, reduced-motion readability where practical, and content validation. Run checks.
+
+Acceptance criteria:
+
+- At least three landmark/hazard types exist.
+- Hazards are deterministic and tied to sector distance.
+- Telegraphs are readable and do not mask enemy bullets.
+- Landmarks reinforce sector identity without requiring external assets.
+
+## Work order 026 - Boss arenas and scroll locks
+
+Goal: make bosses feel like end-of-sector punctuation.
+
+Prompt:
+
+> Add boss arena transitions. Boss sectors should scroll through travel space, enter a boss approach, lock or slow scrolling during the arena, and resume route flow after defeat. Debug boss shortcuts must still spawn bosses immediately without requiring travel. Add deterministic tests for arena start distance, scroll-lock state, boss defeat unlock, final victory, and debug shortcut behavior. Update README/debug notes and performance notes. Run checks.
+
+Acceptance criteria:
+
+- Boss arenas start at deterministic distance markers.
+- Scrolling locks/slows during boss fights and unlocks on defeat.
+- Final boss victory still produces the correct summary.
+- Debug boss shortcuts remain fast and reliable.
+
+## Work order 027 - Route and meta integration for sector conditions
+
+Goal: let route choices and unlocks change the next sector's physical feel.
+
+Prompt:
+
+> Connect route outcomes, challenge flags, and unlocks to sector scrolling conditions. Route events may alter scroll speed, hazard density, landmark type, repair platform placement, vault signatures, ambush timing, salvage density, or boss approach length. Keep effects deterministic and summarize notable modifiers before entering the next sector and in run summary. Add known-seed tests for route-selected sector condition changes and save/import compatibility if metadata changes. Run checks.
+
+Acceptance criteria:
+
+- Routes can alter future sector distance/scroll/hazard conditions.
+- The player sees important sector modifiers before launch.
+- Same seed plus same choices reproduces sector conditions.
+- Summary records notable physical route effects.
+
+## Work order 028 - Velocity presentation and accessibility
+
+Goal: make speed feel good without hurting readability.
+
+Prompt:
+
+> Polish velocity cues: parallax strength, star/debris streaks, pickup drift, engine wake, impact streaks, and subtle screen framing. Respect reduced motion, performance mode, screen shake, and high-contrast bullet settings. Ensure text/HUD does not overlap during scrolling. Add tests where possible for settings-driven renderer state and E2E smoke for reduced motion/high contrast launch. Update README/accessibility notes. Run checks.
+
+Acceptance criteria:
+
+- Scrolling conveys forward speed during normal play.
+- Reduced motion and performance mode reduce visual intensity.
+- High-contrast bullets stay distinct from moving backgrounds.
+- Keyboard-only flow remains intact.
+
+## Work order 029 - Long-scroll performance instrumentation
+
+Goal: measure and harden long scrolling before adding more spectacle.
+
+Prompt:
+
+> Expand debug instrumentation for scrolling performance. The overlay should separate entity count, projectile count, pickup/effect count, background primitive or layer count, and current distance/speed. Add debug scenarios for long-scroll traversal and dense encounter pockets. Add tests for count helpers and Playwright smoke for a long-scroll debug scenario if practical. Update performance notes and release checklist. Run checks.
+
+Acceptance criteria:
+
+- Debug overlay reports distance, speed, and more granular counts.
+- Long-scroll debug scenario is documented and deterministic.
+- Dense and long-scroll scenarios stay under documented budgets.
+- Performance notes explain current limits and follow-up triggers for pooling.
+
+## Work order 030 - Phase 3 playtest release hardening
+
+Goal: ship a scrolling-focused public playtest candidate.
+
+Prompt:
+
+> Audit the Phase 3 scrolling game loop for balance, performance, accessibility, deterministic integrity, browser load, release docs, and manual smoke coverage. Fix blockers only. Update README, changelog, performance notes, Phase 3 plan, backlog, release checklist, and manual test matrix. Run `npm run check`, Playwright smoke, and production preview smoke. Summarize known balance risks, browser gaps, and follow-up issues.
+
+Acceptance criteria:
+
+- Full checks and E2E smoke pass.
+- Production preview loads the scrolling build and assets correctly.
+- Release checklist documents scrolling smoke, debug scenarios, manual browser gaps, known issues, and balance risks.
+- Phase 3 can be declared complete or explicitly deferred with documented blockers.
+
 ## Review subagent prompt
 
 Use after a feature PR:

@@ -3,7 +3,7 @@
 Release candidate: `0.10.0` Phase 2 playtest hardening
 Date: 2026-07-04
 
-Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/VFX. Phase 2 first-pass work orders 011-020 are now implemented, with manual cross-browser playtest still pending.
+Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/VFX. Phase 2 work orders 011-020 are deployed and confirmed. Phase 3 planning now lives in `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`, with manual cross-browser playtest still pending.
 
 ## Automated Checks
 
@@ -58,5 +58,6 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 
 - Audio is procedural cue feedback only; music and a fuller mix are not implemented yet.
 - Route/reward/shop/boss balance is first-pass and needs live playtest tuning.
+- True vertical scrolling, distance objectives, and procedural sector backgrounds are planned for Phase 3 and are not implemented yet.
 - The debug overlay reports total entity count; separate projectile/particle timing counters remain future instrumentation.
 - Manual cross-browser smoke outside Chromium remains pending.

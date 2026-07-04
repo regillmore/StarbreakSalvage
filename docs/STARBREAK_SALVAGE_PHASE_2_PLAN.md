@@ -114,6 +114,8 @@ Exit criteria:
 
 Status: first-pass playtest hardening is implemented with five-boss debug spawns, a deterministic dense-combat performance pocket, updated QA/release documentation, and automated smoke coverage. Manual cross-browser playtest remains pending.
 
+Phase 2 is now concluded after work order 020 deployment confirmation. Phase 3 planning lives in `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md` and focuses on making vertical scrolling, sector distance, procedural backgrounds, and scroll-synced encounters the next core game spine.
+
 ## Recommended Phase 2 Sequence
 
 1. Work order 011 - Phase 2 planning refresh.
@@ -125,8 +127,10 @@ Status: first-pass playtest hardening is implemented with five-boss debug spawns
 7. Work order 017 - Content expansion pack.
 8. Work order 018 - Unlock gating and meta variety.
 9. Work order 019 - Onboarding, HUD, and seed entry.
-10. Work order 020 - Balance, performance, and playtest release. First pass implemented; manual deployment/browser confirmation remains the follow-up gate.
+10. Work order 020 - Balance, performance, and playtest release. Deployed and confirmed; Phase 2 is concluded.
 
 ## Phase 2 Definition of Done
 
 Phase 2 is done when a new player can load the deployed page, enter or accept a seed, choose a contract, play a complete multi-sector run, use special/bomb/graze intentionally, build around item synergies, defeat or die to a final boss, earn unlocks that change future options, and replay/share the seed with stable deterministic content.
+
+Phase 2 met this definition as a first-pass vertical slice. The largest remaining experiential gap is that sectors do not yet scroll through meaningful space; Phase 3 addresses that directly.

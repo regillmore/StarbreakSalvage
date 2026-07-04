@@ -495,3 +495,187 @@ Acceptance:
 Status:
 
 - First pass implemented with automated checks, browser smoke, production preview smoke, known risks, and manual browser gaps documented.
+
+## Phase 3 backlog additions
+
+Phase 3 starts after work order 020 deployment confirmation and cleanly concludes Phase 2. The goal is to make the game feel like a vertical scrolling shooter: forward motion, distance, sector identity, procedural backgrounds, scroll-synced waves, hazards, landmarks, boss arenas, and route-driven sector conditions.
+
+## Epic Q - Scrolling foundation
+
+### Q1 - Scroll state
+
+Acceptance:
+
+- Gameplay tracks distance traveled, sector length, scroll speed, and camera/world offset.
+- Scroll progress is fixed-step and independent from render frame rate.
+- Pause and summary flows do not advance scroll progress.
+
+### Q2 - Sector length generation
+
+Acceptance:
+
+- Sector length and base speed are deterministic from seed, sector, and route modifiers.
+- Known seeds snapshot generated sector length/speed.
+- Debug overlay can expose distance and speed once instrumentation is added.
+
+## Epic R - Procedural backgrounds
+
+### R1 - Parallax strata
+
+Acceptance:
+
+- Each sector has at least three seeded parallax strata.
+- Background plans are deterministic and original.
+- Performance mode can reduce layer count or primitive density.
+
+### R2 - Sector visual identity
+
+Acceptance:
+
+- Outer debris, trade corridor, bio-machine bloom, corporate kill grid, and core wreck sectors are visually distinguishable.
+- Background colors and motion do not obscure enemy bullets.
+- High-contrast mode remains readable.
+
+## Epic S - Scroll-synced encounters
+
+### S1 - Distance wave marks
+
+Acceptance:
+
+- Wave director can schedule major waves by distance markers.
+- Frame drops do not skip or duplicate wave spawns.
+- Same seed reproduces wave distance marks.
+
+### S2 - Encounter pacing
+
+Acceptance:
+
+- Early sectors introduce simple scroll pacing.
+- Late sectors can combine scroll pressure with faction behavior.
+- Debug scenarios can jump to representative distance marks.
+
+## Epic T - Distance objectives
+
+### T1 - Travel-to-exit objective
+
+Acceptance:
+
+- Normal sectors complete by reaching exit distance and clearing required gates.
+- HUD shows distance remaining/reached.
+- Summary records distance reached.
+
+### T2 - Objective variants
+
+Acceptance:
+
+- Boss sectors combine travel distance and boss defeat.
+- Elite/ambush/vault variants can add distance modifiers.
+- Objective progress remains deterministic and tested.
+
+## Epic U - Landmarks and hazards
+
+### U1 - Landmarks
+
+Acceptance:
+
+- At least three landmark types appear at deterministic distance marks.
+- Landmarks reinforce sector theme and route outcomes.
+- Landmarks do not require external art assets.
+
+### U2 - Hazards
+
+Acceptance:
+
+- At least three hazard types have telegraphs and collision behavior.
+- Hazards are sparse enough to preserve bullet readability.
+- Hazard plans are seed-stable.
+
+## Epic V - Boss arenas
+
+### V1 - Arena transition
+
+Acceptance:
+
+- Boss sectors scroll into an arena/approach zone.
+- Scrolling locks or slows during boss fights.
+- Boss defeat returns to route or victory flow.
+
+### V2 - Debug compatibility
+
+Acceptance:
+
+- Debug boss shortcuts still spawn immediately.
+- Boss arena logic is testable without long manual travel.
+- Final boss victory remains distinct.
+
+## Epic W - Route and meta sector conditions
+
+### W1 - Route-conditioned sectors
+
+Acceptance:
+
+- Route outcomes can alter scroll speed, hazard density, landmark type, salvage density, or boss approach length.
+- The next-sector transition explains important modifiers.
+- Run summary records notable route-driven physical conditions.
+
+### W2 - Unlock and challenge sector variants
+
+Acceptance:
+
+- Unlocks can add sector variants without raw power creep.
+- Challenge flags can modify scroll/hazard rules deterministically.
+- Fresh saves remain able to complete runs.
+
+## Epic X - Velocity presentation and accessibility
+
+### X1 - Velocity cues
+
+Acceptance:
+
+- Streaks, debris drift, engine wake, and parallax communicate forward speed.
+- Cues remain original/generated and lightweight.
+- Screen shake and flash effects respect settings.
+
+### X2 - Accessibility and readability
+
+Acceptance:
+
+- Reduced motion simplifies scrolling.
+- High-contrast bullets remain distinct from moving backgrounds.
+- HUD remains legible on mobile and desktop.
+
+## Epic Y - Long-scroll performance
+
+### Y1 - Instrumentation
+
+Acceptance:
+
+- Debug overlay separates entity, projectile, pickup/effect, background, distance, and speed counts.
+- Long-scroll and dense-scroll debug scenarios are deterministic.
+- Performance notes document budgets.
+
+### Y2 - Optimization gates
+
+Acceptance:
+
+- Object pooling or batching is introduced only after profiling shows need.
+- Renderer changes preserve shape-based placeholder clarity.
+- Production preview smoke covers Pages base path after scrolling changes.
+
+## Epic Z - Phase 3 playtest release
+
+### Z1 - Scrolling release checklist
+
+Acceptance:
+
+- README, changelog, performance notes, release checklist, and manual smoke matrix cover scrolling systems.
+- `npm run check`, E2E smoke, and production preview smoke pass.
+- Known scrolling balance/readability risks are documented.
+
+### Z2 - Manual playtest script
+
+Acceptance:
+
+- Manual script covers one distance-based sector, one hazard sequence, one route-conditioned sector, and one boss arena.
+- Browser matrix tracks Chrome/Edge, Firefox, and Safari where available.
+- Deployment confirmation closes Phase 3 or documents blockers.

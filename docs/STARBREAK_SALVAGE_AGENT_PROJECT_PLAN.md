@@ -25,9 +25,11 @@ The project is successful when a player can open the GitHub Pages URL, start a s
 
 Phase 1 is complete as of the M10 release and first-pass audio/VFX follow-up. The project has a deployed alpha foundation: build/release workflow, deterministic generation, combat MVP, route/reward/shop screens, save/unlock data, settings/accessibility basics, seed sharing, and original procedural feedback.
 
-Phase 2 begins from this deployed alpha. Its goal is to make Starbreak Salvage cohesive and durable rather than merely scaffolded: full-run structure, real sector objectives, special/bomb/graze verbs, boss escalation, expanded content, unlock gating, onboarding, balance, and playtest-ready QA.
+Phase 2 is complete as of deployed and confirmed work order 020. It turned the alpha foundation into a more cohesive playtest slice: full-run structure, sector objectives, player verbs, boss escalation, expanded content, unlock gating, onboarding, balance, debug tooling, and release docs.
 
-See `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md` for the active Phase 2 roadmap.
+Phase 3 begins from that playtest slice. Its goal is to make Starbreak Salvage feel like a true vertical-scrolling arcade roguelike: deterministic sector distance, procedural backgrounds, scroll-synced waves, distance objectives, hazards, landmarks, and boss arena transitions.
+
+See `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md` for the active Phase 3 roadmap. `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md` remains the historical record for the concluded Phase 2 sequence.
 
 ## Milestones
 
@@ -161,6 +163,8 @@ Exit criteria:
 
 ## Phase 2 milestones
 
+Status: Phase 2 milestones were completed across work orders 011-020 and are now historical context. Phase 3 work starts from their deployed result.
+
 ### P2.1 - Run Arc Foundation
 
 Scope:
@@ -243,6 +247,66 @@ Exit criteria:
 - Public deployment is suitable for open playtest.
 - Known severe blockers are fixed or documented.
 
+Status: completed by work order 020, then deployed and confirmed.
+
+## Phase 3 milestones
+
+### P3.1 - Scrolling Foundation
+
+Scope:
+
+- Add deterministic sector distance, scroll speed, camera offset, and sector-length state.
+- Advance scroll through the fixed-step simulation so pause, slow motion, and frame stutter cannot desync progress.
+- Keep gameplay collision readable while the background and encounter schedule move forward.
+
+Exit criteria:
+
+- A sector can end by reaching a seeded exit distance.
+- Scroll state is covered by deterministic tests.
+- Existing boss/debug shortcuts still work.
+
+### P3.2 - Procedural Sector Space
+
+Scope:
+
+- Add original procedural background plans for distinct sectors.
+- Render layered parallax, landmarks, and depth cues from deterministic data.
+- Respect reduced motion and performance settings without changing simulation outcomes.
+
+Exit criteria:
+
+- At least three sectors are visually distinguishable by generated background plan.
+- The same seed produces the same background landmarks and major visual beats.
+- Moving backgrounds do not reduce bullet readability.
+
+### P3.3 - Scroll-Synced Encounters
+
+Scope:
+
+- Move major wave scheduling from mostly time/objective triggers to distance markers.
+- Support staggered waves, ambient flybys, hazard windows, and boss approach gates.
+- Prevent duplicate or skipped distance events during frame drops.
+
+Exit criteria:
+
+- Known seeds reproduce wave distance markers and boss approach timing.
+- Sector completion depends on surviving forward progress and resolving required gates.
+- Tests cover stuttered fixed-step updates around event thresholds.
+
+### P3.4 - Scrolling Playtest Candidate
+
+Scope:
+
+- Integrate route conditions, unlocks, hazards, bosses, HUD, summaries, accessibility, and performance instrumentation with the scrolling sector spine.
+- Update documentation and release checklist around vertical scrolling validation.
+- Run long-scroll and production-preview smoke tests.
+
+Exit criteria:
+
+- A deployed build communicates velocity, sector scale, and forward progress.
+- Distance objectives, boss locks, route modifiers, and summaries behave deterministically.
+- No severe blockers remain for a Phase 3 playtest release.
+
 ## Dependency map
 
 ```text
@@ -259,6 +323,10 @@ M0 scaffold
                     -> P2.4 content expansion
                       -> P2.5 meta/UX depth
                         -> P2.6 playtest candidate
+                          -> P3.1 scrolling foundation
+                            -> P3.2 procedural sector space
+                              -> P3.3 scroll-synced encounters
+                                -> P3.4 scrolling playtest candidate
 ```
 
 Parallelizable:
@@ -274,6 +342,8 @@ High-conflict areas:
 - Item hook ordering.
 - World/entity model.
 - Scene manager.
+- Scroll state, camera offset, and sector-progress HUD.
+- Wave/director scheduling around distance thresholds.
 
 ## First five PRs
 
