@@ -29,6 +29,7 @@ export interface RunSessionState {
   currentSectorIndex: number;
   credits: number;
   salvage: number;
+  distanceTraveled: number;
   hullPatch: number;
   curse: number;
   relicsRecovered: number;
@@ -48,6 +49,7 @@ export function createRunSession(
     currentSectorIndex: 0,
     credits: contract.startingCredits,
     salvage: contract.startingSalvage,
+    distanceTraveled: 0,
     hullPatch: 0,
     curse: 0,
     relicsRecovered: 0,
@@ -77,6 +79,7 @@ export function isRunComplete(run: RunSkeleton, session: RunSessionState): boole
 
 export function recordSectorCombatResult(session: RunSessionState, result: CombatRunResult): void {
   session.lastCombatResult = result;
+  session.distanceTraveled += result.distanceTraveled;
   session.credits += result.credits + Math.max(3, result.enemiesDestroyed * 3);
   session.salvage += result.salvage + Math.max(1, result.enemiesDestroyed);
 }

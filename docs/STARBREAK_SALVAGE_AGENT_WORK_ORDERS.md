@@ -318,7 +318,7 @@ Acceptance criteria:
 - Existing gameplay still starts, moves, pauses, and completes sectors.
 - Tests prove scroll progress is fixed-step and reproducible.
 
-Status: first pass implemented; deterministic sector scroll plans, fixed-step scroll state, HUD/debug distance readouts, and reduced-motion-aware starfield offset are in place. Distance-based objectives remain follow-up work; scroll-synced directed waves are covered by work order 023.
+Status: first pass implemented; deterministic sector scroll plans, fixed-step scroll state, HUD/debug distance readouts, and reduced-motion-aware starfield offset are in place. Scroll-synced directed waves are covered by work order 023, and distance-based objectives are covered by work order 024.
 
 ## Work order 022 - Procedural parallax backgrounds
 
@@ -368,6 +368,8 @@ Acceptance criteria:
 - A sector can complete because the player reached its exit distance.
 - Boss-gated sectors do not complete until the boss condition is satisfied.
 - Summary communicates distance reached.
+
+Status: first pass implemented; objective progress now requires sector exit distance plus wave/boss gates, the HUD and sector transition copy communicate travel distance, run summaries show sector distance reached, and save records preserve traveled distance with backward-compatible normalization for older saves.
 
 ## Work order 025 - Sector landmarks and hazards
 

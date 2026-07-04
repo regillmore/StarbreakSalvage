@@ -77,6 +77,8 @@ describe('saveData', () => {
       contractName: 'Debt Runner',
       reason: 'sectorComplete',
       survivedSeconds: 9,
+      distanceTraveled: 1442,
+      sectorLength: 1442,
       sectorsCleared: 1,
       bossesDefeated: 0,
       enemiesDestroyed: 2,
@@ -95,6 +97,8 @@ describe('saveData', () => {
       contractName: 'Debt Runner',
       reason: 'victory',
       survivedSeconds: 184,
+      distanceTraveled: 2536,
+      sectorLength: 2536,
       sectorsCleared: 5,
       bossesDefeated: 2,
       enemiesDestroyed: 28,
@@ -105,8 +109,59 @@ describe('saveData', () => {
 
     expect(save.lastRun?.reason).toBe('victory');
     expect(save.lastRun?.sectorsCleared).toBe(5);
+    expect(save.lastRun?.distanceTraveled).toBe(2536);
+    expect(save.lastRun?.sectorLength).toBe(2536);
     expect(save.stats.bestSectorsCleared).toBe(5);
+    expect(save.stats.bestDistanceTraveled).toBe(2536);
     expect(importSaveData(exportSaveData(save)).lastRun?.reason).toBe('victory');
+  });
+
+  it('preserves destroyed-run distance records and normalizes older v2 saves', () => {
+    const save = applyRunRecordToSave(createDefaultSaveData(), {
+      seed: 'STARBREAK-SCROLL-SMOKE',
+      contractId: 'contract_1',
+      contractName: 'Debt Runner',
+      reason: 'destroyed',
+      survivedSeconds: 22,
+      distanceTraveled: 687.9,
+      sectorLength: 1442,
+      sectorsCleared: 0,
+      bossesDefeated: 0,
+      enemiesDestroyed: 3,
+      creditsRecovered: 10,
+      salvageRecovered: 1,
+      itemTriggers: 0
+    }).data;
+
+    expect(save.stats.distanceTraveled).toBe(687);
+    expect(save.stats.bestDistanceTraveled).toBe(687);
+    expect(save.lastRun?.distanceTraveled).toBe(687);
+    expect(save.lastRun?.sectorLength).toBe(1442);
+
+    const normalized = importSaveData(
+      JSON.stringify({
+        version: SAVE_SCHEMA_VERSION,
+        salvageBank: 0,
+        unlockedIds: [],
+        achievementIds: [],
+        stats: {
+          runsEnded: 1
+        },
+        lastRun: {
+          seed: 'OLD-V2',
+          contractId: 'contract_1',
+          contractName: 'Debt Runner',
+          reason: 'abandoned',
+          sectorsCleared: 0,
+          survivedSeconds: 4,
+          salvageRecovered: 0
+        }
+      })
+    );
+
+    expect(normalized.stats.distanceTraveled).toBe(0);
+    expect(normalized.lastRun?.distanceTraveled).toBe(0);
+    expect(normalized.lastRun?.sectorLength).toBeNull();
   });
 
   it('applies run records to stats, salvage bank, achievements, and unlocks', () => {
@@ -116,6 +171,8 @@ describe('saveData', () => {
       contractName: 'Missile Accountant',
       reason: 'debug',
       survivedSeconds: 6,
+      distanceTraveled: 402,
+      sectorLength: 1442,
       sectorsCleared: 1,
       bossesDefeated: 0,
       enemiesDestroyed: 1,

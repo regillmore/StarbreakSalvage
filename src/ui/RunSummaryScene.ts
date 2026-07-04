@@ -45,6 +45,7 @@ export class RunSummaryScene implements Scene {
       ['Outcome', getOutcomeLabel(this.result)],
       ['Win/Loss', getOutcomeDetail(this.result)],
       ['Survived', `${Math.floor(this.result?.survivedSeconds ?? 0)}s`],
+      ['Distance', formatDistanceSummary(this.result)],
       ['Sectors Cleared', `${getSectorsCleared(this.run, this.routeHistory, this.result)}`],
       ['Destroyed', `${this.result?.enemiesDestroyed ?? 0}`],
       ['Bosses', `${this.result?.bossesDefeated ?? 0}`],
@@ -271,6 +272,22 @@ export function formatRouteHistory(routeHistory: readonly RouteHistoryEntry[]): 
   return routeHistory
     .map((entry) => `S${entry.sectorIndex} ${entry.routeLabel}: ${entry.outcomeTitle ?? 'routed'}`)
     .join(' | ');
+}
+
+export function formatDistanceSummary(result: CombatRunResult | null): string {
+  if (!result) {
+    return '0u';
+  }
+
+  const distance = Math.floor(Math.max(0, result.distanceTraveled));
+  const sectorLength =
+    result.sectorLength === null ? null : Math.floor(Math.max(0, result.sectorLength));
+
+  if (!sectorLength) {
+    return `${distance}u`;
+  }
+
+  return `${distance}/${sectorLength}u`;
 }
 
 export function formatUnlockReasons(saveUpdate: SaveUpdateResult | null): string {

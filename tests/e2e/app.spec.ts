@@ -76,7 +76,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
 
   await page.keyboard.down('Space');
   await expect(page.getByRole('heading', { name: 'Choose Route' })).toBeVisible({
-    timeout: 6_000
+    timeout: 30_000
   });
   await page.keyboard.up('Space');
 

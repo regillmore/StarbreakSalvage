@@ -1,4 +1,5 @@
 import { FACTIONS, type FactionId } from '../content/factions';
+import { clamp } from '../core/math';
 import { createRng, type Rng } from '../core/rng';
 import type { CombatState, EnemySpawn } from './CombatState';
 import type { SectorScrollPlan } from './ScrollState';
@@ -18,15 +19,22 @@ export interface WaveDirectorPlan {
   readonly waves: readonly DirectedWave[];
   readonly spawnSchedule: readonly EnemySpawn[];
   readonly bossSpawnAtSeconds: number | null;
+  readonly sectorLength: number | null;
 }
 
 export interface ObjectiveProgress {
   readonly label: string;
   readonly readout: string;
+  readonly distanceTraveled: number;
+  readonly requiredDistance: number | null;
+  readonly distanceRemaining: number;
+  readonly distanceComplete: boolean;
   readonly supportKills: number;
   readonly requiredEnemyKills: number;
   readonly completedWaves: number;
   readonly requiredWaves: number;
+  readonly supportComplete: boolean;
+  readonly bossComplete: boolean;
   readonly bossDefeated: boolean;
   readonly complete: boolean;
 }
@@ -34,7 +42,9 @@ export interface ObjectiveProgress {
 export type ObjectiveProgressState = Pick<
   CombatState,
   'nextSpawnIndex' | 'enemies' | 'boss' | 'stats'
->;
+> & {
+  readonly scrollDistance?: number;
+};
 
 export interface WaveDirectorOptions {
   readonly seed: string;
@@ -80,7 +90,8 @@ export function createWaveDirectorPlan(options: WaveDirectorOptions): WaveDirect
     objective: options.objective,
     waves,
     spawnSchedule,
-    bossSpawnAtSeconds: options.objective.bossSpawnAtSeconds
+    bossSpawnAtSeconds: options.objective.bossSpawnAtSeconds,
+    sectorLength: options.scroll?.length ?? null
   };
 }
 
@@ -89,6 +100,14 @@ export function getObjectiveProgress(
   state: ObjectiveProgressState
 ): ObjectiveProgress {
   const bossDefeated = state.stats.bossesDefeated > 0;
+  const requiredDistance = plan.sectorLength;
+  const distanceTraveled =
+    requiredDistance === null
+      ? Math.max(0, state.scrollDistance ?? 0)
+      : clamp(state.scrollDistance ?? 0, 0, requiredDistance);
+  const distanceRemaining =
+    requiredDistance === null ? 0 : Math.max(0, requiredDistance - distanceTraveled);
+  const distanceComplete = requiredDistance === null || distanceRemaining <= 0;
   const supportKills = Math.max(0, state.stats.enemiesDestroyed - state.stats.bossesDefeated);
   const cappedSupportKills = Math.min(supportKills, plan.objective.requiredEnemyKills);
   const completedWaves = Math.min(
@@ -101,20 +120,29 @@ export function getObjectiveProgress(
   const supportComplete =
     cappedSupportKills >= plan.objective.requiredEnemyKills && allSpawnsIssued && supportFieldClear;
   const bossComplete = !plan.objective.bossRequired || bossDefeated;
-  const complete = supportComplete && bossComplete && bossFieldClear;
+  const complete = distanceComplete && supportComplete && bossComplete && bossFieldClear;
 
   return {
     label: plan.objective.label,
     readout: formatObjectiveReadout(plan, {
+      distanceTraveled,
+      requiredDistance,
       supportKills: cappedSupportKills,
       completedWaves,
       bossDefeated,
-      supportComplete
+      supportComplete,
+      distanceComplete
     }),
+    distanceTraveled,
+    requiredDistance,
+    distanceRemaining,
+    distanceComplete,
     supportKills: cappedSupportKills,
     requiredEnemyKills: plan.objective.requiredEnemyKills,
     completedWaves,
     requiredWaves: plan.objective.requiredWaves,
+    supportComplete,
+    bossComplete,
     bossDefeated,
     complete
   };
@@ -204,19 +232,32 @@ function chooseFaction(
 function formatObjectiveReadout(
   plan: WaveDirectorPlan,
   progress: {
+    readonly distanceTraveled: number;
+    readonly requiredDistance: number | null;
     readonly supportKills: number;
     readonly completedWaves: number;
     readonly bossDefeated: boolean;
     readonly supportComplete: boolean;
+    readonly distanceComplete: boolean;
   }
 ): string {
-  if (plan.objective.bossRequired && progress.supportComplete) {
+  const distanceReadout =
+    progress.requiredDistance === null
+      ? null
+      : `distance ${Math.floor(progress.distanceTraveled)}/${Math.floor(
+          progress.requiredDistance
+        )}u`;
+  const waveReadout = `waves ${progress.completedWaves}/${plan.objective.requiredWaves}, targets ${progress.supportKills}/${plan.objective.requiredEnemyKills}`;
+
+  if (plan.objective.bossRequired && progress.supportComplete && progress.distanceComplete) {
     return progress.bossDefeated
       ? `${plan.objective.label}: boss defeated`
       : `${plan.objective.label}: boss gate active`;
   }
 
-  return `${plan.objective.label}: waves ${progress.completedWaves}/${plan.objective.requiredWaves}, targets ${progress.supportKills}/${plan.objective.requiredEnemyKills}`;
+  return `${plan.objective.label}: ${[distanceReadout, waveReadout]
+    .filter((part): part is string => Boolean(part))
+    .join(', ')}`;
 }
 
 function roundSeconds(value: number): number {

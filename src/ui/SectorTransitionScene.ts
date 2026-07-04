@@ -34,7 +34,11 @@ export class SectorTransitionScene implements Scene {
 
     const objectiveLine = document.createElement('p');
     objectiveLine.className = 'transition-copy';
-    objectiveLine.textContent = `${sector.objective.label} | ${sector.objective.requiredEnemyKills} targets${sector.objective.bossRequired ? ' + boss gate' : ''}`;
+    objectiveLine.textContent = `${sector.objective.label} | Travel ${Math.floor(
+      sector.scroll.length
+    )}u | ${sector.objective.requiredEnemyKills} targets${
+      sector.objective.bossRequired ? ' + boss gate' : ''
+    }`;
 
     const waveLine = document.createElement('p');
     waveLine.className = 'transition-copy';

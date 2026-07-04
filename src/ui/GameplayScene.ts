@@ -331,7 +331,8 @@ export class GameplayScene implements Scene {
       spawnSchedule: wavePlan.spawnSchedule,
       enemyHullBonus: this.getEnemyHullBonus(),
       enemyFireDelayMultiplier: this.getEnemyFireDelayMultiplier(),
-      bossHullBonus: this.getBossHullBonus()
+      bossHullBonus: this.getBossHullBonus(),
+      sectorLength: this.getCurrentSector().scroll.length
     });
     return this.combatState;
   }
@@ -452,7 +453,7 @@ export class GameplayScene implements Scene {
     }
 
     if (state.stats.shotsFired === 0) {
-      return 'Hint Hold fire, move through gaps, and clear waves to open a route.';
+      return 'Hint Hold fire, move through gaps, and survive to the sector exit.';
     }
 
     if (state.player.specialCharge >= state.player.maxSpecialCharge) {

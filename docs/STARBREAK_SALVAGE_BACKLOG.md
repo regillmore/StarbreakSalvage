@@ -568,6 +568,10 @@ Acceptance:
 - HUD shows distance remaining/reached.
 - Summary records distance reached.
 
+Status:
+
+- First pass implemented in work order 024. Sector completion now requires exit distance plus combat gates, and summaries/save records include distance reached. Future work can tune exit lengths and route-conditioned distance modifiers.
+
 ### T2 - Objective variants
 
 Acceptance:

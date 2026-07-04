@@ -184,6 +184,7 @@ export interface CombatState {
   readonly enemyHullBonus: number;
   readonly enemyFireDelayMultiplier: number;
   readonly bossHullBonus: number;
+  readonly sectorLength: number | null;
   timeSeconds: number;
   scrollDistance: number;
   nextId: number;
@@ -220,6 +221,8 @@ export interface EnemySpawn {
 export interface CombatRunResult {
   readonly reason: CombatEndReason;
   readonly survivedSeconds: number;
+  readonly distanceTraveled: number;
+  readonly sectorLength: number | null;
   readonly credits: number;
   readonly salvage: number;
   readonly enemiesDestroyed: number;
@@ -270,6 +273,7 @@ export interface CombatStateOptions {
   readonly enemyHullBonus?: number;
   readonly enemyFireDelayMultiplier?: number;
   readonly bossHullBonus?: number;
+  readonly sectorLength?: number | null;
 }
 
 export function createCombatState(
@@ -288,6 +292,7 @@ export function createCombatState(
     enemyHullBonus: Math.max(0, Math.floor(options.enemyHullBonus ?? 0)),
     enemyFireDelayMultiplier: clamp(options.enemyFireDelayMultiplier ?? 1, 0.5, 1.5),
     bossHullBonus: Math.max(0, Math.floor(options.bossHullBonus ?? 0)),
+    sectorLength: sanitizeSectorLength(options.sectorLength),
     timeSeconds: 0,
     scrollDistance: 0,
     nextId: 1,
@@ -554,6 +559,11 @@ export function createCombatRunResult(
   return {
     reason,
     survivedSeconds: state.timeSeconds,
+    distanceTraveled:
+      state.sectorLength === null
+        ? Math.max(0, state.scrollDistance)
+        : clamp(state.scrollDistance, 0, state.sectorLength),
+    sectorLength: state.sectorLength,
     credits: state.player.credits,
     salvage: state.player.salvage,
     enemiesDestroyed: state.stats.enemiesDestroyed,
@@ -564,6 +574,10 @@ export function createCombatRunResult(
     itemTriggers: state.stats.itemTriggers,
     itemNames: getItemNames(state.items)
   };
+}
+
+function sanitizeSectorLength(value: number | null | undefined): number | null {
+  return Number.isFinite(value) && typeof value === 'number' && value > 0 ? value : null;
 }
 
 function updatePlayer(

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { createDefaultSaveData, type SaveUpdateResult } from '../../src/core/saveData';
 import {
   buildSeedShareUrl,
+  formatDistanceSummary,
   formatRouteHistory,
   formatUnlockReasons,
   formatUnlockSummary,
@@ -34,6 +35,8 @@ describe('run summary labels', () => {
     const result: CombatRunResult = {
       reason: 'victory',
       survivedSeconds: 182,
+      distanceTraveled: 2536,
+      sectorLength: 2536,
       credits: 24,
       salvage: 8,
       enemiesDestroyed: 32,
@@ -48,6 +51,44 @@ describe('run summary labels', () => {
     expect(getSummaryTitle(result)).toBe('Victory Confirmed');
     expect(getOutcomeLabel(result)).toBe('final boss salvaged');
     expect(getOutcomeDetail(result)).toBe('Win: final boss salvaged.');
+    expect(formatDistanceSummary(result)).toBe('2536/2536u');
+  });
+
+  it('formats death and abandon distance summaries', () => {
+    expect(
+      formatDistanceSummary({
+        reason: 'destroyed',
+        survivedSeconds: 12,
+        distanceTraveled: 512.9,
+        sectorLength: 1442,
+        credits: 0,
+        salvage: 0,
+        enemiesDestroyed: 1,
+        bossesDefeated: 0,
+        shotsFired: 20,
+        pickupsCollected: 0,
+        damageTaken: 3,
+        itemTriggers: 0,
+        itemNames: []
+      })
+    ).toBe('512/1442u');
+    expect(
+      formatDistanceSummary({
+        reason: 'abandoned',
+        survivedSeconds: 4,
+        distanceTraveled: 245.2,
+        sectorLength: null,
+        credits: 0,
+        salvage: 0,
+        enemiesDestroyed: 0,
+        bossesDefeated: 0,
+        shotsFired: 0,
+        pickupsCollected: 0,
+        damageTaken: 0,
+        itemTriggers: 0,
+        itemNames: []
+      })
+    ).toBe('245u');
   });
 });
 

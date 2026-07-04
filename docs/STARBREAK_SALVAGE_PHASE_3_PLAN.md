@@ -30,7 +30,7 @@ The goal is not to copy any specific commercial game. The inspiration is the sen
 
 The Phase 2 game has deterministic sectors and wave objectives, but the playfield still behaves like a stationary combat box:
 
-- sector completion counts waves/targets rather than traveled distance;
+- first-pass sector completion now requires exit distance plus required wave/boss gates, but route-conditioned exits and boss arenas remain follow-ups;
 - first-pass backgrounds are now sector-specific and procedurally layered, but landmarks, hazards, and route-conditioned visual motifs remain follow-ups;
 - first-pass directed enemy waves are now tied to scroll markers, but pickups, hazards, landmarks, and boss approach gates are still follow-ups;
 - bosses spawn into a static field rather than at the end of a traveled sector;
@@ -49,7 +49,7 @@ Exit criteria:
 - Normal sector completion can be driven by distance plus objective gates.
 - Same seed and sector produce the same length and scroll pacing.
 
-Status: first pass implemented by work order 021 with deterministic scroll plans, fixed-step distance state, HUD/debug readouts, and subtle scroll offset for the existing starfield. Distance completion gates move into P3.4.
+Status: first pass implemented by work order 021 with deterministic scroll plans, fixed-step distance state, HUD/debug readouts, and subtle scroll offset for the existing starfield. Distance completion gates are covered by P3.4.
 
 ### P3.2 - Procedural Background Identity
 
@@ -84,6 +84,8 @@ Exit criteria:
 - HUD shows traveled distance and remaining sector objective clearly.
 - Completing a sector normally means reaching the exit distance after required gates.
 - Summary records distance survived/reached.
+
+Status: first pass implemented by work order 024. Objective progress now includes exit-distance state, normal sectors complete only after reaching the sector length and clearing required waves, boss sectors also require boss defeat, sector transition and HUD copy mention travel distance, and run summaries/save records preserve distance reached. Boss arena-specific endings remain P3.6 work.
 
 ### P3.5 - Hazards, Landmarks, And Scale
 

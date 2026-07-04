@@ -50,13 +50,27 @@ describe('WaveDirector', () => {
     expect(plan.spawnSchedule.map((spawn) => spawn.atSeconds)).toEqual([0.45, 1.8]);
   });
 
-  it('requires issued waves, cleared enemies, and target kills before completion', () => {
+  it('requires exit distance, issued waves, cleared enemies, and target kills before completion', () => {
     const plan = getPlan('STARBREAK-SMOKE', 0);
 
     expect(
       getObjectiveProgress(
         plan,
-        makeProgressState({ enemiesDestroyed: 1, nextSpawnIndex: plan.spawnSchedule.length })
+        makeProgressState({
+          enemiesDestroyed: plan.objective.requiredEnemyKills,
+          nextSpawnIndex: plan.spawnSchedule.length,
+          scrollDistance: (plan.sectorLength ?? 0) - 1
+        })
+      ).complete
+    ).toBe(false);
+    expect(
+      getObjectiveProgress(
+        plan,
+        makeProgressState({
+          enemiesDestroyed: 1,
+          nextSpawnIndex: plan.spawnSchedule.length,
+          scrollDistance: plan.sectorLength ?? 0
+        })
       ).complete
     ).toBe(false);
     expect(
@@ -64,7 +78,8 @@ describe('WaveDirector', () => {
         plan,
         makeProgressState({
           enemiesDestroyed: plan.objective.requiredEnemyKills,
-          nextSpawnIndex: plan.spawnSchedule.length - 1
+          nextSpawnIndex: plan.spawnSchedule.length - 1,
+          scrollDistance: plan.sectorLength ?? 0
         })
       ).complete
     ).toBe(false);
@@ -74,7 +89,8 @@ describe('WaveDirector', () => {
         makeProgressState({
           enemiesDestroyed: plan.objective.requiredEnemyKills,
           nextSpawnIndex: plan.spawnSchedule.length,
-          enemies: [{} as never]
+          enemies: [{} as never],
+          scrollDistance: plan.sectorLength ?? 0
         })
       ).complete
     ).toBe(false);
@@ -83,12 +99,15 @@ describe('WaveDirector', () => {
       plan,
       makeProgressState({
         enemiesDestroyed: plan.objective.requiredEnemyKills,
-        nextSpawnIndex: plan.spawnSchedule.length
+        nextSpawnIndex: plan.spawnSchedule.length,
+        scrollDistance: plan.sectorLength ?? 0
       })
     );
 
     expect(progress.complete).toBe(true);
+    expect(progress.distanceComplete).toBe(true);
     expect(progress.readout).toContain('targets 2/2');
+    expect(progress.readout).toContain('distance 1442/1442u');
   });
 
   it('keeps boss-gated sectors open until the boss is defeated', () => {
@@ -117,6 +136,7 @@ describe('WaveDirector', () => {
       makeProgressState({
         enemiesDestroyed: plan.objective.requiredEnemyKills,
         nextSpawnIndex: plan.spawnSchedule.length,
+        scrollDistance: plan.sectorLength ?? 0,
         boss: {} as never
       })
     );
@@ -124,12 +144,27 @@ describe('WaveDirector', () => {
     expect(bossActive.complete).toBe(false);
     expect(bossActive.readout).toContain('boss gate active');
 
+    const travelIncomplete = getObjectiveProgress(
+      plan,
+      makeProgressState({
+        enemiesDestroyed: plan.objective.requiredEnemyKills + 1,
+        bossesDefeated: 1,
+        nextSpawnIndex: plan.spawnSchedule.length,
+        scrollDistance: (plan.sectorLength ?? 0) - 1
+      })
+    );
+
+    expect(travelIncomplete.complete).toBe(false);
+    expect(travelIncomplete.bossComplete).toBe(true);
+    expect(travelIncomplete.distanceComplete).toBe(false);
+
     const bossDefeated = getObjectiveProgress(
       plan,
       makeProgressState({
         enemiesDestroyed: plan.objective.requiredEnemyKills + 1,
         bossesDefeated: 1,
-        nextSpawnIndex: plan.spawnSchedule.length
+        nextSpawnIndex: plan.spawnSchedule.length,
+        scrollDistance: plan.sectorLength ?? 0
       })
     );
 
@@ -384,6 +419,7 @@ function makeProgressState(
     Pick<ObjectiveProgressState, 'nextSpawnIndex' | 'enemies' | 'boss'> & {
       readonly enemiesDestroyed: number;
       readonly bossesDefeated: number;
+      readonly scrollDistance: number;
     }
   > = {}
 ): ObjectiveProgressState {
@@ -391,6 +427,7 @@ function makeProgressState(
     nextSpawnIndex: overrides.nextSpawnIndex ?? 0,
     enemies: overrides.enemies ?? [],
     boss: overrides.boss ?? null,
+    scrollDistance: overrides.scrollDistance ?? 0,
     stats: {
       enemiesDestroyed: overrides.enemiesDestroyed ?? 0,
       bossesDefeated: overrides.bossesDefeated ?? 0,

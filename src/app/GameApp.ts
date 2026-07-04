@@ -446,6 +446,7 @@ export class GameApp {
       previousCombat && previousCombat !== result ? previousCombat.bossesDefeated : 0;
     const previousTriggers =
       previousCombat && previousCombat !== result ? previousCombat.itemTriggers : 0;
+    const currentDistance = previousCombat === result ? 0 : result.distanceTraveled;
 
     return {
       seed: this.currentRun.seed,
@@ -453,6 +454,8 @@ export class GameApp {
       contractName: this.selectedContract.shipName,
       reason: result.reason,
       survivedSeconds: result.survivedSeconds,
+      distanceTraveled: this.runSession.distanceTraveled + currentDistance,
+      sectorLength: result.sectorLength,
       sectorsCleared: getSaveRecordSectorCount(
         this.currentRun,
         this.runSession.currentSectorIndex,

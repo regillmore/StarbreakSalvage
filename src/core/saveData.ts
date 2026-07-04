@@ -20,6 +20,8 @@ export interface SaveStats {
   readonly enemiesDestroyed: number;
   readonly creditsRecovered: number;
   readonly salvageRecovered: number;
+  readonly distanceTraveled: number;
+  readonly bestDistanceTraveled: number;
   readonly bestSectorsCleared: number;
   readonly bestSurvivedSeconds: number;
   readonly itemTriggers: number;
@@ -32,6 +34,8 @@ export interface LastRunSummary {
   readonly reason: CombatEndReason;
   readonly sectorsCleared: number;
   readonly survivedSeconds: number;
+  readonly distanceTraveled: number;
+  readonly sectorLength: number | null;
   readonly salvageRecovered: number;
 }
 
@@ -56,6 +60,8 @@ export interface RunSaveRecord {
   readonly contractName: string;
   readonly reason: CombatEndReason;
   readonly survivedSeconds: number;
+  readonly distanceTraveled: number;
+  readonly sectorLength: number | null;
   readonly sectorsCleared: number;
   readonly bossesDefeated: number;
   readonly enemiesDestroyed: number;
@@ -97,6 +103,8 @@ export function createDefaultSaveData(): SaveData {
       enemiesDestroyed: 0,
       creditsRecovered: 0,
       salvageRecovered: 0,
+      distanceTraveled: 0,
+      bestDistanceTraveled: 0,
       bestSectorsCleared: 0,
       bestSurvivedSeconds: 0,
       itemTriggers: 0
@@ -165,6 +173,12 @@ export function applyRunRecordToSave(current: SaveData, record: RunSaveRecord): 
     enemiesDestroyed: current.stats.enemiesDestroyed + Math.max(0, record.enemiesDestroyed),
     creditsRecovered: current.stats.creditsRecovered + Math.max(0, record.creditsRecovered),
     salvageRecovered: current.stats.salvageRecovered + salvageEarned,
+    distanceTraveled:
+      current.stats.distanceTraveled + Math.max(0, Math.floor(record.distanceTraveled)),
+    bestDistanceTraveled: Math.max(
+      current.stats.bestDistanceTraveled,
+      Math.max(0, Math.floor(record.distanceTraveled))
+    ),
     bestSectorsCleared: Math.max(current.stats.bestSectorsCleared, record.sectorsCleared),
     bestSurvivedSeconds: Math.max(current.stats.bestSurvivedSeconds, record.survivedSeconds),
     itemTriggers: current.stats.itemTriggers + Math.max(0, record.itemTriggers)
@@ -211,6 +225,8 @@ export function applyRunRecordToSave(current: SaveData, record: RunSaveRecord): 
         reason: record.reason,
         sectorsCleared: record.sectorsCleared,
         survivedSeconds: record.survivedSeconds,
+        distanceTraveled: Math.max(0, Math.floor(record.distanceTraveled)),
+        sectorLength: sanitizeNullableCount(record.sectorLength),
         salvageRecovered: salvageEarned
       }
     },
@@ -269,6 +285,8 @@ function normalizeSaveData(input: Record<string, unknown>): SaveData {
       enemiesDestroyed: sanitizeCount(stats.enemiesDestroyed),
       creditsRecovered: sanitizeCount(stats.creditsRecovered),
       salvageRecovered: sanitizeCount(stats.salvageRecovered),
+      distanceTraveled: sanitizeCount(stats.distanceTraveled),
+      bestDistanceTraveled: sanitizeCount(stats.bestDistanceTraveled),
       bestSectorsCleared: sanitizeCount(stats.bestSectorsCleared),
       bestSurvivedSeconds: sanitizeCount(stats.bestSurvivedSeconds),
       itemTriggers: sanitizeCount(stats.itemTriggers)
@@ -302,6 +320,8 @@ function normalizeLastRun(value: unknown): LastRunSummary | null {
     reason,
     sectorsCleared: sanitizeCount(value.sectorsCleared),
     survivedSeconds: sanitizeCount(value.survivedSeconds),
+    distanceTraveled: sanitizeCount(value.distanceTraveled),
+    sectorLength: sanitizeNullableCount(value.sectorLength),
     salvageRecovered: sanitizeCount(value.salvageRecovered)
   };
 }
@@ -336,6 +356,12 @@ function uniqueStrings(values: readonly unknown[]): string[] {
 
 function sanitizeCount(value: unknown): number {
   return Number.isFinite(value) && typeof value === 'number' && value > 0 ? Math.floor(value) : 0;
+}
+
+function sanitizeNullableCount(value: unknown): number | null {
+  return Number.isFinite(value) && typeof value === 'number' && value > 0
+    ? Math.floor(value)
+    : null;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

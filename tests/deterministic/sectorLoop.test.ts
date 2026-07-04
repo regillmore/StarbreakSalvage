@@ -102,6 +102,8 @@ describe('sector route, reward, and shop loop generation', () => {
     const result: CombatRunResult = {
       reason: 'sectorComplete',
       survivedSeconds: 4.2,
+      distanceTraveled: 1442,
+      sectorLength: 1442,
       credits: 2,
       salvage: 1,
       enemiesDestroyed: 1,
