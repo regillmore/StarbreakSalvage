@@ -437,6 +437,8 @@ Acceptance criteria:
 - High-contrast bullets stay distinct from moving backgrounds.
 - Keyboard-only flow remains intact.
 
+Status: first pass implemented; the renderer now derives a settings-aware velocity cue profile, paints lightweight background streaks, engine wake, pickup drift trails, impact streaks, and subtle frame rails, outlines high-contrast projectiles, wraps HUD pills on narrow viewports, and includes unit/E2E smoke coverage for reduced-motion/high-contrast keyboard launch.
+
 ## Work order 029 - Long-scroll performance instrumentation
 
 Goal: measure and harden long scrolling before adding more spectacle.

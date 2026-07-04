@@ -102,6 +102,18 @@ export interface RendererSettings {
   readonly performanceMode: boolean;
 }
 
+export interface VelocityCueState {
+  readonly parallaxScale: number;
+  readonly streakCount: number;
+  readonly streakAlpha: number;
+  readonly frameAlpha: number;
+  readonly frameRailAlpha: number;
+  readonly engineWakeAlpha: number;
+  readonly pickupTrailAlpha: number;
+  readonly impactStreakAlpha: number;
+  readonly highContrastProjectiles: boolean;
+}
+
 export function getCombatEffectRenderRadius(
   effect: Pick<CombatEffectRenderState, 'radius' | 'ttl' | 'maxTtl'>,
   reducedMotion: boolean
@@ -112,6 +124,37 @@ export function getCombatEffectRenderRadius(
 
   const progress = 1 - clamp(effect.ttl / effect.maxTtl, 0, 1);
   return effect.radius * (0.38 + progress * 0.62);
+}
+
+export function getVelocityCueState(settings: RendererSettings): VelocityCueState {
+  if (settings.reducedMotion) {
+    return {
+      parallaxScale: 0,
+      streakCount: 0,
+      streakAlpha: 0,
+      frameAlpha: 0.42,
+      frameRailAlpha: 0.04,
+      engineWakeAlpha: 0.18,
+      pickupTrailAlpha: 0,
+      impactStreakAlpha: 0.18,
+      highContrastProjectiles: settings.bulletContrast === 'high'
+    };
+  }
+
+  const performanceScale = settings.performanceMode ? 0.62 : 1;
+  const contrastScale = settings.bulletContrast === 'high' ? 0.58 : 1;
+
+  return {
+    parallaxScale: settings.performanceMode ? 0.82 : 1.14,
+    streakCount: settings.performanceMode ? 9 : 22,
+    streakAlpha: roundCueValue(0.24 * performanceScale * contrastScale),
+    frameAlpha: roundCueValue(0.58 * performanceScale),
+    frameRailAlpha: roundCueValue(0.18 * performanceScale * contrastScale),
+    engineWakeAlpha: roundCueValue(0.78 * performanceScale),
+    pickupTrailAlpha: roundCueValue(0.48 * performanceScale * contrastScale),
+    impactStreakAlpha: roundCueValue(0.64 * performanceScale * contrastScale),
+    highContrastProjectiles: settings.bulletContrast === 'high'
+  };
 }
 
 export class CanvasRenderer {
@@ -195,7 +238,8 @@ export class CanvasRenderer {
   public paintBackground(scrollOffset = 0, backgroundPlan?: BackgroundPlan): void {
     const { width, height } = this.size;
     const context = this.context;
-    const effectiveScrollOffset = this.settings.reducedMotion ? 0 : scrollOffset;
+    const velocityCues = getVelocityCueState(this.settings);
+    const effectiveScrollOffset = scrollOffset * velocityCues.parallaxScale;
 
     if (backgroundPlan) {
       this.paintGeneratedBackground(backgroundPlan, effectiveScrollOffset);
@@ -214,6 +258,7 @@ export class CanvasRenderer {
     this.paintNebula();
     this.paintStars(effectiveScrollOffset);
     this.paintHorizonGrid(effectiveScrollOffset);
+    this.paintVelocityStreaks(effectiveScrollOffset);
   }
 
   public paintSectorLandmarks(landmarks: readonly VisibleSectorLandmark[]): void {
@@ -267,13 +312,14 @@ export class CanvasRenderer {
     const { width, height } = this.size;
     const context = this.context;
     const inset = 18;
+    const velocityCues = getVelocityCueState(this.settings);
 
     context.save();
-    context.globalAlpha = 0.5;
+    context.globalAlpha = velocityCues.frameAlpha;
     context.strokeStyle = '#7cf7ff';
     context.lineWidth = 1;
     context.strokeRect(inset, inset, width - inset * 2, height - inset * 2);
-    context.globalAlpha = 0.16;
+    context.globalAlpha = velocityCues.frameRailAlpha;
     context.strokeStyle = '#ffd166';
 
     for (let y = height - 80; y > 80; y -= 72) {
@@ -283,18 +329,47 @@ export class CanvasRenderer {
       context.stroke();
     }
 
+    if (velocityCues.frameRailAlpha > 0.08) {
+      const leftRail = context.createLinearGradient(0, 0, 42, 0);
+      leftRail.addColorStop(0, 'rgba(124, 247, 255, 0.24)');
+      leftRail.addColorStop(1, 'rgba(124, 247, 255, 0)');
+
+      const rightRail = context.createLinearGradient(width, 0, width - 42, 0);
+      rightRail.addColorStop(0, 'rgba(255, 209, 102, 0.2)');
+      rightRail.addColorStop(1, 'rgba(255, 209, 102, 0)');
+
+      context.globalAlpha = velocityCues.frameRailAlpha;
+      context.fillStyle = leftRail;
+      context.fillRect(0, inset, 42, height - inset * 2);
+      context.fillStyle = rightRail;
+      context.fillRect(width - 42, inset, 42, height - inset * 2);
+    }
+
     context.restore();
   }
 
   public paintPlayerShip(player: PlayerRenderState): void {
     const context = this.context;
     const thrust = clamp(player.thrust, 0, 1);
+    const shipAlpha = player.invulnerable ? 0.62 : 1;
+    const velocityCues = getVelocityCueState(this.settings);
 
     context.save();
     context.translate(player.x, player.y);
-    context.globalAlpha = player.invulnerable ? 0.62 : 1;
 
-    context.globalAlpha = this.settings.reducedMotion ? 0.28 : 0.35 + thrust * 0.45;
+    if (velocityCues.engineWakeAlpha > 0) {
+      context.globalAlpha = velocityCues.engineWakeAlpha * (0.42 + thrust * 0.58) * shipAlpha;
+      context.strokeStyle = '#ffd166';
+      context.lineWidth = Math.max(2, player.radius * 0.12);
+      context.beginPath();
+      context.moveTo(-player.radius * 0.38, player.radius * 0.72);
+      context.lineTo(-player.radius * 0.18, player.radius * (1.72 + thrust * 0.52));
+      context.moveTo(player.radius * 0.38, player.radius * 0.72);
+      context.lineTo(player.radius * 0.18, player.radius * (1.72 + thrust * 0.52));
+      context.stroke();
+    }
+
+    context.globalAlpha = (this.settings.reducedMotion ? 0.22 : 0.32 + thrust * 0.42) * shipAlpha;
     context.fillStyle = '#ffd166';
     context.beginPath();
     context.moveTo(-player.radius * 0.48, player.radius * 0.68);
@@ -303,7 +378,7 @@ export class CanvasRenderer {
     context.closePath();
     context.fill();
 
-    context.globalAlpha = 1;
+    context.globalAlpha = shipAlpha;
     context.fillStyle = '#7cf7ff';
     context.strokeStyle = '#f8fbff';
     context.lineWidth = 2;
@@ -515,6 +590,7 @@ export class CanvasRenderer {
 
   public paintProjectile(projectile: ProjectileRenderState): void {
     const context = this.context;
+    const velocityCues = getVelocityCueState(this.settings);
 
     context.save();
     context.translate(projectile.x, projectile.y);
@@ -534,18 +610,41 @@ export class CanvasRenderer {
           : (faction?.palette.projectile ?? '#ff6bd6');
     }
 
-    context.shadowBlur = 10;
+    context.shadowBlur = velocityCues.highContrastProjectiles ? 14 : 10;
     context.beginPath();
     context.arc(0, 0, projectile.radius, 0, Math.PI * 2);
     context.fill();
+
+    if (velocityCues.highContrastProjectiles) {
+      context.shadowBlur = 0;
+      context.strokeStyle = '#03050d';
+      context.lineWidth = Math.max(2, projectile.radius * 0.55);
+      context.stroke();
+    }
+
     context.restore();
   }
 
   public paintPickup(pickup: PickupRenderState): void {
     const context = this.context;
+    const velocityCues = getVelocityCueState(this.settings);
 
     context.save();
     context.translate(pickup.x, pickup.y);
+
+    if (velocityCues.pickupTrailAlpha > 0) {
+      context.globalAlpha = velocityCues.pickupTrailAlpha;
+      context.strokeStyle = pickup.kind === 'credit' ? '#ffd166' : '#7cf7ff';
+      context.lineWidth = 1.5;
+      context.beginPath();
+      context.moveTo(-pickup.radius * 0.38, -pickup.radius * 1.9);
+      context.lineTo(-pickup.radius * 0.08, -pickup.radius * 4.2);
+      context.moveTo(pickup.radius * 0.38, -pickup.radius * 1.7);
+      context.lineTo(pickup.radius * 0.08, -pickup.radius * 3.5);
+      context.stroke();
+    }
+
+    context.globalAlpha = 1;
     context.rotate(Math.PI / 4);
     context.fillStyle = pickup.kind === 'credit' ? '#ffd166' : '#7cf7ff';
     context.strokeStyle = '#f8fbff';
@@ -561,9 +660,23 @@ export class CanvasRenderer {
     const radius = getCombatEffectRenderRadius(effect, this.settings.reducedMotion);
     const color =
       effect.kind === 'bomb' ? '#ffd166' : effect.kind === 'special' ? '#7cf7ff' : '#ff6bd6';
+    const velocityCues = getVelocityCueState(this.settings);
 
     context.save();
     context.translate(effect.x, effect.y);
+
+    if (velocityCues.impactStreakAlpha > 0) {
+      context.globalAlpha = alpha * velocityCues.impactStreakAlpha;
+      context.strokeStyle = color;
+      context.lineWidth = effect.kind === 'bomb' ? 3 : 2;
+      for (const offset of [-0.48, 0, 0.48]) {
+        context.beginPath();
+        context.moveTo(offset * radius * 0.58, -radius * 0.8);
+        context.lineTo(offset * radius * 0.26, -radius * 1.28);
+        context.stroke();
+      }
+    }
+
     context.globalAlpha = effect.kind === 'graze' ? alpha * 0.78 : alpha * 0.62;
     context.strokeStyle = color;
     context.fillStyle = color;
@@ -822,6 +935,7 @@ export class CanvasRenderer {
       this.paintBackgroundLayer(layer, scrollOffset);
     }
 
+    this.paintVelocityStreaks(scrollOffset);
     context.globalAlpha = 1;
   }
 
@@ -1033,9 +1147,47 @@ export class CanvasRenderer {
 
     this.context.restore();
   }
+
+  private paintVelocityStreaks(scrollOffset: number): void {
+    const velocityCues = getVelocityCueState(this.settings);
+
+    if (velocityCues.streakCount <= 0 || velocityCues.streakAlpha <= 0) {
+      return;
+    }
+
+    const { width, height } = this.size;
+    const context = this.context;
+    const wrapSpan = height + 220;
+    const offset = wrapCanvasValue(scrollOffset * 1.34, wrapSpan);
+
+    context.save();
+    context.lineCap = 'round';
+
+    for (let index = 0; index < velocityCues.streakCount; index += 1) {
+      const x = (((index * 173) % 997) / 997) * width;
+      const y = wrapCanvasValue(index * 113 + offset, wrapSpan) - 110;
+      const length = 38 + ((index * 47) % 84);
+      const drift = ((index % 5) - 2) * 2.8;
+      const alpha = velocityCues.streakAlpha * (0.55 + ((index * 29) % 45) / 100);
+
+      context.globalAlpha = alpha;
+      context.strokeStyle = index % 3 === 0 ? '#ffd166' : '#c6f7ff';
+      context.lineWidth = index % 4 === 0 ? 1.8 : 1.1;
+      context.beginPath();
+      context.moveTo(x, y);
+      context.lineTo(x + drift, y + length);
+      context.stroke();
+    }
+
+    context.restore();
+  }
 }
 
 function wrapCanvasValue(value: number, span: number): number {
   const safeSpan = Math.max(1, span);
   return ((value % safeSpan) + safeSpan) % safeSpan;
+}
+
+function roundCueValue(value: number): number {
+  return Math.round(value * 1000) / 1000;
 }

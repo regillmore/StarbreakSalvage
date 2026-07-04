@@ -140,3 +140,58 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
 
   expect(browserErrors).toEqual([]);
 });
+
+test('launches gameplay with reduced motion and high contrast settings by keyboard', async ({
+  page
+}) => {
+  const browserErrors: string[] = [];
+  const accessibleSettings = {
+    version: 1,
+    keyBindings: {
+      moveUp: 'W',
+      moveDown: 'S',
+      moveLeft: 'A',
+      moveRight: 'D',
+      fire: ' ',
+      special: 'Shift',
+      bomb: 'X',
+      pause: 'P',
+      confirm: 'Enter',
+      back: 'Escape'
+    },
+    muted: false,
+    masterVolume: 0.8,
+    reducedMotion: true,
+    screenShake: 0,
+    bulletContrast: 'high',
+    fullscreenPreferred: false,
+    performanceMode: true
+  };
+
+  page.on('console', (message) => {
+    if (message.type() === 'error') {
+      browserErrors.push(message.text());
+    }
+  });
+  page.on('pageerror', (error) => browserErrors.push(error.message));
+  await page.addInitScript((settings) => {
+    window.localStorage.setItem('starbreak.settings.v1', JSON.stringify(settings));
+  }, accessibleSettings);
+
+  await page.goto('./?debug=1&seed=STARBREAK-SMOKE');
+
+  await expect(page.locator('html')).toHaveAttribute('data-reduced-motion', 'true');
+  await expect(page.locator('html')).toHaveAttribute('data-bullet-contrast', 'high');
+  await expect(page.locator('html')).toHaveAttribute('data-performance-mode', 'true');
+
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
+
+  await page.keyboard.press('Enter');
+  await expect(page.getByText('Outer Debris Field')).toBeVisible();
+  await expect(page.getByTestId('distance-readout')).toContainText(/Distance \d+\/\d+u/);
+  await expect(page.getByTestId('hint-readout')).toContainText('Hint');
+  await expect(page.locator('.debug-overlay')).toContainText(/Scroll \d+u\/s/);
+
+  expect(browserErrors).toEqual([]);
+});

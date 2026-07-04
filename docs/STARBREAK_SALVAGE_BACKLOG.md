@@ -668,6 +668,10 @@ Acceptance:
 - Cues remain original/generated and lightweight.
 - Screen shake and flash effects respect settings.
 
+Status:
+
+- First pass implemented in work order 028 with settings-derived parallax strength, background streaks, engine wake, pickup drift trails, impact streaks, and subtle frame rails. The cues are canvas primitives only and stay tied to renderer settings rather than simulation state.
+
 ### X2 - Accessibility and readability
 
 Acceptance:
@@ -675,6 +679,10 @@ Acceptance:
 - Reduced motion simplifies scrolling.
 - High-contrast bullets remain distinct from moving backgrounds.
 - HUD remains legible on mobile and desktop.
+
+Status:
+
+- First pass implemented in work order 028. Reduced motion removes parallax/streak velocity cues and most wake/trail motion, performance mode lowers visual density, high-contrast bullets gain outlines and reduced background streak intensity, HUD pills wrap on narrow screens, and E2E smoke covers reduced-motion/high-contrast launch through keyboard flow.
 
 ## Epic Y - Long-scroll performance
 

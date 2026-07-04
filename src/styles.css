@@ -498,6 +498,7 @@ button {
   flex-wrap: wrap;
   align-items: start;
   align-content: start;
+  max-width: 100vw;
   gap: 0.5rem;
   padding: 1rem;
   pointer-events: none;
@@ -505,6 +506,7 @@ button {
 
 .hud-pill {
   min-width: 4.5rem;
+  max-width: calc(100vw - 2rem);
   margin: 0;
   padding: 0.45rem 0.65rem;
   border: 1px solid rgba(124, 247, 255, 0.32);
@@ -514,13 +516,12 @@ button {
   font-size: 0.86rem;
   font-weight: 750;
   line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .hud-pill-wide {
   max-width: min(34rem, calc(100vw - 2rem));
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .pause-panel,
@@ -647,6 +648,13 @@ button {
 
   .game-hud {
     flex-wrap: wrap;
+    gap: 0.38rem;
+    padding: 0.65rem;
+  }
+
+  .hud-pill {
+    padding: 0.38rem 0.5rem;
+    font-size: 0.76rem;
   }
 }
 

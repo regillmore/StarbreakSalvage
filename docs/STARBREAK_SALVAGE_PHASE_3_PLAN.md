@@ -133,6 +133,8 @@ Exit criteria:
 - High-contrast mode keeps enemy bullets distinct from background motion.
 - Keyboard-only and reduced-motion flows remain covered by smoke tests.
 
+Status: first pass implemented by work order 028. Velocity cues are now derived from renderer settings, with normal play using stronger streaks, wake, trails, impact lines, and frame rails while reduced motion/performance mode lowers or removes visual motion. High-contrast bullets gain outlines and lower background streak intensity, HUD pills wrap instead of clipping, and smoke coverage exercises reduced-motion/high-contrast keyboard launch.
+
 ### P3.9 - Performance And Instrumentation
 
 Expand debug tools to profile long scrolling and dense backgrounds.

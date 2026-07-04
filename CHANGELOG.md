@@ -13,6 +13,7 @@
 - Connected unlocks to future run generation so fresh saves begin with baseline contracts while earned unlocks widen ship, item, faction, boss, challenge, practice, and music availability.
 - Added original procedural Web Audio cues for firing, impacts, pickups, boss warnings, sector clears, and run endings.
 - Added gameplay camera shake that respects reduced motion and screen shake strength settings.
+- Added settings-aware velocity presentation with parallax-scaled background streaks, engine wake, pickup drift trails, impact streaks, subtle frame rails, high-contrast projectile outlines, and wrapped HUD pills.
 - Added deterministic sector scroll plans, fixed-step distance tracking, HUD distance/speed readouts, debug distance counters, and subtle reduced-motion-aware starfield drift.
 - Added deterministic procedural parallax background plans for all five sectors, with original canvas-drawn stars, rails, debris, bloom strands, grid lines, and core fractures.
 - Moved normal directed wave spawning onto deterministic scroll-distance marks while retaining time-based fallback schedules and boss-gate timing.
@@ -44,6 +45,7 @@
 - Added sector feature tests for deterministic landmark/hazard plans, feature validation, hazard phase windows, hazard collision damage, and reduced-motion hazard styling.
 - Added boss arena tests for deterministic arena marks, approach/lock/release transitions, boss-spawn gating, scroll-lock behavior, and debug shortcut suppression.
 - Added sector condition tests for route-selected scroll/feature/arena changes, challenge and unlock variants, and run-summary physical modifier text.
+- Added velocity cue state coverage and a reduced-motion/high-contrast keyboard launch Playwright smoke.
 
 ### Planning
 

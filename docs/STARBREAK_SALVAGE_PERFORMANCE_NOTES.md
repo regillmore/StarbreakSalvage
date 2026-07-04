@@ -25,6 +25,7 @@ Phase 3 adds continuous vertical motion, procedural backgrounds, landmarks, and 
 - Hazard rendering uses low-alpha fills/pattern strokes below pickups, enemies, projectiles, and the player. Do not raise hazard opacity or paint it above bullets without a contrast/readability pass.
 - Boss arena plans are generated once per boss-gated sector. Arena approach slows scroll, locked arenas hold distance at explicit zero speed, and active hazard rendering/collision is suppressed during the locked boss fight to keep boss bullets readable.
 - Sector condition plans are derived once per gameplay scene from route outcomes plus challenge/unlock flags. They transform existing scroll, feature, and boss arena plans instead of generating per-frame terrain, so route-conditioned speed, distance, hazards, landmarks, and approach lengths should stay allocation-light and deterministic.
+- Velocity presentation currently uses low-alpha deterministic canvas primitives: background streaks, frame rails, engine wake, pickup trails, impact streaks, and projectile outlines. Reduced motion disables the scrolling streak/parallax cues, performance mode lowers cue density, and high-contrast bullets reduce moving-background intensity while adding outlines.
 - Avoid per-frame allocation in background rendering; cache reusable primitives or draw plans when profiling shows pressure.
 - Keep normal Phase 3 combat near the Phase 2 active-field budget until long-scroll profiling is available.
 - Debug counters currently report distance traveled, scroll speed, and planned background primitive count during gameplay. Future counters should add active landmarks, active hazards, enemies, enemy bullets, player bullets, pickups, and effects.
@@ -65,6 +66,6 @@ The debug overlay entity count includes player, enemies, boss, bullets, pickups,
 ## Phase 3 Playtest Risks
 
 - Future scroll-synced hazards, landmarks, and pickup beats should reuse the indexed marker pattern now used for waves; ad hoc threshold checks can still double-fire or skip under frame catchup.
-- Procedural backgrounds are deliberately low-alpha, but they can still hide bullets unless palette, contrast, and motion settings are validated per sector.
+- Procedural backgrounds and velocity cues are deliberately low-alpha/settings-aware, but they can still hide bullets unless palette, contrast, and motion settings are validated per sector.
 - Boss scroll locks now share a first-pass arena-state contract, and route-conditioned arena approach lengths are covered by unit tests. Future arena variants can still strand the player if they bypass the release condition or hide remaining support targets.
 - Rich landmarks and hazards may compete with enemies for attention; telegraphs should stay distinct from background motion.
