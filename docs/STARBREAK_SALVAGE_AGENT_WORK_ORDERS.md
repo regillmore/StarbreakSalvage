@@ -454,6 +454,8 @@ Acceptance criteria:
 - Dense and long-scroll scenarios stay under documented budgets.
 - Performance notes explain current limits and follow-up triggers for pooling.
 
+Status: first pass implemented; debug state now reports granular enemy, projectile, pickup/effect, telegraph, background layer/primitive, active feature, distance, speed, arena, and scenario counters. Debug key `0` keeps the deterministic dense-combat pocket, debug key `9` jumps to a quiet late-sector long-scroll traversal, and unit/E2E smoke coverage exercises the helpers and overlay.
+
 ## Work order 030 - Phase 3 playtest release hardening
 
 Goal: ship a scrolling-focused public playtest candidate.

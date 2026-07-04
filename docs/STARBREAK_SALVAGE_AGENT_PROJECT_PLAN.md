@@ -309,7 +309,7 @@ Exit criteria:
 - Distance objectives, boss locks, route modifiers, and summaries behave deterministically.
 - No severe blockers remain for a Phase 3 playtest release.
 
-Status: first-pass distance objectives are implemented by work order 024. Normal and boss sectors now require exit distance plus required combat gates, HUD/transition/summary copy exposes distance, and save records preserve distance reached. Hazards, boss arenas, and route-conditioned sector state are implemented by work orders 025-027, and velocity presentation/readability polish is implemented by work order 028. Long-scroll instrumentation remains open Phase 3 work.
+Status: first-pass distance objectives are implemented by work order 024. Normal and boss sectors now require exit distance plus required combat gates, HUD/transition/summary copy exposes distance, and save records preserve distance reached. Hazards, boss arenas, and route-conditioned sector state are implemented by work orders 025-027, velocity presentation/readability polish is implemented by work order 028, and long-scroll debug instrumentation is implemented by work order 029. Phase 3 playtest hardening remains open.
 
 ## Dependency map
 

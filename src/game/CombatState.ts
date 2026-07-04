@@ -234,6 +234,20 @@ export interface CombatRunResult {
   readonly itemNames: readonly string[];
 }
 
+export interface CombatEntityCounts {
+  readonly total: number;
+  readonly player: number;
+  readonly enemies: number;
+  readonly boss: number;
+  readonly projectiles: number;
+  readonly playerProjectiles: number;
+  readonly enemyProjectiles: number;
+  readonly pickups: number;
+  readonly effects: number;
+  readonly pickupsAndEffects: number;
+  readonly telegraphs: number;
+}
+
 const ENEMY_PROJECTILE_SPEED = 285;
 const PLAYER_DAMAGE_INVULNERABILITY_SECONDS = 0.55;
 const DEFAULT_BOSS_ID: BossId = 'boss_auditor_drone_xl';
@@ -540,16 +554,61 @@ export function spawnDebugDenseCombatScenario(state: CombatState, bounds: Combat
   });
 }
 
+export function prepareDebugLongScrollScenario(state: CombatState, scrollDistance?: number): void {
+  state.enemies = [];
+  state.projectiles = [];
+  state.telegraphs = [];
+  state.effects = [];
+  state.pickups = [];
+  state.boss = null;
+  state.bossSpawned = false;
+  state.nextSpawnIndex = state.spawnSchedule.length;
+
+  if (typeof scrollDistance === 'number' && Number.isFinite(scrollDistance)) {
+    state.scrollDistance =
+      state.sectorLength === null
+        ? Math.max(0, scrollDistance)
+        : clamp(scrollDistance, 0, state.sectorLength);
+  }
+}
+
+export function getCombatEntityCounts(state: CombatState): CombatEntityCounts {
+  let playerProjectiles = 0;
+
+  for (const projectile of state.projectiles) {
+    if (projectile.owner === 'player') {
+      playerProjectiles += 1;
+    }
+  }
+
+  const enemyProjectiles = state.projectiles.length - playerProjectiles;
+  const pickupsAndEffects = state.pickups.length + state.effects.length;
+  const boss = Number(state.boss !== null);
+
+  return {
+    total:
+      1 +
+      boss +
+      state.enemies.length +
+      state.projectiles.length +
+      state.pickups.length +
+      state.telegraphs.length +
+      state.effects.length,
+    player: 1,
+    enemies: state.enemies.length,
+    boss,
+    projectiles: state.projectiles.length,
+    playerProjectiles,
+    enemyProjectiles,
+    pickups: state.pickups.length,
+    effects: state.effects.length,
+    pickupsAndEffects,
+    telegraphs: state.telegraphs.length
+  };
+}
+
 export function getCombatEntityCount(state: CombatState): number {
-  return (
-    1 +
-    Number(state.boss !== null) +
-    state.enemies.length +
-    state.projectiles.length +
-    state.pickups.length +
-    state.telegraphs.length +
-    state.effects.length
-  );
+  return getCombatEntityCounts(state).total;
 }
 
 export function createCombatRunResult(

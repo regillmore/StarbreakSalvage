@@ -28,8 +28,8 @@ Phase 3 adds continuous vertical motion, procedural backgrounds, landmarks, and 
 - Velocity presentation currently uses low-alpha deterministic canvas primitives: background streaks, frame rails, engine wake, pickup trails, impact streaks, and projectile outlines. Reduced motion disables the scrolling streak/parallax cues, performance mode lowers cue density, and high-contrast bullets reduce moving-background intensity while adding outlines.
 - Avoid per-frame allocation in background rendering; cache reusable primitives or draw plans when profiling shows pressure.
 - Keep normal Phase 3 combat near the Phase 2 active-field budget until long-scroll profiling is available.
-- Debug counters currently report distance traveled, scroll speed, and planned background primitive count during gameplay. Future counters should add active landmarks, active hazards, enemies, enemy bullets, player bullets, pickups, and effects.
-- Long-scroll debug scenarios should test at least one full sector length without requiring a boss defeat.
+- Debug counters currently report distance traveled, scroll speed, arena phase, active debug scenario, total entities, enemy count, player/enemy projectile split, pickup/effect counts, telegraph count, planned background primitive/layer count, and active landmark/hazard count during gameplay.
+- The long-scroll debug scenario jumps to a deterministic late-sector traversal without requiring a boss defeat or live enemy field. Use it to inspect background, feature, HUD, and scroll counter behavior apart from combat pressure.
 - Moving backgrounds must be tested in standard and high-contrast modes before increasing bullet density.
 
 ## Debug and Playtest Scenarios
@@ -42,9 +42,10 @@ Enable debug tools with `?debug=1` on a local, preview, or Pages URL.
 - `4` spawns Warranty Void Seraph.
 - `5` spawns The Core Wreck.
 - `0` replaces the current field with the dense-combat performance pocket: 12 enemies, 42 enemy bullets, 3 lane telegraphs, and 1 feedback effect, for 59 total active entities including the player.
+- `9` replaces the current field with a quiet late-sector long-scroll traversal: 1 active entity, 0 projectiles, 0 pickups/effects, 0 telegraphs, and the current sector's generated background/features at a deterministic late distance.
 - `K` forces a debug run summary.
 
-The dense pocket is deterministic and intentionally stays below the Phase 2 alpha active-field budget of 80 entities. Use it to confirm the debug overlay remains responsive, bullets remain readable in standard and high-contrast modes, screen shake respects reduced motion, distance/speed counters continue advancing, and the round can still be abandoned or summarized.
+The dense pocket is deterministic and intentionally stays below the Phase 2 alpha active-field budget of 80 entities. The long-scroll traversal is deterministic and intentionally quiet so background/feature rendering can be inspected without combat pressure. Use both to confirm the debug overlay remains responsive, bullets remain readable in standard and high-contrast modes, screen shake respects reduced motion, distance/speed counters continue advancing, and the round can still be abandoned or summarized.
 
 ## Current Boss Phase Volleys
 
@@ -54,7 +55,7 @@ The dense pocket is deterministic and intentionally stays below the Phase 2 alph
 - Warranty Void Seraph: escalates from `VOID AUDIT` into clause-collapse and null-signature phases with longer telegraphs.
 - The Core Wreck: escalates from `CORE SALVO` lanes into reactor breach and `CORE UNSEALED` mixed patterns, capped at 12 bullets.
 
-The debug overlay entity count includes player, enemies, boss, bullets, pickups, and telegraphs.
+The debug overlay total entity count includes player, enemies, boss, bullets, pickups, telegraphs, and effects. The split counters report enemies, projectile owner counts, pickups/effects, telegraphs, background plan size, and active sector features separately.
 
 ## Phase 2 Playtest Risks
 

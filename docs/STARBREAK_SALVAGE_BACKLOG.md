@@ -694,6 +694,10 @@ Acceptance:
 - Long-scroll and dense-scroll debug scenarios are deterministic.
 - Performance notes document budgets.
 
+Status:
+
+- First pass implemented in work order 029. Debug overlay now separates total entities, enemies, projectile owner split, pickups/effects, telegraphs, distance, speed, arena state, scenario label, background primitive/layer count, and active landmark/hazard count. The dense scenario remains on `0`; the deterministic quiet long-scroll traversal shortcut is on `9`.
+
 ### Y2 - Optimization gates
 
 Acceptance:

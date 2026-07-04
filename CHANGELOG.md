@@ -22,7 +22,7 @@
 - Added first-pass boss arena approach, scroll-lock, and post-defeat release states for boss-gated sectors, with arena HUD/debug readouts and immediate debug boss shortcuts preserved.
 - Added deterministic route/meta sector conditions so route outcomes, challenge flags, and unlock variants can alter next-sector scroll speed, travel distance, hazard density, landmark signatures, and boss approach length.
 - Added main-menu seed entry with blank/default/random/known-label handling, compact onboarding HUD hints, richer build/resource HUD readouts, and run summaries with win/loss detail plus unlock reasons.
-- Added five-boss debug spawn shortcuts and a deterministic dense-combat performance pocket behind `?debug=1`.
+- Added five-boss debug spawn shortcuts, granular debug performance counters, a deterministic dense-combat performance pocket, and a quiet long-scroll traversal shortcut behind `?debug=1`.
 - Fixed objective target desyncs where secondary item effects or enemy body collisions could clear enemies without advancing target progress.
 
 ### Testing
@@ -46,6 +46,7 @@
 - Added boss arena tests for deterministic arena marks, approach/lock/release transitions, boss-spawn gating, scroll-lock behavior, and debug shortcut suppression.
 - Added sector condition tests for route-selected scroll/feature/arena changes, challenge and unlock variants, and run-summary physical modifier text.
 - Added velocity cue state coverage and a reduced-motion/high-contrast keyboard launch Playwright smoke.
+- Added debug count, scroll seek, long-scroll preparation, and granular debug overlay E2E smoke coverage.
 
 ### Planning
 

@@ -12,7 +12,8 @@ import {
 import {
   createCombatState,
   forceCombatEnd,
-  getCombatEntityCount,
+  getCombatEntityCounts,
+  prepareDebugLongScrollScenario,
   spawnDebugDenseCombatScenario,
   spawnBoss,
   updateCombatState,
@@ -45,6 +46,7 @@ import {
   createScrollState,
   formatScrollReadout,
   getScrollProgress,
+  setScrollDistance,
   type SectorScrollPlan,
   type ScrollState
 } from '../game/ScrollState';
@@ -67,6 +69,8 @@ const DEBUG_BOSS_SHORTCUTS: Partial<Record<InputAction, BossId>> = {
   debugBossFour: 'boss_warranty_void_seraph',
   debugBossFive: 'boss_core_wreck'
 };
+const DEBUG_LONG_SCROLL_RATIO = 0.86;
+const DEBUG_LONG_SCROLL_EXIT_LEAD = 120;
 
 export class GameplayScene implements Scene {
   public readonly id = 'gameplay';
@@ -98,6 +102,7 @@ export class GameplayScene implements Scene {
   private sectorCompleted = false;
   private queuedSpecial = false;
   private queuedBomb = false;
+  private debugScenario: string | null = null;
 
   public constructor(
     private readonly uiRoot: HTMLElement,
@@ -366,6 +371,7 @@ export class GameplayScene implements Scene {
       spawnBoss(state, debugBossId, this.getCombatBounds(), { clearField: true });
       this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
       this.sectorCompleted = false;
+      this.debugScenario = 'boss-shortcut';
       this.syncReadouts();
     }
 
@@ -375,6 +381,22 @@ export class GameplayScene implements Scene {
       spawnDebugDenseCombatScenario(state, this.getCombatBounds());
       this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
       this.sectorCompleted = false;
+      this.debugScenario = 'dense-combat';
+      this.syncReadouts();
+    }
+
+    if (action === 'debugLongScroll' && this.debugEnabled) {
+      const state = this.getCombatState();
+      const feedbackBefore = createCombatFeedbackSnapshot(state);
+      const scroll = this.getScrollState();
+      const targetDistance = getDebugLongScrollDistance(scroll.plan.length);
+
+      setScrollDistance(scroll, Math.max(scroll.distance, targetDistance), scroll.plan.baseSpeed);
+      prepareDebugLongScrollScenario(state, scroll.distance);
+      this.updateBossArena(scroll.distance, state);
+      this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
+      this.sectorCompleted = false;
+      this.debugScenario = 'long-scroll';
       this.syncReadouts();
     }
   }
@@ -385,15 +407,30 @@ export class GameplayScene implements Scene {
 
   public getDebugState(): SceneDebugState {
     const scroll = getScrollProgress(this.getScrollState());
+    const bounds = this.getCombatBounds();
+    const features = this.getCurrentFeatures();
+    const activeLandmarks = getVisibleSectorLandmarks(features, scroll.distance, bounds.height);
+    const activeHazards =
+      this.bossArenaUpdate.phase === 'locked'
+        ? []
+        : getActiveSectorHazards(features, scroll.distance);
+    const background = this.getCurrentSector().background;
+    const combatState = this.getCombatState();
+    const entityCounts = getCombatEntityCounts(combatState);
 
     return {
       seed: this.run.seed,
-      entityCount: getCombatEntityCount(this.getCombatState()),
+      entityCount: entityCounts.total,
+      entityCounts,
       distance: scroll.distance,
       sectorLength: scroll.length,
       scrollSpeed: scroll.speed,
       arenaPhase: this.bossArenaUpdate.phase,
-      backgroundPrimitives: this.getCurrentSector().background.primitiveCount
+      debugScenario: this.debugScenario ?? undefined,
+      backgroundPrimitives: background.primitiveCount,
+      backgroundLayers: background.layers.length,
+      activeLandmarks: activeLandmarks.length,
+      activeHazards: activeHazards.length
     };
   }
 
@@ -669,4 +706,12 @@ export class GameplayScene implements Scene {
       padding: 24
     };
   }
+}
+
+function getDebugLongScrollDistance(sectorLength: number): number {
+  const length = Math.max(0, sectorLength);
+  const lateDistance = length * DEBUG_LONG_SCROLL_RATIO;
+  const exitLeadDistance = Math.max(0, length - DEBUG_LONG_SCROLL_EXIT_LEAD);
+
+  return Math.min(lateDistance, exitLeadDistance);
 }

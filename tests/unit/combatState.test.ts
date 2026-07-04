@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import {
   createCombatState,
   forceCombatEnd,
+  getCombatEntityCounts,
   getCombatEntityCount,
+  prepareDebugLongScrollScenario,
   spawnDebugDenseCombatScenario,
   spawnBoss,
   updateCombatState,
@@ -270,7 +272,51 @@ describe('CombatState', () => {
       'DENSE PERF LANE',
       'DENSE PERF LANE'
     ]);
+    expect(getCombatEntityCounts(first)).toEqual({
+      total: 59,
+      player: 1,
+      enemies: 12,
+      boss: 0,
+      projectiles: 42,
+      playerProjectiles: 0,
+      enemyProjectiles: 42,
+      pickups: 0,
+      effects: 1,
+      pickupsAndEffects: 1,
+      telegraphs: 3
+    });
     expect(getCombatEntityCount(first)).toBeLessThanOrEqual(80);
+  });
+
+  it('prepares a quiet deterministic long-scroll debug scenario', () => {
+    const state = createCombatState(bounds, 'LONG-SCROLL-DEBUG-TEST');
+
+    spawnBoss(state, 'boss_core_wreck', bounds, { clearField: true });
+    spawnDebugDenseCombatScenario(state, bounds);
+    prepareDebugLongScrollScenario(state, 1200);
+
+    expect(state.enemies).toHaveLength(0);
+    expect(state.projectiles).toHaveLength(0);
+    expect(state.telegraphs).toHaveLength(0);
+    expect(state.effects).toHaveLength(0);
+    expect(state.pickups).toHaveLength(0);
+    expect(state.boss).toBeNull();
+    expect(state.bossSpawned).toBe(false);
+    expect(state.nextSpawnIndex).toBe(state.spawnSchedule.length);
+    expect(state.scrollDistance).toBe(1200);
+    expect(getCombatEntityCounts(state)).toEqual({
+      total: 1,
+      player: 1,
+      enemies: 0,
+      boss: 0,
+      projectiles: 0,
+      playerProjectiles: 0,
+      enemyProjectiles: 0,
+      pickups: 0,
+      effects: 0,
+      pickupsAndEffects: 0,
+      telegraphs: 0
+    });
   });
 
   it('activates special with charge, burst shots, active time, and cooldown', () => {

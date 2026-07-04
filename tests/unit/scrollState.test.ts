@@ -5,6 +5,7 @@ import {
   advanceScrollState,
   createScrollState,
   getScrollProgress,
+  setScrollDistance,
   type SectorScrollPlan
 } from '../../src/game/ScrollState';
 
@@ -82,6 +83,31 @@ describe('ScrollState', () => {
 
     expect(pauseResult.delta).toBe(0);
     expect(getScrollProgress(state)).toEqual(beforePause);
+  });
+
+  it('seeks debug scroll distance while syncing offsets', () => {
+    const state = createScrollState(
+      makePlan({ length: 120, baseSpeed: 60, minSpeed: 40, maxSpeed: 80, startOffset: 250 })
+    );
+
+    const result = setScrollDistance(state, 96.234, 999);
+
+    expect(result).toEqual({
+      previousDistance: 0,
+      distance: 96.23,
+      delta: 96.23,
+      crossedExit: false
+    });
+    expect(getScrollProgress(state)).toEqual({
+      distance: 96.23,
+      length: 120,
+      remaining: 23.77,
+      ratio: 0.8019166666666667,
+      speed: 80,
+      cameraOffset: 346.23,
+      worldOffset: 346.23,
+      complete: false
+    });
   });
 
   it('accepts an explicit zero speed override for arena scroll locks', () => {

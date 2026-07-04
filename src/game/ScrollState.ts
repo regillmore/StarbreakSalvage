@@ -140,6 +140,32 @@ export function advanceScrollState(
   };
 }
 
+export function setScrollDistance(
+  state: ScrollState,
+  distance: number,
+  speedOverride?: number
+): ScrollAdvanceResult {
+  const previousDistance = state.distance;
+  const wasComplete = state.complete;
+
+  state.speed =
+    speedOverride === undefined
+      ? state.speed
+      : speedOverride === 0
+        ? 0
+        : clamp(speedOverride, state.plan.minSpeed, state.plan.maxSpeed);
+  state.distance = roundScrollValue(clamp(distance, 0, state.plan.length));
+  state.complete = state.distance >= state.plan.length;
+  syncOffsets(state);
+
+  return {
+    previousDistance,
+    distance: state.distance,
+    delta: roundScrollValue(state.distance - previousDistance),
+    crossedExit: !wasComplete && state.complete
+  };
+}
+
 export function getScrollProgress(state: ScrollState): ScrollProgress {
   return {
     distance: state.distance,

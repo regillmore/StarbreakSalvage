@@ -99,9 +99,21 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.keyboard.press('0');
   await expect(page.getByTestId('boss-warning')).toContainText('DENSE PERF LANE');
   await expect(page.locator('.debug-overlay')).toContainText(/Entities [5-9]\d/);
+  await expect(page.locator('.debug-overlay')).toContainText('Scenario dense-combat');
+  await expect(page.locator('.debug-overlay')).toContainText(/Projectiles 42 \(P0\/E42\)/);
+  await expect(page.locator('.debug-overlay')).toContainText('Pickups/FX 0/1');
+  await expect(page.locator('.debug-overlay')).toContainText('Telegraphs 3');
   await expect(page.locator('.debug-overlay')).toContainText(/Distance \d+\/\d+/);
   await expect(page.locator('.debug-overlay')).toContainText(/Scroll \d+u\/s/);
-  await expect(page.locator('.debug-overlay')).toContainText(/Bg \d+/);
+  await expect(page.locator('.debug-overlay')).toContainText(/Bg \d+p\/4l/);
+  await expect(page.locator('.debug-overlay')).toContainText(/Features L\d+\/H\d+/);
+
+  await page.keyboard.press('9');
+  await expect(page.locator('.debug-overlay')).toContainText('Scenario long-scroll');
+  await expect(page.locator('.debug-overlay')).toContainText('Entities 1');
+  await expect(page.locator('.debug-overlay')).toContainText('Projectiles 0 (P0/E0)');
+  await expect(page.locator('.debug-overlay')).toContainText('Pickups/FX 0/0');
+  await expect(page.getByTestId('distance-readout')).toContainText(/Distance 1\d{3}\/\d+u/);
 
   await page.keyboard.press('K');
   await expect(page.getByRole('heading', { name: 'Debug Run Ended' })).toBeVisible();

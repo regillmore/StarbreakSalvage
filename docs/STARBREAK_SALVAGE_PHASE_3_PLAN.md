@@ -145,6 +145,8 @@ Exit criteria:
 - Debug scenario can run a long scroll segment and dense encounter pocket.
 - Production preview smoke covers long-scroll asset/base-path behavior.
 
+Status: first pass implemented by work order 029. The debug overlay now separates total entities, enemies, projectiles by owner, pickups/effects, telegraphs, background primitives/layers, active landmarks/hazards, distance, speed, arena state, and active debug scenario. The existing dense-combat shortcut remains on `0`, and a quiet late-sector long-scroll traversal shortcut now runs on `9`. Production preview smoke remains part of the P3.10 release-hardening pass.
+
 ### P3.10 - Phase 3 Playtest Candidate
 
 Harden the scrolling build for deployment and manual playtest.

@@ -546,20 +546,43 @@ export class GameApp {
     const backgroundDebug =
       debugState.backgroundPrimitives === undefined
         ? []
-        : [`Bg ${debugState.backgroundPrimitives}`];
+        : [
+            `Bg ${debugState.backgroundPrimitives}p${
+              debugState.backgroundLayers === undefined ? '' : `/${debugState.backgroundLayers}l`
+            }`
+          ];
+    const featureDebug =
+      debugState.activeLandmarks === undefined && debugState.activeHazards === undefined
+        ? []
+        : [`Features L${debugState.activeLandmarks ?? 0}/H${debugState.activeHazards ?? 0}`];
+    const countDebug =
+      debugState.entityCounts === undefined
+        ? []
+        : [
+            `Enemies ${debugState.entityCounts.enemies}${
+              debugState.entityCounts.boss > 0 ? `+Boss ${debugState.entityCounts.boss}` : ''
+            }`,
+            `Projectiles ${debugState.entityCounts.projectiles} (P${debugState.entityCounts.playerProjectiles}/E${debugState.entityCounts.enemyProjectiles})`,
+            `Pickups/FX ${debugState.entityCounts.pickups}/${debugState.entityCounts.effects}`,
+            `Telegraphs ${debugState.entityCounts.telegraphs}`
+          ];
     const arenaDebug =
       debugState.arenaPhase && debugState.arenaPhase !== 'none'
         ? [`Arena ${debugState.arenaPhase}`]
         : [];
+    const scenarioDebug = debugState.debugScenario ? [`Scenario ${debugState.debugScenario}`] : [];
 
     this.debugOverlay.textContent = [
       `FPS ${Math.round(this.frameStats.fps)}`,
       `Scene ${this.sceneManager.getSceneId()}`,
       `Seed ${debugState.seed}`,
       `Entities ${debugState.entityCount}`,
+      ...countDebug,
       ...scrollDebug,
       ...arenaDebug,
-      ...backgroundDebug
+      ...scenarioDebug,
+      ...backgroundDebug,
+      ...featureDebug
     ].join(' | ');
   }
 
