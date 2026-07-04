@@ -11,7 +11,7 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 | ----------------------------- | ------ | ---------------------------------------------------- |
 | TypeScript typecheck          | Pass   | `npm run check`                                      |
 | ESLint                        | Pass   | `npm run check`                                      |
-| Unit and deterministic tests  | Pass   | `npm run check` - 26 files, 140 tests                |
+| Unit and deterministic tests  | Pass   | `npm run check` - 26 files, 142 tests                |
 | Production build              | Pass   | `npm run check` - Vite build created `dist/`         |
 | Playwright Chromium smoke     | Pass   | `npm run test:e2e` - 1 passed                        |
 | Production preview asset load | Pass   | Local preview returned HTTP 200 and Pages asset path |

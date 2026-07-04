@@ -7,6 +7,7 @@ import {
   updateCombatState,
   type CombatBounds
 } from '../../src/game/CombatState';
+import { createWaveDirectorPlan, getObjectiveProgress } from '../../src/game/WaveDirector';
 
 const bounds: CombatBounds = {
   width: 640,
@@ -331,4 +332,123 @@ describe('CombatState', () => {
     expect(state.stats.enemiesDestroyed).toBe(1);
     expect(state.player.specialCharge).toBeGreaterThan(0);
   });
+
+  it('counts item side-effect defeats toward objective target progress', () => {
+    const state = createCombatState(bounds, 'SIDE-EFFECT-TARGET-TEST', {
+      skipEnemyWaves: true,
+      items: [
+        { itemId: 'item_split_prism', acquisitionOrder: 0 },
+        { itemId: 'item_chain_arc_capacitor', acquisitionOrder: 1 }
+      ]
+    });
+    const plan = createTwoTargetPlan();
+    state.nextSpawnIndex = plan.spawnSchedule.length;
+    state.player.specialCharge = 0;
+    state.enemies.push(
+      {
+        id: 801,
+        factionId: 'faction_corporate_ledger',
+        x: state.player.x,
+        y: state.player.y - 120,
+        radius: 17,
+        hull: 1,
+        maxHull: 1,
+        drift: 0,
+        targetY: 120,
+        fireCooldown: 1
+      },
+      {
+        id: 802,
+        factionId: 'faction_corporate_ledger',
+        x: state.player.x + 24,
+        y: state.player.y - 120,
+        radius: 17,
+        hull: 0.5,
+        maxHull: 1,
+        drift: 0,
+        targetY: 120,
+        fireCooldown: 1
+      }
+    );
+    state.projectiles.push({
+      id: 803,
+      owner: 'player',
+      x: state.player.x,
+      y: state.player.y - 120,
+      vx: 0,
+      vy: 0,
+      radius: 8,
+      damage: 1,
+      ttl: 1,
+      tags: ['laser'],
+      procDepth: 0
+    });
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
+
+    expect(state.enemies).toHaveLength(0);
+    expect(state.stats.enemiesDestroyed).toBe(2);
+    expect(getObjectiveProgress(plan, state).complete).toBe(true);
+  });
+
+  it('counts enemy body collisions as cleared targets to avoid empty-field soft locks', () => {
+    const state = createCombatState(bounds, 'BODY-COLLISION-TARGET-TEST', {
+      skipEnemyWaves: true
+    });
+    const plan = createOneTargetPlan();
+    state.nextSpawnIndex = plan.spawnSchedule.length;
+    state.enemies.push({
+      id: 901,
+      factionId: 'faction_corporate_ledger',
+      x: state.player.x,
+      y: state.player.y,
+      radius: 17,
+      hull: 3,
+      maxHull: 3,
+      drift: 0,
+      targetY: state.player.y,
+      fireCooldown: 1
+    });
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
+
+    expect(state.enemies).toHaveLength(0);
+    expect(state.stats.enemiesDestroyed).toBe(1);
+    expect(state.stats.damageTaken).toBe(1);
+    expect(getObjectiveProgress(plan, state).complete).toBe(true);
+  });
 });
+
+function createOneTargetPlan() {
+  return createWaveDirectorPlan({
+    seed: 'TARGET-COLLISION-PLAN',
+    objective: {
+      kind: 'clearWaves',
+      label: 'Collision Sweep',
+      requiredWaves: 1,
+      spawnsPerWave: 1,
+      requiredEnemyKills: 1,
+      bossRequired: false,
+      bossSpawnAtSeconds: null
+    },
+    majorWaves: ['collision_single'],
+    preferredFactionId: 'faction_corporate_ledger'
+  });
+}
+
+function createTwoTargetPlan() {
+  return createWaveDirectorPlan({
+    seed: 'TARGET-REGRESSION-PLAN',
+    objective: {
+      kind: 'clearWaves',
+      label: 'Regression Sweep',
+      requiredWaves: 1,
+      spawnsPerWave: 2,
+      requiredEnemyKills: 2,
+      bossRequired: false,
+      bossSpawnAtSeconds: null
+    },
+    majorWaves: ['regression_pair'],
+    preferredFactionId: 'faction_corporate_ledger'
+  });
+}

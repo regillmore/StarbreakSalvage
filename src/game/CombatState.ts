@@ -697,6 +697,10 @@ function activateBomb(state: CombatState, bounds: CombatBounds): void {
   });
 
   for (const enemy of state.enemies) {
+    if (enemyIdsToRemove.has(enemy.id)) {
+      continue;
+    }
+
     damageEnemyWithProjectile(
       state,
       enemy,
@@ -1053,7 +1057,10 @@ function resolveCombatCollisions(state: CombatState): void {
       continue;
     }
 
-    enemyIdsToRemove.add(enemy.id);
+    recordEnemyDefeat(state, enemy, enemyIdsToRemove, {
+      dropPickups: false,
+      grantSpecialCharge: false
+    });
     damagePlayer(state, 1);
   }
 
@@ -1111,7 +1118,6 @@ function damageEnemyWithProjectile(
     return;
   }
 
-  enemyIdsToRemove.add(enemy.id);
   const killPayload = applyItemHooks('onEnemyKilled', state.items, {
     projectileTags: projectile.tags,
     overkillDamage,
@@ -1119,18 +1125,14 @@ function damageEnemyWithProjectile(
     blastDamage: 0,
     arcDamage: 0
   });
-  spawnEnemyDefeatPickups(state, enemy, killPayload.bonusSalvage);
-  applyKillSideEffects(state, enemy, killPayload, enemyIdsToRemove);
-  state.stats = {
-    ...state.stats,
-    enemiesDestroyed: state.stats.enemiesDestroyed + 1,
+  recordEnemyDefeat(state, enemy, enemyIdsToRemove, {
+    bonusSalvage: killPayload.bonusSalvage,
     itemTriggers:
-      state.stats.itemTriggers +
       Number(killPayload.bonusSalvage > 0) +
       Number(killPayload.blastDamage > 0) +
       Number(killPayload.arcDamage > 0)
-  };
-  gainSpecialCharge(state, SPECIAL_CHARGE_PER_KILL);
+  });
+  applyKillSideEffects(state, enemy, killPayload, enemyIdsToRemove);
 }
 
 function damageBossWithProjectile(
@@ -1536,8 +1538,7 @@ function applyKillSideEffects(
     if (nearest) {
       nearest.hull = applyDamage(nearest.hull, payload.arcDamage).hull;
       if (nearest.hull <= 0) {
-        enemyIdsToRemove.add(nearest.id);
-        spawnEnemyDefeatPickups(state, nearest, 0);
+        recordEnemyDefeat(state, nearest, enemyIdsToRemove);
       }
     }
   }
@@ -1554,11 +1555,44 @@ function applyKillSideEffects(
 
       enemy.hull = applyDamage(enemy.hull, payload.blastDamage).hull;
       if (enemy.hull <= 0) {
-        enemyIdsToRemove.add(enemy.id);
-        spawnEnemyDefeatPickups(state, enemy, 0);
+        recordEnemyDefeat(state, enemy, enemyIdsToRemove);
       }
     }
   }
+}
+
+function recordEnemyDefeat(
+  state: CombatState,
+  enemy: EnemyState,
+  enemyIdsToRemove: Set<number>,
+  options: {
+    readonly bonusSalvage?: number;
+    readonly itemTriggers?: number;
+    readonly dropPickups?: boolean;
+    readonly grantSpecialCharge?: boolean;
+  } = {}
+): boolean {
+  if (enemyIdsToRemove.has(enemy.id)) {
+    return false;
+  }
+
+  enemyIdsToRemove.add(enemy.id);
+
+  if (options.dropPickups ?? true) {
+    spawnEnemyDefeatPickups(state, enemy, options.bonusSalvage ?? 0);
+  }
+
+  state.stats = {
+    ...state.stats,
+    enemiesDestroyed: state.stats.enemiesDestroyed + 1,
+    itemTriggers: state.stats.itemTriggers + Math.max(0, options.itemTriggers ?? 0)
+  };
+
+  if (options.grantSpecialCharge ?? true) {
+    gainSpecialCharge(state, SPECIAL_CHARGE_PER_KILL);
+  }
+
+  return true;
 }
 
 function getDistanceSquared(
