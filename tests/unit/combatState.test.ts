@@ -101,6 +101,65 @@ describe('CombatState', () => {
     expect(new Set(first.spawnSchedule.map((spawn) => spawn.factionId)).size).toBeGreaterThan(1);
   });
 
+  it('spawns distance-marked waves once when scroll jumps across thresholds', () => {
+    const plan = createWaveDirectorPlan({
+      seed: 'DISTANCE-STUTTER-PLAN',
+      objective: {
+        kind: 'clearWaves',
+        label: 'Stutter Sweep',
+        requiredWaves: 2,
+        spawnsPerWave: 2,
+        requiredEnemyKills: 4,
+        bossRequired: false,
+        bossSpawnAtSeconds: null
+      },
+      majorWaves: ['stutter_one', 'stutter_two'],
+      preferredFactionId: 'faction_corporate_ledger',
+      scroll: {
+        length: 1000,
+        baseSpeed: 100
+      }
+    });
+    const firstDistance = plan.spawnSchedule[0]?.atDistance ?? 0;
+    const finalDistance = Math.max(...plan.spawnSchedule.map((spawn) => spawn.atDistance ?? 0));
+    const state = createCombatState(bounds, 'DISTANCE-STUTTER-RUN', {
+      spawnSchedule: plan.spawnSchedule,
+      bossSpawnAtSeconds: null
+    });
+
+    updateCombatState(
+      state,
+      { movement: { x: 0, y: 0 }, fire: false, scrollDistance: firstDistance - 1 },
+      1 / 60,
+      bounds
+    );
+
+    expect(state.nextSpawnIndex).toBe(0);
+    expect(state.enemies).toHaveLength(0);
+
+    updateCombatState(
+      state,
+      { movement: { x: 0, y: 0 }, fire: false, scrollDistance: finalDistance + 1 },
+      1 / 60,
+      bounds
+    );
+
+    expect(state.nextSpawnIndex).toBe(plan.spawnSchedule.length);
+    expect(state.enemies).toHaveLength(plan.spawnSchedule.length);
+
+    const spawnedIds = state.enemies.map((enemy) => enemy.id);
+
+    updateCombatState(
+      state,
+      { movement: { x: 0, y: 0 }, fire: false, scrollDistance: finalDistance + 1 },
+      1 / 60,
+      bounds
+    );
+
+    expect(state.nextSpawnIndex).toBe(plan.spawnSchedule.length);
+    expect(state.enemies.map((enemy) => enemy.id)).toEqual(spawnedIds);
+  });
+
   it('fires the void corsair phase skirmish pattern', () => {
     const state = createCombatState(bounds, 'VOID-CORSAIR-PATTERN', {
       skipEnemyWaves: true

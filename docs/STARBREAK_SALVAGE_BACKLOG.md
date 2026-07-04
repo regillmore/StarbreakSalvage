@@ -546,6 +546,10 @@ Acceptance:
 - Frame drops do not skip or duplicate wave spawns.
 - Same seed reproduces wave distance marks.
 
+Status:
+
+- First pass implemented in work order 023 for directed combat waves. Time fallback remains for handcrafted schedules; pickup beats, hazards, and boss approach markers remain follow-up encounter pacing work.
+
 ### S2 - Encounter pacing
 
 Acceptance:

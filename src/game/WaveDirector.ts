@@ -1,6 +1,7 @@
 import { FACTIONS, type FactionId } from '../content/factions';
 import { createRng, type Rng } from '../core/rng';
 import type { CombatState, EnemySpawn } from './CombatState';
+import type { SectorScrollPlan } from './ScrollState';
 import type { SectorObjectivePlan } from './SectorObjectives';
 import { getWaveStartSeconds } from './SectorObjectives';
 
@@ -8,6 +9,7 @@ export interface DirectedWave {
   readonly index: number;
   readonly label: string;
   readonly startsAtSeconds: number;
+  readonly startsAtDistance: number | null;
   readonly spawnCount: number;
 }
 
@@ -40,7 +42,13 @@ export interface WaveDirectorOptions {
   readonly majorWaves: readonly string[];
   readonly preferredFactionId: FactionId;
   readonly availableFactionIds?: readonly FactionId[];
+  readonly scroll?: Pick<SectorScrollPlan, 'length' | 'baseSpeed'>;
 }
+
+const DISTANCE_WAVE_WINDOW_START_RATIO = 0.12;
+const DISTANCE_WAVE_WINDOW_END_RATIO = 0.58;
+const DISTANCE_SPAWN_SPACING = 40;
+const BOSS_GATE_DISTANCE_LEAD_SECONDS = 0.75;
 
 export function createWaveDirectorPlan(options: WaveDirectorOptions): WaveDirectorPlan {
   const waves = options.majorWaves
@@ -49,6 +57,13 @@ export function createWaveDirectorPlan(options: WaveDirectorOptions): WaveDirect
       index,
       label,
       startsAtSeconds: getWaveStartSeconds(index),
+      startsAtDistance: getWaveStartDistance({
+        waveIndex: index,
+        requiredWaves: options.objective.requiredWaves,
+        spawnsPerWave: options.objective.spawnsPerWave,
+        scroll: options.scroll,
+        bossSpawnAtSeconds: options.objective.bossSpawnAtSeconds
+      }),
       spawnCount: options.objective.spawnsPerWave
     }));
   const rng = createRng(options.seed).fork('wave-director');
@@ -105,6 +120,43 @@ export function getObjectiveProgress(
   };
 }
 
+function getWaveStartDistance(options: {
+  readonly waveIndex: number;
+  readonly requiredWaves: number;
+  readonly spawnsPerWave: number;
+  readonly scroll?: Pick<SectorScrollPlan, 'length' | 'baseSpeed'>;
+  readonly bossSpawnAtSeconds: number | null;
+}): number | null {
+  const scroll = options.scroll;
+
+  if (!scroll || scroll.length <= 0 || scroll.baseSpeed <= 0) {
+    return null;
+  }
+
+  const requiredWaves = Math.max(1, Math.floor(options.requiredWaves));
+  const waveIndex = Math.min(Math.max(0, Math.floor(options.waveIndex)), requiredWaves - 1);
+  const maxSpawnOffset = Math.max(0, options.spawnsPerWave - 1) * DISTANCE_SPAWN_SPACING;
+  const firstDistance =
+    options.bossSpawnAtSeconds === null
+      ? scroll.length * DISTANCE_WAVE_WINDOW_START_RATIO
+      : getWaveStartSeconds(0) * scroll.baseSpeed;
+  const lastDistance =
+    options.bossSpawnAtSeconds === null
+      ? scroll.length * DISTANCE_WAVE_WINDOW_END_RATIO
+      : Math.max(
+          firstDistance,
+          (options.bossSpawnAtSeconds - BOSS_GATE_DISTANCE_LEAD_SECONDS) * scroll.baseSpeed -
+            maxSpawnOffset
+        );
+
+  if (requiredWaves === 1) {
+    return roundDistance((firstDistance + lastDistance) / 2);
+  }
+
+  const ratio = waveIndex / (requiredWaves - 1);
+  return roundDistance(firstDistance + (lastDistance - firstDistance) * ratio);
+}
+
 function createWaveSpawns(options: {
   readonly rng: Rng;
   readonly wave: DirectedWave;
@@ -116,6 +168,10 @@ function createWaveSpawns(options: {
   for (let spawnIndex = 0; spawnIndex < options.wave.spawnCount; spawnIndex += 1) {
     spawns.push({
       atSeconds: roundSeconds(options.wave.startsAtSeconds + spawnIndex * 0.32),
+      atDistance:
+        options.wave.startsAtDistance === null
+          ? null
+          : roundDistance(options.wave.startsAtDistance + spawnIndex * DISTANCE_SPAWN_SPACING),
       waveIndex: options.wave.index,
       waveLabel: options.wave.label,
       xRatio: spawnIndex === 0 ? 0.5 : options.rng.int(20, 80) / 100,
@@ -164,5 +220,9 @@ function formatObjectiveReadout(
 }
 
 function roundSeconds(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+function roundDistance(value: number): number {
   return Math.round(value * 100) / 100;
 }

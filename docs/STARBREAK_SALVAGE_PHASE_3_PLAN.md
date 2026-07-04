@@ -32,7 +32,7 @@ The Phase 2 game has deterministic sectors and wave objectives, but the playfiel
 
 - sector completion counts waves/targets rather than traveled distance;
 - first-pass backgrounds are now sector-specific and procedurally layered, but landmarks, hazards, and route-conditioned visual motifs remain follow-ups;
-- enemy wave timing is mostly time-based, not tied to scroll markers;
+- first-pass directed enemy waves are now tied to scroll markers, but pickups, hazards, landmarks, and boss approach gates are still follow-ups;
 - bosses spawn into a static field rather than at the end of a traveled sector;
 - route/event choices affect future combat but not the physical feeling of the next sector;
 - debug tools stress entity counts, but not long-scroll rendering or distance progression.
@@ -72,6 +72,8 @@ Exit criteria:
 - Wave director can schedule encounters by distance.
 - Existing boss-gate and objective tests cover distance progress.
 - Same seed reproduces major encounter marks.
+
+Status: first pass implemented by work order 023. Directed major waves now receive deterministic scroll-distance marks when a sector scroll plan is available, gameplay feeds fixed-step distance into combat spawning, time-based schedules remain as a fallback, and tests cover known-seed marks, spawn order, and frame-stutter duplicate prevention. Pickup beats, hazard windows, and boss approach gates remain later Phase 3 work.
 
 ### P3.4 - Distance Objectives And Sector Endings
 

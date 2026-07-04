@@ -13,12 +13,41 @@ describe('WaveDirector', () => {
 
     expect(plan.objective.requiredEnemyKills).toBeGreaterThan(1);
     expect(plan.bossSpawnAtSeconds).toBeNull();
-    expect(plan.waves.map((wave) => [wave.index, wave.label, wave.startsAtSeconds])).toEqual([
-      [0, 'salvage_thief_dive', 0.45],
-      [1, 'wreck_gnat_swarm', 1.8]
+    expect(
+      plan.waves.map((wave) => [
+        wave.index,
+        wave.label,
+        wave.startsAtSeconds,
+        wave.startsAtDistance
+      ])
+    ).toEqual([
+      [0, 'salvage_thief_dive', 0.45, 173.04],
+      [1, 'wreck_gnat_swarm', 1.8, 836.36]
     ]);
     expect(plan.spawnSchedule.map((spawn) => spawn.atSeconds)).toEqual([0.45, 1.8]);
+    expect(plan.spawnSchedule.map((spawn) => spawn.atDistance)).toEqual([173.04, 836.36]);
     expect(plan.spawnSchedule.every((spawn) => spawn.xRatio === 0.5)).toBe(true);
+  });
+
+  it('keeps a time-based fallback when no scroll plan is provided', () => {
+    const plan = createWaveDirectorPlan({
+      seed: 'TIME-FALLBACK',
+      objective: {
+        kind: 'clearWaves',
+        label: 'Fallback Sweep',
+        requiredWaves: 2,
+        spawnsPerWave: 1,
+        requiredEnemyKills: 2,
+        bossRequired: false,
+        bossSpawnAtSeconds: null
+      },
+      majorWaves: ['clock_one', 'clock_two'],
+      preferredFactionId: 'faction_corporate_ledger'
+    });
+
+    expect(plan.waves.map((wave) => wave.startsAtDistance)).toEqual([null, null]);
+    expect(plan.spawnSchedule.map((spawn) => spawn.atDistance ?? null)).toEqual([null, null]);
+    expect(plan.spawnSchedule.map((spawn) => spawn.atSeconds)).toEqual([0.45, 1.8]);
   });
 
   it('requires issued waves, cleared enemies, and target kills before completion', () => {
@@ -68,6 +97,20 @@ describe('WaveDirector', () => {
     expect(plan.objective.bossRequired).toBe(true);
     expect(plan.bossSpawnAtSeconds).toBe(5.55);
     expect(plan.spawnSchedule).toHaveLength(6);
+    expect(
+      plan.spawnSchedule.map((spawn) => ({
+        wave: spawn.waveLabel,
+        atSeconds: spawn.atSeconds,
+        atDistance: spawn.atDistance
+      }))
+    ).toEqual([
+      { wave: 'beam_warning_grid', atSeconds: 0.45, atDistance: 45 },
+      { wave: 'beam_warning_grid', atSeconds: 0.77, atDistance: 85 },
+      { wave: 'elite_laser_fan', atSeconds: 1.8, atDistance: 242.5 },
+      { wave: 'elite_laser_fan', atSeconds: 2.12, atDistance: 282.5 },
+      { wave: 'mine_checkerboard', atSeconds: 3.15, atDistance: 440 },
+      { wave: 'mine_checkerboard', atSeconds: 3.47, atDistance: 480 }
+    ]);
 
     const bossActive = getObjectiveProgress(
       plan,
@@ -331,7 +374,8 @@ function getPlan(seed: string, sectorIndex: number) {
     seed: `${run.seed}:combat:${sector.sectorId}`,
     objective: sector.objective,
     majorWaves: sector.majorWaves,
-    preferredFactionId: sector.bossFactionId
+    preferredFactionId: sector.bossFactionId,
+    scroll: sector.scroll
   });
 }
 

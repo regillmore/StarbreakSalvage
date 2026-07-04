@@ -41,6 +41,7 @@ export interface CombatInput {
   readonly fire: boolean;
   readonly special?: boolean;
   readonly bomb?: boolean;
+  readonly scrollDistance?: number;
 }
 
 export interface PlayerState {
@@ -184,6 +185,7 @@ export interface CombatState {
   readonly enemyFireDelayMultiplier: number;
   readonly bossHullBonus: number;
   timeSeconds: number;
+  scrollDistance: number;
   nextId: number;
   nextSpawnIndex: number;
   bossSpawned: boolean;
@@ -205,6 +207,7 @@ export interface CombatState {
 
 export interface EnemySpawn {
   readonly atSeconds: number;
+  readonly atDistance?: number | null;
   readonly waveIndex: number;
   readonly waveLabel: string;
   readonly xRatio: number;
@@ -286,6 +289,7 @@ export function createCombatState(
     enemyFireDelayMultiplier: clamp(options.enemyFireDelayMultiplier ?? 1, 0.5, 1.5),
     bossHullBonus: Math.max(0, Math.floor(options.bossHullBonus ?? 0)),
     timeSeconds: 0,
+    scrollDistance: 0,
     nextId: 1,
     nextSpawnIndex: 0,
     bossSpawned: false,
@@ -361,6 +365,10 @@ export function updateCombatState(
 
   const safeDt = clamp(dt, 0, 0.1);
   state.timeSeconds += safeDt;
+  state.scrollDistance = Math.max(
+    state.scrollDistance,
+    input.scrollDistance ?? state.scrollDistance
+  );
   updatePlayer(state, input, safeDt, bounds);
   spawnDueEnemies(state, bounds);
   spawnDueBoss(state, bounds);
@@ -842,7 +850,7 @@ function spawnDueEnemies(state: CombatState, bounds: CombatBounds): void {
   while (state.nextSpawnIndex < state.spawnSchedule.length) {
     const spawn = state.spawnSchedule[state.nextSpawnIndex];
 
-    if (!spawn || spawn.atSeconds > state.timeSeconds) {
+    if (!spawn || !isSpawnDue(spawn, state)) {
       return;
     }
 
@@ -862,6 +870,14 @@ function spawnDueEnemies(state: CombatState, bounds: CombatBounds): void {
     });
     state.nextSpawnIndex += 1;
   }
+}
+
+function isSpawnDue(spawn: EnemySpawn, state: CombatState): boolean {
+  if (spawn.atDistance !== null && spawn.atDistance !== undefined) {
+    return spawn.atDistance <= state.scrollDistance;
+  }
+
+  return spawn.atSeconds <= state.timeSeconds;
 }
 
 function spawnDueBoss(state: CombatState, bounds: CombatBounds): void {

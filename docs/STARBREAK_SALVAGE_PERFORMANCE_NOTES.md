@@ -18,6 +18,8 @@ Phase 3 adds continuous vertical motion, procedural backgrounds, landmarks, and 
 - Normal background rendering currently uses 4 parallax strata per sector.
 - Performance mode currently collapses rendering to priority 1-2 strata without changing encounter timing.
 - Background plans are generated once per sector and rendered from deterministic data plus scroll offset.
+- Directed normal waves now use deterministic scroll-distance markers when a sector scroll plan is available; handcrafted/debug schedules can still fall back to time markers.
+- The combat spawn queue processes every crossed distance marker in order and advances one spawn index, so fixed-step catchup frames should not skip or duplicate current wave spawns.
 - Avoid per-frame allocation in background rendering; cache reusable primitives or draw plans when profiling shows pressure.
 - Keep normal Phase 3 combat near the Phase 2 active-field budget until long-scroll profiling is available.
 - Debug counters currently report distance traveled, scroll speed, and planned background primitive count during gameplay. Future counters should add active landmarks, active hazards, enemies, enemy bullets, player bullets, pickups, and effects.
@@ -57,7 +59,7 @@ The debug overlay entity count includes player, enemies, boss, bullets, pickups,
 
 ## Phase 3 Playtest Risks
 
-- Scroll-synced wave thresholds can double-fire or skip if they are not advanced through fixed-step distance crossings.
+- Future scroll-synced hazards, landmarks, and pickup beats should reuse the indexed marker pattern now used for waves; ad hoc threshold checks can still double-fire or skip under frame catchup.
 - Procedural backgrounds are deliberately low-alpha, but they can still hide bullets unless palette, contrast, and motion settings are validated per sector.
 - Boss scroll locks can strand the player if arena entry, boss defeat, and exit-distance logic do not share one sector-state contract.
 - Rich landmarks and hazards may compete with enemies for attention; telegraphs should stay distinct from background motion.

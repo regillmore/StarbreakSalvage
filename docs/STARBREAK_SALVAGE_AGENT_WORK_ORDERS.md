@@ -318,7 +318,7 @@ Acceptance criteria:
 - Existing gameplay still starts, moves, pauses, and completes sectors.
 - Tests prove scroll progress is fixed-step and reproducible.
 
-Status: first pass implemented; deterministic sector scroll plans, fixed-step scroll state, HUD/debug distance readouts, and reduced-motion-aware starfield offset are in place. Distance-based objectives and scroll-synced waves remain follow-up work.
+Status: first pass implemented; deterministic sector scroll plans, fixed-step scroll state, HUD/debug distance readouts, and reduced-motion-aware starfield offset are in place. Distance-based objectives remain follow-up work; scroll-synced directed waves are covered by work order 023.
 
 ## Work order 022 - Procedural parallax backgrounds
 
@@ -351,6 +351,8 @@ Acceptance criteria:
 - Frame drops do not skip or duplicate scheduled waves.
 - Known seeds reproduce wave distance marks and spawn order.
 - Existing boss and route flow still works.
+
+Status: first pass implemented; directed wave plans now include deterministic distance marks when sector scroll plans are available, combat spawning consumes fixed-step scroll distance with a time-based fallback, boss-gate timing is preserved, and tests cover known-seed marks, spawn order, and frame-stutter duplicate prevention.
 
 ## Work order 024 - Distance objectives and HUD
 

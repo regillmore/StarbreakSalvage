@@ -3,18 +3,18 @@
 Release candidate: `0.10.0` Phase 2 playtest hardening
 Date: 2026-07-04
 
-Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/VFX. Phase 2 work orders 011-020 are deployed and confirmed. Phase 3 planning now lives in `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`; work orders 021-022 add the first-pass scroll simulation and procedural background foundations, with manual cross-browser playtest still pending.
+Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/VFX. Phase 2 work orders 011-020 are deployed and confirmed. Phase 3 planning now lives in `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`; work orders 021-023 add the first-pass scroll simulation, procedural background, and scroll-synced directed-wave foundations, with manual cross-browser playtest still pending.
 
 ## Automated Checks
 
-| Item                          | Status | Evidence                                             |
-| ----------------------------- | ------ | ---------------------------------------------------- |
-| TypeScript typecheck          | Pass   | `npm run check`                                      |
-| ESLint                        | Pass   | `npm run check`                                      |
-| Unit and deterministic tests  | Pass   | `npm run check` - 28 files, 152 tests                |
-| Production build              | Pass   | `npm run check` - Vite build created `dist/`         |
-| Playwright Chromium smoke     | Pass   | `npm run test:e2e` - 1 passed                        |
-| Production preview asset load | Pass   | Local preview returned HTTP 200 and Pages asset path |
+| Item                          | Status          | Evidence                                                                                             |
+| ----------------------------- | --------------- | ---------------------------------------------------------------------------------------------------- |
+| TypeScript typecheck          | Pass            | `npm run check`                                                                                      |
+| ESLint                        | Pass            | `npm run check`                                                                                      |
+| Unit and deterministic tests  | Pass            | `npm run check` - 28 files, 154 tests                                                                |
+| Production build              | Pass            | `npm run check` - Vite build created `dist/`                                                         |
+| Playwright Chromium smoke     | Blocked locally | Prior release pass remains; WO023 local run could not launch missing `chromium_headless_shell-1228`. |
+| Production preview asset load | Pass            | Local preview returned HTTP 200 and Pages asset path                                                 |
 
 ## Release Audit
 
@@ -58,6 +58,6 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 
 - Audio is procedural cue feedback only; music and a fuller mix are not implemented yet.
 - Route/reward/shop/boss balance is first-pass and needs live playtest tuning.
-- First-pass scroll simulation and procedural sector backgrounds exist, but distance objectives, scroll-synced encounters, landmarks, and hazards remain Phase 3 follow-up work.
+- First-pass scroll simulation, procedural sector backgrounds, and scroll-synced directed waves exist, but distance objectives, landmarks, hazards, and boss arenas remain Phase 3 follow-up work.
 - The debug overlay reports total entity count plus distance/speed/background primitive count; separate projectile/particle/background timing counters remain future instrumentation.
 - Manual cross-browser smoke outside Chromium remains pending.

@@ -293,6 +293,8 @@ Exit criteria:
 - Sector completion depends on surviving forward progress and resolving required gates.
 - Tests cover stuttered fixed-step updates around event thresholds.
 
+Status: directed wave distance markers, fixed-step combat spawn consumption, time fallback, and stutter duplicate tests are implemented by work order 023. Boss approach timing and distance-based sector completion remain follow-up Phase 3 work.
+
 ### P3.4 - Scrolling Playtest Candidate
 
 Scope:

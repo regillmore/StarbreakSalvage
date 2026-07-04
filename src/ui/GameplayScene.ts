@@ -170,7 +170,8 @@ export class GameplayScene implements Scene {
   }
 
   public update(dt: number): void {
-    advanceScrollState(this.getScrollState(), dt);
+    const scrollState = this.getScrollState();
+    advanceScrollState(scrollState, dt);
 
     const state = this.getCombatState();
     const feedbackBefore = createCombatFeedbackSnapshot(state);
@@ -184,7 +185,8 @@ export class GameplayScene implements Scene {
         movement: this.input.getMovementAxis(),
         fire: this.input.isActionPressed('fire'),
         special,
-        bomb
+        bomb,
+        scrollDistance: scrollState.distance
       },
       dt,
       this.getCombatBounds()
@@ -350,7 +352,8 @@ export class GameplayScene implements Scene {
       objective: sector.objective,
       majorWaves: sector.majorWaves,
       preferredFactionId: sector.bossFactionId,
-      availableFactionIds: this.run.availableFactionIds
+      availableFactionIds: this.run.availableFactionIds,
+      scroll: sector.scroll
     });
 
     return this.wavePlan;
