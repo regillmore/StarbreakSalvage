@@ -10,6 +10,7 @@ import {
   type BossArenaState,
   type BossArenaUpdate
 } from '../game/BossArena';
+import { createDefaultCombatBounds } from '../game/CombatGeometry';
 import {
   createCombatState,
   forceCombatEnd,
@@ -294,21 +295,19 @@ export class GameplayScene implements Scene {
   public render(renderer: CanvasRenderer, _alpha: number): void {
     const state = this.getCombatState();
     const scroll = this.getScrollState();
+    const bounds = this.getCombatBounds();
 
     renderer.paintBackground(scroll.cameraOffset, this.getCurrentSector().background);
     renderer.beginGameplayLayer();
     renderer.paintSectorLandmarks(
-      getVisibleSectorLandmarks(
-        this.getCurrentFeatures(),
-        scroll.distance,
-        renderer.getSize().height
-      )
+      getVisibleSectorLandmarks(this.getCurrentFeatures(), scroll.distance, bounds.height),
+      bounds
     );
-    renderer.paintGameplayFrame();
 
     if (this.bossArenaUpdate.phase !== 'locked') {
       renderer.paintSectorHazards(
-        getActiveSectorHazards(this.getCurrentFeatures(), scroll.distance)
+        getActiveSectorHazards(this.getCurrentFeatures(), scroll.distance),
+        bounds
       );
     }
 
@@ -347,6 +346,7 @@ export class GameplayScene implements Scene {
       invulnerable: state.player.invulnerableSeconds > 0
     });
     renderer.endGameplayLayer();
+    renderer.paintGameplayFrame();
   }
 
   public handleAction(action: InputAction): void {
@@ -411,7 +411,7 @@ export class GameplayScene implements Scene {
   public getDebugState(): SceneDebugState {
     const scroll = getScrollProgress(this.getScrollState());
     const viewportLayout = this.getViewportLayout();
-    const bounds = this.getCombatBounds(viewportLayout);
+    const bounds = this.getCombatBounds();
     const features = this.getCurrentFeatures();
     const activeLandmarks = getVisibleSectorLandmarks(features, scroll.distance, bounds.height);
     const activeHazards =
@@ -441,7 +441,9 @@ export class GameplayScene implements Scene {
         className: viewportLayout.viewportClass,
         scale: viewportLayout.canvasScale,
         safeFrameWidth: viewportLayout.gameplaySafeFrame.width,
-        safeFrameHeight: viewportLayout.gameplaySafeFrame.height
+        safeFrameHeight: viewportLayout.gameplaySafeFrame.height,
+        arenaWidth: bounds.width,
+        arenaHeight: bounds.height
       }
     };
   }
@@ -709,13 +711,8 @@ export class GameplayScene implements Scene {
     }
   }
 
-  private getCombatBounds(layout = this.getViewportLayout()): CombatBounds {
-    return {
-      width: layout.width,
-      height: layout.height,
-      padding: layout.combatPadding,
-      safeFrame: layout.gameplaySafeFrame
-    };
+  private getCombatBounds(): CombatBounds {
+    return createDefaultCombatBounds();
   }
 
   private getViewportLayout(): ViewportLayout {

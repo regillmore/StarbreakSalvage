@@ -560,8 +560,12 @@ export class GameApp {
         ? []
         : [
             `Viewport ${debugState.viewport.width}x${debugState.viewport.height} ${debugState.viewport.className} @${debugState.viewport.scale.toFixed(2)}`,
-            `Safe ${debugState.viewport.safeFrameWidth}x${debugState.viewport.safeFrameHeight}`
-          ];
+            `Safe ${debugState.viewport.safeFrameWidth}x${debugState.viewport.safeFrameHeight}`,
+            debugState.viewport.arenaWidth === undefined ||
+            debugState.viewport.arenaHeight === undefined
+              ? ''
+              : `World ${debugState.viewport.arenaWidth}x${debugState.viewport.arenaHeight}`
+          ].filter((line) => line.length > 0);
     const countDebug =
       debugState.entityCounts === undefined
         ? []

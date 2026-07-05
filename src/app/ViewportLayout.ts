@@ -1,4 +1,9 @@
 import { clamp } from '../core/math';
+import {
+  COMBAT_ARENA_HEIGHT,
+  COMBAT_ARENA_PADDING,
+  COMBAT_ARENA_WIDTH
+} from '../game/CombatGeometry';
 
 export type ViewportClass = 'narrow' | 'standard' | 'wide';
 
@@ -30,34 +35,33 @@ export interface ViewportLayout {
   readonly canvasScale: number;
   readonly combatPadding: number;
   readonly hudSafeArea: HudSafeArea;
+  readonly viewportSafeFrame: ViewportRect;
   readonly gameplaySafeFrame: ViewportRect;
 }
 
 const MIN_VIEWPORT_WIDTH = 320;
 const MIN_VIEWPORT_HEIGHT = 240;
-const BASE_VIEWPORT_WIDTH = 960;
-const BASE_VIEWPORT_HEIGHT = 720;
 const MIN_SAFE_FRAME_WIDTH = 260;
 const MIN_SAFE_FRAME_HEIGHT = 132;
+const MAX_GAMEPLAY_PRESENTATION_SCALE = 1.22;
 
 export function calculateViewportLayout(input: ViewportLayoutInput): ViewportLayout {
   const width = sanitizeViewportDimension(input.width, MIN_VIEWPORT_WIDTH);
   const height = sanitizeViewportDimension(input.height, MIN_VIEWPORT_HEIGHT);
   const dpr = roundLayoutValue(clamp(input.dpr ?? 1, 1, 2));
   const viewportClass = getViewportClass(width);
-  const canvasScale = roundLayoutValue(
-    clamp(Math.min(width / BASE_VIEWPORT_WIDTH, height / BASE_VIEWPORT_HEIGHT), 0.58, 1.22)
-  );
   const sideReserve = calculateSideReserve(width, viewportClass);
   const hudTop = calculateTopReserve(height, viewportClass);
   const hudBottom = calculateBottomReserve(height, viewportClass);
-  const safeFrame = fitSafeFrame({
+  const viewportSafeFrame = fitSafeFrame({
     width,
     height,
     top: hudTop,
     bottom: hudBottom,
     side: sideReserve
   });
+  const gameplaySafeFrame = fitGameplayArenaFrame(viewportSafeFrame);
+  const canvasScale = gameplaySafeFrame.width / COMBAT_ARENA_WIDTH;
 
   return {
     width,
@@ -65,14 +69,15 @@ export function calculateViewportLayout(input: ViewportLayoutInput): ViewportLay
     dpr,
     viewportClass,
     canvasScale,
-    combatPadding: Math.round(clamp(20 * canvasScale, 14, 28)),
+    combatPadding: COMBAT_ARENA_PADDING,
     hudSafeArea: {
-      top: safeFrame.y,
-      bottom: height - safeFrame.y - safeFrame.height,
-      left: safeFrame.x,
-      right: width - safeFrame.x - safeFrame.width
+      top: gameplaySafeFrame.y,
+      bottom: height - gameplaySafeFrame.y - gameplaySafeFrame.height,
+      left: gameplaySafeFrame.x,
+      right: width - gameplaySafeFrame.x - gameplaySafeFrame.width
     },
-    gameplaySafeFrame: safeFrame
+    viewportSafeFrame,
+    gameplaySafeFrame
   };
 }
 
@@ -150,6 +155,23 @@ function fitSafeFrame(input: {
     y: top,
     width: Math.max(1, input.width - side * 2),
     height: Math.max(1, input.height - top - bottom)
+  };
+}
+
+function fitGameplayArenaFrame(frame: ViewportRect): ViewportRect {
+  const scale = Math.min(
+    frame.width / COMBAT_ARENA_WIDTH,
+    frame.height / COMBAT_ARENA_HEIGHT,
+    MAX_GAMEPLAY_PRESENTATION_SCALE
+  );
+  const width = Math.max(1, Math.round(COMBAT_ARENA_WIDTH * scale));
+  const height = Math.max(1, Math.round(COMBAT_ARENA_HEIGHT * scale));
+
+  return {
+    x: Math.round(frame.x + (frame.width - width) / 2),
+    y: Math.round(frame.y + (frame.height - height) / 2),
+    width,
+    height
   };
 }
 

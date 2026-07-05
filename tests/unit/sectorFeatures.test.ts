@@ -1,15 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
 import { createCombatState, type CombatBounds } from '../../src/game/CombatState';
+import { createDefaultCombatBounds } from '../../src/game/CombatGeometry';
 import { generateRunSkeleton } from '../../src/game/Generation';
 import { resolveSectorHazardCollisions } from '../../src/game/SectorHazards';
 import {
   getActiveSectorHazards,
+  getSectorHazardCollisionRect,
   getSectorHazardVisualState,
   summarizeSectorFeaturePlan,
   validateSectorFeaturePlan,
   type SectorFeaturePlan
 } from '../../src/game/SectorFeatures';
+import { calculateViewportLayout } from '../../src/app/ViewportLayout';
 
 const bounds: CombatBounds = {
   width: 640,
@@ -113,6 +116,26 @@ describe('SectorFeatures', () => {
     expect(active.damagingHazardIds).toEqual([hazard.id]);
     expect(active.hitHazardIds).toEqual([]);
     expect(state.stats.damageTaken).toBe(0);
+  });
+
+  it('keeps hazard lane ratios stable when viewport presentation scale changes', () => {
+    const combatBounds = createDefaultCombatBounds();
+    const hazard = {
+      ...getRequiredHazard(),
+      xRatio: 0.5,
+      widthRatio: 0.25
+    };
+    const rect = getSectorHazardCollisionRect(hazard, combatBounds);
+    const narrow = calculateViewportLayout({ width: 390, height: 700, dpr: 2 });
+    const wide = calculateViewportLayout({ width: 1280, height: 720, dpr: 1 });
+
+    expect(rect.width).toBeCloseTo(combatBounds.width * hazard.widthRatio);
+    expect((rect.width * narrow.canvasScale) / narrow.gameplaySafeFrame.width).toBeCloseTo(
+      hazard.widthRatio
+    );
+    expect((rect.width * wide.canvasScale) / wide.gameplaySafeFrame.width).toBeCloseTo(
+      hazard.widthRatio
+    );
   });
 
   it('keeps reduced-motion hazard warnings static but visible', () => {

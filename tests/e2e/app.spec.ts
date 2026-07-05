@@ -225,8 +225,9 @@ test('keeps the gameplay HUD and safe frame readable in a narrow viewport', asyn
 
   await page.keyboard.press('Enter');
   await expect(page.getByText('Outer Debris Field')).toBeVisible();
-  await expect(page.locator('.debug-overlay')).toContainText('Viewport 390x700 narrow @0.58');
-  await expect(page.locator('.debug-overlay')).toContainText('Safe 362x479');
+  await expect(page.locator('.debug-overlay')).toContainText('Viewport 390x700 narrow @0.57');
+  await expect(page.locator('.debug-overlay')).toContainText('Safe 362x407');
+  await expect(page.locator('.debug-overlay')).toContainText('World 640x720');
   await expect(page.getByTestId('objective-readout')).toBeVisible();
 
   const hudBox = await page.locator('.game-hud').boundingBox();

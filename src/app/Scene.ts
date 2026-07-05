@@ -33,6 +33,8 @@ export interface SceneDebugState {
     readonly scale: number;
     readonly safeFrameWidth: number;
     readonly safeFrameHeight: number;
+    readonly arenaWidth?: number;
+    readonly arenaHeight?: number;
   };
 }
 

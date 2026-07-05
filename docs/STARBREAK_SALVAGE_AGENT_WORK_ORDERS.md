@@ -492,7 +492,7 @@ Acceptance criteria:
 - Scaling helpers have unit coverage or E2E viewport coverage.
 - Existing keyboard gameplay, pause, and debug overlays still work.
 
-Status: first pass implemented; viewport layout now classifies desktop/standard/narrow sizes, clamps DPR, derives HUD reserves and a gameplay safe frame, draws frame rails from that safe frame, clamps player movement inside it, reports viewport/safe-frame metrics in debug mode, and adds unit plus narrow-viewport E2E coverage.
+Status: first pass implemented and parity-hardened; viewport layout now classifies desktop/standard/narrow sizes, clamps DPR, derives HUD reserves, fits a fixed 640x720 combat arena into the gameplay safe frame, draws frame rails from that frame, keeps hazards/enemies/projectiles/player movement in combat-world units, reports viewport/safe-frame/world metrics in debug mode, and adds unit plus narrow-viewport E2E coverage.
 
 ## Work order 032 - Mouse controls
 

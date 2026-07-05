@@ -22,6 +22,8 @@ import {
   type ScreenShakeState
 } from '../core/screenShake';
 import { generateStarfield, type Star, starCountForViewport } from '../core/starfield';
+import { createDefaultCombatBounds } from '../game/CombatGeometry';
+import type { CombatBounds } from '../game/CombatState';
 import { calculateViewportLayout, type ViewportLayout } from './ViewportLayout';
 
 const BACKGROUND_SEED = 'STARBREAK-SALVAGE-SHELL';
@@ -212,9 +214,12 @@ export class CanvasRenderer {
 
   public beginGameplayLayer(): void {
     const offset = getScreenShakeOffset(this.shakeState);
+    const frame = this.viewportLayout.gameplaySafeFrame;
+    const scale = this.viewportLayout.canvasScale;
 
     this.context.save();
-    this.context.translate(offset.x, offset.y);
+    this.context.translate(frame.x + offset.x, frame.y + offset.y);
+    this.context.scale(scale, scale);
   }
 
   public endGameplayLayer(): void {
@@ -271,8 +276,11 @@ export class CanvasRenderer {
     this.paintVelocityStreaks(effectiveScrollOffset);
   }
 
-  public paintSectorLandmarks(landmarks: readonly VisibleSectorLandmark[]): void {
-    const { width, height } = this.size;
+  public paintSectorLandmarks(
+    landmarks: readonly VisibleSectorLandmark[],
+    bounds: CombatBounds = createDefaultCombatBounds()
+  ): void {
+    const { width, height } = bounds;
     const context = this.context;
     const alphaScale =
       (this.settings.performanceMode ? 0.78 : 1) * (this.settings.reducedMotion ? 0.82 : 1);
@@ -292,10 +300,12 @@ export class CanvasRenderer {
     }
   }
 
-  public paintSectorHazards(activeHazards: readonly ActiveSectorHazard[]): void {
-    const { width, height } = this.size;
+  public paintSectorHazards(
+    activeHazards: readonly ActiveSectorHazard[],
+    bounds: CombatBounds = createDefaultCombatBounds()
+  ): void {
+    const { height } = bounds;
     const context = this.context;
-    const bounds = { width, height, padding: 24 };
 
     for (const activeHazard of activeHazards) {
       const rect = getSectorHazardCollisionRect(activeHazard.hazard, bounds);
