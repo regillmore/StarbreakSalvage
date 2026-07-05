@@ -634,6 +634,10 @@ export class GameApp {
     const themeDebug = debugState.contractTheme
       ? [`Theme ${debugState.contractTheme.themeKey}/${debugState.contractTheme.shipName}`]
       : [];
+    const upgradeDebug =
+      debugState.upgradeEffects && debugState.upgradeEffects.length > 0
+        ? [`Upgrades ${debugState.upgradeEffects.join(', ')}`]
+        : [];
 
     this.debugOverlay.textContent = [
       `FPS ${Math.round(this.frameStats.fps)}`,
@@ -647,6 +651,7 @@ export class GameApp {
       ...inputDebug,
       ...hudDebug,
       ...themeDebug,
+      ...upgradeDebug,
       ...backgroundDebug,
       ...featureDebug,
       ...viewportDebug
@@ -655,7 +660,8 @@ export class GameApp {
 
   private createRunSkeleton(): RunSkeleton {
     return generateRunSkeleton(this.currentSeedLabel, {
-      unlockedIds: this.saveData.unlockedIds
+      unlockedIds: this.saveData.unlockedIds,
+      purchasedUpgradeIds: this.saveData.purchasedUpgradeIds
     });
   }
 

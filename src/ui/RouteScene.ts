@@ -2,6 +2,7 @@ import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene, SceneDebugState } from '../app/Scene';
 import type { RouteOption, RunSkeleton, StartingContract } from '../game/Generation';
 import { getCurrentSector, type RunSessionState } from '../game/RunSession';
+import { getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import type { InputAction } from '../systems/InputSystem';
 import {
   applyContractScreenTheme,
@@ -66,7 +67,11 @@ export class RouteScene implements Scene {
       hint.className = 'choice-body';
       hint.textContent = route.rewardHint;
 
-      routeButton.append(name, risk, hint);
+      const intel = document.createElement('span');
+      intel.className = 'choice-body route-intel-hint';
+      intel.textContent = route.intelHint ?? '';
+
+      routeButton.append(name, risk, hint, ...(route.intelHint ? [intel] : []));
       routeGrid.append(routeButton);
       this.routeButtons.push(routeButton);
     }
@@ -99,7 +104,8 @@ export class RouteScene implements Scene {
     return {
       seed: this.run.seed,
       entityCount: 0,
-      contractTheme: createContractThemeDebugState(this.contract)
+      contractTheme: createContractThemeDebugState(this.contract),
+      upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects)
     };
   }
 }

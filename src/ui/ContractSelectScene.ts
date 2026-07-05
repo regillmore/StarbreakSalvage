@@ -1,6 +1,7 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene } from '../app/Scene';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
+import { formatRunUpgradeEffects, getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import type { InputAction } from '../systems/InputSystem';
 import { createShipPreviewElement, createShipPreviewModel } from './ShipPreview';
 
@@ -31,6 +32,8 @@ export class ContractSelectScene implements Scene {
     const title = document.createElement('h1');
     title.id = 'contract-title';
     title.textContent = 'Choose Contract';
+
+    const upgradeIntel = this.createUpgradeIntelLine();
 
     const selectedPreview = document.createElement('section');
     selectedPreview.className = 'contract-selected-preview';
@@ -84,13 +87,25 @@ export class ContractSelectScene implements Scene {
       economy.className = 'contract-detail';
       economy.textContent = `Start: ${contract.startingCredits} credits | ${contract.startingSalvage} salvage`;
 
+      const survey = document.createElement('p');
+      survey.className = 'contract-detail contract-survey-note';
+      survey.textContent = contract.surveyNote ?? '';
+
       const selectButton = document.createElement('button');
       selectButton.className = 'secondary-button contract-select-button';
       selectButton.type = 'button';
       selectButton.textContent = index === this.selectedIndex ? 'Selected' : 'Select';
       selectButton.addEventListener('click', () => this.selectContract(index));
 
-      article.append(header, summary, weapon, stats, economy, selectButton);
+      article.append(
+        header,
+        summary,
+        weapon,
+        stats,
+        economy,
+        ...(contract.surveyNote ? [survey] : []),
+        selectButton
+      );
       list.append(article);
       this.contractCards.push(article);
     }
@@ -111,7 +126,7 @@ export class ContractSelectScene implements Scene {
     backButton.addEventListener('click', this.onBack);
 
     controls.append(launchButton, backButton);
-    shell.append(eyebrow, title, selectedPreview, list, controls);
+    shell.append(eyebrow, title, upgradeIntel, selectedPreview, list, controls);
     this.uiRoot.replaceChildren(shell);
     launchButton.focus();
   }
@@ -140,8 +155,35 @@ export class ContractSelectScene implements Scene {
     }
   }
 
-  public getDebugState(): { seed: string; entityCount: number } {
-    return { seed: this.run.seed, entityCount: 0 };
+  public getDebugState(): {
+    seed: string;
+    entityCount: number;
+    upgradeEffects?: readonly string[];
+  } {
+    return {
+      seed: this.run.seed,
+      entityCount: 0,
+      upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects)
+    };
+  }
+
+  private createUpgradeIntelLine(): HTMLElement {
+    const upgradeIntel = document.createElement('p');
+    upgradeIntel.className = 'contract-upgrade-intel';
+    upgradeIntel.dataset.testid = 'contract-upgrade-intel';
+
+    if (this.run.upgradeEffects.activeUpgradeIds.length === 0) {
+      upgradeIntel.textContent = 'Upgrades: none';
+      return upgradeIntel;
+    }
+
+    upgradeIntel.textContent = [
+      `Upgrades: ${formatRunUpgradeEffects(this.run.upgradeEffects)}`,
+      this.run.seedSurvey
+    ]
+      .filter((line): line is string => Boolean(line))
+      .join(' | ');
+    return upgradeIntel;
   }
 
   private selectContract(index: number): void {
@@ -205,7 +247,11 @@ export class ContractSelectScene implements Scene {
     const perk = document.createElement('p');
     perk.textContent = `${selectedContract.perk}. Tradeoff: ${selectedContract.drawback}.`;
 
-    copy.append(kicker, title, weapon, perk);
+    const survey = document.createElement('p');
+    survey.className = 'contract-detail contract-survey-note';
+    survey.textContent = selectedContract.surveyNote ?? '';
+
+    copy.append(kicker, title, weapon, perk, ...(selectedContract.surveyNote ? [survey] : []));
     this.selectedPreviewElement.replaceChildren(preview, copy);
   }
 

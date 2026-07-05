@@ -910,6 +910,10 @@ Acceptance:
 - Same save state plus same seed reproduces upgrade-influenced generation.
 - Fresh saves remain complete and playable.
 
+Status:
+
+- Implemented in work order 043. Purchased upgrades now alter contract survey/board size where unlocked ships allow, route intel, market decoder shop stock/discount/bias, relic dossier vault reward choices, seed survey text, summary rows, and debug labels. `UPGRADE-SEED-SNAPSHOT` and fresh-save tests cover determinism and baseline viability.
+
 ## Epic AH - Upgrade Bay UX
 
 ### AH1 - Upgrade menu surface

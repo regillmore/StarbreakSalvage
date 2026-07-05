@@ -7,6 +7,7 @@ import {
   createSectorConditionPlan,
   formatSectorConditionReadout
 } from '../game/SectorConditions';
+import { getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import type { InputAction } from '../systems/InputSystem';
 import {
   applyContractScreenTheme,
@@ -110,7 +111,8 @@ export class SectorTransitionScene implements Scene {
     return {
       seed: this.run.seed,
       entityCount: 0,
-      contractTheme: createContractThemeDebugState(this.contract)
+      contractTheme: createContractThemeDebugState(this.contract),
+      upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects)
     };
   }
 }

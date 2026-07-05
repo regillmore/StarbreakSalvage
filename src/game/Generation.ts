@@ -10,6 +10,7 @@ import {
   type WeaponId
 } from '../content/ships';
 import type { UnlockId } from '../content/unlocks';
+import type { UpgradeId } from '../content/upgrades';
 import { getWeaponById, type WeaponPatternId } from '../content/weapons';
 import { createRng, parseSeedLabel, type Rng, type WeightedChoice } from '../core/rng';
 import { createBackgroundPlan, type BackgroundPlan } from './BackgroundPlan';
@@ -21,6 +22,7 @@ import {
   type SectorFeaturePlan
 } from './SectorFeatures';
 import { createSectorObjectivePlan, type SectorObjectivePlan } from './SectorObjectives';
+import { resolveRunUpgradeEffects, type RunUpgradeEffects } from './UpgradeEffects';
 import {
   filterUnlockedBossCandidates,
   getAvailableFactionIds,
@@ -48,6 +50,7 @@ export interface StartingContract {
   readonly summary: string;
   readonly itemBias: readonly string[];
   readonly rewardMultiplier: number;
+  readonly surveyNote: string | null;
 }
 
 export interface RouteOption {
@@ -55,6 +58,7 @@ export interface RouteOption {
   readonly label: string;
   readonly risk: number;
   readonly rewardHint: string;
+  readonly intelHint?: string;
 }
 
 export interface SectorRoute {
@@ -80,11 +84,15 @@ export interface RunSkeleton {
   readonly seed: string;
   readonly unlockedIds: readonly UnlockId[];
   readonly availableFactionIds: readonly FactionId[];
+  readonly upgradeEffects: RunUpgradeEffects;
+  readonly seedSurvey: string | null;
   readonly contracts: readonly StartingContract[];
   readonly sectors: readonly SectorRoute[];
 }
 
-export type RunGenerationOptions = UnlockAccess;
+export interface RunGenerationOptions extends UnlockAccess {
+  readonly purchasedUpgradeIds?: readonly UpgradeId[];
+}
 
 const ROUTE_OPTIONS: Readonly<Record<RouteKind, Omit<RouteOption, 'risk'>>> = {
   shop: {
@@ -138,31 +146,49 @@ export function generateRunSkeleton(
   const rootRng = createRng(seed);
   const unlockedIds = getEffectiveUnlockedIds(options);
   const unlockAccess = { unlockedIds };
+  const upgradeEffects = resolveRunUpgradeEffects(options.purchasedUpgradeIds);
+  const contracts = generateStartingContracts(
+    seed,
+    rootRng.fork('contracts'),
+    unlockAccess,
+    upgradeEffects
+  );
+  const sectors = SECTORS.map((sector, index) =>
+    generateSectorRoute(
+      sector,
+      index + 1,
+      rootRng.fork(`sector-${index + 1}`),
+      unlockAccess,
+      upgradeEffects
+    )
+  );
 
   return {
     seed,
     unlockedIds,
     availableFactionIds: getAvailableFactionIds(unlockAccess),
-    contracts: generateStartingContracts(seed, rootRng.fork('contracts'), unlockAccess),
-    sectors: SECTORS.map((sector, index) =>
-      generateSectorRoute(sector, index + 1, rootRng.fork(`sector-${index + 1}`), unlockAccess)
-    )
+    upgradeEffects,
+    seedSurvey: createSeedSurveyText(upgradeEffects, sectors),
+    contracts,
+    sectors
   };
 }
 
 function generateStartingContracts(
   seed: string,
   rng: Rng,
-  unlockAccess: UnlockAccess
+  unlockAccess: UnlockAccess,
+  upgradeEffects: RunUpgradeEffects
 ): StartingContract[] {
   const selectedShips: ShipDefinition[] = [];
   const availableShips = getAvailableShips(unlockAccess);
+  const contractCount = Math.min(upgradeEffects.contractBoardSlots, availableShips.length);
 
   if (availableShips.length < 3) {
     throw new Error('Unlock gating must leave at least three starter ships available.');
   }
 
-  for (let slot = 0; slot < 3; slot += 1) {
+  for (let slot = 0; slot < contractCount; slot += 1) {
     const ship = rng.weightedChoice(
       availableShips.map((candidate) => ({
         item: candidate,
@@ -195,7 +221,8 @@ function generateStartingContracts(
       drawback: ship.drawback,
       summary: ship.contractSummary,
       itemBias: ship.itemBias,
-      rewardMultiplier: rewardRng.int(100, 130) / 100
+      rewardMultiplier: rewardRng.int(100, 130) / 100,
+      surveyNote: upgradeEffects.contractSurvey ? createContractSurveyNote(ship) : null
     };
   });
 }
@@ -204,11 +231,12 @@ function generateSectorRoute(
   sector: SectorDefinition,
   index: number,
   rng: Rng,
-  unlockAccess: UnlockAccess
+  unlockAccess: UnlockAccess,
+  upgradeEffects: RunUpgradeEffects
 ): SectorRoute {
   const bossCandidates = filterUnlockedBossCandidates(sector.bossCandidates, unlockAccess);
   const boss = getBossById(rng.choice(bossCandidates));
-  const routeOptions = generateRouteOptions(rng.fork('routes'), index);
+  const routeOptions = generateRouteOptions(rng.fork('routes'), index, upgradeEffects);
   const waveRng = rng.fork('major-waves');
   const majorWaves = waveRng.shuffle(sector.majorWavePool).slice(0, 3);
   const objective = createSectorObjectivePlan(sector, majorWaves);
@@ -253,7 +281,11 @@ function generateSectorRoute(
   };
 }
 
-function generateRouteOptions(rng: Rng, sectorIndex: number): RouteOption[] {
+function generateRouteOptions(
+  rng: Rng,
+  sectorIndex: number,
+  upgradeEffects: RunUpgradeEffects
+): RouteOption[] {
   const weightedRoutes: readonly WeightedChoice<RouteKind>[] = [
     { item: 'shop', weight: sectorIndex === 1 ? 2 : 4 },
     { item: 'elite', weight: 3 + sectorIndex },
@@ -274,10 +306,15 @@ function generateRouteOptions(rng: Rng, sectorIndex: number): RouteOption[] {
         ]
       : selectUniqueWeighted<RouteKind>(rng, weightedRoutes, 3);
 
-  return routeKinds.map((kind) => ({
-    ...ROUTE_OPTIONS[kind],
-    risk: calculateRouteRisk(kind, sectorIndex)
-  }));
+  return routeKinds.map((kind) => {
+    const risk = calculateRouteRisk(kind, sectorIndex);
+
+    return {
+      ...ROUTE_OPTIONS[kind],
+      risk,
+      ...(upgradeEffects.routeIntel ? { intelHint: createRouteIntelHint(kind, risk) } : {})
+    };
+  });
 }
 
 function selectUniqueWeighted<T>(
@@ -332,9 +369,89 @@ function getShipWeight(seed: string, ship: ShipDefinition): number {
   return weight;
 }
 
+function createContractSurveyNote(ship: ShipDefinition): string {
+  const profile = getShipProfile(ship.stats);
+  const bias = ship.itemBias.slice(0, 2).join(' / ');
+  return `Survey: ${profile} frame; favors ${bias}.`;
+}
+
+function getShipProfile(stats: ShipStats): string {
+  if (stats.speed >= 410) {
+    return 'fast';
+  }
+
+  if (stats.maxHull >= 3) {
+    return 'sturdy';
+  }
+
+  if (stats.bombCapacity >= 2) {
+    return 'ordnance';
+  }
+
+  return 'volatile';
+}
+
+function createRouteIntelHint(kind: RouteKind, risk: number): string {
+  const pressure = risk <= 2 ? 'low pressure' : risk <= 4 ? 'medium pressure' : 'high pressure';
+
+  if (kind === 'shop') {
+    return `Ledger: ${pressure}, market stop before the next sector.`;
+  }
+
+  if (kind === 'repair') {
+    return `Ledger: ${pressure}, service lane can stabilize future hull.`;
+  }
+
+  if (kind === 'vault') {
+    return `Ledger: ${pressure}, relic pool and curse exposure likely.`;
+  }
+
+  if (kind === 'elite') {
+    return `Ledger: ${pressure}, bounty pressure can widen rewards.`;
+  }
+
+  if (kind === 'glitch') {
+    return `Ledger: ${pressure}, seed shear can distort next-sector pacing.`;
+  }
+
+  return `Ledger: ${pressure}, faction cache with escort pressure.`;
+}
+
+function createSeedSurveyText(
+  upgradeEffects: RunUpgradeEffects,
+  sectors: readonly SectorRoute[]
+): string | null {
+  if (!upgradeEffects.seedSurvey) {
+    return null;
+  }
+
+  const openingSector = sectors[0];
+
+  if (!openingSector) {
+    return null;
+  }
+
+  return `Seed Map: ${openingSector.sectorName} | ${Math.floor(
+    openingSector.scroll.length
+  )}u | ${openingSector.routeOptions.map((route) => route.label).join('/')}`;
+}
+
 export function summarizeRunSkeleton(run: RunSkeleton): unknown {
   return {
     seed: run.seed,
+    ...(run.upgradeEffects.activeUpgradeIds.length > 0
+      ? {
+          upgrades: {
+            active: run.upgradeEffects.activeUpgradeIds,
+            names: run.upgradeEffects.activeUpgradeNames,
+            contractBoardSlots: run.upgradeEffects.contractBoardSlots,
+            shopStockBonus: run.upgradeEffects.shopStockBonus,
+            shopDiscount: run.upgradeEffects.shopDiscount,
+            rewardChoiceBonus: run.upgradeEffects.rewardChoiceBonus,
+            seedSurvey: run.seedSurvey
+          }
+        }
+      : {}),
     contracts: run.contracts.map((contract) => ({
       shipId: contract.shipId,
       sponsor: contract.sponsor,
@@ -347,7 +464,8 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
         startingCredits: contract.startingCredits,
         startingSalvage: contract.startingSalvage
       },
-      rewardMultiplier: contract.rewardMultiplier
+      rewardMultiplier: contract.rewardMultiplier,
+      ...(contract.surveyNote ? { surveyNote: contract.surveyNote } : {})
     })),
     sectors: run.sectors.map((sector) => ({
       sectorId: sector.sectorId,
@@ -369,6 +487,9 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
         baseSpeed: sector.scroll.baseSpeed,
         startOffset: sector.scroll.startOffset
       },
+      ...(sector.routeOptions.some((route) => route.intelHint)
+        ? { routeIntel: sector.routeOptions.map((route) => route.intelHint ?? '') }
+        : {}),
       background: {
         id: sector.background.id,
         layerCount: sector.background.layers.length,

@@ -8,6 +8,7 @@ import type { RunSkeleton, StartingContract } from '../game/Generation';
 import type { RouteHistoryEntry } from '../game/RunSession';
 import type { AppliedRouteOutcome } from '../game/RouteEvents';
 import { formatSectorConditionTimeline } from '../game/SectorConditions';
+import { formatRunUpgradeEffects, getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import type { InputAction } from '../systems/InputSystem';
 import {
   applyContractScreenTheme,
@@ -72,6 +73,7 @@ export class RunSummaryScene implements Scene {
       ['Item Hooks', `${this.result?.itemTriggers ?? 0}`],
       ['Routes', formatRouteHistory(this.routeHistory)],
       ['Sector Conditions', formatSectorConditionTimeline(this.run, this.routeOutcomes)],
+      ['Upgrade Effects', formatRunUpgradeEffects(this.run.upgradeEffects)],
       ['Banked Salvage', `${this.saveData.salvageBank} kg`],
       ['Items', this.result?.itemNames.join(', ') ?? 'none'],
       ['Unlock Reasons', formatUnlockReasons(this.saveUpdate)]
@@ -129,7 +131,8 @@ export class RunSummaryScene implements Scene {
     return {
       seed: this.run.seed,
       entityCount: 0,
-      contractTheme: createContractThemeDebugState(this.contract)
+      contractTheme: createContractThemeDebugState(this.contract),
+      upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects)
     };
   }
 

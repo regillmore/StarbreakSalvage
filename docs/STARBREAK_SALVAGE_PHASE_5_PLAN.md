@@ -40,7 +40,7 @@ Exit criteria:
 - Upgrade effects widen future choices, information, starting variety, or build texture without turning into raw stat inflation.
 - Fresh saves and existing saves migrate safely.
 
-Status: first pass implemented in work order 041. Upgrade definitions now live in a validated content catalog, banked scrap can purchase persistent upgrade ids through save helpers, save version 3 migrates legacy v2 data, and early upgrade effects are framed as future variety/information sidegrades. Upgrade Bay presentation is implemented by work order 042, and generation integration remains a follow-up.
+Status: first pass implemented in work orders 041 and 043. Upgrade definitions now live in a validated content catalog, banked scrap can purchase persistent upgrade ids through save helpers, save version 3 migrates legacy v2 data, and upgrade effects are framed as future variety/information sidegrades. Upgrade Bay presentation is implemented by work order 042.
 
 ### P5.2 - Upgrade Bay And Icons
 
@@ -63,6 +63,8 @@ Exit criteria:
 - Upgrades can affect contract boards, seed preview, route information, shop affordances, or reward variety deterministically.
 - The same save state plus same seed reproduces the same upgrade-influenced generation.
 - Save export/import preserves upgrade state.
+
+Status: implemented in work order 043. Purchased upgrades can add contract survey notes and a fourth contract slot when unlocked ships allow, seed survey text, route ledger hints, market decoder shop stock/discount/bias, and relic dossier vault reward choices. Unit snapshots cover same-save/same-seed output and fresh-save viability.
 
 ### P5.4 - Run Results And Toast Feedback
 

@@ -10,6 +10,7 @@ import {
   type RunSessionState
 } from '../game/RunSession';
 import { generateShopInventory, SHOP_REROLL_COST } from '../game/Shops';
+import { getMarketDecoderReadout, getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import type { InputAction } from '../systems/InputSystem';
 import {
   applyContractScreenTheme,
@@ -36,9 +37,17 @@ export class ShopScene implements Scene {
     const sector = getCurrentSector(this.run, this.session);
     const rerollCount = getShopRerollCount(this.session, sector.index);
     const shopModifiers = getShopModifiersForSector(this.session, sector.index);
-    const priceDiscount = shopModifiers.reduce((total, modifier) => total + modifier.discount, 0);
-    const stockBonus = shopModifiers.reduce((total, modifier) => total + modifier.stockBonus, 0);
-    const shopBiasTags = shopModifiers.flatMap((modifier) => modifier.biasTags);
+    const upgradeReadout = getMarketDecoderReadout(this.run.upgradeEffects);
+    const priceDiscount =
+      shopModifiers.reduce((total, modifier) => total + modifier.discount, 0) +
+      this.run.upgradeEffects.shopDiscount;
+    const stockBonus =
+      shopModifiers.reduce((total, modifier) => total + modifier.stockBonus, 0) +
+      this.run.upgradeEffects.shopStockBonus;
+    const shopBiasTags = [
+      ...shopModifiers.flatMap((modifier) => modifier.biasTags),
+      ...this.run.upgradeEffects.shopBiasTags
+    ];
     const inventory = generateShopInventory({
       seed: sector.shopSeed,
       sectorIndex: sector.index,
@@ -65,6 +74,11 @@ export class ShopScene implements Scene {
     const title = document.createElement('h1');
     title.id = 'shop-title';
     title.textContent = 'Shop';
+
+    const upgradeNote = document.createElement('p');
+    upgradeNote.className = 'screen-upgrade-note';
+    upgradeNote.dataset.testid = 'shop-upgrade-note';
+    upgradeNote.textContent = upgradeReadout ?? '';
 
     const shopGrid = document.createElement('div');
     shopGrid.className = 'shop-grid';
@@ -121,6 +135,7 @@ export class ShopScene implements Scene {
       eyebrow,
       createContractThemeStrip(this.uiRoot.ownerDocument, theme),
       title,
+      ...(upgradeReadout ? [upgradeNote] : []),
       shopGrid,
       controls
     );
@@ -144,7 +159,8 @@ export class ShopScene implements Scene {
     return {
       seed: this.run.seed,
       entityCount: 0,
-      contractTheme: createContractThemeDebugState(this.contract)
+      contractTheme: createContractThemeDebugState(this.contract),
+      upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects)
     };
   }
 }

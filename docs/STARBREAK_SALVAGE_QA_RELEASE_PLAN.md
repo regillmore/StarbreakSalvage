@@ -97,6 +97,7 @@ Current Phase 5 coverage:
 
 - Work order 041 covers upgrade catalog validation, save migration, import/export, affordability, purchase helpers, and corrupted upgrade data repair.
 - Work order 042 adds Upgrade Bay view-model tests plus a Playwright smoke fixture that opens the bay in a narrow high-contrast viewport, verifies icon/state copy, purchases an upgrade with banked scrap, and confirms persisted save/menu state.
+- Work order 043 adds same-save/same-seed upgrade generation snapshots for contract boards, route intel, market decoder shop output, relic dossier vault rewards, seed survey text, fresh-save viability, summary/debug exposure, and browser smoke that a purchased upgrade appears on the next contract board.
 
 ## Known seed tests
 
@@ -130,7 +131,7 @@ Phase 4 should add these seed fixtures:
 Phase 5 should add these seed/save fixtures:
 
 - `SCRAP-BAY-SMOKE` - progressed save fixture with enough scrap to buy a first upgrade; implemented in the work order 042 Playwright bay smoke.
-- `UPGRADE-SEED-SNAPSHOT` - same seed tested under fresh and upgraded save states.
+- `UPGRADE-SEED-SNAPSHOT` - same seed tested under fresh and upgraded save states; implemented in work order 043 upgrade-effect snapshots.
 - `LUNAR-SURFACE-LANE` - deterministic lunar sector/background/feature plan.
 - `EXIT-TOAST-CHECK` - forgiving sector completion path for exit/toast smoke.
 - `SHIP-BREAKUP-TEST` - deterministic death/destruction summary path.
@@ -183,7 +184,7 @@ Phase 5 performance checks should include Upgrade Bay DOM/icon rendering cost, u
 - [x] HUD mode and contract theme visible in debug mode for Phase 4 smoke.
 - [x] Contract preview model and selection smoke coverage exists.
 - [x] Contract theme propagation smoke coverage exists for route/shop/reward/transition/summary screens.
-- [ ] Upgrade Bay and banked scrap state visible in debug or smoke once Phase 5 instrumentation lands.
+- [x] Upgrade Bay, banked scrap state, and upgrade-influenced generation visible in tests/debug smoke.
 - [ ] Sector exit/toast, lunar sector, and destruction smoke paths exist.
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [ ] Heavy combat debug scene documented.

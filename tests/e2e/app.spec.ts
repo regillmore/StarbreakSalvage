@@ -305,6 +305,11 @@ test('opens the Upgrade Bay and purchases an upgrade from banked scrap', async (
   await expect(page.getByTestId('boot-status')).toContainText('Bank 4 kg');
   await expect(page.getByTestId('boot-status')).toContainText('Upgrades 1');
 
+  await page.getByRole('button', { name: 'Start Run' }).click();
+  await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
+  await expect(page.getByTestId('contract-upgrade-intel')).toContainText('Contract Survey Rig');
+  await expect(page.locator('.contract-survey-note').first()).toContainText('Survey:');
+
   expect(browserErrors).toEqual([]);
 });
 

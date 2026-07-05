@@ -411,7 +411,7 @@ Exit criteria:
 - Upgrade definitions validate and save safely.
 - Same save state plus same seed reproduces upgrade-influenced generation.
 
-Status: first pass implemented by work order 041. Banked scrap can buy persistent upgrade ids through save helpers, upgrade definitions validate, legacy saves migrate to version 3, and export/import preserves upgrade state. Work order 042 adds the visual Upgrade Bay; generation integration remains P5.1/P5.3 follow-up work.
+Status: implemented through work order 043. Banked scrap can buy persistent upgrade ids through save helpers, upgrade definitions validate, legacy saves migrate to version 3, export/import preserves upgrade state, the visual Upgrade Bay exists, and purchased upgrades now influence deterministic contract boards, route intel, shop affordances, vault rewards, seed survey text, summary rows, and debug metadata.
 
 ### P5.2 - Upgrade Bay UX
 

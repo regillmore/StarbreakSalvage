@@ -25,6 +25,7 @@
 - Expanded debug overlay viewport/input instrumentation with DPR, canvas pixel size, safe-frame origin, HUD mode, active input mode, and selected contract context for Phase 4 smoke checks.
 - Added a data-backed Phase 5 upgrade catalog, save-backed upgrade purchase helpers, and save version 3 migration for banked scrap progression.
 - Added an Upgrade Bay reachable from the main menu and Unlock Archive, with static inline SVG category icons, cost/lock/install states, and save-backed banked-scrap purchases.
+- Connected purchased upgrades into deterministic run generation for contract survey notes, extra contract slots when unlocked ships allow, route ledger hints, market decoder stock/discount changes, relic-biased vault rewards, seed survey text, summary rows, and debug overlay labels.
 - Added deterministic sector scroll plans, fixed-step distance tracking, HUD distance/speed readouts, debug distance counters, and subtle reduced-motion-aware starfield drift.
 - Added deterministic procedural parallax background plans for all five sectors, with original canvas-drawn stars, rails, debris, bloom strands, grid lines, and core fractures.
 - Moved normal directed wave spawning onto deterministic scroll-distance marks while retaining time-based fallback schedules and boss-gate timing.
@@ -70,6 +71,7 @@
 - Hardened Playwright smoke assertions for narrow viewport layout metrics, pointer input mode, contract previews, and cockpit HUD mode/theme state.
 - Added upgrade catalog validation plus save migration, import/export, affordability, and purchase tests.
 - Added Upgrade Bay view-model tests and a Playwright smoke path for narrow high-contrast rendering plus a banked-scrap purchase.
+- Added upgrade-influenced generation snapshots for `UPGRADE-SEED-SNAPSHOT`, fresh-save guardrails, and Playwright coverage that a purchased upgrade appears on the next contract board.
 
 ### Planning
 

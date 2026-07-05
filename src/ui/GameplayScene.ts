@@ -31,6 +31,7 @@ import { describeItemLoadout } from '../game/ItemHooks';
 import type { ItemInstance } from '../game/Rewards';
 import { getSectorCompletionReason } from '../game/RunOutcome';
 import type { RouteCombatModifier } from '../game/RouteEvents';
+import { getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import {
   createHudMeterModel,
   createHudThemeModel,
@@ -537,7 +538,8 @@ export class GameplayScene implements Scene {
       },
       inputMode: this.input.getActiveInputMode(),
       hudMode: hudTheme.mode,
-      contractTheme: createContractThemeDebugState(this.contract)
+      contractTheme: createContractThemeDebugState(this.contract),
+      upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects)
     };
   }
 

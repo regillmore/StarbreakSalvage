@@ -4,6 +4,7 @@ import type { ItemId } from '../content/items';
 import type { RouteOption, RunSkeleton, StartingContract } from '../game/Generation';
 import { generateSectorRewardChoices } from '../game/SectorRewards';
 import { getCurrentSector, getRouteCreditReward, type RunSessionState } from '../game/RunSession';
+import { getRewardDossierReadout, getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import type { InputAction } from '../systems/InputSystem';
 import {
   applyContractScreenTheme,
@@ -53,6 +54,12 @@ export class RewardScene implements Scene {
     title.id = 'reward-title';
     title.textContent = 'Choose Reward';
 
+    const upgradeReadout = getRewardDossierReadout(this.run.upgradeEffects, this.route.kind);
+    const upgradeNote = document.createElement('p');
+    upgradeNote.className = 'screen-upgrade-note';
+    upgradeNote.dataset.testid = 'reward-upgrade-note';
+    upgradeNote.textContent = upgradeReadout ?? '';
+
     const rewardGrid = document.createElement('div');
     rewardGrid.className = 'reward-grid';
 
@@ -89,6 +96,7 @@ export class RewardScene implements Scene {
       eyebrow,
       createContractThemeStrip(this.uiRoot.ownerDocument, theme),
       title,
+      ...(upgradeReadout ? [upgradeNote] : []),
       rewardGrid
     );
     this.uiRoot.replaceChildren(shell);
@@ -124,7 +132,8 @@ export class RewardScene implements Scene {
     return {
       seed: this.run.seed,
       entityCount: 0,
-      contractTheme: createContractThemeDebugState(this.contract)
+      contractTheme: createContractThemeDebugState(this.contract),
+      upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects)
     };
   }
 }

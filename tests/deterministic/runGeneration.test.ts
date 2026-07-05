@@ -71,6 +71,7 @@ describe('deterministic generation guardrails', () => {
       'src/game/ScrollState.ts',
       'src/game/SectorFeatures.ts',
       'src/game/SectorObjectives.ts',
+      'src/game/UpgradeEffects.ts',
       'src/game/WaveDirector.ts'
     ];
 

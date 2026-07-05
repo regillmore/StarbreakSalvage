@@ -6,6 +6,7 @@ import {
   type RunSessionState
 } from './RunSession';
 import { generateRewardChoices, type RewardChoice } from './Rewards';
+import { getRewardUpgradeBiasTags, getRewardUpgradeChoiceBonus } from './UpgradeEffects';
 
 export function generateSectorRewardChoices(options: {
   readonly run: RunSkeleton;
@@ -22,15 +23,21 @@ export function generateSectorRewardChoices(options: {
   const poolId = poolOverride ?? (options.routeKind === 'vault' ? 'vault' : 'combat');
   const choiceBonus = modifiers.reduce((total, modifier) => total + modifier.choiceBonus, 0);
   const modifierBiasTags = modifiers.flatMap((modifier) => modifier.biasTags);
+  const upgradeChoiceBonus = getRewardUpgradeChoiceBonus(
+    options.run.upgradeEffects,
+    options.routeKind
+  );
+  const upgradeBiasTags = getRewardUpgradeBiasTags(options.run.upgradeEffects, options.routeKind);
 
   return generateRewardChoices({
     seed: `${sector.rewardPoolSeed}:sector-${sector.index}:route-${options.routeKind}`,
     poolId,
-    count: options.count ?? 3 + choiceBonus,
+    count: options.count ?? 3 + choiceBonus + upgradeChoiceBonus,
     biasTags: [
       ...options.contract.itemBias,
       ...getRouteBiasTags(options.routeKind),
-      ...modifierBiasTags
+      ...modifierBiasTags,
+      ...upgradeBiasTags
     ],
     excludeItemIds: getOwnedItemIds(options.session),
     unlockedIds: options.run.unlockedIds

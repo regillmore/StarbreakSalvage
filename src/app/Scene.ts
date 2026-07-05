@@ -26,6 +26,7 @@ export interface SceneDebugState {
   readonly inputMode?: string;
   readonly hudMode?: string;
   readonly contractTheme?: ContractThemeDebugState;
+  readonly upgradeEffects?: readonly string[];
   readonly backgroundPrimitives?: number;
   readonly backgroundLayers?: number;
   readonly activeLandmarks?: number;

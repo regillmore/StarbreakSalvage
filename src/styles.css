@@ -453,6 +453,22 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   font-weight: 750;
 }
 
+.contract-upgrade-intel,
+.screen-upgrade-note {
+  margin: -0.2rem 0 0;
+  color: #c6f7ff;
+  font-size: 0.86rem;
+  font-weight: 850;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+}
+
+.contract-survey-note,
+.route-intel-hint {
+  color: #ffd166;
+}
+
 .contract-select-button {
   width: 100%;
   min-width: 0;
