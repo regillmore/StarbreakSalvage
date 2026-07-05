@@ -111,6 +111,8 @@ Exit criteria:
 - Engine wake, special/bomb cues, and hit flashes can use ship appearance data.
 - Cues remain readable and original, with reduced-motion/performance fallbacks.
 
+Status: first pass implemented in work order 037. Gameplay ship rendering now uses a pure appearance-plus-combat-state cue model for themed engine wake, damage flash, invulnerability rings, special/bomb readiness brackets, and weapon heat/overheat stress, with reduced-motion, performance, and high-contrast intensity fallbacks.
+
 ### P4.8 - Contract Theme Propagation
 
 Carry contract theme into route transition, reward/shop, summary, and debug context without overdecorating operational screens.

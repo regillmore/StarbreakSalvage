@@ -20,6 +20,7 @@
 - Added New Game contract ship previews with compact card SVGs, a larger selected-contract preview, weapon/role cue primitives, and arrow-key selection updates.
 - Added a contract-themed cockpit HUD with appearance-derived frame accents, readable meters for hull/special/bombs/weapon heat, and high-contrast/reduced-motion simplification.
 - Hardened Phase 4 accessibility by preserving native keyboard activation for focused buttons, clearing pointer guidance over DOM overlays, and simplifying preview/HUD treatment under reduced motion, performance mode, and high contrast.
+- Added ship-specific combat feedback for themed engine wake, damage flash, invulnerability rings, special/bomb readiness, and weapon heat/overheat stress.
 - Added deterministic sector scroll plans, fixed-step distance tracking, HUD distance/speed readouts, debug distance counters, and subtle reduced-motion-aware starfield drift.
 - Added deterministic procedural parallax background plans for all five sectors, with original canvas-drawn stars, rails, debris, bloom strands, grid lines, and core fractures.
 - Moved normal directed wave spawning onto deterministic scroll-distance marks while retaining time-based fallback schedules and boss-gate timing.
@@ -60,6 +61,7 @@
 - Added ship preview model/selection unit coverage and Playwright smoke assertions for preview selection before launch.
 - Added HUD theme helper coverage and Playwright smoke assertions for cockpit theme and core meters.
 - Added Playwright smoke coverage for keyboard-only start, contract selection, pause, end-run, summary, and return-to-menu flow.
+- Added ship combat cue helper coverage for theme-derived colors, damage/invulnerability, heat/overheat, and accessibility/performance intensity reductions.
 
 ### Planning
 

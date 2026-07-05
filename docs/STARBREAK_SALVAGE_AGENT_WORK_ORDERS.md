@@ -594,6 +594,8 @@ Acceptance criteria:
 - Reduced motion and performance mode reduce cue intensity.
 - Combat remains readable in high-contrast bullet mode.
 
+Status: first pass implemented; gameplay ship rendering now derives a pure cue model from selected ship appearance plus current combat state, then draws themed engine wake, damage flash, dashed invulnerability ring, special/bomb readiness brackets, and weapon heat/overheat stress without changing the hit-radius ring. Reduced-motion, performance, and high-contrast settings lower or simplify cue intensity, and unit tests cover cue-state derivation.
+
 ## Work order 038 - Contract theme propagation
 
 Goal: carry contract identity through non-combat screens without turning them into clutter.

@@ -403,7 +403,20 @@ export class GameplayScene implements Scene {
         Math.abs(this.getEffectiveMovementAxis(state).y)
       ),
       appearance: this.contract.shipAppearance,
-      invulnerable: state.player.invulnerableSeconds > 0
+      invulnerable: state.player.invulnerableSeconds > 0,
+      hull: state.player.hull,
+      maxHull: state.player.maxHull,
+      invulnerableSeconds: state.player.invulnerableSeconds,
+      specialCharge: state.player.specialCharge,
+      maxSpecialCharge: state.player.maxSpecialCharge,
+      specialCooldown: state.player.specialCooldown,
+      specialActiveSeconds: state.player.specialActiveSeconds,
+      bombs: state.player.bombs,
+      maxBombs: state.player.maxBombs,
+      bombCooldown: state.player.bombCooldown,
+      weaponHeat: state.player.weaponHeat,
+      weaponOverheatLimit: state.weapon.overheatLimit,
+      weaponOverheatSeconds: state.player.weaponOverheatSeconds
     });
     renderer.endGameplayLayer();
     renderer.paintGameplayFrame();

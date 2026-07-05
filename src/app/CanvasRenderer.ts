@@ -25,6 +25,10 @@ import {
 import { generateStarfield, type Star, starCountForViewport } from '../core/starfield';
 import { createDefaultCombatBounds } from '../game/CombatGeometry';
 import type { CombatBounds } from '../game/CombatState';
+import {
+  getPlayerShipCueState,
+  type PlayerShipCueState
+} from './ShipCombatCues';
 import { calculateViewportLayout, type ViewportLayout } from './ViewportLayout';
 
 const BACKGROUND_SEED = 'STARBREAK-SALVAGE-SHELL';
@@ -52,6 +56,19 @@ export interface PlayerRenderState {
   readonly thrust: number;
   readonly appearance?: ShipAppearance;
   readonly invulnerable?: boolean;
+  readonly hull?: number;
+  readonly maxHull?: number;
+  readonly invulnerableSeconds?: number;
+  readonly specialCharge?: number;
+  readonly maxSpecialCharge?: number;
+  readonly specialCooldown?: number;
+  readonly specialActiveSeconds?: number;
+  readonly bombs?: number;
+  readonly maxBombs?: number;
+  readonly bombCooldown?: number;
+  readonly weaponHeat?: number;
+  readonly weaponOverheatLimit?: number;
+  readonly weaponOverheatSeconds?: number;
 }
 
 export interface EnemyRenderState {
@@ -384,26 +401,57 @@ export class CanvasRenderer {
   public paintPlayerShip(player: PlayerRenderState): void {
     const context = this.context;
     const thrust = clamp(player.thrust, 0, 1);
-    const shipAlpha = player.invulnerable ? 0.62 : 1;
     const velocityCues = getVelocityCueState(this.settings);
     const appearance = player.appearance ?? DEFAULT_PLAYER_SHIP_APPEARANCE;
+    const cueState = getPlayerShipCueState(
+      {
+        appearance,
+        thrust,
+        hull: player.hull ?? 1,
+        maxHull: player.maxHull ?? 1,
+        invulnerableSeconds: player.invulnerableSeconds ?? (player.invulnerable ? 0.28 : 0),
+        specialCharge: player.specialCharge ?? 0,
+        maxSpecialCharge: player.maxSpecialCharge ?? 1,
+        specialCooldown: player.specialCooldown ?? 0,
+        specialActiveSeconds: player.specialActiveSeconds ?? 0,
+        bombs: player.bombs ?? 0,
+        maxBombs: player.maxBombs ?? 0,
+        bombCooldown: player.bombCooldown ?? 0,
+        weaponHeat: player.weaponHeat ?? 0,
+        weaponOverheatLimit: player.weaponOverheatLimit ?? 1,
+        weaponOverheatSeconds: player.weaponOverheatSeconds ?? 0
+      },
+      this.settings
+    );
+    const shipAlpha = cueState.bodyAlpha;
 
     context.save();
     context.translate(player.x, player.y);
 
-    if (velocityCues.engineWakeAlpha > 0) {
-      context.globalAlpha = velocityCues.engineWakeAlpha * (0.42 + thrust * 0.58) * shipAlpha;
-      context.strokeStyle = appearance.engineColor;
+    this.paintPlayerReadinessCues(player.radius, cueState);
+
+    if (velocityCues.engineWakeAlpha > 0 && cueState.wakeAlpha > 0) {
+      const wakeLength = cueState.wakeLengthScale;
+
+      context.globalAlpha = velocityCues.engineWakeAlpha * cueState.wakeAlpha * shipAlpha;
+      context.strokeStyle = cueState.wakeColor;
       context.lineWidth = Math.max(2, player.radius * 0.12);
       context.beginPath();
       context.moveTo(-player.radius * 0.38, player.radius * 0.72);
-      context.lineTo(-player.radius * 0.18, player.radius * (1.72 + thrust * 0.52));
+      context.lineTo(-player.radius * 0.18, player.radius * (1.42 + wakeLength * 0.7));
       context.moveTo(player.radius * 0.38, player.radius * 0.72);
-      context.lineTo(player.radius * 0.18, player.radius * (1.72 + thrust * 0.52));
+      context.lineTo(player.radius * 0.18, player.radius * (1.42 + wakeLength * 0.7));
+      if (cueState.specialActiveAlpha > 0) {
+        context.moveTo(0, player.radius * 0.62);
+        context.lineTo(0, player.radius * (1.36 + wakeLength * 0.78));
+      }
       context.stroke();
     }
 
-    context.globalAlpha = (this.settings.reducedMotion ? 0.22 : 0.32 + thrust * 0.42) * shipAlpha;
+    context.globalAlpha =
+      (this.settings.reducedMotion ? 0.2 : 0.28 + thrust * 0.36) *
+      (0.62 + cueState.wakeAlpha * 0.38) *
+      shipAlpha;
     context.fillStyle = appearance.engineColor;
     context.beginPath();
     context.moveTo(-player.radius * 0.48, player.radius * 0.68);
@@ -428,8 +476,10 @@ export class CanvasRenderer {
     this.tracePlayerShipSilhouette(appearance.silhouette, player.radius);
     context.stroke();
 
+    this.paintPlayerDamageCues(appearance.silhouette, player.radius, cueState);
+
     context.globalAlpha = shipAlpha * (this.settings.bulletContrast === 'high' ? 0.42 : 0.24);
-    context.strokeStyle = '#f8fbff';
+    context.strokeStyle = cueState.hitRingColor;
     context.lineWidth = 1;
     context.beginPath();
     context.arc(0, 0, player.radius, 0, Math.PI * 2);
@@ -437,6 +487,7 @@ export class CanvasRenderer {
 
     context.globalAlpha = shipAlpha;
     this.paintPlayerWeaponMounts(appearance.weaponMounts, appearance, player.radius);
+    this.paintPlayerWeaponStress(player.radius, cueState);
 
     context.fillStyle =
       this.settings.bulletContrast === 'high' ? '#ffffff' : appearance.cockpitAccent;
@@ -444,6 +495,106 @@ export class CanvasRenderer {
     context.arc(0, player.radius * 0.2, Math.max(2.5, player.radius * 0.18), 0, Math.PI * 2);
     context.fill();
 
+    context.restore();
+  }
+
+  private paintPlayerReadinessCues(radius: number, cueState: PlayerShipCueState): void {
+    const context = this.context;
+
+    if (cueState.bombReadyAlpha > 0) {
+      context.save();
+      context.globalAlpha = cueState.bombReadyAlpha;
+      context.strokeStyle = cueState.bombColor;
+      context.lineWidth = 1.5;
+      context.setLineDash([Math.max(5, radius * 0.24), Math.max(4, radius * 0.18)]);
+      context.beginPath();
+      context.arc(0, 0, radius * 1.34, 0, Math.PI * 2);
+      context.stroke();
+      context.restore();
+    }
+
+    if (cueState.specialReadyAlpha > 0 || cueState.specialActiveAlpha > 0) {
+      context.save();
+      context.globalAlpha = Math.max(cueState.specialReadyAlpha, cueState.specialActiveAlpha);
+      context.strokeStyle = cueState.specialColor;
+      context.lineWidth = cueState.specialActiveAlpha > 0 ? 2.2 : 1.6;
+      context.beginPath();
+      context.arc(0, -radius * 0.12, radius * 0.88, Math.PI * 1.08, Math.PI * 1.92);
+      context.stroke();
+      context.beginPath();
+      context.moveTo(-radius * 0.42, -radius * 0.82);
+      context.lineTo(-radius * 0.18, -radius * 1.06);
+      context.moveTo(radius * 0.42, -radius * 0.82);
+      context.lineTo(radius * 0.18, -radius * 1.06);
+      context.stroke();
+      context.restore();
+    }
+
+    if (cueState.invulnerabilityRingAlpha > 0) {
+      context.save();
+      context.globalAlpha = cueState.invulnerabilityRingAlpha;
+      context.strokeStyle = cueState.invulnerabilityColor;
+      context.lineWidth = 1.3;
+      context.setLineDash([4, 6]);
+      context.beginPath();
+      context.arc(0, 0, radius * 1.18, 0, Math.PI * 2);
+      context.stroke();
+      context.restore();
+    }
+  }
+
+  private paintPlayerDamageCues(
+    silhouette: ShipSilhouette,
+    radius: number,
+    cueState: PlayerShipCueState
+  ): void {
+    if (cueState.damageFlashAlpha <= 0) {
+      return;
+    }
+
+    const context = this.context;
+
+    context.save();
+    context.globalAlpha = cueState.damageFlashAlpha;
+    context.fillStyle = cueState.damageColor;
+    this.tracePlayerShipSilhouette(silhouette, radius * 0.9);
+    context.fill();
+    context.strokeStyle = cueState.damageColor;
+    context.lineWidth = 1.4;
+    context.beginPath();
+    context.moveTo(-radius * 0.36, -radius * 0.28);
+    context.lineTo(radius * 0.04, radius * 0.08);
+    context.lineTo(-radius * 0.14, radius * 0.42);
+    context.moveTo(radius * 0.32, -radius * 0.04);
+    context.lineTo(radius * 0.08, radius * 0.28);
+    context.stroke();
+    context.restore();
+  }
+
+  private paintPlayerWeaponStress(radius: number, cueState: PlayerShipCueState): void {
+    const alpha = Math.max(cueState.heatStressAlpha, cueState.overheatAlpha);
+
+    if (alpha <= 0) {
+      return;
+    }
+
+    const context = this.context;
+
+    context.save();
+    context.globalAlpha = alpha;
+    context.strokeStyle = cueState.heatColor;
+    context.lineWidth = cueState.overheatAlpha > 0 ? 2.4 : 1.7;
+    if (cueState.overheatAlpha > 0) {
+      context.setLineDash([3, 4]);
+    }
+    context.beginPath();
+    context.moveTo(-radius * 0.72, -radius * 0.04);
+    context.lineTo(-radius * 0.92, radius * 0.36);
+    context.moveTo(radius * 0.72, -radius * 0.04);
+    context.lineTo(radius * 0.92, radius * 0.36);
+    context.moveTo(-radius * 0.18, -radius * 0.9);
+    context.lineTo(radius * 0.18, -radius * 0.9);
+    context.stroke();
     context.restore();
   }
 
