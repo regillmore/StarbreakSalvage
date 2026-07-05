@@ -74,9 +74,9 @@ Phase 4 introduces display/input/identity polish. Add tests closest to the risk:
 - narrow/wide viewport E2E smoke for main menu, contract selection, gameplay HUD, pause, and summary; work order 031 adds narrow gameplay HUD/safe-frame smoke, with wider route/pause/summary viewport coverage still useful;
 - mouse/pointer input mapping, bounds clamping, click/hold fire, and focus safety in menus/settings; work order 032 adds passive pointer guidance, primary-button fire, debug input-mode reporting, and pointer movement/fire smoke coverage;
 - keyboard-only parity after mouse, contract-preview, and future HUD changes; work order 034 adds arrow-key preview selection plus preview smoke assertions;
-- ship appearance content validation for silhouettes, palettes, engine/cockpit accents, weapon mount hints, and HUD theme keys; work order 033 adds this coverage, with preview/HUD theme QA still pending;
+- ship appearance content validation for silhouettes, palettes, engine/cockpit accents, weapon mount hints, and HUD theme keys; work orders 033-035 add appearance, preview, and cockpit HUD coverage, with manual cross-theme QA still useful;
 - contract selection preview state for keyboard focus, pointer selection, and narrow layouts; work order 034 adds pure preview-model coverage and Playwright preview-selection assertions, with manual contrast/narrow browser checks still useful;
-- themed HUD readability for hull, economy, objective, warnings, boss, weapon, special, bomb, and build state;
+- themed HUD readability for hull, economy, objective, warnings, boss, weapon, special, bomb, and build state; work order 035 adds semantic meter/readout coverage, with manual cross-theme checks still useful;
 - reduced motion, high contrast, and performance mode interactions with ship previews, ship wake/damage cues, and contract HUD themes.
 
 ## Known seed tests
@@ -175,7 +175,7 @@ Phase 4 accessibility checks should also cover narrow viewport HUD readability, 
 - [ ] No essential information conveyed by color alone.
 - [ ] Distance/objective text remains readable over moving backgrounds.
 - [ ] Reduced motion simplifies scrolling effects without hiding gameplay state.
-- [ ] Themed HUD and ship previews preserve text contrast.
+- [x] Themed HUD and ship previews preserve text contrast in automated smoke coverage.
 - [ ] Mouse controls do not trap or steal menu focus.
 
 ## Release checklist

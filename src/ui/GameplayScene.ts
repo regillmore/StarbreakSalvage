@@ -32,6 +32,11 @@ import type { ItemInstance } from '../game/Rewards';
 import { getSectorCompletionReason } from '../game/RunOutcome';
 import type { RouteCombatModifier } from '../game/RouteEvents';
 import {
+  createHudMeterModel,
+  createHudThemeModel,
+  type HudThemeOptions
+} from './HudTheme';
+import {
   applySectorConditionsToBossArena,
   applySectorConditionsToFeatures,
   applySectorConditionsToScroll,
@@ -80,6 +85,12 @@ const DEBUG_BOSS_SHORTCUTS: Partial<Record<InputAction, BossId>> = {
 const DEBUG_LONG_SCROLL_RATIO = 0.86;
 const DEBUG_LONG_SCROLL_EXIT_LEAD = 120;
 
+interface HudMeterElements {
+  readonly root: HTMLDivElement;
+  readonly fill: HTMLSpanElement;
+  readonly value: HTMLSpanElement;
+}
+
 export class GameplayScene implements Scene {
   public readonly id = 'gameplay';
 
@@ -109,6 +120,10 @@ export class GameplayScene implements Scene {
   private readonly warningReadout: HTMLParagraphElement;
   private readonly itemReadout: HTMLParagraphElement;
   private readonly hintReadout: HTMLParagraphElement;
+  private readonly hullMeter: HudMeterElements;
+  private readonly specialMeter: HudMeterElements;
+  private readonly bombMeter: HudMeterElements;
+  private readonly heatMeter: HudMeterElements;
   private sectorCompleted = false;
   private queuedSpecial = false;
   private queuedBomb = false;
@@ -141,11 +156,11 @@ export class GameplayScene implements Scene {
     this.distanceReadout.dataset.testid = 'distance-readout';
 
     this.hullReadout = document.createElement('p');
-    this.hullReadout.className = 'hud-pill';
+    this.hullReadout.className = 'hud-pill hud-pill-vital';
     this.hullReadout.dataset.testid = 'hull-readout';
 
     this.economyReadout = document.createElement('p');
-    this.economyReadout.className = 'hud-pill';
+    this.economyReadout.className = 'hud-pill hud-pill-vital';
     this.economyReadout.dataset.testid = 'pickup-readout';
 
     this.objectiveReadout = document.createElement('p');
@@ -157,7 +172,7 @@ export class GameplayScene implements Scene {
     this.verbReadout.dataset.testid = 'verb-readout';
 
     this.weaponReadout = document.createElement('p');
-    this.weaponReadout.className = 'hud-pill hud-pill-wide';
+    this.weaponReadout.className = 'hud-pill hud-pill-wide hud-pill-system';
     this.weaponReadout.dataset.testid = 'weapon-readout';
 
     this.combatReadout = document.createElement('p');
@@ -169,7 +184,7 @@ export class GameplayScene implements Scene {
     this.bossReadout.dataset.testid = 'boss-readout';
 
     this.warningReadout = document.createElement('p');
-    this.warningReadout.className = 'hud-pill';
+    this.warningReadout.className = 'hud-pill hud-pill-warning';
     this.warningReadout.dataset.testid = 'boss-warning';
 
     this.itemReadout = document.createElement('p');
@@ -179,14 +194,48 @@ export class GameplayScene implements Scene {
     this.hintReadout = document.createElement('p');
     this.hintReadout.className = 'hud-pill hud-pill-wide';
     this.hintReadout.dataset.testid = 'hint-readout';
+
+    this.hullMeter = createHudMeterElement(document, 'Hull integrity', 'HUL', 'hull-meter');
+    this.specialMeter = createHudMeterElement(document, 'Special charge', 'SPC', 'special-meter');
+    this.bombMeter = createHudMeterElement(document, 'Bomb stock', 'BMB', 'bomb-meter');
+    this.heatMeter = createHudMeterElement(document, 'Weapon heat', 'HEAT', 'weapon-heat-meter');
   }
 
   public enter(): void {
     this.getCombatState();
 
+    const ownerDocument = this.uiRoot.ownerDocument;
+    const hudTheme = createHudThemeModel(
+      this.contract.shipAppearance,
+      getHudThemeOptions(ownerDocument)
+    );
     const hud = document.createElement('section');
-    hud.className = 'game-hud';
-    hud.setAttribute('aria-label', 'Run status');
+    hud.className = 'game-hud cockpit-hud';
+    hud.dataset.testid = 'cockpit-hud';
+    hud.dataset.hudTheme = hudTheme.themeKey;
+    hud.dataset.hudMode = hudTheme.mode;
+    hud.setAttribute('aria-label', `${this.contract.shipName} cockpit status`);
+
+    for (const [property, value] of Object.entries(hudTheme.cssVariables)) {
+      hud.style.setProperty(property, value);
+    }
+
+    const chrome = ownerDocument.createElement('div');
+    chrome.className = 'hud-cockpit-chrome';
+
+    const themeReadout = ownerDocument.createElement('p');
+    themeReadout.className = 'hud-theme-readout';
+    themeReadout.dataset.testid = 'hud-theme-readout';
+    themeReadout.textContent = `${hudTheme.label} | ${this.contract.shipName}`;
+
+    const meterStrip = ownerDocument.createElement('div');
+    meterStrip.className = 'hud-meter-strip';
+    meterStrip.append(
+      this.hullMeter.root,
+      this.specialMeter.root,
+      this.bombMeter.root,
+      this.heatMeter.root
+    );
 
     const sector = document.createElement('p');
     sector.className = 'hud-pill';
@@ -196,7 +245,9 @@ export class GameplayScene implements Scene {
     contract.className = 'hud-pill';
     contract.textContent = this.contract.shipName;
 
-    hud.append(
+    const readoutStrip = ownerDocument.createElement('div');
+    readoutStrip.className = 'hud-readout-strip';
+    readoutStrip.append(
       sector,
       this.distanceReadout,
       this.hullReadout,
@@ -209,9 +260,10 @@ export class GameplayScene implements Scene {
       this.bossReadout,
       this.warningReadout,
       this.itemReadout,
-      contract,
-      this.positionReadout
+      contract
     );
+    chrome.append(themeReadout, meterStrip);
+    hud.append(chrome, readoutStrip, this.positionReadout);
     this.uiRoot.replaceChildren(hud);
     this.syncReadouts();
   }
@@ -594,6 +646,7 @@ export class GameplayScene implements Scene {
     this.objectiveReadout.textContent = getObjectiveProgress(this.getWavePlan(), state).readout;
     this.verbReadout.textContent = this.getVerbReadout(state);
     this.weaponReadout.textContent = this.getWeaponReadout(state);
+    this.syncMeters(state);
     this.combatReadout.textContent = `Destroyed ${state.stats.enemiesDestroyed} | Shots ${state.stats.shotsFired} | Hooks ${state.stats.itemTriggers}`;
     this.bossReadout.textContent = state.boss
       ? `${state.boss.name} ${Math.max(0, state.boss.hull)}/${state.boss.maxHull} | ${
@@ -641,6 +694,31 @@ export class GameplayScene implements Scene {
         : `Heat ${heatPercent}%`;
 
     return `${state.weapon.name} | ${state.weapon.pattern} | ${heatStatus}`;
+  }
+
+  private syncMeters(state: CombatState): void {
+    syncHudMeter(
+      this.hullMeter,
+      createHudMeterModel(state.player.hull, state.player.maxHull),
+      state.player.hull <= 1 ? 'danger' : 'steady'
+    );
+    syncHudMeter(
+      this.specialMeter,
+      createHudMeterModel(state.player.specialCharge, state.player.maxSpecialCharge),
+      state.player.specialCharge >= state.player.maxSpecialCharge ? 'ready' : 'charging'
+    );
+    syncHudMeter(
+      this.bombMeter,
+      createHudMeterModel(state.player.bombs, state.player.maxBombs),
+      state.player.bombs > 0 ? 'ready' : 'empty'
+    );
+    syncHudMeter(
+      this.heatMeter,
+      createHudMeterModel(state.player.weaponHeat, state.weapon.overheatLimit),
+      state.player.weaponOverheatSeconds > 0 || state.player.weaponHeat >= state.weapon.overheatLimit
+        ? 'danger'
+        : 'steady'
+    );
   }
 
   private getBuildReadout(state: CombatState): string {
@@ -760,4 +838,61 @@ function getDebugLongScrollDistance(sectorLength: number): number {
   const exitLeadDistance = Math.max(0, length - DEBUG_LONG_SCROLL_EXIT_LEAD);
 
   return Math.min(lateDistance, exitLeadDistance);
+}
+
+function createHudMeterElement(
+  ownerDocument: Document,
+  label: string,
+  shortLabel: string,
+  testId: string
+): HudMeterElements {
+  const root = ownerDocument.createElement('div');
+  root.className = 'hud-meter';
+  root.dataset.testid = testId;
+  root.setAttribute('role', 'meter');
+  root.setAttribute('aria-label', label);
+  root.setAttribute('aria-valuemin', '0');
+  root.setAttribute('aria-valuemax', '100');
+  root.setAttribute('aria-valuenow', '0');
+
+  const caption = ownerDocument.createElement('span');
+  caption.className = 'hud-meter-caption';
+  caption.textContent = shortLabel;
+
+  const value = ownerDocument.createElement('span');
+  value.className = 'hud-meter-value';
+  value.textContent = '0%';
+
+  const track = ownerDocument.createElement('span');
+  track.className = 'hud-meter-track';
+
+  const fill = ownerDocument.createElement('span');
+  fill.className = 'hud-meter-fill';
+  fill.style.width = '0%';
+
+  track.append(fill);
+  root.append(caption, value, track);
+
+  return { root, fill, value };
+}
+
+function syncHudMeter(
+  elements: HudMeterElements,
+  meter: ReturnType<typeof createHudMeterModel>,
+  state: string
+): void {
+  elements.root.dataset.state = state;
+  elements.root.setAttribute('aria-valuenow', String(meter.percent));
+  elements.fill.style.width = meter.width;
+  elements.value.textContent = meter.width;
+}
+
+function getHudThemeOptions(ownerDocument: Document): HudThemeOptions {
+  const { dataset } = ownerDocument.documentElement;
+
+  return {
+    reducedMotion: dataset.reducedMotion === 'true',
+    bulletContrast: dataset.bulletContrast === 'high' ? 'high' : 'standard',
+    performanceMode: dataset.performanceMode === 'true'
+  };
 }

@@ -560,6 +560,8 @@ Acceptance criteria:
 - HUD layout remains stable on narrow and wide windows.
 - Accessibility settings reduce or clarify themed presentation as needed.
 
+Status: first pass implemented; gameplay now wraps the existing critical readouts in a contract-themed cockpit HUD, derives frame/meter colors from the selected ship appearance, exposes accessible meter elements for hull/special/bombs/weapon heat, and simplifies the treatment under high-contrast/reduced-motion/performance settings. Unit tests cover theme/meter derivation and Playwright smoke asserts the themed HUD and core readouts.
+
 ## Work order 036 - Display and input accessibility
 
 Goal: harden Phase 4 display/input features for more players.

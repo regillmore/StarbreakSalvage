@@ -71,6 +71,12 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('distance-readout')).toContainText(/Distance \d+\/\d+u/);
   await expect(page.getByTestId('hull-readout')).toContainText('Hull');
   await expect(page.getByTestId('pickup-readout')).toContainText(/Credits .* Salvage/);
+  await expect(page.getByTestId('cockpit-hud')).toHaveAttribute('data-hud-theme', 'redline');
+  await expect(page.getByTestId('hud-theme-readout')).toContainText('REDLINE COCKPIT');
+  await expect(page.getByTestId('hull-meter')).toHaveAttribute('aria-valuenow', '100');
+  await expect(page.getByTestId('special-meter')).toHaveAttribute('aria-valuenow', '100');
+  await expect(page.getByTestId('bomb-meter')).toHaveAttribute('aria-valuenow', '100');
+  await expect(page.getByTestId('weapon-heat-meter')).toHaveAttribute('aria-valuenow', '0');
   await expect(page.getByTestId('objective-readout')).toContainText(/waves|targets|Boss/i);
   await expect(page.getByTestId('hint-readout')).toContainText('Hint');
   await expect(page.getByTestId('verb-readout')).toContainText('Special');
@@ -225,6 +231,7 @@ test('launches gameplay with reduced motion and high contrast settings by keyboa
 
   await page.keyboard.press('Enter');
   await expect(page.getByText('Outer Debris Field')).toBeVisible();
+  await expect(page.getByTestId('cockpit-hud')).toHaveAttribute('data-hud-mode', 'contrast');
   await expect(page.getByTestId('distance-readout')).toContainText(/Distance \d+\/\d+u/);
   await expect(page.getByTestId('hint-readout')).toContainText('Hint');
   await expect(page.locator('.debug-overlay')).toContainText(/Scroll \d+u\/s/);

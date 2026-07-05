@@ -824,6 +824,10 @@ Acceptance:
 - Critical text readouts and screen-reader support remain intact.
 - Themed HUD respects reduced motion, performance mode, and high-contrast bullets.
 
+Status:
+
+- First pass implemented in work order 035 with appearance-derived cockpit frame accents, semantic hull/special/bomb/heat meters, readable text readouts, high-contrast/reduced-motion simplification, unit tests, and Playwright smoke coverage.
+
 ## Epic AE - Contract theme propagation and feedback
 
 ### AE1 - Ship identity feedback

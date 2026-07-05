@@ -27,8 +27,8 @@ Phase 3 made forward motion real, but several player-facing seams remain:
 - passive mouse/touch movement and fire exist, but later preview/HUD interactions still need focus and accessibility audits;
 - contract stats, weapons, gameplay ship silhouettes/palettes, and contract-selection previews are now distinct;
 - contract selection now has visual previews, but the broader route/reward/shop/summary contract theme is still sparse;
-- HUD text is functional, but it does not yet feel like a ship cockpit or contract-themed instrument panel;
-- debug coverage now reports viewport and input-mode state, but preview/HUD theme smoke coverage remains pending.
+- HUD now has a first-pass contract-themed cockpit layer, but deeper ship feedback and non-combat theme propagation remain sparse;
+- debug coverage now reports viewport and input-mode state, and preview/HUD theme smoke coverage exists, but broader route/pause/summary viewport coverage remains useful.
 
 ## Phase 4 Milestones
 
@@ -86,6 +86,8 @@ Exit criteria:
 - HUD frame, meter accents, and key readouts reflect the selected ship/contract theme.
 - Critical values remain text-readable and screen-reader friendly.
 - Reduced motion/performance/high-contrast settings still simplify presentation.
+
+Status: first pass implemented in work order 035. Gameplay now derives cockpit frame accents, meter colors, and HUD mode from selected ship appearance plus document accessibility settings. Hull, special, bomb, and weapon heat meters remain semantic DOM elements while existing text readouts keep their test ids and screen-reader value.
 
 ### P4.6 - Display And Input Accessibility
 
