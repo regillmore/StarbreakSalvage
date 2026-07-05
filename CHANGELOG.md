@@ -42,6 +42,7 @@
 - Added unit coverage for seed entry resolution and run-summary detail helpers, plus E2E coverage for seed entry and keyboard-only start.
 - Added regression coverage for empty-field objective progress after item side-effect kills and body-collision clears.
 - Added debug-scenario coverage for final boss shortcuts, dense combat budgets, and browser smoke of the debug stress path.
+- Added a debug-only sector-complete shortcut so browser smoke can cover route/shop/reward transitions without depending on combat clear timing.
 - Added scroll-state tests for known-seed sector length snapshots, fixed-step advancement, speed clamping, zero-dt pause behavior, and exit completion.
 - Added background-plan determinism tests and content validation for sector background references and strata metadata.
 - Added scroll-synced wave tests for known-seed distance marks, spawn order, time fallback, and frame-stutter duplicate prevention.

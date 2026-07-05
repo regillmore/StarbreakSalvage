@@ -375,6 +375,13 @@ export class GameplayScene implements Scene {
       this.onGameOver(forceCombatEnd(this.getCombatState(), 'debug'));
     }
 
+    if (action === 'debugSectorComplete' && this.debugEnabled) {
+      this.emitFeedback(['sectorClear']);
+      this.sectorCompleted = true;
+      this.onSectorComplete(forceCombatEnd(this.getCombatState(), 'sectorComplete'));
+      return;
+    }
+
     const debugBossId = DEBUG_BOSS_SHORTCUTS[action];
     if (debugBossId && this.debugEnabled) {
       const state = this.getCombatState();

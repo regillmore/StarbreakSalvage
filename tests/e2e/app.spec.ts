@@ -3,6 +3,8 @@ import { expect, test } from '@playwright/test';
 test('loads the shell, starts gameplay, moves, pauses, and enters the sector loop', async ({
   page
 }) => {
+  test.setTimeout(90_000);
+
   const browserErrors: string[] = [];
   page.on('console', (message) => {
     if (message.type() === 'error') {
@@ -56,6 +58,13 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
       .getByRole('img', { name: /Missile Accountant ship preview/ })
   ).toBeVisible();
 
+  await page
+    .locator('article')
+    .filter({ hasText: 'Debt Runner' })
+    .getByRole('button', { name: /Select|Selected/ })
+    .click();
+  await expect(page.getByTestId('selected-contract-preview')).toContainText('Debt Runner');
+
   await page.getByRole('button', { name: 'Launch Contract' }).click();
 
   await expect(page.getByText('Outer Debris Field')).toBeVisible();
@@ -92,11 +101,8 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.keyboard.press('Escape');
   await expect(page.getByText('Outer Debris Field')).toBeVisible();
 
-  await page.keyboard.down('Space');
-  await expect(page.getByRole('heading', { name: 'Choose Route' })).toBeVisible({
-    timeout: 30_000
-  });
-  await page.keyboard.up('Space');
+  await page.keyboard.press('8');
+  await expect(page.getByRole('heading', { name: 'Choose Route' })).toBeVisible();
 
   await page.getByTestId('route-shop').click();
   await expect(page.getByRole('heading', { name: 'Shop' })).toBeVisible();

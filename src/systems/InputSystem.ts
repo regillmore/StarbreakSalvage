@@ -21,6 +21,7 @@ export const INPUT_ACTIONS = [
   'debugBossFour',
   'debugBossFive',
   'debugDenseCombat',
+  'debugSectorComplete',
   'debugLongScroll'
 ] as const;
 
@@ -61,6 +62,7 @@ export const DEFAULT_KEY_BINDINGS: KeyBindingMap = {
   debugBossFour: ['4'],
   debugBossFive: ['5'],
   debugDenseCombat: ['0'],
+  debugSectorComplete: ['8'],
   debugLongScroll: ['9']
 };
 

@@ -13,7 +13,7 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 | ESLint                        | Pass            | `npm run check`                                                                          |
 | Unit and deterministic tests  | Pass            | `npm run check` - 33 files, 193 tests                                                    |
 | Production build              | Pass            | `npm run check` - Vite build created `dist/`                                             |
-| Playwright Chromium smoke     | Blocked locally | `npm run test:e2e` attempted; local Playwright Chromium headless shell is not installed. |
+| Playwright Chromium smoke     | Pass            | `npm run test:e2e` with Codex escalation; sandboxed runs cannot read the AppData browser cache. |
 | Production preview asset load | Pass            | Local preview returned HTTP 200 and Pages asset path                                     |
 
 ## Release Audit
@@ -33,7 +33,7 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 | Seed sharing               | Pass   | Menu seed entry and summary share links support blank/default/random/known/custom labels.                                                                                                                                                                                                                 |
 | Content validation         | Pass   | Shipped content validates and bad fixtures are covered by tests.                                                                                                                                                                                                                                          |
 | Runtime dependencies       | Pass   | No production dependencies remain.                                                                                                                                                                                                                                                                        |
-| Debug/performance tools    | Pass   | `?debug=1` supports five boss shortcuts, dense combat stress, quiet long-scroll traversal, forced summary, granular entity/projectile/pickup/effect/feature counters, distance/speed/arena counters, input mode, background primitive/layer count, viewport scale, safe-frame size, and fixed world size. |
+| Debug/performance tools    | Pass   | `?debug=1` supports five boss shortcuts, dense combat stress, forced sector completion, quiet long-scroll traversal, forced summary, granular entity/projectile/pickup/effect/feature counters, distance/speed/arena counters, input mode, background primitive/layer count, viewport scale, safe-frame size, and fixed world size. |
 
 ## Phase 3 Scrolling Playtest Audit
 
@@ -43,13 +43,13 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 | Performance           | Pass   | Dense and long-scroll debug scenarios are deterministic; granular counters separate combat, background, feature, distance, speed, and arena state.                                                                             |
 | Accessibility         | Watch  | Keyboard flow, remapping, passive mouse/touch assist, mute, reduced motion, shake strength, contrast, HUD wrapping, fixed-arena safe-frame scaling, and high-contrast bullets exist; manual mobile and contrast checks remain. |
 | Deterministic content | Pass   | Seeded contracts, sectors, objectives, routes, rewards, shops, boss schedule, scroll plans, backgrounds, hazards, arena marks, and condition plans are covered by tests.                                                       |
-| Browser load          | Pass   | Static Vite build, Pages base path, and production preview smoke are covered; local Playwright is blocked by missing Chromium cache.                                                                                           |
+| Browser load          | Pass   | Static Vite build, Pages base path, production preview smoke, and escalated local Playwright smoke are covered.                                                                                                                |
 
 ## Manual Browser Smoke
 
 | Browser                 | Load    | Start Run | Combat  | Mouse   | Pause   | Settings | Summary | Debug Perf | Long Scroll | Notes                                       |
 | ----------------------- | ------- | --------- | ------- | ------- | ------- | -------- | ------- | ---------- | ----------- | ------------------------------------------- |
-| Chromium via Playwright | Blocked | Blocked   | Blocked | Blocked | Blocked | Blocked  | Blocked | Blocked    | Blocked     | Local Chromium headless shell is missing.   |
+| Chromium via Playwright | Pass    | Pass      | Pass    | Pass    | Pass    | Pass     | Pass    | Pass       | Pass        | `npm run test:e2e` passes with Codex escalation. |
 | Chrome or Edge manual   | Not run | Not run   | Not run | Not run | Not run | Not run  | Not run | Not run    | Not run     | Requires manual browser pass on deployment. |
 | Firefox manual          | Not run | Not run   | Not run | Not run | Not run | Not run  | Not run | Not run    | Not run     | Requires manual browser pass on deployment. |
 | Safari manual           | Not run | Not run   | Not run | Not run | Not run | Not run  | Not run | Not run    | Not run     | Requires macOS/iOS browser pass.            |
