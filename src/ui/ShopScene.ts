@@ -1,5 +1,5 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
-import type { Scene } from '../app/Scene';
+import type { Scene, SceneDebugState } from '../app/Scene';
 import type { ItemId } from '../content/items';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import {
@@ -11,6 +11,13 @@ import {
 } from '../game/RunSession';
 import { generateShopInventory, SHOP_REROLL_COST } from '../game/Shops';
 import type { InputAction } from '../systems/InputSystem';
+import {
+  applyContractScreenTheme,
+  createContractScreenThemeModel,
+  createContractThemeDebugState,
+  createContractThemeStrip,
+  getContractThemeOptions
+} from './ContractTheme';
 
 export class ShopScene implements Scene {
   public readonly id = 'shop';
@@ -45,6 +52,11 @@ export class ShopScene implements Scene {
     const shell = document.createElement('main');
     shell.className = 'scene-panel scene-panel-wide shop-panel';
     shell.setAttribute('aria-labelledby', 'shop-title');
+    const theme = createContractScreenThemeModel(
+      this.contract,
+      getContractThemeOptions(this.uiRoot.ownerDocument)
+    );
+    applyContractScreenTheme(shell, theme);
 
     const eyebrow = document.createElement('p');
     eyebrow.className = 'eyebrow';
@@ -105,7 +117,13 @@ export class ShopScene implements Scene {
     leaveButton.addEventListener('click', this.onLeave);
 
     controls.append(rerollButton, leaveButton);
-    shell.append(eyebrow, title, shopGrid, controls);
+    shell.append(
+      eyebrow,
+      createContractThemeStrip(this.uiRoot.ownerDocument, theme),
+      title,
+      shopGrid,
+      controls
+    );
     this.uiRoot.replaceChildren(shell);
     shopGrid.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
   }
@@ -122,7 +140,11 @@ export class ShopScene implements Scene {
     }
   }
 
-  public getDebugState(): { seed: string; entityCount: number } {
-    return { seed: this.run.seed, entityCount: 0 };
+  public getDebugState(): SceneDebugState {
+    return {
+      seed: this.run.seed,
+      entityCount: 0,
+      contractTheme: createContractThemeDebugState(this.contract)
+    };
   }
 }

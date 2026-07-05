@@ -1,6 +1,6 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
-import type { Scene } from '../app/Scene';
-import type { RunSkeleton } from '../game/Generation';
+import type { Scene, SceneDebugState } from '../app/Scene';
+import type { RunSkeleton, StartingContract } from '../game/Generation';
 import { getCurrentSector, type RunSessionState } from '../game/RunSession';
 import {
   applySectorConditionsToScroll,
@@ -8,6 +8,13 @@ import {
   formatSectorConditionReadout
 } from '../game/SectorConditions';
 import type { InputAction } from '../systems/InputSystem';
+import {
+  applyContractScreenTheme,
+  createContractScreenThemeModel,
+  createContractThemeDebugState,
+  createContractThemeStrip,
+  getContractThemeOptions
+} from './ContractTheme';
 
 export class SectorTransitionScene implements Scene {
   public readonly id = 'sector-transition';
@@ -16,6 +23,7 @@ export class SectorTransitionScene implements Scene {
     private readonly uiRoot: HTMLElement,
     private readonly run: RunSkeleton,
     private readonly session: RunSessionState,
+    private readonly contract: StartingContract,
     private readonly onEnterSector: () => void
   ) {}
 
@@ -30,6 +38,11 @@ export class SectorTransitionScene implements Scene {
     const shell = document.createElement('main');
     shell.className = 'scene-panel transition-panel';
     shell.setAttribute('aria-labelledby', 'transition-title');
+    const theme = createContractScreenThemeModel(
+      this.contract,
+      getContractThemeOptions(this.uiRoot.ownerDocument)
+    );
+    applyContractScreenTheme(shell, theme);
 
     const eyebrow = document.createElement('p');
     eyebrow.className = 'eyebrow';
@@ -67,7 +80,16 @@ export class SectorTransitionScene implements Scene {
     enterButton.textContent = 'Enter Sector';
     enterButton.addEventListener('click', this.onEnterSector);
 
-    shell.append(eyebrow, title, routeLine, objectiveLine, conditionLine, waveLine, enterButton);
+    shell.append(
+      eyebrow,
+      createContractThemeStrip(this.uiRoot.ownerDocument, theme),
+      title,
+      routeLine,
+      objectiveLine,
+      conditionLine,
+      waveLine,
+      enterButton
+    );
     this.uiRoot.replaceChildren(shell);
     enterButton.focus();
   }
@@ -84,7 +106,11 @@ export class SectorTransitionScene implements Scene {
     }
   }
 
-  public getDebugState(): { seed: string; entityCount: number } {
-    return { seed: this.run.seed, entityCount: 0 };
+  public getDebugState(): SceneDebugState {
+    return {
+      seed: this.run.seed,
+      entityCount: 0,
+      contractTheme: createContractThemeDebugState(this.contract)
+    };
   }
 }

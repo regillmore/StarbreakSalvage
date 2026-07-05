@@ -83,6 +83,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('weapon-readout')).toContainText('Heat');
   await expect(page.getByTestId('boss-readout')).toContainText('Boss');
   await expect(page.getByTestId('item-readout')).toContainText('Split Prism');
+  await expect(page.locator('.debug-overlay')).toContainText('Theme redline/Debt Runner');
 
   const startPosition = await page.getByTestId('player-position').textContent();
   await page.keyboard.down('ArrowRight');
@@ -109,16 +110,23 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
 
   await page.keyboard.press('8');
   await expect(page.getByRole('heading', { name: 'Choose Route' })).toBeVisible();
+  await expect(page.locator('.route-panel')).toHaveAttribute('data-contract-theme', 'redline');
+  await expect(page.getByTestId('contract-theme-strip')).toContainText(
+    'REDLINE CONTRACT | Debt Runner'
+  );
 
   await page.getByTestId('route-shop').click();
   await expect(page.getByRole('heading', { name: 'Shop' })).toBeVisible();
+  await expect(page.locator('.shop-panel')).toHaveAttribute('data-contract-theme', 'redline');
 
   await page.getByRole('button', { name: /Reroll/ }).click();
   await page.getByRole('button', { name: 'Leave Shop' }).click();
   await expect(page.getByRole('heading', { name: 'Choose Reward' })).toBeVisible();
+  await expect(page.locator('.reward-panel')).toHaveAttribute('data-contract-theme', 'redline');
 
   await page.getByRole('button', { name: /Take / }).first().click();
   await expect(page.getByRole('heading', { name: /Entering Trade War Corridor/ })).toBeVisible();
+  await expect(page.locator('.transition-panel')).toHaveAttribute('data-contract-theme', 'redline');
 
   await page.getByRole('button', { name: 'Enter Sector' }).click();
   await expect(page.getByText('Trade War Corridor')).toBeVisible();
@@ -147,6 +155,8 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
 
   await page.keyboard.press('K');
   await expect(page.getByRole('heading', { name: 'Debug Run Ended' })).toBeVisible();
+  await expect(page.locator('.summary-panel')).toHaveAttribute('data-contract-theme', 'redline');
+  await expect(page.getByText(/redline theme \| needle silhouette/)).toBeVisible();
   await expect(page.getByText('forced test', { exact: true })).toBeVisible();
   await expect(page.getByText('Debug: forced test summary.')).toBeVisible();
   await expect(page.getByTestId('unlock-summary')).toContainText('Unlocked:');

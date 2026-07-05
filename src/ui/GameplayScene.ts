@@ -36,6 +36,7 @@ import {
   createHudThemeModel,
   type HudThemeOptions
 } from './HudTheme';
+import { createContractThemeDebugState } from './ContractTheme';
 import {
   applySectorConditionsToBossArena,
   applySectorConditionsToFeatures,
@@ -525,7 +526,8 @@ export class GameplayScene implements Scene {
         arenaWidth: bounds.width,
         arenaHeight: bounds.height
       },
-      inputMode: this.input.getActiveInputMode()
+      inputMode: this.input.getActiveInputMode(),
+      contractTheme: createContractThemeDebugState(this.contract)
     };
   }
 

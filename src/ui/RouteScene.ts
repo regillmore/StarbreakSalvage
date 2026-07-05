@@ -1,8 +1,15 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
-import type { Scene } from '../app/Scene';
-import type { RouteOption, RunSkeleton } from '../game/Generation';
+import type { Scene, SceneDebugState } from '../app/Scene';
+import type { RouteOption, RunSkeleton, StartingContract } from '../game/Generation';
 import { getCurrentSector, type RunSessionState } from '../game/RunSession';
 import type { InputAction } from '../systems/InputSystem';
+import {
+  applyContractScreenTheme,
+  createContractScreenThemeModel,
+  createContractThemeDebugState,
+  createContractThemeStrip,
+  getContractThemeOptions
+} from './ContractTheme';
 
 export class RouteScene implements Scene {
   public readonly id = 'route';
@@ -12,6 +19,7 @@ export class RouteScene implements Scene {
     private readonly uiRoot: HTMLElement,
     private readonly run: RunSkeleton,
     private readonly session: RunSessionState,
+    private readonly contract: StartingContract,
     private readonly onSelectRoute: (route: RouteOption) => void
   ) {}
 
@@ -20,6 +28,11 @@ export class RouteScene implements Scene {
     const shell = document.createElement('main');
     shell.className = 'scene-panel scene-panel-wide route-panel';
     shell.setAttribute('aria-labelledby', 'route-title');
+    const theme = createContractScreenThemeModel(
+      this.contract,
+      getContractThemeOptions(this.uiRoot.ownerDocument)
+    );
+    applyContractScreenTheme(shell, theme);
 
     const eyebrow = document.createElement('p');
     eyebrow.className = 'eyebrow';
@@ -58,7 +71,7 @@ export class RouteScene implements Scene {
       this.routeButtons.push(routeButton);
     }
 
-    shell.append(eyebrow, title, routeGrid);
+    shell.append(eyebrow, createContractThemeStrip(this.uiRoot.ownerDocument, theme), title, routeGrid);
     this.uiRoot.replaceChildren(shell);
     this.routeButtons[0]?.focus();
   }
@@ -82,7 +95,11 @@ export class RouteScene implements Scene {
     }
   }
 
-  public getDebugState(): { seed: string; entityCount: number } {
-    return { seed: this.run.seed, entityCount: 0 };
+  public getDebugState(): SceneDebugState {
+    return {
+      seed: this.run.seed,
+      entityCount: 0,
+      contractTheme: createContractThemeDebugState(this.contract)
+    };
   }
 }

@@ -611,6 +611,8 @@ Acceptance criteria:
 - Theme metadata does not break existing save/import/export behavior.
 - UI remains readable on narrow layouts.
 
+Status: first pass implemented; route choice, route event, shop, reward, sector transition, run summary, and debug overlay now consume a shared selected-contract screen theme model. Non-combat screens get a compact contract strip plus subdued CSS-variable accents, run summaries include ship/theme/silhouette/mount metadata for replay/debug context, and save/import/export schema remains unchanged.
+
 ## Work order 039 - Viewport/input debug and smoke coverage
 
 Goal: make Phase 4 polish measurable before release hardening.

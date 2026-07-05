@@ -288,9 +288,15 @@ export class GameApp {
 
   private showRouteChoice(): void {
     this.sceneManager.switchTo(
-      new RouteScene(this.uiRoot, this.currentRun, this.runSession, (route) => {
-        this.handleRouteChoice(route);
-      })
+      new RouteScene(
+        this.uiRoot,
+        this.currentRun,
+        this.runSession,
+        this.selectedContract,
+        (route) => {
+          this.handleRouteChoice(route);
+        }
+      )
     );
   }
 
@@ -315,7 +321,7 @@ export class GameApp {
 
   private showRouteEvent(route: RouteOption, outcome: AppliedRouteOutcome): void {
     this.sceneManager.switchTo(
-      new RouteEventScene(this.uiRoot, outcome, () => {
+      new RouteEventScene(this.uiRoot, outcome, this.selectedContract, () => {
         this.showReward(route);
       })
     );
@@ -388,9 +394,15 @@ export class GameApp {
 
   private showSectorTransition(): void {
     this.sceneManager.switchTo(
-      new SectorTransitionScene(this.uiRoot, this.currentRun, this.runSession, () => {
-        this.showGameplay();
-      })
+      new SectorTransitionScene(
+        this.uiRoot,
+        this.currentRun,
+        this.runSession,
+        this.selectedContract,
+        () => {
+          this.showGameplay();
+        }
+      )
     );
   }
 
@@ -583,6 +595,9 @@ export class GameApp {
         : [];
     const scenarioDebug = debugState.debugScenario ? [`Scenario ${debugState.debugScenario}`] : [];
     const inputDebug = debugState.inputMode ? [`Input ${debugState.inputMode}`] : [];
+    const themeDebug = debugState.contractTheme
+      ? [`Theme ${debugState.contractTheme.themeKey}/${debugState.contractTheme.shipName}`]
+      : [];
 
     this.debugOverlay.textContent = [
       `FPS ${Math.round(this.frameStats.fps)}`,
@@ -594,6 +609,7 @@ export class GameApp {
       ...arenaDebug,
       ...scenarioDebug,
       ...inputDebug,
+      ...themeDebug,
       ...backgroundDebug,
       ...featureDebug,
       ...viewportDebug

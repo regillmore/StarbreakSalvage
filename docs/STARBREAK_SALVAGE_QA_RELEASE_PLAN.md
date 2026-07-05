@@ -77,6 +77,7 @@ Phase 4 introduces display/input/identity polish. Add tests closest to the risk:
 - ship appearance content validation for silhouettes, palettes, engine/cockpit accents, weapon mount hints, and HUD theme keys; work orders 033-035 add appearance, preview, and cockpit HUD coverage, with manual cross-theme QA still useful;
 - contract selection preview state for keyboard focus, pointer selection, and narrow layouts; work order 034 adds pure preview-model coverage and Playwright preview-selection assertions, with manual contrast/narrow browser checks still useful;
 - themed HUD readability for hull, economy, objective, warnings, boss, weapon, special, bomb, and build state; work order 035 adds semantic meter/readout coverage, with manual cross-theme checks still useful;
+- non-combat contract theme propagation for route choice, route event, shop, reward, sector transition, run summary, and debug overlay; work order 038 adds pure theme-model coverage plus Playwright assertions through the route/shop/reward/transition/summary path;
 - reduced motion, high contrast, and performance mode interactions with ship previews, ship wake/damage cues, and contract HUD themes; work order 036 simplifies preview/HUD treatment under those settings and work order 037 adds cue-state coverage for ship wake, damage, readiness, and heat stress.
 
 ## Known seed tests
@@ -140,7 +141,7 @@ Phase 3 performance checks should also include background primitive count, paral
 
 Current first-pass instrumentation exposes granular combat counts, background primitive/layer counts, active landmark/hazard counts, distance, speed, active input mode, viewport size/class/presentation scale, safe-frame size, fixed combat world size, a dense-combat debug pocket, and a quiet late-sector long-scroll traversal behind `?debug=1`. Manual browser validation and production preview smoke still need to close the checklist.
 
-Phase 4 performance checks should include viewport/presentation scale, safe-frame size, fixed-world hazard/enemy spacing parity, HUD rendering density, preview rendering cost, mouse input update behavior, ship cue rendering cost, and whether themed HUD/ship cues add measurable overhead in dense and long-scroll debug scenarios.
+Phase 4 performance checks should include viewport/presentation scale, safe-frame size, fixed-world hazard/enemy spacing parity, HUD rendering density, preview rendering cost, mouse input update behavior, ship cue rendering cost, non-combat theme DOM cost, and whether themed HUD/ship cues add measurable overhead in dense and long-scroll debug scenarios.
 
 - [ ] FPS overlay available behind debug flag.
 - [ ] Projectile count visible in debug mode.
@@ -150,6 +151,7 @@ Phase 4 performance checks should include viewport/presentation scale, safe-fram
 - [x] Viewport/canvas scale visible in debug mode once Phase 4 instrumentation lands.
 - [x] Active input mode visible in debug mode once mouse controls land.
 - [x] Contract preview model and selection smoke coverage exists.
+- [x] Contract theme propagation smoke coverage exists for route/shop/reward/transition/summary screens.
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [ ] Heavy combat debug scene documented.
 - [ ] Long-scroll debug scene documented.

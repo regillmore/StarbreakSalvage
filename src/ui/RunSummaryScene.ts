@@ -1,5 +1,5 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
-import type { Scene } from '../app/Scene';
+import type { Scene, SceneDebugState } from '../app/Scene';
 import { ACHIEVEMENTS } from '../content/achievements';
 import { getUnlockById } from '../content/unlocks';
 import type { SaveData, SaveUpdateResult } from '../core/saveData';
@@ -9,6 +9,14 @@ import type { RouteHistoryEntry } from '../game/RunSession';
 import type { AppliedRouteOutcome } from '../game/RouteEvents';
 import { formatSectorConditionTimeline } from '../game/SectorConditions';
 import type { InputAction } from '../systems/InputSystem';
+import {
+  applyContractScreenTheme,
+  createContractScreenThemeModel,
+  createContractThemeDebugState,
+  createContractThemeStrip,
+  formatContractThemeSummary,
+  getContractThemeOptions
+} from './ContractTheme';
 
 export class RunSummaryScene implements Scene {
   public readonly id = 'run-summary';
@@ -29,6 +37,11 @@ export class RunSummaryScene implements Scene {
     const shell = document.createElement('main');
     shell.className = 'scene-panel summary-panel';
     shell.setAttribute('aria-labelledby', 'summary-title');
+    const theme = createContractScreenThemeModel(
+      this.contract,
+      getContractThemeOptions(this.uiRoot.ownerDocument)
+    );
+    applyContractScreenTheme(shell, theme);
 
     const eyebrow = document.createElement('p');
     eyebrow.className = 'eyebrow';
@@ -44,6 +57,7 @@ export class RunSummaryScene implements Scene {
     const statEntries: ReadonlyArray<readonly [string, string]> = [
       ['Seed', this.run.seed],
       ['Contract', this.contract.shipName],
+      ['Ship Theme', formatContractThemeSummary(this.contract)],
       ['Reached', getReachedSectorName(this.run, this.routeHistory, this.result)],
       ['Outcome', getOutcomeLabel(this.result)],
       ['Win/Loss', getOutcomeDetail(this.result)],
@@ -86,7 +100,15 @@ export class RunSummaryScene implements Scene {
     unlockSummary.dataset.testid = 'unlock-summary';
     unlockSummary.textContent = this.getUnlockSummaryText();
 
-    shell.append(eyebrow, title, stats, seedShare, unlockSummary, menuButton);
+    shell.append(
+      eyebrow,
+      createContractThemeStrip(this.uiRoot.ownerDocument, theme),
+      title,
+      stats,
+      seedShare,
+      unlockSummary,
+      menuButton
+    );
     this.uiRoot.replaceChildren(shell);
     menuButton.focus();
   }
@@ -103,8 +125,12 @@ export class RunSummaryScene implements Scene {
     }
   }
 
-  public getDebugState(): { seed: string; entityCount: number } {
-    return { seed: this.run.seed, entityCount: 0 };
+  public getDebugState(): SceneDebugState {
+    return {
+      seed: this.run.seed,
+      entityCount: 0,
+      contractTheme: createContractThemeDebugState(this.contract)
+    };
   }
 
   private getUnlockSummaryText(): string {

@@ -26,9 +26,9 @@ Phase 3 made forward motion real, but several player-facing seams remain:
 - gameplay now uses a fixed 640x720 safe arena with viewport metrics, but wider route/pause/summary viewport smoke remains useful;
 - passive mouse/touch movement and fire exist, but later preview/HUD interactions still need focus and accessibility audits;
 - contract stats, weapons, gameplay ship silhouettes/palettes, and contract-selection previews are now distinct;
-- contract selection now has visual previews, but the broader route/reward/shop/summary contract theme is still sparse;
-- HUD now has a first-pass contract-themed cockpit layer, but deeper ship feedback and non-combat theme propagation remain sparse;
-- debug coverage now reports viewport and input-mode state, and preview/HUD theme smoke coverage exists, but broader route/pause/summary viewport coverage remains useful.
+- contract selection, gameplay ship feedback, and non-combat route/reward/shop/summary screens now carry selected-contract identity, but manual cross-theme readability checks remain useful;
+- HUD now has a first-pass contract-themed cockpit layer and selected ship feedback, but broader release smoke around the full route/pause/summary loop remains useful;
+- debug coverage now reports viewport, input-mode, and contract-theme state, and preview/HUD/non-combat theme smoke coverage exists, but broader route/pause/summary viewport coverage remains useful.
 
 ## Phase 4 Milestones
 
@@ -122,6 +122,8 @@ Exit criteria:
 - Contract identity appears consistently but quietly outside gameplay.
 - Summary captures ship appearance/theme identifiers for debugging and replay context.
 - Existing route/reward/shop readability remains intact.
+
+Status: first pass implemented in work order 038. Route choice, route events, shop, reward, sector transition, run summary, and debug overlay now share selected-contract theme metadata, use subdued panel/card accents, and keep the run summary's seed, route, item, unlock, and distance reporting intact without changing save data.
 
 ### P4.9 - Viewport/Input Debug And Smoke Coverage
 

@@ -1,5 +1,6 @@
 import type { CanvasRenderer } from './CanvasRenderer';
 import type { InputAction } from '../systems/InputSystem';
+import type { ContractThemeDebugState } from '../ui/ContractTheme';
 
 export interface SceneDebugState {
   readonly seed: string;
@@ -23,6 +24,7 @@ export interface SceneDebugState {
   readonly arenaPhase?: string;
   readonly debugScenario?: string;
   readonly inputMode?: string;
+  readonly contractTheme?: ContractThemeDebugState;
   readonly backgroundPrimitives?: number;
   readonly backgroundLayers?: number;
   readonly activeLandmarks?: number;

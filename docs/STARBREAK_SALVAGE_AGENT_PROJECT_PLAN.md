@@ -29,7 +29,7 @@ Phase 2 is complete as of deployed and confirmed work order 020. It turned the a
 
 Phase 3 is complete as of deployed and confirmed work order 030. It made Starbreak Salvage feel like a first-pass vertical-scrolling arcade roguelike: deterministic sector distance, procedural backgrounds, scroll-synced waves, distance objectives, hazards, landmarks, boss arena transitions, route-conditioned sector physics, velocity cues, and long-scroll instrumentation.
 
-Phase 4 begins from that scrolling playtest slice. Its goal is display/input/identity polish: window-size parity, optional mouse controls, contract-specific ship visuals, new-game ship previews, and contract-themed graphical HUD presentation. Work orders 031-037 have completed the display/input foundation, first-pass gameplay ship identity, New Game contract previews, the first cockpit HUD layer, keyboard/pointer accessibility hardening, and ship-specific combat feedback.
+Phase 4 begins from that scrolling playtest slice. Its goal is display/input/identity polish: window-size parity, optional mouse controls, contract-specific ship visuals, new-game ship previews, and contract-themed graphical HUD presentation. Work orders 031-038 have completed the display/input foundation, first-pass gameplay ship identity, New Game contract previews, the first cockpit HUD layer, keyboard/pointer accessibility hardening, ship-specific combat feedback, and non-combat contract theme propagation.
 
 See `docs/STARBREAK_SALVAGE_PHASE_4_PLAN.md` for the active Phase 4 roadmap. `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md` and `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md` remain historical records for concluded phases.
 
@@ -391,7 +391,7 @@ Exit criteria:
 - Keyboard and mouse-assisted play are documented and smoke-tested where browser tooling is available.
 - No severe display/input/HUD blockers remain for the Phase 4 playtest release.
 
-Status: accessibility hardening first pass implemented by work order 036, with ship combat feedback first pass implemented by work order 037. Keyboard-only start, pause, end-run, summary, and return-to-menu flow are covered by Playwright smoke, pointer guidance is cleared over DOM overlays so menus/settings remain neutral, and ship cue intensity respects reduced motion, performance mode, and high-contrast settings.
+Status: accessibility hardening first pass implemented by work order 036, ship combat feedback first pass implemented by work order 037, and non-combat theme propagation first pass implemented by work order 038. Keyboard-only start, pause, end-run, summary, and return-to-menu flow are covered by Playwright smoke, pointer guidance is cleared over DOM overlays so menus/settings remain neutral, ship cue intensity respects reduced motion, performance mode, and high-contrast settings, and route/reward/shop/transition/summary screens now carry subdued selected-contract accents plus summary theme metadata.
 
 ## Dependency map
 

@@ -1,10 +1,17 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
-import type { Scene } from '../app/Scene';
+import type { Scene, SceneDebugState } from '../app/Scene';
 import type { ItemId } from '../content/items';
 import type { RouteOption, RunSkeleton, StartingContract } from '../game/Generation';
 import { generateSectorRewardChoices } from '../game/SectorRewards';
 import { getCurrentSector, getRouteCreditReward, type RunSessionState } from '../game/RunSession';
 import type { InputAction } from '../systems/InputSystem';
+import {
+  applyContractScreenTheme,
+  createContractScreenThemeModel,
+  createContractThemeDebugState,
+  createContractThemeStrip,
+  getContractThemeOptions
+} from './ContractTheme';
 
 export class RewardScene implements Scene {
   public readonly id = 'reward';
@@ -32,6 +39,11 @@ export class RewardScene implements Scene {
     const shell = document.createElement('main');
     shell.className = 'scene-panel scene-panel-wide reward-panel';
     shell.setAttribute('aria-labelledby', 'reward-title');
+    const theme = createContractScreenThemeModel(
+      this.contract,
+      getContractThemeOptions(this.uiRoot.ownerDocument)
+    );
+    applyContractScreenTheme(shell, theme);
 
     const eyebrow = document.createElement('p');
     eyebrow.className = 'eyebrow';
@@ -73,7 +85,12 @@ export class RewardScene implements Scene {
     creditsButton.addEventListener('click', this.onTakeCredits);
     rewardGrid.append(creditsButton);
 
-    shell.append(eyebrow, title, rewardGrid);
+    shell.append(
+      eyebrow,
+      createContractThemeStrip(this.uiRoot.ownerDocument, theme),
+      title,
+      rewardGrid
+    );
     this.uiRoot.replaceChildren(shell);
     rewardGrid.querySelector<HTMLButtonElement>('button')?.focus();
   }
@@ -103,7 +120,11 @@ export class RewardScene implements Scene {
     }
   }
 
-  public getDebugState(): { seed: string; entityCount: number } {
-    return { seed: this.run.seed, entityCount: 0 };
+  public getDebugState(): SceneDebugState {
+    return {
+      seed: this.run.seed,
+      entityCount: 0,
+      contractTheme: createContractThemeDebugState(this.contract)
+    };
   }
 }
