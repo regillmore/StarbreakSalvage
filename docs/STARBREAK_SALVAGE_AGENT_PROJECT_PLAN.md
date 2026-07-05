@@ -411,7 +411,7 @@ Exit criteria:
 - Upgrade definitions validate and save safely.
 - Same save state plus same seed reproduces upgrade-influenced generation.
 
-Status: first pass implemented by work order 041. Banked scrap can buy persistent upgrade ids through save helpers, upgrade definitions validate, legacy saves migrate to version 3, and export/import preserves upgrade state. Generation integration remains P5.1/P5.3 follow-up work.
+Status: first pass implemented by work order 041. Banked scrap can buy persistent upgrade ids through save helpers, upgrade definitions validate, legacy saves migrate to version 3, and export/import preserves upgrade state. Work order 042 adds the visual Upgrade Bay; generation integration remains P5.1/P5.3 follow-up work.
 
 ### P5.2 - Upgrade Bay UX
 
@@ -425,6 +425,8 @@ Exit criteria:
 - Upgrade choices are readable before purchase.
 - Icons communicate category at a glance.
 - Upgrade menu smoke coverage exists.
+
+Status: implemented by work order 042. Upgrade Bay cards now show original inline SVG icons, costs, prerequisites, installed/available/locked/unaffordable states, and save-backed purchase feedback from both the main menu and Unlock Archive. Unit and Playwright smoke coverage exercise the view model, narrow layout, high contrast, and purchase persistence.
 
 ### P5.3 - Sector Exit And Reward Feedback
 

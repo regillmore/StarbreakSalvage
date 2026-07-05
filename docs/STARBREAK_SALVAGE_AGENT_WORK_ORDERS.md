@@ -666,7 +666,7 @@ Acceptance criteria:
 - Save migration/export/import preserves banked scrap and upgrades.
 - Upgrade effects are framed as variety, information, or sidegrades rather than raw stat inflation.
 
-Status: first pass implemented; banked scrap now has a data-backed persistent upgrade catalog, save-backed purchase/affordability helpers, save schema version 3 with legacy v2 localStorage fallback, export/import preservation for purchased upgrade ids, and validation/tests for upgrade metadata, affordability, migration, and fresh-save defaults. The visual Upgrade Bay remains work order 042, and run-generation effects remain work order 043.
+Status: first pass implemented; banked scrap now has a data-backed persistent upgrade catalog, save-backed purchase/affordability helpers, save schema version 3 with legacy v2 localStorage fallback, export/import preservation for purchased upgrade ids, and validation/tests for upgrade metadata, affordability, migration, and fresh-save defaults. The visual Upgrade Bay is covered by work order 042, and run-generation effects remain work order 043.
 
 ## Work order 042 - Upgrade bay menu icons and affordances
 
@@ -682,6 +682,8 @@ Acceptance criteria:
 - Upgrade cards show icons, costs, and purchase state clearly.
 - Keyboard and pointer users can inspect upgrades.
 - Narrow/high-contrast layouts remain readable.
+
+Status: implemented; the Upgrade Bay is reachable from the main menu and Unlock Archive, renders static original inline SVG icons for each upgrade icon key, shows cost/available/locked/unaffordable/installed state copy, supports focusable cards plus pointer purchase buttons, writes successful purchases to save data, and has view-model unit coverage plus a narrow high-contrast Playwright purchase smoke.
 
 ## Work order 043 - Upgrade purchases and run-generation integration
 

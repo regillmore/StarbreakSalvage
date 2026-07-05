@@ -1,5 +1,52 @@
 import { expect, test } from '@playwright/test';
 
+const SCRAP_BAY_SAVE = {
+  version: 3,
+  salvageBank: 8,
+  unlockedIds: [],
+  purchasedUpgradeIds: [],
+  achievementIds: [],
+  stats: {
+    runsEnded: 1,
+    deaths: 0,
+    forcedTests: 0,
+    sectorsCleared: 1,
+    bossesDefeated: 0,
+    enemiesDestroyed: 8,
+    creditsRecovered: 16,
+    salvageRecovered: 8,
+    distanceTraveled: 1442,
+    bestDistanceTraveled: 1442,
+    bestSectorsCleared: 1,
+    bestSurvivedSeconds: 38,
+    itemTriggers: 2
+  },
+  lastRun: null
+} as const;
+
+const HIGH_CONTRAST_SETTINGS = {
+  version: 1,
+  keyBindings: {
+    moveUp: 'W',
+    moveDown: 'S',
+    moveLeft: 'A',
+    moveRight: 'D',
+    fire: ' ',
+    special: 'Shift',
+    bomb: 'X',
+    pause: 'P',
+    confirm: 'Enter',
+    back: 'Escape'
+  },
+  muted: false,
+  masterVolume: 0.8,
+  reducedMotion: true,
+  screenShake: 0,
+  bulletContrast: 'high',
+  fullscreenPreferred: false,
+  performanceMode: true
+} as const;
+
 test('loads the shell, starts gameplay, moves, pauses, and enters the sector loop', async ({
   page
 }) => {
@@ -194,6 +241,69 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Starbreak Salvage' })).toBeVisible();
   await expect(page.getByTestId('boot-status')).toContainText(/Bank [1-9]\d* kg/);
+
+  expect(browserErrors).toEqual([]);
+});
+
+test('opens the Upgrade Bay and purchases an upgrade from banked scrap', async ({ page }) => {
+  const browserErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') {
+      browserErrors.push(message.text());
+    }
+  });
+  page.on('pageerror', (error) => browserErrors.push(error.message));
+  await page.setViewportSize({ width: 390, height: 700 });
+  await page.addInitScript(
+    ({ save, settings }) => {
+      window.localStorage.setItem('starbreak.save.v3', JSON.stringify(save));
+      window.localStorage.setItem('starbreak.settings.v1', JSON.stringify(settings));
+    },
+    { save: SCRAP_BAY_SAVE, settings: HIGH_CONTRAST_SETTINGS }
+  );
+
+  await page.goto('./?debug=1');
+
+  await expect(page.locator('html')).toHaveAttribute('data-bullet-contrast', 'high');
+  await expect(page.getByRole('heading', { name: 'Starbreak Salvage' })).toBeVisible();
+  await page.getByRole('button', { name: 'Upgrade Bay' }).click();
+
+  await expect(page.getByRole('heading', { name: 'Upgrade Bay' })).toBeVisible();
+  await expect(page.getByTestId('upgrade-bay-summary')).toContainText(
+    'Bank 8 kg | Installed 0/6 | Ready 2'
+  );
+  await expect(page.locator('[data-testid^="upgrade-card-"]')).toHaveCount(6);
+
+  const bayBox = await page.locator('.upgrade-bay-panel').boundingBox();
+  if (!bayBox) {
+    throw new Error('Expected the Upgrade Bay panel to have a browser layout box.');
+  }
+  expect(bayBox.width).toBeLessThanOrEqual(390);
+
+  const surveyRig = page.getByTestId('upgrade-card-upgrade_contract_survey_rig');
+  await expect(surveyRig.getByRole('img', { name: 'Contract Survey Rig icon' })).toBeVisible();
+  await expect(surveyRig).toContainText('Hangar');
+  await expect(surveyRig).toContainText('Ready to install');
+  await surveyRig.getByRole('button', { name: 'Install Contract Survey Rig' }).click();
+
+  await expect(page.getByTestId('upgrade-bay-status')).toContainText(
+    'Purchased Contract Survey Rig.'
+  );
+  await expect(page.getByTestId('upgrade-bay-summary')).toContainText(
+    'Bank 4 kg | Installed 1/6 | Ready 1'
+  );
+  await expect(surveyRig).toContainText('Installed in the archive.');
+
+  const savedUpgradeIds = await page.evaluate(() => {
+    const raw = window.localStorage.getItem('starbreak.save.v3');
+    return raw ? JSON.parse(raw).purchasedUpgradeIds : [];
+  });
+  expect(savedUpgradeIds).toEqual(['upgrade_contract_survey_rig']);
+
+  await page.getByRole('button', { name: 'Back' }).click();
+  await expect(page.getByRole('heading', { name: 'Starbreak Salvage' })).toBeVisible();
+  await expect(page.getByTestId('boot-status')).toContainText('Bank 4 kg');
+  await expect(page.getByTestId('boot-status')).toContainText('Upgrades 1');
 
   expect(browserErrors).toEqual([]);
 });

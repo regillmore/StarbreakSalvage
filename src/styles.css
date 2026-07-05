@@ -595,7 +595,27 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
   overflow: auto;
 }
 
+.upgrade-bay-panel {
+  max-height: min(92vh, 840px);
+  overflow: auto;
+}
+
+.upgrade-bay-summary {
+  margin: 0;
+  color: #c6f7ff;
+  font-size: 0.95rem;
+  font-weight: 850;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
 .archive-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.upgrade-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
@@ -622,6 +642,114 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
 
 .archive-item p {
   margin: 0;
+}
+
+.upgrade-card {
+  display: grid;
+  min-height: 19rem;
+  align-content: start;
+  gap: 0.58rem;
+  padding: 0.9rem;
+  border: 1px solid rgba(124, 247, 255, 0.26);
+  border-radius: 8px;
+  color: #f8fbff;
+  background: rgba(10, 14, 34, 0.74);
+}
+
+.upgrade-card:focus-visible {
+  outline: 3px solid #ff6bd6;
+  outline-offset: 4px;
+}
+
+.upgrade-card[data-state='available'] {
+  border-color: rgba(255, 209, 102, 0.78);
+  box-shadow: 0 0 0 1px rgba(255, 209, 102, 0.16) inset;
+}
+
+.upgrade-card[data-state='purchased'] {
+  border-color: rgba(114, 242, 167, 0.58);
+  background:
+    linear-gradient(160deg, rgba(34, 88, 64, 0.34), rgba(10, 14, 34, 0.68)),
+    rgba(10, 14, 34, 0.74);
+}
+
+.upgrade-card[data-state='locked'],
+.upgrade-card[data-state='unaffordable'] {
+  border-color: rgba(219, 232, 238, 0.18);
+}
+
+.upgrade-card-header {
+  display: grid;
+  grid-template-columns: 3.4rem minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.upgrade-card-title {
+  min-width: 0;
+}
+
+.upgrade-card h2 {
+  margin: 0.18rem 0 0;
+  color: #7cf7ff;
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.upgrade-icon {
+  display: block;
+  width: 3.35rem;
+  aspect-ratio: 1;
+  padding: 0.26rem;
+  border: 1px solid rgba(124, 247, 255, 0.32);
+  border-radius: 8px;
+  color: #7cf7ff;
+  background: rgba(2, 4, 10, 0.62);
+}
+
+.upgrade-state,
+.upgrade-prerequisites {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.upgrade-state {
+  color: #ffd166;
+}
+
+.upgrade-card[data-state='available'] .upgrade-state {
+  color: #72f2a7;
+}
+
+.upgrade-card[data-state='purchased'] .upgrade-state {
+  color: #9df9c5;
+}
+
+.upgrade-prerequisites {
+  color: #ffb6e9;
+}
+
+.upgrade-effect {
+  color: #f8fbff;
+}
+
+.upgrade-card-action {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.55rem;
+  align-self: end;
+  margin-top: 0.2rem;
+}
+
+.upgrade-card-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
+.upgrade-card-action:disabled:hover {
+  transform: none;
 }
 
 .save-textarea {
@@ -898,6 +1026,22 @@ html[data-bullet-contrast='high'] .hud-theme-readout {
   background: rgba(2, 4, 10, 0.86);
 }
 
+html[data-bullet-contrast='high'] .upgrade-card {
+  border-color: rgba(248, 251, 255, 0.58);
+  background: rgba(2, 4, 10, 0.88);
+  box-shadow: none;
+}
+
+html[data-bullet-contrast='high'] .upgrade-card[data-state='available'] {
+  border-color: #ffef5f;
+}
+
+html[data-bullet-contrast='high'] .upgrade-icon {
+  color: #ffef5f;
+  border-color: rgba(248, 251, 255, 0.62);
+  background: rgba(248, 251, 255, 0.08);
+}
+
 html[data-bullet-contrast='high'] .hud-meter-track {
   background: rgba(248, 251, 255, 0.18);
 }
@@ -1001,6 +1145,7 @@ html[data-bullet-contrast='high'] .hud-meter-track {
   .route-grid,
   .reward-grid,
   .shop-grid,
+  .upgrade-grid,
   .archive-grid,
   .settings-grid {
     grid-template-columns: 1fr;
@@ -1015,7 +1160,8 @@ html[data-bullet-contrast='high'] .hud-meter-track {
   }
 
   .contract-card,
-  .choice-card {
+  .choice-card,
+  .upgrade-card {
     min-height: auto;
   }
 }

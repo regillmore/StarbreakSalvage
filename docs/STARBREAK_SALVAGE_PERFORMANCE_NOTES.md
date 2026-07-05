@@ -66,7 +66,7 @@ Phase 5 adds upgrade spending, more feedback beats, a lunar surface sector, and 
 - Lunar hazards should keep sparse distance windows until smoke proves readability; avoid layering dust, terrain, hazard, and enemy bullets at the same intensity.
 - Ship destruction debris should use a fixed budget, ship appearance colors, and settings-aware intensity. Reduced motion and performance mode should lower debris count and screen shake rather than changing death outcome timing.
 
-Work order 041 keeps upgrades data/save-only: catalog validation and purchase helpers add no per-frame work. Upgrade Bay DOM/icon cost starts in work order 042, and upgrade-influenced generation branching starts in work order 043.
+Work order 041 keeps upgrades data/save-only: catalog validation and purchase helpers add no per-frame work. Work order 042 adds static Upgrade Bay DOM and inline SVG icon rendering only when the menu is entered or refreshed after purchase; it adds no gameplay-frame work. Upgrade-influenced generation branching starts in work order 043.
 
 ## Debug and Playtest Scenarios
 

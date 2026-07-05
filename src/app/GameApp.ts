@@ -8,11 +8,13 @@ import {
   getSaveSummary,
   importSaveData,
   loadSaveData,
+  purchaseUpgrade,
   resetSaveData,
   writeSaveData,
   type RunSaveRecord,
   type SaveData,
-  type SaveUpdateResult
+  type SaveUpdateResult,
+  type UpgradePurchaseResult
 } from '../core/saveData';
 import {
   createDefaultSettings,
@@ -63,6 +65,8 @@ import { SectorTransitionScene } from '../ui/SectorTransitionScene';
 import { ShopScene } from '../ui/ShopScene';
 import { UnlockArchiveScene } from '../ui/UnlockArchiveScene';
 import type { ItemId } from '../content/items';
+import type { UpgradeId } from '../content/upgrades';
+import { UpgradeBayScene } from '../ui/UpgradeBayScene';
 
 export class GameApp {
   private readonly canvas: HTMLCanvasElement;
@@ -177,6 +181,9 @@ export class GameApp {
           this.showUnlockArchive();
         },
         () => {
+          this.showUpgradeBay();
+        },
+        () => {
           this.showSettings(() => this.showMainMenu());
         }
       )
@@ -214,8 +221,22 @@ export class GameApp {
           this.refreshRunForCurrentSave();
         },
         () => {
+          this.showUpgradeBay(() => this.showUnlockArchive());
+        },
+        () => {
           this.showMainMenu();
         }
+      )
+    );
+  }
+
+  private showUpgradeBay(onBack: () => void = () => this.showMainMenu()): void {
+    this.sceneManager.switchTo(
+      new UpgradeBayScene(
+        this.uiRoot,
+        () => this.saveData,
+        (upgradeId) => this.buyPersistentUpgrade(upgradeId),
+        onBack
       )
     );
   }
@@ -381,6 +402,19 @@ export class GameApp {
     const sector = getCurrentSector(this.currentRun, this.runSession);
     incrementShopRerollCount(this.runSession, sector.index);
     return true;
+  }
+
+  private buyPersistentUpgrade(upgradeId: UpgradeId): UpgradePurchaseResult {
+    const result = purchaseUpgrade(this.saveData, upgradeId);
+
+    if (!result.ok) {
+      return result;
+    }
+
+    this.saveData = result.data;
+    writeSaveData(window.localStorage, this.saveData);
+    this.refreshRunForCurrentSave();
+    return result;
   }
 
   private advanceAfterReward(): void {

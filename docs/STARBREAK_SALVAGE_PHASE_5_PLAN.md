@@ -40,7 +40,7 @@ Exit criteria:
 - Upgrade effects widen future choices, information, starting variety, or build texture without turning into raw stat inflation.
 - Fresh saves and existing saves migrate safely.
 
-Status: first pass implemented in work order 041. Upgrade definitions now live in a validated content catalog, banked scrap can purchase persistent upgrade ids through save helpers, save version 3 migrates legacy v2 data, and early upgrade effects are framed as future variety/information sidegrades. Upgrade Bay presentation and generation integration remain follow-ups.
+Status: first pass implemented in work order 041. Upgrade definitions now live in a validated content catalog, banked scrap can purchase persistent upgrade ids through save helpers, save version 3 migrates legacy v2 data, and early upgrade effects are framed as future variety/information sidegrades. Upgrade Bay presentation is implemented by work order 042, and generation integration remains a follow-up.
 
 ### P5.2 - Upgrade Bay And Icons
 
@@ -51,6 +51,8 @@ Exit criteria:
 - Upgrade categories have original iconography, cost states, purchased states, and unavailable states.
 - The menu is keyboard and pointer usable.
 - Upgrade copy is short and scannable on narrow layouts.
+
+Status: implemented in work order 042. The Upgrade Bay is reachable outside runs, uses original inline SVG category icons, exposes installed/available/locked/unaffordable copy, purchases through the save-backed helper, and has unit plus narrow high-contrast Playwright smoke coverage.
 
 ### P5.3 - Upgrade Effects In Run Generation
 

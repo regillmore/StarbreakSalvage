@@ -93,6 +93,11 @@ Phase 5 introduces persistent upgrade spending, sector completion feedback, luna
 - player destruction cue state, death-to-summary reliability, ship-theme color usage, reduced motion, performance mode, high contrast, screen shake, and mute interactions;
 - Playwright smoke for opening Upgrade Bay, checking an upgrade state, launching a lunar sector path or verifying generated lunar content, forcing sector completion, and forcing player destruction where practical.
 
+Current Phase 5 coverage:
+
+- Work order 041 covers upgrade catalog validation, save migration, import/export, affordability, purchase helpers, and corrupted upgrade data repair.
+- Work order 042 adds Upgrade Bay view-model tests plus a Playwright smoke fixture that opens the bay in a narrow high-contrast viewport, verifies icon/state copy, purchases an upgrade with banked scrap, and confirms persisted save/menu state.
+
 ## Known seed tests
 
 - `STARBREAK-SMOKE` — stable forgiving smoke path.
@@ -124,7 +129,7 @@ Phase 4 should add these seed fixtures:
 
 Phase 5 should add these seed/save fixtures:
 
-- `SCRAP-BAY-SMOKE` - progressed save fixture with enough scrap to buy a first upgrade.
+- `SCRAP-BAY-SMOKE` - progressed save fixture with enough scrap to buy a first upgrade; implemented in the work order 042 Playwright bay smoke.
 - `UPGRADE-SEED-SNAPSHOT` - same seed tested under fresh and upgraded save states.
 - `LUNAR-SURFACE-LANE` - deterministic lunar sector/background/feature plan.
 - `EXIT-TOAST-CHECK` - forgiving sector completion path for exit/toast smoke.

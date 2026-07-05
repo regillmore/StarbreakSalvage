@@ -21,6 +21,7 @@ export class UnlockArchiveScene implements Scene {
     private readonly onExport: () => string,
     private readonly onImport: (serialized: string) => SaveImportResult,
     private readonly onReset: () => void,
+    private readonly onOpenUpgradeBay: () => void,
     private readonly onBack: () => void
   ) {}
 
@@ -104,6 +105,12 @@ export class UnlockArchiveScene implements Scene {
     const controls = document.createElement('div');
     controls.className = 'button-row';
 
+    const upgradeBayButton = document.createElement('button');
+    upgradeBayButton.className = 'secondary-button';
+    upgradeBayButton.type = 'button';
+    upgradeBayButton.textContent = 'Upgrade Bay';
+    upgradeBayButton.addEventListener('click', this.onOpenUpgradeBay);
+
     const exportButton = document.createElement('button');
     exportButton.className = 'secondary-button';
     exportButton.type = 'button';
@@ -144,7 +151,7 @@ export class UnlockArchiveScene implements Scene {
     backButton.textContent = 'Back';
     backButton.addEventListener('click', this.onBack);
 
-    controls.append(exportButton, importButton, resetButton, backButton);
+    controls.append(upgradeBayButton, exportButton, importButton, resetButton, backButton);
 
     const status = document.createElement('p');
     status.className = 'boot-status';

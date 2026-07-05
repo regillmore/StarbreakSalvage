@@ -16,6 +16,7 @@ export class MainMenuScene implements Scene {
     private readonly seedInput: string,
     private readonly onStartRun: (seedInput: string) => void,
     private readonly onOpenArchive: () => void,
+    private readonly onOpenUpgradeBay: () => void,
     private readonly onOpenSettings: () => void
   ) {}
 
@@ -92,6 +93,12 @@ export class MainMenuScene implements Scene {
     archiveButton.textContent = 'Unlock Archive';
     archiveButton.addEventListener('click', this.onOpenArchive);
 
+    const upgradeBayButton = document.createElement('button');
+    upgradeBayButton.className = 'secondary-button title-button';
+    upgradeBayButton.type = 'button';
+    upgradeBayButton.textContent = 'Upgrade Bay';
+    upgradeBayButton.addEventListener('click', this.onOpenUpgradeBay);
+
     const settingsButton = document.createElement('button');
     settingsButton.className = 'secondary-button title-button';
     settingsButton.type = 'button';
@@ -103,7 +110,7 @@ export class MainMenuScene implements Scene {
     status.dataset.testid = 'boot-status';
     status.textContent = `Bank ${this.saveSummary.salvageBank} kg | Unlocks ${this.saveSummary.unlockCount} | Upgrades ${this.saveSummary.upgradeCount} | Runs ${this.saveSummary.runsEnded}`;
 
-    shell.append(title, tagline, seedForm, archiveButton, settingsButton, status);
+    shell.append(title, tagline, seedForm, archiveButton, upgradeBayButton, settingsButton, status);
     this.uiRoot.replaceChildren(shell);
     seedInput.focus();
   }

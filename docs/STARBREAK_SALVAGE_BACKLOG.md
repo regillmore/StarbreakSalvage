@@ -920,6 +920,10 @@ Acceptance:
 - Cards show name, category, cost, purchased/locked/available state, and short effect text.
 - Keyboard and pointer navigation are supported.
 
+Status:
+
+- Implemented in work order 042. The Upgrade Bay is reachable from both entry points, renders focusable upgrade cards, and purchases through save-backed banked scrap helpers.
+
 ### AH2 - Upgrade icons
 
 Acceptance:
@@ -928,6 +932,10 @@ Acceptance:
 - Icons remain readable in high contrast and narrow layouts.
 - Icon rendering does not introduce external assets.
 
+Status:
+
+- Implemented in work order 042 with static inline SVG primitives for contract, route, market, vault, scrap, and seed-map icon keys plus narrow/high-contrast smoke coverage.
+
 ### AH3 - Purchase and affordability feedback
 
 Acceptance:
@@ -935,6 +943,10 @@ Acceptance:
 - Players receive clear confirmation when buying an upgrade.
 - Newly affordable upgrades can be surfaced after a run.
 - Failed purchases explain whether scrap, prerequisites, or locks are missing.
+
+Status:
+
+- Partially implemented in work order 042. Upgrade Bay purchases confirm success, locked and unaffordable cards explain their blocker, and failed purchase messages are wired through the save helper. Newly affordable run-end surfacing remains work order 044.
 
 ## Epic AI - Sector completion feedback
 
