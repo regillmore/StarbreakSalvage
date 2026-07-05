@@ -24,6 +24,7 @@ export interface SceneDebugState {
   readonly arenaPhase?: string;
   readonly debugScenario?: string;
   readonly inputMode?: string;
+  readonly hudMode?: string;
   readonly contractTheme?: ContractThemeDebugState;
   readonly backgroundPrimitives?: number;
   readonly backgroundLayers?: number;
@@ -33,7 +34,12 @@ export interface SceneDebugState {
     readonly width: number;
     readonly height: number;
     readonly className: string;
+    readonly dpr: number;
     readonly scale: number;
+    readonly canvasPixelWidth: number;
+    readonly canvasPixelHeight: number;
+    readonly safeFrameX: number;
+    readonly safeFrameY: number;
     readonly safeFrameWidth: number;
     readonly safeFrameHeight: number;
     readonly arenaWidth?: number;

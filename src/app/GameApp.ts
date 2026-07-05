@@ -571,8 +571,9 @@ export class GameApp {
       debugState.viewport === undefined
         ? []
         : [
-            `Viewport ${debugState.viewport.width}x${debugState.viewport.height} ${debugState.viewport.className} @${debugState.viewport.scale.toFixed(2)}`,
-            `Safe ${debugState.viewport.safeFrameWidth}x${debugState.viewport.safeFrameHeight}`,
+            `Viewport ${debugState.viewport.width}x${debugState.viewport.height} ${debugState.viewport.className} @${debugState.viewport.scale.toFixed(2)} DPR ${debugState.viewport.dpr.toFixed(2)}`,
+            `Canvas ${debugState.viewport.canvasPixelWidth}x${debugState.viewport.canvasPixelHeight}`,
+            `Safe ${debugState.viewport.safeFrameX},${debugState.viewport.safeFrameY} ${debugState.viewport.safeFrameWidth}x${debugState.viewport.safeFrameHeight}`,
             debugState.viewport.arenaWidth === undefined ||
             debugState.viewport.arenaHeight === undefined
               ? ''
@@ -595,6 +596,7 @@ export class GameApp {
         : [];
     const scenarioDebug = debugState.debugScenario ? [`Scenario ${debugState.debugScenario}`] : [];
     const inputDebug = debugState.inputMode ? [`Input ${debugState.inputMode}`] : [];
+    const hudDebug = debugState.hudMode ? [`HUD ${debugState.hudMode}`] : [];
     const themeDebug = debugState.contractTheme
       ? [`Theme ${debugState.contractTheme.themeKey}/${debugState.contractTheme.shipName}`]
       : [];
@@ -609,6 +611,7 @@ export class GameApp {
       ...arenaDebug,
       ...scenarioDebug,
       ...inputDebug,
+      ...hudDebug,
       ...themeDebug,
       ...backgroundDebug,
       ...featureDebug,

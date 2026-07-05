@@ -43,7 +43,7 @@ Phase 4 adds explicit display parity before richer ship previews and HUD theming
 - Gameplay now uses a fixed 640x720 combat arena. The viewport helper fits that arena into the HUD-safe region with a uniform presentation scale, so wider/taller browser windows no longer add extra enemy spacing or dodge space.
 - Hazard lane widths, enemy spawn ratios, boss sway, projectile cleanup, pickup drift, and player bounds stay in combat-world units; only the final canvas presentation transform changes per viewport.
 - HUD CSS caps narrow-window height to the same top band used by the safe frame, preventing the current text-heavy HUD from spilling into the player lane.
-- Debug counters now report viewport size/class/presentation scale, safe-frame size, and fixed combat world size during gameplay, alongside existing entity, scroll, background, landmark, and hazard counters.
+- Debug counters now report viewport size/class/presentation scale, DPR, canvas pixel size, safe-frame origin/size, HUD mode, active input mode, and fixed combat world size during gameplay, alongside existing entity, scroll, background, landmark, and hazard counters.
 - Pointer guidance uses the same viewport-to-combat-world helper and only stores one current pointer target in the input system, so mouse/touch movement should stay allocation-light in dense combat.
 - Player ship appearance rendering remains shape-based canvas work: one selected silhouette path, simple mount primitives, appearance-derived colors, high-contrast substitutions, and a fixed hit-radius ring. New Game previews use static inline SVG primitives derived from the same appearance data, so they add DOM cost only on contract selection screens rather than per-frame gameplay cost.
 - The gameplay HUD now derives contract-themed CSS variables and four semantic DOM meters from existing combat state. Meter updates are simple style/attribute changes on persistent elements; avoid replacing the HUD subtree per frame unless profiling shows this is cheap enough.
@@ -64,7 +64,7 @@ Enable debug tools with `?debug=1` on a local, preview, or Pages URL.
 - `9` replaces the current field with a quiet late-sector long-scroll traversal: 1 active entity, 0 projectiles, 0 pickups/effects, 0 telegraphs, and the current sector's generated background/features at a deterministic late distance.
 - `K` forces a debug run summary.
 
-The dense pocket is deterministic and intentionally stays below the Phase 2 alpha active-field budget of 80 entities. The long-scroll traversal is deterministic and intentionally quiet so background/feature rendering can be inspected without combat pressure. Use both to confirm the debug overlay remains responsive, bullets remain readable in standard and high-contrast modes, screen shake respects reduced motion, distance/speed counters continue advancing, and the round can still be abandoned or summarized.
+The dense pocket is deterministic and intentionally stays below the Phase 2 alpha active-field budget of 80 entities. The long-scroll traversal is deterministic and intentionally quiet so background/feature rendering can be inspected without combat pressure. Use both to confirm the debug overlay remains responsive, bullets remain readable in standard and high-contrast modes, screen shake respects reduced motion, distance/speed counters continue advancing, viewport/HUD/input metrics remain stable, and the round can still be abandoned or summarized.
 
 ## Current Boss Phase Volleys
 
@@ -74,7 +74,7 @@ The dense pocket is deterministic and intentionally stays below the Phase 2 alph
 - Warranty Void Seraph: escalates from `VOID AUDIT` into clause-collapse and null-signature phases with longer telegraphs.
 - The Core Wreck: escalates from `CORE SALVO` lanes into reactor breach and `CORE UNSEALED` mixed patterns, capped at 12 bullets.
 
-The debug overlay total entity count includes player, enemies, boss, bullets, pickups, telegraphs, and effects. The split counters report enemies, projectile owner counts, pickups/effects, telegraphs, background plan size, and active sector features separately.
+The debug overlay total entity count includes player, enemies, boss, bullets, pickups, telegraphs, and effects. The split counters report enemies, projectile owner counts, pickups/effects, telegraphs, background plan size, active sector features, viewport/canvas metrics, HUD mode, input mode, and contract theme separately.
 
 ## Phase 2 Playtest Risks
 
@@ -95,4 +95,4 @@ The debug overlay total entity count includes player, enemies, boss, bullets, pi
 - Window-size parity can create new overlap bugs between canvas, HUD, debug overlay, and DOM scenes unless safe-frame helpers are test-covered.
 - Mouse controls can accidentally bypass pause/settings focus or undermine keyboard remapping if pointer state does not flow through the input abstraction. Work order 036 now clears pointer guidance over DOM overlays and preserves native button activation, but future pointer settings should keep using the input abstraction.
 - Contract ship previews and HUD themes can obscure hitboxes or bullets unless high-contrast and reduced-motion settings are checked with each baseline contract. Gameplay ship silhouettes, New Game previews, and the cockpit HUD now keep simple primitives/DOM styling, but manual theme readability checks remain useful across all baseline ships.
-- Contract preview, graphical HUD, ship combat cue, and non-combat theme rendering should stay shape-based/static and cheap until debug/preview smoke shows there is room for richer visuals.
+- Contract preview, graphical HUD, ship combat cue, and non-combat theme rendering should stay shape-based/static and cheap until debug/preview smoke shows there is room for richer visuals. HUD changes should continue to expose mode/theme state in debug so narrow and high-contrast smoke can catch regressions early.

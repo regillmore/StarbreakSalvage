@@ -856,6 +856,10 @@ Acceptance:
 - Smoke coverage or manual matrix covers narrow viewport and mouse input.
 - Release docs capture local browser blockers separately from gameplay blockers.
 
+Status:
+
+- First pass implemented in work order 039. Debug mode now reports viewport class/scale/DPR, canvas pixel size, safe-frame origin/size, active input mode, HUD mode, selected contract theme, and fixed combat world size. Playwright smoke covers narrow viewport launch, pointer movement/fire input mode, contract preview selection, and cockpit HUD theme/mode assertions.
+
 ### AF2 - Phase 4 release checklist
 
 Acceptance:

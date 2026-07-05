@@ -135,6 +135,8 @@ Exit criteria:
 - E2E covers at least one narrow viewport launch and one mouse-control smoke where local browsers are available.
 - Release checklist documents display/input browser gaps.
 
+Status: first pass implemented in work order 039. Gameplay debug output now includes viewport class, presentation scale, DPR, canvas pixel size, safe-frame origin/size, active input mode, HUD mode, fixed combat world size, and selected contract theme. Playwright smoke covers contract preview/HUD theme verification, high-contrast HUD mode, pointer movement/fire input mode, and a narrow viewport launch with exact safe-frame metrics.
+
 ### P4.10 - Phase 4 Playtest Candidate
 
 Harden the display/input/ship-identity build for deployment.

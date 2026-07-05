@@ -502,6 +502,10 @@ export class GameplayScene implements Scene {
     const background = this.getCurrentSector().background;
     const combatState = this.getCombatState();
     const entityCounts = getCombatEntityCounts(combatState);
+    const hudTheme = createHudThemeModel(
+      this.contract.shipAppearance,
+      getHudThemeOptions(this.uiRoot.ownerDocument)
+    );
 
     return {
       seed: this.run.seed,
@@ -520,13 +524,19 @@ export class GameplayScene implements Scene {
         width: viewportLayout.width,
         height: viewportLayout.height,
         className: viewportLayout.viewportClass,
+        dpr: viewportLayout.dpr,
         scale: viewportLayout.canvasScale,
+        canvasPixelWidth: Math.round(viewportLayout.width * viewportLayout.dpr),
+        canvasPixelHeight: Math.round(viewportLayout.height * viewportLayout.dpr),
+        safeFrameX: viewportLayout.gameplaySafeFrame.x,
+        safeFrameY: viewportLayout.gameplaySafeFrame.y,
         safeFrameWidth: viewportLayout.gameplaySafeFrame.width,
         safeFrameHeight: viewportLayout.gameplaySafeFrame.height,
         arenaWidth: bounds.width,
         arenaHeight: bounds.height
       },
       inputMode: this.input.getActiveInputMode(),
+      hudMode: hudTheme.mode,
       contractTheme: createContractThemeDebugState(this.contract)
     };
   }

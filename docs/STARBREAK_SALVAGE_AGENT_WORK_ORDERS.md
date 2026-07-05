@@ -628,6 +628,8 @@ Acceptance criteria:
 - Contract preview and themed HUD smoke coverage exists or local browser blockers are documented.
 - Performance notes explain when display/HUD rendering would need optimization.
 
+Status: first pass implemented; gameplay debug state now reports viewport class/scale/DPR, canvas pixel dimensions, safe-frame origin/size, fixed combat world size, active input mode, HUD mode, and selected contract theme. Playwright smoke now asserts contract preview/HUD theme state, reduced-motion high-contrast HUD mode, pointer input mode, and exact narrow-viewport safe-frame/canvas metrics.
+
 ## Work order 040 - Phase 4 playtest release hardening
 
 Goal: ship a display/input/contract-identity playtest candidate.

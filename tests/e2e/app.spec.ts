@@ -84,6 +84,10 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('boss-readout')).toContainText('Boss');
   await expect(page.getByTestId('item-readout')).toContainText('Split Prism');
   await expect(page.locator('.debug-overlay')).toContainText('Theme redline/Debt Runner');
+  await expect(page.locator('.debug-overlay')).toContainText('HUD standard');
+  await expect(page.locator('.debug-overlay')).toContainText(/Viewport \d+x\d+ \w+ @[0-9.]+ DPR [0-9.]+/);
+  await expect(page.locator('.debug-overlay')).toContainText(/Canvas \d+x\d+/);
+  await expect(page.locator('.debug-overlay')).toContainText(/Safe \d+,\d+ \d+x\d+/);
 
   const startPosition = await page.getByTestId('player-position').textContent();
   await page.keyboard.down('ArrowRight');
@@ -245,6 +249,7 @@ test('launches gameplay with reduced motion and high contrast settings by keyboa
   await expect(page.getByTestId('distance-readout')).toContainText(/Distance \d+\/\d+u/);
   await expect(page.getByTestId('hint-readout')).toContainText('Hint');
   await expect(page.locator('.debug-overlay')).toContainText(/Scroll \d+u\/s/);
+  await expect(page.locator('.debug-overlay')).toContainText('HUD contrast');
 
   expect(browserErrors).toEqual([]);
 });
@@ -320,6 +325,7 @@ test('supports pointer-guided movement and primary-button fire during gameplay',
   const startPosition = await page.getByTestId('player-position').textContent();
   await page.mouse.move(760, 550);
   await expect(page.locator('.debug-overlay')).toContainText('Input pointer');
+  await expect(page.locator('.debug-overlay')).toContainText(/Safe \d+,\d+ \d+x\d+/);
 
   await expect
     .poll(async () => page.getByTestId('player-position').textContent())
@@ -349,9 +355,12 @@ test('keeps the gameplay HUD and safe frame readable in a narrow viewport', asyn
 
   await page.keyboard.press('Enter');
   await expect(page.getByText('Outer Debris Field')).toBeVisible();
-  await expect(page.locator('.debug-overlay')).toContainText('Viewport 390x700 narrow @0.57');
-  await expect(page.locator('.debug-overlay')).toContainText('Safe 362x407');
+  await expect(page.locator('.debug-overlay')).toContainText('Viewport 390x700 narrow @0.57 DPR 1.00');
+  await expect(page.locator('.debug-overlay')).toContainText('Canvas 390x700');
+  await expect(page.locator('.debug-overlay')).toContainText('Safe 14,204 362x407');
   await expect(page.locator('.debug-overlay')).toContainText('World 640x720');
+  await expect(page.locator('.debug-overlay')).toContainText('Input none');
+  await expect(page.locator('.debug-overlay')).toContainText('HUD standard');
   await expect(page.getByTestId('objective-readout')).toBeVisible();
 
   const hudBox = await page.locator('.game-hud').boundingBox();
