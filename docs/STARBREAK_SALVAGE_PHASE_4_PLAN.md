@@ -23,12 +23,12 @@ Make Starbreak Salvage feel cohesive across displays and control styles while gi
 
 Phase 3 made forward motion real, but several player-facing seams remain:
 
-- the canvas fills the browser, but gameplay framing and HUD density are not explicitly validated across window sizes;
-- keyboard input is strong, but mouse movement/fire are absent;
-- contract stats and weapons are distinct, but player ship silhouettes and palettes are mostly shared;
+- gameplay now uses a fixed 640x720 safe arena with viewport metrics, but wider route/pause/summary viewport smoke remains useful;
+- passive mouse/touch movement and fire exist, but later preview/HUD interactions still need focus and accessibility audits;
+- contract stats, weapons, and gameplay ship silhouettes/palettes are now distinct, but contract selection still lacks visual ship previews;
 - contract selection is text-heavy and lacks ship previews;
 - HUD text is functional, but it does not yet feel like a ship cockpit or contract-themed instrument panel;
-- debug coverage measures scrolling performance, but not viewport parity or input-mode parity.
+- debug coverage now reports viewport and input-mode state, but preview/HUD theme smoke coverage remains pending.
 
 ## Phase 4 Milestones
 
@@ -62,6 +62,8 @@ Exit criteria:
 - Ship appearance lives in content data and validates alongside ship stats.
 - At least the baseline contracts have distinct original silhouettes/palettes.
 - Rendering remains shape/canvas based and deterministic.
+
+Status: first pass implemented in work order 033. Appearance data now lives with ship content, generated contracts expose it, gameplay rendering consumes it, and content validation catches missing or invalid silhouettes, palettes, mounts, and HUD theme keys.
 
 ### P4.4 - Contract Selection Ship Previews
 

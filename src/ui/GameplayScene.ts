@@ -350,6 +350,7 @@ export class GameplayScene implements Scene {
         Math.abs(this.getEffectiveMovementAxis(state).x),
         Math.abs(this.getEffectiveMovementAxis(state).y)
       ),
+      appearance: this.contract.shipAppearance,
       invulnerable: state.player.invulnerableSeconds > 0
     });
     renderer.endGameplayLayer();

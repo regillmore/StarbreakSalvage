@@ -1,5 +1,6 @@
 import { getBossById, type BossId } from '../content/bosses';
 import { getFactionById, type FactionId } from '../content/factions';
+import type { ShipAppearance, ShipSilhouette, ShipWeaponMountHint } from '../content/ships';
 import type { BulletContrast } from '../core/settingsData';
 import { clamp } from '../core/math';
 import type {
@@ -27,6 +28,16 @@ import type { CombatBounds } from '../game/CombatState';
 import { calculateViewportLayout, type ViewportLayout } from './ViewportLayout';
 
 const BACKGROUND_SEED = 'STARBREAK-SALVAGE-SHELL';
+const DEFAULT_PLAYER_SHIP_APPEARANCE: ShipAppearance = {
+  silhouette: 'needle',
+  primaryColor: '#59f2ff',
+  secondaryColor: '#12324a',
+  trimColor: '#f8fbff',
+  engineColor: '#ffd166',
+  cockpitAccent: '#ff6bd6',
+  weaponMounts: ['nose', 'wing'],
+  hudThemeKey: 'redline'
+};
 
 export interface RenderSize {
   readonly width: number;
@@ -39,6 +50,7 @@ export interface PlayerRenderState {
   readonly y: number;
   readonly radius: number;
   readonly thrust: number;
+  readonly appearance?: ShipAppearance;
   readonly invulnerable?: boolean;
 }
 
@@ -374,13 +386,14 @@ export class CanvasRenderer {
     const thrust = clamp(player.thrust, 0, 1);
     const shipAlpha = player.invulnerable ? 0.62 : 1;
     const velocityCues = getVelocityCueState(this.settings);
+    const appearance = player.appearance ?? DEFAULT_PLAYER_SHIP_APPEARANCE;
 
     context.save();
     context.translate(player.x, player.y);
 
     if (velocityCues.engineWakeAlpha > 0) {
       context.globalAlpha = velocityCues.engineWakeAlpha * (0.42 + thrust * 0.58) * shipAlpha;
-      context.strokeStyle = '#ffd166';
+      context.strokeStyle = appearance.engineColor;
       context.lineWidth = Math.max(2, player.radius * 0.12);
       context.beginPath();
       context.moveTo(-player.radius * 0.38, player.radius * 0.72);
@@ -391,7 +404,7 @@ export class CanvasRenderer {
     }
 
     context.globalAlpha = (this.settings.reducedMotion ? 0.22 : 0.32 + thrust * 0.42) * shipAlpha;
-    context.fillStyle = '#ffd166';
+    context.fillStyle = appearance.engineColor;
     context.beginPath();
     context.moveTo(-player.radius * 0.48, player.radius * 0.68);
     context.lineTo(0, player.radius * (1.35 + thrust * 0.45));
@@ -400,24 +413,189 @@ export class CanvasRenderer {
     context.fill();
 
     context.globalAlpha = shipAlpha;
-    context.fillStyle = '#7cf7ff';
-    context.strokeStyle = '#f8fbff';
-    context.lineWidth = 2;
-    context.beginPath();
-    context.moveTo(0, -player.radius);
-    context.lineTo(player.radius * 0.82, player.radius * 0.78);
-    context.lineTo(0, player.radius * 0.36);
-    context.lineTo(-player.radius * 0.82, player.radius * 0.78);
-    context.closePath();
+    context.fillStyle = appearance.secondaryColor;
+    this.tracePlayerShipSilhouette(appearance.silhouette, player.radius * 1.08);
     context.fill();
+
+    context.fillStyle =
+      this.settings.bulletContrast === 'high' ? '#f8fbff' : appearance.primaryColor;
+    this.tracePlayerShipSilhouette(appearance.silhouette, player.radius * 0.92);
+    context.fill();
+
+    context.strokeStyle =
+      this.settings.bulletContrast === 'high' ? '#ffef5f' : appearance.trimColor;
+    context.lineWidth = 2;
+    this.tracePlayerShipSilhouette(appearance.silhouette, player.radius);
     context.stroke();
 
-    context.fillStyle = '#ff6bd6';
+    context.globalAlpha = shipAlpha * (this.settings.bulletContrast === 'high' ? 0.42 : 0.24);
+    context.strokeStyle = '#f8fbff';
+    context.lineWidth = 1;
+    context.beginPath();
+    context.arc(0, 0, player.radius, 0, Math.PI * 2);
+    context.stroke();
+
+    context.globalAlpha = shipAlpha;
+    this.paintPlayerWeaponMounts(appearance.weaponMounts, appearance, player.radius);
+
+    context.fillStyle =
+      this.settings.bulletContrast === 'high' ? '#ffffff' : appearance.cockpitAccent;
     context.beginPath();
     context.arc(0, player.radius * 0.2, Math.max(2.5, player.radius * 0.18), 0, Math.PI * 2);
     context.fill();
 
     context.restore();
+  }
+
+  private tracePlayerShipSilhouette(silhouette: ShipSilhouette, radius: number): void {
+    const context = this.context;
+
+    context.beginPath();
+
+    switch (silhouette) {
+      case 'chapel':
+        context.moveTo(0, -radius * 1.08);
+        context.lineTo(radius * 0.62, -radius * 0.18);
+        context.lineTo(radius * 0.48, radius * 0.76);
+        context.lineTo(0, radius * 0.46);
+        context.lineTo(-radius * 0.48, radius * 0.76);
+        context.lineTo(-radius * 0.62, -radius * 0.18);
+        break;
+      case 'ordnance':
+        context.moveTo(0, -radius * 0.9);
+        context.lineTo(radius * 0.9, -radius * 0.28);
+        context.lineTo(radius * 0.72, radius * 0.84);
+        context.lineTo(radius * 0.22, radius * 0.58);
+        context.lineTo(0, radius * 0.82);
+        context.lineTo(-radius * 0.22, radius * 0.58);
+        context.lineTo(-radius * 0.72, radius * 0.84);
+        context.lineTo(-radius * 0.9, -radius * 0.28);
+        break;
+      case 'phase':
+        context.moveTo(0, -radius * 1.05);
+        context.lineTo(radius * 0.74, -radius * 0.1);
+        context.lineTo(radius * 0.34, radius * 0.18);
+        context.lineTo(radius * 0.62, radius * 0.9);
+        context.lineTo(0, radius * 0.34);
+        context.lineTo(-radius * 0.62, radius * 0.9);
+        context.lineTo(-radius * 0.34, radius * 0.18);
+        context.lineTo(-radius * 0.74, -radius * 0.1);
+        break;
+      case 'bulwark':
+        context.moveTo(0, -radius * 0.88);
+        context.lineTo(radius * 0.96, -radius * 0.04);
+        context.lineTo(radius * 0.72, radius * 0.68);
+        context.lineTo(radius * 0.18, radius * 0.92);
+        context.lineTo(0, radius * 0.64);
+        context.lineTo(-radius * 0.18, radius * 0.92);
+        context.lineTo(-radius * 0.72, radius * 0.68);
+        context.lineTo(-radius * 0.96, -radius * 0.04);
+        break;
+      case 'monk':
+        context.moveTo(0, -radius * 0.92);
+        context.lineTo(radius * 0.58, -radius * 0.28);
+        context.lineTo(radius * 0.52, radius * 0.5);
+        context.lineTo(0, radius * 0.88);
+        context.lineTo(-radius * 0.52, radius * 0.5);
+        context.lineTo(-radius * 0.58, -radius * 0.28);
+        break;
+      case 'prototype':
+        context.moveTo(0, -radius * 1.08);
+        context.lineTo(radius * 0.52, -radius * 0.48);
+        context.lineTo(radius * 0.98, radius * 0.14);
+        context.lineTo(radius * 0.34, radius * 0.34);
+        context.lineTo(radius * 0.42, radius * 0.88);
+        context.lineTo(0, radius * 0.54);
+        context.lineTo(-radius * 0.58, radius * 0.76);
+        context.lineTo(-radius * 0.32, radius * 0.08);
+        context.lineTo(-radius * 0.72, -radius * 0.3);
+        break;
+      case 'relic':
+        context.moveTo(0, -radius * 1.02);
+        context.lineTo(radius * 0.78, -radius * 0.12);
+        context.lineTo(radius * 0.34, radius * 0.76);
+        context.lineTo(0, radius * 0.44);
+        context.lineTo(-radius * 0.34, radius * 0.76);
+        context.lineTo(-radius * 0.78, -radius * 0.12);
+        break;
+      case 'needle':
+      default:
+        context.moveTo(0, -radius);
+        context.lineTo(radius * 0.82, radius * 0.78);
+        context.lineTo(0, radius * 0.36);
+        context.lineTo(-radius * 0.82, radius * 0.78);
+        break;
+    }
+
+    context.closePath();
+  }
+
+  private paintPlayerWeaponMounts(
+    mounts: readonly ShipWeaponMountHint[],
+    appearance: ShipAppearance,
+    radius: number
+  ): void {
+    const context = this.context;
+    const mountColor = this.settings.bulletContrast === 'high' ? '#ffffff' : appearance.trimColor;
+
+    context.save();
+    context.fillStyle = mountColor;
+    context.strokeStyle = appearance.engineColor;
+    context.lineWidth = 1;
+
+    for (const mount of mounts) {
+      this.paintPlayerWeaponMount(mount, radius);
+    }
+
+    context.restore();
+  }
+
+  private paintPlayerWeaponMount(mount: ShipWeaponMountHint, radius: number): void {
+    const context = this.context;
+    const size = Math.max(2.2, radius * 0.13);
+
+    switch (mount) {
+      case 'nose':
+        context.fillRect(-size * 0.5, -radius * 0.82, size, size * 1.6);
+        break;
+      case 'wing':
+        context.beginPath();
+        context.arc(-radius * 0.56, radius * 0.12, size, 0, Math.PI * 2);
+        context.fill();
+        context.beginPath();
+        context.arc(radius * 0.56, radius * 0.12, size, 0, Math.PI * 2);
+        context.fill();
+        break;
+      case 'pod':
+        context.fillRect(-radius * 0.8, radius * 0.18, size * 1.1, size * 2.4);
+        context.fillRect(radius * 0.8 - size * 1.1, radius * 0.18, size * 1.1, size * 2.4);
+        break;
+      case 'drone':
+        context.beginPath();
+        context.arc(-radius * 0.84, -radius * 0.28, size * 0.95, 0, Math.PI * 2);
+        context.fill();
+        context.beginPath();
+        context.arc(radius * 0.84, -radius * 0.28, size * 0.95, 0, Math.PI * 2);
+        context.fill();
+        break;
+      case 'broadside':
+        context.strokeRect(-radius * 0.78, -radius * 0.16, size * 1.2, size * 3.2);
+        context.strokeRect(radius * 0.78 - size * 1.2, -radius * 0.16, size * 1.2, size * 3.2);
+        break;
+      case 'beam':
+        context.fillRect(-size * 0.42, -radius * 0.92, size * 0.84, radius * 0.48);
+        break;
+      case 'orbit':
+        context.beginPath();
+        context.arc(-radius * 0.38, radius * 0.54, size * 0.82, 0, Math.PI * 2);
+        context.fill();
+        context.beginPath();
+        context.arc(radius * 0.38, radius * 0.54, size * 0.82, 0, Math.PI * 2);
+        context.fill();
+        break;
+      default:
+        break;
+    }
   }
 
   public paintEnemy(enemy: EnemyRenderState): void {

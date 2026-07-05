@@ -14,7 +14,13 @@ import {
   type RewardPoolDefinition
 } from './items';
 import { SECTORS, type SectorDefinition } from './sectors';
-import { SHIPS, type ShipDefinition } from './ships';
+import {
+  SHIP_HUD_THEME_KEYS,
+  SHIP_SILHOUETTES,
+  SHIP_WEAPON_MOUNT_HINTS,
+  SHIPS,
+  type ShipDefinition
+} from './ships';
 import { UNLOCKS, type UnlockDefinition } from './unlocks';
 import { WEAPONS, type WeaponDefinition } from './weapons';
 import { ITEM_HOOK_IMPLEMENTATIONS } from '../game/ItemHooks';
@@ -67,6 +73,9 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const unlockKinds = new Set(['ship', 'item', 'faction', 'bossPractice', 'music', 'challenge']);
   const weaponPatterns = new Set(['single', 'dual', 'spread', 'split', 'missile', 'beam']);
   const bossPatterns = new Set(['auditFan', 'missileCurtain', 'sporeSpiral']);
+  const shipSilhouettes = new Set<string>(SHIP_SILHOUETTES);
+  const shipMountHints = new Set<string>(SHIP_WEAPON_MOUNT_HINTS);
+  const shipHudThemeKeys = new Set<string>(SHIP_HUD_THEME_KEYS);
 
   if (items.length < 30) {
     errors.push('Content must define at least 30 items');
@@ -384,6 +393,67 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
       errors.push(`Ship ${ship.id} references missing weapon: ${ship.weapon}`);
     }
 
+    if (!ship.appearance) {
+      errors.push(`Ship ${ship.id} must define appearance`);
+    } else {
+      if (!shipSilhouettes.has(ship.appearance.silhouette)) {
+        errors.push(
+          `Ship ${ship.id} has invalid silhouette: ${String(ship.appearance.silhouette)}`
+        );
+      }
+
+      if (!shipHudThemeKeys.has(ship.appearance.hudThemeKey)) {
+        errors.push(
+          `Ship ${ship.id} has invalid HUD theme: ${String(ship.appearance.hudThemeKey)}`
+        );
+      }
+
+      const weaponMounts = Array.isArray(ship.appearance.weaponMounts)
+        ? ship.appearance.weaponMounts
+        : [];
+
+      if (weaponMounts.length === 0) {
+        errors.push(`Ship ${ship.id} appearance must define at least one weapon mount`);
+      }
+
+      for (const mount of weaponMounts) {
+        if (!shipMountHints.has(String(mount))) {
+          errors.push(`Ship ${ship.id} has invalid weapon mount: ${String(mount)}`);
+        }
+      }
+
+      validateHexColor(
+        errors,
+        `Ship ${ship.id} appearance`,
+        'primaryColor',
+        ship.appearance.primaryColor
+      );
+      validateHexColor(
+        errors,
+        `Ship ${ship.id} appearance`,
+        'secondaryColor',
+        ship.appearance.secondaryColor
+      );
+      validateHexColor(
+        errors,
+        `Ship ${ship.id} appearance`,
+        'trimColor',
+        ship.appearance.trimColor
+      );
+      validateHexColor(
+        errors,
+        `Ship ${ship.id} appearance`,
+        'engineColor',
+        ship.appearance.engineColor
+      );
+      validateHexColor(
+        errors,
+        `Ship ${ship.id} appearance`,
+        'cockpitAccent',
+        ship.appearance.cockpitAccent
+      );
+    }
+
     validatePositiveInteger(errors, `Ship ${ship.id} stats`, 'maxHull', ship.stats.maxHull);
     validatePositiveNumber(errors, `Ship ${ship.id} stats`, 'speed', ship.stats.speed);
     validatePositiveNumber(errors, `Ship ${ship.id} stats`, 'hitRadius', ship.stats.hitRadius);
@@ -564,5 +634,11 @@ function validateNonNegativeInteger(
 function validateUnitNumber(errors: string[], owner: string, field: string, value: number): void {
   if (!Number.isFinite(value) || value < 0 || value > 1) {
     errors.push(`${owner} must have ${field} between 0 and 1`);
+  }
+}
+
+function validateHexColor(errors: string[], owner: string, field: string, value: string): void {
+  if (!/^#[0-9a-fA-F]{6}$/.test(value)) {
+    errors.push(`${owner} must have ${field} as a #RRGGBB color`);
   }
 }

@@ -34,6 +34,53 @@ export type ShipTag =
   | 'shield'
   | 'speed';
 
+export const SHIP_SILHOUETTES = [
+  'needle',
+  'chapel',
+  'ordnance',
+  'phase',
+  'bulwark',
+  'monk',
+  'prototype',
+  'relic'
+] as const;
+
+export const SHIP_WEAPON_MOUNT_HINTS = [
+  'nose',
+  'wing',
+  'pod',
+  'drone',
+  'broadside',
+  'beam',
+  'orbit'
+] as const;
+
+export const SHIP_HUD_THEME_KEYS = [
+  'redline',
+  'parish',
+  'ledger',
+  'phase',
+  'aegis',
+  'scrap',
+  'warranty',
+  'relic'
+] as const;
+
+export type ShipSilhouette = (typeof SHIP_SILHOUETTES)[number];
+export type ShipWeaponMountHint = (typeof SHIP_WEAPON_MOUNT_HINTS)[number];
+export type ShipHudThemeKey = (typeof SHIP_HUD_THEME_KEYS)[number];
+
+export interface ShipAppearance {
+  readonly silhouette: ShipSilhouette;
+  readonly primaryColor: string;
+  readonly secondaryColor: string;
+  readonly trimColor: string;
+  readonly engineColor: string;
+  readonly cockpitAccent: string;
+  readonly weaponMounts: readonly ShipWeaponMountHint[];
+  readonly hudThemeKey: ShipHudThemeKey;
+}
+
 export interface ShipStats {
   readonly maxHull: number;
   readonly speed: number;
@@ -52,6 +99,7 @@ export interface ShipDefinition {
   readonly tags: readonly ShipTag[];
   readonly weapon: WeaponId;
   readonly weaponName: string;
+  readonly appearance: ShipAppearance;
   readonly stats: ShipStats;
   readonly perk: string;
   readonly drawback: string;
@@ -67,6 +115,16 @@ export const SHIPS: readonly ShipDefinition[] = [
     tags: ['credit', 'speed'],
     weapon: 'weapon_light_needle_laser',
     weaponName: 'Light Needle Laser',
+    appearance: {
+      silhouette: 'needle',
+      primaryColor: '#59f2ff',
+      secondaryColor: '#12324a',
+      trimColor: '#f8fbff',
+      engineColor: '#ffd166',
+      cockpitAccent: '#ff6bd6',
+      weaponMounts: ['nose', 'wing'],
+      hudThemeKey: 'redline'
+    },
     stats: {
       maxHull: 2,
       speed: 430,
@@ -90,6 +148,16 @@ export const SHIPS: readonly ShipDefinition[] = [
     tags: ['drone'],
     weapon: 'weapon_pulse_cannon',
     weaponName: 'Pulse Cannon',
+    appearance: {
+      silhouette: 'chapel',
+      primaryColor: '#9fd7ff',
+      secondaryColor: '#2d2857',
+      trimColor: '#fff2b8',
+      engineColor: '#6fffd0',
+      cockpitAccent: '#f6d96f',
+      weaponMounts: ['drone', 'orbit'],
+      hudThemeKey: 'parish'
+    },
     stats: {
       maxHull: 3,
       speed: 340,
@@ -113,6 +181,16 @@ export const SHIPS: readonly ShipDefinition[] = [
     tags: ['missile', 'overkill'],
     weapon: 'weapon_dumbfire_missile_rack',
     weaponName: 'Dumbfire Missile Rack',
+    appearance: {
+      silhouette: 'ordnance',
+      primaryColor: '#d6e1ea',
+      secondaryColor: '#74323c',
+      trimColor: '#ffc15a',
+      engineColor: '#ff8a3d',
+      cockpitAccent: '#f8fbff',
+      weaponMounts: ['pod', 'broadside'],
+      hudThemeKey: 'ledger'
+    },
     stats: {
       maxHull: 4,
       speed: 300,
@@ -136,6 +214,16 @@ export const SHIPS: readonly ShipDefinition[] = [
     tags: ['phase', 'graze'],
     weapon: 'weapon_needle_splitter',
     weaponName: 'Needle Splitter',
+    appearance: {
+      silhouette: 'phase',
+      primaryColor: '#7cf7ff',
+      secondaryColor: '#2b5cff',
+      trimColor: '#f8fbff',
+      engineColor: '#baff6f',
+      cockpitAccent: '#ff8cff',
+      weaponMounts: ['nose', 'wing'],
+      hudThemeKey: 'phase'
+    },
     stats: {
       maxHull: 2,
       speed: 455,
@@ -159,6 +247,16 @@ export const SHIPS: readonly ShipDefinition[] = [
     tags: ['shield', 'armor'],
     weapon: 'weapon_short_range_spread',
     weaponName: 'Short-Range Spread Cannon',
+    appearance: {
+      silhouette: 'bulwark',
+      primaryColor: '#9adfa7',
+      secondaryColor: '#243b3a',
+      trimColor: '#e8fff0',
+      engineColor: '#ffd166',
+      cockpitAccent: '#7cf7ff',
+      weaponMounts: ['broadside', 'wing'],
+      hudThemeKey: 'aegis'
+    },
     stats: {
       maxHull: 5,
       speed: 280,
@@ -182,6 +280,16 @@ export const SHIPS: readonly ShipDefinition[] = [
     tags: ['scrap'],
     weapon: 'weapon_kinetic_popgun',
     weaponName: 'Kinetic Popgun',
+    appearance: {
+      silhouette: 'monk',
+      primaryColor: '#d9c66f',
+      secondaryColor: '#3b3840',
+      trimColor: '#f8fbff',
+      engineColor: '#8affc1',
+      cockpitAccent: '#ffb36f',
+      weaponMounts: ['nose', 'orbit'],
+      hudThemeKey: 'scrap'
+    },
     stats: {
       maxHull: 3,
       speed: 360,
@@ -205,6 +313,16 @@ export const SHIPS: readonly ShipDefinition[] = [
     tags: ['prototype', 'heat'],
     weapon: 'weapon_prototype_beam',
     weaponName: 'Prototype Beam',
+    appearance: {
+      silhouette: 'prototype',
+      primaryColor: '#f8fbff',
+      secondaryColor: '#2434a3',
+      trimColor: '#ffef5f',
+      engineColor: '#ff6b3d',
+      cockpitAccent: '#62ffcb',
+      weaponMounts: ['beam', 'pod'],
+      hudThemeKey: 'warranty'
+    },
     stats: {
       maxHull: 3,
       speed: 370,
@@ -228,6 +346,16 @@ export const SHIPS: readonly ShipDefinition[] = [
     tags: ['relic', 'curse'],
     weapon: 'weapon_basic_blaster',
     weaponName: 'Basic Blaster',
+    appearance: {
+      silhouette: 'relic',
+      primaryColor: '#62d986',
+      secondaryColor: '#26213d',
+      trimColor: '#f5dc7a',
+      engineColor: '#6fc8ff',
+      cockpitAccent: '#ff6bd6',
+      weaponMounts: ['nose', 'orbit'],
+      hudThemeKey: 'relic'
+    },
     stats: {
       maxHull: 2,
       speed: 350,

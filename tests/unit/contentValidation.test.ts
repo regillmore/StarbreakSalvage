@@ -282,6 +282,36 @@ describe('validateContent', () => {
     expect(errors).toContain(`Ship ${baseShip.id} stats must have non-negative bombCapacity`);
   });
 
+  it('rejects invalid ship appearance definitions', () => {
+    const errors = validateContent({
+      ships: [
+        {
+          ...baseShip,
+          id: 'ship_drone_chaplain',
+          appearance: undefined
+        },
+        {
+          ...baseShip,
+          appearance: {
+            ...baseShip.appearance,
+            silhouette: 'saucer',
+            primaryColor: 'cyan',
+            hudThemeKey: 'invalid_theme',
+            weaponMounts: ['nose', 'invalid_mount']
+          }
+        }
+      ] as unknown as readonly ShipDefinition[]
+    });
+
+    expect(errors).toContain('Ship ship_drone_chaplain must define appearance');
+    expect(errors).toContain(`Ship ${baseShip.id} has invalid silhouette: saucer`);
+    expect(errors).toContain(`Ship ${baseShip.id} has invalid HUD theme: invalid_theme`);
+    expect(errors).toContain(`Ship ${baseShip.id} has invalid weapon mount: invalid_mount`);
+    expect(errors).toContain(
+      `Ship ${baseShip.id} appearance must have primaryColor as a #RRGGBB color`
+    );
+  });
+
   it('rejects invalid weapon definitions', () => {
     const errors = validateContent({
       weapons: [

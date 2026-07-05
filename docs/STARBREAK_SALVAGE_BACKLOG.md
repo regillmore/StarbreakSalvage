@@ -786,6 +786,10 @@ Acceptance:
 - Baseline contracts have distinct original visual identities.
 - Content validation catches invalid appearance references.
 
+Status:
+
+- First pass implemented in work order 033 with appearance data on every ship, baseline-distinct silhouettes/palettes, and validation for missing or invalid appearance references.
+
 ### AC2 - Gameplay ship rendering
 
 Acceptance:
@@ -793,6 +797,10 @@ Acceptance:
 - Player ship renderer consumes appearance data.
 - Visual differences do not change hitbox or damage logic.
 - Reduced motion, performance mode, and high contrast remain readable.
+
+Status:
+
+- First pass implemented in work order 033 with original canvas silhouettes, appearance-derived colors/mount hints, high-contrast simplification, and a visible hit-radius ring that preserves combat semantics.
 
 ## Epic AD - Contract previews and HUD
 

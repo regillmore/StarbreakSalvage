@@ -526,6 +526,8 @@ Acceptance criteria:
 - Gameplay hit radius remains clear and unchanged by purely visual differences.
 - Reduced motion/performance/high-contrast behavior remains readable.
 
+Status: first pass implemented; ship content now carries data-driven appearance for silhouettes, palettes, engine/cockpit accents, weapon mount hints, and HUD theme keys. Generated contracts expose the appearance, gameplay renders the selected contract ship with original canvas silhouettes plus a hit-radius ring, and validation/tests cover invalid or missing appearance data.
+
 ## Work order 034 - New Game contract selection ship previews
 
 Goal: show the ship before the player commits to a contract.

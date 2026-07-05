@@ -74,7 +74,7 @@ Phase 4 introduces display/input/identity polish. Add tests closest to the risk:
 - narrow/wide viewport E2E smoke for main menu, contract selection, gameplay HUD, pause, and summary; work order 031 adds narrow gameplay HUD/safe-frame smoke, with wider route/pause/summary viewport coverage still useful;
 - mouse/pointer input mapping, bounds clamping, click/hold fire, and focus safety in menus/settings; work order 032 adds passive pointer guidance, primary-button fire, debug input-mode reporting, and pointer movement/fire smoke coverage;
 - keyboard-only parity after mouse and contract-preview changes;
-- ship appearance content validation for silhouettes, palettes, engine/cockpit accents, weapon mount hints, and HUD theme keys;
+- ship appearance content validation for silhouettes, palettes, engine/cockpit accents, weapon mount hints, and HUD theme keys; work order 033 adds this coverage, with preview/HUD theme QA still pending;
 - contract selection preview state for keyboard focus, pointer selection, and narrow layouts;
 - themed HUD readability for hull, economy, objective, warnings, boss, weapon, special, bomb, and build state;
 - reduced motion, high contrast, and performance mode interactions with ship previews, ship wake/damage cues, and contract HUD themes.
@@ -122,6 +122,7 @@ Phase 2 should extend this checklist as systems become real. In addition to the 
 - [ ] Every reward pool has at least one eligible item.
 - [ ] Rarity values are valid.
 - [ ] Curses are clearly marked.
+- [x] Ship appearance references, palettes, weapon mount hints, and HUD theme keys validate.
 
 ## Manual browser smoke matrix
 

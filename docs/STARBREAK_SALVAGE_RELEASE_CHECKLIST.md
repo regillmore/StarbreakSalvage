@@ -11,7 +11,7 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 | ----------------------------- | --------------- | ------------------------------------------------------------------------------------ |
 | TypeScript typecheck          | Pass            | `npm run check`                                                                      |
 | ESLint                        | Pass            | `npm run check`                                                                      |
-| Unit and deterministic tests  | Pass            | `npm run check` - 32 files, 188 tests                                                |
+| Unit and deterministic tests  | Pass            | `npm run check` - 32 files, 190 tests                                                |
 | Production build              | Pass            | `npm run check` - Vite build created `dist/`                                         |
 | Playwright Chromium smoke     | Blocked locally | Targeted smoke attempted; local Playwright Chromium headless shell is not installed. |
 | Production preview asset load | Pass            | Local preview returned HTTP 200 and Pages asset path                                 |
@@ -20,7 +20,7 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 
 | Item                       | Status | Notes                                                                                                                                                                                                                                                                                                     |
 | -------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Public deployment playable | Pass   | Existing Pages deployment confirmed through 031; WO032 keeps the static Vite build.                                                                                                                                                                                                                       |
+| Public deployment playable | Pass   | Existing Pages deployment confirmed through 032; WO033 keeps the static Vite build.                                                                                                                                                                                                                       |
 | Vite base path             | Pass   | `vite.config.ts` uses `/StarbreakSalvage/`.                                                                                                                                                                                                                                                               |
 | Pages workflow             | Pass   | `.github/workflows/pages.yml` builds `dist` and deploys Pages artifact.                                                                                                                                                                                                                                   |
 | CI workflow                | Pass   | `.github/workflows/ci.yml` runs checks and Playwright smoke.                                                                                                                                                                                                                                              |
@@ -60,5 +60,5 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 - Route/reward/shop/boss balance is first-pass and needs live playtest tuning.
 - First-pass scroll simulation, procedural sector backgrounds, scroll-synced directed waves, distance objectives, landmarks, hazards, boss arenas, route-conditioned sector conditions, velocity presentation cues, and long-scroll instrumentation exist, but balance/readability tuning remains early.
 - The debug overlay reports granular entity, scroll/background/feature, input mode, viewport, safe-frame, and fixed-world counts; frame-time sampling and allocation timing remain future instrumentation work.
-- Phase 4 display/input work remains partial: first-pass fixed-arena window-size parity and passive mouse/touch assist exist, while contract ship appearance, ship previews, and graphical HUD theming are not implemented yet.
+- Phase 4 display/input work remains partial: first-pass fixed-arena window-size parity, passive mouse/touch assist, and gameplay contract ship appearance exist, while ship previews and graphical HUD theming are not implemented yet.
 - Manual cross-browser smoke outside Chromium remains pending.

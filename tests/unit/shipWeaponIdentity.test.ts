@@ -16,6 +16,24 @@ const bounds: CombatBounds = {
 };
 
 describe('ship stats and weapon identity', () => {
+  it('defines distinct baseline ship appearances without changing hit radius stats', () => {
+    const baselineShips = [
+      getShip('ship_debt_runner'),
+      getShip('ship_drone_chaplain'),
+      getShip('ship_missile_accountant')
+    ];
+
+    expect(new Set(baselineShips.map((ship) => ship.appearance.silhouette)).size).toBe(3);
+    expect(new Set(baselineShips.map((ship) => ship.appearance.primaryColor)).size).toBe(3);
+
+    for (const ship of baselineShips) {
+      const state = createShipCombatState(ship.id);
+
+      expect(state.player.radius).toBe(ship.stats.hitRadius);
+      expect(ship.appearance.weaponMounts.length).toBeGreaterThan(0);
+    }
+  });
+
   it('turns at least three generated contracts into distinct combat state and economy', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
     const states = run.contracts.map((contract) =>
@@ -34,9 +52,11 @@ describe('ship stats and weapon identity', () => {
 
     for (const contract of run.contracts) {
       const session = createRunSession(run, contract);
+      const ship = getShip(contract.shipId);
 
       expect(session.credits).toBe(contract.startingCredits);
       expect(session.salvage).toBe(contract.startingSalvage);
+      expect(contract.shipAppearance).toEqual(ship.appearance);
     }
   });
 

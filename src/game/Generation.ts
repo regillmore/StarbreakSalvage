@@ -2,7 +2,13 @@ import { getBossById, type BossId, type BossPatternId } from '../content/bosses'
 import { getBackgroundById } from '../content/backgrounds';
 import type { FactionId } from '../content/factions';
 import { SECTORS, type SectorDefinition } from '../content/sectors';
-import { type ShipDefinition, type ShipId, type ShipStats, type WeaponId } from '../content/ships';
+import {
+  type ShipAppearance,
+  type ShipDefinition,
+  type ShipId,
+  type ShipStats,
+  type WeaponId
+} from '../content/ships';
 import type { UnlockId } from '../content/unlocks';
 import { getWeaponById, type WeaponPatternId } from '../content/weapons';
 import { createRng, parseSeedLabel, type Rng, type WeightedChoice } from '../core/rng';
@@ -29,6 +35,7 @@ export interface StartingContract {
   readonly id: string;
   readonly shipId: ShipId;
   readonly shipName: string;
+  readonly shipAppearance: ShipAppearance;
   readonly sponsor: string;
   readonly startingWeaponId: WeaponId;
   readonly startingWeaponName: string;
@@ -176,6 +183,7 @@ function generateStartingContracts(
       id: `contract_${index + 1}_${ship.id.replace('ship_', '')}`,
       shipId: ship.id,
       shipName: ship.name,
+      shipAppearance: ship.appearance,
       sponsor: sponsorRng.choice(ship.sponsors),
       startingWeaponId: ship.weapon,
       startingWeaponName: weapon.name,
