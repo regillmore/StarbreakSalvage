@@ -1,5 +1,6 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene, SceneDebugState } from '../app/Scene';
+import { calculateViewportLayout, type ViewportLayout } from '../app/ViewportLayout';
 import { getItemById } from '../content/items';
 import {
   createBossArenaState,
@@ -87,6 +88,8 @@ export class GameplayScene implements Scene {
     speedOverride: null,
     shouldSpawnBoss: false
   };
+  private viewportLayout: ViewportLayout | null = null;
+  private viewportLayoutKey = '';
   private readonly positionReadout: HTMLParagraphElement;
   private readonly distanceReadout: HTMLParagraphElement;
   private readonly hullReadout: HTMLParagraphElement;
@@ -407,7 +410,8 @@ export class GameplayScene implements Scene {
 
   public getDebugState(): SceneDebugState {
     const scroll = getScrollProgress(this.getScrollState());
-    const bounds = this.getCombatBounds();
+    const viewportLayout = this.getViewportLayout();
+    const bounds = this.getCombatBounds(viewportLayout);
     const features = this.getCurrentFeatures();
     const activeLandmarks = getVisibleSectorLandmarks(features, scroll.distance, bounds.height);
     const activeHazards =
@@ -430,7 +434,15 @@ export class GameplayScene implements Scene {
       backgroundPrimitives: background.primitiveCount,
       backgroundLayers: background.layers.length,
       activeLandmarks: activeLandmarks.length,
-      activeHazards: activeHazards.length
+      activeHazards: activeHazards.length,
+      viewport: {
+        width: viewportLayout.width,
+        height: viewportLayout.height,
+        className: viewportLayout.viewportClass,
+        scale: viewportLayout.canvasScale,
+        safeFrameWidth: viewportLayout.gameplaySafeFrame.width,
+        safeFrameHeight: viewportLayout.gameplaySafeFrame.height
+      }
     };
   }
 
@@ -697,14 +709,28 @@ export class GameplayScene implements Scene {
     }
   }
 
-  private getCombatBounds(): CombatBounds {
-    const ownerWindow = this.uiRoot.ownerDocument.defaultView ?? window;
-
+  private getCombatBounds(layout = this.getViewportLayout()): CombatBounds {
     return {
-      width: Math.max(320, ownerWindow.innerWidth),
-      height: Math.max(240, ownerWindow.innerHeight),
-      padding: 24
+      width: layout.width,
+      height: layout.height,
+      padding: layout.combatPadding,
+      safeFrame: layout.gameplaySafeFrame
     };
+  }
+
+  private getViewportLayout(): ViewportLayout {
+    const ownerWindow = this.uiRoot.ownerDocument.defaultView ?? window;
+    const width = ownerWindow.innerWidth;
+    const height = ownerWindow.innerHeight;
+    const dpr = ownerWindow.devicePixelRatio || 1;
+    const layoutKey = `${width}x${height}@${dpr}`;
+
+    if (!this.viewportLayout || this.viewportLayoutKey !== layoutKey) {
+      this.viewportLayout = calculateViewportLayout({ width, height, dpr });
+      this.viewportLayoutKey = layoutKey;
+    }
+
+    return this.viewportLayout;
   }
 }
 

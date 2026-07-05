@@ -26,6 +26,14 @@ export interface SceneDebugState {
   readonly backgroundLayers?: number;
   readonly activeLandmarks?: number;
   readonly activeHazards?: number;
+  readonly viewport?: {
+    readonly width: number;
+    readonly height: number;
+    readonly className: string;
+    readonly scale: number;
+    readonly safeFrameWidth: number;
+    readonly safeFrameHeight: number;
+  };
 }
 
 export interface Scene {

@@ -22,6 +22,7 @@ import {
   type ScreenShakeState
 } from '../core/screenShake';
 import { generateStarfield, type Star, starCountForViewport } from '../core/starfield';
+import { calculateViewportLayout, type ViewportLayout } from './ViewportLayout';
 
 const BACKGROUND_SEED = 'STARBREAK-SALVAGE-SHELL';
 
@@ -160,6 +161,7 @@ export function getVelocityCueState(settings: RendererSettings): VelocityCueStat
 export class CanvasRenderer {
   private readonly context: CanvasRenderingContext2D;
   private size: RenderSize = { width: 1, height: 1, dpr: 1 };
+  private viewportLayout: ViewportLayout = calculateViewportLayout(this.size);
   private starCache: Star[] = [];
   private starCacheKey = '';
   private shakeState: ScreenShakeState = IDLE_SCREEN_SHAKE;
@@ -185,6 +187,10 @@ export class CanvasRenderer {
 
   public getSize(): RenderSize {
     return this.size;
+  }
+
+  public getViewportLayout(): ViewportLayout {
+    return this.viewportLayout;
   }
 
   public setSettings(settings: RendererSettings): void {
@@ -217,21 +223,25 @@ export class CanvasRenderer {
 
   public resizeToDisplay(): void {
     const ownerWindow = this.canvas.ownerDocument.defaultView ?? window;
-    const dpr = Math.min(ownerWindow.devicePixelRatio || 1, 2);
-    const width = Math.max(320, Math.floor(ownerWindow.innerWidth));
-    const height = Math.max(240, Math.floor(ownerWindow.innerHeight));
+    const viewportLayout = calculateViewportLayout({
+      width: ownerWindow.innerWidth,
+      height: ownerWindow.innerHeight,
+      dpr: ownerWindow.devicePixelRatio || 1
+    });
+    const { dpr, width, height } = viewportLayout;
     const pixelWidth = Math.floor(width * dpr);
     const pixelHeight = Math.floor(height * dpr);
 
     if (this.canvas.width !== pixelWidth || this.canvas.height !== pixelHeight) {
       this.canvas.width = pixelWidth;
       this.canvas.height = pixelHeight;
-      this.canvas.style.width = `${width}px`;
-      this.canvas.style.height = `${height}px`;
-      this.size = { width, height, dpr };
       this.starCacheKey = '';
     }
 
+    this.canvas.style.width = `${width}px`;
+    this.canvas.style.height = `${height}px`;
+    this.size = { width, height, dpr };
+    this.viewportLayout = viewportLayout;
     this.context.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
@@ -309,40 +319,41 @@ export class CanvasRenderer {
   }
 
   public paintGameplayFrame(): void {
-    const { width, height } = this.size;
+    const { width } = this.size;
+    const frame = this.viewportLayout.gameplaySafeFrame;
     const context = this.context;
-    const inset = 18;
     const velocityCues = getVelocityCueState(this.settings);
 
     context.save();
     context.globalAlpha = velocityCues.frameAlpha;
     context.strokeStyle = '#7cf7ff';
     context.lineWidth = 1;
-    context.strokeRect(inset, inset, width - inset * 2, height - inset * 2);
+    context.strokeRect(frame.x, frame.y, frame.width, frame.height);
     context.globalAlpha = velocityCues.frameRailAlpha;
     context.strokeStyle = '#ffd166';
 
-    for (let y = height - 80; y > 80; y -= 72) {
+    for (let y = frame.y + frame.height - 42; y > frame.y + 42; y -= 72) {
       context.beginPath();
-      context.moveTo(inset, y);
-      context.lineTo(width - inset, y - 18);
+      context.moveTo(frame.x, y);
+      context.lineTo(frame.x + frame.width, y - 18);
       context.stroke();
     }
 
     if (velocityCues.frameRailAlpha > 0.08) {
-      const leftRail = context.createLinearGradient(0, 0, 42, 0);
+      const railWidth = Math.min(42, Math.max(18, frame.x + 22));
+      const leftRail = context.createLinearGradient(0, 0, railWidth, 0);
       leftRail.addColorStop(0, 'rgba(124, 247, 255, 0.24)');
       leftRail.addColorStop(1, 'rgba(124, 247, 255, 0)');
 
-      const rightRail = context.createLinearGradient(width, 0, width - 42, 0);
+      const rightRail = context.createLinearGradient(width, 0, width - railWidth, 0);
       rightRail.addColorStop(0, 'rgba(255, 209, 102, 0.2)');
       rightRail.addColorStop(1, 'rgba(255, 209, 102, 0)');
 
       context.globalAlpha = velocityCues.frameRailAlpha;
       context.fillStyle = leftRail;
-      context.fillRect(0, inset, 42, height - inset * 2);
+      context.fillRect(0, frame.y, railWidth, frame.height);
       context.fillStyle = rightRail;
-      context.fillRect(width - 42, inset, 42, height - inset * 2);
+      context.fillRect(width - railWidth, frame.y, railWidth, frame.height);
     }
 
     context.restore();

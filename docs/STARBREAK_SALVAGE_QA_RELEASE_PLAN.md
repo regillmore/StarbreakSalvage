@@ -71,7 +71,7 @@ Phase 3 introduces true vertical scrolling. Add tests closest to the risk:
 Phase 4 introduces display/input/identity polish. Add tests closest to the risk:
 
 - viewport scaling helpers for canvas size, device pixel ratio, gameplay safe frame, and HUD safe areas;
-- narrow/wide viewport E2E smoke for main menu, contract selection, gameplay HUD, pause, and summary;
+- narrow/wide viewport E2E smoke for main menu, contract selection, gameplay HUD, pause, and summary; work order 031 adds narrow gameplay HUD/safe-frame smoke, with wider route/pause/summary viewport coverage still useful;
 - mouse/pointer input mapping, bounds clamping, click/hold fire, and focus safety in menus/settings;
 - keyboard-only parity after mouse and contract-preview changes;
 - ship appearance content validation for silhouettes, palettes, engine/cockpit accents, weapon mount hints, and HUD theme keys;
@@ -137,7 +137,7 @@ Phase 2 performance checks should include wave/objective count, projectile count
 
 Phase 3 performance checks should also include background primitive count, parallax layer count, distance traveled, scroll speed, active distance markers, active landmarks, active hazards, and long-scroll scenarios that run longer than a normal sector.
 
-Current first-pass instrumentation exposes granular combat counts, background primitive/layer counts, active landmark/hazard counts, distance, speed, a dense-combat debug pocket, and a quiet late-sector long-scroll traversal behind `?debug=1`. Manual browser validation and production preview smoke still need to close the checklist.
+Current first-pass instrumentation exposes granular combat counts, background primitive/layer counts, active landmark/hazard counts, distance, speed, viewport size/class/canvas scale, safe-frame size, a dense-combat debug pocket, and a quiet late-sector long-scroll traversal behind `?debug=1`. Manual browser validation and production preview smoke still need to close the checklist.
 
 Phase 4 performance checks should include viewport/canvas scale, safe-frame size, HUD rendering density, preview rendering cost, mouse input update behavior, and whether themed HUD/ship cues add measurable overhead in dense and long-scroll debug scenarios.
 
@@ -146,7 +146,7 @@ Phase 4 performance checks should include viewport/canvas scale, safe-frame size
 - [ ] Particle count visible in debug mode.
 - [ ] Background/debug counters visible in debug mode.
 - [ ] Distance and scroll speed visible in debug mode.
-- [ ] Viewport/canvas scale visible in debug mode once Phase 4 instrumentation lands.
+- [x] Viewport/canvas scale visible in debug mode once Phase 4 instrumentation lands.
 - [ ] Active input mode visible in debug mode once mouse controls land.
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [ ] Heavy combat debug scene documented.

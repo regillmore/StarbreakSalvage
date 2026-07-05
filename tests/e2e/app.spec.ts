@@ -207,3 +207,35 @@ test('launches gameplay with reduced motion and high contrast settings by keyboa
 
   expect(browserErrors).toEqual([]);
 });
+
+test('keeps the gameplay HUD and safe frame readable in a narrow viewport', async ({ page }) => {
+  const browserErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') {
+      browserErrors.push(message.text());
+    }
+  });
+  page.on('pageerror', (error) => browserErrors.push(error.message));
+
+  await page.setViewportSize({ width: 390, height: 700 });
+  await page.goto('./?debug=1&seed=STARBREAK-SMOKE');
+
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
+
+  await page.keyboard.press('Enter');
+  await expect(page.getByText('Outer Debris Field')).toBeVisible();
+  await expect(page.locator('.debug-overlay')).toContainText('Viewport 390x700 narrow @0.58');
+  await expect(page.locator('.debug-overlay')).toContainText('Safe 362x479');
+  await expect(page.getByTestId('objective-readout')).toBeVisible();
+
+  const hudBox = await page.locator('.game-hud').boundingBox();
+  if (!hudBox) {
+    throw new Error('Expected the gameplay HUD to have a browser layout box.');
+  }
+
+  expect(hudBox.width).toBeLessThanOrEqual(390);
+  expect(hudBox.y + hudBox.height).toBeLessThanOrEqual(175);
+
+  expect(browserErrors).toEqual([]);
+});

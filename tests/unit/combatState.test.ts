@@ -20,6 +20,32 @@ const bounds: CombatBounds = {
 };
 
 describe('CombatState', () => {
+  it('clamps player movement to a provided gameplay safe frame', () => {
+    const safeFrame = {
+      x: 78,
+      y: 132,
+      width: 486,
+      height: 508
+    };
+    const safeBounds: CombatBounds = {
+      width: 640,
+      height: 720,
+      padding: 24,
+      safeFrame
+    };
+    const state = createCombatState(safeBounds, 'SAFE-FRAME-CLAMP');
+
+    updateCombatState(state, { movement: { x: -100, y: -100 }, fire: false }, 1, safeBounds);
+
+    expect(state.player.x).toBe(state.player.radius + safeFrame.x);
+    expect(state.player.y).toBe(state.player.radius + safeFrame.y);
+
+    updateCombatState(state, { movement: { x: 100, y: 100 }, fire: false }, 1, safeBounds);
+
+    expect(state.player.x).toBe(safeFrame.x + safeFrame.width - state.player.radius);
+    expect(state.player.y).toBe(safeFrame.y + safeFrame.height - state.player.radius);
+  });
+
   it('lets player fire destroy enemies and produce pickups', () => {
     const state = createCombatState(bounds, 'STARBREAK-SMOKE');
 

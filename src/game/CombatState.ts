@@ -34,6 +34,14 @@ export interface CombatBounds {
   readonly width: number;
   readonly height: number;
   readonly padding: number;
+  readonly safeFrame?: CombatSafeFrame;
+}
+
+export interface CombatSafeFrame {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
 }
 
 export interface CombatInput {
@@ -639,6 +647,17 @@ export function applyPlayerDamage(state: CombatState, damage: number): void {
   damagePlayer(state, damage);
 }
 
+export function getCombatSafeFrame(bounds: CombatBounds): CombatSafeFrame {
+  return (
+    bounds.safeFrame ?? {
+      x: bounds.padding,
+      y: bounds.padding,
+      width: Math.max(1, bounds.width - bounds.padding * 2),
+      height: Math.max(1, bounds.height - bounds.padding * 2)
+    }
+  );
+}
+
 function sanitizeSectorLength(value: number | null | undefined): number | null {
   return Number.isFinite(value) && typeof value === 'number' && value > 0 ? value : null;
 }
@@ -650,16 +669,17 @@ function updatePlayer(
   bounds: CombatBounds
 ): void {
   const { player } = state;
+  const safeFrame = getCombatSafeFrame(bounds);
 
   player.x = clamp(
     player.x + input.movement.x * player.speed * dt,
-    bounds.padding + player.radius,
-    bounds.width - bounds.padding - player.radius
+    safeFrame.x + player.radius,
+    safeFrame.x + safeFrame.width - player.radius
   );
   player.y = clamp(
     player.y + input.movement.y * player.speed * dt,
-    bounds.padding + player.radius,
-    bounds.height - bounds.padding - player.radius
+    safeFrame.y + player.radius,
+    safeFrame.y + safeFrame.height - player.radius
   );
   player.fireCooldown = Math.max(0, player.fireCooldown - dt);
   player.weaponOverheatSeconds = Math.max(0, player.weaponOverheatSeconds - dt);

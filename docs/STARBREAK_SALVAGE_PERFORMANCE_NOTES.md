@@ -34,6 +34,17 @@ Phase 3 adds continuous vertical motion, procedural backgrounds, landmarks, and 
 
 Phase 3 closeout: work order 030 keeps object pooling/batching deferred. Local production preview smoke covers the static Pages base path; frame-time sampling and allocation timing remain future instrumentation rather than current blockers.
 
+## Phase 4 Display Budget Targets
+
+Phase 4 adds explicit display parity before richer ship previews and HUD theming. Keep the first implementation measurable and cheap.
+
+- Viewport layout is derived from a pure helper with desktop, standard/laptop-tablet, and narrow classes.
+- Canvas DPR is clamped to `2` so high-density displays do not silently multiply fill cost beyond the current shape renderer's budget.
+- Gameplay now uses a calculated safe frame with top HUD reserve, side reserves, and bottom reserve; player movement clamps to that safe frame while existing combat bounds remain compatible with fallback callers.
+- HUD CSS caps narrow-window height to the same top band used by the safe frame, preventing the current text-heavy HUD from spilling into the player lane.
+- Debug counters now report viewport size/class/canvas scale and safe-frame size during gameplay, alongside existing entity, scroll, background, landmark, and hazard counters.
+- The helper is cached by viewport key inside gameplay scenes. Future mouse controls, previews, and themed HUD work should reuse the same safe-frame contract instead of introducing parallel window math.
+
 ## Debug and Playtest Scenarios
 
 Enable debug tools with `?debug=1` on a local, preview, or Pages URL.

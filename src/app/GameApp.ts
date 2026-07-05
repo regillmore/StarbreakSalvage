@@ -555,6 +555,13 @@ export class GameApp {
       debugState.activeLandmarks === undefined && debugState.activeHazards === undefined
         ? []
         : [`Features L${debugState.activeLandmarks ?? 0}/H${debugState.activeHazards ?? 0}`];
+    const viewportDebug =
+      debugState.viewport === undefined
+        ? []
+        : [
+            `Viewport ${debugState.viewport.width}x${debugState.viewport.height} ${debugState.viewport.className} @${debugState.viewport.scale.toFixed(2)}`,
+            `Safe ${debugState.viewport.safeFrameWidth}x${debugState.viewport.safeFrameHeight}`
+          ];
     const countDebug =
       debugState.entityCounts === undefined
         ? []
@@ -582,7 +589,8 @@ export class GameApp {
       ...arenaDebug,
       ...scenarioDebug,
       ...backgroundDebug,
-      ...featureDebug
+      ...featureDebug,
+      ...viewportDebug
     ].join(' | ');
   }
 
