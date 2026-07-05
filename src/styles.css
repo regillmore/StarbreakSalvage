@@ -48,6 +48,8 @@ button {
 
 .game-canvas {
   display: block;
+  cursor: crosshair;
+  touch-action: none;
 }
 
 .ui-layer {

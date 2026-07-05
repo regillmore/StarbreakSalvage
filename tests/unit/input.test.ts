@@ -3,8 +3,11 @@ import { describe, expect, it } from 'vitest';
 import {
   actionsForKey,
   DEFAULT_KEY_BINDINGS,
+  getPointerGuidanceAxis,
+  INACTIVE_POINTER_CONTROL_STATE,
   movementAxisFromActions,
   normalizeKey,
+  preferKeyboardMovement,
   primaryActionForKey
 } from '../../src/systems/InputSystem';
 import type { InputAction } from '../../src/systems/InputSystem';
@@ -39,5 +42,30 @@ describe('input helpers', () => {
 
     expect(axis.x).toBeCloseTo(Math.SQRT1_2);
     expect(axis.y).toBeCloseTo(-Math.SQRT1_2);
+  });
+
+  it('derives pointer guidance only outside the dead zone', () => {
+    expect(
+      getPointerGuidanceAxis(
+        { x: 320, y: 560 },
+        { ...INACTIVE_POINTER_CONTROL_STATE, active: true, position: { x: 326, y: 564 } }
+      )
+    ).toEqual({ x: 0, y: 0 });
+
+    const axis = getPointerGuidanceAxis(
+      { x: 320, y: 560 },
+      { ...INACTIVE_POINTER_CONTROL_STATE, active: true, position: { x: 420, y: 560 } }
+    );
+
+    expect(axis.x).toBeCloseTo(1);
+    expect(axis.y).toBeCloseTo(0);
+  });
+
+  it('keeps keyboard movement authoritative over pointer guidance', () => {
+    const keyboard = { x: -1, y: 0 };
+    const pointer = { x: 1, y: 0 };
+
+    expect(preferKeyboardMovement(keyboard, pointer)).toBe(keyboard);
+    expect(preferKeyboardMovement({ x: 0, y: 0 }, pointer)).toBe(pointer);
   });
 });

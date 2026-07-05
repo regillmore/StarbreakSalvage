@@ -15,6 +15,7 @@
 - Added gameplay camera shake that respects reduced motion and screen shake strength settings.
 - Added settings-aware velocity presentation with parallax-scaled background streaks, engine wake, pickup drift trails, impact streaks, subtle frame rails, high-contrast projectile outlines, and wrapped HUD pills.
 - Added explicit viewport scaling with desktop/standard/narrow layout classes, a fixed 640x720 gameplay arena, compact narrow HUD bounds, and debug viewport/safe-frame/world metrics.
+- Added passive mouse/touch assist for gameplay: pointer guidance maps through the fixed arena, keyboard movement overrides it, and primary pointer press fires through the normal input path.
 - Added deterministic sector scroll plans, fixed-step distance tracking, HUD distance/speed readouts, debug distance counters, and subtle reduced-motion-aware starfield drift.
 - Added deterministic procedural parallax background plans for all five sectors, with original canvas-drawn stars, rails, debris, bloom strands, grid lines, and core fractures.
 - Moved normal directed wave spawning onto deterministic scroll-distance marks while retaining time-based fallback schedules and boss-gate timing.
@@ -49,6 +50,7 @@
 - Added velocity cue state coverage and a reduced-motion/high-contrast keyboard launch Playwright smoke.
 - Added debug count, scroll seek, long-scroll preparation, and granular debug overlay E2E smoke coverage.
 - Added viewport layout helper tests, fixed-arena hazard ratio coverage, safe-frame movement clamp coverage, and a narrow-viewport gameplay HUD Playwright smoke.
+- Added pointer guidance unit coverage and a mouse movement/fire Playwright smoke path.
 
 ### Planning
 

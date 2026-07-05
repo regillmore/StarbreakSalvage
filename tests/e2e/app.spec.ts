@@ -208,6 +208,40 @@ test('launches gameplay with reduced motion and high contrast settings by keyboa
   expect(browserErrors).toEqual([]);
 });
 
+test('supports pointer-guided movement and primary-button fire during gameplay', async ({
+  page
+}) => {
+  const browserErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') {
+      browserErrors.push(message.text());
+    }
+  });
+  page.on('pageerror', (error) => browserErrors.push(error.message));
+
+  await page.goto('./?debug=1&seed=STARBREAK-SMOKE');
+
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
+
+  await page.keyboard.press('Enter');
+  await expect(page.getByText('Outer Debris Field')).toBeVisible();
+
+  const startPosition = await page.getByTestId('player-position').textContent();
+  await page.mouse.move(760, 550);
+  await expect(page.locator('.debug-overlay')).toContainText('Input pointer');
+
+  await expect
+    .poll(async () => page.getByTestId('player-position').textContent())
+    .not.toBe(startPosition);
+
+  await page.mouse.down();
+  await expect(page.getByTestId('combat-status')).toContainText(/Shots [1-9]/);
+  await page.mouse.up();
+
+  expect(browserErrors).toEqual([]);
+});
+
 test('keeps the gameplay HUD and safe frame readable in a narrow viewport', async ({ page }) => {
   const browserErrors: string[] = [];
   page.on('console', (message) => {

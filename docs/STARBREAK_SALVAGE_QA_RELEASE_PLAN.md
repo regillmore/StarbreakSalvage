@@ -72,7 +72,7 @@ Phase 4 introduces display/input/identity polish. Add tests closest to the risk:
 
 - viewport scaling helpers for canvas size, device pixel ratio, fixed combat arena fit, gameplay safe frame, and HUD safe areas;
 - narrow/wide viewport E2E smoke for main menu, contract selection, gameplay HUD, pause, and summary; work order 031 adds narrow gameplay HUD/safe-frame smoke, with wider route/pause/summary viewport coverage still useful;
-- mouse/pointer input mapping, bounds clamping, click/hold fire, and focus safety in menus/settings;
+- mouse/pointer input mapping, bounds clamping, click/hold fire, and focus safety in menus/settings; work order 032 adds passive pointer guidance, primary-button fire, debug input-mode reporting, and pointer movement/fire smoke coverage;
 - keyboard-only parity after mouse and contract-preview changes;
 - ship appearance content validation for silhouettes, palettes, engine/cockpit accents, weapon mount hints, and HUD theme keys;
 - contract selection preview state for keyboard focus, pointer selection, and narrow layouts;
@@ -137,7 +137,7 @@ Phase 2 performance checks should include wave/objective count, projectile count
 
 Phase 3 performance checks should also include background primitive count, parallax layer count, distance traveled, scroll speed, active distance markers, active landmarks, active hazards, and long-scroll scenarios that run longer than a normal sector.
 
-Current first-pass instrumentation exposes granular combat counts, background primitive/layer counts, active landmark/hazard counts, distance, speed, viewport size/class/presentation scale, safe-frame size, fixed combat world size, a dense-combat debug pocket, and a quiet late-sector long-scroll traversal behind `?debug=1`. Manual browser validation and production preview smoke still need to close the checklist.
+Current first-pass instrumentation exposes granular combat counts, background primitive/layer counts, active landmark/hazard counts, distance, speed, active input mode, viewport size/class/presentation scale, safe-frame size, fixed combat world size, a dense-combat debug pocket, and a quiet late-sector long-scroll traversal behind `?debug=1`. Manual browser validation and production preview smoke still need to close the checklist.
 
 Phase 4 performance checks should include viewport/presentation scale, safe-frame size, fixed-world hazard/enemy spacing parity, HUD rendering density, preview rendering cost, mouse input update behavior, and whether themed HUD/ship cues add measurable overhead in dense and long-scroll debug scenarios.
 
@@ -147,7 +147,7 @@ Phase 4 performance checks should include viewport/presentation scale, safe-fram
 - [ ] Background/debug counters visible in debug mode.
 - [ ] Distance and scroll speed visible in debug mode.
 - [x] Viewport/canvas scale visible in debug mode once Phase 4 instrumentation lands.
-- [ ] Active input mode visible in debug mode once mouse controls land.
+- [x] Active input mode visible in debug mode once mouse controls land.
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [ ] Heavy combat debug scene documented.
 - [ ] Long-scroll debug scene documented.
@@ -159,7 +159,7 @@ Phase 2 accessibility checks should cover seed entry, summary sharing, special/b
 
 Phase 3 accessibility checks should also cover moving-background readability, high-contrast bullets over each sector palette, reduced-motion parallax simplification, distance HUD readability, boss scroll-lock clarity, and keyboard-only continuation after reaching sector exits.
 
-Phase 4 accessibility checks should also cover narrow viewport HUD readability, mouse controls as optional input, keyboard-only parity after previews/HUD changes, high-contrast bullets over contract ship/HUD themes, reduced-motion simplification for ship wake/damage cues, and focus safety across pointer interactions.
+Phase 4 accessibility checks should also cover narrow viewport HUD readability, mouse controls as passive optional input, keyboard-only parity after previews/HUD changes, high-contrast bullets over contract ship/HUD themes, reduced-motion simplification for ship wake/damage cues, and focus safety across pointer interactions.
 
 - [ ] Keyboard-only menu navigation.
 - [ ] Remappable controls.

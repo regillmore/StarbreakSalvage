@@ -44,7 +44,8 @@ Phase 4 adds explicit display parity before richer ship previews and HUD theming
 - Hazard lane widths, enemy spawn ratios, boss sway, projectile cleanup, pickup drift, and player bounds stay in combat-world units; only the final canvas presentation transform changes per viewport.
 - HUD CSS caps narrow-window height to the same top band used by the safe frame, preventing the current text-heavy HUD from spilling into the player lane.
 - Debug counters now report viewport size/class/presentation scale, safe-frame size, and fixed combat world size during gameplay, alongside existing entity, scroll, background, landmark, and hazard counters.
-- The helper is cached by viewport key inside gameplay scenes. Future mouse controls, previews, and themed HUD work should reuse the same safe-frame contract instead of introducing parallel window math.
+- Pointer guidance uses the same viewport-to-combat-world helper and only stores one current pointer target in the input system, so mouse/touch movement should stay allocation-light in dense combat.
+- The helper is cached by viewport key inside gameplay scenes. Future previews and themed HUD work should reuse the same safe-frame contract instead of introducing parallel window math.
 
 ## Debug and Playtest Scenarios
 

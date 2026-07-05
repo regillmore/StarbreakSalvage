@@ -1,4 +1,7 @@
+import { calculateViewportLayout, viewportPointToCombatPoint } from '../app/ViewportLayout';
 import type { Vector2 } from '../core/math';
+
+export type ActiveInputMode = 'none' | 'keyboard' | 'pointer';
 
 export const INPUT_ACTIONS = [
   'moveUp',
@@ -23,6 +26,22 @@ export const INPUT_ACTIONS = [
 
 export type InputAction = (typeof INPUT_ACTIONS)[number];
 export type KeyBindingMap = Record<InputAction, readonly string[]>;
+
+export interface PointerControlState {
+  readonly active: boolean;
+  readonly insideFrame: boolean;
+  readonly primaryDown: boolean;
+  readonly position: Vector2;
+  readonly pointerType: string;
+}
+
+export const INACTIVE_POINTER_CONTROL_STATE: PointerControlState = {
+  active: false,
+  insideFrame: false,
+  primaryDown: false,
+  position: { x: 0, y: 0 },
+  pointerType: 'unknown'
+};
 
 export const DEFAULT_KEY_BINDINGS: KeyBindingMap = {
   moveUp: ['ArrowUp', 'W'],
@@ -90,9 +109,38 @@ export function movementAxisFromActions(actions: ReadonlySet<InputAction>): Vect
   return { x, y };
 }
 
+export function getPointerGuidanceAxis(
+  player: Vector2,
+  pointer: PointerControlState,
+  deadZone = 10
+): Vector2 {
+  if (!pointer.active) {
+    return { x: 0, y: 0 };
+  }
+
+  const dx = pointer.position.x - player.x;
+  const dy = pointer.position.y - player.y;
+  const distance = Math.hypot(dx, dy);
+
+  if (distance <= deadZone) {
+    return { x: 0, y: 0 };
+  }
+
+  return {
+    x: dx / distance,
+    y: dy / distance
+  };
+}
+
+export function preferKeyboardMovement(keyboard: Vector2, pointer: Vector2): Vector2 {
+  return keyboard.x !== 0 || keyboard.y !== 0 ? keyboard : pointer;
+}
+
 export class InputSystem {
   private readonly keysDown = new Set<string>();
   private readonly pressedActions = new Set<InputAction>();
+  private pointerState: PointerControlState = INACTIVE_POINTER_CONTROL_STATE;
+  private activeInputMode: ActiveInputMode = 'none';
   private isStarted = false;
 
   public constructor(
@@ -107,6 +155,10 @@ export class InputSystem {
 
     this.ownerWindow.addEventListener('keydown', this.handleKeyDown);
     this.ownerWindow.addEventListener('keyup', this.handleKeyUp);
+    this.ownerWindow.addEventListener('pointermove', this.handlePointerMove);
+    this.ownerWindow.addEventListener('pointerdown', this.handlePointerDown);
+    this.ownerWindow.addEventListener('pointerup', this.handlePointerUp);
+    this.ownerWindow.addEventListener('pointercancel', this.handlePointerCancel);
     this.ownerWindow.addEventListener('blur', this.handleBlur);
     this.isStarted = true;
   }
@@ -118,9 +170,15 @@ export class InputSystem {
 
     this.ownerWindow.removeEventListener('keydown', this.handleKeyDown);
     this.ownerWindow.removeEventListener('keyup', this.handleKeyUp);
+    this.ownerWindow.removeEventListener('pointermove', this.handlePointerMove);
+    this.ownerWindow.removeEventListener('pointerdown', this.handlePointerDown);
+    this.ownerWindow.removeEventListener('pointerup', this.handlePointerUp);
+    this.ownerWindow.removeEventListener('pointercancel', this.handlePointerCancel);
     this.ownerWindow.removeEventListener('blur', this.handleBlur);
     this.keysDown.clear();
     this.pressedActions.clear();
+    this.pointerState = INACTIVE_POINTER_CONTROL_STATE;
+    this.activeInputMode = 'none';
     this.isStarted = false;
   }
 
@@ -150,6 +208,18 @@ export class InputSystem {
     return movementAxisFromActions(this.getHeldActions());
   }
 
+  public getPointerControlState(): PointerControlState {
+    return this.pointerState;
+  }
+
+  public isPointerFirePressed(): boolean {
+    return this.pointerState.active && this.pointerState.primaryDown;
+  }
+
+  public getActiveInputMode(): ActiveInputMode {
+    return this.activeInputMode;
+  }
+
   public drainPressedActions(): InputAction[] {
     const actions = [...this.pressedActions];
     this.pressedActions.clear();
@@ -171,6 +241,7 @@ export class InputSystem {
 
     event.preventDefault();
     this.keysDown.add(normalizedKey);
+    this.activeInputMode = 'keyboard';
 
     if (!event.repeat && action) {
       this.pressedActions.add(action);
@@ -186,10 +257,75 @@ export class InputSystem {
     }
   };
 
+  private readonly handlePointerMove = (event: PointerEvent): void => {
+    if (shouldIgnorePointerEvent(event) && !this.pointerState.primaryDown) {
+      return;
+    }
+
+    this.updatePointerState(event);
+  };
+
+  private readonly handlePointerDown = (event: PointerEvent): void => {
+    if (event.button !== 0 || shouldIgnorePointerEvent(event)) {
+      return;
+    }
+
+    this.updatePointerState(event, true);
+
+    if (this.pointerState.insideFrame) {
+      event.preventDefault();
+    }
+  };
+
+  private readonly handlePointerUp = (event: PointerEvent): void => {
+    if (event.button !== 0) {
+      return;
+    }
+
+    this.updatePointerState(event, false);
+  };
+
+  private readonly handlePointerCancel = (): void => {
+    this.pointerState = INACTIVE_POINTER_CONTROL_STATE;
+  };
+
   private readonly handleBlur = (): void => {
     this.keysDown.clear();
     this.pressedActions.clear();
+    this.pointerState = INACTIVE_POINTER_CONTROL_STATE;
+    this.activeInputMode = 'none';
   };
+
+  private updatePointerState(
+    event: PointerEvent,
+    primaryDown = this.pointerState.primaryDown
+  ): void {
+    const layout = calculateViewportLayout({
+      width: this.ownerWindow.innerWidth,
+      height: this.ownerWindow.innerHeight,
+      dpr: this.ownerWindow.devicePixelRatio || 1
+    });
+    const position = viewportPointToCombatPoint(layout, {
+      x: event.clientX,
+      y: event.clientY
+    });
+    const active = position.insideFrame || primaryDown;
+
+    this.pointerState = {
+      active,
+      insideFrame: position.insideFrame,
+      primaryDown,
+      position: {
+        x: position.x,
+        y: position.y
+      },
+      pointerType: event.pointerType || 'unknown'
+    };
+
+    if (active) {
+      this.activeInputMode = 'pointer';
+    }
+  }
 }
 
 function shouldIgnoreKeyboardEvent(event: KeyboardEvent): boolean {
@@ -204,6 +340,25 @@ function shouldIgnoreKeyboardEvent(event: KeyboardEvent): boolean {
     tagName === 'input' ||
     tagName === 'textarea' ||
     tagName === 'select' ||
+    (target instanceof HTMLElement && target.isContentEditable)
+  );
+}
+
+function shouldIgnorePointerEvent(event: PointerEvent): boolean {
+  const target = event.target;
+
+  if (!(target instanceof Element)) {
+    return false;
+  }
+
+  const tagName = target.tagName.toLowerCase();
+  return (
+    tagName === 'button' ||
+    tagName === 'input' ||
+    tagName === 'textarea' ||
+    tagName === 'select' ||
+    tagName === 'label' ||
+    target.closest('[role="button"]') !== null ||
     (target instanceof HTMLElement && target.isContentEditable)
   );
 }

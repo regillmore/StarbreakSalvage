@@ -1,4 +1,4 @@
-import { clamp } from '../core/math';
+import { clamp, type Vector2 } from '../core/math';
 import {
   COMBAT_ARENA_HEIGHT,
   COMBAT_ARENA_PADDING,
@@ -37,6 +37,10 @@ export interface ViewportLayout {
   readonly hudSafeArea: HudSafeArea;
   readonly viewportSafeFrame: ViewportRect;
   readonly gameplaySafeFrame: ViewportRect;
+}
+
+export interface CombatPointerPosition extends Vector2 {
+  readonly insideFrame: boolean;
 }
 
 const MIN_VIEWPORT_WIDTH = 320;
@@ -91,6 +95,31 @@ export function getViewportClass(width: number): ViewportClass {
   }
 
   return 'standard';
+}
+
+export function viewportPointToCombatPoint(
+  layout: Pick<ViewportLayout, 'canvasScale' | 'gameplaySafeFrame'>,
+  point: Vector2
+): CombatPointerPosition {
+  const scale = layout.canvasScale > 0 ? layout.canvasScale : 1;
+  const rawX = (point.x - layout.gameplaySafeFrame.x) / scale;
+  const rawY = (point.y - layout.gameplaySafeFrame.y) / scale;
+
+  return {
+    x: clamp(rawX, 0, COMBAT_ARENA_WIDTH),
+    y: clamp(rawY, 0, COMBAT_ARENA_HEIGHT),
+    insideFrame: rawX >= 0 && rawX <= COMBAT_ARENA_WIDTH && rawY >= 0 && rawY <= COMBAT_ARENA_HEIGHT
+  };
+}
+
+export function combatPointToViewportPoint(
+  layout: Pick<ViewportLayout, 'canvasScale' | 'gameplaySafeFrame'>,
+  point: Vector2
+): Vector2 {
+  return {
+    x: layout.gameplaySafeFrame.x + point.x * layout.canvasScale,
+    y: layout.gameplaySafeFrame.y + point.y * layout.canvasScale
+  };
 }
 
 function sanitizeViewportDimension(value: number, minimum: number): number {

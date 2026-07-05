@@ -1,6 +1,7 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene, SceneDebugState } from '../app/Scene';
 import { calculateViewportLayout, type ViewportLayout } from '../app/ViewportLayout';
+import type { Vector2 } from '../core/math';
 import { getItemById } from '../content/items';
 import {
   createBossArenaState,
@@ -62,7 +63,12 @@ import {
   diffCombatFeedback,
   type CombatFeedbackCue
 } from '../systems/CombatFeedback';
-import type { InputSystem, InputAction } from '../systems/InputSystem';
+import {
+  getPointerGuidanceAxis,
+  preferKeyboardMovement,
+  type InputAction,
+  type InputSystem
+} from '../systems/InputSystem';
 
 const DEBUG_BOSS_SHORTCUTS: Partial<Record<InputAction, BossId>> = {
   debugBossOne: 'boss_auditor_drone_xl',
@@ -230,11 +236,12 @@ export class GameplayScene implements Scene {
     const bomb = this.queuedBomb;
     this.queuedSpecial = false;
     this.queuedBomb = false;
+    const movement = this.getEffectiveMovementAxis(state);
     let result = updateCombatState(
       state,
       {
-        movement: this.input.getMovementAxis(),
-        fire: this.input.isActionPressed('fire'),
+        movement,
+        fire: this.input.isActionPressed('fire') || this.input.isPointerFirePressed(),
         special,
         bomb,
         scrollDistance: scrollState.distance
@@ -340,8 +347,8 @@ export class GameplayScene implements Scene {
       y: state.player.y,
       radius: state.player.radius,
       thrust: Math.max(
-        Math.abs(this.input.getMovementAxis().x),
-        Math.abs(this.input.getMovementAxis().y)
+        Math.abs(this.getEffectiveMovementAxis(state).x),
+        Math.abs(this.getEffectiveMovementAxis(state).y)
       ),
       invulnerable: state.player.invulnerableSeconds > 0
     });
@@ -444,7 +451,8 @@ export class GameplayScene implements Scene {
         safeFrameHeight: viewportLayout.gameplaySafeFrame.height,
         arenaWidth: bounds.width,
         arenaHeight: bounds.height
-      }
+      },
+      inputMode: this.input.getActiveInputMode()
     };
   }
 
@@ -709,6 +717,13 @@ export class GameplayScene implements Scene {
     if (cues.length > 0) {
       this.onFeedback(cues);
     }
+  }
+
+  private getEffectiveMovementAxis(state: CombatState): Vector2 {
+    return preferKeyboardMovement(
+      this.input.getMovementAxis(),
+      getPointerGuidanceAxis(state.player, this.input.getPointerControlState())
+    );
   }
 
   private getCombatBounds(): CombatBounds {

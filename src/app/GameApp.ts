@@ -582,6 +582,7 @@ export class GameApp {
         ? [`Arena ${debugState.arenaPhase}`]
         : [];
     const scenarioDebug = debugState.debugScenario ? [`Scenario ${debugState.debugScenario}`] : [];
+    const inputDebug = debugState.inputMode ? [`Input ${debugState.inputMode}`] : [];
 
     this.debugOverlay.textContent = [
       `FPS ${Math.round(this.frameStats.fps)}`,
@@ -592,6 +593,7 @@ export class GameApp {
       ...scrollDebug,
       ...arenaDebug,
       ...scenarioDebug,
+      ...inputDebug,
       ...backgroundDebug,
       ...featureDebug,
       ...viewportDebug

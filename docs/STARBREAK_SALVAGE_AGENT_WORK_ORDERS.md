@@ -509,6 +509,8 @@ Acceptance criteria:
 - Keyboard-only and remapped-key flows remain intact.
 - Pointer behavior does not trap focus or break pause/settings scenes.
 
+Status: first pass implemented; gameplay now consumes passive pointer guidance through `InputSystem`, maps viewport pointer positions into the fixed 640x720 combat world, lets keyboard movement override pointer guidance, maps primary pointer press to fire, reports active input mode in debug output, and includes unit plus E2E smoke coverage.
+
 ## Work order 033 - Ship appearance data model
 
 Goal: make contract ships visually distinct from content data.

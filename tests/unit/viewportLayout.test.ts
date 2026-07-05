@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { calculateViewportLayout } from '../../src/app/ViewportLayout';
+import {
+  calculateViewportLayout,
+  combatPointToViewportPoint,
+  viewportPointToCombatPoint
+} from '../../src/app/ViewportLayout';
 import { COMBAT_ARENA_HEIGHT, COMBAT_ARENA_WIDTH } from '../../src/game/CombatGeometry';
 
 describe('ViewportLayout', () => {
@@ -81,6 +85,26 @@ describe('ViewportLayout', () => {
         2
       );
     }
+  });
+
+  it('maps viewport pointer positions into clamped combat-world coordinates', () => {
+    const layout = calculateViewportLayout({ width: 390, height: 700, dpr: 2 });
+    const center = combatPointToViewportPoint(layout, {
+      x: COMBAT_ARENA_WIDTH / 2,
+      y: COMBAT_ARENA_HEIGHT / 2
+    });
+    const mappedCenter = viewportPointToCombatPoint(layout, center);
+    const mappedOutside = viewportPointToCombatPoint(layout, {
+      x: layout.gameplaySafeFrame.x + layout.gameplaySafeFrame.width + 80,
+      y: layout.gameplaySafeFrame.y - 80
+    });
+
+    expect(mappedCenter.insideFrame).toBe(true);
+    expect(mappedCenter.x).toBeCloseTo(COMBAT_ARENA_WIDTH / 2);
+    expect(mappedCenter.y).toBeCloseTo(COMBAT_ARENA_HEIGHT / 2);
+    expect(mappedOutside.insideFrame).toBe(false);
+    expect(mappedOutside.x).toBe(COMBAT_ARENA_WIDTH);
+    expect(mappedOutside.y).toBe(0);
   });
 
   it('sanitizes invalid inputs to the minimum supported browser size', () => {
