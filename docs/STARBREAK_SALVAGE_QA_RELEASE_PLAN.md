@@ -73,9 +73,9 @@ Phase 4 introduces display/input/identity polish. Add tests closest to the risk:
 - viewport scaling helpers for canvas size, device pixel ratio, fixed combat arena fit, gameplay safe frame, and HUD safe areas;
 - narrow/wide viewport E2E smoke for main menu, contract selection, gameplay HUD, pause, and summary; work order 031 adds narrow gameplay HUD/safe-frame smoke, with wider route/pause/summary viewport coverage still useful;
 - mouse/pointer input mapping, bounds clamping, click/hold fire, and focus safety in menus/settings; work order 032 adds passive pointer guidance, primary-button fire, debug input-mode reporting, and pointer movement/fire smoke coverage;
-- keyboard-only parity after mouse and contract-preview changes;
+- keyboard-only parity after mouse, contract-preview, and future HUD changes; work order 034 adds arrow-key preview selection plus preview smoke assertions;
 - ship appearance content validation for silhouettes, palettes, engine/cockpit accents, weapon mount hints, and HUD theme keys; work order 033 adds this coverage, with preview/HUD theme QA still pending;
-- contract selection preview state for keyboard focus, pointer selection, and narrow layouts;
+- contract selection preview state for keyboard focus, pointer selection, and narrow layouts; work order 034 adds pure preview-model coverage and Playwright preview-selection assertions, with manual contrast/narrow browser checks still useful;
 - themed HUD readability for hull, economy, objective, warnings, boss, weapon, special, bomb, and build state;
 - reduced motion, high contrast, and performance mode interactions with ship previews, ship wake/damage cues, and contract HUD themes.
 
@@ -149,6 +149,7 @@ Phase 4 performance checks should include viewport/presentation scale, safe-fram
 - [ ] Distance and scroll speed visible in debug mode.
 - [x] Viewport/canvas scale visible in debug mode once Phase 4 instrumentation lands.
 - [x] Active input mode visible in debug mode once mouse controls land.
+- [x] Contract preview model and selection smoke coverage exists.
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [ ] Heavy combat debug scene documented.
 - [ ] Long-scroll debug scene documented.

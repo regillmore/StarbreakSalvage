@@ -32,11 +32,29 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.keyboard.press('Enter');
 
   await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
+  await expect(page.getByTestId('contract-ship-preview')).toHaveCount(3);
+  await expect(page.getByTestId('selected-contract-preview')).toContainText(/.+/);
+  await expect(
+    page.getByTestId('selected-contract-preview').getByRole('img', { name: /ship preview/ })
+  ).toBeVisible();
+
+  const firstPreviewText = await page.getByTestId('selected-contract-preview').textContent();
+  await page.keyboard.press('ArrowRight');
+  await expect
+    .poll(async () => page.getByTestId('selected-contract-preview').textContent())
+    .not.toBe(firstPreviewText);
+
   await page
     .locator('article')
     .filter({ hasText: 'Missile Accountant' })
-    .getByRole('button', { name: 'Select' })
+    .getByRole('button', { name: /Select|Selected/ })
     .click();
+  await expect(page.getByTestId('selected-contract-preview')).toContainText('Missile Accountant');
+  await expect(
+    page
+      .getByTestId('selected-contract-preview')
+      .getByRole('img', { name: /Missile Accountant ship preview/ })
+  ).toBeVisible();
 
   await page.getByRole('button', { name: 'Launch Contract' }).click();
 

@@ -812,6 +812,10 @@ Acceptance:
 - Selected preview updates through keyboard and pointer interactions.
 - Preview layout remains readable on narrow viewports.
 
+Status:
+
+- First pass implemented in work order 034 with compact card previews, a larger selected-contract preview, arrow-key selection wraparound, pointer/button selection updates, and pure preview-model tests.
+
 ### AD2 - Contract-themed graphical HUD
 
 Acceptance:

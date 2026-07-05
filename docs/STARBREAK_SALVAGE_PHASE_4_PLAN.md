@@ -25,8 +25,8 @@ Phase 3 made forward motion real, but several player-facing seams remain:
 
 - gameplay now uses a fixed 640x720 safe arena with viewport metrics, but wider route/pause/summary viewport smoke remains useful;
 - passive mouse/touch movement and fire exist, but later preview/HUD interactions still need focus and accessibility audits;
-- contract stats, weapons, and gameplay ship silhouettes/palettes are now distinct, but contract selection still lacks visual ship previews;
-- contract selection is text-heavy and lacks ship previews;
+- contract stats, weapons, gameplay ship silhouettes/palettes, and contract-selection previews are now distinct;
+- contract selection now has visual previews, but the broader route/reward/shop/summary contract theme is still sparse;
 - HUD text is functional, but it does not yet feel like a ship cockpit or contract-themed instrument panel;
 - debug coverage now reports viewport and input-mode state, but preview/HUD theme smoke coverage remains pending.
 
@@ -74,6 +74,8 @@ Exit criteria:
 - Each contract card shows a compact ship preview.
 - The selected contract preview updates through keyboard and mouse/pointer flow.
 - Preview visuals are readable in high contrast and narrow layouts.
+
+Status: first pass implemented in work order 034. Contract cards now show compact SVG previews, the selected-contract preview updates through arrow keys and pointer/button selection, and narrow layouts stack the preview band without crowding card text.
 
 ### P4.5 - Contract-Themed Gameplay HUD
 

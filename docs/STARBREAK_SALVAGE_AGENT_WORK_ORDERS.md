@@ -543,6 +543,8 @@ Acceptance criteria:
 - Previews do not crowd text on narrow layouts.
 - No copied or external ship art is introduced.
 
+Status: first pass implemented; the contract board now renders compact SVG ship previews for every generated contract, a larger selected-contract preview with weapon/role cues, arrow-key selection wraparound, button/card pointer selection updates, and narrow-layout stacking. Preview models are pure/tested and Playwright smoke asserts preview selection before launch.
+
 ## Work order 035 - Contract-themed graphical player HUD
 
 Goal: make gameplay HUD feel like a ship cockpit without hiding state.

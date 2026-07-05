@@ -29,7 +29,7 @@ Phase 2 is complete as of deployed and confirmed work order 020. It turned the a
 
 Phase 3 is complete as of deployed and confirmed work order 030. It made Starbreak Salvage feel like a first-pass vertical-scrolling arcade roguelike: deterministic sector distance, procedural backgrounds, scroll-synced waves, distance objectives, hazards, landmarks, boss arena transitions, route-conditioned sector physics, velocity cues, and long-scroll instrumentation.
 
-Phase 4 begins from that scrolling playtest slice. Its goal is display/input/identity polish: window-size parity, optional mouse controls, contract-specific ship visuals, new-game ship previews, and contract-themed graphical HUD presentation. Work orders 031-033 have completed the display/input foundation and first-pass gameplay ship identity.
+Phase 4 begins from that scrolling playtest slice. Its goal is display/input/identity polish: window-size parity, optional mouse controls, contract-specific ship visuals, new-game ship previews, and contract-themed graphical HUD presentation. Work orders 031-034 have completed the display/input foundation, first-pass gameplay ship identity, and New Game contract previews.
 
 See `docs/STARBREAK_SALVAGE_PHASE_4_PLAN.md` for the active Phase 4 roadmap. `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md` and `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md` remain historical records for concluded phases.
 
@@ -358,6 +358,8 @@ Exit criteria:
 - Contract choice feels visual before launch.
 - Preview state updates with focus/selection.
 - No external or copied art is introduced.
+
+Status: first pass implemented by work order 034. New Game contract cards now show compact original SVG previews, selected preview state updates from keyboard and pointer/button selection, and preview geometry is derived from contract appearance data.
 
 ### P4.4 - Graphical Contract HUD
 

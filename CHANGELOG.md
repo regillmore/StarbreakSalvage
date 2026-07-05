@@ -17,6 +17,7 @@
 - Added explicit viewport scaling with desktop/standard/narrow layout classes, a fixed 640x720 gameplay arena, compact narrow HUD bounds, and debug viewport/safe-frame/world metrics.
 - Added passive mouse/touch assist for gameplay: pointer guidance maps through the fixed arena, keyboard movement overrides it, and primary pointer press fires through the normal input path.
 - Added data-driven contract ship appearance with distinct canvas silhouettes, palettes, engine/cockpit accents, weapon mount hints, HUD theme keys, and a visible hit-radius ring.
+- Added New Game contract ship previews with compact card SVGs, a larger selected-contract preview, weapon/role cue primitives, and arrow-key selection updates.
 - Added deterministic sector scroll plans, fixed-step distance tracking, HUD distance/speed readouts, debug distance counters, and subtle reduced-motion-aware starfield drift.
 - Added deterministic procedural parallax background plans for all five sectors, with original canvas-drawn stars, rails, debris, bloom strands, grid lines, and core fractures.
 - Moved normal directed wave spawning onto deterministic scroll-distance marks while retaining time-based fallback schedules and boss-gate timing.
@@ -53,6 +54,7 @@
 - Added viewport layout helper tests, fixed-arena hazard ratio coverage, safe-frame movement clamp coverage, and a narrow-viewport gameplay HUD Playwright smoke.
 - Added pointer guidance unit coverage and a mouse movement/fire Playwright smoke path.
 - Added ship appearance validation coverage and contract render-state derivation checks.
+- Added ship preview model/selection unit coverage and Playwright smoke assertions for preview selection before launch.
 
 ### Planning
 

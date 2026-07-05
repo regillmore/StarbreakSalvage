@@ -45,7 +45,7 @@ Phase 4 adds explicit display parity before richer ship previews and HUD theming
 - HUD CSS caps narrow-window height to the same top band used by the safe frame, preventing the current text-heavy HUD from spilling into the player lane.
 - Debug counters now report viewport size/class/presentation scale, safe-frame size, and fixed combat world size during gameplay, alongside existing entity, scroll, background, landmark, and hazard counters.
 - Pointer guidance uses the same viewport-to-combat-world helper and only stores one current pointer target in the input system, so mouse/touch movement should stay allocation-light in dense combat.
-- Player ship appearance rendering remains shape-based canvas work: one selected silhouette path, simple mount primitives, appearance-derived colors, high-contrast substitutions, and a fixed hit-radius ring. It should stay negligible next to background and projectile cost until contract previews or themed HUD elements multiply ship drawing.
+- Player ship appearance rendering remains shape-based canvas work: one selected silhouette path, simple mount primitives, appearance-derived colors, high-contrast substitutions, and a fixed hit-radius ring. New Game previews use static inline SVG primitives derived from the same appearance data, so they add DOM cost only on contract selection screens rather than per-frame gameplay cost.
 - The helper is cached by viewport key inside gameplay scenes. Future previews and themed HUD work should reuse the same safe-frame contract instead of introducing parallel window math.
 
 ## Debug and Playtest Scenarios
@@ -91,5 +91,5 @@ The debug overlay total entity count includes player, enemies, boss, bullets, pi
 
 - Window-size parity can create new overlap bugs between canvas, HUD, debug overlay, and DOM scenes unless safe-frame helpers are test-covered.
 - Mouse controls can accidentally bypass pause/settings focus or undermine keyboard remapping if pointer state does not flow through the input abstraction.
-- Contract ship previews and HUD themes can obscure hitboxes or bullets unless high-contrast and reduced-motion settings are checked with each baseline contract. Gameplay ship silhouettes now keep a visible hit-radius ring, but preview/HUD theme readability remains pending.
-- Contract previews and graphical HUD rendering should stay shape-based and cheap until debug/preview smoke shows there is room for richer visuals.
+- Contract ship previews and HUD themes can obscure hitboxes or bullets unless high-contrast and reduced-motion settings are checked with each baseline contract. Gameplay ship silhouettes and New Game previews now keep simple shape primitives, but HUD theme readability remains pending.
+- Contract preview and graphical HUD rendering should stay shape-based and cheap until debug/preview smoke shows there is room for richer visuals.
