@@ -29,9 +29,11 @@ Phase 2 is complete as of deployed and confirmed work order 020. It turned the a
 
 Phase 3 is complete as of deployed and confirmed work order 030. It made Starbreak Salvage feel like a first-pass vertical-scrolling arcade roguelike: deterministic sector distance, procedural backgrounds, scroll-synced waves, distance objectives, hazards, landmarks, boss arena transitions, route-conditioned sector physics, velocity cues, and long-scroll instrumentation.
 
-Phase 4 begins from that scrolling playtest slice. Its goal is display/input/identity polish: window-size parity, optional mouse controls, contract-specific ship visuals, new-game ship previews, and contract-themed graphical HUD presentation. Work orders 031-039 have completed the display/input foundation, first-pass gameplay ship identity, New Game contract previews, the first cockpit HUD layer, keyboard/pointer accessibility hardening, ship-specific combat feedback, non-combat contract theme propagation, and viewport/input/HUD debug smoke hardening.
+Phase 4 is complete as of validated work order 040. It added display/input/identity polish: window-size parity, optional mouse controls, contract-specific ship visuals, new-game ship previews, a contract-themed graphical HUD, keyboard/pointer accessibility hardening, ship-specific combat feedback, non-combat contract theme propagation, viewport/input/HUD debug smoke, and release documentation.
 
-See `docs/STARBREAK_SALVAGE_PHASE_4_PLAN.md` for the active Phase 4 roadmap. `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md` and `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md` remain historical records for concluded phases.
+Phase 5 begins from that display/input playtest candidate. Its goal is progression and sector-feedback depth: banked scrap purpose, upgrade bay icons and purchases, upgrade-influenced future runs, sector completion exits/toasts, a lunar surface sector family, and richer player ship destruction.
+
+See `docs/STARBREAK_SALVAGE_PHASE_5_PLAN.md` for the active Phase 5 roadmap. `docs/STARBREAK_SALVAGE_PHASE_4_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`, and `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md` remain historical records for concluded phases.
 
 ## Milestones
 
@@ -391,7 +393,78 @@ Exit criteria:
 - Keyboard and mouse-assisted play are documented and smoke-tested where browser tooling is available.
 - No severe display/input/HUD blockers remain for the Phase 4 playtest release.
 
-Status: accessibility hardening first pass implemented by work order 036, ship combat feedback first pass implemented by work order 037, non-combat theme propagation first pass implemented by work order 038, and viewport/input debug smoke hardening first pass implemented by work order 039. Keyboard-only start, pause, end-run, summary, and return-to-menu flow are covered by Playwright smoke, pointer guidance is cleared over DOM overlays so menus/settings remain neutral, ship cue intensity respects reduced motion, performance mode, and high-contrast settings, route/reward/shop/transition/summary screens carry subdued selected-contract accents plus summary theme metadata, and debug smoke now asserts DPR/canvas/safe-frame metrics, input mode, HUD mode, contract previews, and selected contract theme.
+Status: completed by work orders 036-040. Keyboard-only start, pause, end-run, summary, and return-to-menu flow are covered by Playwright smoke, pointer guidance is cleared over DOM overlays so menus/settings remain neutral, ship cue intensity respects reduced motion, performance mode, and high-contrast settings, route/reward/shop/transition/summary screens carry subdued selected-contract accents plus summary theme metadata, and debug smoke asserts DPR/canvas/safe-frame metrics, input mode, HUD mode, contract previews, and selected contract theme. Full check, Playwright Chromium smoke, and local production preview smoke passed for the closeout; release docs capture remaining manual browser gaps and Phase 5 follow-up direction.
+
+## Phase 5 milestones
+
+### P5.1 - Progression Economy
+
+Scope:
+
+- Give banked scrap a clear purpose through persistent upgrade definitions and save-backed purchases.
+- Keep upgrades focused on variety, information, or sidegrades rather than raw permanent damage.
+- Preserve save migration, export, import, and fresh-save viability.
+
+Exit criteria:
+
+- Players can understand what scrap buys and what they can afford.
+- Upgrade definitions validate and save safely.
+- Same save state plus same seed reproduces upgrade-influenced generation.
+
+### P5.2 - Upgrade Bay UX
+
+Scope:
+
+- Add an Upgrade Bay surface with category icons, cost states, purchased/locked states, and concise copy.
+- Preserve keyboard, pointer, narrow viewport, high-contrast, and reduced-motion usability.
+
+Exit criteria:
+
+- Upgrade choices are readable before purchase.
+- Icons communicate category at a glance.
+- Upgrade menu smoke coverage exists.
+
+### P5.3 - Sector Exit And Reward Feedback
+
+Scope:
+
+- Add sector completion exits/toasts.
+- Improve run-end scrap breakdown and upgrade affordability feedback.
+- Keep route/reward/summary flow deterministic and non-blocking.
+
+Exit criteria:
+
+- Sector completion feels like crossing an exit.
+- Run summaries explain earned and banked scrap.
+- Toasts are accessible and reduced-motion aware.
+
+### P5.4 - Lunar Surface Sector
+
+Scope:
+
+- Add a deterministic lunar surface sector family with original low-altitude backgrounds.
+- Add lunar landmarks, hazards, and encounter pacing hooks.
+- Validate new sector references and keep bullet readability intact.
+
+Exit criteria:
+
+- Lunar sectors are visually and mechanically distinct.
+- Known seeds can reproduce lunar backgrounds/features.
+- Hazards telegraph clearly and stay under bullets.
+
+### P5.5 - Destruction And Phase 5 Playtest Candidate
+
+Scope:
+
+- Add richer player ship destruction using ship appearance data.
+- Extend debug/smoke coverage around upgrades, lunar sectors, exits, and destruction.
+- Harden release docs and manual browser matrix.
+
+Exit criteria:
+
+- Death-to-summary remains reliable and more expressive.
+- Full checks, E2E smoke, and production preview smoke pass.
+- Known progression, sector, and browser risks are documented.
 
 ## Dependency map
 
@@ -418,6 +491,11 @@ M0 scaffold
                                       -> P4.3 contract previews
                                         -> P4.4 graphical HUD
                                           -> P4.5 display/input playtest candidate
+                                            -> P5.1 progression economy
+                                              -> P5.2 upgrade bay UX
+                                                -> P5.3 sector/reward feedback
+                                                  -> P5.4 lunar surface sector
+                                                    -> P5.5 destruction/progression playtest candidate
 ```
 
 Parallelizable:
@@ -437,6 +515,9 @@ High-conflict areas:
 - Wave/director scheduling around distance thresholds.
 - Viewport/canvas scaling, HUD layout, and input-mode behavior.
 - Ship appearance data shared by gameplay, previews, HUD, and summaries.
+- Save data, banked scrap, upgrade definitions, and run generation.
+- Sector content tables shared by backgrounds, features, waves, and validation.
+- Death/destruction flow shared by combat, audio/VFX, and run summary.
 
 ## First five PRs
 

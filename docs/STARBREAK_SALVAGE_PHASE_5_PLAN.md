@@ -1,0 +1,118 @@
+# Starbreak Salvage - Phase 5 Plan
+
+## Phase 4 Conclusion
+
+Phase 4 is concluded after work order 040 validation. It turned the scrolling playtest foundation into a more cohesive browser game slice across displays, input styles, and contract identity: fixed combat-world presentation, passive mouse/touch controls, contract-specific ship appearance, New Game ship previews, a themed cockpit HUD, accessibility hardening, ship identity feedback, contract theme propagation, and viewport/input/HUD smoke coverage.
+
+The game now reads more consistently on screen, but the long-term loop still needs stronger reasons to keep playing. Banked scrap needs an understandable purpose, upgrades need a real home, sector completion needs a satisfying punctuation beat, and death should feel dramatic without becoming noisy.
+
+## Phase 5 Product Goal
+
+Make the run-to-run loop feel rewarding and legible while adding one strong new place to fly through. Phase 5 should connect banked scrap to durable variety, give upgrades clear iconography and purchase feedback, add a lunar surface sector family, make sector exits and rewards easier to parse, and make player destruction feel like a memorable consequence.
+
+## Phase 5 Pillars
+
+1. **Scrap Has Purpose** - banked scrap should unlock choices, sidegrades, and run variety rather than simple permanent stat inflation.
+2. **Upgrade Bay Clarity** - upgrade categories should have readable icons, costs, states, and short explanations.
+3. **Sector Punctuation** - reaching an exit should feel like crossing a line, with a clear toast and transition into rewards/routes.
+4. **New Terrain Identity** - the lunar surface should feel different from deep-space sectors while preserving bullet readability.
+5. **Consequence And Spectacle** - ship destruction should be richer, readable, original, and respectful of reduced motion/performance settings.
+6. **Save-Safe Progression** - upgrade purchases, unlock records, and scrap conversion must migrate safely and remain local-only.
+
+## Current Gap
+
+- banked salvage/scrap is tracked, but its player-facing purpose is thin;
+- the Unlock Archive explains grants, but there is no upgrade bay where players can intentionally spend banked resources;
+- existing menus rely on text-heavy cards, so upgrade category icons and purchase states need a concise visual language;
+- sector completion currently routes forward correctly, but the completion moment can feel abrupt;
+- sector variety is space-first, with no low-altitude/lunar terrain family yet;
+- player death produces a summary, but the combat-side destruction moment is still first-pass feedback.
+
+## Phase 5 Milestones
+
+### P5.1 - Banked Scrap Economy
+
+Define what banked scrap buys and what it should not buy.
+
+Exit criteria:
+
+- Banked scrap can be spent through deterministic, save-backed progression data.
+- Upgrade effects widen future choices, information, starting variety, or build texture without turning into raw stat inflation.
+- Fresh saves and existing saves migrate safely.
+
+### P5.2 - Upgrade Bay And Icons
+
+Add a menu surface for persistent upgrades.
+
+Exit criteria:
+
+- Upgrade categories have original iconography, cost states, purchased states, and unavailable states.
+- The menu is keyboard and pointer usable.
+- Upgrade copy is short and scannable on narrow layouts.
+
+### P5.3 - Upgrade Effects In Run Generation
+
+Connect purchased upgrades to future runs.
+
+Exit criteria:
+
+- Upgrades can affect contract boards, seed preview, route information, shop affordances, or reward variety deterministically.
+- The same save state plus same seed reproduces the same upgrade-influenced generation.
+- Save export/import preserves upgrade state.
+
+### P5.4 - Run Results And Toast Feedback
+
+Make scrap gain, unlock progress, and sector completion more legible.
+
+Exit criteria:
+
+- Run summaries explain earned scrap and upgrade-relevant progress.
+- Sector completion shows a short exit/toast beat before route/reward screens.
+- Toasts are readable, non-blocking, and respect reduced motion.
+
+### P5.5 - Lunar Surface Sector
+
+Add a new low-altitude sector family.
+
+Exit criteria:
+
+- Lunar surface backgrounds, landmarks, hazards, and palette are deterministic and original.
+- Lunar terrain communicates altitude and speed without hiding bullets.
+- Content validation covers the new sector references.
+
+### P5.6 - Destruction And Recovery Feedback
+
+Make player death and near-death outcomes feel intentional.
+
+Exit criteria:
+
+- Ship destruction uses richer debris, shock, and cockpit failure cues.
+- Reduced motion/performance/high-contrast settings keep death readable.
+- Summary transition remains reliable and accessible.
+
+### P5.7 - Phase 5 Playtest Candidate
+
+Harden the progression/sector-feedback slice for deployment.
+
+Exit criteria:
+
+- `npm run check`, Playwright smoke, and production preview smoke pass.
+- Release docs cover upgrade spending, lunar sector smoke, sector exit toasts, and ship destruction risks.
+- Manual browser gaps are documented separately from gameplay blockers.
+
+## Recommended Phase 5 Sequence
+
+1. Work order 041 - Banked scrap purpose and progression economy.
+2. Work order 042 - Upgrade bay menu icons and affordances.
+3. Work order 043 - Upgrade purchases and run-generation integration.
+4. Work order 044 - Run-end scrap breakdown and upgrade toasts.
+5. Work order 045 - Sector completion exit sequence and toast.
+6. Work order 046 - Lunar surface sector foundation.
+7. Work order 047 - Lunar hazards, landmarks, and encounter pacing.
+8. Work order 048 - Rich player ship destruction.
+9. Work order 049 - Phase 5 deterministic smoke and debug instrumentation.
+10. Work order 050 - Phase 5 playtest release hardening.
+
+## Phase 5 Definition Of Done
+
+Phase 5 is done when a player can finish or lose a run, understand what scrap was earned, spend banked scrap on readable upgrades, see those upgrades influence future seeded runs, fly through a distinct lunar surface sector, understand sector exits through clear completion feedback, and experience ship destruction as satisfying feedback rather than an abrupt summary jump.

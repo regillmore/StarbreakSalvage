@@ -81,6 +81,18 @@ Phase 4 introduces display/input/identity polish. Add tests closest to the risk:
 - viewport/input/HUD debug smoke for DPR, canvas pixel size, safe-frame origin/size, active input mode, HUD mode, contract preview, and selected contract theme; work order 039 adds Playwright assertions for narrow viewport launch, pointer input, high-contrast HUD mode, and preview/HUD theme state;
 - reduced motion, high contrast, and performance mode interactions with ship previews, ship wake/damage cues, and contract HUD themes; work order 036 simplifies preview/HUD treatment under those settings and work order 037 adds cue-state coverage for ship wake, damage, readiness, and heat stress.
 
+## Phase 5 QA focus
+
+Phase 5 introduces persistent upgrade spending, sector completion feedback, lunar surface content, and richer ship destruction. Add tests closest to the risk:
+
+- banked scrap upgrade catalog validation, costs, prerequisites, affordability, purchase state, save migration, export/import, and corrupted-data repair;
+- same save state plus same seed snapshots for upgrade-influenced contract boards, route previews, shops, rewards, and summary metadata;
+- Upgrade Bay view models, icon/category state, keyboard focus order, pointer purchase flow, narrow layout, and high-contrast readability;
+- sector exit sequence state, completion toast timing, route/reward transition reliability, debug sector-complete shortcut behavior, and reduced-motion fallback;
+- lunar sector generation snapshots for background plans, feature plans, hazard windows, route-conditioned modifiers, and content references;
+- player destruction cue state, death-to-summary reliability, ship-theme color usage, reduced motion, performance mode, high contrast, screen shake, and mute interactions;
+- Playwright smoke for opening Upgrade Bay, checking an upgrade state, launching a lunar sector path or verifying generated lunar content, forcing sector completion, and forcing player destruction where practical.
+
 ## Known seed tests
 
 - `STARBREAK-SMOKE` — stable forgiving smoke path.
@@ -110,9 +122,17 @@ Phase 4 should add these seed fixtures:
 - `HANGAR-PREVIEW-GRID` - contract board with visually distinct baseline ships.
 - `COCKPIT-HUD-TEST` - contract theme and HUD state coverage with special/bomb/overheat cues.
 
+Phase 5 should add these seed/save fixtures:
+
+- `SCRAP-BAY-SMOKE` - progressed save fixture with enough scrap to buy a first upgrade.
+- `UPGRADE-SEED-SNAPSHOT` - same seed tested under fresh and upgraded save states.
+- `LUNAR-SURFACE-LANE` - deterministic lunar sector/background/feature plan.
+- `EXIT-TOAST-CHECK` - forgiving sector completion path for exit/toast smoke.
+- `SHIP-BREAKUP-TEST` - deterministic death/destruction summary path.
+
 ## Content validation checklist
 
-Phase 2 should extend this checklist as systems become real. In addition to the existing entries, content validation should cover ship stat ranges, objective references, wave references, implemented hook coverage, and unlock-gated pools for fresh and progressed saves. Phase 3 should extend it again for sector length ranges, scroll-speed modifiers, background-plan references, landmark references, hazard references, and distance marker ordering. Phase 4 should extend it again for ship appearance references, HUD theme keys, preview assets/primitives, and input/display settings defaults.
+Phase 2 should extend this checklist as systems become real. In addition to the existing entries, content validation should cover ship stat ranges, objective references, wave references, implemented hook coverage, and unlock-gated pools for fresh and progressed saves. Phase 3 should extend it again for sector length ranges, scroll-speed modifiers, background-plan references, landmark references, hazard references, and distance marker ordering. Phase 4 should extend it again for ship appearance references, HUD theme keys, preview assets/primitives, and input/display settings defaults. Phase 5 should extend it again for upgrade definitions, upgrade prerequisites, upgrade effect references, icon categories, lunar sector references, lunar feature references, and destruction cue metadata.
 
 - [ ] No duplicate IDs.
 - [ ] Every item tag is registered.
@@ -125,14 +145,16 @@ Phase 2 should extend this checklist as systems become real. In addition to the 
 - [ ] Rarity values are valid.
 - [ ] Curses are clearly marked.
 - [x] Ship appearance references, palettes, weapon mount hints, and HUD theme keys validate.
+- [ ] Upgrade definitions, costs, prerequisites, effect references, and icon categories validate.
+- [ ] Lunar sector background, landmark, hazard, faction, and boss references validate.
 
 ## Manual browser smoke matrix
 
-| Browser       | Load | Start run | Combat | Pause | Settings | Summary | Narrow viewport | Mouse | Notes |
-| ------------- | ---- | --------- | ------ | ----- | -------- | ------- | --------------- | ----- | ----- |
-| Chrome/Edge   |      |           |        |       |          |         |                 |       |       |
-| Firefox       |      |           |        |       |          |         |                 |       |       |
-| Safari/WebKit |      |           |        |       |          |         |                 |       |       |
+| Browser       | Load | Start run | Combat | Pause | Settings | Summary | Narrow viewport | Mouse | Upgrade Bay | Lunar/Exit | Notes |
+| ------------- | ---- | --------- | ------ | ----- | -------- | ------- | --------------- | ----- | ----------- | ---------- | ----- |
+| Chrome/Edge   |      |           |        |       |          |         |                 |       |             |            |       |
+| Firefox       |      |           |        |       |          |         |                 |       |             |            |       |
+| Safari/WebKit |      |           |        |       |          |         |                 |       |             |            |       |
 
 ## Performance checklist
 
@@ -144,6 +166,8 @@ Current first-pass instrumentation exposes granular combat counts, background pr
 
 Phase 4 performance checks should include viewport/presentation scale, safe-frame size, fixed-world hazard/enemy spacing parity, HUD rendering density, preview rendering cost, mouse input update behavior, ship cue rendering cost, non-combat theme DOM cost, and whether themed HUD/ship cues add measurable overhead in dense and long-scroll debug scenarios.
 
+Phase 5 performance checks should include Upgrade Bay DOM/icon rendering cost, upgrade-state generation branching, toast queue overhead, lunar background/feature primitive counts, lunar hazard readability, and ship destruction particle/debris budgets in reduced motion/performance modes.
+
 - [ ] FPS overlay available behind debug flag.
 - [ ] Projectile count visible in debug mode.
 - [ ] Particle count visible in debug mode.
@@ -154,6 +178,8 @@ Phase 4 performance checks should include viewport/presentation scale, safe-fram
 - [x] HUD mode and contract theme visible in debug mode for Phase 4 smoke.
 - [x] Contract preview model and selection smoke coverage exists.
 - [x] Contract theme propagation smoke coverage exists for route/shop/reward/transition/summary screens.
+- [ ] Upgrade Bay and banked scrap state visible in debug or smoke once Phase 5 instrumentation lands.
+- [ ] Sector exit/toast, lunar sector, and destruction smoke paths exist.
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [ ] Heavy combat debug scene documented.
 - [ ] Long-scroll debug scene documented.
@@ -166,6 +192,8 @@ Phase 2 accessibility checks should cover seed entry, summary sharing, special/b
 Phase 3 accessibility checks should also cover moving-background readability, high-contrast bullets over each sector palette, reduced-motion parallax simplification, distance HUD readability, boss scroll-lock clarity, and keyboard-only continuation after reaching sector exits.
 
 Phase 4 accessibility checks should also cover narrow viewport HUD readability, mouse controls as passive optional input, keyboard-only parity after previews/HUD changes, high-contrast bullets over contract ship/HUD themes, reduced-motion simplification for ship wake/damage cues, and focus safety across pointer interactions.
+
+Phase 5 accessibility checks should also cover Upgrade Bay focus and purchase confirmation, upgrade icon text alternatives, non-color-only affordability state, sector exit/toast timing, lunar terrain bullet readability, and ship destruction fallback under reduced motion/performance/high-contrast settings.
 
 - [x] Keyboard-only menu navigation.
 - [ ] Remappable controls.
@@ -186,16 +214,16 @@ Phase 4 accessibility checks should also cover narrow viewport HUD readability, 
 
 - [x] `npm run check` passes.
 - [x] E2E smoke tests pass.
-- [ ] Production build preview tested.
+- [x] Production build preview tested.
 - [ ] GitHub Pages deployed.
 - [ ] Public URL loads assets correctly.
-- [ ] README updated.
-- [ ] License present.
-- [ ] Credits mention original/generated placeholders as appropriate.
-- [ ] Changelog updated.
-- [ ] Save migration tested.
-- [ ] Seed sharing works.
-- [ ] Known severe bugs documented or fixed.
+- [x] README updated.
+- [x] License present.
+- [x] Credits mention original/generated placeholders as appropriate.
+- [x] Changelog updated.
+- [x] Save migration tested.
+- [x] Seed sharing works.
+- [x] Known severe bugs documented or fixed.
 
 ## Release notes template
 

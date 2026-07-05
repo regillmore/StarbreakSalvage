@@ -51,6 +51,21 @@ Phase 4 adds explicit display parity before richer ship previews and HUD theming
 - Non-combat contract theme propagation uses one shared selected-contract theme model plus CSS variables on persistent route/shop/reward/transition/summary panels. It does not change deterministic generation, save data, or per-frame canvas work; future richer non-combat art should remain static DOM/SVG unless profiling shows it is safe.
 - The helper is cached by viewport key inside gameplay scenes. Future previews and themed HUD work should reuse the same safe-frame contract instead of introducing parallel window math.
 
+Phase 4 closeout: work order 040 keeps richer rendering optimization deferred. `npm run check`, Playwright Chromium smoke, and production preview asset-path smoke passed locally. Manual cross-browser performance/readability checks outside Chromium remain pending.
+
+## Phase 5 Progression And Sector Feedback Budget Targets
+
+Phase 5 adds upgrade spending, more feedback beats, a lunar surface sector, and richer destruction. Keep the first pass measurable and conservative.
+
+- Upgrade definitions should be data-only and validated in tests; purchases should update persistent save state without adding per-frame work.
+- Upgrade Bay icons should be static inline SVG, CSS, or canvas-derived primitives. Avoid image assets and avoid rebuilding the whole menu tree while the player hovers a card.
+- Upgrade effects that influence generation must branch from save state plus explicit seeded RNG streams; do not add `Math.random()` or hidden time-based variation.
+- Toasts should be short-lived DOM elements with bounded queue length. Avoid stacking enough to cover gameplay or menus.
+- Sector exit sequences should be brief and reuse existing renderer primitives where possible; reduced motion should remove travel streaks or pulses without skipping route/reward flow.
+- Lunar surface backgrounds should track primitive/layer counts like existing sectors. Terrain silhouettes must render below bullets and hazards, with high-contrast bullets still outlined.
+- Lunar hazards should keep sparse distance windows until smoke proves readability; avoid layering dust, terrain, hazard, and enemy bullets at the same intensity.
+- Ship destruction debris should use a fixed budget, ship appearance colors, and settings-aware intensity. Reduced motion and performance mode should lower debris count and screen shake rather than changing death outcome timing.
+
 ## Debug and Playtest Scenarios
 
 Enable debug tools with `?debug=1` on a local, preview, or Pages URL.
@@ -96,3 +111,12 @@ The debug overlay total entity count includes player, enemies, boss, bullets, pi
 - Mouse controls can accidentally bypass pause/settings focus or undermine keyboard remapping if pointer state does not flow through the input abstraction. Work order 036 now clears pointer guidance over DOM overlays and preserves native button activation, but future pointer settings should keep using the input abstraction.
 - Contract ship previews and HUD themes can obscure hitboxes or bullets unless high-contrast and reduced-motion settings are checked with each baseline contract. Gameplay ship silhouettes, New Game previews, and the cockpit HUD now keep simple primitives/DOM styling, but manual theme readability checks remain useful across all baseline ships.
 - Contract preview, graphical HUD, ship combat cue, and non-combat theme rendering should stay shape-based/static and cheap until debug/preview smoke shows there is room for richer visuals. HUD changes should continue to expose mode/theme state in debug so narrow and high-contrast smoke can catch regressions early.
+
+## Phase 5 Playtest Risks
+
+- Banked scrap upgrades can accidentally become raw permanent power creep. Keep early upgrades focused on variety, information, starting options, and run-shaping sidegrades until balance data supports more.
+- Upgrade effects that touch generation can break seeded reproducibility if they bypass explicit save-state inputs or RNG streams.
+- Upgrade Bay icons can become decoration without clarity; every icon state should have text and accessible state copy.
+- Sector exit toasts and completion beats can delay route flow or hide danger if they are too long or too animated.
+- Lunar terrain can easily hide bullets because it adds large shapes below the action. Keep terrain muted, hazards telegraphed, and high-contrast outlines active.
+- Rich destruction can obscure the cause of death or make summary transitions flaky. Keep the death state bounded, deterministic, and settings-aware.

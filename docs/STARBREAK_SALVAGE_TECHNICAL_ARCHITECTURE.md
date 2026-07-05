@@ -126,6 +126,16 @@ Use stable string IDs for everything:
 
 All content tables should be validated in tests.
 
+## Phase 5 progression and feedback boundaries
+
+- Persistent upgrades should live in content tables with stable IDs, costs, categories, icon keys, prerequisites, and effect descriptors.
+- Save data should store purchased upgrade IDs and banked scrap, not duplicated upgrade effect payloads. Generation should resolve effects from content at run creation time.
+- Upgrade effects must receive the current save state and explicit RNG/generation context. They should not read DOM state, current time, or `Math.random()`.
+- Upgrade Bay UI should derive a pure view model from save data plus upgrade definitions before rendering icons, cost state, and purchase affordances.
+- Sector completion exits/toasts should be modeled as explicit scene or gameplay states so route/reward transitions cannot double-fire.
+- Lunar surface content should reuse existing sector background/feature/hazard validation paths rather than introducing a separate terrain generator.
+- Player destruction should remain a bounded combat outcome state that hands off to the existing run summary path after a known duration or event.
+
 ## Item hooks
 
 Use deterministic hook order:

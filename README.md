@@ -2,7 +2,7 @@
 
 **Starbreak Salvage** is a browser-first 2D vertical roguelike shooter about disposable pilots, unstable ship contracts, and profitable wreckage. The project is intentionally static: no backend, no accounts, and no runtime network dependency after the page loads.
 
-This repository is in the early playable release-candidate stage. It currently ships a Vite + TypeScript app with a canvas renderer, fixed-step loop, input manager, scene manager, deterministic contract and sector generation, deterministic sector scroll plans, procedural parallax sector backgrounds, scroll-synced directed waves, distance-based sector objectives, deterministic sector landmarks and hazards, first-pass boss arenas with scroll locks, route-conditioned sector modifiers, settings-aware velocity cues, explicit viewport scaling with a fixed 640x720 gameplay arena, passive mouse/touch controls, data-driven contract ship appearance and selection previews, a contract-themed cockpit HUD, Phase 4 accessibility hardening, first-pass ship damage/readiness/overheat cues, quiet contract-theme propagation across non-combat run screens, granular debug performance counters, expanded viewport/input/HUD debug smoke, expanded item hooks, a combat MVP, route/reward/shop screens, four-faction boss alpha content, a final-sector victory path, save/unlock progression, in-menu seed entry, settings, procedural audio/VFX feedback, unit tests, Playwright smoke coverage, CI, and GitHub Pages deployment wiring. Phase 4 implementation now focuses next on playtest release hardening.
+This repository is in the early playable release-candidate stage. It currently ships a Vite + TypeScript app with a canvas renderer, fixed-step loop, input manager, scene manager, deterministic contract and sector generation, deterministic sector scroll plans, procedural parallax sector backgrounds, scroll-synced directed waves, distance-based sector objectives, deterministic sector landmarks and hazards, first-pass boss arenas with scroll locks, route-conditioned sector modifiers, settings-aware velocity cues, explicit viewport scaling with a fixed 640x720 gameplay arena, passive mouse/touch controls, data-driven contract ship appearance and selection previews, a contract-themed cockpit HUD, Phase 4 accessibility hardening, first-pass ship damage/readiness/overheat cues, quiet contract-theme propagation across non-combat run screens, granular debug performance counters, expanded viewport/input/HUD debug smoke, expanded item hooks, a combat MVP, route/reward/shop screens, four-faction boss alpha content, a final-sector victory path, save/unlock progression, in-menu seed entry, settings, procedural audio/VFX feedback, unit tests, Playwright smoke coverage, CI, and GitHub Pages deployment wiring. Phase 4 is documented as complete; Phase 5 now focuses next on banked scrap purpose, upgrade bay clarity, sector exit feedback, a lunar surface sector, and richer ship destruction.
 
 ## Local Development
 
@@ -61,7 +61,7 @@ Projectile budget notes live in `docs/STARBREAK_SALVAGE_PERFORMANCE_NOTES.md`.
 
 Release checklist status lives in `docs/STARBREAK_SALVAGE_RELEASE_CHECKLIST.md`.
 
-Phase 2 planning lives in `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md`. Phase 3 planning lives in `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`. Phase 4 planning lives in `docs/STARBREAK_SALVAGE_PHASE_4_PLAN.md`; new agent work orders continue from work order 031 in `docs/STARBREAK_SALVAGE_AGENT_WORK_ORDERS.md`.
+Phase 2 planning lives in `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md`. Phase 3 planning lives in `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`. Phase 4 planning lives in `docs/STARBREAK_SALVAGE_PHASE_4_PLAN.md`. Phase 5 planning lives in `docs/STARBREAK_SALVAGE_PHASE_5_PLAN.md`; new agent work orders continue from work order 041 in `docs/STARBREAK_SALVAGE_AGENT_WORK_ORDERS.md`.
 
 ## Project Vision
 
@@ -82,6 +82,7 @@ The core project direction lives in:
 - `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md`
 - `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`
 - `docs/STARBREAK_SALVAGE_PHASE_4_PLAN.md`
+- `docs/STARBREAK_SALVAGE_PHASE_5_PLAN.md`
 - `docs/STARBREAK_SALVAGE_GAME_DESIGN_SEED.md`
 - `docs/STARBREAK_SALVAGE_TECHNICAL_ARCHITECTURE.md`
 - `docs/STARBREAK_SALVAGE_CONTENT_SEED.json`

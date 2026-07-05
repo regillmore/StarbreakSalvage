@@ -867,3 +867,125 @@ Acceptance:
 - README, changelog, performance notes, release checklist, and QA docs cover Phase 4 features.
 - `npm run check` and production preview smoke pass.
 - Known display/input/HUD risks are documented before deployment.
+
+Status:
+
+- First pass completed in work order 040. Automated checks, Playwright Chromium smoke, production preview asset-path smoke, Phase 4 closeout notes, and manual browser gaps are documented.
+
+## Phase 5 backlog additions
+
+Phase 5 starts after work order 040 validation and cleanly concludes the display/input/contract-identity playtest foundation. The goal is progression and sector-feedback depth: banked scrap purpose, upgrade bay clarity, upgrade-influenced future runs, sector completion feedback, lunar surface content, and richer player ship destruction.
+
+## Epic AG - Banked scrap and upgrades
+
+### AG1 - Scrap economy purpose
+
+Acceptance:
+
+- Banked scrap can be spent on persistent upgrade definitions.
+- Upgrade costs and prerequisites validate.
+- Upgrade framing widens variety, information, or sidegrades rather than raw permanent power.
+
+### AG2 - Save-safe upgrade state
+
+Acceptance:
+
+- Existing saves migrate with empty upgrade state.
+- Export/import preserves purchased upgrades and remaining scrap.
+- Corrupted upgrade data repairs safely.
+
+### AG3 - Upgrade effects in generation
+
+Acceptance:
+
+- Purchased upgrades can alter contract boards, route information, shops, or reward variety deterministically.
+- Same save state plus same seed reproduces upgrade-influenced generation.
+- Fresh saves remain complete and playable.
+
+## Epic AH - Upgrade Bay UX
+
+### AH1 - Upgrade menu surface
+
+Acceptance:
+
+- Upgrade Bay is reachable from the main menu or Unlock Archive.
+- Cards show name, category, cost, purchased/locked/available state, and short effect text.
+- Keyboard and pointer navigation are supported.
+
+### AH2 - Upgrade icons
+
+Acceptance:
+
+- Upgrade categories have original icons.
+- Icons remain readable in high contrast and narrow layouts.
+- Icon rendering does not introduce external assets.
+
+### AH3 - Purchase and affordability feedback
+
+Acceptance:
+
+- Players receive clear confirmation when buying an upgrade.
+- Newly affordable upgrades can be surfaced after a run.
+- Failed purchases explain whether scrap, prerequisites, or locks are missing.
+
+## Epic AI - Sector completion feedback
+
+### AI1 - Exit sequence
+
+Acceptance:
+
+- Completing objectives triggers a short exit/corridor/beacon beat before route/reward flow.
+- Debug sector completion remains fast.
+- Reduced motion simplifies the sequence.
+
+### AI2 - Completion toasts
+
+Acceptance:
+
+- Sector completion, scrap gain, and upgrade affordability toasts are concise and non-blocking.
+- Toasts are visible above gameplay/DOM overlays without hiding critical controls.
+- Toasts are testable or documented in smoke coverage.
+
+## Epic AJ - Lunar surface sector
+
+### AJ1 - Lunar sector family
+
+Acceptance:
+
+- Lunar Surface appears in deterministic sector generation.
+- Background plans use original low-altitude terrain, crater, ridge, tower, or wreck-shadow motifs.
+- Content validation covers sector references.
+
+### AJ2 - Lunar features
+
+Acceptance:
+
+- Lunar sectors have at least two landmarks and two hazard patterns.
+- Hazards have deterministic distance windows and readable telegraphs.
+- Features remain under bullets and respect high-contrast/reduced-motion settings.
+
+### AJ3 - Lunar encounter pacing
+
+Acceptance:
+
+- Lunar waves and route-conditioned effects feel distinct from existing sectors.
+- Debug counters remain useful for lunar backgrounds/features.
+- Known seeds can reproduce lunar sector plans.
+
+## Epic AK - Ship destruction and Phase 5 release
+
+### AK1 - Rich player destruction
+
+Acceptance:
+
+- Player death includes ship breakup, themed debris, cockpit failure, or transponder cues.
+- Death-to-summary transition remains reliable.
+- Reduced motion, performance mode, high contrast, and mute settings are respected.
+
+### AK2 - Phase 5 smoke and release docs
+
+Acceptance:
+
+- Smoke coverage or manual matrix covers Upgrade Bay, sector exit toast, lunar sector, and ship destruction.
+- `npm run check`, E2E smoke, and production preview smoke pass before Phase 5 closeout.
+- Known progression balance, browser, and readability risks are documented.

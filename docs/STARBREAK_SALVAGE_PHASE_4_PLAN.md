@@ -147,6 +147,8 @@ Exit criteria:
 - Release docs document window-size, mouse, contract preview, and HUD theme coverage.
 - Manual browser matrix includes desktop, narrow viewport, keyboard, and mouse passes.
 
+Status: completed in work order 040. `npm run check`, Playwright Chromium smoke, and production preview asset-path smoke passed locally. Release docs now record Phase 4 coverage, remaining manual cross-browser gaps, and the Phase 5 roadmap.
+
 ## Recommended Phase 4 Sequence
 
 1. Work order 031 - Resolution scaling and viewport parity.
@@ -162,4 +164,4 @@ Exit criteria:
 
 ## Phase 4 Definition Of Done
 
-Phase 4 is done when a player can launch the game on common window sizes, choose a contract with a clear ship preview, play with keyboard or mouse-assisted controls, recognize their ship and HUD theme in combat, and still rely on readable bullets, stable layout, deterministic runs, and accessible settings.
+Phase 4 is complete after work order 040. A player can launch the game on common window sizes, choose a contract with a clear ship preview, play with keyboard or mouse-assisted controls, recognize their ship and HUD theme in combat, and still rely on readable bullets, stable layout, deterministic runs, and accessible settings. Manual non-Chromium browser smoke remains a release-validation gap rather than a Phase 4 blocker.

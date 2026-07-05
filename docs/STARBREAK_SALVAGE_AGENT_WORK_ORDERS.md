@@ -645,6 +645,162 @@ Acceptance criteria:
 - Release checklist documents window-size, mouse, preview, HUD theme, and manual browser gaps.
 - Phase 4 can be declared complete or explicitly deferred with documented blockers.
 
+Status: first pass implemented; Phase 4 is documented as complete after `npm run check`, Playwright Chromium smoke, and production preview asset-path smoke passed locally. Release, QA, performance, backlog, README, changelog, and project planning docs now record the display/input/contract-identity closeout, remaining manual browser gaps, and the Phase 5 roadmap.
+
+## Phase 5 work orders
+
+Phase 5 begins after work order 040 validation and concludes the display/input/contract-identity playtest foundation. Its purpose is to make the run-to-run loop more meaningful: banked scrap should have a clear use, upgrades should be visible and intentional, sector completion should feel like a real exit, the game should gain a lunar surface sector family, and player ship destruction should feel richer without compromising readability or accessibility. Preserve deterministic generation and local-only save behavior.
+
+## Work order 041 - Banked scrap purpose and progression economy
+
+Goal: make banked scrap a meaningful meta resource.
+
+Prompt:
+
+> Read `AGENTS.md` first. Then read the Phase 5 plan, save/unlock code, archive UI, generation code, and content validation tests. Define a banked scrap progression model that spends scrap on durable variety rather than simple permanent power. Add upgrade definitions for a small first catalog, costs, prerequisites if needed, and save migration/import/export support. Keep existing saves safe. Add tests for upgrade catalog validation, purchase affordability, migration, import/export, and fresh-save defaults. Update README and planning docs. Run checks.
+
+Acceptance criteria:
+
+- Banked scrap can buy persistent upgrade entries.
+- Upgrade definitions are data-driven and validated.
+- Save migration/export/import preserves banked scrap and upgrades.
+- Upgrade effects are framed as variety, information, or sidegrades rather than raw stat inflation.
+
+## Work order 042 - Upgrade bay menu icons and affordances
+
+Goal: give persistent upgrades a clear home and visual language.
+
+Prompt:
+
+> Build an Upgrade Bay menu reachable from the main menu or Unlock Archive. Render upgrade categories with original iconography, cost state, purchased state, locked state, and concise descriptions. Icons can be inline SVG or canvas-derived primitives, but no external assets. Preserve keyboard navigation, pointer selection, focus order, narrow layout readability, and high-contrast/reduced-motion treatment. Add unit tests for upgrade view models and E2E smoke for opening the bay and reading/purchasing when possible. Update QA docs. Run checks.
+
+Acceptance criteria:
+
+- Upgrade Bay is reachable without starting a run.
+- Upgrade cards show icons, costs, and purchase state clearly.
+- Keyboard and pointer users can inspect upgrades.
+- Narrow/high-contrast layouts remain readable.
+
+## Work order 043 - Upgrade purchases and run-generation integration
+
+Goal: make purchased upgrades affect future seeded runs safely.
+
+Prompt:
+
+> Connect a first set of upgrades to deterministic run generation and run setup. Good first effects include broader contract board choices, one extra route preview, shop affordance changes, reward pool nudges, or seed information; avoid permanent damage/hull inflation unless explicitly justified. Same seed plus same save upgrade state must reproduce the same contract board, route preview, rewards, and shops. Add tests for known-save plus known-seed snapshots and ensure fresh saves remain balanced. Update summary/debug metadata if useful. Run checks.
+
+Acceptance criteria:
+
+- At least three purchased upgrades have visible future-run effects.
+- Same save state plus same seed reproduces upgrade-influenced generation.
+- Fresh saves still generate a complete playable run.
+- Debug or summary context exposes upgrade influence where useful.
+
+## Work order 044 - Run-end scrap breakdown and upgrade toasts
+
+Goal: make earned scrap and upgrade progress understandable after each run.
+
+Prompt:
+
+> Improve run summaries and archive/update feedback so players understand how much scrap they earned, how much is banked, what unlock or upgrade progress changed, and what they can afford next. Add compact toast or callout feedback for newly affordable upgrades without turning the summary into a shop. Preserve seed sharing and existing summary detail. Add tests for scrap breakdown formatting, affordability detection, and save summary records. Update README. Run checks.
+
+Acceptance criteria:
+
+- Run summary explains earned scrap, banked scrap, and upgrade-relevant progress.
+- Newly affordable upgrades can be surfaced without blocking summary flow.
+- Seed sharing and route/item/unlock summary detail remain intact.
+- Formatting is tested.
+
+## Work order 045 - Sector completion exit sequence and toast
+
+Goal: make sector completion feel like crossing an exit rather than an abrupt scene jump.
+
+Prompt:
+
+> Add a short sector-exit sequence when objectives complete: exit corridor or beacon visuals, reduced enemy pressure where appropriate, completion toast, and then the existing route/reward transition. Keep it deterministic, brief, skippable or non-blocking, and respectful of reduced motion/performance settings. Debug sector-complete shortcut should still be fast and reliable. Add tests for completion state transitions and E2E smoke for the exit toast if practical. Update performance and QA notes. Run checks.
+
+Acceptance criteria:
+
+- Completing a sector produces a readable exit/completion beat.
+- Route/reward flow still opens reliably after the beat.
+- Debug completion shortcut remains useful.
+- Reduced motion simplifies the sequence.
+
+## Work order 046 - Lunar surface sector foundation
+
+Goal: add a new low-altitude sector family.
+
+Prompt:
+
+> Add a deterministic Lunar Surface sector family with original background strata, palette, sector metadata, and route/generation references. The sector should suggest low-altitude flight over craters, ridgelines, towers, or wreck shadows without using external art. Keep bullets readable over the terrain and support reduced motion/performance simplification. Add content validation and known-seed tests for lunar sector generation/background plans. Update README and performance notes. Run checks.
+
+Acceptance criteria:
+
+- Lunar Surface can appear as a generated sector.
+- Background plans are deterministic and original.
+- Bullets remain readable in standard and high-contrast modes.
+- Content validation covers lunar references.
+
+## Work order 047 - Lunar hazards, landmarks, and encounter pacing
+
+Goal: make the lunar sector play differently, not just look different.
+
+Prompt:
+
+> Add lunar-specific landmarks, hazards, and encounter pacing hooks. Examples include crater shadow bands, comm-array flybys, dust plumes, mining lasers, low-orbit debris, or surface-defense arcs. Hazards must telegraph clearly, use deterministic distance windows, and stay under bullets. Add tests for lunar feature determinism, hazard phase timing, collision/readability metadata, and route/condition interaction. Update debug/performance notes. Run checks.
+
+Acceptance criteria:
+
+- Lunar sectors have at least two distinct landmarks and two hazard patterns.
+- Hazard timing is deterministic and tested.
+- Route and condition modifiers can affect lunar features safely.
+- Debug counters remain useful in lunar sectors.
+
+## Work order 048 - Rich player ship destruction
+
+Goal: make death feel dramatic and readable.
+
+Prompt:
+
+> Replace the abrupt player death moment with a richer destruction sequence: ship breakup, themed debris, cockpit failure pulse, brief control loss, optional escape/transponder cue, and then the existing summary. Feed colors and silhouette hints from ship appearance data. Respect reduced motion, performance mode, screen shake, high contrast, and audio mute. Add unit tests for destruction cue state and E2E or integration coverage for death-to-summary reliability. Run checks.
+
+Acceptance criteria:
+
+- Player ship destruction is visibly richer than a simple disappearance.
+- The death-to-summary transition remains reliable.
+- Accessibility/performance settings reduce or clarify the sequence.
+- No external assets are introduced.
+
+## Work order 049 - Phase 5 deterministic smoke and debug instrumentation
+
+Goal: make progression and new-sector work measurable before release hardening.
+
+Prompt:
+
+> Extend debug and smoke coverage for Phase 5 systems. Add debug or test helpers for upgrade state, banked scrap, sector exit sequence state, lunar sector generation, and destruction sequence state where useful. Add deterministic smoke paths for opening Upgrade Bay, previewing or purchasing an upgrade, forcing a sector completion toast, launching or verifying a lunar sector, and forcing player destruction if practical. Update QA/release docs and document any local browser blockers. Run checks.
+
+Acceptance criteria:
+
+- Debug or test state can expose upgrade/scrap and exit/destruction state.
+- Automated or documented smoke covers Upgrade Bay, sector exit toast, lunar sector, and ship destruction.
+- Local browser blockers are separated from gameplay blockers.
+- Existing Phase 4 smoke remains green.
+
+## Work order 050 - Phase 5 playtest release hardening
+
+Goal: ship a progression/sector-feedback playtest candidate.
+
+Prompt:
+
+> Audit the Phase 5 build for banked scrap purpose, upgrade menu clarity, upgrade generation effects, lunar surface sector readability, sector exit feedback, ship destruction, accessibility, deterministic integrity, save compatibility, browser load, release docs, and manual smoke coverage. Fix blockers only. Update README, changelog, performance notes, Phase 5 plan, backlog, release checklist, and QA docs. Run `npm run check`, Playwright smoke if available, and production preview smoke. Summarize known progression balance risks, browser gaps, and follow-up issues.
+
+Acceptance criteria:
+
+- Full checks and production preview smoke pass.
+- E2E smoke passes or local browser-install blockers are clearly documented.
+- Release docs document upgrade, lunar sector, exit toast, destruction, and manual browser gaps.
+- Phase 5 can be declared complete or explicitly deferred with documented blockers.
+
 ## Review subagent prompt
 
 Use after a feature PR:
