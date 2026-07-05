@@ -210,6 +210,10 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByText(/redline theme \| needle silhouette/)).toBeVisible();
   await expect(page.getByText('forced test', { exact: true })).toBeVisible();
   await expect(page.getByText('Debug: forced test summary.')).toBeVisible();
+  await expect(page.getByTestId('scrap-breakdown')).toContainText(
+    /Earned \+\d+ kg \| Bank \d+ -> \d+ kg/
+  );
+  await expect(page.getByTestId('upgrade-progress-callout')).toContainText(/upgrade|next/i);
   await expect(page.getByTestId('unlock-summary')).toContainText('Unlocked:');
   await expect(page.getByTestId('seed-share-link')).toHaveValue(/seed=STARBREAK-SMOKE/);
 

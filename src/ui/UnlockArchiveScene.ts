@@ -5,6 +5,7 @@ import { UPGRADES } from '../content/upgrades';
 import type { SaveData } from '../core/saveData';
 import type { Scene } from '../app/Scene';
 import type { InputAction } from '../systems/InputSystem';
+import { createArchiveUpgradeProgressModel } from './RunSummaryProgress';
 
 export interface SaveImportResult {
   readonly ok: boolean;
@@ -27,13 +28,14 @@ export class UnlockArchiveScene implements Scene {
 
   public enter(): void {
     const saveData = this.getSaveData();
+    const upgradeProgress = createArchiveUpgradeProgressModel(saveData);
     const shell = document.createElement('main');
     shell.className = 'scene-panel scene-panel-wide archive-panel';
     shell.setAttribute('aria-labelledby', 'archive-title');
 
     const eyebrow = document.createElement('p');
     eyebrow.className = 'eyebrow';
-    eyebrow.textContent = `Salvage Bank ${saveData.salvageBank} kg | Unlocks ${saveData.unlockedIds.length}/${UNLOCKS.length} | Upgrades ${saveData.purchasedUpgradeIds.length}/${UPGRADES.length}`;
+    eyebrow.textContent = `Salvage Bank ${saveData.salvageBank} kg | Unlocks ${saveData.unlockedIds.length}/${UNLOCKS.length} | Upgrades ${saveData.purchasedUpgradeIds.length}/${UPGRADES.length} | Ready ${upgradeProgress.availableUpgradeCount}`;
 
     const title = document.createElement('h1');
     title.id = 'archive-title';
@@ -50,6 +52,8 @@ export class UnlockArchiveScene implements Scene {
       ['Best Sector', `${saveData.stats.bestSectorsCleared}`],
       ['Recovered', `${saveData.stats.salvageRecovered} kg`],
       ['Upgrades', `${saveData.purchasedUpgradeIds.length}/${UPGRADES.length}`],
+      ['Affordable', `${upgradeProgress.availableUpgradeCount}/${UPGRADES.length}`],
+      ['Next Upgrade', upgradeProgress.statusText],
       ['Achievements', `${saveData.achievementIds.length}/${ACHIEVEMENTS.length}`]
     ];
 
@@ -156,7 +160,8 @@ export class UnlockArchiveScene implements Scene {
     const status = document.createElement('p');
     status.className = 'boot-status';
     status.dataset.testid = 'save-status';
-    status.textContent = this.statusText;
+    status.textContent =
+      this.statusText === 'Archive ready.' ? upgradeProgress.statusText : this.statusText;
 
     shell.append(eyebrow, title, stats, unlockGrid, saveBox, controls, status);
     this.uiRoot.replaceChildren(shell);

@@ -717,6 +717,8 @@ Acceptance criteria:
 - Seed sharing and route/item/unlock summary detail remain intact.
 - Formatting is tested.
 
+Status: implemented; run summaries now show scrap flow, upgrade outlook, and compact upgrade progress callouts for newly affordable, already available, next-target, or completed upgrade states while preserving seed sharing, route, item, unlock, and theme detail. The Unlock Archive now surfaces affordable upgrade count and the next upgrade target, and tests cover scrap breakdown formatting, affordability detection, save summary records, and the Playwright summary smoke.
+
 ## Work order 045 - Sector completion exit sequence and toast
 
 Goal: make sector completion feel like crossing an exit rather than an abrupt scene jump.

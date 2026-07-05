@@ -411,7 +411,7 @@ Exit criteria:
 - Upgrade definitions validate and save safely.
 - Same save state plus same seed reproduces upgrade-influenced generation.
 
-Status: implemented through work order 043. Banked scrap can buy persistent upgrade ids through save helpers, upgrade definitions validate, legacy saves migrate to version 3, export/import preserves upgrade state, the visual Upgrade Bay exists, and purchased upgrades now influence deterministic contract boards, route intel, shop affordances, vault rewards, seed survey text, summary rows, and debug metadata.
+Status: implemented through work order 044. Banked scrap can buy persistent upgrade ids through save helpers, upgrade definitions validate, legacy saves migrate to version 3, export/import preserves upgrade state, the visual Upgrade Bay exists, purchased upgrades influence deterministic contract boards, route intel, shop affordances, vault rewards, seed survey text, summary rows, and debug metadata, and run summaries/archive status now explain earned scrap plus upgrade affordability.
 
 ### P5.2 - Upgrade Bay UX
 
@@ -441,6 +441,8 @@ Exit criteria:
 - Sector completion feels like crossing an exit.
 - Run summaries explain earned and banked scrap.
 - Toasts are accessible and reduced-motion aware.
+
+Status: partially implemented through work order 044. Run summaries now show earned/banked scrap flow and upgrade affordability/next-target callouts without blocking seed sharing or route/item/unlock detail; Unlock Archive status also surfaces ready upgrades. Sector completion exit/toast feedback remains work order 045.
 
 ### P5.4 - Lunar Surface Sector
 

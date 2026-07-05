@@ -950,7 +950,7 @@ Acceptance:
 
 Status:
 
-- Partially implemented in work order 042. Upgrade Bay purchases confirm success, locked and unaffordable cards explain their blocker, and failed purchase messages are wired through the save helper. Newly affordable run-end surfacing remains work order 044.
+- Implemented across work orders 042 and 044. Upgrade Bay purchases confirm success, locked and unaffordable cards explain their blocker, failed purchase messages are wired through the save helper, and run summaries/archive status now surface newly affordable, already available, next-target, or completed upgrade progress.
 
 ## Epic AI - Sector completion feedback
 
@@ -969,6 +969,10 @@ Acceptance:
 - Sector completion, scrap gain, and upgrade affordability toasts are concise and non-blocking.
 - Toasts are visible above gameplay/DOM overlays without hiding critical controls.
 - Toasts are testable or documented in smoke coverage.
+
+Status:
+
+- Partially covered by work order 044 for run-end scrap and upgrade affordability callouts on summary/archive screens. In-game sector completion toast timing and route/reward transition punctuation remain work order 045.
 
 ## Epic AJ - Lunar surface sector
 

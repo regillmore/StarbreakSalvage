@@ -21,9 +21,9 @@ Make the run-to-run loop feel rewarding and legible while adding one strong new 
 
 ## Current Gap
 
-- banked salvage/scrap is tracked, but its player-facing purpose is thin;
-- the Unlock Archive explains grants, but there is no upgrade bay where players can intentionally spend banked resources;
-- existing menus rely on text-heavy cards, so upgrade category icons and purchase states need a concise visual language;
+- banked salvage/scrap now has a first upgrade loop, but balance must keep it focused on variety, information, and sidegrades;
+- the Upgrade Bay and run summaries now explain affordability, but future feedback should avoid turning summary screens into shops;
+- existing menus have first-pass upgrade icons, but later upgrade categories will need the same concise visual language;
 - sector completion currently routes forward correctly, but the completion moment can feel abrupt;
 - sector variety is space-first, with no low-altitude/lunar terrain family yet;
 - player death produces a summary, but the combat-side destruction moment is still first-pass feedback.
@@ -75,6 +75,8 @@ Exit criteria:
 - Run summaries explain earned scrap and upgrade-relevant progress.
 - Sector completion shows a short exit/toast beat before route/reward screens.
 - Toasts are readable, non-blocking, and respect reduced motion.
+
+Status: partially implemented by work order 044. Run summaries now explain earned and banked scrap, upgrade outlook, and newly available or next-target upgrade progress; the Unlock Archive also reports affordable upgrades and the next target. Sector completion exit/toast feedback remains work order 045.
 
 ### P5.5 - Lunar Surface Sector
 

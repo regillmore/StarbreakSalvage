@@ -1083,6 +1083,24 @@ html[data-bullet-contrast='high'] .hud-meter-track {
   line-height: 1.45;
 }
 
+.summary-callout {
+  padding: 0.58rem 0.75rem;
+  border-left: 3px solid #ffd166;
+  border-radius: 6px;
+  color: #f8fbff;
+  background: rgba(10, 14, 34, 0.64);
+  overflow-wrap: anywhere;
+}
+
+.upgrade-progress-callout[data-callout-kind='new'],
+.upgrade-progress-callout[data-callout-kind='available'] {
+  border-left-color: #72f2a7;
+}
+
+.upgrade-progress-callout[data-callout-kind='next'] {
+  border-left-color: #7cf7ff;
+}
+
 .seed-share {
   display: grid;
   gap: 0.55rem;

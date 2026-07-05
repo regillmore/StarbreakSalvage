@@ -18,6 +18,7 @@ import {
   formatContractThemeSummary,
   getContractThemeOptions
 } from './ContractTheme';
+import { createRunSummaryProgressModel } from './RunSummaryProgress';
 
 export class RunSummaryScene implements Scene {
   public readonly id = 'run-summary';
@@ -52,6 +53,8 @@ export class RunSummaryScene implements Scene {
     title.id = 'summary-title';
     title.textContent = getSummaryTitle(this.result);
 
+    const progress = createRunSummaryProgressModel(this.saveData, this.saveUpdate);
+
     const stats = document.createElement('dl');
     stats.className = 'summary-stats';
 
@@ -74,6 +77,8 @@ export class RunSummaryScene implements Scene {
       ['Routes', formatRouteHistory(this.routeHistory)],
       ['Sector Conditions', formatSectorConditionTimeline(this.run, this.routeOutcomes)],
       ['Upgrade Effects', formatRunUpgradeEffects(this.run.upgradeEffects)],
+      ['Scrap Flow', progress.scrapBreakdownText],
+      ['Upgrade Outlook', progress.upgradeProgressText],
       ['Banked Salvage', `${this.saveData.salvageBank} kg`],
       ['Items', this.result?.itemNames.join(', ') ?? 'none'],
       ['Unlock Reasons', formatUnlockReasons(this.saveUpdate)]
@@ -88,6 +93,18 @@ export class RunSummaryScene implements Scene {
 
       stats.append(term, detail);
     }
+
+    const scrapBreakdown = document.createElement('p');
+    scrapBreakdown.className = 'summary-note summary-callout';
+    scrapBreakdown.dataset.testid = 'scrap-breakdown';
+    scrapBreakdown.textContent = progress.scrapBreakdownText;
+
+    const upgradeCallout = document.createElement('p');
+    upgradeCallout.className = 'summary-note summary-callout upgrade-progress-callout';
+    upgradeCallout.dataset.testid = 'upgrade-progress-callout';
+    upgradeCallout.dataset.calloutKind = progress.calloutKind;
+    upgradeCallout.setAttribute('aria-live', 'polite');
+    upgradeCallout.textContent = progress.calloutText;
 
     const seedShare = this.createSeedShareControl();
 
@@ -107,6 +124,8 @@ export class RunSummaryScene implements Scene {
       createContractThemeStrip(this.uiRoot.ownerDocument, theme),
       title,
       stats,
+      scrapBreakdown,
+      upgradeCallout,
       seedShare,
       unlockSummary,
       menuButton

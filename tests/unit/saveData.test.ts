@@ -4,6 +4,7 @@ import {
   applyRunRecordToSave,
   createDefaultSaveData,
   exportSaveData,
+  getSaveSummary,
   getUpgradeAffordability,
   importSaveData,
   LEGACY_SAVE_STORAGE_KEYS,
@@ -229,6 +230,13 @@ describe('saveData', () => {
     expect(update.salvageEarned).toBe(2);
     expect(update.data.salvageBank).toBe(2);
     expect(update.data.stats.runsEnded).toBe(1);
+    expect(getSaveSummary(update.data)).toEqual(
+      expect.objectContaining({
+        salvageBank: 2,
+        upgradeCount: 0,
+        runsEnded: 1
+      })
+    );
     expect(update.data.achievementIds).toEqual([
       'achievement_first_contract',
       'achievement_salvage_receipt',
