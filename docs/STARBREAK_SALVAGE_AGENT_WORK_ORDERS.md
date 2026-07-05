@@ -577,6 +577,8 @@ Acceptance criteria:
 - High-contrast bullets and themed HUD remain readable together.
 - Reduced motion/performance mode simplify previews/HUD/ship cues.
 
+Status: first pass implemented; native Enter/Space activation now stays with focused DOM buttons while non-activation keys still drive scene shortcuts, pointer guidance clears over DOM overlays so menus/settings do not seed stale mouse control, reduced-motion/performance/high-contrast modes simplify ship previews and cockpit HUD styling, and Playwright smoke covers keyboard-only start, contract selection, pause, end-run, summary, and return-to-menu flow.
+
 ## Work order 037 - Ship damage, wake, and identity feedback
 
 Goal: reinforce contract identity during combat moments.

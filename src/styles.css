@@ -398,6 +398,21 @@ button {
   filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ship-engine) 42%, transparent));
 }
 
+html[data-reduced-motion='true'] .ship-preview-weapon-cue,
+html[data-reduced-motion='true'] .ship-preview-mounts,
+html[data-performance-mode='true'] .ship-preview-weapon-cue,
+html[data-performance-mode='true'] .ship-preview-mounts {
+  filter: none;
+}
+
+html[data-bullet-contrast='high'] .ship-preview-frame {
+  border-color: rgba(248, 251, 255, 0.64);
+  background:
+    linear-gradient(135deg, rgba(248, 251, 255, 0.12), transparent),
+    rgba(2, 4, 10, 0.88);
+  box-shadow: none;
+}
+
 .route-grid,
 .reward-grid,
 .shop-grid {

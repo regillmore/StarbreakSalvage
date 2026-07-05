@@ -239,6 +239,55 @@ test('launches gameplay with reduced motion and high contrast settings by keyboa
   expect(browserErrors).toEqual([]);
 });
 
+test('supports keyboard-only start, pause, end-run, and summary flow', async ({ page }) => {
+  const browserErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') {
+      browserErrors.push(message.text());
+    }
+  });
+  page.on('pageerror', (error) => browserErrors.push(error.message));
+
+  await page.goto('./?debug=1&seed=STARBREAK-SMOKE');
+
+  await expect(page.getByTestId('seed-entry')).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: 'Start Run' })).toBeFocused();
+
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
+
+  const firstPreviewText = await page.getByTestId('selected-contract-preview').textContent();
+  await expect(page.getByRole('button', { name: 'Launch Contract' })).toBeFocused();
+  await page.keyboard.press('ArrowRight');
+  await expect
+    .poll(async () => page.getByTestId('selected-contract-preview').textContent())
+    .not.toBe(firstPreviewText);
+
+  await page.keyboard.press('Enter');
+  await expect(page.getByText('Outer Debris Field')).toBeVisible();
+  await expect(page.getByTestId('cockpit-hud')).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('heading', { name: 'Paused' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Resume' })).toBeFocused();
+
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: 'Settings' })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: 'End Run' })).toBeFocused();
+  await page.keyboard.press('Enter');
+
+  await expect(page.getByRole('heading', { name: 'Contract Suspended' })).toBeVisible();
+  await expect(page.getByText('Abandoned: pilot exited before resolution.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Back to Menu' })).toBeFocused();
+
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Starbreak Salvage' })).toBeVisible();
+
+  expect(browserErrors).toEqual([]);
+});
+
 test('supports pointer-guided movement and primary-button fire during gameplay', async ({
   page
 }) => {

@@ -261,6 +261,7 @@ export class InputSystem {
 
   private readonly handlePointerMove = (event: PointerEvent): void => {
     if (shouldIgnorePointerEvent(event) && !this.pointerState.primaryDown) {
+      this.clearPointerState();
       return;
     }
 
@@ -268,7 +269,12 @@ export class InputSystem {
   };
 
   private readonly handlePointerDown = (event: PointerEvent): void => {
-    if (event.button !== 0 || shouldIgnorePointerEvent(event)) {
+    if (event.button !== 0) {
+      return;
+    }
+
+    if (shouldIgnorePointerEvent(event)) {
+      this.clearPointerState();
       return;
     }
 
@@ -284,17 +290,22 @@ export class InputSystem {
       return;
     }
 
+    if (shouldIgnorePointerEvent(event)) {
+      this.clearPointerState();
+      return;
+    }
+
     this.updatePointerState(event, false);
   };
 
   private readonly handlePointerCancel = (): void => {
-    this.pointerState = INACTIVE_POINTER_CONTROL_STATE;
+    this.clearPointerState();
   };
 
   private readonly handleBlur = (): void => {
     this.keysDown.clear();
     this.pressedActions.clear();
-    this.pointerState = INACTIVE_POINTER_CONTROL_STATE;
+    this.clearPointerState();
     this.activeInputMode = 'none';
   };
 
@@ -328,6 +339,14 @@ export class InputSystem {
       this.activeInputMode = 'pointer';
     }
   }
+
+  private clearPointerState(): void {
+    this.pointerState = INACTIVE_POINTER_CONTROL_STATE;
+
+    if (this.activeInputMode === 'pointer') {
+      this.activeInputMode = 'none';
+    }
+  }
 }
 
 function shouldIgnoreKeyboardEvent(event: KeyboardEvent): boolean {
@@ -338,12 +357,16 @@ function shouldIgnoreKeyboardEvent(event: KeyboardEvent): boolean {
   }
 
   const tagName = target.tagName.toLowerCase();
-  return (
+  if (
     tagName === 'input' ||
     tagName === 'textarea' ||
     tagName === 'select' ||
     (target instanceof HTMLElement && target.isContentEditable)
-  );
+  ) {
+    return true;
+  }
+
+  return isNativeActivationKey(event.key) && isNativeActivationTarget(target);
 }
 
 function shouldIgnorePointerEvent(event: PointerEvent): boolean {
@@ -355,6 +378,7 @@ function shouldIgnorePointerEvent(event: PointerEvent): boolean {
 
   const tagName = target.tagName.toLowerCase();
   return (
+    target.closest('.ui-layer') !== null ||
     tagName === 'button' ||
     tagName === 'input' ||
     tagName === 'textarea' ||
@@ -363,4 +387,12 @@ function shouldIgnorePointerEvent(event: PointerEvent): boolean {
     target.closest('[role="button"]') !== null ||
     (target instanceof HTMLElement && target.isContentEditable)
   );
+}
+
+function isNativeActivationKey(key: string): boolean {
+  return key === 'Enter' || key === ' ' || key === 'Space' || key === 'Spacebar';
+}
+
+function isNativeActivationTarget(target: Element): boolean {
+  return target.closest('button, [role="button"]') !== null;
 }

@@ -73,11 +73,11 @@ Phase 4 introduces display/input/identity polish. Add tests closest to the risk:
 - viewport scaling helpers for canvas size, device pixel ratio, fixed combat arena fit, gameplay safe frame, and HUD safe areas;
 - narrow/wide viewport E2E smoke for main menu, contract selection, gameplay HUD, pause, and summary; work order 031 adds narrow gameplay HUD/safe-frame smoke, with wider route/pause/summary viewport coverage still useful;
 - mouse/pointer input mapping, bounds clamping, click/hold fire, and focus safety in menus/settings; work order 032 adds passive pointer guidance, primary-button fire, debug input-mode reporting, and pointer movement/fire smoke coverage;
-- keyboard-only parity after mouse, contract-preview, and future HUD changes; work order 034 adds arrow-key preview selection plus preview smoke assertions;
+- keyboard-only parity after mouse, contract-preview, and future HUD changes; work orders 034 and 036 add arrow-key preview selection plus keyboard-only start/pause/summary smoke coverage;
 - ship appearance content validation for silhouettes, palettes, engine/cockpit accents, weapon mount hints, and HUD theme keys; work orders 033-035 add appearance, preview, and cockpit HUD coverage, with manual cross-theme QA still useful;
 - contract selection preview state for keyboard focus, pointer selection, and narrow layouts; work order 034 adds pure preview-model coverage and Playwright preview-selection assertions, with manual contrast/narrow browser checks still useful;
 - themed HUD readability for hull, economy, objective, warnings, boss, weapon, special, bomb, and build state; work order 035 adds semantic meter/readout coverage, with manual cross-theme checks still useful;
-- reduced motion, high contrast, and performance mode interactions with ship previews, ship wake/damage cues, and contract HUD themes.
+- reduced motion, high contrast, and performance mode interactions with ship previews, ship wake/damage cues, and contract HUD themes; work order 036 simplifies preview/HUD treatment under those settings.
 
 ## Known seed tests
 
@@ -163,25 +163,25 @@ Phase 3 accessibility checks should also cover moving-background readability, hi
 
 Phase 4 accessibility checks should also cover narrow viewport HUD readability, mouse controls as passive optional input, keyboard-only parity after previews/HUD changes, high-contrast bullets over contract ship/HUD themes, reduced-motion simplification for ship wake/damage cues, and focus safety across pointer interactions.
 
-- [ ] Keyboard-only menu navigation.
+- [x] Keyboard-only menu navigation.
 - [ ] Remappable controls.
-- [ ] Pause always available during gameplay.
+- [x] Pause always available during gameplay.
 - [ ] Mute option.
 - [ ] Volume sliders.
-- [ ] Reduced motion.
+- [x] Reduced motion.
 - [ ] Screen shake strength.
-- [ ] Bullet contrast option.
+- [x] Bullet contrast option.
 - [ ] Flash reduction.
 - [ ] No essential information conveyed by color alone.
 - [ ] Distance/objective text remains readable over moving backgrounds.
-- [ ] Reduced motion simplifies scrolling effects without hiding gameplay state.
+- [x] Reduced motion simplifies scrolling effects without hiding gameplay state.
 - [x] Themed HUD and ship previews preserve text contrast in automated smoke coverage.
-- [ ] Mouse controls do not trap or steal menu focus.
+- [x] Mouse controls do not trap or steal menu focus.
 
 ## Release checklist
 
-- [ ] `npm run check` passes.
-- [ ] E2E smoke tests pass.
+- [x] `npm run check` passes.
+- [x] E2E smoke tests pass.
 - [ ] Production build preview tested.
 - [ ] GitHub Pages deployed.
 - [ ] Public URL loads assets correctly.

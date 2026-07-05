@@ -29,7 +29,7 @@ Phase 2 is complete as of deployed and confirmed work order 020. It turned the a
 
 Phase 3 is complete as of deployed and confirmed work order 030. It made Starbreak Salvage feel like a first-pass vertical-scrolling arcade roguelike: deterministic sector distance, procedural backgrounds, scroll-synced waves, distance objectives, hazards, landmarks, boss arena transitions, route-conditioned sector physics, velocity cues, and long-scroll instrumentation.
 
-Phase 4 begins from that scrolling playtest slice. Its goal is display/input/identity polish: window-size parity, optional mouse controls, contract-specific ship visuals, new-game ship previews, and contract-themed graphical HUD presentation. Work orders 031-035 have completed the display/input foundation, first-pass gameplay ship identity, New Game contract previews, and the first cockpit HUD layer.
+Phase 4 begins from that scrolling playtest slice. Its goal is display/input/identity polish: window-size parity, optional mouse controls, contract-specific ship visuals, new-game ship previews, and contract-themed graphical HUD presentation. Work orders 031-036 have completed the display/input foundation, first-pass gameplay ship identity, New Game contract previews, the first cockpit HUD layer, and keyboard/pointer accessibility hardening.
 
 See `docs/STARBREAK_SALVAGE_PHASE_4_PLAN.md` for the active Phase 4 roadmap. `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md` and `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md` remain historical records for concluded phases.
 
@@ -390,6 +390,8 @@ Exit criteria:
 - A deployed build communicates selected ship identity from contract selection through gameplay and summary.
 - Keyboard and mouse-assisted play are documented and smoke-tested where browser tooling is available.
 - No severe display/input/HUD blockers remain for the Phase 4 playtest release.
+
+Status: accessibility hardening first pass implemented by work order 036. Keyboard-only start, pause, end-run, summary, and return-to-menu flow are covered by Playwright smoke, and pointer guidance is cleared over DOM overlays so menus/settings remain neutral.
 
 ## Dependency map
 

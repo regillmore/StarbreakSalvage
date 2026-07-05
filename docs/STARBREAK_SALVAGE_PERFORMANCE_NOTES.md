@@ -91,6 +91,6 @@ The debug overlay total entity count includes player, enemies, boss, bullets, pi
 ## Phase 4 Playtest Risks
 
 - Window-size parity can create new overlap bugs between canvas, HUD, debug overlay, and DOM scenes unless safe-frame helpers are test-covered.
-- Mouse controls can accidentally bypass pause/settings focus or undermine keyboard remapping if pointer state does not flow through the input abstraction.
+- Mouse controls can accidentally bypass pause/settings focus or undermine keyboard remapping if pointer state does not flow through the input abstraction. Work order 036 now clears pointer guidance over DOM overlays and preserves native button activation, but future pointer settings should keep using the input abstraction.
 - Contract ship previews and HUD themes can obscure hitboxes or bullets unless high-contrast and reduced-motion settings are checked with each baseline contract. Gameplay ship silhouettes, New Game previews, and the cockpit HUD now keep simple primitives/DOM styling, but manual theme readability checks remain useful across all baseline ships.
 - Contract preview and graphical HUD rendering should stay shape-based and cheap until debug/preview smoke shows there is room for richer visuals.

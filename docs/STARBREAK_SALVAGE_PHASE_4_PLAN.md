@@ -99,6 +99,8 @@ Exit criteria:
 - Mouse controls have a clear opt-in/neutral default and do not trap focus.
 - High contrast and reduced motion remain readable over all contract themes.
 
+Status: first pass implemented in work order 036. Global input now preserves native button activation for keyboard users, overlay pointer events clear mouse guidance state instead of affecting gameplay, preview/HUD styling simplifies under accessibility settings, and E2E smoke covers keyboard-only start/pause/summary flow.
+
 ### P4.7 - Ship Damage, Wake, And Identity Feedback
 
 Add lightweight visual feedback that reinforces ship identity during play.
