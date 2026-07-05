@@ -40,6 +40,8 @@ Exit criteria:
 - Upgrade effects widen future choices, information, starting variety, or build texture without turning into raw stat inflation.
 - Fresh saves and existing saves migrate safely.
 
+Status: first pass implemented in work order 041. Upgrade definitions now live in a validated content catalog, banked scrap can purchase persistent upgrade ids through save helpers, save version 3 migrates legacy v2 data, and early upgrade effects are framed as future variety/information sidegrades. Upgrade Bay presentation and generation integration remain follow-ups.
+
 ### P5.2 - Upgrade Bay And Icons
 
 Add a menu surface for persistent upgrades.

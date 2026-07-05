@@ -1,6 +1,7 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import { ACHIEVEMENTS } from '../content/achievements';
 import { UNLOCKS } from '../content/unlocks';
+import { UPGRADES } from '../content/upgrades';
 import type { SaveData } from '../core/saveData';
 import type { Scene } from '../app/Scene';
 import type { InputAction } from '../systems/InputSystem';
@@ -31,7 +32,7 @@ export class UnlockArchiveScene implements Scene {
 
     const eyebrow = document.createElement('p');
     eyebrow.className = 'eyebrow';
-    eyebrow.textContent = `Salvage Bank ${saveData.salvageBank} kg | Unlocks ${saveData.unlockedIds.length}/${UNLOCKS.length}`;
+    eyebrow.textContent = `Salvage Bank ${saveData.salvageBank} kg | Unlocks ${saveData.unlockedIds.length}/${UNLOCKS.length} | Upgrades ${saveData.purchasedUpgradeIds.length}/${UPGRADES.length}`;
 
     const title = document.createElement('h1');
     title.id = 'archive-title';
@@ -47,6 +48,7 @@ export class UnlockArchiveScene implements Scene {
       ['Bosses', `${saveData.stats.bossesDefeated}`],
       ['Best Sector', `${saveData.stats.bestSectorsCleared}`],
       ['Recovered', `${saveData.stats.salvageRecovered} kg`],
+      ['Upgrades', `${saveData.purchasedUpgradeIds.length}/${UPGRADES.length}`],
       ['Achievements', `${saveData.achievementIds.length}/${ACHIEVEMENTS.length}`]
     ];
 

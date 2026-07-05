@@ -15,6 +15,7 @@ import {
 import { SECTORS, type SectorDefinition } from '../../src/content/sectors';
 import { SHIPS, type ShipDefinition } from '../../src/content/ships';
 import { UNLOCKS, type UnlockDefinition } from '../../src/content/unlocks';
+import { UPGRADES, type UpgradeDefinition } from '../../src/content/upgrades';
 import { WEAPONS, type WeaponDefinition } from '../../src/content/weapons';
 import { ITEM_HOOK_IMPLEMENTATIONS } from '../../src/game/ItemHooks';
 
@@ -25,6 +26,7 @@ const baseBoss = BOSSES[0] as BossDefinition;
 const baseSector = SECTORS[0] as SectorDefinition;
 const baseShip = SHIPS[0] as ShipDefinition;
 const baseUnlock = UNLOCKS[0] as UnlockDefinition;
+const baseUpgrade = UPGRADES[0] as UpgradeDefinition;
 const baseWeapon = WEAPONS[0] as WeaponDefinition;
 const baseAchievement = ACHIEVEMENTS[0] as AchievementDefinition;
 
@@ -45,6 +47,7 @@ describe('validateContent', () => {
     expect(ITEMS).toHaveLength(30);
     expect(FACTIONS).toHaveLength(4);
     expect(BACKGROUNDS).toHaveLength(5);
+    expect(UPGRADES.length).toBeGreaterThanOrEqual(6);
     expect(representedArchetypes).toHaveLength(ITEM_ARCHETYPES.length);
     expect(representedArchetypes.length).toBeGreaterThanOrEqual(6);
   });
@@ -150,6 +153,45 @@ describe('validateContent', () => {
     expect(errors).toContain(`Unlock ${baseUnlock.id} must have a summary`);
     expect(errors).toContain(`Unlock ${baseUnlock.id} must describe its effect`);
     expect(errors).toContain(`Unlock ${baseUnlock.id} must list at least one grant`);
+  });
+
+  it('rejects invalid upgrade catalog metadata', () => {
+    const errors = validateContent({
+      upgrades: [
+        baseUpgrade,
+        {
+          ...baseUpgrade,
+          name: 'Duplicate Survey Rig'
+        },
+        {
+          ...baseUpgrade,
+          id: 'upgrade_seed_cartographer',
+          category: 'thruster',
+          iconKey: 'orb',
+          effectKind: 'damageBoost',
+          name: '',
+          summary: '',
+          effect: '',
+          cost: 0,
+          prerequisites: ['upgrade_missing', 'upgrade_seed_cartographer']
+        }
+      ] as unknown as readonly UpgradeDefinition[]
+    });
+
+    expect(errors).toContain(`Duplicate upgrade id: ${baseUpgrade.id}`);
+    expect(errors).toContain('Upgrade upgrade_seed_cartographer has invalid category: thruster');
+    expect(errors).toContain('Upgrade upgrade_seed_cartographer has invalid icon: orb');
+    expect(errors).toContain(
+      'Upgrade upgrade_seed_cartographer has invalid effect kind: damageBoost'
+    );
+    expect(errors).toContain('Upgrade upgrade_seed_cartographer must have a name');
+    expect(errors).toContain('Upgrade upgrade_seed_cartographer must have a summary');
+    expect(errors).toContain('Upgrade upgrade_seed_cartographer must describe its effect');
+    expect(errors).toContain('Upgrade upgrade_seed_cartographer must have positive cost');
+    expect(errors).toContain(
+      'Upgrade upgrade_seed_cartographer references missing prerequisite: upgrade_missing'
+    );
+    expect(errors).toContain('Upgrade upgrade_seed_cartographer cannot require itself');
   });
 
   it('rejects missing sector boss references', () => {

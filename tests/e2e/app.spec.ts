@@ -178,7 +178,8 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
 
   await page.getByRole('button', { name: 'Export Save' }).click();
   const exportedSave = await page.getByTestId('save-import-box').inputValue();
-  expect(exportedSave).toContain('"version": 2');
+  expect(exportedSave).toContain('"version": 3');
+  expect(exportedSave).toContain('"purchasedUpgradeIds":');
 
   await page.getByRole('button', { name: 'Reset Save' }).click();
   await expect(page.getByTestId('save-status')).toContainText('Save reset.');

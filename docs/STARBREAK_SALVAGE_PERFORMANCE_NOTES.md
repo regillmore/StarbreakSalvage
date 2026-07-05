@@ -66,6 +66,8 @@ Phase 5 adds upgrade spending, more feedback beats, a lunar surface sector, and 
 - Lunar hazards should keep sparse distance windows until smoke proves readability; avoid layering dust, terrain, hazard, and enemy bullets at the same intensity.
 - Ship destruction debris should use a fixed budget, ship appearance colors, and settings-aware intensity. Reduced motion and performance mode should lower debris count and screen shake rather than changing death outcome timing.
 
+Work order 041 keeps upgrades data/save-only: catalog validation and purchase helpers add no per-frame work. Upgrade Bay DOM/icon cost starts in work order 042, and upgrade-influenced generation branching starts in work order 043.
+
 ## Debug and Playtest Scenarios
 
 Enable debug tools with `?debug=1` on a local, preview, or Pages URL.
@@ -114,7 +116,7 @@ The debug overlay total entity count includes player, enemies, boss, bullets, pi
 
 ## Phase 5 Playtest Risks
 
-- Banked scrap upgrades can accidentally become raw permanent power creep. Keep early upgrades focused on variety, information, starting options, and run-shaping sidegrades until balance data supports more.
+- Banked scrap upgrades can accidentally become raw permanent power creep. The first catalog is deliberately framed around variety, information, starting options, and run-shaping sidegrades; keep later effects inside that lane until balance data supports more.
 - Upgrade effects that touch generation can break seeded reproducibility if they bypass explicit save-state inputs or RNG streams.
 - Upgrade Bay icons can become decoration without clarity; every icon state should have text and accessible state copy.
 - Sector exit toasts and completion beats can delay route flow or hide danger if they are too long or too animated.

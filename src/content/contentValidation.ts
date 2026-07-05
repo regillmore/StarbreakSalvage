@@ -22,6 +22,13 @@ import {
   type ShipDefinition
 } from './ships';
 import { UNLOCKS, type UnlockDefinition } from './unlocks';
+import {
+  UPGRADES,
+  UPGRADE_CATEGORIES,
+  UPGRADE_EFFECT_KINDS,
+  UPGRADE_ICON_KEYS,
+  type UpgradeDefinition
+} from './upgrades';
 import { WEAPONS, type WeaponDefinition } from './weapons';
 import { ITEM_HOOK_IMPLEMENTATIONS } from '../game/ItemHooks';
 
@@ -38,6 +45,7 @@ export interface ContentValidationInput {
   readonly sectors?: readonly SectorDefinition[];
   readonly ships?: readonly ShipDefinition[];
   readonly unlocks?: readonly UnlockDefinition[];
+  readonly upgrades?: readonly UpgradeDefinition[];
   readonly weapons?: readonly WeaponDefinition[];
 }
 
@@ -54,6 +62,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const sectors = input.sectors ?? SECTORS;
   const ships = input.ships ?? SHIPS;
   const unlocks = input.unlocks ?? UNLOCKS;
+  const upgrades = input.upgrades ?? UPGRADES;
   const weapons = input.weapons ?? WEAPONS;
   const errors: string[] = [];
   const achievementIds = new Set<string>();
@@ -63,6 +72,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const itemIds = new Set<string>();
   const shipIds = new Set<string>();
   const unlockIds = new Set<string>();
+  const upgradeIds = new Set<string>();
   const weaponIds = new Set<string>();
   const tagRegistry = new Set<string>(ITEM_TAGS);
   const hookRegistry = new Set<string>(ITEM_HOOKS);
@@ -71,6 +81,9 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const factionShapes = new Set(['jagged', 'diamond', 'organic', 'needle']);
   const backgroundLayerKinds = new Set<string>(BACKGROUND_LAYER_KINDS);
   const unlockKinds = new Set(['ship', 'item', 'faction', 'bossPractice', 'music', 'challenge']);
+  const upgradeCategories = new Set<string>(UPGRADE_CATEGORIES);
+  const upgradeEffectKinds = new Set<string>(UPGRADE_EFFECT_KINDS);
+  const upgradeIconKeys = new Set<string>(UPGRADE_ICON_KEYS);
   const weaponPatterns = new Set(['single', 'dual', 'spread', 'split', 'missile', 'beam']);
   const bossPatterns = new Set(['auditFan', 'missileCurtain', 'sporeSpiral']);
   const shipSilhouettes = new Set<string>(SHIP_SILHOUETTES);
@@ -157,6 +170,52 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
 
     if (unlock.grants.length === 0) {
       errors.push(`Unlock ${unlock.id} must list at least one grant`);
+    }
+  }
+
+  for (const upgrade of upgrades) {
+    if (upgradeIds.has(upgrade.id)) {
+      errors.push(`Duplicate upgrade id: ${upgrade.id}`);
+    }
+
+    upgradeIds.add(upgrade.id);
+
+    if (!upgradeCategories.has(upgrade.category)) {
+      errors.push(`Upgrade ${upgrade.id} has invalid category: ${upgrade.category}`);
+    }
+
+    if (!upgradeIconKeys.has(upgrade.iconKey)) {
+      errors.push(`Upgrade ${upgrade.id} has invalid icon: ${upgrade.iconKey}`);
+    }
+
+    if (!upgradeEffectKinds.has(upgrade.effectKind)) {
+      errors.push(`Upgrade ${upgrade.id} has invalid effect kind: ${upgrade.effectKind}`);
+    }
+
+    if (!upgrade.name.trim()) {
+      errors.push(`Upgrade ${upgrade.id} must have a name`);
+    }
+
+    if (!upgrade.summary.trim()) {
+      errors.push(`Upgrade ${upgrade.id} must have a summary`);
+    }
+
+    if (!upgrade.effect.trim()) {
+      errors.push(`Upgrade ${upgrade.id} must describe its effect`);
+    }
+
+    validatePositiveInteger(errors, `Upgrade ${upgrade.id}`, 'cost', upgrade.cost);
+  }
+
+  for (const upgrade of upgrades) {
+    for (const prerequisiteId of upgrade.prerequisites) {
+      if (prerequisiteId === upgrade.id) {
+        errors.push(`Upgrade ${upgrade.id} cannot require itself`);
+      }
+
+      if (!upgradeIds.has(prerequisiteId)) {
+        errors.push(`Upgrade ${upgrade.id} references missing prerequisite: ${prerequisiteId}`);
+      }
     }
   }
 

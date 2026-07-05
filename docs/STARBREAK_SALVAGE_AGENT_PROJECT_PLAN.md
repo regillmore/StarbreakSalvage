@@ -31,7 +31,7 @@ Phase 3 is complete as of deployed and confirmed work order 030. It made Starbre
 
 Phase 4 is complete as of validated work order 040. It added display/input/identity polish: window-size parity, optional mouse controls, contract-specific ship visuals, new-game ship previews, a contract-themed graphical HUD, keyboard/pointer accessibility hardening, ship-specific combat feedback, non-combat contract theme propagation, viewport/input/HUD debug smoke, and release documentation.
 
-Phase 5 begins from that display/input playtest candidate. Its goal is progression and sector-feedback depth: banked scrap purpose, upgrade bay icons and purchases, upgrade-influenced future runs, sector completion exits/toasts, a lunar surface sector family, and richer player ship destruction.
+Phase 5 begins from that display/input playtest candidate. Its goal is progression and sector-feedback depth: banked scrap purpose, upgrade bay icons and purchases, upgrade-influenced future runs, sector completion exits/toasts, a lunar surface sector family, and richer player ship destruction. Work order 041 has started this with a data-backed upgrade catalog, save-backed purchases, and upgrade-state migration.
 
 See `docs/STARBREAK_SALVAGE_PHASE_5_PLAN.md` for the active Phase 5 roadmap. `docs/STARBREAK_SALVAGE_PHASE_4_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`, and `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md` remain historical records for concluded phases.
 
@@ -410,6 +410,8 @@ Exit criteria:
 - Players can understand what scrap buys and what they can afford.
 - Upgrade definitions validate and save safely.
 - Same save state plus same seed reproduces upgrade-influenced generation.
+
+Status: first pass implemented by work order 041. Banked scrap can buy persistent upgrade ids through save helpers, upgrade definitions validate, legacy saves migrate to version 3, and export/import preserves upgrade state. Generation integration remains P5.1/P5.3 follow-up work.
 
 ### P5.2 - Upgrade Bay UX
 

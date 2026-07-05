@@ -666,6 +666,8 @@ Acceptance criteria:
 - Save migration/export/import preserves banked scrap and upgrades.
 - Upgrade effects are framed as variety, information, or sidegrades rather than raw stat inflation.
 
+Status: first pass implemented; banked scrap now has a data-backed persistent upgrade catalog, save-backed purchase/affordability helpers, save schema version 3 with legacy v2 localStorage fallback, export/import preservation for purchased upgrade ids, and validation/tests for upgrade metadata, affordability, migration, and fresh-save defaults. The visual Upgrade Bay remains work order 042, and run-generation effects remain work order 043.
+
 ## Work order 042 - Upgrade bay menu icons and affordances
 
 Goal: give persistent upgrades a clear home and visual language.

@@ -101,7 +101,7 @@ export class MainMenuScene implements Scene {
     const status = document.createElement('p');
     status.className = 'boot-status';
     status.dataset.testid = 'boot-status';
-    status.textContent = `Bank ${this.saveSummary.salvageBank} kg | Unlocks ${this.saveSummary.unlockCount} | Runs ${this.saveSummary.runsEnded}`;
+    status.textContent = `Bank ${this.saveSummary.salvageBank} kg | Unlocks ${this.saveSummary.unlockCount} | Upgrades ${this.saveSummary.upgradeCount} | Runs ${this.saveSummary.runsEnded}`;
 
     shell.append(title, tagline, seedForm, archiveButton, settingsButton, status);
     this.uiRoot.replaceChildren(shell);

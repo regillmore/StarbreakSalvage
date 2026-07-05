@@ -4,8 +4,11 @@ import {
   applyRunRecordToSave,
   createDefaultSaveData,
   exportSaveData,
+  getUpgradeAffordability,
   importSaveData,
+  LEGACY_SAVE_STORAGE_KEYS,
   loadSaveData,
+  purchaseUpgrade,
   resetSaveData,
   SAVE_SCHEMA_VERSION,
   SAVE_STORAGE_KEY,
@@ -36,6 +39,7 @@ describe('saveData', () => {
     expect(save.version).toBe(SAVE_SCHEMA_VERSION);
     expect(save.salvageBank).toBe(0);
     expect(save.unlockedIds).toEqual([]);
+    expect(save.purchasedUpgradeIds).toEqual([]);
   });
 
   it('loads corrupted localStorage safely as a repaired default', () => {
@@ -68,10 +72,43 @@ describe('saveData', () => {
     expect(migrated.stats.runsEnded).toBe(3);
     expect(migrated.stats.bossesDefeated).toBe(1);
     expect(migrated.unlockedIds).toContain('unlock_ship_scrap_monk');
+    expect(migrated.purchasedUpgradeIds).toEqual([]);
+  });
+
+  it('migrates legacy v2 saves with empty upgrade state', () => {
+    const migrated = importSaveData(
+      JSON.stringify({
+        version: 2,
+        salvageBank: 9,
+        unlockedIds: ['unlock_ship_scrap_monk'],
+        achievementIds: [],
+        stats: {
+          runsEnded: 2,
+          salvageRecovered: 9
+        },
+        lastRun: {
+          seed: 'OLD-V2',
+          contractId: 'contract_1',
+          contractName: 'Debt Runner',
+          reason: 'sectorComplete',
+          sectorsCleared: 1,
+          survivedSeconds: 12,
+          distanceTraveled: 1442,
+          sectorLength: 1442,
+          salvageRecovered: 4
+        }
+      })
+    );
+
+    expect(migrated.version).toBe(SAVE_SCHEMA_VERSION);
+    expect(migrated.salvageBank).toBe(9);
+    expect(migrated.stats.runsEnded).toBe(2);
+    expect(migrated.lastRun?.seed).toBe('OLD-V2');
+    expect(migrated.purchasedUpgradeIds).toEqual([]);
   });
 
   it('round-trips through export and import', () => {
-    const save = applyRunRecordToSave(createDefaultSaveData(), {
+    const runSave = applyRunRecordToSave(createDefaultSaveData(), {
       seed: 'STARBREAK-SMOKE',
       contractId: 'contract_1',
       contractName: 'Debt Runner',
@@ -86,6 +123,13 @@ describe('saveData', () => {
       salvageRecovered: 3,
       itemTriggers: 1
     }).data;
+    const save = purchaseUpgrade(
+      {
+        ...runSave,
+        salvageBank: 6
+      },
+      'upgrade_contract_survey_rig'
+    ).data;
 
     expect(importSaveData(exportSaveData(save))).toEqual(save);
   });
@@ -143,6 +187,7 @@ describe('saveData', () => {
         version: SAVE_SCHEMA_VERSION,
         salvageBank: 0,
         unlockedIds: [],
+        purchasedUpgradeIds: [],
         achievementIds: [],
         stats: {
           runsEnded: 1
@@ -197,17 +242,75 @@ describe('saveData', () => {
     expect(update.newUnlockIds).toContain('unlock_music_outer_debris');
   });
 
+  it('evaluates upgrade affordability and purchases with banked scrap', () => {
+    const baseSave = {
+      ...createDefaultSaveData(),
+      salvageBank: 6
+    };
+    const unaffordable = getUpgradeAffordability(baseSave, 'upgrade_market_decoder');
+    const firstPurchase = purchaseUpgrade(baseSave, 'upgrade_contract_survey_rig');
+    const duplicatePurchase = purchaseUpgrade(firstPurchase.data, 'upgrade_contract_survey_rig');
+    const lockedPurchase = purchaseUpgrade(baseSave, 'upgrade_route_ledger_uplink');
+
+    expect(unaffordable.state).toBe('locked');
+    expect(unaffordable.missingPrerequisiteIds).toEqual(['upgrade_salvage_escrow_index']);
+    expect(firstPurchase.ok).toBe(true);
+    expect(firstPurchase.spent).toBe(4);
+    expect(firstPurchase.remainingSalvageBank).toBe(2);
+    expect(firstPurchase.data.purchasedUpgradeIds).toEqual(['upgrade_contract_survey_rig']);
+    expect(duplicatePurchase.ok).toBe(false);
+    expect(duplicatePurchase.state).toBe('purchased');
+    expect(duplicatePurchase.data).toBe(firstPurchase.data);
+    expect(lockedPurchase.ok).toBe(false);
+    expect(lockedPurchase.state).toBe('locked');
+    expect(lockedPurchase.missingPrerequisiteIds).toEqual(['upgrade_contract_survey_rig']);
+  });
+
+  it('blocks upgrade purchase when scrap is too low after prerequisites are met', () => {
+    const save = {
+      ...createDefaultSaveData(),
+      salvageBank: 2,
+      purchasedUpgradeIds: ['upgrade_contract_survey_rig'] as const
+    };
+    const affordability = getUpgradeAffordability(save, 'upgrade_route_ledger_uplink');
+    const purchase = purchaseUpgrade(save, 'upgrade_route_ledger_uplink');
+
+    expect(affordability.state).toBe('unaffordable');
+    expect(purchase.ok).toBe(false);
+    expect(purchase.state).toBe('unaffordable');
+    expect(purchase.remainingSalvageBank).toBe(2);
+  });
+
   it('writes and resets save data through storage', () => {
     const storage = new MemoryStorage();
     const save = {
       ...createDefaultSaveData(),
-      salvageBank: 4
+      salvageBank: 4,
+      purchasedUpgradeIds: ['upgrade_salvage_escrow_index'] as const
     };
 
     writeSaveData(storage, save);
     expect(loadSaveData(storage).data.salvageBank).toBe(4);
+    expect(loadSaveData(storage).data.purchasedUpgradeIds).toEqual([
+      'upgrade_salvage_escrow_index'
+    ]);
 
+    storage.setItem(LEGACY_SAVE_STORAGE_KEYS[0], '{"version":2,"salvageBank":5}');
     expect(resetSaveData(storage)).toEqual(createDefaultSaveData());
     expect(storage.getItem(SAVE_STORAGE_KEY)).toBeNull();
+    expect(storage.getItem(LEGACY_SAVE_STORAGE_KEYS[0])).toBeNull();
+  });
+
+  it('loads legacy v2 storage and marks it for repair/write-forward', () => {
+    const storage = new MemoryStorage();
+    storage.setItem(LEGACY_SAVE_STORAGE_KEYS[0], '{"version":2,"salvageBank":7}');
+
+    const loaded = loadSaveData(storage);
+
+    expect(loaded.repaired).toBe(true);
+    expect(loaded.error).toBeNull();
+    expect(loaded.data.version).toBe(SAVE_SCHEMA_VERSION);
+    expect(loaded.data.salvageBank).toBe(7);
+    expect(loaded.data.purchasedUpgradeIds).toEqual([]);
   });
 });

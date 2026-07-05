@@ -1,0 +1,131 @@
+export const UPGRADE_CATEGORIES = [
+  'hangar',
+  'navigation',
+  'market',
+  'archive',
+  'salvage'
+] as const;
+
+export const UPGRADE_ICON_KEYS = [
+  'contract-scope',
+  'route-radar',
+  'market-tag',
+  'vault-index',
+  'scrap-ledger',
+  'seed-map'
+] as const;
+
+export const UPGRADE_EFFECT_KINDS = [
+  'contractBoard',
+  'routeIntel',
+  'shopTelemetry',
+  'rewardVariety',
+  'salvageLedger',
+  'seedSurvey'
+] as const;
+
+export type UpgradeCategory = (typeof UPGRADE_CATEGORIES)[number];
+export type UpgradeIconKey = (typeof UPGRADE_ICON_KEYS)[number];
+export type UpgradeEffectKind = (typeof UPGRADE_EFFECT_KINDS)[number];
+
+export type UpgradeId =
+  | 'upgrade_contract_survey_rig'
+  | 'upgrade_salvage_escrow_index'
+  | 'upgrade_route_ledger_uplink'
+  | 'upgrade_market_decoder'
+  | 'upgrade_relic_pattern_dossier'
+  | 'upgrade_seed_cartographer';
+
+export interface UpgradeDefinition {
+  readonly id: UpgradeId;
+  readonly category: UpgradeCategory;
+  readonly iconKey: UpgradeIconKey;
+  readonly effectKind: UpgradeEffectKind;
+  readonly name: string;
+  readonly summary: string;
+  readonly effect: string;
+  readonly cost: number;
+  readonly prerequisites: readonly UpgradeId[];
+}
+
+export const UPGRADES: readonly UpgradeDefinition[] = [
+  {
+    id: 'upgrade_contract_survey_rig',
+    category: 'hangar',
+    iconKey: 'contract-scope',
+    effectKind: 'contractBoard',
+    name: 'Contract Survey Rig',
+    summary: 'hangar scanners that make future contract boards easier to read',
+    effect: 'Future work can reveal one extra contract tendency before launch.',
+    cost: 4,
+    prerequisites: []
+  },
+  {
+    id: 'upgrade_salvage_escrow_index',
+    category: 'salvage',
+    iconKey: 'scrap-ledger',
+    effectKind: 'salvageLedger',
+    name: 'Salvage Escrow Index',
+    summary: 'a ledger that tracks what banked scrap can unlock next',
+    effect: 'Future summaries can surface newly affordable upgrade options.',
+    cost: 3,
+    prerequisites: []
+  },
+  {
+    id: 'upgrade_route_ledger_uplink',
+    category: 'navigation',
+    iconKey: 'route-radar',
+    effectKind: 'routeIntel',
+    name: 'Route Ledger Uplink',
+    summary: 'navigation records that preview route pressure without lowering it',
+    effect: 'Future route screens can reveal one additional risk clue.',
+    cost: 6,
+    prerequisites: ['upgrade_contract_survey_rig']
+  },
+  {
+    id: 'upgrade_market_decoder',
+    category: 'market',
+    iconKey: 'market-tag',
+    effectKind: 'shopTelemetry',
+    name: 'Market Decoder',
+    summary: 'shop telemetry that helps pilots read prices and rerolls',
+    effect: 'Future shops can expose one extra inventory or discount hint.',
+    cost: 7,
+    prerequisites: ['upgrade_salvage_escrow_index']
+  },
+  {
+    id: 'upgrade_relic_pattern_dossier',
+    category: 'archive',
+    iconKey: 'vault-index',
+    effectKind: 'rewardVariety',
+    name: 'Relic Pattern Dossier',
+    summary: 'archive notes that widen vault and relic decision space',
+    effect: 'Future vault rewards can add a clearer relic-biased option.',
+    cost: 8,
+    prerequisites: ['upgrade_route_ledger_uplink']
+  },
+  {
+    id: 'upgrade_seed_cartographer',
+    category: 'navigation',
+    iconKey: 'seed-map',
+    effectKind: 'seedSurvey',
+    name: 'Seed Cartographer',
+    summary: 'map fragments that make seeded sectors easier to compare',
+    effect: 'Future seed previews can show one sector modifier before launch.',
+    cost: 10,
+    prerequisites: ['upgrade_route_ledger_uplink']
+  }
+];
+
+export function getUpgradeById(
+  id: UpgradeId,
+  upgrades: readonly UpgradeDefinition[] = UPGRADES
+): UpgradeDefinition {
+  const upgrade = upgrades.find((candidate) => candidate.id === id);
+
+  if (!upgrade) {
+    throw new Error(`Unknown upgrade id: ${id}`);
+  }
+
+  return upgrade;
+}

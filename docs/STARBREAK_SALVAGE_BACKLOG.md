@@ -886,6 +886,10 @@ Acceptance:
 - Upgrade costs and prerequisites validate.
 - Upgrade framing widens variety, information, or sidegrades rather than raw permanent power.
 
+Status:
+
+- First pass implemented in work order 041 with six data-backed upgrades, costs, prerequisites, icon/effect categories, and save purchase helpers.
+
 ### AG2 - Save-safe upgrade state
 
 Acceptance:
@@ -893,6 +897,10 @@ Acceptance:
 - Existing saves migrate with empty upgrade state.
 - Export/import preserves purchased upgrades and remaining scrap.
 - Corrupted upgrade data repairs safely.
+
+Status:
+
+- First pass implemented in work order 041. Save schema version 3 stores `purchasedUpgradeIds`, migrates legacy v2 saves from the old localStorage key, sanitizes unknown upgrade ids, and preserves purchases through export/import.
 
 ### AG3 - Upgrade effects in generation
 

@@ -145,7 +145,7 @@ Phase 2 should extend this checklist as systems become real. In addition to the 
 - [ ] Rarity values are valid.
 - [ ] Curses are clearly marked.
 - [x] Ship appearance references, palettes, weapon mount hints, and HUD theme keys validate.
-- [ ] Upgrade definitions, costs, prerequisites, effect references, and icon categories validate.
+- [x] Upgrade definitions, costs, prerequisites, effect references, and icon categories validate.
 - [ ] Lunar sector background, landmark, hazard, faction, and boss references validate.
 
 ## Manual browser smoke matrix
