@@ -286,6 +286,36 @@ src/game/BackgroundPlan.ts
 - Add pooling/batching only after long-scroll debug scenarios show need.
 - Keep bullets visually above moving backgrounds with stable contrast and no hidden blending tricks.
 
+## Phase 4 architecture priorities
+
+Phase 4 adds display/input/identity polish without turning presentation into a separate framework. Keep visual identity data-driven and reuse existing scene/input/render boundaries.
+
+### Viewport and scaling
+
+- Treat canvas size, device pixel ratio, gameplay safe frame, and HUD safe areas as explicit derived state.
+- Keep gameplay simulation in world/screen units that are stable under resize; renderer layout can adapt, but hitbox semantics should stay readable.
+- Add pure helpers for scaling and safe-area calculations before embedding layout math directly in scenes.
+- Debug metrics may expose viewport size, canvas scale, safe frame, and active HUD mode.
+
+### Mouse and pointer input
+
+- Route mouse movement, pointer state, and click/hold fire through the input abstraction.
+- Pointer controls should be optional and must not interfere with DOM focus, settings, menus, pause, or keyboard-only play.
+- Clamp gameplay pointer targets to the safe frame, not the full browser window when HUD or letterboxing is active.
+- Store new pointer settings through the settings module only when the implementation needs user-tunable behavior.
+
+### Ship appearance and previews
+
+- Ship appearance belongs in content data next to ship/contract identity: silhouette, palette, engine color, cockpit accent, weapon mount hints, and HUD theme key.
+- Gameplay ship rendering, contract previews, HUD theme, and summary/debug labels should consume the same appearance data rather than duplicating style tables.
+- Appearance changes must not alter combat hit radius, collision, or deterministic run generation unless explicitly modeled as gameplay stats.
+
+### Themed HUD
+
+- Themed HUD should decorate clear operational readouts, not replace them with ambiguous art.
+- Critical state still needs text and semantic DOM exposure for accessibility.
+- Reduced motion, performance mode, and high-contrast bullet settings should simplify cockpit styling and preserve bullet readability.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

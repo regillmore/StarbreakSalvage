@@ -66,6 +66,19 @@ Phase 3 introduces true vertical scrolling. Add tests closest to the risk:
 - reduced motion, high-contrast, screen shake, and performance mode readability against moving procedural backgrounds;
 - long-scroll performance scenarios that separate background cost from projectiles, enemies, pickups, effects, and HUD.
 
+## Phase 4 QA focus
+
+Phase 4 introduces display/input/identity polish. Add tests closest to the risk:
+
+- viewport scaling helpers for canvas size, device pixel ratio, gameplay safe frame, and HUD safe areas;
+- narrow/wide viewport E2E smoke for main menu, contract selection, gameplay HUD, pause, and summary;
+- mouse/pointer input mapping, bounds clamping, click/hold fire, and focus safety in menus/settings;
+- keyboard-only parity after mouse and contract-preview changes;
+- ship appearance content validation for silhouettes, palettes, engine/cockpit accents, weapon mount hints, and HUD theme keys;
+- contract selection preview state for keyboard focus, pointer selection, and narrow layouts;
+- themed HUD readability for hull, economy, objective, warnings, boss, weapon, special, bomb, and build state;
+- reduced motion, high contrast, and performance mode interactions with ship previews, ship wake/damage cues, and contract HUD themes.
+
 ## Known seed tests
 
 - `STARBREAK-SMOKE` — stable forgiving smoke path.
@@ -88,9 +101,16 @@ Phase 3 should add these seed fixtures:
 - `BLOOM-PARALLAX-LONG` - long procedural background and landmark determinism.
 - `CORE-ARENA-LOCK` - boss approach, scroll lock, boss defeat, scroll resume, and sector completion.
 
+Phase 4 should add these seed fixtures:
+
+- `VIEWPORT-PARITY-SMOKE` - stable opening contract and first sector for narrow/wide layout checks.
+- `MOUSE-AIM-CALIBRATE` - forgiving ship and weapon setup for pointer movement/fire validation.
+- `HANGAR-PREVIEW-GRID` - contract board with visually distinct baseline ships.
+- `COCKPIT-HUD-TEST` - contract theme and HUD state coverage with special/bomb/overheat cues.
+
 ## Content validation checklist
 
-Phase 2 should extend this checklist as systems become real. In addition to the existing entries, content validation should cover ship stat ranges, objective references, wave references, implemented hook coverage, and unlock-gated pools for fresh and progressed saves. Phase 3 should extend it again for sector length ranges, scroll-speed modifiers, background-plan references, landmark references, hazard references, and distance marker ordering.
+Phase 2 should extend this checklist as systems become real. In addition to the existing entries, content validation should cover ship stat ranges, objective references, wave references, implemented hook coverage, and unlock-gated pools for fresh and progressed saves. Phase 3 should extend it again for sector length ranges, scroll-speed modifiers, background-plan references, landmark references, hazard references, and distance marker ordering. Phase 4 should extend it again for ship appearance references, HUD theme keys, preview assets/primitives, and input/display settings defaults.
 
 - [ ] No duplicate IDs.
 - [ ] Every item tag is registered.
@@ -105,11 +125,11 @@ Phase 2 should extend this checklist as systems become real. In addition to the 
 
 ## Manual browser smoke matrix
 
-| Browser       | Load | Start run | Combat | Pause | Settings | Summary | Notes |
-| ------------- | ---- | --------- | ------ | ----- | -------- | ------- | ----- |
-| Chrome/Edge   |      |           |        |       |          |         |       |
-| Firefox       |      |           |        |       |          |         |       |
-| Safari/WebKit |      |           |        |       |          |         |       |
+| Browser       | Load | Start run | Combat | Pause | Settings | Summary | Narrow viewport | Mouse | Notes |
+| ------------- | ---- | --------- | ------ | ----- | -------- | ------- | --------------- | ----- | ----- |
+| Chrome/Edge   |      |           |        |       |          |         |                 |       |       |
+| Firefox       |      |           |        |       |          |         |                 |       |       |
+| Safari/WebKit |      |           |        |       |          |         |                 |       |       |
 
 ## Performance checklist
 
@@ -119,11 +139,15 @@ Phase 3 performance checks should also include background primitive count, paral
 
 Current first-pass instrumentation exposes granular combat counts, background primitive/layer counts, active landmark/hazard counts, distance, speed, a dense-combat debug pocket, and a quiet late-sector long-scroll traversal behind `?debug=1`. Manual browser validation and production preview smoke still need to close the checklist.
 
+Phase 4 performance checks should include viewport/canvas scale, safe-frame size, HUD rendering density, preview rendering cost, mouse input update behavior, and whether themed HUD/ship cues add measurable overhead in dense and long-scroll debug scenarios.
+
 - [ ] FPS overlay available behind debug flag.
 - [ ] Projectile count visible in debug mode.
 - [ ] Particle count visible in debug mode.
 - [ ] Background/debug counters visible in debug mode.
 - [ ] Distance and scroll speed visible in debug mode.
+- [ ] Viewport/canvas scale visible in debug mode once Phase 4 instrumentation lands.
+- [ ] Active input mode visible in debug mode once mouse controls land.
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [ ] Heavy combat debug scene documented.
 - [ ] Long-scroll debug scene documented.
@@ -134,6 +158,8 @@ Current first-pass instrumentation exposes granular combat counts, background pr
 Phase 2 accessibility checks should cover seed entry, summary sharing, special/bomb/graze HUD readability, reduced motion, mute, and keyboard-only route/reward/shop flows.
 
 Phase 3 accessibility checks should also cover moving-background readability, high-contrast bullets over each sector palette, reduced-motion parallax simplification, distance HUD readability, boss scroll-lock clarity, and keyboard-only continuation after reaching sector exits.
+
+Phase 4 accessibility checks should also cover narrow viewport HUD readability, mouse controls as optional input, keyboard-only parity after previews/HUD changes, high-contrast bullets over contract ship/HUD themes, reduced-motion simplification for ship wake/damage cues, and focus safety across pointer interactions.
 
 - [ ] Keyboard-only menu navigation.
 - [ ] Remappable controls.
@@ -147,6 +173,8 @@ Phase 3 accessibility checks should also cover moving-background readability, hi
 - [ ] No essential information conveyed by color alone.
 - [ ] Distance/objective text remains readable over moving backgrounds.
 - [ ] Reduced motion simplifies scrolling effects without hiding gameplay state.
+- [ ] Themed HUD and ship previews preserve text contrast.
+- [ ] Mouse controls do not trap or steal menu focus.
 
 ## Release checklist
 

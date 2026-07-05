@@ -1,9 +1,9 @@
 # Starbreak Salvage Release Checklist
 
-Release candidate: `0.10.0` Phase 2 playtest hardening
+Release candidate: Phase 3 scrolling playtest hardening
 Date: 2026-07-04
 
-Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/VFX. Phase 2 work orders 011-020 are deployed and confirmed. Phase 3 planning now lives in `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`; work orders 021-029 add the first-pass scroll simulation, procedural background, scroll-synced directed-wave, distance-objective, landmark, hazard, boss-arena, route-conditioned sector, velocity/readability, and long-scroll instrumentation foundations, with manual cross-browser playtest still pending.
+Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/VFX. Phase 2 work orders 011-020 are deployed and confirmed. Phase 3 work orders 021-030 are complete as a first-pass scrolling playtest foundation: scroll simulation, procedural backgrounds, scroll-synced directed waves, distance objectives, landmarks, hazards, boss arenas, route-conditioned sector conditions, velocity/readability polish, long-scroll instrumentation, and release docs. Phase 4 planning now lives in `docs/STARBREAK_SALVAGE_PHASE_4_PLAN.md`.
 
 ## Automated Checks
 
@@ -20,11 +20,11 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 
 | Item                       | Status | Notes                                                                                                                                                                                                                                      |
 | -------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Public deployment playable | Pass   | Existing Pages deployment confirmed through 019; WO020 keeps the static Vite build.                                                                                                                                                        |
+| Public deployment playable | Pass   | Existing Pages deployment confirmed through 029; WO030 keeps the static Vite build.                                                                                                                                                        |
 | Vite base path             | Pass   | `vite.config.ts` uses `/StarbreakSalvage/`.                                                                                                                                                                                                |
 | Pages workflow             | Pass   | `.github/workflows/pages.yml` builds `dist` and deploys Pages artifact.                                                                                                                                                                    |
 | CI workflow                | Pass   | `.github/workflows/ci.yml` runs checks and Playwright smoke.                                                                                                                                                                               |
-| README                     | Pass   | Local dev, controls, settings, save, debug, seed sharing, vision, credits, and license are documented.                                                                                                                                     |
+| README                     | Pass   | Local dev, controls, settings, save, debug, seed sharing, vision, planning links, credits, and license are documented.                                                                                                                     |
 | License                    | Pass   | `LICENSE` is present.                                                                                                                                                                                                                      |
 | Credits                    | Pass   | `CREDITS.md` documents original placeholders and tooling.                                                                                                                                                                                  |
 | Changelog                  | Pass   | `CHANGELOG.md` has a `0.10.0` entry.                                                                                                                                                                                                       |
@@ -35,29 +35,30 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 | Runtime dependencies       | Pass   | No production dependencies remain.                                                                                                                                                                                                         |
 | Debug/performance tools    | Pass   | `?debug=1` supports five boss shortcuts, dense combat stress, quiet long-scroll traversal, forced summary, granular entity/projectile/pickup/effect/feature counters, distance/speed/arena counters, and background primitive/layer count. |
 
-## Phase 2 Playtest Audit
+## Phase 3 Scrolling Playtest Audit
 
-| Area                  | Status | Notes                                                                                                                         |
-| --------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| Balance               | Watch  | First-pass routes, rewards, shop economy, boss pressure, and unlock pacing need live playtest data.                           |
-| Performance           | Pass   | Dense debug pocket stays under the 80-entity Phase 2 alpha budget and has unit/E2E coverage.                                  |
-| Accessibility         | Watch  | Keyboard flow, remapping, mute, reduced motion, shake strength, and contrast exist; manual mobile and contrast checks remain. |
-| Deterministic content | Pass   | Seeded contracts, sectors, objectives, routes, rewards, shops, boss schedule, and unlock-gated pools are covered by tests.    |
-| Browser load          | Pass   | Static Vite build, Pages base path, Playwright smoke, and production preview smoke are covered.                               |
+| Area                  | Status | Notes                                                                                                                                                                    |
+| --------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Balance               | Watch  | First-pass scroll speed, sector length, hazard density, route conditions, rewards, shop economy, boss pressure, and unlock pacing need live playtest data.               |
+| Performance           | Pass   | Dense and long-scroll debug scenarios are deterministic; granular counters separate combat, background, feature, distance, speed, and arena state.                       |
+| Accessibility         | Watch  | Keyboard flow, remapping, mute, reduced motion, shake strength, contrast, HUD wrapping, and high-contrast bullets exist; manual mobile and contrast checks remain.       |
+| Deterministic content | Pass   | Seeded contracts, sectors, objectives, routes, rewards, shops, boss schedule, scroll plans, backgrounds, hazards, arena marks, and condition plans are covered by tests. |
+| Browser load          | Pass   | Static Vite build, Pages base path, and production preview smoke are covered; local Playwright is blocked by missing Chromium cache.                                     |
 
 ## Manual Browser Smoke
 
-| Browser                 | Load    | Start Run | Combat  | Pause   | Settings | Summary | Debug Perf | Notes                                       |
-| ----------------------- | ------- | --------- | ------- | ------- | -------- | ------- | ---------- | ------------------------------------------- |
-| Chromium via Playwright | Blocked | Blocked   | Blocked | Blocked | Blocked  | Blocked | Blocked    | Local Chromium headless shell is missing.   |
-| Chrome or Edge manual   | Not run | Not run   | Not run | Not run | Not run  | Not run | Not run    | Requires manual browser pass on deployment. |
-| Firefox manual          | Not run | Not run   | Not run | Not run | Not run  | Not run | Not run    | Requires manual browser pass on deployment. |
-| Safari manual           | Not run | Not run   | Not run | Not run | Not run  | Not run | Not run    | Requires macOS/iOS browser pass.            |
+| Browser                 | Load    | Start Run | Combat  | Pause   | Settings | Summary | Debug Perf | Long Scroll | Notes                                       |
+| ----------------------- | ------- | --------- | ------- | ------- | -------- | ------- | ---------- | ----------- | ------------------------------------------- |
+| Chromium via Playwright | Blocked | Blocked   | Blocked | Blocked | Blocked  | Blocked | Blocked    | Blocked     | Local Chromium headless shell is missing.   |
+| Chrome or Edge manual   | Not run | Not run   | Not run | Not run | Not run  | Not run | Not run    | Not run     | Requires manual browser pass on deployment. |
+| Firefox manual          | Not run | Not run   | Not run | Not run | Not run  | Not run | Not run    | Not run     | Requires manual browser pass on deployment. |
+| Safari manual           | Not run | Not run   | Not run | Not run | Not run  | Not run | Not run    | Not run     | Requires macOS/iOS browser pass.            |
 
 ## Known Issues
 
 - Audio is procedural cue feedback only; music and a fuller mix are not implemented yet.
 - Route/reward/shop/boss balance is first-pass and needs live playtest tuning.
 - First-pass scroll simulation, procedural sector backgrounds, scroll-synced directed waves, distance objectives, landmarks, hazards, boss arenas, route-conditioned sector conditions, velocity presentation cues, and long-scroll instrumentation exist, but balance/readability tuning remains early.
-- The debug overlay reports granular entity and scroll/background/feature counts; frame-time sampling, allocation timing, and production-preview scrolling smoke remain future release-hardening work.
+- The debug overlay reports granular entity and scroll/background/feature counts; frame-time sampling and allocation timing remain future instrumentation work.
+- Phase 4 display/input work is intentionally deferred: explicit window-size parity, mouse controls, contract ship appearance, ship previews, and graphical HUD theming are not implemented yet.
 - Manual cross-browser smoke outside Chromium remains pending.

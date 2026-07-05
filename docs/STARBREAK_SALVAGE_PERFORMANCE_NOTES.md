@@ -32,6 +32,8 @@ Phase 3 adds continuous vertical motion, procedural backgrounds, landmarks, and 
 - The long-scroll debug scenario jumps to a deterministic late-sector traversal without requiring a boss defeat or live enemy field. Use it to inspect background, feature, HUD, and scroll counter behavior apart from combat pressure.
 - Moving backgrounds must be tested in standard and high-contrast modes before increasing bullet density.
 
+Phase 3 closeout: work order 030 keeps object pooling/batching deferred. Local production preview smoke covers the static Pages base path; frame-time sampling and allocation timing remain future instrumentation rather than current blockers.
+
 ## Debug and Playtest Scenarios
 
 Enable debug tools with `?debug=1` on a local, preview, or Pages URL.
@@ -70,3 +72,10 @@ The debug overlay total entity count includes player, enemies, boss, bullets, pi
 - Procedural backgrounds and velocity cues are deliberately low-alpha/settings-aware, but they can still hide bullets unless palette, contrast, and motion settings are validated per sector.
 - Boss scroll locks now share a first-pass arena-state contract, and route-conditioned arena approach lengths are covered by unit tests. Future arena variants can still strand the player if they bypass the release condition or hide remaining support targets.
 - Rich landmarks and hazards may compete with enemies for attention; telegraphs should stay distinct from background motion.
+
+## Phase 4 Playtest Risks
+
+- Window-size parity can create new overlap bugs between canvas, HUD, debug overlay, and DOM scenes unless safe-frame helpers are test-covered.
+- Mouse controls can accidentally bypass pause/settings focus or undermine keyboard remapping if pointer state does not flow through the input abstraction.
+- Contract ship silhouettes and HUD themes can obscure hitboxes or bullets unless high-contrast and reduced-motion settings are checked with each baseline contract.
+- Contract previews and graphical HUD rendering should stay shape-based and cheap until debug/preview smoke shows there is room for richer visuals.

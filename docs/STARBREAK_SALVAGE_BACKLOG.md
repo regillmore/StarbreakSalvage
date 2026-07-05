@@ -482,7 +482,7 @@ Acceptance:
 
 Status:
 
-- First pass implemented with five boss shortcuts and a deterministic dense-combat debug pocket. The overlay currently reports total entity count; separate projectile/particle counters remain a follow-up.
+- First pass implemented with five boss shortcuts, deterministic dense-combat and long-scroll debug pockets, granular entity/projectile/pickup/effect/feature counters, distance/speed/arena counters, and background primitive/layer counts.
 
 ### P2 - Playtest checklist
 
@@ -706,6 +706,10 @@ Acceptance:
 - Renderer changes preserve shape-based placeholder clarity.
 - Production preview smoke covers Pages base path after scrolling changes.
 
+Status:
+
+- First pass completed in work order 030 with local production preview asset/base-path smoke. Object pooling and batching remain deferred until profiling shows a need.
+
 ## Epic Z - Phase 3 playtest release
 
 ### Z1 - Scrolling release checklist
@@ -716,6 +720,10 @@ Acceptance:
 - `npm run check`, E2E smoke, and production preview smoke pass.
 - Known scrolling balance/readability risks are documented.
 
+Status:
+
+- First pass completed in work order 030. Automated checks and production preview smoke are documented; local Playwright remains blocked by missing Chromium browser cache and manual cross-browser smoke remains pending for deployment validation.
+
 ### Z2 - Manual playtest script
 
 Acceptance:
@@ -723,3 +731,119 @@ Acceptance:
 - Manual script covers one distance-based sector, one hazard sequence, one route-conditioned sector, and one boss arena.
 - Browser matrix tracks Chrome/Edge, Firefox, and Safari where available.
 - Deployment confirmation closes Phase 3 or documents blockers.
+
+Status:
+
+- First pass completed in work order 030. The QA/release docs now identify scrolling, hazard, route-conditioned sector, boss arena, dense-combat, and long-scroll debug passes as the manual smoke focus. Full browser matrix execution remains a deployment/manual testing task.
+
+## Phase 4 backlog additions
+
+Phase 4 starts after work order 030 deployment confirmation and cleanly concludes the first scrolling playtest foundation. The goal is display/input/identity polish: window-size parity, optional mouse controls, contract-specific ship visuals, new-game previews, and a contract-themed graphical HUD.
+
+## Epic AA - Resolution scaling and viewport parity
+
+### AA1 - Gameplay safe frame
+
+Acceptance:
+
+- Canvas scaling preserves a stable gameplay safe frame across desktop, laptop, tablet-like, and narrow mobile windows.
+- Player movement, bullets, hazards, and boss arena framing remain inside readable bounds.
+- Debug tools can expose viewport/canvas scale where useful.
+
+### AA2 - HUD safe areas
+
+Acceptance:
+
+- HUD does not overlap critical gameplay or itself on narrow and wide layouts.
+- Important readouts wrap or compress predictably.
+- E2E or documented manual smoke covers at least one narrow viewport.
+
+## Epic AB - Mouse controls
+
+### AB1 - Pointer movement and fire
+
+Acceptance:
+
+- Optional mouse/pointer input can move or guide the ship during gameplay.
+- Click/hold fire maps through the input abstraction.
+- Pointer movement is clamped to the gameplay safe frame.
+
+### AB2 - Input-mode settings and accessibility
+
+Acceptance:
+
+- Mouse controls are documented and optional.
+- Keyboard and remapped-key play remain fully functional.
+- Menus, settings, pause, and focus order are not disrupted by pointer input.
+
+## Epic AC - Contract ship visual identity
+
+### AC1 - Ship appearance schema
+
+Acceptance:
+
+- Ship appearance data includes silhouette, palette, engine color, cockpit accent, weapon mount hints, and HUD theme key.
+- Baseline contracts have distinct original visual identities.
+- Content validation catches invalid appearance references.
+
+### AC2 - Gameplay ship rendering
+
+Acceptance:
+
+- Player ship renderer consumes appearance data.
+- Visual differences do not change hitbox or damage logic.
+- Reduced motion, performance mode, and high contrast remain readable.
+
+## Epic AD - Contract previews and HUD
+
+### AD1 - Contract selection ship previews
+
+Acceptance:
+
+- New-game contract cards show ship previews using appearance data.
+- Selected preview updates through keyboard and pointer interactions.
+- Preview layout remains readable on narrow viewports.
+
+### AD2 - Contract-themed graphical HUD
+
+Acceptance:
+
+- HUD frame, meters, and accents reflect the selected contract theme.
+- Critical text readouts and screen-reader support remain intact.
+- Themed HUD respects reduced motion, performance mode, and high-contrast bullets.
+
+## Epic AE - Contract theme propagation and feedback
+
+### AE1 - Ship identity feedback
+
+Acceptance:
+
+- Damage, invulnerability, engine wake, special readiness, bomb readiness, and overheat cues can use ship appearance data.
+- Cues remain original, readable, and lightweight.
+- Reduced-motion/performance fallbacks exist.
+
+### AE2 - Theme propagation
+
+Acceptance:
+
+- Route transition, reward, shop, run summary, and debug context carry subtle contract theme accents.
+- Operational screens remain quiet and scannable.
+- Seed sharing and save/import/export remain compatible.
+
+## Epic AF - Phase 4 playtest release
+
+### AF1 - Viewport/input debug and smoke
+
+Acceptance:
+
+- Debug overlay can report viewport/canvas scale and active input mode.
+- Smoke coverage or manual matrix covers narrow viewport and mouse input.
+- Release docs capture local browser blockers separately from gameplay blockers.
+
+### AF2 - Phase 4 release checklist
+
+Acceptance:
+
+- README, changelog, performance notes, release checklist, and QA docs cover Phase 4 features.
+- `npm run check` and production preview smoke pass.
+- Known display/input/HUD risks are documented before deployment.

@@ -471,6 +471,162 @@ Acceptance criteria:
 - Release checklist documents scrolling smoke, debug scenarios, manual browser gaps, known issues, and balance risks.
 - Phase 3 can be declared complete or explicitly deferred with documented blockers.
 
+Status: first pass implemented; Phase 3 is documented as complete after the scrolling playtest hardening pass, release and QA docs capture local check/preview evidence plus the local Playwright browser-cache blocker, and Phase 4 planning/work orders now continue the roadmap.
+
+## Phase 4 work orders
+
+Phase 4 begins after work order 030 deployment confirmation and concludes the first scrolling playtest foundation. Its purpose is to make Starbreak Salvage feel cohesive across displays and control styles while giving each contract a distinct ship, preview, and cockpit/HUD identity. Preserve deterministic run generation and keep the game static, original, accessible, and small.
+
+## Work order 031 - Resolution scaling and viewport parity
+
+Goal: make the playfield and HUD stable across common browser sizes.
+
+Prompt:
+
+> Read `AGENTS.md` first. Then read the Phase 4 plan, renderer, app shell, CSS, settings, and E2E smoke. Add explicit viewport/canvas scaling rules for desktop, laptop, tablet-like, and narrow mobile windows. Define a gameplay safe frame and HUD safe areas so the player, bullets, and objective/HUD text remain readable without overlap. Add pure helpers for scale/safe-area calculations where practical, debug overlay viewport metrics if useful, and viewport-focused tests. Update README/QA/performance notes. Run checks.
+
+Acceptance criteria:
+
+- Canvas and gameplay safe frame scale predictably at common viewport sizes.
+- HUD text does not overlap the playfield or itself on narrow and wide layouts.
+- Scaling helpers have unit coverage or E2E viewport coverage.
+- Existing keyboard gameplay, pause, and debug overlays still work.
+
+## Work order 032 - Mouse controls
+
+Goal: add optional mouse-assisted play while preserving keyboard-first control.
+
+Prompt:
+
+> Add mouse/pointer controls through the existing input abstraction. Support an opt-in or clearly documented mouse mode for ship movement or pointer-guided movement, plus click/hold fire where appropriate. Keep keyboard/remapped controls fully functional. Add settings for mouse mode/sensitivity only if needed by the implementation. Clamp pointer movement to the gameplay safe frame, respect pause/settings/menu focus, and add tests for pointer-to-action mapping and bounds behavior. Add E2E smoke for mouse launch/control if local browsers are available. Update README/accessibility notes. Run checks.
+
+Acceptance criteria:
+
+- Mouse input can move or guide the ship during gameplay.
+- Mouse fire maps through gameplay input rather than bypassing action state.
+- Keyboard-only and remapped-key flows remain intact.
+- Pointer behavior does not trap focus or break pause/settings scenes.
+
+## Work order 033 - Ship appearance data model
+
+Goal: make contract ships visually distinct from content data.
+
+Prompt:
+
+> Add a data-driven ship appearance model tied to contracts/ships: silhouette archetype, primary/secondary palette, engine color, cockpit accent, weapon mount hints, and HUD theme key. Validate appearance references alongside ship stats. Update the player renderer to draw at least the baseline contract ships with distinct original canvas silhouettes and palettes while preserving hitbox clarity. Add tests for content validation and render-state derivation where practical. Update docs. Run checks.
+
+Acceptance criteria:
+
+- Baseline contracts have distinct ship silhouettes and palettes.
+- Appearance data validates and fails on missing/invalid references.
+- Gameplay hit radius remains clear and unchanged by purely visual differences.
+- Reduced motion/performance/high-contrast behavior remains readable.
+
+## Work order 034 - New Game contract selection ship previews
+
+Goal: show the ship before the player commits to a contract.
+
+Prompt:
+
+> Upgrade the contract selection scene with ship preview rendering for each contract card and a larger selected-contract preview if layout allows. Previews should use the ship appearance data and show weapon/role cues without external assets. Preserve keyboard selection, focus order, and narrow viewport readability. Add tests for preview data wiring and E2E smoke for selecting a contract with previews. Update README and QA notes. Run checks.
+
+Acceptance criteria:
+
+- Each contract choice displays a readable ship preview.
+- Selected contract preview updates through keyboard and pointer interactions.
+- Previews do not crowd text on narrow layouts.
+- No copied or external ship art is introduced.
+
+## Work order 035 - Contract-themed graphical player HUD
+
+Goal: make gameplay HUD feel like a ship cockpit without hiding state.
+
+Prompt:
+
+> Replace or augment the current pill-heavy gameplay HUD with a contract-themed graphical HUD layer. Use the selected ship appearance/HUD theme for frame accents, meter colors, weapon/special/bomb indicators, and compact status panels. Keep critical values text-readable, screen-reader friendly, and responsive. Respect reduced motion, high contrast, performance mode, and color contrast. Add unit tests for HUD theme derivation and E2E smoke for core readouts. Update docs. Run checks.
+
+Acceptance criteria:
+
+- HUD frame and meters reflect the selected contract theme.
+- Hull, credits/salvage, objective, weapon heat, special, bomb, boss, and warning states remain readable.
+- HUD layout remains stable on narrow and wide windows.
+- Accessibility settings reduce or clarify themed presentation as needed.
+
+## Work order 036 - Display and input accessibility
+
+Goal: harden Phase 4 display/input features for more players.
+
+Prompt:
+
+> Audit resolution scaling, mouse controls, ship previews, and themed HUD behavior for accessibility. Ensure keyboard-only flow remains complete, focus order is sensible, pointer controls are optional/clear, reduced motion and performance mode simplify visuals, and high-contrast mode works across ship/HUD themes. Add tests for settings interactions and E2E smoke for keyboard-only plus high-contrast/reduced-motion launch if practical. Update QA checklist and README. Run checks.
+
+Acceptance criteria:
+
+- Keyboard-only flow can start, play, pause, and summarize a run.
+- Mouse controls are optional and do not interfere with menus/settings.
+- High-contrast bullets and themed HUD remain readable together.
+- Reduced motion/performance mode simplify previews/HUD/ship cues.
+
+## Work order 037 - Ship damage, wake, and identity feedback
+
+Goal: reinforce contract identity during combat moments.
+
+Prompt:
+
+> Add lightweight ship-specific visual feedback for damage, invulnerability, engine wake, special readiness, bomb readiness, and overheat/weapon stress. Feed effects from ship appearance data and existing combat state rather than adding random or external assets. Keep bullets readable and preserve reduced-motion/performance fallbacks. Add tests for cue-state derivation where possible and update performance notes. Run checks.
+
+Acceptance criteria:
+
+- Ship damage and invulnerability states are visible without confusing hitbox size.
+- Engine wake and readiness cues differ by contract theme.
+- Reduced motion and performance mode reduce cue intensity.
+- Combat remains readable in high-contrast bullet mode.
+
+## Work order 038 - Contract theme propagation
+
+Goal: carry contract identity through non-combat screens without turning them into clutter.
+
+Prompt:
+
+> Propagate contract theme accents into route transition, reward, shop, run summary, and debug context. Keep operational screens quiet and scannable; avoid decorative cards inside cards. Summaries should include ship appearance/theme identifiers for debugging/replay context if useful. Preserve seed sharing and save compatibility. Add tests for summary/theme formatting where practical. Update README/changelog. Run checks.
+
+Acceptance criteria:
+
+- Route/reward/shop/summary screens reflect the selected contract theme subtly.
+- Summary still clearly reports seed, route history, items, unlocks, and distance.
+- Theme metadata does not break existing save/import/export behavior.
+- UI remains readable on narrow layouts.
+
+## Work order 039 - Viewport/input debug and smoke coverage
+
+Goal: make Phase 4 polish measurable before release hardening.
+
+Prompt:
+
+> Extend debug instrumentation and smoke coverage for viewport parity and input modes. Add overlay metrics for viewport size, canvas scale, safe frame, HUD mode, and active input mode where useful. Add deterministic smoke paths for narrow viewport launch, mouse-control play, and contract preview/HUD theme verification if practical. Update performance notes, QA plan, and release checklist. Run checks.
+
+Acceptance criteria:
+
+- Debug overlay can report viewport/canvas scale and input mode.
+- Automated or documented smoke covers narrow viewport and mouse input.
+- Contract preview and themed HUD smoke coverage exists or local browser blockers are documented.
+- Performance notes explain when display/HUD rendering would need optimization.
+
+## Work order 040 - Phase 4 playtest release hardening
+
+Goal: ship a display/input/contract-identity playtest candidate.
+
+Prompt:
+
+> Audit the Phase 4 build for resolution parity, mouse controls, ship appearance, contract previews, themed HUD, accessibility, deterministic integrity, browser load, release docs, and manual smoke coverage. Fix blockers only. Update README, changelog, performance notes, Phase 4 plan, backlog, release checklist, and manual test matrix. Run `npm run check`, Playwright smoke if available, and production preview smoke. Summarize known display/input risks, browser gaps, and follow-up issues.
+
+Acceptance criteria:
+
+- Full checks and production preview smoke pass.
+- E2E smoke passes or local browser-install blockers are clearly documented.
+- Release checklist documents window-size, mouse, preview, HUD theme, and manual browser gaps.
+- Phase 4 can be declared complete or explicitly deferred with documented blockers.
+
 ## Review subagent prompt
 
 Use after a feature PR:

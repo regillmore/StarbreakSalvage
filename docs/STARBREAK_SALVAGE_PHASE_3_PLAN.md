@@ -26,16 +26,18 @@ The goal is not to copy any specific commercial game. The inspiration is the sen
 5. **Deterministic Terrain And Pacing** - same seed and route should reproduce sector length, biome layers, landmarks, hazard lanes, major wave marks, and boss arena timing.
 6. **Performance Before Ornament** - scrolling visuals must stay cheap, shape-based/original, and testable before richer art polish.
 
-## Current Gap
+## Phase 3 Closeout
 
-The Phase 2 game has deterministic sectors and wave objectives, but the playfield still behaves like a stationary combat box:
+Phase 3 is complete as a first-pass scrolling playtest slice after work order 030:
 
-- first-pass sector completion now requires exit distance plus required wave/boss gates, boss-gated sectors now have first-pass arena approach/lock/release behavior, and route outcomes can alter next-sector travel distance and scroll speed;
-- first-pass backgrounds are now sector-specific and procedurally layered, with deterministic landmarks and sparse hazards now layered on top; route-conditioned landmark and hazard variants now have a first-pass condition layer;
-- first-pass directed enemy waves are now tied to scroll markers, and first-pass hazards are tied to distance windows; pickup beats and boss approach gates are still follow-ups;
-- bosses now spawn from deterministic arena locks in boss-gated sectors, and route-conditioned boss approach lengths now exist in a first pass; arena presentation and intro polish remain early;
-- route/event choices now affect future combat and the physical feeling of the next sector, but balance/readability tuning is still early;
-- debug tools stress entity counts, but not long-scroll rendering or distance progression.
+- sector completion requires exit distance plus required wave/boss gates;
+- backgrounds are sector-specific, procedurally layered, and route-conditioned by landmarks and hazards;
+- directed enemy waves, hazards, and boss arenas are tied to deterministic scroll distance;
+- route/event choices can alter future sector speed, length, hazards, landmarks, and boss approach length;
+- velocity cues, reduced-motion/high-contrast behavior, and HUD wrapping have first-pass polish;
+- debug tools now cover dense combat and quiet late-sector long-scroll traversal with granular counters.
+
+Phase 3 remaining risks are balance, manual cross-browser validation, mobile display tuning, richer visual identity, and input parity. Those move into Phase 4 rather than blocking the scrolling foundation.
 
 ## Phase 3 Milestones
 
@@ -157,6 +159,8 @@ Exit criteria:
 - Release checklist documents scrolling browser smoke and known balance risks.
 - Manual test script covers at least one full distance-based sector and one boss arena.
 
+Status: completed by work order 030. Release docs now treat Phase 3 as a first-pass scrolling playtest candidate, production preview asset/base-path smoke is documented, local `npm run check` is green, and the local Playwright browser-cache blocker plus manual browser gaps are recorded for deployment validation.
+
 ## Recommended Phase 3 Sequence
 
 1. Work order 021 - Scrolling simulation foundation.
@@ -173,3 +177,5 @@ Exit criteria:
 ## Phase 3 Definition Of Done
 
 Phase 3 is done when a new player can start a seeded run, feel the ship moving through visually distinct sectors, survive distance-based objectives, encounter waves and hazards at deterministic scroll marks, transition into boss arenas where appropriate, choose routes that alter future sector conditions, and replay/share the seed with stable sector distance, background, landmark, wave, shop, reward, and boss timing.
+
+Status: achieved as a first-pass implementation by work orders 021-030. Follow-up polish continues in Phase 4 around display parity, mouse controls, contract ship identity, ship previews, and graphical HUD presentation.

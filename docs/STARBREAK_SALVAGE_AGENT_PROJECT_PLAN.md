@@ -27,9 +27,11 @@ Phase 1 is complete as of the M10 release and first-pass audio/VFX follow-up. Th
 
 Phase 2 is complete as of deployed and confirmed work order 020. It turned the alpha foundation into a more cohesive playtest slice: full-run structure, sector objectives, player verbs, boss escalation, expanded content, unlock gating, onboarding, balance, debug tooling, and release docs.
 
-Phase 3 begins from that playtest slice. Its goal is to make Starbreak Salvage feel like a true vertical-scrolling arcade roguelike: deterministic sector distance, procedural backgrounds, scroll-synced waves, distance objectives, hazards, landmarks, and boss arena transitions.
+Phase 3 is complete as of deployed and confirmed work order 030. It made Starbreak Salvage feel like a first-pass vertical-scrolling arcade roguelike: deterministic sector distance, procedural backgrounds, scroll-synced waves, distance objectives, hazards, landmarks, boss arena transitions, route-conditioned sector physics, velocity cues, and long-scroll instrumentation.
 
-See `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md` for the active Phase 3 roadmap. `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md` remains the historical record for the concluded Phase 2 sequence.
+Phase 4 begins from that scrolling playtest slice. Its goal is display/input/identity polish: window-size parity, optional mouse controls, contract-specific ship visuals, new-game ship previews, and contract-themed graphical HUD presentation.
+
+See `docs/STARBREAK_SALVAGE_PHASE_4_PLAN.md` for the active Phase 4 roadmap. `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md` and `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md` remain historical records for concluded phases.
 
 ## Milestones
 
@@ -309,7 +311,79 @@ Exit criteria:
 - Distance objectives, boss locks, route modifiers, and summaries behave deterministically.
 - No severe blockers remain for a Phase 3 playtest release.
 
-Status: first-pass distance objectives are implemented by work order 024. Normal and boss sectors now require exit distance plus required combat gates, HUD/transition/summary copy exposes distance, and save records preserve distance reached. Hazards, boss arenas, and route-conditioned sector state are implemented by work orders 025-027, velocity presentation/readability polish is implemented by work order 028, and long-scroll debug instrumentation is implemented by work order 029. Phase 3 playtest hardening remains open.
+Status: completed by work orders 024-030. Normal and boss sectors require exit distance plus required combat gates, HUD/transition/summary copy exposes distance, save records preserve distance reached, hazards/boss arenas/route-conditioned sector state are implemented, velocity presentation/readability polish is in place, long-scroll debug instrumentation exists, and release docs capture automated checks, preview smoke, and browser gaps.
+
+## Phase 4 milestones
+
+### P4.1 - Display And Input Foundation
+
+Scope:
+
+- Define viewport/canvas scaling and gameplay safe frame rules.
+- Add optional mouse/pointer controls through the input abstraction.
+- Preserve keyboard/remapped controls and pause/settings focus behavior.
+
+Exit criteria:
+
+- Common desktop, laptop, tablet-like, and narrow windows keep gameplay readable.
+- Mouse-assisted control works without bypassing input state.
+- Debug or test coverage exposes viewport and input-mode parity.
+
+### P4.2 - Contract Ship Identity
+
+Scope:
+
+- Add data-driven ship appearance for contract silhouettes, palettes, engine/cockpit accents, weapon mount hints, and HUD theme keys.
+- Render distinct player ships in gameplay without changing hitbox semantics.
+- Validate appearance content references.
+
+Exit criteria:
+
+- Baseline contracts are visually distinguishable in motion.
+- Appearance data is deterministic and test-covered.
+- Reduced motion, performance mode, and high contrast remain readable.
+
+### P4.3 - Contract Selection Previews
+
+Scope:
+
+- Add ship previews to new-game contract cards.
+- Show role/weapon cues from content data.
+- Preserve keyboard and pointer selection across narrow layouts.
+
+Exit criteria:
+
+- Contract choice feels visual before launch.
+- Preview state updates with focus/selection.
+- No external or copied art is introduced.
+
+### P4.4 - Graphical Contract HUD
+
+Scope:
+
+- Build a contract-themed gameplay HUD layer with readable graphical meters.
+- Keep hull, economy, objective, warning, boss, weapon, special, bomb, and build state visible.
+- Preserve screen-reader text and accessibility settings.
+
+Exit criteria:
+
+- HUD feels like a lightweight cockpit tied to the selected ship.
+- Text/readout clarity remains intact on narrow and wide windows.
+- High contrast and reduced motion simplify theme treatment.
+
+### P4.5 - Phase 4 Playtest Candidate
+
+Scope:
+
+- Propagate contract theme subtly into route/reward/shop/summary screens.
+- Add viewport/input debug and smoke coverage.
+- Harden release docs and manual browser matrix.
+
+Exit criteria:
+
+- A deployed build communicates selected ship identity from contract selection through gameplay and summary.
+- Keyboard and mouse-assisted play are documented and smoke-tested where browser tooling is available.
+- No severe display/input/HUD blockers remain for the Phase 4 playtest release.
 
 ## Dependency map
 
@@ -331,6 +405,11 @@ M0 scaffold
                             -> P3.2 procedural sector space
                               -> P3.3 scroll-synced encounters
                                 -> P3.4 scrolling playtest candidate
+                                  -> P4.1 display/input foundation
+                                    -> P4.2 contract ship identity
+                                      -> P4.3 contract previews
+                                        -> P4.4 graphical HUD
+                                          -> P4.5 display/input playtest candidate
 ```
 
 Parallelizable:
@@ -348,6 +427,8 @@ High-conflict areas:
 - Scene manager.
 - Scroll state, camera offset, and sector-progress HUD.
 - Wave/director scheduling around distance thresholds.
+- Viewport/canvas scaling, HUD layout, and input-mode behavior.
+- Ship appearance data shared by gameplay, previews, HUD, and summaries.
 
 ## First five PRs
 
