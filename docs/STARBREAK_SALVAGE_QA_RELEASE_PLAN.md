@@ -111,7 +111,7 @@ Current Phase 5 coverage:
 Phase 6 expands the item catalog and hook surface. Add tests closest to the risk:
 
 - item catalog audit coverage for current rarity, tag, hook, reward-pool, archetype, unlock, and bridge-effect baselines; work order 051 adds the first helper and unit coverage;
-- item metadata validation for family, source hints, unlock tier, implementation status, uniqueness/stackability, effect text, rarity, and reward-pool placement;
+- item metadata validation for family, source hints, unlock tier, implementation status, uniqueness/stackability, effect text, rarity, and reward-pool placement; work order 052 adds source/pool drift, unlock-gate drift, bridge/planned note, duplicate metadata, and unsupported starter rarity/source fixtures;
 - hook registration, dispatch ordering, proc limits, and multi-item interaction tests for new hook points such as graze, special, bomb, sector start, route choice, shop entry, reward generation, and boss phase events;
 - known-seed snapshots for reward, shop, vault, boss, faction, lunar, and unlock-gated item pools under fresh and progressed saves;
 - item unlock and discovery migration/import/export/corruption repair if save shape changes;
@@ -182,7 +182,8 @@ Phase 2 should extend this checklist as systems become real. In addition to the 
 - [x] Ship appearance references, palettes, weapon mount hints, and HUD theme keys validate.
 - [x] Upgrade definitions, costs, prerequisites, effect references, and icon categories validate.
 - [x] Lunar sector background, feature, pacing, faction, and boss references validate.
-- [ ] Item family, source, implementation status, unlock gate, and synergy references validate after Phase 6 schema work.
+- [x] Item family, source, implementation status, unlock gate, and reward-pool source metadata validate after Phase 6 schema work.
+- [ ] Item discovery gates, source-weighted pools, synergy cluster references, and item card presentation data validate after later Phase 6 work.
 
 ## Manual browser smoke matrix
 

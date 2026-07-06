@@ -34,6 +34,33 @@ describe('item catalog audit', () => {
       overkill: 1,
       relic: 1
     });
+    expect(audit.familyCounts).toEqual({
+      'laser-split': 4,
+      'missile-overkill': 4,
+      'drone-copy': 4,
+      'shield-revenge': 3,
+      'credit-shop': 4,
+      'curse-relic': 4,
+      'phase-graze': 3,
+      'heat-prototype': 3,
+      'lunar-surface': 0,
+      'route-economy': 1,
+      'boss-pressure': 0
+    });
+    expect(audit.implementationStatusCounts).toEqual({
+      live: 26,
+      bridge: 4,
+      planned: 0
+    });
+    expect(audit.unlockTierCounts).toEqual({
+      baseline: 25,
+      advanced: 4,
+      unlock: 1
+    });
+    expect(audit.stackingCounts).toEqual({
+      unique: 30,
+      stackable: 0
+    });
   });
 
   it('summarizes reward pool breadth and current unlock gating', () => {
@@ -62,6 +89,18 @@ describe('item catalog audit', () => {
         rarityCounts: { common: 0, uncommon: 1, rare: 5, prototype: 3, cursed: 2 }
       }
     ]);
+    expect(audit.sourceCounts).toMatchObject({
+      starter: 17,
+      combat: 23,
+      vault: 11,
+      unlock: 1,
+      shop: 0,
+      elite: 0,
+      boss: 0,
+      faction: 0,
+      lunar: 0,
+      route: 0
+    });
     expect(audit.lockedItemIds).toEqual(['item_overheat_oracle']);
   });
 
@@ -79,9 +118,9 @@ describe('item catalog audit', () => {
     ]);
     expect(audit.bridgeEffectNotes.map((note) => note.itemId)).toEqual([
       'item_ricochet_license',
+      'item_cursed_hull_plate',
       'item_phase_grazer',
-      'item_vault_parasite',
-      'item_cursed_hull_plate'
+      'item_vault_parasite'
     ]);
     expect(BRIDGE_EFFECT_AUDIT_NOTES).toHaveLength(4);
   });

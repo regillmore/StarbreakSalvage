@@ -1,6 +1,6 @@
 # Starbreak Salvage - Item Catalog Audit
 
-Work order 051 baseline. This document records the current item catalog before Phase 6 starts expanding metadata, hooks, reward pools, unlocks, and presentation. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
+Work orders 051-052 baseline. This document records the current item catalog before Phase 6 starts expanding hooks, reward pools, unlocks, and presentation. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
 
 ## Current Shape
 
@@ -11,6 +11,19 @@ Work order 051 baseline. This document records the current item catalog before P
 | Hook names | 5 | Add graze, special, bomb, sector, route, shop, reward, and boss-phase hooks where practical |
 | Locked item ids | 1 | Multiple unlock-gated families, not just individual items |
 | Archetype records | 8 | Keep legacy archetypes and add lunar, route, boss-pressure, and discovery-oriented families |
+
+## Schema Metadata
+
+Work order 052 formalized compact item metadata:
+
+- `family` selects one Phase 6 family lane such as laser/split, curse/relic, lunar/surface, route/economy, or boss-pressure.
+- `sources` records current and future acquisition intent, including starter, combat, shop, vault, elite, boss, faction, lunar, route, and unlock.
+- `unlockTier` separates baseline, advanced, and explicitly unlock-gated items.
+- `implementationStatus` distinguishes live, bridge, and planned effects; bridge/planned entries must explain the gap.
+- `stacking` records unique versus stackable intent before duplicate item rewards become possible.
+- `uiTags` gives item cards a short, validated badge vocabulary without parsing gameplay tags.
+
+The current catalog remains behavior-compatible with the pre-052 reward pools. Validation now requires reward-pool membership to match source metadata, unlock-gated items to carry both an unlock tier and unlock source, and prototype/cursed items to stay out of starter sources.
 
 ## Rarity Coverage
 
@@ -96,7 +109,7 @@ These items have live behavior today, but their text or fantasy points toward fu
 | Vault Parasite | Pays extra salvage on kills. | Connect to vault/source weighting or curse/relic reward flow. |
 | Cursed Hull Plate | Fires curse-themed revenge shards on hit. | Add an explicit cost/downside or update copy if the item stays purely retaliatory. |
 
-No shipped item is a pure no-op: current validation requires every declared hook to have an implementation. Phase 6 should formalize live, bridge, and planned implementation status in item metadata.
+No shipped item is a pure no-op: current validation requires every declared hook to have an implementation. Work order 052 formalized live, bridge, and planned implementation status in item metadata.
 
 ## Target Families
 

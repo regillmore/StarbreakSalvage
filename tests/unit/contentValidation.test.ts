@@ -424,6 +424,75 @@ describe('validateContent', () => {
     expect(errors).toContain('Item item_split_prism has invalid tag: not-a-real-tag');
   });
 
+  it('rejects invalid item metadata', () => {
+    const errors = validateContent({
+      items: [
+        {
+          ...baseItem,
+          metadata: {
+            family: 'saucer-build',
+            sources: ['starter', 'starter', 'moon'],
+            unlockTier: 'vip',
+            implementationStatus: 'bridge',
+            stacking: 'infinite',
+            uiTags: ['laser', 'laser', 'sparkle']
+          }
+        } as unknown as ItemDefinition,
+        {
+          ...baseItem,
+          id: 'item_vault_parasite',
+          rarity: 'prototype',
+          metadata: {
+            ...baseItem.metadata,
+            sources: ['starter'],
+            implementationStatus: 'planned',
+            implementationNote: ''
+          }
+        } as unknown as ItemDefinition
+      ]
+    });
+
+    expect(errors).toContain('Item item_chain_arc_capacitor has invalid family: saucer-build');
+    expect(errors).toContain('Item item_chain_arc_capacitor has invalid source: moon');
+    expect(errors).toContain('Item item_chain_arc_capacitor has duplicate source: starter');
+    expect(errors).toContain('Item item_chain_arc_capacitor has invalid unlock tier: vip');
+    expect(errors).toContain(
+      'Item item_chain_arc_capacitor must explain bridge implementation'
+    );
+    expect(errors).toContain('Item item_chain_arc_capacitor has invalid stacking mode: infinite');
+    expect(errors).toContain('Item item_chain_arc_capacitor has invalid UI tag: sparkle');
+    expect(errors).toContain('Item item_chain_arc_capacitor has duplicate UI tag: laser');
+    expect(errors).toContain(
+      'Item item_vault_parasite cannot be starter sourced while implementation is planned'
+    );
+    expect(errors).toContain(
+      'Item item_vault_parasite cannot be starter sourced with prototype rarity'
+    );
+  });
+
+  it('rejects item metadata that drifts from unlock gates and reward pools', () => {
+    const errors = validateContent({
+      items: [
+        {
+          ...baseItem,
+          metadata: {
+            ...baseItem.metadata,
+            sources: ['starter', 'unlock'],
+            unlockTier: 'unlock'
+          }
+        }
+      ],
+      itemUnlocks: {
+        item_chain_arc_capacitor: 'unlock_missing' as never
+      }
+    });
+
+    expect(errors).toContain('Item item_chain_arc_capacitor appears in combat pool without combat source');
+    expect(errors).toContain(
+      'Item item_chain_arc_capacitor references missing unlock gate: unlock_missing'
+    );
+  });
+
   it('rejects missing item hook implementations', () => {
     const errors = validateContent({
       itemHookImplementations: {

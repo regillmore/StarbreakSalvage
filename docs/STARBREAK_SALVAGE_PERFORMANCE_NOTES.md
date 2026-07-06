@@ -75,6 +75,7 @@ Phase 5 closeout: work order 050 keeps progression/sector-feedback optimization 
 Phase 6 expands the item catalog and hook surface. Keep the first larger catalog conservative until proc and DOM costs are measured.
 
 - Item definitions should remain data-only and validated in tests. Large item batches should not add production dependencies or external assets.
+- Work order 052 keeps schema growth data-only: family/source/unlock/status/stacking/UI-tag metadata is resolved by content validation and audit helpers, not by per-frame gameplay systems.
 - Item hook dispatch should stay explicit, deterministic, and bounded by proc budgets. New hooks should avoid scanning unrelated state every frame.
 - Prefer generation-time pool sampling over per-frame item filtering. Reward, shop, vault, boss, faction, lunar, and unlock-gated pools should be derived from seed plus save state when the relevant screen or encounter is created.
 - Large reward/shop/archive item card surfaces should use stable DOM nodes or compact render passes rather than rebuilding excessive nested markup on hover.

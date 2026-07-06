@@ -32,6 +32,7 @@
 - Added Lunar Surface crater-shadow, comm-array, and surface-relay landmarks plus dust-plume, mining-laser, and surface-defense hazard patterns with low-altitude encounter pacing hooks.
 - Added a bounded player ship destruction sequence with contract-colored debris, cockpit failure pulse, transponder toast, debug-state instrumentation, and reduced-motion/performance/high-contrast variants before the existing destroyed summary.
 - Expanded Phase 5 debug instrumentation with progression, banked scrap, upgrade readiness, run resource, and current sector-plan readouts for upgrade and lunar smoke coverage.
+- Added compact item metadata for Phase 6 catalog scale, including family, source hints, unlock tier, implementation status, stackability, and UI tags.
 - Added deterministic sector scroll plans, fixed-step distance tracking, HUD distance/speed readouts, debug distance counters, and subtle reduced-motion-aware starfield drift.
 - Added deterministic procedural parallax background plans for all five sectors, with original canvas-drawn stars, rails, debris, bloom strands, grid lines, and core fractures.
 - Moved normal directed wave spawning onto deterministic scroll-distance marks while retaining time-based fallback schedules and boss-gate timing.
@@ -46,6 +47,7 @@
 ### Testing
 
 - Added a repeatable Phase 6 item catalog audit helper and unit coverage for the current rarity, tag, hook, reward-pool, archetype, unlock, target-family, and bridge-effect baseline.
+- Added item metadata validation for family/source/status/stacking/UI tags, bridge/planned implementation notes, reward-pool source drift, unlock-gate drift, and unsupported starter rarity/source combinations.
 - Added wave director and objective completion tests, including known-seed objective snapshots and boss-gate coverage.
 - Added combat tests for special charge/use, bomb mitigation, graze detection, remapped special/bomb controls, and reduced-motion effect rendering.
 - Added validation and gameplay tests for ship stat contracts, weapon references, weapon patterns, heat/reload behavior, and starting economy.
@@ -95,6 +97,7 @@
 - Concluded Phase 4 in planning docs and added the Phase 5 roadmap/work orders for banked scrap purpose, upgrade bay icons, sector exits/toasts, lunar surface content, ship destruction, and progression release hardening.
 - Concluded Phase 5 in planning docs and added the Phase 6 roadmap/work orders for item taxonomy, hook expansion, catalog growth, reward pool weighting, unlock-gated item families, synergy identity, item presentation, and item-heavy smoke coverage.
 - Started Phase 6 with a documented audit of the current 30-item catalog, repeated-reward risks, underrepresented archetypes, target item families, and bridge-effect follow-ups.
+- Formalized the Phase 6 item metadata contract and validation baseline before adding larger item batches.
 
 ## 0.10.0 - 2026-07-03
 

@@ -1,14 +1,24 @@
 import {
   ITEM_ARCHETYPES,
+  ITEM_FAMILIES,
   ITEM_HOOKS,
+  ITEM_IMPLEMENTATION_STATUSES,
+  ITEM_SOURCES,
+  ITEM_STACKING_MODES,
   ITEM_TAGS,
+  ITEM_UNLOCK_TIERS,
   ITEMS,
   REWARD_POOLS,
+  type ItemFamily,
   type ItemDefinition,
   type ItemHook,
+  type ItemImplementationStatus,
   type ItemId,
   type ItemRarity,
+  type ItemSource,
+  type ItemStackingMode,
   type ItemTag,
+  type ItemUnlockTier,
   type RewardPoolDefinition
 } from './items';
 import { ITEM_HOOK_IMPLEMENTATIONS } from '../game/ItemHooks';
@@ -17,46 +27,16 @@ import { ITEM_UNLOCKS } from '../game/UnlockGates';
 const ITEM_RARITIES = ['common', 'uncommon', 'rare', 'prototype', 'cursed'] as const;
 
 export const PHASE_6_TARGET_ITEM_COUNT = 60;
-
-export const PHASE_6_TARGET_ITEM_FAMILIES = [
-  'laser-split',
-  'missile-overkill',
-  'drone-copy',
-  'shield-revenge',
-  'credit-shop',
-  'curse-relic',
-  'phase-graze',
-  'heat-prototype',
-  'lunar-surface',
-  'route-economy',
-  'boss-pressure'
-] as const;
-
-export type Phase6TargetItemFamily = (typeof PHASE_6_TARGET_ITEM_FAMILIES)[number];
+export const PHASE_6_TARGET_ITEM_FAMILIES = ITEM_FAMILIES;
+export type Phase6TargetItemFamily = ItemFamily;
 
 export interface BridgeEffectAuditNote {
   readonly itemId: ItemId;
   readonly note: string;
 }
 
-export const BRIDGE_EFFECT_AUDIT_NOTES: readonly BridgeEffectAuditNote[] = [
-  {
-    itemId: 'item_ricochet_license',
-    note: 'Extends plasma projectile life now; true edge-bounce behavior is still future work.'
-  },
-  {
-    itemId: 'item_phase_grazer',
-    note: 'Adds phase shots and graze charge today; a dedicated onGraze hook would make the fantasy clearer.'
-  },
-  {
-    itemId: 'item_vault_parasite',
-    note: 'Pays extra salvage today; stronger vault/source weighting still belongs in Phase 6 pool work.'
-  },
-  {
-    itemId: 'item_cursed_hull_plate',
-    note: 'Adds curse-themed revenge fire today; its downside/risk copy is still lighter than its text implies.'
-  }
-];
+export const BRIDGE_EFFECT_AUDIT_NOTES: readonly BridgeEffectAuditNote[] =
+  createBridgeEffectNotes(ITEMS);
 
 export interface ItemCatalogArchetypeAudit {
   readonly id: string;
@@ -79,6 +59,11 @@ export interface ItemCatalogAudit {
   readonly tagCounts: Readonly<Record<ItemTag, number>>;
   readonly hookCounts: Readonly<Record<ItemHook, number>>;
   readonly rarityCounts: Readonly<Record<ItemRarity, number>>;
+  readonly familyCounts: Readonly<Record<ItemFamily, number>>;
+  readonly sourceCounts: Readonly<Record<ItemSource, number>>;
+  readonly unlockTierCounts: Readonly<Record<ItemUnlockTier, number>>;
+  readonly implementationStatusCounts: Readonly<Record<ItemImplementationStatus, number>>;
+  readonly stackingCounts: Readonly<Record<ItemStackingMode, number>>;
   readonly poolAudits: readonly ItemCatalogPoolAudit[];
   readonly archetypeAudits: readonly ItemCatalogArchetypeAudit[];
   readonly underrepresentedArchetypeIds: readonly string[];
@@ -99,9 +84,18 @@ export function createItemCatalogAudit(options: {
   const tagCounts = createCountRecord(ITEM_TAGS);
   const hookCounts = createCountRecord(ITEM_HOOKS);
   const rarityCounts = createCountRecord(ITEM_RARITIES);
+  const familyCounts = createCountRecord(ITEM_FAMILIES);
+  const sourceCounts = createCountRecord(ITEM_SOURCES);
+  const unlockTierCounts = createCountRecord(ITEM_UNLOCK_TIERS);
+  const implementationStatusCounts = createCountRecord(ITEM_IMPLEMENTATION_STATUSES);
+  const stackingCounts = createCountRecord(ITEM_STACKING_MODES);
 
   for (const item of items) {
     rarityCounts[item.rarity] += 1;
+    familyCounts[item.metadata.family] += 1;
+    unlockTierCounts[item.metadata.unlockTier] += 1;
+    implementationStatusCounts[item.metadata.implementationStatus] += 1;
+    stackingCounts[item.metadata.stacking] += 1;
 
     for (const tag of item.tags) {
       tagCounts[tag] += 1;
@@ -109,6 +103,10 @@ export function createItemCatalogAudit(options: {
 
     for (const hook of item.hooks) {
       hookCounts[hook] += 1;
+    }
+
+    for (const source of item.metadata.sources) {
+      sourceCounts[source] += 1;
     }
   }
 
@@ -156,11 +154,16 @@ export function createItemCatalogAudit(options: {
     tagCounts,
     hookCounts,
     rarityCounts,
+    familyCounts,
+    sourceCounts,
+    unlockTierCounts,
+    implementationStatusCounts,
+    stackingCounts,
     poolAudits,
     archetypeAudits,
     underrepresentedArchetypeIds,
     lockedItemIds: Object.keys(itemUnlocks).sort() as ItemId[],
-    bridgeEffectNotes: BRIDGE_EFFECT_AUDIT_NOTES
+    bridgeEffectNotes: createBridgeEffectNotes(items)
   };
 }
 
@@ -170,4 +173,13 @@ export function getImplementedHookItemIds(hook: ItemHook): readonly ItemId[] {
 
 function createCountRecord<TKey extends string>(keys: readonly TKey[]): Record<TKey, number> {
   return Object.fromEntries(keys.map((key) => [key, 0])) as Record<TKey, number>;
+}
+
+function createBridgeEffectNotes(items: readonly ItemDefinition[]): BridgeEffectAuditNote[] {
+  return items
+    .filter((item) => item.metadata.implementationStatus === 'bridge')
+    .map((item) => ({
+      itemId: item.id,
+      note: item.metadata.implementationNote ?? 'Bridge item is missing an implementation note.'
+    }));
 }

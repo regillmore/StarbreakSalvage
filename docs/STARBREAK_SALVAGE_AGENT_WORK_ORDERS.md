@@ -857,6 +857,8 @@ Acceptance criteria:
 - Existing reward generation remains deterministic.
 - UI can keep reading old and new item fields safely.
 
+Status: implemented; item definitions now carry compact metadata for family, source hints, unlock tier, implementation status, stackability, and UI tags without changing reward generation. Content validation now catches invalid metadata, missing bridge/planned notes, unsupported starter rarity/source combinations, reward-pool/source drift, unlock-gate/source mismatches, and broken item unlock references. The repeatable catalog audit now reports family/source/unlock/status/stacking counts from the same metadata.
+
 ## Work order 053 - Item hook surface expansion
 
 Goal: unlock more effect variety without ad hoc combat code.

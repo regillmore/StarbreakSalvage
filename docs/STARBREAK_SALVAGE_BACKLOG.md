@@ -1062,6 +1062,10 @@ Acceptance:
 - Existing item content migrates without breaking deterministic reward generation.
 - UI helpers tolerate old and new fields safely.
 
+Status:
+
+- Implemented in work order 052. Every item now has compact metadata for family, source hints, unlock tier, implementation status, stackability, and short UI tags, while reward generation continues to read the same stable item ids and pools.
+
 ### AL3 - Item validation at scale
 
 Acceptance:
@@ -1069,6 +1073,10 @@ Acceptance:
 - Validation catches invalid families, sources, unlock gates, hook references, implementation states, missing effect text, and empty pools.
 - Bad fixtures cover metadata, pool, and hook failures.
 - Validation remains fast enough for `npm run check`.
+
+Status:
+
+- Implemented in work order 052. Validation now rejects invalid or duplicate metadata fields, missing bridge/planned implementation notes, unsupported starter rarity/source combinations, reward pool/source mismatches, item unlock gates with missing unlocks, and unlock source/tier drift; unit fixtures cover the new failure modes.
 
 ## Epic AM - Hook and effect variety
 

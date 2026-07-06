@@ -3,10 +3,16 @@ import { ACHIEVEMENTS, type AchievementDefinition } from './achievements';
 import { BACKGROUNDS, BACKGROUND_LAYER_KINDS, type BackgroundDefinition } from './backgrounds';
 import { FACTIONS, type FactionDefinition } from './factions';
 import {
+  ITEM_FAMILIES,
   ITEM_ARCHETYPES,
   ITEM_HOOKS,
+  ITEM_IMPLEMENTATION_STATUSES,
+  ITEM_SOURCES,
+  ITEM_STACKING_MODES,
   ITEMS,
   ITEM_TAGS,
+  ITEM_UI_TAGS,
+  ITEM_UNLOCK_TIERS,
   REWARD_POOLS,
   type ItemHook,
   type ItemId,
@@ -21,7 +27,7 @@ import {
   SHIPS,
   type ShipDefinition
 } from './ships';
-import { UNLOCKS, type UnlockDefinition } from './unlocks';
+import { UNLOCKS, type UnlockDefinition, type UnlockId } from './unlocks';
 import {
   UPGRADES,
   UPGRADE_CATEGORIES,
@@ -31,6 +37,7 @@ import {
 } from './upgrades';
 import { WEAPONS, type WeaponDefinition } from './weapons';
 import { ITEM_HOOK_IMPLEMENTATIONS } from '../game/ItemHooks';
+import { ITEM_UNLOCKS } from '../game/UnlockGates';
 
 export type ItemHookImplementationRegistry = Readonly<Partial<Record<ItemHook, readonly ItemId[]>>>;
 
@@ -41,6 +48,7 @@ export interface ContentValidationInput {
   readonly factions?: readonly FactionDefinition[];
   readonly items?: readonly ItemDefinition[];
   readonly itemHookImplementations?: ItemHookImplementationRegistry;
+  readonly itemUnlocks?: Readonly<Partial<Record<ItemId, UnlockId>>>;
   readonly rewardPools?: readonly RewardPoolDefinition[];
   readonly sectors?: readonly SectorDefinition[];
   readonly ships?: readonly ShipDefinition[];
@@ -58,6 +66,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const itemHookImplementations = createItemHookImplementationRegistry(
     input.itemHookImplementations
   );
+  const itemUnlocks = input.itemUnlocks ?? ITEM_UNLOCKS;
   const rewardPools = input.rewardPools ?? REWARD_POOLS;
   const sectors = input.sectors ?? SECTORS;
   const ships = input.ships ?? SHIPS;
@@ -77,6 +86,12 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const tagRegistry = new Set<string>(ITEM_TAGS);
   const hookRegistry = new Set<string>(ITEM_HOOKS);
   const itemRarities = new Set(['common', 'uncommon', 'rare', 'prototype', 'cursed']);
+  const itemFamilies = new Set<string>(ITEM_FAMILIES);
+  const itemSources = new Set<string>(ITEM_SOURCES);
+  const itemUnlockTiers = new Set<string>(ITEM_UNLOCK_TIERS);
+  const itemImplementationStatuses = new Set<string>(ITEM_IMPLEMENTATION_STATUSES);
+  const itemStackingModes = new Set<string>(ITEM_STACKING_MODES);
+  const itemUiTags = new Set<string>(ITEM_UI_TAGS);
   const factionPatterns = new Set(['driftShot', 'laneBurst', 'sporeSpread', 'phaseSkirmish']);
   const factionShapes = new Set(['jagged', 'diamond', 'organic', 'needle']);
   const backgroundLayerKinds = new Set<string>(BACKGROUND_LAYER_KINDS);
@@ -387,6 +402,15 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     if (!Number.isFinite(item.weight) || item.weight <= 0) {
       errors.push(`Item ${item.id} must have a positive weight`);
     }
+
+    validateItemMetadata(errors, item, itemUnlocks, {
+      families: itemFamilies,
+      sources: itemSources,
+      unlockTiers: itemUnlockTiers,
+      implementationStatuses: itemImplementationStatuses,
+      stackingModes: itemStackingModes,
+      uiTags: itemUiTags
+    });
   }
 
   for (const weapon of weapons) {
@@ -566,6 +590,13 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
 
       if (!itemIds.has(itemId)) {
         errors.push(`Reward pool ${pool.id} references missing item: ${itemId}`);
+        continue;
+      }
+
+      const item = items.find((candidate) => candidate.id === itemId);
+
+      if (item && !item.metadata.sources.includes(pool.id)) {
+        errors.push(`Item ${item.id} appears in ${pool.id} pool without ${pool.id} source`);
       }
     }
   }
@@ -573,6 +604,16 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   for (const item of items) {
     if (!rewardedItemIds.has(item.id)) {
       errors.push(`Item ${item.id} must appear in at least one reward pool`);
+    }
+  }
+
+  for (const [itemId, unlockId] of Object.entries(itemUnlocks) as [ItemId, UnlockId][]) {
+    if (!itemIds.has(itemId)) {
+      errors.push(`Item unlock gate references missing item: ${itemId}`);
+    }
+
+    if (!unlockIds.has(unlockId)) {
+      errors.push(`Item ${itemId} references missing unlock gate: ${unlockId}`);
     }
   }
 
@@ -650,6 +691,127 @@ function createItemHookImplementationRegistry(
   };
 }
 
+interface ItemMetadataRegistries {
+  readonly families: ReadonlySet<string>;
+  readonly sources: ReadonlySet<string>;
+  readonly unlockTiers: ReadonlySet<string>;
+  readonly implementationStatuses: ReadonlySet<string>;
+  readonly stackingModes: ReadonlySet<string>;
+  readonly uiTags: ReadonlySet<string>;
+}
+
+function validateItemMetadata(
+  errors: string[],
+  item: ItemDefinition,
+  itemUnlocks: Readonly<Partial<Record<ItemId, UnlockId>>>,
+  registries: ItemMetadataRegistries
+): void {
+  const metadata = item.metadata;
+
+  if (!metadata) {
+    errors.push(`Item ${item.id} must define metadata`);
+    return;
+  }
+
+  if (!registries.families.has(metadata.family)) {
+    errors.push(`Item ${item.id} has invalid family: ${String(metadata.family)}`);
+  }
+
+  if (metadata.sources.length === 0) {
+    errors.push(`Item ${item.id} must list at least one source`);
+  }
+
+  for (const source of metadata.sources) {
+    if (!registries.sources.has(source)) {
+      errors.push(`Item ${item.id} has invalid source: ${String(source)}`);
+    }
+  }
+
+  for (const duplicateSource of getDuplicateStrings(metadata.sources)) {
+    errors.push(`Item ${item.id} has duplicate source: ${duplicateSource}`);
+  }
+
+  if (!registries.unlockTiers.has(metadata.unlockTier)) {
+    errors.push(`Item ${item.id} has invalid unlock tier: ${String(metadata.unlockTier)}`);
+  }
+
+  if (!registries.implementationStatuses.has(metadata.implementationStatus)) {
+    errors.push(
+      `Item ${item.id} has invalid implementation status: ${String(metadata.implementationStatus)}`
+    );
+  }
+
+  if (
+    (metadata.implementationStatus === 'bridge' || metadata.implementationStatus === 'planned') &&
+    !metadata.implementationNote?.trim()
+  ) {
+    errors.push(`Item ${item.id} must explain ${metadata.implementationStatus} implementation`);
+  }
+
+  if (metadata.implementationStatus === 'planned' && metadata.sources.includes('starter')) {
+    errors.push(`Item ${item.id} cannot be starter sourced while implementation is planned`);
+  }
+
+  if (!registries.stackingModes.has(metadata.stacking)) {
+    errors.push(`Item ${item.id} has invalid stacking mode: ${String(metadata.stacking)}`);
+  }
+
+  if (metadata.uiTags.length === 0) {
+    errors.push(`Item ${item.id} must list at least one UI tag`);
+  }
+
+  for (const uiTag of metadata.uiTags) {
+    if (!registries.uiTags.has(uiTag)) {
+      errors.push(`Item ${item.id} has invalid UI tag: ${String(uiTag)}`);
+    }
+  }
+
+  for (const duplicateUiTag of getDuplicateStrings(metadata.uiTags)) {
+    errors.push(`Item ${item.id} has duplicate UI tag: ${duplicateUiTag}`);
+  }
+
+  const requiredUnlockId = itemUnlocks[item.id];
+  const hasUnlockSource = metadata.sources.includes('unlock');
+
+  if (metadata.unlockTier === 'unlock' && !requiredUnlockId) {
+    errors.push(`Item ${item.id} is unlock tier but has no unlock gate`);
+  }
+
+  if (requiredUnlockId && metadata.unlockTier !== 'unlock') {
+    errors.push(`Item ${item.id} has an unlock gate but is not unlock tier`);
+  }
+
+  if (hasUnlockSource && !requiredUnlockId) {
+    errors.push(`Item ${item.id} lists unlock source without an unlock gate`);
+  }
+
+  if (requiredUnlockId && !hasUnlockSource) {
+    errors.push(`Item ${item.id} has an unlock gate but no unlock source`);
+  }
+
+  if (
+    (item.rarity === 'prototype' || item.rarity === 'cursed') &&
+    metadata.sources.includes('starter')
+  ) {
+    errors.push(`Item ${item.id} cannot be starter sourced with ${item.rarity} rarity`);
+  }
+}
+
+function getDuplicateStrings(values: readonly string[]): string[] {
+  const seen = new Set<string>();
+  const duplicates = new Set<string>();
+
+  for (const value of values) {
+    if (seen.has(value)) {
+      duplicates.add(value);
+    }
+
+    seen.add(value);
+  }
+
+  return [...duplicates];
+}
+
 function validatePositiveNumber(
   errors: string[],
   owner: string,
@@ -713,12 +875,37 @@ function validateEncounterPacing(errors: string[], sector: SectorDefinition): vo
     return;
   }
 
-  validateUnitNumber(errors, `Sector ${sector.id} encounter pacing`, 'waveWindowStartRatio', pacing.waveWindowStartRatio);
-  validateUnitNumber(errors, `Sector ${sector.id} encounter pacing`, 'waveWindowEndRatio', pacing.waveWindowEndRatio);
+  validateUnitNumber(
+    errors,
+    `Sector ${sector.id} encounter pacing`,
+    'waveWindowStartRatio',
+    pacing.waveWindowStartRatio
+  );
+  validateUnitNumber(
+    errors,
+    `Sector ${sector.id} encounter pacing`,
+    'waveWindowEndRatio',
+    pacing.waveWindowEndRatio
+  );
   validatePositiveNumber(errors, `Sector ${sector.id} encounter pacing`, 'spawnSpacing', pacing.spawnSpacing);
-  validateUnitNumber(errors, `Sector ${sector.id} encounter pacing`, 'firstSpawnXRatio', pacing.firstSpawnXRatio);
-  validateUnitNumber(errors, `Sector ${sector.id} encounter pacing`, 'flankXMinRatio', pacing.flankXMinRatio);
-  validateUnitNumber(errors, `Sector ${sector.id} encounter pacing`, 'flankXMaxRatio', pacing.flankXMaxRatio);
+  validateUnitNumber(
+    errors,
+    `Sector ${sector.id} encounter pacing`,
+    'firstSpawnXRatio',
+    pacing.firstSpawnXRatio
+  );
+  validateUnitNumber(
+    errors,
+    `Sector ${sector.id} encounter pacing`,
+    'flankXMinRatio',
+    pacing.flankXMinRatio
+  );
+  validateUnitNumber(
+    errors,
+    `Sector ${sector.id} encounter pacing`,
+    'flankXMaxRatio',
+    pacing.flankXMaxRatio
+  );
   validatePositiveNumber(errors, `Sector ${sector.id} encounter pacing`, 'targetYMin', pacing.targetYMin);
   validatePositiveNumber(errors, `Sector ${sector.id} encounter pacing`, 'targetYMax', pacing.targetYMax);
 

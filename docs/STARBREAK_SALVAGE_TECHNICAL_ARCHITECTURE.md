@@ -138,6 +138,16 @@ All content tables should be validated in tests.
 
 ## Item hooks
 
+Item definitions should keep scale-oriented metadata next to gameplay tags and hooks:
+
+- `family` for build/archetype grouping;
+- `sources` for starter, combat, shop, vault, elite, boss, faction, lunar, route, and unlock acquisition intent;
+- `unlockTier` and unlock gate links for progression-aware pools;
+- `implementationStatus` plus notes for live, bridge, or planned effects;
+- `stacking` and short `uiTags` for future reward/card presentation.
+
+Validation should reject metadata drift before generation uses it. Reward-pool membership must match source metadata, unlock-gated items must carry unlock tier/source intent, and bridge/planned items must explain their implementation gap.
+
 Use deterministic hook order:
 
 1. base weapon emits payload;
