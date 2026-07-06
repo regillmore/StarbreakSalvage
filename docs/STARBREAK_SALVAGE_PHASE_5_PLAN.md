@@ -112,6 +112,8 @@ Exit criteria:
 - Release docs cover upgrade spending, lunar sector smoke, sector exit toasts, and ship destruction risks.
 - Manual browser gaps are documented separately from gameplay blockers.
 
+Status: in progress through work order 049. Debug instrumentation now exposes Phase 5 progression, banked scrap, upgrade readiness, run resource, sector-plan, exit, and destruction state, while Playwright smoke covers Upgrade Bay purchase/readiness, sector exit toast flow, forced destruction, and reaching Lunar Surface through `LUNAR-SURFACE-LANE`. Work order 050 still needs the full playtest release audit, production preview smoke, and final manual browser-risk summary.
+
 ## Recommended Phase 5 Sequence
 
 1. Work order 041 - Banked scrap purpose and progression economy.

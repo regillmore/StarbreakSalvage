@@ -802,6 +802,8 @@ Acceptance criteria:
 - Local browser blockers are separated from gameplay blockers.
 - Existing Phase 4 smoke remains green.
 
+Status: implemented; debug state now exposes progression/banked scrap/upgrade readiness in menu and Upgrade Bay surfaces, run credits/salvage plus sector id/name/background/pacing during gameplay and transitions, sector-exit progress, and destruction progress. Playwright smoke now covers Upgrade Bay purchase/debug state, forced sector-exit route flow, forced player destruction through destroyed summary, and a `LUNAR-SURFACE-LANE` browser path that reaches Lunar Surface and verifies lunar sector-plan/background/feature instrumentation. Chromium smoke still requires the approved Playwright escalation because sandboxed runs cannot read the local browser cache.
+
 ## Work order 050 - Phase 5 playtest release hardening
 
 Goal: ship a progression/sector-feedback playtest candidate.

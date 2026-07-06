@@ -1,5 +1,6 @@
 import { CanvasRenderer } from './CanvasRenderer';
 import { Loop, type FrameStats } from './Loop';
+import type { SceneDebugState } from './Scene';
 import { SceneManager } from './SceneManager';
 import type { CombatRunResult } from '../game/CombatState';
 import {
@@ -601,6 +602,18 @@ export class GameApp {
       debugState.activeLandmarks === undefined && debugState.activeHazards === undefined
         ? []
         : [`Features L${debugState.activeLandmarks ?? 0}/H${debugState.activeHazards ?? 0}`];
+    const sectorDebug = debugState.sector
+      ? [
+          `Sector S${debugState.sector.index} ${debugState.sector.name}`,
+          `Plan ${[
+            debugState.sector.id,
+            debugState.sector.backgroundId,
+            debugState.sector.encounterPacing
+          ]
+            .filter((part): part is string => Boolean(part))
+            .join('/')}`
+        ]
+      : [];
     const viewportDebug =
       debugState.viewport === undefined
         ? []
@@ -642,6 +655,7 @@ export class GameApp {
       debugState.upgradeEffects && debugState.upgradeEffects.length > 0
         ? [`Upgrades ${debugState.upgradeEffects.join(', ')}`]
         : [];
+    const progressionDebug = createProgressionDebugLines(debugState.progression);
 
     this.debugOverlay.textContent = [
       `FPS ${Math.round(this.frameStats.fps)}`,
@@ -658,6 +672,8 @@ export class GameApp {
       ...hudDebug,
       ...themeDebug,
       ...upgradeDebug,
+      ...progressionDebug,
+      ...sectorDebug,
       ...backgroundDebug,
       ...featureDebug,
       ...viewportDebug
@@ -678,6 +694,33 @@ export class GameApp {
       unlockedIds: this.saveData.unlockedIds
     });
   }
+}
+
+function createProgressionDebugLines(
+  progression: SceneDebugState['progression']
+): readonly string[] {
+  if (!progression) {
+    return [];
+  }
+
+  const saveParts = [
+    progression.salvageBank === undefined ? null : `Bank ${progression.salvageBank}kg`,
+    progression.purchasedUpgrades === undefined
+      ? null
+      : progression.totalUpgrades === undefined
+        ? `Upgrades ${progression.purchasedUpgrades}`
+        : `Upgrades ${progression.purchasedUpgrades}/${progression.totalUpgrades}`,
+    progression.availableUpgrades === undefined ? null : `Ready ${progression.availableUpgrades}`
+  ].filter((part): part is string => Boolean(part));
+  const runParts = [
+    progression.runCredits === undefined ? null : `Credits ${progression.runCredits}`,
+    progression.runSalvage === undefined ? null : `Salvage ${progression.runSalvage}`
+  ].filter((part): part is string => Boolean(part));
+
+  return [
+    ...(saveParts.length > 0 ? [`Progress ${saveParts.join(' ')}`] : []),
+    ...(runParts.length > 0 ? [`Run ${runParts.join(' ')}`] : [])
+  ];
 }
 
 function getInitialSeed(ownerWindow: Window): string | null {

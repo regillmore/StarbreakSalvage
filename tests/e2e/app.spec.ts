@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 const SCRAP_BAY_SAVE = {
   version: 3,
@@ -114,7 +114,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
 
   await page.getByRole('button', { name: 'Launch Contract' }).click();
 
-  await expect(page.getByText('Outer Debris Field')).toBeVisible();
+  await expectGameplaySector(page, 'Outer Debris Field');
   await expect(page.getByTestId('distance-readout')).toContainText(/Distance \d+\/\d+u/);
   await expect(page.getByTestId('hull-readout')).toContainText('Hull');
   await expect(page.getByTestId('pickup-readout')).toContainText(/Credits .* Salvage/);
@@ -157,7 +157,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByRole('heading', { name: 'Paused' })).toBeVisible();
 
   await page.keyboard.press('Escape');
-  await expect(page.getByText('Outer Debris Field')).toBeVisible();
+  await expectGameplaySector(page, 'Outer Debris Field');
 
   await page.keyboard.press('8');
   await expect(page.getByTestId('sector-exit-toast')).toContainText(
@@ -184,7 +184,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.locator('.transition-panel')).toHaveAttribute('data-contract-theme', 'redline');
 
   await page.getByRole('button', { name: 'Enter Sector' }).click();
-  await expect(page.getByText('Trade War Corridor')).toBeVisible();
+  await expectGameplaySector(page, 'Trade War Corridor');
 
   await page.keyboard.press('5');
   await expect(page.getByTestId('boss-readout')).toContainText('The Core Wreck');
@@ -281,6 +281,9 @@ test('opens the Upgrade Bay and purchases an upgrade from banked scrap', async (
   await page.getByRole('button', { name: 'Upgrade Bay' }).click();
 
   await expect(page.getByRole('heading', { name: 'Upgrade Bay' })).toBeVisible();
+  await expect(page.locator('.debug-overlay')).toContainText(
+    'Progress Bank 8kg Upgrades 0/6 Ready 2'
+  );
   await expect(page.getByTestId('upgrade-bay-summary')).toContainText(
     'Bank 8 kg | Installed 0/6 | Ready 2'
   );
@@ -304,6 +307,9 @@ test('opens the Upgrade Bay and purchases an upgrade from banked scrap', async (
   await expect(page.getByTestId('upgrade-bay-summary')).toContainText(
     'Bank 4 kg | Installed 1/6 | Ready 1'
   );
+  await expect(page.locator('.debug-overlay')).toContainText(
+    'Progress Bank 4kg Upgrades 1/6 Ready 1'
+  );
   await expect(surveyRig).toContainText('Installed in the archive.');
 
   const savedUpgradeIds = await page.evaluate(() => {
@@ -321,6 +327,41 @@ test('opens the Upgrade Bay and purchases an upgrade from banked scrap', async (
   await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
   await expect(page.getByTestId('contract-upgrade-intel')).toContainText('Contract Survey Rig');
   await expect(page.locator('.contract-survey-note').first()).toContainText('Survey:');
+
+  expect(browserErrors).toEqual([]);
+});
+
+test('reaches and instruments the deterministic lunar sector smoke path', async ({ page }) => {
+  const browserErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') {
+      browserErrors.push(message.text());
+    }
+  });
+  page.on('pageerror', (error) => browserErrors.push(error.message));
+
+  await page.goto('./?debug=1&seed=LUNAR-SURFACE-LANE');
+
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
+
+  await page.keyboard.press('Enter');
+  await expectGameplaySector(page, 'Outer Debris Field', 1);
+  await expect(page.locator('.debug-overlay')).toContainText('Sector S1 Outer Debris Field');
+
+  await forceCompleteSectorAndEnterNext(page, 'Trade War Corridor');
+  await expect(page.locator('.debug-overlay')).toContainText('Sector S2 Trade War Corridor');
+
+  await forceCompleteSectorAndEnterNext(page, 'Lunar Surface');
+  await expectGameplaySector(page, 'Lunar Surface');
+  await expect(page.locator('.debug-overlay')).toContainText('Sector S3 Lunar Surface');
+  await expect(page.locator('.debug-overlay')).toContainText(
+    'Plan sector_lunar_surface/background_lunar_surface/paced'
+  );
+  await expect(page.locator('.debug-overlay')).toContainText(/Bg \d+p\/5l/);
+  await expect(page.locator('.debug-overlay')).toContainText(/Features L\d+\/H\d+/);
+  await expect(page.locator('.debug-overlay')).toContainText(/Run Credits \d+ Salvage \d+/);
+  await expect(page.getByTestId('distance-readout')).toContainText(/Distance \d+\/\d+u/);
 
   expect(browserErrors).toEqual([]);
 });
@@ -372,7 +413,7 @@ test('launches gameplay with reduced motion and high contrast settings by keyboa
   await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
 
   await page.keyboard.press('Enter');
-  await expect(page.getByText('Outer Debris Field')).toBeVisible();
+  await expectGameplaySector(page, 'Outer Debris Field');
   await expect(page.getByTestId('cockpit-hud')).toHaveAttribute('data-hud-mode', 'contrast');
   await expect(page.getByTestId('distance-readout')).toContainText(/Distance \d+\/\d+u/);
   await expect(page.getByTestId('hint-readout')).toContainText('Hint');
@@ -408,7 +449,7 @@ test('supports keyboard-only start, pause, end-run, and summary flow', async ({ 
     .not.toBe(firstPreviewText);
 
   await page.keyboard.press('Enter');
-  await expect(page.getByText('Outer Debris Field')).toBeVisible();
+  await expectGameplaySector(page, 'Outer Debris Field');
   await expect(page.getByTestId('cockpit-hud')).toBeVisible();
 
   await page.keyboard.press('Escape');
@@ -448,7 +489,7 @@ test('supports pointer-guided movement and primary-button fire during gameplay',
   await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
 
   await page.keyboard.press('Enter');
-  await expect(page.getByText('Outer Debris Field')).toBeVisible();
+  await expectGameplaySector(page, 'Outer Debris Field');
 
   const startPosition = await page.getByTestId('player-position').textContent();
   await page.mouse.move(760, 550);
@@ -482,7 +523,7 @@ test('keeps the gameplay HUD and safe frame readable in a narrow viewport', asyn
   await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
 
   await page.keyboard.press('Enter');
-  await expect(page.getByText('Outer Debris Field')).toBeVisible();
+  await expectGameplaySector(page, 'Outer Debris Field');
   await expect(page.locator('.debug-overlay')).toContainText('Viewport 390x700 narrow @0.57 DPR 1.00');
   await expect(page.locator('.debug-overlay')).toContainText('Canvas 390x700');
   await expect(page.locator('.debug-overlay')).toContainText('Safe 14,204 362x407');
@@ -501,3 +542,44 @@ test('keeps the gameplay HUD and safe frame readable in a narrow viewport', asyn
 
   expect(browserErrors).toEqual([]);
 });
+
+async function forceCompleteSectorAndEnterNext(page: Page, nextSectorName: string): Promise<void> {
+  await page.keyboard.press('8');
+  await expect(page.getByTestId('sector-exit-toast')).toContainText(/clear \| route telemetry/);
+  await expect(page.getByRole('heading', { name: 'Choose Route' })).toBeVisible();
+
+  await chooseFirstRouteAndReward(page);
+  await expect(page.getByRole('heading', { name: new RegExp(`Entering ${nextSectorName}`) })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Enter Sector' }).click();
+  await expectGameplaySector(page, nextSectorName);
+}
+
+async function expectGameplaySector(
+  page: Page,
+  sectorName: string,
+  sectorIndex?: number
+): Promise<void> {
+  const expectedText =
+    sectorIndex === undefined ? sectorName : `Sector ${sectorIndex} | ${sectorName}`;
+
+  await expect(page.locator('.hud-pill').filter({ hasText: expectedText })).toBeVisible();
+}
+
+async function chooseFirstRouteAndReward(page: Page): Promise<void> {
+  const firstRoute = page.locator('.route-card').first();
+  const routeTestId = await firstRoute.getAttribute('data-testid');
+
+  await firstRoute.click();
+
+  if (routeTestId === 'route-shop') {
+    await expect(page.getByRole('heading', { name: 'Shop' })).toBeVisible();
+    await page.getByRole('button', { name: 'Leave Shop' }).click();
+  } else {
+    await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+    await page.getByRole('button', { name: 'Continue' }).click();
+  }
+
+  await expect(page.getByRole('heading', { name: 'Choose Reward' })).toBeVisible();
+  await page.getByRole('button', { name: /Take / }).first().click();
+}

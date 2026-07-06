@@ -103,6 +103,7 @@ Current Phase 5 coverage:
 - Work order 046 adds deterministic `LUNAR-SURFACE-LANE` generation coverage, Lunar Surface background-strata checks, first-pass feature-plan validation, and content breadth/reference validation.
 - Work order 047 adds lunar-specific feature determinism, hazard phase/readability/collision metadata tests, route-conditioned lunar feature regression coverage, sector pacing validation, and wave-director pacing checks.
 - Work order 048 adds player-destruction cue-state tests for deterministic debris, reduced-motion/performance/high-contrast variants, feedback/audio mappings, debug force-destruction input, and Playwright smoke coverage from destruction toast/debug progress through the destroyed summary.
+- Work order 049 adds debug overlay coverage for banked scrap, upgrade readiness, run resources, current sector id/name/background/pacing, exit progress, and destruction progress. Playwright smoke now verifies Upgrade Bay readiness after purchase, forced sector exit flow, forced destruction, and a `LUNAR-SURFACE-LANE` route that reaches Lunar Surface in-browser.
 
 ## Known seed tests
 
@@ -139,7 +140,7 @@ Phase 5 should add these seed/save fixtures:
 - `UPGRADE-SEED-SNAPSHOT` - same seed tested under fresh and upgraded save states; implemented in work order 043 upgrade-effect snapshots.
 - `RUN-SCRAP-CALLOUT` - forced summary path that verifies earned/banked scrap and upgrade progress copy; implemented in the work order 044 Playwright summary smoke.
 - `EXIT-TOAST-CHECK` - forgiving sector completion path for exit/toast smoke; implemented through the work order 045 forced sector-complete Playwright path.
-- `LUNAR-SURFACE-LANE` - deterministic lunar sector/background/feature/pacing plan; implemented across work orders 046 and 047 generation, background, feature, route-condition, content, and wave-director tests.
+- `LUNAR-SURFACE-LANE` - deterministic lunar sector/background/feature/pacing plan; implemented across work orders 046 and 047 generation/background/feature/route-condition/content/wave-director tests, with browser traversal smoke added in work order 049.
 - `SHIP-BREAKUP-TEST` - deterministic death/destruction summary path; first covered by the work order 048 debug forced-destruction Playwright path.
 
 ## Content validation checklist
@@ -174,27 +175,27 @@ Phase 2 performance checks should include wave/objective count, projectile count
 
 Phase 3 performance checks should also include background primitive count, parallax layer count, distance traveled, scroll speed, active distance markers, active landmarks, active hazards, and long-scroll scenarios that run longer than a normal sector.
 
-Current first-pass instrumentation exposes granular combat counts, background primitive/layer counts, active landmark/hazard counts, distance, speed, active input mode, HUD mode, viewport size/class/presentation scale, DPR, canvas pixel size, safe-frame origin/size, fixed combat world size, a dense-combat debug pocket, and a quiet late-sector long-scroll traversal behind `?debug=1`. Manual browser validation and production preview smoke still need to close the checklist.
+Current first-pass instrumentation exposes granular combat counts, background primitive/layer counts, active landmark/hazard counts, distance, speed, active input mode, HUD mode, viewport size/class/presentation scale, DPR, canvas pixel size, safe-frame origin/size, fixed combat world size, banked scrap, upgrade readiness, run resources, current sector id/name/background/pacing, exit progress, destruction progress, a dense-combat debug pocket, forced exit/destruction shortcuts, and a quiet late-sector long-scroll traversal behind `?debug=1`. Manual browser validation and production preview smoke still need to close the checklist.
 
 Phase 4 performance checks should include viewport/presentation scale, safe-frame size, fixed-world hazard/enemy spacing parity, HUD rendering density, preview rendering cost, mouse input update behavior, ship cue rendering cost, non-combat theme DOM cost, and whether themed HUD/ship cues add measurable overhead in dense and long-scroll debug scenarios.
 
 Phase 5 performance checks should include Upgrade Bay DOM/icon rendering cost, upgrade-state generation branching, toast queue overhead, lunar background/feature primitive counts, lunar hazard readability, and ship destruction particle/debris budgets in reduced motion/performance modes.
 
-- [ ] FPS overlay available behind debug flag.
-- [ ] Projectile count visible in debug mode.
+- [x] FPS overlay available behind debug flag.
+- [x] Projectile count visible in debug mode.
 - [ ] Particle count visible in debug mode.
-- [ ] Background/debug counters visible in debug mode.
-- [ ] Distance and scroll speed visible in debug mode.
+- [x] Background/debug counters visible in debug mode.
+- [x] Distance and scroll speed visible in debug mode.
 - [x] Viewport/canvas scale visible in debug mode once Phase 4 instrumentation lands.
 - [x] Active input mode visible in debug mode once mouse controls land.
 - [x] HUD mode and contract theme visible in debug mode for Phase 4 smoke.
 - [x] Contract preview model and selection smoke coverage exists.
 - [x] Contract theme propagation smoke coverage exists for route/shop/reward/transition/summary screens.
 - [x] Upgrade Bay, banked scrap state, and upgrade-influenced generation visible in tests/debug smoke.
-- [ ] Sector exit/toast and destruction smoke paths exist; lunar browser smoke remains a work order 049 target.
+- [x] Sector exit/toast, destruction, and lunar browser smoke paths exist.
 - [ ] Normal combat stays near 60 FPS on dev machine.
-- [ ] Heavy combat debug scene documented.
-- [ ] Long-scroll debug scene documented.
+- [x] Heavy combat debug scene documented.
+- [x] Long-scroll debug scene documented.
 - [ ] Screen shake and particles respect reduced motion/performance settings.
 
 ## Accessibility checklist

@@ -31,6 +31,7 @@
 - Added a deterministic Lunar Surface sector foundation with original crater, ridge, surface-array, and wreck-shadow background strata and a `LUNAR-SURFACE-LANE` seed route.
 - Added Lunar Surface crater-shadow, comm-array, and surface-relay landmarks plus dust-plume, mining-laser, and surface-defense hazard patterns with low-altitude encounter pacing hooks.
 - Added a bounded player ship destruction sequence with contract-colored debris, cockpit failure pulse, transponder toast, debug-state instrumentation, and reduced-motion/performance/high-contrast variants before the existing destroyed summary.
+- Expanded Phase 5 debug instrumentation with progression, banked scrap, upgrade readiness, run resource, and current sector-plan readouts for upgrade and lunar smoke coverage.
 - Added deterministic sector scroll plans, fixed-step distance tracking, HUD distance/speed readouts, debug distance counters, and subtle reduced-motion-aware starfield drift.
 - Added deterministic procedural parallax background plans for all five sectors, with original canvas-drawn stars, rails, debris, bloom strands, grid lines, and core fractures.
 - Moved normal directed wave spawning onto deterministic scroll-distance marks while retaining time-based fallback schedules and boss-gate timing.
@@ -82,6 +83,7 @@
 - Added lunar sector generation, background-strata, feature-plan, and content-validation coverage for `LUNAR-SURFACE-LANE`.
 - Added lunar feature determinism, hazard readability metadata, wave-pacing, content validation, and route-conditioned lunar feature regression coverage.
 - Added player-destruction unit tests for deterministic debris, cue timing, settings variants, feedback/audio mappings, the debug force-destruction key, and Playwright death-to-summary smoke coverage.
+- Added Playwright smoke coverage that drives a `LUNAR-SURFACE-LANE` run through two forced sector exits into Lunar Surface and verifies sector-plan/debug instrumentation in-browser.
 
 ### Planning
 

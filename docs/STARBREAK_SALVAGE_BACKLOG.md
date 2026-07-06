@@ -1033,3 +1033,5 @@ Acceptance:
 - Smoke coverage or manual matrix covers Upgrade Bay, sector exit toast, lunar sector, and ship destruction.
 - `npm run check`, E2E smoke, and production preview smoke pass before Phase 5 closeout.
 - Known progression balance, browser, and readability risks are documented.
+
+- First smoke pass implemented in work order 049. Automated Chromium smoke covers Upgrade Bay purchase/readiness debug state, forced sector exit flow, forced player destruction, and reaching Lunar Surface through `LUNAR-SURFACE-LANE`; release closeout and production preview smoke remain in work order 050.

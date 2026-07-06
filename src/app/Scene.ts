@@ -29,6 +29,21 @@ export interface SceneDebugState {
   readonly hudMode?: string;
   readonly contractTheme?: ContractThemeDebugState;
   readonly upgradeEffects?: readonly string[];
+  readonly progression?: {
+    readonly salvageBank?: number;
+    readonly purchasedUpgrades?: number;
+    readonly totalUpgrades?: number;
+    readonly availableUpgrades?: number;
+    readonly runCredits?: number;
+    readonly runSalvage?: number;
+  };
+  readonly sector?: {
+    readonly index: number;
+    readonly id: string;
+    readonly name: string;
+    readonly backgroundId?: string;
+    readonly encounterPacing?: string;
+  };
   readonly backgroundPrimitives?: number;
   readonly backgroundLayers?: number;
   readonly activeLandmarks?: number;

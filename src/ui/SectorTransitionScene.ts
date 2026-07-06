@@ -108,11 +108,24 @@ export class SectorTransitionScene implements Scene {
   }
 
   public getDebugState(): SceneDebugState {
+    const sector = getCurrentSector(this.run, this.session);
+
     return {
       seed: this.run.seed,
       entityCount: 0,
       contractTheme: createContractThemeDebugState(this.contract),
-      upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects)
+      upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects),
+      progression: {
+        runCredits: this.session.credits,
+        runSalvage: this.session.salvage
+      },
+      sector: {
+        index: sector.index,
+        id: sector.sectorId,
+        name: sector.sectorName,
+        backgroundId: sector.background.id,
+        encounterPacing: sector.encounterPacing ? 'paced' : undefined
+      }
     };
   }
 }

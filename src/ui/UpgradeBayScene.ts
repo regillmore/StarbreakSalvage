@@ -1,5 +1,5 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
-import type { Scene } from '../app/Scene';
+import type { Scene, SceneDebugState } from '../app/Scene';
 import type { UpgradeIconKey, UpgradeId } from '../content/upgrades';
 import type { SaveData, UpgradePurchaseResult } from '../core/saveData';
 import type { InputAction } from '../systems/InputSystem';
@@ -86,8 +86,19 @@ export class UpgradeBayScene implements Scene {
     }
   }
 
-  public getDebugState(): { seed: string; entityCount: number } {
-    return { seed: 'n/a', entityCount: 0 };
+  public getDebugState(): SceneDebugState {
+    const model = createUpgradeBayViewModel(this.getSaveData());
+
+    return {
+      seed: 'n/a',
+      entityCount: 0,
+      progression: {
+        salvageBank: model.salvageBank,
+        purchasedUpgrades: model.purchasedCount,
+        totalUpgrades: model.totalCount,
+        availableUpgrades: model.availableCount
+      }
+    };
   }
 
   private createUpgradeCard(card: UpgradeCardViewModel): HTMLElement {

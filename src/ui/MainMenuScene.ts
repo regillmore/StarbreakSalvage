@@ -1,5 +1,5 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
-import type { Scene } from '../app/Scene';
+import type { Scene, SceneDebugState } from '../app/Scene';
 import type { getSaveSummary } from '../core/saveData';
 import { KNOWN_SEED_LABELS, previewSeedEntry } from '../game/SeedEntry';
 import type { InputAction } from '../systems/InputSystem';
@@ -127,7 +127,14 @@ export class MainMenuScene implements Scene {
     }
   }
 
-  public getDebugState(): { seed: string; entityCount: number } {
-    return { seed: 'n/a', entityCount: 0 };
+  public getDebugState(): SceneDebugState {
+    return {
+      seed: 'n/a',
+      entityCount: 0,
+      progression: {
+        salvageBank: this.saveSummary.salvageBank,
+        purchasedUpgrades: this.saveSummary.upgradeCount
+      }
+    };
   }
 }

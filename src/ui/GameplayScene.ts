@@ -575,6 +575,7 @@ export class GameplayScene implements Scene {
         ? []
         : getActiveSectorHazards(features, scroll.distance);
     const background = this.getCurrentSector().background;
+    const currentSector = this.getCurrentSector();
     const combatState = this.getCombatState();
     const entityCounts = getCombatEntityCounts(combatState);
     const hudTheme = createHudThemeModel(
@@ -623,7 +624,18 @@ export class GameplayScene implements Scene {
       inputMode: this.input.getActiveInputMode(),
       hudMode: hudTheme.mode,
       contractTheme: createContractThemeDebugState(this.contract),
-      upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects)
+      upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects),
+      progression: {
+        runCredits: this.startingCredits + combatState.player.credits,
+        runSalvage: this.startingSalvage + combatState.player.salvage
+      },
+      sector: {
+        index: this.sectorIndex + 1,
+        id: currentSector.sectorId,
+        name: currentSector.sectorName,
+        backgroundId: currentSector.background.id,
+        encounterPacing: currentSector.encounterPacing ? 'paced' : undefined
+      }
     };
   }
 

@@ -79,10 +79,11 @@ Enable debug tools with `?debug=1` on a local, preview, or Pages URL.
 - `5` spawns The Core Wreck.
 - `0` replaces the current field with the dense-combat performance pocket: 12 enemies, 42 enemy bullets, 3 lane telegraphs, and 1 feedback effect, for 59 total active entities including the player.
 - `7` forces the player destruction sequence, including deterministic contract-colored debris and the destroyed summary handoff.
+- `8` forces the current sector completion beat, including exit-progress telemetry before route flow.
 - `9` replaces the current field with a quiet late-sector long-scroll traversal: 1 active entity, 0 projectiles, 0 pickups/effects, 0 telegraphs, and the current sector's generated background/features at a deterministic late distance.
 - `K` forces a debug run summary.
 
-The dense pocket is deterministic and intentionally stays below the Phase 2 alpha active-field budget of 80 entities. The long-scroll traversal is deterministic and intentionally quiet so background/feature rendering can be inspected without combat pressure. The forced-destruction path is deterministic and bounded so death-to-summary timing can be tested without relying on combat damage. Use these to confirm the debug overlay remains responsive, bullets remain readable in standard and high-contrast modes, screen shake respects reduced motion, distance/speed/destruction counters behave correctly, viewport/HUD/input metrics remain stable, and the round can still be abandoned or summarized.
+The dense pocket is deterministic and intentionally stays below the Phase 2 alpha active-field budget of 80 entities. The long-scroll traversal is deterministic and intentionally quiet so background/feature rendering can be inspected without combat pressure. The forced-destruction path is deterministic and bounded so death-to-summary timing can be tested without relying on combat damage. Work order 049 also exposes progression, upgrade readiness, run resource, and sector-plan telemetry in the debug overlay, so browser smoke can verify banked scrap, `LUNAR-SURFACE-LANE`, exit, and destruction paths without reading private app state. Use these to confirm the debug overlay remains responsive, bullets remain readable in standard and high-contrast modes, screen shake respects reduced motion, distance/speed/destruction counters behave correctly, viewport/HUD/input metrics remain stable, and the round can still be abandoned or summarized.
 
 ## Current Boss Phase Volleys
 
