@@ -458,6 +458,8 @@ Exit criteria:
 - Known seeds can reproduce lunar backgrounds/features.
 - Hazards telegraph clearly and stay under bullets.
 
+Status: partially implemented through work order 046. Lunar Surface now appears in deterministic generation for `LUNAR-SURFACE-LANE`, uses original crater/ridge/tower/wreck-shadow background primitives with muted terrain alpha, and has content/background/feature validation coverage. Lunar-specific landmark, hazard, route-condition, and pacing depth remains work order 047.
+
 ### P5.5 - Destruction And Phase 5 Playtest Candidate
 
 Scope:

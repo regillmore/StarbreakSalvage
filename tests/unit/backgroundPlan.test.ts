@@ -30,6 +30,44 @@ describe('BackgroundPlan', () => {
     }
   });
 
+  it('creates readable deterministic lunar surface strata', () => {
+    const run = generateRunSkeleton('LUNAR-SURFACE-LANE');
+    const lunarBackground = run.sectors.find(
+      (sector) => sector.sectorId === 'sector_lunar_surface'
+    )?.background;
+
+    if (!lunarBackground) {
+      throw new Error('Expected lunar sector background.');
+    }
+
+    expect(lunarBackground.id).toBe('background_lunar_surface');
+    expect(lunarBackground.layers.map((layer) => layer.kind)).toEqual([
+      'deepStars',
+      'craterRims',
+      'lunarRidges',
+      'surfaceTowers',
+      'wreckShadows'
+    ]);
+    expect(lunarBackground.layers.map((layer) => layer.primitives[0]?.kind)).toEqual([
+      'spark',
+      'crater',
+      'ridge',
+      'tower',
+      'shadow'
+    ]);
+    expect(lunarBackground.layers.slice(1).every((layer) => layer.alpha <= 0.24)).toBe(true);
+    expect(lunarBackground.layers.at(-1)?.priority).toBe(3);
+    const repeatedBackground = generateRunSkeleton('LUNAR-SURFACE-LANE').sectors[2]?.background;
+
+    if (!repeatedBackground) {
+      throw new Error('Expected repeated lunar sector background.');
+    }
+
+    expect(summarizeBackgroundPlan(lunarBackground)).toEqual(
+      summarizeBackgroundPlan(repeatedBackground)
+    );
+  });
+
   it('matches the known-seed opening background snapshot', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
     const openingBackground = run.sectors[0]?.background;

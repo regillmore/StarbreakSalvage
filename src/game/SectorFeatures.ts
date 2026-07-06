@@ -100,6 +100,7 @@ const LANDMARK_CHOICES: Readonly<Record<SectorId, readonly SectorLandmarkKind[]>
   sector_trade_war_corridor: ['convoy_shadow', 'beacon_line', 'vault_door'],
   sector_bio_machine_bloom: ['repair_platform', 'beacon_line', 'core_machinery'],
   sector_corporate_kill_grid: ['beacon_line', 'vault_door', 'core_machinery'],
+  sector_lunar_surface: ['wreck_silhouette', 'beacon_line', 'convoy_shadow'],
   sector_core_wreck: ['core_machinery', 'wreck_silhouette', 'vault_door']
 };
 
@@ -108,6 +109,7 @@ const HAZARD_CHOICES: Readonly<Record<SectorId, readonly SectorHazardKind[]>> = 
   sector_trade_war_corridor: ['warning_beam', 'mine_belt', 'debris_lane'],
   sector_bio_machine_bloom: ['salvage_storm', 'debris_lane', 'mine_belt'],
   sector_corporate_kill_grid: ['warning_beam', 'crush_gate', 'mine_belt'],
+  sector_lunar_surface: ['debris_lane', 'warning_beam', 'mine_belt'],
   sector_core_wreck: ['crush_gate', 'warning_beam', 'salvage_storm']
 };
 

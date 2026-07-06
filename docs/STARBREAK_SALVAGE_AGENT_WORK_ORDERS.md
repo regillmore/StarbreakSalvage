@@ -751,6 +751,8 @@ Acceptance criteria:
 - Bullets remain readable in standard and high-contrast modes.
 - Content validation covers lunar references.
 
+Status: implemented; Lunar Surface now has sector metadata, a deterministic `LUNAR-SURFACE-LANE` route slot, original low-altitude background strata for crater rims, ridgelines, surface-array towers, and wreck shadows, first-pass sparse feature references, and content validation/test coverage for sector/background/feature references. Terrain layers use muted alpha and priority tiers so performance and reduced-motion modes can simplify the visual load while high-contrast bullets remain foregrounded.
+
 ## Work order 047 - Lunar hazards, landmarks, and encounter pacing
 
 Goal: make the lunar sector play differently, not just look different.

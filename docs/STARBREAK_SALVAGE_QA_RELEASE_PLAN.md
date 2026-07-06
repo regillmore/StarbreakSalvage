@@ -100,6 +100,7 @@ Current Phase 5 coverage:
 - Work order 043 adds same-save/same-seed upgrade generation snapshots for contract boards, route intel, market decoder shop output, relic dossier vault rewards, seed survey text, fresh-save viability, summary/debug exposure, and browser smoke that a purchased upgrade appears on the next contract board.
 - Work order 044 adds run-summary progress tests for earned/banked scrap formatting, newly affordable/available/next/completed upgrade callouts, archive upgrade status, save summary records, and Playwright summary assertions.
 - Work order 045 adds sector-exit sequence tests for normal/debug/reduced-motion/final-sector timing and Playwright smoke assertions for forced exit toast, debug exit progress, and route flow after the beat.
+- Work order 046 adds deterministic `LUNAR-SURFACE-LANE` generation coverage, Lunar Surface background-strata checks, first-pass feature-plan validation, and content breadth/reference validation.
 
 ## Known seed tests
 
@@ -136,7 +137,7 @@ Phase 5 should add these seed/save fixtures:
 - `UPGRADE-SEED-SNAPSHOT` - same seed tested under fresh and upgraded save states; implemented in work order 043 upgrade-effect snapshots.
 - `RUN-SCRAP-CALLOUT` - forced summary path that verifies earned/banked scrap and upgrade progress copy; implemented in the work order 044 Playwright summary smoke.
 - `EXIT-TOAST-CHECK` - forgiving sector completion path for exit/toast smoke; implemented through the work order 045 forced sector-complete Playwright path.
-- `LUNAR-SURFACE-LANE` - deterministic lunar sector/background/feature plan.
+- `LUNAR-SURFACE-LANE` - deterministic lunar sector/background/feature plan; implemented in work order 046 generation, background, and feature tests.
 - `SHIP-BREAKUP-TEST` - deterministic death/destruction summary path.
 
 ## Content validation checklist
@@ -155,7 +156,7 @@ Phase 2 should extend this checklist as systems become real. In addition to the 
 - [ ] Curses are clearly marked.
 - [x] Ship appearance references, palettes, weapon mount hints, and HUD theme keys validate.
 - [x] Upgrade definitions, costs, prerequisites, effect references, and icon categories validate.
-- [ ] Lunar sector background, landmark, hazard, faction, and boss references validate.
+- [x] Lunar sector background, first-pass feature, faction, and boss references validate.
 
 ## Manual browser smoke matrix
 

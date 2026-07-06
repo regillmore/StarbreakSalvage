@@ -1440,6 +1440,51 @@ export class CanvasRenderer {
       context.moveTo(-lineLength / 2, -size * 0.2);
       context.quadraticCurveTo(0, size * 1.2, lineLength / 2, -size * 0.15);
       context.stroke();
+    } else if (primitive.kind === 'crater') {
+      context.beginPath();
+      context.ellipse(0, 0, Math.max(size * 1.6, lineLength * 0.5), size, 0, 0, Math.PI * 2);
+      context.stroke();
+      context.globalAlpha = alpha * 0.28;
+      context.fillStyle = primitive.accentColor;
+      context.beginPath();
+      context.ellipse(size * 0.18, size * 0.12, size * 0.72, size * 0.32, 0, 0, Math.PI * 2);
+      context.fill();
+    } else if (primitive.kind === 'ridge') {
+      context.beginPath();
+      context.moveTo(-lineLength / 2, size * 0.25);
+      context.lineTo(-lineLength * 0.22, -size * 0.3);
+      context.lineTo(lineLength * 0.06, size * 0.08);
+      context.lineTo(lineLength * 0.34, -size * 0.24);
+      context.lineTo(lineLength / 2, size * 0.18);
+      context.stroke();
+      context.globalAlpha = alpha * 0.32;
+      context.strokeStyle = primitive.accentColor;
+      context.beginPath();
+      context.moveTo(-lineLength * 0.46, size * 0.58);
+      context.lineTo(lineLength * 0.42, size * 0.42);
+      context.stroke();
+    } else if (primitive.kind === 'tower') {
+      const towerWidth = Math.max(lineWidth * 3, size * 0.55);
+      context.beginPath();
+      context.moveTo(-towerWidth, lineLength / 2);
+      context.lineTo(-towerWidth * 0.36, -lineLength / 2);
+      context.lineTo(towerWidth * 0.36, -lineLength / 2);
+      context.lineTo(towerWidth, lineLength / 2);
+      context.closePath();
+      context.fill();
+      context.globalAlpha = alpha * 0.55;
+      context.strokeStyle = primitive.accentColor;
+      context.beginPath();
+      context.moveTo(0, -lineLength / 2);
+      context.lineTo(0, -lineLength * 0.78);
+      context.moveTo(-towerWidth * 1.9, -lineLength * 0.68);
+      context.lineTo(towerWidth * 1.9, -lineLength * 0.68);
+      context.stroke();
+    } else if (primitive.kind === 'shadow') {
+      context.globalAlpha = alpha * 0.72;
+      context.beginPath();
+      context.ellipse(0, 0, Math.max(size * 1.4, lineLength * 0.5), Math.max(size, lineWidth * 4), 0, 0, Math.PI * 2);
+      context.fill();
     } else {
       this.paintAngularBackgroundShape(primitive, size, lineLength, lineWidth);
     }

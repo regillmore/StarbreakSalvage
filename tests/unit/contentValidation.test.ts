@@ -46,7 +46,7 @@ describe('validateContent', () => {
 
     expect(ITEMS).toHaveLength(30);
     expect(FACTIONS).toHaveLength(4);
-    expect(BACKGROUNDS).toHaveLength(5);
+    expect(BACKGROUNDS).toHaveLength(6);
     expect(UPGRADES.length).toBeGreaterThanOrEqual(6);
     expect(representedArchetypes).toHaveLength(ITEM_ARCHETYPES.length);
     expect(representedArchetypes.length).toBeGreaterThanOrEqual(6);

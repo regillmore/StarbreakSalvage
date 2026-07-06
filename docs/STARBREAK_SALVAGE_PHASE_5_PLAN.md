@@ -25,7 +25,7 @@ Make the run-to-run loop feel rewarding and legible while adding one strong new 
 - the Upgrade Bay and run summaries now explain affordability, but future feedback should avoid turning summary screens into shops;
 - existing menus have first-pass upgrade icons, but later upgrade categories will need the same concise visual language;
 - sector completion currently routes forward correctly, but the completion moment can feel abrupt;
-- sector variety is space-first, with no low-altitude/lunar terrain family yet;
+- sector variety now has a first Lunar Surface background family, but lunar-specific hazards, landmarks, and encounter pacing still need depth;
 - player death produces a summary, but the combat-side destruction moment is still first-pass feedback.
 
 ## Phase 5 Milestones
@@ -87,6 +87,8 @@ Exit criteria:
 - Lunar surface backgrounds, landmarks, hazards, and palette are deterministic and original.
 - Lunar terrain communicates altitude and speed without hiding bullets.
 - Content validation covers the new sector references.
+
+Status: partially implemented by work order 046. Lunar Surface can appear through the deterministic `LUNAR-SURFACE-LANE` route, with original crater/ridge/tower/wreck-shadow background strata, muted terrain layers, first-pass generic feature references, and content/background/feature tests. Lunar-specific landmarks, hazards, and encounter pacing remain work order 047.
 
 ### P5.6 - Destruction And Recovery Feedback
 

@@ -3,6 +3,7 @@ export type BackgroundId =
   | 'background_trade_war_corridor'
   | 'background_bio_machine_bloom'
   | 'background_corporate_kill_grid'
+  | 'background_lunar_surface'
   | 'background_core_wreck';
 
 export type BackgroundLayerKind =
@@ -16,6 +17,10 @@ export type BackgroundLayerKind =
   | 'bloomStrands'
   | 'killGrid'
   | 'warningRails'
+  | 'lunarRidges'
+  | 'craterRims'
+  | 'surfaceTowers'
+  | 'wreckShadows'
   | 'coreFractures'
   | 'reactorEmbers';
 
@@ -55,6 +60,10 @@ export const BACKGROUND_LAYER_KINDS: readonly BackgroundLayerKind[] = [
   'bloomStrands',
   'killGrid',
   'warningRails',
+  'lunarRidges',
+  'craterRims',
+  'surfaceTowers',
+  'wreckShadows',
   'coreFractures',
   'reactorEmbers'
 ];
@@ -264,6 +273,68 @@ export const BACKGROUNDS: readonly BackgroundDefinition[] = [
         alpha: 0.24,
         parallax: 0.78,
         density: 42,
+        priority: 3
+      }
+    ]
+  },
+  {
+    id: 'background_lunar_surface',
+    name: 'Lunar Surface',
+    palette: {
+      top: '#040713',
+      middle: '#111626',
+      bottom: '#1b1f26',
+      glow: 'rgba(226, 238, 255, 0.11)'
+    },
+    layers: [
+      {
+        id: 'thin-orbit-stars',
+        kind: 'deepStars',
+        color: '#f8fbff',
+        accentColor: '#b8d9ff',
+        alpha: 0.44,
+        parallax: 0.08,
+        density: 52,
+        priority: 1
+      },
+      {
+        id: 'distant-crater-rims',
+        kind: 'craterRims',
+        color: '#5c6773',
+        accentColor: '#b8d9ff',
+        alpha: 0.24,
+        parallax: 0.28,
+        density: 28,
+        priority: 1
+      },
+      {
+        id: 'low-ridge-parallax',
+        kind: 'lunarRidges',
+        color: '#6f7987',
+        accentColor: '#d7e5ff',
+        alpha: 0.2,
+        parallax: 0.58,
+        density: 24,
+        priority: 2
+      },
+      {
+        id: 'surface-array-shadows',
+        kind: 'surfaceTowers',
+        color: '#2c3542',
+        accentColor: '#7cf7ff',
+        alpha: 0.18,
+        parallax: 0.82,
+        density: 16,
+        priority: 2
+      },
+      {
+        id: 'near-wreck-shadows',
+        kind: 'wreckShadows',
+        color: '#181d25',
+        accentColor: '#ffd166',
+        alpha: 0.16,
+        parallax: 1.02,
+        density: 12,
         priority: 3
       }
     ]

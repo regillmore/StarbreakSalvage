@@ -49,6 +49,23 @@ describe('SectorFeatures', () => {
     expect(hazardKinds.size).toBeGreaterThanOrEqual(3);
   });
 
+  it('ships valid first-pass lunar surface features when the lunar lane appears', () => {
+    const run = generateRunSkeleton('LUNAR-SURFACE-LANE');
+    const lunarSector = run.sectors.find((sector) => sector.sectorId === 'sector_lunar_surface');
+
+    if (!lunarSector) {
+      throw new Error('Expected lunar sector.');
+    }
+
+    expect(validateSectorFeaturePlan(lunarSector.features, lunarSector.scroll.length)).toEqual([]);
+    expect(lunarSector.features.landmarks.map((landmark) => landmark.kind)).toEqual(
+      expect.arrayContaining(['wreck_silhouette', 'beacon_line'])
+    );
+    expect(lunarSector.features.hazards.map((hazard) => hazard.kind)).toEqual(
+      expect.arrayContaining(['debris_lane', 'warning_beam'])
+    );
+  });
+
   it('opens hazard telegraph and active phases from scroll distance', () => {
     const sector = getOpeningSector();
     const hazard = sector.features.hazards[0];

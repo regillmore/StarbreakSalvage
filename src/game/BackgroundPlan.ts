@@ -8,7 +8,18 @@ import type {
 import type { Rng } from '../core/rng';
 
 export type BackgroundPrimitiveKind =
-  'spark' | 'streak' | 'plate' | 'rail' | 'gridLine' | 'strand' | 'bloom' | 'fracture';
+  | 'spark'
+  | 'streak'
+  | 'plate'
+  | 'rail'
+  | 'gridLine'
+  | 'strand'
+  | 'bloom'
+  | 'fracture'
+  | 'crater'
+  | 'ridge'
+  | 'tower'
+  | 'shadow';
 
 export interface BackgroundPrimitive {
   readonly kind: BackgroundPrimitiveKind;
@@ -221,6 +232,58 @@ function createPrimitive(
         width: round(0.001 + rng.nextFloat() * 0.0035),
         rotation: index % 3 === 0 ? Math.PI / 2 : round(-0.08 + rng.nextFloat() * 0.16),
         alpha: round(0.32 + rng.nextFloat() * 0.3),
+        color,
+        accentColor
+      };
+    case 'craterRims':
+      return {
+        kind: 'crater',
+        x,
+        y,
+        size: round(0.024 + rng.nextFloat() * 0.07),
+        length: round(0.055 + rng.nextFloat() * 0.16),
+        width: round(0.006 + rng.nextFloat() * 0.018),
+        rotation: round(-0.35 + rng.nextFloat() * 0.7),
+        alpha: round(0.3 + rng.nextFloat() * 0.32),
+        color,
+        accentColor
+      };
+    case 'lunarRidges':
+      return {
+        kind: 'ridge',
+        x,
+        y,
+        size: round(0.01 + rng.nextFloat() * 0.036),
+        length: round(0.12 + rng.nextFloat() * 0.28),
+        width: round(0.0015 + rng.nextFloat() * 0.004),
+        rotation: round(-0.22 + rng.nextFloat() * 0.44),
+        alpha: round(0.32 + rng.nextFloat() * 0.28),
+        color,
+        accentColor
+      };
+    case 'surfaceTowers':
+      return {
+        kind: 'tower',
+        x,
+        y,
+        size: round(0.014 + rng.nextFloat() * 0.04),
+        length: round(0.045 + rng.nextFloat() * 0.12),
+        width: round(0.006 + rng.nextFloat() * 0.018),
+        rotation: round(-0.08 + rng.nextFloat() * 0.16),
+        alpha: round(0.34 + rng.nextFloat() * 0.28),
+        color,
+        accentColor
+      };
+    case 'wreckShadows':
+      return {
+        kind: 'shadow',
+        x,
+        y,
+        size: round(0.032 + rng.nextFloat() * 0.075),
+        length: round(0.11 + rng.nextFloat() * 0.24),
+        width: round(0.012 + rng.nextFloat() * 0.038),
+        rotation: round(-0.5 + rng.nextFloat() * 1),
+        alpha: round(0.28 + rng.nextFloat() * 0.24),
         color,
         accentColor
       };

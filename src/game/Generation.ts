@@ -1,7 +1,7 @@
 import { getBossById, type BossId, type BossPatternId } from '../content/bosses';
 import { getBackgroundById } from '../content/backgrounds';
 import type { FactionId } from '../content/factions';
-import { SECTORS, type SectorDefinition } from '../content/sectors';
+import { SECTORS, type SectorDefinition, type SectorId } from '../content/sectors';
 import {
   type ShipAppearance,
   type ShipDefinition,
@@ -138,6 +138,19 @@ const SEED_TAG_HINTS: ReadonlyArray<readonly [string, readonly string[]]> = [
   ['SMOKE', ['credit', 'drone', 'missile']]
 ];
 
+const OPENING_SECTOR_ID: SectorId = 'sector_outer_debris_field';
+const CORE_SECTOR_ID: SectorId = 'sector_core_wreck';
+const STANDARD_MIDDLE_SECTOR_IDS: readonly SectorId[] = [
+  'sector_trade_war_corridor',
+  'sector_bio_machine_bloom',
+  'sector_corporate_kill_grid'
+];
+const LUNAR_MIDDLE_SECTOR_IDS: readonly SectorId[] = [
+  'sector_trade_war_corridor',
+  'sector_lunar_surface',
+  'sector_corporate_kill_grid'
+];
+
 export function generateRunSkeleton(
   seedInput: string | null | undefined,
   options: RunGenerationOptions = {}
@@ -153,7 +166,8 @@ export function generateRunSkeleton(
     unlockAccess,
     upgradeEffects
   );
-  const sectors = SECTORS.map((sector, index) =>
+  const sectorSequence = selectSectorSequence(seed);
+  const sectors = sectorSequence.map((sector, index) =>
     generateSectorRoute(
       sector,
       index + 1,
@@ -172,6 +186,28 @@ export function generateRunSkeleton(
     contracts,
     sectors
   };
+}
+
+function selectSectorSequence(seed: string): readonly SectorDefinition[] {
+  const middleSectorIds = seed.includes('LUNAR')
+    ? LUNAR_MIDDLE_SECTOR_IDS
+    : STANDARD_MIDDLE_SECTOR_IDS;
+
+  return [
+    getSectorDefinition(OPENING_SECTOR_ID),
+    ...middleSectorIds.map((sectorId) => getSectorDefinition(sectorId)),
+    getSectorDefinition(CORE_SECTOR_ID)
+  ];
+}
+
+function getSectorDefinition(id: SectorId): SectorDefinition {
+  const sector = SECTORS.find((candidate) => candidate.id === id);
+
+  if (!sector) {
+    throw new Error(`Unknown sector definition: ${id}`);
+  }
+
+  return sector;
 }
 
 function generateStartingContracts(

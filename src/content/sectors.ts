@@ -6,6 +6,7 @@ export type SectorId =
   | 'sector_trade_war_corridor'
   | 'sector_bio_machine_bloom'
   | 'sector_corporate_kill_grid'
+  | 'sector_lunar_surface'
   | 'sector_core_wreck';
 
 export type SectorObjectiveKind = 'clearWaves' | 'defeatBoss';
@@ -92,6 +93,26 @@ export const SECTORS: readonly SectorDefinition[] = [
       waveCount: 3,
       spawnsPerWave: 2,
       bossGate: true
+    }
+  },
+  {
+    id: 'sector_lunar_surface',
+    name: 'Lunar Surface',
+    role: 'low-altitude terrain and surface shadows',
+    backgroundId: 'background_lunar_surface',
+    bossCandidates: ['boss_unsold_missiles_carrier', 'boss_warranty_void_seraph'],
+    majorWavePool: [
+      'crater_skim_patrol',
+      'ridge_shadow_intercept',
+      'surface_array_crossfire',
+      'low_orbit_debris'
+    ],
+    objective: {
+      kind: 'clearWaves',
+      label: 'Skim the lunar salvage lane',
+      waveCount: 3,
+      spawnsPerWave: 2,
+      bossGate: false
     }
   },
   {

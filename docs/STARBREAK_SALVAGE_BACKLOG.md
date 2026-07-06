@@ -988,6 +988,10 @@ Acceptance:
 - Background plans use original low-altitude terrain, crater, ridge, tower, or wreck-shadow motifs.
 - Content validation covers sector references.
 
+Status:
+
+- Implemented in work order 046. `LUNAR-SURFACE-LANE` routes through Lunar Surface, the content catalog includes the sector/background references, and background plans use original crater, ridge, tower, and wreck-shadow primitives.
+
 ### AJ2 - Lunar features
 
 Acceptance:
@@ -995,6 +999,10 @@ Acceptance:
 - Lunar sectors have at least two landmarks and two hazard patterns.
 - Hazards have deterministic distance windows and readable telegraphs.
 - Features remain under bullets and respect high-contrast/reduced-motion settings.
+
+Status:
+
+- Foundation partially covered by work order 046 with existing sparse feature families so the lunar sector is playable. Lunar-specific landmarks and hazard patterns remain work order 047.
 
 ### AJ3 - Lunar encounter pacing
 
