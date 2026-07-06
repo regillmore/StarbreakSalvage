@@ -102,6 +102,7 @@ Current Phase 5 coverage:
 - Work order 045 adds sector-exit sequence tests for normal/debug/reduced-motion/final-sector timing and Playwright smoke assertions for forced exit toast, debug exit progress, and route flow after the beat.
 - Work order 046 adds deterministic `LUNAR-SURFACE-LANE` generation coverage, Lunar Surface background-strata checks, first-pass feature-plan validation, and content breadth/reference validation.
 - Work order 047 adds lunar-specific feature determinism, hazard phase/readability/collision metadata tests, route-conditioned lunar feature regression coverage, sector pacing validation, and wave-director pacing checks.
+- Work order 048 adds player-destruction cue-state tests for deterministic debris, reduced-motion/performance/high-contrast variants, feedback/audio mappings, debug force-destruction input, and Playwright smoke coverage from destruction toast/debug progress through the destroyed summary.
 
 ## Known seed tests
 
@@ -139,7 +140,7 @@ Phase 5 should add these seed/save fixtures:
 - `RUN-SCRAP-CALLOUT` - forced summary path that verifies earned/banked scrap and upgrade progress copy; implemented in the work order 044 Playwright summary smoke.
 - `EXIT-TOAST-CHECK` - forgiving sector completion path for exit/toast smoke; implemented through the work order 045 forced sector-complete Playwright path.
 - `LUNAR-SURFACE-LANE` - deterministic lunar sector/background/feature/pacing plan; implemented across work orders 046 and 047 generation, background, feature, route-condition, content, and wave-director tests.
-- `SHIP-BREAKUP-TEST` - deterministic death/destruction summary path.
+- `SHIP-BREAKUP-TEST` - deterministic death/destruction summary path; first covered by the work order 048 debug forced-destruction Playwright path.
 
 ## Content validation checklist
 
@@ -190,7 +191,7 @@ Phase 5 performance checks should include Upgrade Bay DOM/icon rendering cost, u
 - [x] Contract preview model and selection smoke coverage exists.
 - [x] Contract theme propagation smoke coverage exists for route/shop/reward/transition/summary screens.
 - [x] Upgrade Bay, banked scrap state, and upgrade-influenced generation visible in tests/debug smoke.
-- [ ] Sector exit/toast and lunar sector smoke paths exist; destruction smoke remains work order 049 after rich destruction lands.
+- [ ] Sector exit/toast and destruction smoke paths exist; lunar browser smoke remains a work order 049 target.
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [ ] Heavy combat debug scene documented.
 - [ ] Long-scroll debug scene documented.

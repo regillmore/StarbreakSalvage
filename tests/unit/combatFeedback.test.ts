@@ -59,6 +59,9 @@ describe('CombatFeedback', () => {
 
   it('keeps nonzero shake for impact cues and no shake for pickups', () => {
     expect(getFeedbackShakeIntensity('playerHit')).toBeGreaterThan(0);
+    expect(getFeedbackShakeIntensity('playerDestroyed')).toBeGreaterThan(
+      getFeedbackShakeIntensity('playerHit')
+    );
     expect(getFeedbackShakeIntensity('bombUsed')).toBeGreaterThan(
       getFeedbackShakeIntensity('playerHit')
     );

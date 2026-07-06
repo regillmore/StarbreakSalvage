@@ -22,6 +22,7 @@ export interface SceneDebugState {
   readonly sectorLength?: number;
   readonly scrollSpeed?: number;
   readonly exitSequence?: string;
+  readonly destructionSequence?: string;
   readonly arenaPhase?: string;
   readonly debugScenario?: string;
   readonly inputMode?: string;

@@ -629,6 +629,9 @@ export class GameApp {
         ? [`Arena ${debugState.arenaPhase}`]
         : [];
     const exitDebug = debugState.exitSequence ? [`Exit ${debugState.exitSequence}`] : [];
+    const destructionDebug = debugState.destructionSequence
+      ? [`Destruction ${debugState.destructionSequence}`]
+      : [];
     const scenarioDebug = debugState.debugScenario ? [`Scenario ${debugState.debugScenario}`] : [];
     const inputDebug = debugState.inputMode ? [`Input ${debugState.inputMode}`] : [];
     const hudDebug = debugState.hudMode ? [`HUD ${debugState.hudMode}`] : [];
@@ -649,6 +652,7 @@ export class GameApp {
       ...scrollDebug,
       ...arenaDebug,
       ...exitDebug,
+      ...destructionDebug,
       ...scenarioDebug,
       ...inputDebug,
       ...hudDebug,

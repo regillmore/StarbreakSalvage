@@ -77,6 +77,13 @@ const CUE_DEFINITIONS: Readonly<Record<CombatFeedbackCue, AudioCueDefinition>> =
     durationSeconds: 0.18,
     gain: 0.105
   },
+  playerDestroyed: {
+    waveform: 'sawtooth',
+    frequency: 84,
+    endFrequency: 24,
+    durationSeconds: 0.38,
+    gain: 0.12
+  },
   bossSpawned: {
     waveform: 'sawtooth',
     frequency: 92,

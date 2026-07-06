@@ -31,6 +31,7 @@ import {
   type PlayerShipCueState
 } from './ShipCombatCues';
 import { calculateViewportLayout, type ViewportLayout } from './ViewportLayout';
+import type { PlayerDestructionPresentation } from '../game/PlayerDestruction';
 
 const BACKGROUND_SEED = 'STARBREAK-SALVAGE-SHELL';
 const DEFAULT_PLAYER_SHIP_APPEARANCE: ShipAppearance = {
@@ -559,6 +560,115 @@ export class CanvasRenderer {
     context.beginPath();
     context.arc(0, player.radius * 0.2, Math.max(2.5, player.radius * 0.18), 0, Math.PI * 2);
     context.fill();
+
+    context.restore();
+  }
+
+  public paintPlayerDestruction(presentation: PlayerDestructionPresentation): void {
+    const context = this.context;
+    const { center, colors, radius } = presentation;
+
+    context.save();
+    context.translate(center.x, center.y);
+
+    if (presentation.shockwaveAlpha > 0) {
+      context.globalAlpha = presentation.shockwaveAlpha;
+      context.strokeStyle = colors.warning;
+      context.lineWidth = presentation.motionMode === 'reduced' ? 1.5 : 2.4;
+      context.beginPath();
+      context.arc(0, 0, presentation.shockwaveRadius, 0, Math.PI * 2);
+      context.stroke();
+    }
+
+    if (presentation.failurePulseAlpha > 0) {
+      context.globalAlpha = presentation.failurePulseAlpha;
+      context.fillStyle = colors.warning;
+      this.tracePlayerShipSilhouette(presentation.silhouette, radius * 0.92);
+      context.fill();
+    }
+
+    context.globalAlpha = 0.74;
+    context.strokeStyle = colors.trim;
+    context.lineWidth = 1.4;
+    this.tracePlayerShipSilhouette(presentation.silhouette, radius * 1.02);
+    context.stroke();
+
+    for (const debris of presentation.debris) {
+      this.paintPlayerDestructionDebris(debris, center);
+    }
+
+    if (presentation.cockpitPulseAlpha > 0) {
+      context.globalAlpha = presentation.cockpitPulseAlpha;
+      context.strokeStyle = colors.cockpit;
+      context.lineWidth = 1.8;
+      context.beginPath();
+      context.arc(0, radius * 0.16, presentation.cockpitPulseRadius, 0, Math.PI * 2);
+      context.stroke();
+      context.fillStyle = colors.cockpit;
+      context.beginPath();
+      context.arc(0, radius * 0.16, Math.max(2.5, radius * 0.16), 0, Math.PI * 2);
+      context.fill();
+    }
+
+    if (presentation.transponderAlpha > 0) {
+      context.globalAlpha = presentation.transponderAlpha;
+      context.fillStyle = colors.warning;
+      context.font = '700 12px "Trebuchet MS", Arial, sans-serif';
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.fillText(presentation.transponderText, 0, -radius * 2.35);
+    }
+
+    context.restore();
+  }
+
+  private paintPlayerDestructionDebris(
+    debris: PlayerDestructionPresentation['debris'][number],
+    center: PlayerDestructionPresentation['center']
+  ): void {
+    const context = this.context;
+    const half = debris.size / 2;
+
+    context.save();
+    context.translate(debris.x - center.x, debris.y - center.y);
+    context.rotate(debris.rotation);
+    context.globalAlpha = debris.alpha;
+    context.fillStyle = debris.color;
+    context.strokeStyle = debris.color;
+    context.lineWidth = Math.max(1, debris.size * 0.16);
+
+    if (debris.shape === 'engine') {
+      context.beginPath();
+      context.moveTo(-half, -half * 0.45);
+      context.lineTo(half, -half * 0.45);
+      context.lineTo(0, half * 1.35);
+      context.closePath();
+      context.fill();
+    } else if (debris.shape === 'cockpit') {
+      context.beginPath();
+      context.ellipse(0, 0, half * 0.82, half * 1.1, 0.2, 0, Math.PI * 2);
+      context.fill();
+      context.globalAlpha *= 0.62;
+      context.strokeStyle = '#f8fbff';
+      context.stroke();
+    } else if (debris.shape === 'signal') {
+      context.beginPath();
+      context.moveTo(-half, 0);
+      context.lineTo(half, 0);
+      context.moveTo(0, -half);
+      context.lineTo(0, half);
+      context.stroke();
+    } else if (debris.shape === 'trim') {
+      context.fillRect(-half * 1.2, -half * 0.28, debris.size * 1.7, half * 0.56);
+    } else {
+      context.beginPath();
+      context.moveTo(-half, -half);
+      context.lineTo(half * 1.1, -half * 0.2);
+      context.lineTo(half * 0.28, half);
+      context.lineTo(-half * 0.9, half * 0.44);
+      context.closePath();
+      context.fill();
+    }
 
     context.restore();
   }

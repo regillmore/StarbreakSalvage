@@ -9,6 +9,7 @@ export type CombatFeedbackCue =
   | 'bossDefeated'
   | 'pickupCollected'
   | 'playerHit'
+  | 'playerDestroyed'
   | 'bossSpawned'
   | 'bossWarning'
   | 'sectorClear'
@@ -36,6 +37,7 @@ const SHAKE_INTENSITY_BY_CUE: Readonly<Record<CombatFeedbackCue, number>> = {
   bossDefeated: 0.72,
   pickupCollected: 0,
   playerHit: 0.64,
+  playerDestroyed: 0.78,
   bossSpawned: 0.46,
   bossWarning: 0.18,
   sectorClear: 0.34,

@@ -474,6 +474,8 @@ Exit criteria:
 - Full checks, E2E smoke, and production preview smoke pass.
 - Known progression, sector, and browser risks are documented.
 
+Status: in progress through work order 048. Rich player destruction is implemented as a bounded gameplay state with deterministic contract-colored debris, cockpit/transponder cues, settings-aware variants, debug overlay progress, and forced-destruction Playwright coverage. Work orders 049-050 still need broader deterministic smoke/debug instrumentation and Phase 5 release hardening.
+
 ## Dependency map
 
 ```text

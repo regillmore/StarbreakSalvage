@@ -785,6 +785,8 @@ Acceptance criteria:
 - Accessibility/performance settings reduce or clarify the sequence.
 - No external assets are introduced.
 
+Status: implemented; player death now enters a bounded destruction state before the existing summary, with contract-colored deterministic debris, silhouette remnants, cockpit failure pulse, transponder toast, a `playerDestroyed` feedback/audio cue, reduced-motion/performance/high-contrast variants, and debug overlay progress. Debug key `7` forces the destruction path behind `?debug=1`, while `K` remains the instant forced-summary shortcut. Unit coverage validates deterministic debris/cue state/settings variants and Playwright smoke now exercises forced destruction through to the destroyed summary.
+
 ## Work order 049 - Phase 5 deterministic smoke and debug instrumentation
 
 Goal: make progression and new-sector work measurable before release hardening.

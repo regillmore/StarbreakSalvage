@@ -68,6 +68,12 @@ import {
   type SectorExitSequenceState
 } from '../game/SectorExitSequence';
 import {
+  advancePlayerDestructionSequence,
+  createPlayerDestructionSequence,
+  getPlayerDestructionPresentation,
+  type PlayerDestructionSequenceState
+} from '../game/PlayerDestruction';
+import {
   createWaveDirectorPlan,
   getObjectiveProgress,
   type WaveDirectorPlan
@@ -130,12 +136,15 @@ export class GameplayScene implements Scene {
   private readonly itemReadout: HTMLParagraphElement;
   private readonly hintReadout: HTMLParagraphElement;
   private readonly exitToast: HTMLParagraphElement;
+  private readonly destructionToast: HTMLParagraphElement;
   private readonly hullMeter: HudMeterElements;
   private readonly specialMeter: HudMeterElements;
   private readonly bombMeter: HudMeterElements;
   private readonly heatMeter: HudMeterElements;
   private exitSequence: SectorExitSequenceState | null = null;
   private exitSequenceResult: CombatRunResult | null = null;
+  private destructionSequence: PlayerDestructionSequenceState | null = null;
+  private destructionSequenceResult: CombatRunResult | null = null;
   private sectorCompleted = false;
   private queuedSpecial = false;
   private queuedBomb = false;
@@ -214,6 +223,13 @@ export class GameplayScene implements Scene {
     this.exitToast.setAttribute('aria-live', 'polite');
     this.exitToast.setAttribute('aria-hidden', 'true');
 
+    this.destructionToast = document.createElement('p');
+    this.destructionToast.className = 'sector-exit-toast player-destruction-toast';
+    this.destructionToast.dataset.testid = 'player-destruction-toast';
+    this.destructionToast.dataset.destructionState = 'idle';
+    this.destructionToast.setAttribute('aria-live', 'assertive');
+    this.destructionToast.setAttribute('aria-hidden', 'true');
+
     this.hullMeter = createHudMeterElement(document, 'Hull integrity', 'HUL', 'hull-meter');
     this.specialMeter = createHudMeterElement(document, 'Special charge', 'SPC', 'special-meter');
     this.bombMeter = createHudMeterElement(document, 'Bomb stock', 'BMB', 'bomb-meter');
@@ -283,12 +299,17 @@ export class GameplayScene implements Scene {
     );
     chrome.append(themeReadout, meterStrip);
     hud.append(chrome, readoutStrip, this.positionReadout);
-    this.uiRoot.replaceChildren(hud, this.exitToast);
+    this.uiRoot.replaceChildren(hud, this.exitToast, this.destructionToast);
     this.syncExitSequenceUi();
+    this.syncPlayerDestructionUi();
     this.syncReadouts();
   }
 
   public update(dt: number): void {
+    if (this.updatePlayerDestructionSequence(dt)) {
+      return;
+    }
+
     if (this.updateSectorExitSequence(dt)) {
       return;
     }
@@ -352,6 +373,11 @@ export class GameplayScene implements Scene {
     this.syncReadouts();
 
     if (result) {
+      if (result.reason === 'destroyed') {
+        this.startPlayerDestructionSequence(result);
+        return;
+      }
+
       this.emitFeedback(['runEnd']);
       this.onGameOver(result);
       return;
@@ -413,35 +439,47 @@ export class GameplayScene implements Scene {
       renderer.paintProjectile(projectile);
     }
 
-    renderer.paintPlayerShip({
-      x: state.player.x,
-      y: state.player.y,
-      radius: state.player.radius,
-      thrust: Math.max(
-        Math.abs(this.getEffectiveMovementAxis(state).x),
-        Math.abs(this.getEffectiveMovementAxis(state).y)
-      ),
-      appearance: this.contract.shipAppearance,
-      invulnerable: state.player.invulnerableSeconds > 0,
-      hull: state.player.hull,
-      maxHull: state.player.maxHull,
-      invulnerableSeconds: state.player.invulnerableSeconds,
-      specialCharge: state.player.specialCharge,
-      maxSpecialCharge: state.player.maxSpecialCharge,
-      specialCooldown: state.player.specialCooldown,
-      specialActiveSeconds: state.player.specialActiveSeconds,
-      bombs: state.player.bombs,
-      maxBombs: state.player.maxBombs,
-      bombCooldown: state.player.bombCooldown,
-      weaponHeat: state.player.weaponHeat,
-      weaponOverheatLimit: state.weapon.overheatLimit,
-      weaponOverheatSeconds: state.player.weaponOverheatSeconds
-    });
+    if (this.destructionSequence) {
+      renderer.paintPlayerDestruction(getPlayerDestructionPresentation(this.destructionSequence));
+    } else {
+      renderer.paintPlayerShip({
+        x: state.player.x,
+        y: state.player.y,
+        radius: state.player.radius,
+        thrust: Math.max(
+          Math.abs(this.getEffectiveMovementAxis(state).x),
+          Math.abs(this.getEffectiveMovementAxis(state).y)
+        ),
+        appearance: this.contract.shipAppearance,
+        invulnerable: state.player.invulnerableSeconds > 0,
+        hull: state.player.hull,
+        maxHull: state.player.maxHull,
+        invulnerableSeconds: state.player.invulnerableSeconds,
+        specialCharge: state.player.specialCharge,
+        maxSpecialCharge: state.player.maxSpecialCharge,
+        specialCooldown: state.player.specialCooldown,
+        specialActiveSeconds: state.player.specialActiveSeconds,
+        bombs: state.player.bombs,
+        maxBombs: state.player.maxBombs,
+        bombCooldown: state.player.bombCooldown,
+        weaponHeat: state.player.weaponHeat,
+        weaponOverheatLimit: state.weapon.overheatLimit,
+        weaponOverheatSeconds: state.player.weaponOverheatSeconds
+      });
+    }
     renderer.endGameplayLayer();
     renderer.paintGameplayFrame();
   }
 
   public handleAction(action: InputAction): void {
+    if (this.destructionSequence) {
+      if (action === 'pause' || action === 'back') {
+        this.onPause(this);
+      }
+
+      return;
+    }
+
     if (this.exitSequence) {
       if (action === 'pause' || action === 'back') {
         this.onPause(this);
@@ -469,6 +507,14 @@ export class GameplayScene implements Scene {
     if (action === 'debugGameOver' && this.debugEnabled) {
       this.emitFeedback(['runEnd']);
       this.onGameOver(forceCombatEnd(this.getCombatState(), 'debug'));
+    }
+
+    if (action === 'debugDestroyPlayer' && this.debugEnabled) {
+      const state = this.getCombatState();
+      state.player.hull = 0;
+      state.scrollDistance = this.getScrollState().distance;
+      this.startPlayerDestructionSequence(forceCombatEnd(state, 'destroyed'));
+      return;
     }
 
     if (action === 'debugSectorComplete' && this.debugEnabled) {
@@ -546,6 +592,11 @@ export class GameplayScene implements Scene {
       exitSequence: this.exitSequence
         ? `${this.exitSequence.reason} ${Math.round(
             getSectorExitPresentation(this.exitSequence).progress * 100
+          )}%`
+        : undefined,
+      destructionSequence: this.destructionSequence
+        ? `${this.destructionSequence.motionMode} ${Math.round(
+            getPlayerDestructionPresentation(this.destructionSequence).progress * 100
           )}%`
         : undefined,
       arenaPhase: this.bossArenaUpdate.phase,
@@ -639,6 +690,62 @@ export class GameplayScene implements Scene {
     this.onSectorComplete(result);
   }
 
+  private startPlayerDestructionSequence(result: CombatRunResult): void {
+    if (this.destructionSequenceResult) {
+      return;
+    }
+
+    const state = this.getCombatState();
+    const settings = getHudThemeOptions(this.uiRoot.ownerDocument);
+
+    state.player.hull = 0;
+    state.scrollDistance = this.getScrollState().distance;
+    this.destructionSequence = createPlayerDestructionSequence({
+      shipName: this.contract.shipName,
+      appearance: this.contract.shipAppearance,
+      x: state.player.x,
+      y: state.player.y,
+      radius: state.player.radius,
+      reducedMotion: settings.reducedMotion,
+      performanceMode: settings.performanceMode,
+      bulletContrast: settings.bulletContrast
+    });
+    this.destructionSequenceResult = result;
+    this.emitFeedback(['playerDestroyed']);
+    this.syncPlayerDestructionUi();
+    this.syncReadouts();
+  }
+
+  private updatePlayerDestructionSequence(dt: number): boolean {
+    if (!this.destructionSequence) {
+      return false;
+    }
+
+    const complete = advancePlayerDestructionSequence(this.destructionSequence, dt);
+    this.syncPlayerDestructionUi();
+    this.syncReadouts();
+
+    if (complete) {
+      this.finishPlayerDestructionSequence();
+    }
+
+    return true;
+  }
+
+  private finishPlayerDestructionSequence(): void {
+    const result = this.destructionSequenceResult;
+
+    if (!result) {
+      return;
+    }
+
+    this.destructionSequence = null;
+    this.destructionSequenceResult = null;
+    this.syncPlayerDestructionUi();
+    this.emitFeedback(['runEnd']);
+    this.onGameOver(result);
+  }
+
   private syncExitSequenceUi(): void {
     if (!this.exitSequence) {
       this.exitToast.dataset.exitState = 'idle';
@@ -652,6 +759,21 @@ export class GameplayScene implements Scene {
     this.exitToast.dataset.exitMotion = presentation.motion;
     this.exitToast.setAttribute('aria-hidden', 'false');
     this.exitToast.textContent = presentation.toast;
+  }
+
+  private syncPlayerDestructionUi(): void {
+    if (!this.destructionSequence) {
+      this.destructionToast.dataset.destructionState = 'idle';
+      this.destructionToast.setAttribute('aria-hidden', 'true');
+      this.destructionToast.textContent = '';
+      return;
+    }
+
+    const presentation = getPlayerDestructionPresentation(this.destructionSequence);
+    this.destructionToast.dataset.destructionState = 'active';
+    this.destructionToast.dataset.destructionMotion = presentation.motionMode;
+    this.destructionToast.setAttribute('aria-hidden', 'false');
+    this.destructionToast.textContent = `Cockpit failure | ${presentation.transponderText}`;
   }
 
   private getCombatState(): CombatState {
@@ -773,6 +895,9 @@ export class GameplayScene implements Scene {
     const exitPresentation = this.exitSequence
       ? getSectorExitPresentation(this.exitSequence)
       : null;
+    const destructionPresentation = this.destructionSequence
+      ? getPlayerDestructionPresentation(this.destructionSequence)
+      : null;
 
     this.positionReadout.textContent = `Player ${Math.round(state.player.x)},${Math.round(
       state.player.y
@@ -810,6 +935,14 @@ export class GameplayScene implements Scene {
       )}%`;
       this.warningReadout.textContent = exitPresentation.toast;
       this.hintReadout.textContent = exitPresentation.hint;
+    }
+
+    if (destructionPresentation) {
+      this.objectiveReadout.textContent = `Ship breakup | ${Math.round(
+        destructionPresentation.progress * 100
+      )}%`;
+      this.warningReadout.textContent = destructionPresentation.transponderText;
+      this.hintReadout.textContent = 'Hint Controls offline; rescue transponder broadcasting.';
     }
   }
 

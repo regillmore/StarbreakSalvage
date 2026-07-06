@@ -100,6 +100,8 @@ Exit criteria:
 - Reduced motion/performance/high-contrast settings keep death readable.
 - Summary transition remains reliable and accessible.
 
+Status: implemented by work order 048. Player death now starts a deterministic destruction sequence with contract-colored debris, silhouette remnants, cockpit pulse, transponder toast, and a dedicated feedback/audio cue before handing off to the existing destroyed summary. Reduced motion shortens and simplifies the beat, performance mode lowers debris budget, high contrast swaps the palette to bright warning colors, and Playwright smoke covers the debug forced-destruction path through summary.
+
 ### P5.7 - Phase 5 Playtest Candidate
 
 Harden the progression/sector-feedback slice for deployment.

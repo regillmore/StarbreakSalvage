@@ -1064,6 +1064,17 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
   transform: translateY(0);
 }
 
+.player-destruction-toast {
+  border-color: rgba(255, 93, 108, 0.62);
+  border-left-color: #ff5d6c;
+  box-shadow: 0 0 28px rgba(255, 93, 108, 0.2);
+}
+
+.player-destruction-toast[data-destruction-state='active'] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 html[data-reduced-motion='true'] .sector-exit-toast {
   box-shadow: none;
   transform: none;
@@ -1081,6 +1092,10 @@ html[data-bullet-contrast='high'] .hud-theme-readout,
 html[data-bullet-contrast='high'] .sector-exit-toast {
   border-color: rgba(248, 251, 255, 0.58);
   background: rgba(2, 4, 10, 0.86);
+}
+
+html[data-bullet-contrast='high'] .player-destruction-toast {
+  border-left-color: #ffef5f;
 }
 
 html[data-bullet-contrast='high'] .upgrade-card {

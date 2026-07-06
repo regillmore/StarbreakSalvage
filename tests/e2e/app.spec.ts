@@ -208,12 +208,16 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.locator('.debug-overlay')).toContainText('Pickups/FX 0/0');
   await expect(page.getByTestId('distance-readout')).toContainText(/Distance 1\d{3}\/\d+u/);
 
-  await page.keyboard.press('K');
-  await expect(page.getByRole('heading', { name: 'Debug Run Ended' })).toBeVisible();
+  await page.keyboard.press('7');
+  await expect(page.getByTestId('player-destruction-toast')).toContainText(
+    /Cockpit failure \| Debt Runner TRANSPONDER LOST/i
+  );
+  await expect(page.locator('.debug-overlay')).toContainText(/Destruction standard \d+%/);
+  await expect(page.getByRole('heading', { name: 'Ship Destroyed' })).toBeVisible();
   await expect(page.locator('.summary-panel')).toHaveAttribute('data-contract-theme', 'redline');
   await expect(page.getByText(/redline theme \| needle silhouette/)).toBeVisible();
-  await expect(page.getByText('forced test', { exact: true })).toBeVisible();
-  await expect(page.getByText('Debug: forced test summary.')).toBeVisible();
+  await expect(page.getByText('permadeath', { exact: true })).toBeVisible();
+  await expect(page.getByText('Loss: ship destroyed and contract closed.')).toBeVisible();
   await expect(page.getByTestId('scrap-breakdown')).toContainText(
     /Earned \+\d+ kg \| Bank \d+ -> \d+ kg/
   );

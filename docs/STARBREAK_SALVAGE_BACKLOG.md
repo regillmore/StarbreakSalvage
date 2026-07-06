@@ -1024,6 +1024,8 @@ Acceptance:
 - Death-to-summary transition remains reliable.
 - Reduced motion, performance mode, high contrast, and mute settings are respected.
 
+- Implemented in work order 048. Death now plays a bounded deterministic destruction beat with ship-themed debris, silhouette/cockpit/transponder cues, settings-aware palette and debris budgets, feedback/audio integration, debug progress, and forced-destruction E2E coverage before the normal destroyed summary.
+
 ### AK2 - Phase 5 smoke and release docs
 
 Acceptance:
