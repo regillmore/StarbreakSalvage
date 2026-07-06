@@ -68,6 +68,21 @@ Phase 5 adds upgrade spending, more feedback beats, a lunar surface sector, and 
 
 Work order 041 keeps upgrades data/save-only: catalog validation and purchase helpers add no per-frame work. Work order 042 adds static Upgrade Bay DOM and inline SVG icon rendering only when the menu is entered or refreshed after purchase; it adds no gameplay-frame work. Work order 043 resolves purchased upgrade effects once per generated run and reuses existing contract, route, shop, reward, summary, and debug surfaces; it adds no per-frame combat work beyond a short debug label string. Work order 044 builds run-summary/archive progress models only when those scenes enter and renders static DOM callouts. Work order 045 adds a single active sector-exit toast plus a bounded canvas beacon/corridor primitive after completion; reduced motion removes corridor lines and shortens the beat, and the sequence clears enemy pressure instead of adding combat work. Work order 046 adds one extra generated background family with 132 lunar primitives on the deterministic lunar route; reduced motion/performance modes hide priority-3 wreck shadows and scale layer alpha through the existing background renderer. Work order 047 reuses the existing sector feature renderer and wave director, adding only three lunar landmark patterns, three lunar hazard patterns, static readability metadata, and one optional sector pacing block resolved at run/wave-plan creation time. Work order 048 freezes combat during a bounded destruction state and draws at most 12 deterministic debris pieces, reduced to 8 in performance mode and 5 with reduced motion, before returning to the existing summary path.
 
+Phase 5 closeout: work order 050 keeps progression/sector-feedback optimization deferred until profiling requires it. `npm run check`, Playwright Chromium smoke, and production preview asset-path smoke passed locally. Manual cross-browser performance/readability checks outside Chromium remain pending.
+
+## Phase 6 Item Catalog Budget Targets
+
+Phase 6 expands the item catalog and hook surface. Keep the first larger catalog conservative until proc and DOM costs are measured.
+
+- Item definitions should remain data-only and validated in tests. Large item batches should not add production dependencies or external assets.
+- Item hook dispatch should stay explicit, deterministic, and bounded by proc budgets. New hooks should avoid scanning unrelated state every frame.
+- Prefer generation-time pool sampling over per-frame item filtering. Reward, shop, vault, boss, faction, lunar, and unlock-gated pools should be derived from seed plus save state when the relevant screen or encounter is created.
+- Large reward/shop/archive item card surfaces should use stable DOM nodes or compact render passes rather than rebuilding excessive nested markup on hover.
+- Item icons, if added, should be inline SVG, CSS, or canvas primitives with high-contrast fallbacks; avoid image assets.
+- Item discovery and archive filtering should remain local-only and save-safe. Do not add telemetry or network calls.
+- Dense synergy combat should expose enough debug state to inspect active item count, hook count, build identity, and proc budget before increasing projectile or particle density.
+- New item effects should prefer conditional behavior, alternate projectiles, economy, routing, shields, cooldowns, or source weighting over unconditional damage multipliers.
+
 ## Debug and Playtest Scenarios
 
 Enable debug tools with `?debug=1` on a local, preview, or Pages URL.
@@ -124,3 +139,11 @@ The debug overlay total entity count includes player, enemies, boss, bullets, pi
 - Sector exit toasts and completion beats can delay route flow or hide danger if they are too long or too animated.
 - Lunar terrain and hazard bands can hide bullets if overbright. Keep terrain muted, hazards telegraphed below combat layers, mining lasers narrow, dust plumes low alpha, and high-contrast projectile outlines active.
 - Rich destruction can obscure the cause of death or make summary transitions flaky. Keep the death state bounded, deterministic, and settings-aware.
+
+## Phase 6 Playtest Risks
+
+- A larger item catalog can dilute rewards if too many entries are cosmetic, stubbed, or weakly differentiated. Track implementation status and reward source intent explicitly.
+- New hooks can create runaway proc chains if ordering and budgets are not enforced. Tests should cover multi-item interactions before adding dense effects.
+- Reward pool weighting can become opaque. Source hints and summaries should explain why rare, cursed, lunar, faction, or boss items appeared.
+- Unlock-gated item families can starve fresh saves if baseline pools shrink too far. Keep fresh-save pool sufficiency covered by deterministic tests.
+- Item card and archive UI can become too dense on narrow screens. Favor concise tags, clear rarity/source labels, and accessible text over decorative clutter.

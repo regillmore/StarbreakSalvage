@@ -84,6 +84,7 @@
 - Added lunar feature determinism, hazard readability metadata, wave-pacing, content validation, and route-conditioned lunar feature regression coverage.
 - Added player-destruction unit tests for deterministic debris, cue timing, settings variants, feedback/audio mappings, the debug force-destruction key, and Playwright death-to-summary smoke coverage.
 - Added Playwright smoke coverage that drives a `LUNAR-SURFACE-LANE` run through two forced sector exits into Lunar Surface and verifies sector-plan/debug instrumentation in-browser.
+- Verified the Phase 5 closeout with `npm run check`, 7-test Playwright Chromium smoke, and production preview asset-path smoke under `/StarbreakSalvage/`.
 
 ### Planning
 
@@ -91,6 +92,7 @@
 - Concluded Phase 2 in planning docs and added the Phase 3 roadmap/work orders for vertical scrolling, procedural sector backgrounds, distance objectives, scroll-synced encounters, hazards, boss arenas, and scrolling playtest hardening.
 - Concluded Phase 3 in planning docs and added the Phase 4 roadmap/work orders for resolution parity, mouse controls, contract ship identity, ship previews, graphical HUD polish, and display/input release hardening.
 - Concluded Phase 4 in planning docs and added the Phase 5 roadmap/work orders for banked scrap purpose, upgrade bay icons, sector exits/toasts, lunar surface content, ship destruction, and progression release hardening.
+- Concluded Phase 5 in planning docs and added the Phase 6 roadmap/work orders for item taxonomy, hook expansion, catalog growth, reward pool weighting, unlock-gated item families, synergy identity, item presentation, and item-heavy smoke coverage.
 
 ## 0.10.0 - 2026-07-03
 

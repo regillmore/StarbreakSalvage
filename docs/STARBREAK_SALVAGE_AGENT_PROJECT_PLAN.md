@@ -31,9 +31,11 @@ Phase 3 is complete as of deployed and confirmed work order 030. It made Starbre
 
 Phase 4 is complete as of validated work order 040. It added display/input/identity polish: window-size parity, optional mouse controls, contract-specific ship visuals, new-game ship previews, a contract-themed graphical HUD, keyboard/pointer accessibility hardening, ship-specific combat feedback, non-combat contract theme propagation, viewport/input/HUD debug smoke, and release documentation.
 
-Phase 5 begins from that display/input playtest candidate. Its goal is progression and sector-feedback depth: banked scrap purpose, upgrade bay icons and purchases, upgrade-influenced future runs, sector completion exits/toasts, a lunar surface sector family, and richer player ship destruction. Work orders 041-047 now cover the upgrade catalog/bay/effects, run-end scrap feedback, sector-exit toast, and the first deterministic Lunar Surface sector with lunar hazards, landmarks, and pacing.
+Phase 5 is complete as of validated work order 050. It added progression and sector-feedback depth: banked scrap purpose, upgrade bay icons and purchases, upgrade-influenced future runs, run-end scrap feedback, sector completion exits/toasts, a lunar surface sector family with hazards and pacing, richer player ship destruction, and release/debug smoke coverage.
 
-See `docs/STARBREAK_SALVAGE_PHASE_5_PLAN.md` for the active Phase 5 roadmap. `docs/STARBREAK_SALVAGE_PHASE_4_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`, and `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md` remain historical records for concluded phases.
+Phase 6 begins from that progression/sector-feedback candidate. Its goal is item-catalog depth: item taxonomy, expanded metadata and validation, broader hook surfaces, larger original item batches, reward/shop/vault pool weighting, unlock-gated item families, synergy identity, item presentation, and item-heavy smoke coverage.
+
+See `docs/STARBREAK_SALVAGE_PHASE_6_PLAN.md` for the active Phase 6 roadmap. `docs/STARBREAK_SALVAGE_PHASE_5_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_4_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`, and `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md` remain historical records for concluded phases.
 
 ## Milestones
 
@@ -474,7 +476,79 @@ Exit criteria:
 - Full checks, E2E smoke, and production preview smoke pass.
 - Known progression, sector, and browser risks are documented.
 
-Status: in progress through work order 049. Rich player destruction is implemented as a bounded gameplay state with deterministic contract-colored debris, cockpit/transponder cues, settings-aware variants, debug overlay progress, and forced-destruction Playwright coverage. Phase 5 debug overlay coverage now also exposes banked scrap, upgrade readiness, run resources, sector plans, exit progress, destruction progress, and Lunar Surface browser smoke through `LUNAR-SURFACE-LANE`. Work order 050 still needs full release hardening, production preview smoke, and final browser-risk documentation.
+Status: completed by work order 050. Rich player destruction is implemented as a bounded gameplay state with deterministic contract-colored debris, cockpit/transponder cues, settings-aware variants, debug overlay progress, and forced-destruction Playwright coverage. Phase 5 debug overlay coverage also exposes banked scrap, upgrade readiness, run resources, sector plans, exit progress, destruction progress, and Lunar Surface browser smoke through `LUNAR-SURFACE-LANE`. Full check, Playwright Chromium smoke, and local production preview asset-path smoke passed for the closeout; release docs capture remaining manual browser gaps and Phase 6 item-catalog direction.
+
+## Phase 6 milestones
+
+### P6.1 - Item Taxonomy And Validation
+
+Scope:
+
+- Audit the current 30-item catalog by tag, hook, rarity, reward pool, archetype, and implementation status.
+- Add item metadata for family, source, unlock tier, stackability/uniqueness, and live/planned effect state.
+- Expand content validation so a larger catalog can fail fast on broken references or weak metadata.
+
+Exit criteria:
+
+- Item catalog intent is documented before large content additions.
+- Item definitions can support source/family/unlock status.
+- Validation protects tags, hooks, pools, implementation status, and reward sources.
+
+### P6.2 - Hook And Effect Expansion
+
+Scope:
+
+- Add deterministic hook points for graze, special, bomb, sector start, route selection, shop entry, reward generation, and boss phase events where practical.
+- Keep hook order bounded, explicit, and test-covered.
+- Convert lightweight placeholder effects into live effects or explicitly tracked planned effects.
+
+Exit criteria:
+
+- New hook surfaces can support more varied effects without ad hoc system coupling.
+- Proc order and proc limits are tested.
+- Existing item behavior and seeded generation remain stable.
+
+### P6.3 - Catalog Growth And Pool Curation
+
+Scope:
+
+- Grow the catalog toward at least 60 total items in the first Phase 6 batch.
+- Curate starter, combat, shop, vault, boss, faction, lunar, and unlock-gated pools.
+- Add rarity/source weighting that remains deterministic from seed plus save state.
+
+Exit criteria:
+
+- Reward and shop choices repeat less often.
+- Fresh saves stay understandable and complete.
+- Known-seed snapshots cover item pool outputs.
+
+### P6.4 - Unlocks, Discovery, And Synergy Identity
+
+Scope:
+
+- Let permanent progression reveal item families and discovery records without raw power creep.
+- Detect build clusters from tags, families, and acquisition order.
+- Surface compact build identity in HUD, reward/shop context, archive, and summary where useful.
+
+Exit criteria:
+
+- Unlocks widen item variety deterministically.
+- At least ten synergy clusters are represented.
+- Item discovery and build identity are readable without overwhelming narrow layouts.
+
+### P6.5 - Phase 6 Item Playtest Candidate
+
+Scope:
+
+- Improve item card, reward, shop, vault, archive, and summary presentation for a larger catalog.
+- Add item-heavy debug/smoke coverage and performance notes.
+- Harden release docs and manual browser matrix.
+
+Exit criteria:
+
+- `npm run check`, Playwright smoke, and production preview smoke pass.
+- Release docs cover item count, hook coverage, pool/gating behavior, discovery UI, item-heavy smoke, and balance risks.
+- No severe item-system blockers remain for the next playtest.
 
 ## Dependency map
 
@@ -506,6 +580,11 @@ M0 scaffold
                                                 -> P5.3 sector/reward feedback
                                                   -> P5.4 lunar surface sector
                                                     -> P5.5 destruction/progression playtest candidate
+                                                      -> P6.1 item taxonomy and validation
+                                                        -> P6.2 hook and effect expansion
+                                                          -> P6.3 catalog growth and pool curation
+                                                            -> P6.4 unlocks, discovery, and synergy identity
+                                                              -> P6.5 item playtest candidate
 ```
 
 Parallelizable:
@@ -528,6 +607,7 @@ High-conflict areas:
 - Save data, banked scrap, upgrade definitions, and run generation.
 - Sector content tables shared by backgrounds, features, waves, and validation.
 - Death/destruction flow shared by combat, audio/VFX, and run summary.
+- Item definitions, hook handlers, reward pools, shop/vault generation, unlock gates, and summary/archive item presentation.
 
 ## First five PRs
 

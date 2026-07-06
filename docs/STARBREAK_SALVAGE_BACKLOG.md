@@ -1034,4 +1034,137 @@ Acceptance:
 - `npm run check`, E2E smoke, and production preview smoke pass before Phase 5 closeout.
 - Known progression balance, browser, and readability risks are documented.
 
-- First smoke pass implemented in work order 049. Automated Chromium smoke covers Upgrade Bay purchase/readiness debug state, forced sector exit flow, forced player destruction, and reaching Lunar Surface through `LUNAR-SURFACE-LANE`; release closeout and production preview smoke remain in work order 050.
+- Completed in work order 050. Automated Chromium smoke covers Upgrade Bay purchase/readiness debug state, forced sector exit flow, forced player destruction, and reaching Lunar Surface through `LUNAR-SURFACE-LANE`; `npm run check`, Playwright smoke, and production preview asset-path smoke passed for the Phase 5 closeout. Manual non-Chromium and real-device smoke remain deployment validation tasks.
+
+## Phase 6 backlog additions
+
+Phase 6 starts after work order 050 validation and cleanly concludes the progression/sector-feedback playtest foundation. The goal is item-catalog depth: richer item taxonomy, more hook surfaces, larger original item batches, curated reward pools, unlock-gated item families, synergy identity, improved presentation, and item-heavy smoke coverage.
+
+## Epic AL - Item taxonomy and validation
+
+### AL1 - Catalog audit
+
+Acceptance:
+
+- Current 30-item catalog is documented by tag, hook, rarity, pool, archetype, and implementation status.
+- Repeated reward feel and placeholder effects are identified.
+- Phase 6 count and family goals are explicit.
+
+### AL2 - Item metadata schema
+
+Acceptance:
+
+- Item definitions can express family, source hints, unlock tier, implementation status, and uniqueness/stackability.
+- Existing item content migrates without breaking deterministic reward generation.
+- UI helpers tolerate old and new fields safely.
+
+### AL3 - Item validation at scale
+
+Acceptance:
+
+- Validation catches invalid families, sources, unlock gates, hook references, implementation states, missing effect text, and empty pools.
+- Bad fixtures cover metadata, pool, and hook failures.
+- Validation remains fast enough for `npm run check`.
+
+## Epic AM - Hook and effect variety
+
+### AM1 - New item hook surfaces
+
+Acceptance:
+
+- Hooks exist for graze, special use, bomb use, sector start, route selection, shop entry, reward generation, and boss phase events where practical.
+- Hook order is deterministic and documented.
+- Proc limits prevent runaway chains.
+
+### AM2 - Live effect conversion
+
+Acceptance:
+
+- Lightweight placeholder item effects are either implemented or explicitly marked as planned.
+- Effect handlers remain isolated from unrelated systems.
+- Tests cover representative effects in each major hook family.
+
+### AM3 - Proc budget instrumentation
+
+Acceptance:
+
+- Debug or test helpers can report active item count, active hook count, proc budget, and build identity where useful.
+- Dense item interactions have deterministic smoke or integration coverage.
+
+## Epic AN - Catalog expansion and pool curation
+
+### AN1 - Item expansion batch
+
+Acceptance:
+
+- Catalog reaches at least 60 total items in the first Phase 6 expansion.
+- New items are original, validated, and assigned to source pools.
+- Fresh saves remain readable and playable.
+
+### AN2 - Reward source pools
+
+Acceptance:
+
+- Starter, combat, shop, vault, elite, boss, faction, lunar, and unlock-gated pools can be weighted independently.
+- Known-seed snapshots cover reward, shop, and vault item outputs.
+- Rare, prototype, and cursed items do not flood early fresh-save runs.
+
+### AN3 - Sector and faction item identity
+
+Acceptance:
+
+- Lunar, faction, boss, and route-themed items can appear from appropriate sources.
+- Source hints are visible when useful.
+- Pool weighting remains deterministic from seed plus save state.
+
+## Epic AO - Unlocks, discovery, and build identity
+
+### AO1 - Unlock-gated item families
+
+Acceptance:
+
+- Permanent progression can reveal item families, not just individual rewards.
+- Unlock Archive explains newly available families.
+- Fresh saves retain sufficient baseline item variety.
+
+### AO2 - Item discovery records
+
+Acceptance:
+
+- Save data can track discovered items or families if added.
+- Migration/import/export preserve discovery state.
+- Corrupted discovery data repairs safely.
+
+### AO3 - Synergy cluster detection
+
+Acceptance:
+
+- At least ten build clusters are detectable from item tags, families, and acquisition order.
+- HUD, rewards, shops, or summaries can surface compact build identity.
+- Detection and tie-breaking are deterministic and tested.
+
+## Epic AP - Item presentation and Phase 6 release
+
+### AP1 - Item card presentation
+
+Acceptance:
+
+- Reward, shop, vault, summary, and archive item cards show rarity, tags/family, source, and effect state clearly.
+- Keyboard, pointer, high-contrast, reduced-motion, and narrow viewport paths remain usable.
+- No external item art is introduced.
+
+### AP2 - Item-heavy smoke
+
+Acceptance:
+
+- Automated or documented smoke covers an item-heavy reward/shop/vault path.
+- Debug tooling can exercise rich item pools and dense synergy combat.
+- Performance notes document item hook and UI budgets.
+
+### AP3 - Phase 6 release checklist
+
+Acceptance:
+
+- README, changelog, performance notes, release checklist, and QA docs cover item expansion.
+- `npm run check`, E2E smoke, and production preview smoke pass before Phase 6 closeout.
+- Known item balance, browser, and readability risks are documented.

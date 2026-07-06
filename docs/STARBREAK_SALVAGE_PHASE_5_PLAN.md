@@ -112,7 +112,7 @@ Exit criteria:
 - Release docs cover upgrade spending, lunar sector smoke, sector exit toasts, and ship destruction risks.
 - Manual browser gaps are documented separately from gameplay blockers.
 
-Status: in progress through work order 049. Debug instrumentation now exposes Phase 5 progression, banked scrap, upgrade readiness, run resource, sector-plan, exit, and destruction state, while Playwright smoke covers Upgrade Bay purchase/readiness, sector exit toast flow, forced destruction, and reaching Lunar Surface through `LUNAR-SURFACE-LANE`. Work order 050 still needs the full playtest release audit, production preview smoke, and final manual browser-risk summary.
+Status: completed by work order 050. Debug instrumentation exposes Phase 5 progression, banked scrap, upgrade readiness, run resource, sector-plan, exit, and destruction state, while Playwright smoke covers Upgrade Bay purchase/readiness, sector exit toast flow, forced destruction, and reaching Lunar Surface through `LUNAR-SURFACE-LANE`. `npm run check`, Playwright Chromium smoke, and production preview asset-path smoke passed locally; remaining browser risk is limited to manual non-Chromium and real-device validation.
 
 ## Recommended Phase 5 Sequence
 
@@ -130,3 +130,5 @@ Status: in progress through work order 049. Debug instrumentation now exposes Ph
 ## Phase 5 Definition Of Done
 
 Phase 5 is done when a player can finish or lose a run, understand what scrap was earned, spend banked scrap on readable upgrades, see those upgrades influence future seeded runs, fly through a distinct lunar surface sector, understand sector exits through clear completion feedback, and experience ship destruction as satisfying feedback rather than an abrupt summary jump.
+
+Status: complete after work order 050 validation. Phase 6 continues from this foundation with an item-catalog expansion roadmap in `docs/STARBREAK_SALVAGE_PHASE_6_PLAN.md`.

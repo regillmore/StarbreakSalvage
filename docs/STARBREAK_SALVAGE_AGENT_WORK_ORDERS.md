@@ -819,6 +819,162 @@ Acceptance criteria:
 - Release docs document upgrade, lunar sector, exit toast, destruction, and manual browser gaps.
 - Phase 5 can be declared complete or explicitly deferred with documented blockers.
 
+Status: implemented; Phase 5 is documented as complete after `npm run check`, Playwright Chromium smoke, and production preview asset-path smoke passed locally. Release, QA, performance, backlog, README, changelog, and project planning docs now record the progression/sector-feedback closeout, remaining manual browser gaps, and the Phase 6 item-catalog roadmap.
+
+## Phase 6 work orders
+
+Phase 6 begins after work order 050 validation and concludes the progression/sector-feedback playtest foundation. Its purpose is to make build crafting feel much richer: audit the current 30-item catalog, expand item metadata and validation, add more hooks, grow the catalog in original batches, improve reward pool curation, connect item unlocks/discovery, surface synergy identity, and harden item-heavy smoke coverage. Preserve deterministic reward, shop, vault, and unlock behavior from seed plus save state.
+
+## Work order 051 - Phase 6 item taxonomy and audit
+
+Goal: establish the expansion plan before adding many items.
+
+Prompt:
+
+> Read `AGENTS.md` first. Then read the Phase 6 plan, item content, item hook handlers, reward generation, unlock gating, summary UI, and content validation tests. Audit the current item catalog for tags, hooks, rarity, pool placement, implementation status, archetype coverage, and repeated reward feel. Add a lightweight item catalog audit doc or generated test helper if useful. Do not add large item batches yet. Update planning docs with target families, count goals, and risks. Run checks.
+
+Acceptance criteria:
+
+- Current item catalog coverage is documented by tag, hook, rarity, pool, and archetype.
+- Phase 6 target item families and count goals are clear.
+- Stubbed or lightweight effects are identified without breaking current play.
+- Existing tests remain green.
+
+## Work order 052 - Item schema and validation expansion
+
+Goal: make a larger catalog safe to maintain.
+
+Prompt:
+
+> Expand item definitions with metadata needed for scale, such as family, source hints, unlock tier, implementation status, stackability/uniqueness, and short UI tags. Keep the schema compact and data-driven. Extend content validation to catch duplicate families where invalid, unknown source hints, missing implementation notes, empty pools, invalid hook references, invalid unlock gates, missing effect text, and unsupported rarity/source combinations. Preserve save and seed compatibility. Run checks.
+
+Acceptance criteria:
+
+- Item schema can represent source, family, unlock tier, and implementation status.
+- Content validation catches broken item metadata and pool references.
+- Existing reward generation remains deterministic.
+- UI can keep reading old and new item fields safely.
+
+## Work order 053 - Item hook surface expansion
+
+Goal: unlock more effect variety without ad hoc combat code.
+
+Prompt:
+
+> Add new deterministic item hook points for richer interactions. Good first hooks include `onGraze`, `onSpecialUsed`, `onBombUsed`, `onSectorStart`, `onRouteChosen`, `onShopEntered`, `onRewardGenerated`, and `onBossPhaseChanged` where they fit existing systems. Keep hook dispatch order deterministic, bounded, and explicit. Add tests for hook ordering, proc limits, and interactions with existing `onFire`, `onProjectileSpawn`, `onEnemyKilled`, `onPlayerHit`, and `onPickupCollected` behavior. Run checks.
+
+Acceptance criteria:
+
+- New hook names are registered and validated.
+- Hook dispatch order and proc limits are tested.
+- Existing items continue to behave as before.
+- Future item effects can attach without reaching into unrelated systems.
+
+## Work order 054 - First item catalog expansion pack
+
+Goal: increase reward variety with original, validated item content.
+
+Prompt:
+
+> Add the first Phase 6 item expansion batch, targeting at least 60 total item definitions. Favor varied effects across laser/split, missile/overkill, drone/copy, shield/revenge, credit/shop, curse/relic, phase/graze, heat/prototype, lunar/surface, route/economy, and boss-pressure families. Every new item needs tags, rarity, source/pool placement, effect text, implementation status, and live hook behavior where practical. Add validation and deterministic reward/shop/vault snapshot updates. Run checks.
+
+Acceptance criteria:
+
+- Catalog reaches at least 60 total items.
+- New items are original and validated.
+- Starter pools stay readable for fresh saves.
+- Reward, shop, and vault generation snapshots remain deterministic.
+
+## Work order 055 - Reward pools, rarity, and source weighting
+
+Goal: make item acquisition feel curated rather than flat random.
+
+Prompt:
+
+> Refine item pool generation for starter rewards, combat rewards, shops, vaults, elites, bosses, lunar sectors, faction routes, and route events. Add deterministic rarity/source weighting helpers and tests for known seeds. Preserve the same seed plus save state contract. Avoid making rare/prototype/cursed items too common in fresh runs. Update reward/shop copy if source hints become visible. Run checks.
+
+Acceptance criteria:
+
+- Item pools can be weighted by source, rarity, route, sector, faction, and save state.
+- Known-seed snapshots cover reward, shop, and vault outputs.
+- Fresh saves still receive complete, understandable item choices.
+- Pool weights are data-driven and validated.
+
+## Work order 056 - Unlock-gated item families and discovery records
+
+Goal: use permanent progression to widen item variety.
+
+Prompt:
+
+> Connect Phase 6 item families to unlock and discovery records. Some item families should begin locked or hidden until achievements, upgrades, bosses, sectors, or challenge flags expose them. Add save-safe discovered-item records if needed, with migration/import/export tests. The Unlock Archive should explain newly available item families without spoiling every detail by default. Preserve fresh-save pool sufficiency. Run checks.
+
+Acceptance criteria:
+
+- Item unlock gates alter future reward/shop/vault pools deterministically.
+- Save migration and export/import preserve item discovery state if added.
+- Unlock Archive can show item-family progress or discovery hints.
+- Fresh saves remain complete and balanced.
+
+## Work order 057 - Synergy clusters and build identity readouts
+
+Goal: make item combinations legible and exciting.
+
+Prompt:
+
+> Add a synergy model that detects or labels build clusters from item tags, families, and acquisition order. Target at least ten clusters, including existing archetypes plus new lunar, boss, route, and economy variants. Surface compact build identity in HUD, reward/shop context, and run summary where useful. Add tests for cluster detection, tie-breaking, and deterministic summary copy. Run checks.
+
+Acceptance criteria:
+
+- At least ten synergy clusters are represented.
+- HUD or summary can describe the active build identity compactly.
+- Cluster detection is deterministic and tested.
+- Copy remains concise on narrow layouts.
+
+## Work order 058 - Item card, shop, reward, and archive presentation
+
+Goal: make a larger catalog readable to players.
+
+Prompt:
+
+> Improve item presentation across reward choices, shops, vaults, run summary, and Unlock Archive. Add compact original item icons or tag badges if practical, source/rarity/family labels, clear implemented/planned effect state, keyboard focus safety, high-contrast treatment, and narrow layout checks. Avoid external assets. Add unit tests for item card view models and E2E smoke for an item-heavy reward/shop path if practical. Run checks.
+
+Acceptance criteria:
+
+- Item cards communicate rarity, tags/family, source, and effect clearly.
+- Shop/reward/archive item surfaces remain keyboard and pointer usable.
+- Narrow/high-contrast layouts stay readable.
+- Presentation changes do not alter deterministic generation.
+
+## Work order 059 - Item stress smoke and balance instrumentation
+
+Goal: make item-heavy runs measurable before release hardening.
+
+Prompt:
+
+> Add debug or test paths for item-heavy runs: forced reward chains, rich shop/vault inventory, dense synergy combat, and unlock-gated item pool previews where practical. Extend debug overlay or test helpers with item count, active hook counts, build identity, and proc budget state if useful. Add deterministic smoke coverage for at least one item-heavy path. Update QA/performance notes with item-specific budgets and manual playtest focus. Run checks.
+
+Acceptance criteria:
+
+- Debug/test tooling can inspect large item pools and active hook pressure.
+- Browser or documented manual smoke covers an item-heavy reward/shop/vault path.
+- Proc budgets and item effect risks are documented.
+- Existing Phase 5 smoke remains green.
+
+## Work order 060 - Phase 6 playtest release hardening
+
+Goal: ship an item-catalog playtest candidate.
+
+Prompt:
+
+> Audit the Phase 6 build for item count, effect implementation status, hook determinism, reward/shop/vault weighting, unlock/discovery behavior, item UI readability, balance, accessibility, performance, browser load, release docs, and manual smoke coverage. Fix blockers only. Update README, changelog, performance notes, Phase 6 plan, backlog, release checklist, and QA docs. Run `npm run check`, Playwright smoke if available, and production preview smoke. Summarize known item balance risks, browser gaps, and follow-up issues.
+
+Acceptance criteria:
+
+- Full checks and production preview smoke pass.
+- E2E smoke passes or local browser-install blockers are clearly documented.
+- Release docs document item count, hook coverage, reward pools, unlock/discovery state, and manual browser gaps.
+- Phase 6 can be declared complete or explicitly deferred with documented blockers.
+
 ## Review subagent prompt
 
 Use after a feature PR:

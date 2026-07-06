@@ -104,6 +104,19 @@ Current Phase 5 coverage:
 - Work order 047 adds lunar-specific feature determinism, hazard phase/readability/collision metadata tests, route-conditioned lunar feature regression coverage, sector pacing validation, and wave-director pacing checks.
 - Work order 048 adds player-destruction cue-state tests for deterministic debris, reduced-motion/performance/high-contrast variants, feedback/audio mappings, debug force-destruction input, and Playwright smoke coverage from destruction toast/debug progress through the destroyed summary.
 - Work order 049 adds debug overlay coverage for banked scrap, upgrade readiness, run resources, current sector id/name/background/pacing, exit progress, and destruction progress. Playwright smoke now verifies Upgrade Bay readiness after purchase, forced sector exit flow, forced destruction, and a `LUNAR-SURFACE-LANE` route that reaches Lunar Surface in-browser.
+- Work order 050 closes Phase 5 with `npm run check`, 7-test Playwright Chromium smoke, production preview asset-path smoke, and release docs that separate automated coverage from manual non-Chromium/real-device browser gaps.
+
+## Phase 6 QA focus
+
+Phase 6 expands the item catalog and hook surface. Add tests closest to the risk:
+
+- item metadata validation for family, source hints, unlock tier, implementation status, uniqueness/stackability, effect text, rarity, and reward-pool placement;
+- hook registration, dispatch ordering, proc limits, and multi-item interaction tests for new hook points such as graze, special, bomb, sector start, route choice, shop entry, reward generation, and boss phase events;
+- known-seed snapshots for reward, shop, vault, boss, faction, lunar, and unlock-gated item pools under fresh and progressed saves;
+- item unlock and discovery migration/import/export/corruption repair if save shape changes;
+- synergy cluster detection, tie-breaking, HUD/summary copy, and narrow-layout build identity presentation;
+- item card view models for reward, shop, vault, archive, and summary surfaces, including high-contrast and keyboard focus state;
+- browser smoke for at least one item-heavy reward/shop/vault path and one dense synergy combat/debug path.
 
 ## Known seed tests
 
@@ -143,9 +156,17 @@ Phase 5 should add these seed/save fixtures:
 - `LUNAR-SURFACE-LANE` - deterministic lunar sector/background/feature/pacing plan; implemented across work orders 046 and 047 generation/background/feature/route-condition/content/wave-director tests, with browser traversal smoke added in work order 049.
 - `SHIP-BREAKUP-TEST` - deterministic death/destruction summary path; first covered by the work order 048 debug forced-destruction Playwright path.
 
+Phase 6 should add these seed/save fixtures:
+
+- `ITEM-CATALOG-AUDIT` - stable fixture for catalog metadata and reward pool sampling.
+- `HOOK-STORM-SMOKE` - item-heavy combat fixture with multiple hook families active under proc budget limits.
+- `SHOP-VAULT-STACK` - reward/shop/vault route path for item source weighting smoke.
+- `UNLOCKED-ITEM-FAMILIES` - progressed save fixture that verifies unlock-gated item families and discovery records.
+- `LUNAR-RELIC-CATALOG` - lunar/faction/source-biased item pool fixture for sector-themed items.
+
 ## Content validation checklist
 
-Phase 2 should extend this checklist as systems become real. In addition to the existing entries, content validation should cover ship stat ranges, objective references, wave references, implemented hook coverage, and unlock-gated pools for fresh and progressed saves. Phase 3 should extend it again for sector length ranges, scroll-speed modifiers, background-plan references, landmark references, hazard references, and distance marker ordering. Phase 4 should extend it again for ship appearance references, HUD theme keys, preview assets/primitives, and input/display settings defaults. Phase 5 should extend it again for upgrade definitions, upgrade prerequisites, upgrade effect references, icon categories, lunar sector references, lunar feature references, and destruction cue metadata.
+Phase 2 should extend this checklist as systems become real. In addition to the existing entries, content validation should cover ship stat ranges, objective references, wave references, implemented hook coverage, and unlock-gated pools for fresh and progressed saves. Phase 3 should extend it again for sector length ranges, scroll-speed modifiers, background-plan references, landmark references, hazard references, and distance marker ordering. Phase 4 should extend it again for ship appearance references, HUD theme keys, preview assets/primitives, and input/display settings defaults. Phase 5 should extend it again for upgrade definitions, upgrade prerequisites, upgrade effect references, icon categories, lunar sector references, lunar feature references, and destruction cue metadata. Phase 6 should extend it again for item family/source metadata, implementation status, unlock/discovery gates, source-weighted pools, synergy cluster references, and item card presentation data.
 
 - [ ] No duplicate IDs.
 - [ ] Every item tag is registered.
@@ -160,6 +181,7 @@ Phase 2 should extend this checklist as systems become real. In addition to the 
 - [x] Ship appearance references, palettes, weapon mount hints, and HUD theme keys validate.
 - [x] Upgrade definitions, costs, prerequisites, effect references, and icon categories validate.
 - [x] Lunar sector background, feature, pacing, faction, and boss references validate.
+- [ ] Item family, source, implementation status, unlock gate, and synergy references validate after Phase 6 schema work.
 
 ## Manual browser smoke matrix
 
@@ -175,11 +197,13 @@ Phase 2 performance checks should include wave/objective count, projectile count
 
 Phase 3 performance checks should also include background primitive count, parallax layer count, distance traveled, scroll speed, active distance markers, active landmarks, active hazards, and long-scroll scenarios that run longer than a normal sector.
 
-Current first-pass instrumentation exposes granular combat counts, background primitive/layer counts, active landmark/hazard counts, distance, speed, active input mode, HUD mode, viewport size/class/presentation scale, DPR, canvas pixel size, safe-frame origin/size, fixed combat world size, banked scrap, upgrade readiness, run resources, current sector id/name/background/pacing, exit progress, destruction progress, a dense-combat debug pocket, forced exit/destruction shortcuts, and a quiet late-sector long-scroll traversal behind `?debug=1`. Manual browser validation and production preview smoke still need to close the checklist.
+Current first-pass instrumentation exposes granular combat counts, background primitive/layer counts, active landmark/hazard counts, distance, speed, active input mode, HUD mode, viewport size/class/presentation scale, DPR, canvas pixel size, safe-frame origin/size, fixed combat world size, banked scrap, upgrade readiness, run resources, current sector id/name/background/pacing, exit progress, destruction progress, a dense-combat debug pocket, forced exit/destruction shortcuts, and a quiet late-sector long-scroll traversal behind `?debug=1`. Production preview smoke passed for work order 050; manual non-Chromium and real-device browser validation still need to close the checklist.
 
 Phase 4 performance checks should include viewport/presentation scale, safe-frame size, fixed-world hazard/enemy spacing parity, HUD rendering density, preview rendering cost, mouse input update behavior, ship cue rendering cost, non-combat theme DOM cost, and whether themed HUD/ship cues add measurable overhead in dense and long-scroll debug scenarios.
 
 Phase 5 performance checks should include Upgrade Bay DOM/icon rendering cost, upgrade-state generation branching, toast queue overhead, lunar background/feature primitive counts, lunar hazard readability, and ship destruction particle/debris budgets in reduced motion/performance modes.
+
+Phase 6 performance checks should include item hook dispatch cost, proc budget limits, reward/shop/vault pool sampling cost, large item card DOM rendering, archive filtering, and dense synergy combat readability.
 
 - [x] FPS overlay available behind debug flag.
 - [x] Projectile count visible in debug mode.
