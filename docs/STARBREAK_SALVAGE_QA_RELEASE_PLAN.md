@@ -110,6 +110,7 @@ Current Phase 5 coverage:
 
 Phase 6 expands the item catalog and hook surface. Add tests closest to the risk:
 
+- item catalog audit coverage for current rarity, tag, hook, reward-pool, archetype, unlock, and bridge-effect baselines; work order 051 adds the first helper and unit coverage;
 - item metadata validation for family, source hints, unlock tier, implementation status, uniqueness/stackability, effect text, rarity, and reward-pool placement;
 - hook registration, dispatch ordering, proc limits, and multi-item interaction tests for new hook points such as graze, special, bomb, sector start, route choice, shop entry, reward generation, and boss phase events;
 - known-seed snapshots for reward, shop, vault, boss, faction, lunar, and unlock-gated item pools under fresh and progressed saves;

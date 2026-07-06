@@ -45,6 +45,7 @@
 
 ### Testing
 
+- Added a repeatable Phase 6 item catalog audit helper and unit coverage for the current rarity, tag, hook, reward-pool, archetype, unlock, target-family, and bridge-effect baseline.
 - Added wave director and objective completion tests, including known-seed objective snapshots and boss-gate coverage.
 - Added combat tests for special charge/use, bomb mitigation, graze detection, remapped special/bomb controls, and reduced-motion effect rendering.
 - Added validation and gameplay tests for ship stat contracts, weapon references, weapon patterns, heat/reload behavior, and starting economy.
@@ -93,6 +94,7 @@
 - Concluded Phase 3 in planning docs and added the Phase 4 roadmap/work orders for resolution parity, mouse controls, contract ship identity, ship previews, graphical HUD polish, and display/input release hardening.
 - Concluded Phase 4 in planning docs and added the Phase 5 roadmap/work orders for banked scrap purpose, upgrade bay icons, sector exits/toasts, lunar surface content, ship destruction, and progression release hardening.
 - Concluded Phase 5 in planning docs and added the Phase 6 roadmap/work orders for item taxonomy, hook expansion, catalog growth, reward pool weighting, unlock-gated item families, synergy identity, item presentation, and item-heavy smoke coverage.
+- Started Phase 6 with a documented audit of the current 30-item catalog, repeated-reward risks, underrepresented archetypes, target item families, and bridge-effect follow-ups.
 
 ## 0.10.0 - 2026-07-03
 

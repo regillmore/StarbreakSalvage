@@ -840,6 +840,8 @@ Acceptance criteria:
 - Stubbed or lightweight effects are identified without breaking current play.
 - Existing tests remain green.
 
+Status: implemented; the Phase 6 item catalog audit now documents the 30-item baseline by rarity, tag, hook, reward pool, archetype, unlock gate, target family, and bridge/lightweight effect notes. A pure audit helper and unit coverage lock the baseline without changing item generation or gameplay behavior.
+
 ## Work order 052 - Item schema and validation expansion
 
 Goal: make a larger catalog safe to maintain.

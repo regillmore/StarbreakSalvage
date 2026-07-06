@@ -40,6 +40,8 @@ Exit criteria:
 - Validation distinguishes live, stubbed, and planned effects.
 - Existing 30 items are audited without changing seeded behavior unintentionally.
 
+Status: implemented by work order 051. The current 30-item catalog is audited in `docs/STARBREAK_SALVAGE_ITEM_CATALOG_AUDIT.md`, with repeatable coverage helpers in `src/content/itemCatalogAudit.ts` and unit tests for rarity, tag, hook, pool, archetype, unlock, and bridge-effect baselines. Work order 052 should convert this audit into durable item schema and validation fields.
+
 ### P6.2 - Hook And Effect Surface Expansion
 
 Broaden the item hook system so new effects can interact with more of the run.

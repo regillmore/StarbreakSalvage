@@ -494,6 +494,8 @@ Exit criteria:
 - Item definitions can support source/family/unlock status.
 - Validation protects tags, hooks, pools, implementation status, and reward sources.
 
+Status: started by work order 051. The catalog audit documents the current 30-item baseline by rarity, tag, hook, pool, archetype, unlock gate, bridge-effect status, target family, and repeated-reward risk, with a small helper/test preserving those counts before schema work begins.
+
 ### P6.2 - Hook And Effect Expansion
 
 Scope:
