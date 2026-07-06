@@ -292,6 +292,42 @@ describe('validateContent', () => {
     );
   });
 
+  it('rejects invalid sector encounter pacing data', () => {
+    const errors = validateContent({
+      sectors: [
+        {
+          ...baseSector,
+          encounterPacing: {
+            waveWindowStartRatio: 0.8,
+            waveWindowEndRatio: 0.2,
+            spawnSpacing: 0,
+            firstSpawnXRatio: 1.2,
+            flankXMinRatio: 0.9,
+            flankXMaxRatio: 0.1,
+            targetYMin: 180,
+            targetYMax: 80
+          }
+        }
+      ] as unknown as readonly SectorDefinition[]
+    });
+
+    expect(errors).toContain(
+      'Sector sector_outer_debris_field encounter pacing must order wave window ratios'
+    );
+    expect(errors).toContain(
+      'Sector sector_outer_debris_field encounter pacing must have positive spawnSpacing'
+    );
+    expect(errors).toContain(
+      'Sector sector_outer_debris_field encounter pacing must have firstSpawnXRatio between 0 and 1'
+    );
+    expect(errors).toContain(
+      'Sector sector_outer_debris_field encounter pacing must order flank x ratios'
+    );
+    expect(errors).toContain(
+      'Sector sector_outer_debris_field encounter pacing must order target y bounds'
+    );
+  });
+
   it('rejects duplicate item ids', () => {
     const errors = validateContent({
       items: [baseItem, { ...baseItem, name: 'Duplicate Capacitor' }]

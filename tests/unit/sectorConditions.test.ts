@@ -102,6 +102,28 @@ describe('SectorConditions', () => {
     expect(validateSectorFeaturePlan(glitch.features, glitch.scroll.length)).toEqual([]);
   });
 
+  it('applies route-conditioned pressure to lunar features without losing lunar identity', () => {
+    const conditioned = getConditionedSectorAfterRoute('LUNAR-SURFACE-LANE', 1, 'glitch');
+
+    expect(conditioned.baseSector.sectorId).toBe('sector_lunar_surface');
+    expect(conditioned.conditions.hazardKinds).toEqual(['salvage_storm']);
+    expect(conditioned.features.hazards.length).toBeGreaterThan(
+      conditioned.baseSector.features.hazards.length
+    );
+    expect(conditioned.features.hazards.map((hazard) => hazard.kind)).toEqual(
+      expect.arrayContaining([
+        'dust_plume',
+        'mining_laser',
+        'surface_defense_arc',
+        'salvage_storm'
+      ])
+    );
+    expect(conditioned.features.landmarks.map((landmark) => landmark.kind)).toEqual(
+      expect.arrayContaining(['crater_shadow_band', 'comm_array_flyby', 'surface_relay'])
+    );
+    expect(validateSectorFeaturePlan(conditioned.features, conditioned.scroll.length)).toEqual([]);
+  });
+
   it('applies challenge and unlock condition modifiers deterministically', () => {
     const challengeRun = generateRunSkeleton('DEBT-CEILING-404', {
       unlockedIds: ['unlock_challenge_debt_ceiling']
@@ -224,7 +246,11 @@ function summarizeConditionedNextSector(seed: string, kind: RouteKind): unknown 
 }
 
 function getConditionedNextSector(seed: string, kind: RouteKind) {
-  const { run, session } = selectRouteIntoNextSector(seed, kind);
+  return getConditionedSectorAfterRoute(seed, 0, kind);
+}
+
+function getConditionedSectorAfterRoute(seed: string, sourceSectorIndex: number, kind: RouteKind) {
+  const { run, session } = selectRouteIntoSector(seed, sourceSectorIndex, kind);
   const baseSector = getCurrentSector(run, session);
   const conditions = createSectorConditionPlan({
     run,
@@ -250,6 +276,10 @@ function getConditionedNextSector(seed: string, kind: RouteKind) {
 }
 
 function selectRouteIntoNextSector(seed: string, kind: RouteKind) {
+  return selectRouteIntoSector(seed, 0, kind);
+}
+
+function selectRouteIntoSector(seed: string, sourceSectorIndex: number, kind: RouteKind) {
   const run = generateRunSkeleton(seed);
   const contract = run.contracts[0];
 
@@ -258,6 +288,7 @@ function selectRouteIntoNextSector(seed: string, kind: RouteKind) {
   }
 
   const session = createRunSession(run, contract);
+  session.currentSectorIndex = sourceSectorIndex;
   const sector = getCurrentSector(run, session);
   const route = makeRoute(kind);
   const outcome = generateRouteOutcome({

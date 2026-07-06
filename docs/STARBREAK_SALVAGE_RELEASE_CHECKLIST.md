@@ -11,7 +11,7 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 | ----------------------------- | --------------- | ---------------------------------------------------------------------------------------- |
 | TypeScript typecheck          | Pass            | `npm run check`                                                                          |
 | ESLint                        | Pass            | `npm run check`                                                                          |
-| Unit and deterministic tests  | Pass            | `npm run check` - 40 files, 226 tests                                                    |
+| Unit and deterministic tests  | Pass            | `npm run check` - 40 files, 230 tests                                                    |
 | Production build              | Pass            | `npm run check` - Vite build created `dist/`                                             |
 | Playwright Chromium smoke     | Pass            | `npm run test:e2e` - 6 Chromium smoke tests with Codex escalation; sandboxed runs cannot read the AppData browser cache. |
 | Production preview asset load | Pass            | Local preview returned HTTP 200 and Pages asset path                                     |
@@ -73,5 +73,5 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 - The debug overlay reports granular entity, scroll/background/feature, input mode, HUD mode, contract theme, viewport/DPR/canvas, safe-frame, and fixed-world counts; frame-time sampling and allocation timing remain future instrumentation work.
 - Phase 4 display/input work is complete as a first-pass playtest candidate: fixed-arena window-size parity, passive mouse/touch assist, gameplay contract ship appearance, New Game ship previews, cockpit HUD theming, accessibility hardening, ship identity feedback, non-combat contract theme propagation, viewport/input debug smoke hardening, and release evidence exist. Phase 5 progression/sector-feedback work is in progress.
 - Banked scrap now has a first data-backed upgrade catalog, save-backed purchase helpers, a visual Upgrade Bay with static original icons, deterministic upgrade-influenced run generation for contract, route, shop, vault reward, and seed-survey surfaces, plus run-end scrap/upgrade progress callouts. Sector exits now have a short beacon/toast beat before route or victory handoff.
-- Lunar Surface has a first deterministic background/sector foundation; lunar-specific hazards/landmarks/encounter pacing and richer player destruction are planned but not implemented yet.
+- Lunar Surface now has deterministic background, landmark, hazard, and encounter-pacing content; manual smoke should still check bullet readability over dust plumes, mining lasers, and surface-defense arcs. Richer player destruction remains planned but not implemented yet.
 - Manual cross-browser smoke outside Chromium remains pending.

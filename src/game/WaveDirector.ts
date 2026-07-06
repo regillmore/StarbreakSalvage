@@ -1,3 +1,4 @@
+import type { SectorEncounterPacingDefinition } from '../content/sectors';
 import { FACTIONS, type FactionId } from '../content/factions';
 import { clamp } from '../core/math';
 import { createRng, type Rng } from '../core/rng';
@@ -20,6 +21,7 @@ export interface WaveDirectorPlan {
   readonly spawnSchedule: readonly EnemySpawn[];
   readonly bossSpawnAtSeconds: number | null;
   readonly sectorLength: number | null;
+  readonly encounterPacing: SectorEncounterPacingDefinition | null;
 }
 
 export interface ObjectiveProgress {
@@ -53,14 +55,26 @@ export interface WaveDirectorOptions {
   readonly preferredFactionId: FactionId;
   readonly availableFactionIds?: readonly FactionId[];
   readonly scroll?: Pick<SectorScrollPlan, 'length' | 'baseSpeed'>;
+  readonly pacing?: SectorEncounterPacingDefinition | null;
 }
 
 const DISTANCE_WAVE_WINDOW_START_RATIO = 0.12;
 const DISTANCE_WAVE_WINDOW_END_RATIO = 0.58;
 const DISTANCE_SPAWN_SPACING = 40;
 const BOSS_GATE_DISTANCE_LEAD_SECONDS = 0.75;
+const DEFAULT_ENCOUNTER_PACING: SectorEncounterPacingDefinition = {
+  waveWindowStartRatio: DISTANCE_WAVE_WINDOW_START_RATIO,
+  waveWindowEndRatio: DISTANCE_WAVE_WINDOW_END_RATIO,
+  spawnSpacing: DISTANCE_SPAWN_SPACING,
+  firstSpawnXRatio: 0.5,
+  flankXMinRatio: 0.2,
+  flankXMaxRatio: 0.8,
+  targetYMin: 86,
+  targetYMax: 182
+};
 
 export function createWaveDirectorPlan(options: WaveDirectorOptions): WaveDirectorPlan {
+  const pacing = normalizeEncounterPacing(options.pacing);
   const waves = options.majorWaves
     .slice(0, options.objective.requiredWaves)
     .map((label, index) => ({
@@ -72,7 +86,8 @@ export function createWaveDirectorPlan(options: WaveDirectorOptions): WaveDirect
         requiredWaves: options.objective.requiredWaves,
         spawnsPerWave: options.objective.spawnsPerWave,
         scroll: options.scroll,
-        bossSpawnAtSeconds: options.objective.bossSpawnAtSeconds
+        bossSpawnAtSeconds: options.objective.bossSpawnAtSeconds,
+        pacing
       }),
       spawnCount: options.objective.spawnsPerWave
     }));
@@ -82,7 +97,8 @@ export function createWaveDirectorPlan(options: WaveDirectorOptions): WaveDirect
       rng: rng.fork(`wave-${wave.index + 1}-${wave.label}`),
       wave,
       preferredFactionId: options.preferredFactionId,
-      availableFactionIds: options.availableFactionIds ?? FACTIONS.map((faction) => faction.id)
+      availableFactionIds: options.availableFactionIds ?? FACTIONS.map((faction) => faction.id),
+      pacing
     })
   );
 
@@ -91,7 +107,8 @@ export function createWaveDirectorPlan(options: WaveDirectorOptions): WaveDirect
     waves,
     spawnSchedule,
     bossSpawnAtSeconds: options.objective.bossSpawnAtSeconds,
-    sectorLength: options.scroll?.length ?? null
+    sectorLength: options.scroll?.length ?? null,
+    encounterPacing: options.pacing ?? null
   };
 }
 
@@ -154,6 +171,7 @@ function getWaveStartDistance(options: {
   readonly spawnsPerWave: number;
   readonly scroll?: Pick<SectorScrollPlan, 'length' | 'baseSpeed'>;
   readonly bossSpawnAtSeconds: number | null;
+  readonly pacing: SectorEncounterPacingDefinition;
 }): number | null {
   const scroll = options.scroll;
 
@@ -163,14 +181,14 @@ function getWaveStartDistance(options: {
 
   const requiredWaves = Math.max(1, Math.floor(options.requiredWaves));
   const waveIndex = Math.min(Math.max(0, Math.floor(options.waveIndex)), requiredWaves - 1);
-  const maxSpawnOffset = Math.max(0, options.spawnsPerWave - 1) * DISTANCE_SPAWN_SPACING;
+  const maxSpawnOffset = Math.max(0, options.spawnsPerWave - 1) * options.pacing.spawnSpacing;
   const firstDistance =
     options.bossSpawnAtSeconds === null
-      ? scroll.length * DISTANCE_WAVE_WINDOW_START_RATIO
+      ? scroll.length * options.pacing.waveWindowStartRatio
       : getWaveStartSeconds(0) * scroll.baseSpeed;
   const lastDistance =
     options.bossSpawnAtSeconds === null
-      ? scroll.length * DISTANCE_WAVE_WINDOW_END_RATIO
+      ? scroll.length * options.pacing.waveWindowEndRatio
       : Math.max(
           firstDistance,
           (options.bossSpawnAtSeconds - BOSS_GATE_DISTANCE_LEAD_SECONDS) * scroll.baseSpeed -
@@ -190,6 +208,7 @@ function createWaveSpawns(options: {
   readonly wave: DirectedWave;
   readonly preferredFactionId: FactionId;
   readonly availableFactionIds: readonly FactionId[];
+  readonly pacing: SectorEncounterPacingDefinition;
 }): EnemySpawn[] {
   const spawns: EnemySpawn[] = [];
 
@@ -199,11 +218,20 @@ function createWaveSpawns(options: {
       atDistance:
         options.wave.startsAtDistance === null
           ? null
-          : roundDistance(options.wave.startsAtDistance + spawnIndex * DISTANCE_SPAWN_SPACING),
+          : roundDistance(options.wave.startsAtDistance + spawnIndex * options.pacing.spawnSpacing),
       waveIndex: options.wave.index,
       waveLabel: options.wave.label,
-      xRatio: spawnIndex === 0 ? 0.5 : options.rng.int(20, 80) / 100,
-      targetY: options.rng.int(86, 182),
+      xRatio:
+        spawnIndex === 0
+          ? options.pacing.firstSpawnXRatio
+          : options.rng.int(
+              Math.round(options.pacing.flankXMinRatio * 100),
+              Math.round(options.pacing.flankXMaxRatio * 100)
+            ) / 100,
+      targetY: options.rng.int(
+        Math.round(options.pacing.targetYMin),
+        Math.round(options.pacing.targetYMax)
+      ),
       hull: options.wave.index >= 2 || spawnIndex > 1 ? 3 : 2,
       fireDelay: options.rng.int(80, 145) / 100,
       factionId: chooseFaction(options.rng, options.preferredFactionId, options.availableFactionIds)
@@ -227,6 +255,40 @@ function chooseFaction(
       weight: faction.id === preferredFactionId ? 5 : 2
     }))
   );
+}
+
+function normalizeEncounterPacing(
+  pacing: SectorEncounterPacingDefinition | null | undefined
+): SectorEncounterPacingDefinition {
+  if (!pacing) {
+    return DEFAULT_ENCOUNTER_PACING;
+  }
+
+  const waveWindowStartRatio = clamp(pacing.waveWindowStartRatio, 0.04, 0.82);
+  const waveWindowEndRatio = clamp(
+    Math.max(pacing.waveWindowEndRatio, waveWindowStartRatio + 0.04),
+    waveWindowStartRatio + 0.04,
+    0.92
+  );
+  const flankXMinRatio = clamp(pacing.flankXMinRatio, 0.08, 0.86);
+  const flankXMaxRatio = clamp(
+    Math.max(pacing.flankXMaxRatio, flankXMinRatio + 0.04),
+    flankXMinRatio + 0.04,
+    0.92
+  );
+  const targetYMin = Math.round(clamp(pacing.targetYMin, 64, 220));
+  const targetYMax = Math.round(clamp(Math.max(pacing.targetYMax, targetYMin + 4), targetYMin + 4, 240));
+
+  return {
+    waveWindowStartRatio,
+    waveWindowEndRatio,
+    spawnSpacing: Math.max(12, pacing.spawnSpacing),
+    firstSpawnXRatio: clamp(pacing.firstSpawnXRatio, 0.08, 0.92),
+    flankXMinRatio,
+    flankXMaxRatio,
+    targetYMin,
+    targetYMax
+  };
 }
 
 function formatObjectiveReadout(

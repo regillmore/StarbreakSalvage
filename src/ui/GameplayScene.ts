@@ -689,7 +689,8 @@ export class GameplayScene implements Scene {
       majorWaves: sector.majorWaves,
       preferredFactionId: sector.bossFactionId,
       availableFactionIds: this.run.availableFactionIds,
-      scroll: this.getCurrentScrollPlan()
+      scroll: this.getCurrentScrollPlan(),
+      pacing: sector.encounterPacing
     });
 
     return this.wavePlan;

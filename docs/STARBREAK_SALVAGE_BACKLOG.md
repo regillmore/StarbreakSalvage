@@ -1002,7 +1002,7 @@ Acceptance:
 
 Status:
 
-- Foundation partially covered by work order 046 with existing sparse feature families so the lunar sector is playable. Lunar-specific landmarks and hazard patterns remain work order 047.
+- Implemented in work order 047. Lunar sectors now use crater-shadow, comm-array, and surface-relay landmarks plus dust-plume, mining-laser, and surface-defense hazard windows with deterministic telegraph/active phases and readability metadata.
 
 ### AJ3 - Lunar encounter pacing
 
@@ -1011,6 +1011,8 @@ Acceptance:
 - Lunar waves and route-conditioned effects feel distinct from existing sectors.
 - Debug counters remain useful for lunar backgrounds/features.
 - Known seeds can reproduce lunar sector plans.
+
+- Implemented in work order 047. Lunar sectors carry optional encounter-pacing data for low-altitude wave spacing, route-conditioned feature transforms remain valid over lunar hazards/landmarks, and `LUNAR-SURFACE-LANE` tests reproduce the sector plan.
 
 ## Epic AK - Ship destruction and Phase 5 release
 

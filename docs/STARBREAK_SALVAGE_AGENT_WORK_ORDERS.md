@@ -768,6 +768,8 @@ Acceptance criteria:
 - Route and condition modifiers can affect lunar features safely.
 - Debug counters remain useful in lunar sectors.
 
+Status: implemented; Lunar Surface now uses its own deterministic crater-shadow, comm-array, and surface-relay landmarks plus dust-plume, mining-laser, and surface-defense hazard windows. Lunar sectors also carry optional encounter-pacing data consumed by the wave director for low-altitude spacing, while route-conditioned feature scaling/addition remains valid and debug landmark/hazard counters continue to apply.
+
 ## Work order 048 - Rich player ship destruction
 
 Goal: make death feel dramatic and readable.

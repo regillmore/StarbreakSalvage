@@ -78,6 +78,16 @@ describe('generateRunSkeleton', () => {
       'surfaceTowers',
       'wreckShadows'
     ]);
+    expect(run.sectors[2]?.encounterPacing).toEqual({
+      waveWindowStartRatio: 0.16,
+      waveWindowEndRatio: 0.72,
+      spawnSpacing: 34,
+      firstSpawnXRatio: 0.56,
+      flankXMinRatio: 0.14,
+      flankXMaxRatio: 0.86,
+      targetYMin: 92,
+      targetYMax: 158
+    });
   });
 
   it('normalizes user seed input before generation', () => {

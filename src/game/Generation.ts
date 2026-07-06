@@ -1,7 +1,12 @@
 import { getBossById, type BossId, type BossPatternId } from '../content/bosses';
 import { getBackgroundById } from '../content/backgrounds';
 import type { FactionId } from '../content/factions';
-import { SECTORS, type SectorDefinition, type SectorId } from '../content/sectors';
+import {
+  SECTORS,
+  type SectorDefinition,
+  type SectorEncounterPacingDefinition,
+  type SectorId
+} from '../content/sectors';
 import {
   type ShipAppearance,
   type ShipDefinition,
@@ -72,6 +77,7 @@ export interface SectorRoute {
   readonly routeOptions: readonly RouteOption[];
   readonly majorWaves: readonly string[];
   readonly objective: SectorObjectivePlan;
+  readonly encounterPacing: SectorEncounterPacingDefinition | null;
   readonly scroll: SectorScrollPlan;
   readonly background: BackgroundPlan;
   readonly features: SectorFeaturePlan;
@@ -308,6 +314,7 @@ function generateSectorRoute(
     routeOptions,
     majorWaves,
     objective,
+    encounterPacing: sector.encounterPacing ?? null,
     scroll,
     background,
     features,
@@ -518,6 +525,7 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
         bossRequired: sector.objective.bossRequired,
         bossSpawnAtSeconds: sector.objective.bossSpawnAtSeconds
       },
+      ...(sector.encounterPacing ? { encounterPacing: sector.encounterPacing } : {}),
       scroll: {
         length: sector.scroll.length,
         baseSpeed: sector.scroll.baseSpeed,

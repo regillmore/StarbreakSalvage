@@ -149,7 +149,10 @@ const CONDITION_LANDMARK_LABELS: Readonly<Record<SectorLandmarkKind, string>> = 
   vault_door: 'vault signature',
   convoy_shadow: 'market convoy shadow',
   repair_platform: 'repair platform',
-  core_machinery: 'bloom machinery'
+  core_machinery: 'bloom machinery',
+  crater_shadow_band: 'route-marked crater shadow',
+  comm_array_flyby: 'comm-array flyby',
+  surface_relay: 'surface relay'
 };
 
 const CONDITION_HAZARD_LABELS: Readonly<Record<SectorHazardKind, string>> = {
@@ -157,7 +160,10 @@ const CONDITION_HAZARD_LABELS: Readonly<Record<SectorHazardKind, string>> = {
   warning_beam: 'ROUTE BEAM',
   mine_belt: 'ROUTE MINES',
   salvage_storm: 'ROUTE STORM',
-  crush_gate: 'ROUTE GATE'
+  crush_gate: 'ROUTE GATE',
+  dust_plume: 'ROUTE DUST',
+  mining_laser: 'ROUTE LASER',
+  surface_defense_arc: 'ROUTE ARC'
 };
 
 const CONDITION_HAZARD_METRICS: Readonly<
@@ -174,7 +180,10 @@ const CONDITION_HAZARD_METRICS: Readonly<
   warning_beam: { widthRatio: 0.12, activeSpan: 130, telegraphLead: 170 },
   mine_belt: { widthRatio: 0.32, activeSpan: 160, telegraphLead: 145 },
   salvage_storm: { widthRatio: 0.42, activeSpan: 205, telegraphLead: 150 },
-  crush_gate: { widthRatio: 0.28, activeSpan: 125, telegraphLead: 180 }
+  crush_gate: { widthRatio: 0.28, activeSpan: 125, telegraphLead: 180 },
+  dust_plume: { widthRatio: 0.34, activeSpan: 175, telegraphLead: 165 },
+  mining_laser: { widthRatio: 0.1, activeSpan: 120, telegraphLead: 185 },
+  surface_defense_arc: { widthRatio: 0.24, activeSpan: 150, telegraphLead: 170 }
 };
 
 export function createSectorConditionPlan(

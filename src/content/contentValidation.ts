@@ -617,6 +617,10 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     if (sector.objective.kind === 'defeatBoss' && !sector.objective.bossGate) {
       errors.push(`Sector ${sector.id} defeatBoss objective must enable bossGate`);
     }
+
+    if (sector.encounterPacing) {
+      validateEncounterPacing(errors, sector);
+    }
   }
 
   return errors;
@@ -699,5 +703,34 @@ function validateUnitNumber(errors: string[], owner: string, field: string, valu
 function validateHexColor(errors: string[], owner: string, field: string, value: string): void {
   if (!/^#[0-9a-fA-F]{6}$/.test(value)) {
     errors.push(`${owner} must have ${field} as a #RRGGBB color`);
+  }
+}
+
+function validateEncounterPacing(errors: string[], sector: SectorDefinition): void {
+  const pacing = sector.encounterPacing;
+
+  if (!pacing) {
+    return;
+  }
+
+  validateUnitNumber(errors, `Sector ${sector.id} encounter pacing`, 'waveWindowStartRatio', pacing.waveWindowStartRatio);
+  validateUnitNumber(errors, `Sector ${sector.id} encounter pacing`, 'waveWindowEndRatio', pacing.waveWindowEndRatio);
+  validatePositiveNumber(errors, `Sector ${sector.id} encounter pacing`, 'spawnSpacing', pacing.spawnSpacing);
+  validateUnitNumber(errors, `Sector ${sector.id} encounter pacing`, 'firstSpawnXRatio', pacing.firstSpawnXRatio);
+  validateUnitNumber(errors, `Sector ${sector.id} encounter pacing`, 'flankXMinRatio', pacing.flankXMinRatio);
+  validateUnitNumber(errors, `Sector ${sector.id} encounter pacing`, 'flankXMaxRatio', pacing.flankXMaxRatio);
+  validatePositiveNumber(errors, `Sector ${sector.id} encounter pacing`, 'targetYMin', pacing.targetYMin);
+  validatePositiveNumber(errors, `Sector ${sector.id} encounter pacing`, 'targetYMax', pacing.targetYMax);
+
+  if (pacing.waveWindowStartRatio >= pacing.waveWindowEndRatio) {
+    errors.push(`Sector ${sector.id} encounter pacing must order wave window ratios`);
+  }
+
+  if (pacing.flankXMinRatio >= pacing.flankXMaxRatio) {
+    errors.push(`Sector ${sector.id} encounter pacing must order flank x ratios`);
+  }
+
+  if (pacing.targetYMin >= pacing.targetYMax) {
+    errors.push(`Sector ${sector.id} encounter pacing must order target y bounds`);
   }
 }

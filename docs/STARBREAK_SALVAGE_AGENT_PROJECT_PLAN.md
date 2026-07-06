@@ -31,7 +31,7 @@ Phase 3 is complete as of deployed and confirmed work order 030. It made Starbre
 
 Phase 4 is complete as of validated work order 040. It added display/input/identity polish: window-size parity, optional mouse controls, contract-specific ship visuals, new-game ship previews, a contract-themed graphical HUD, keyboard/pointer accessibility hardening, ship-specific combat feedback, non-combat contract theme propagation, viewport/input/HUD debug smoke, and release documentation.
 
-Phase 5 begins from that display/input playtest candidate. Its goal is progression and sector-feedback depth: banked scrap purpose, upgrade bay icons and purchases, upgrade-influenced future runs, sector completion exits/toasts, a lunar surface sector family, and richer player ship destruction. Work order 041 has started this with a data-backed upgrade catalog, save-backed purchases, and upgrade-state migration.
+Phase 5 begins from that display/input playtest candidate. Its goal is progression and sector-feedback depth: banked scrap purpose, upgrade bay icons and purchases, upgrade-influenced future runs, sector completion exits/toasts, a lunar surface sector family, and richer player ship destruction. Work orders 041-047 now cover the upgrade catalog/bay/effects, run-end scrap feedback, sector-exit toast, and the first deterministic Lunar Surface sector with lunar hazards, landmarks, and pacing.
 
 See `docs/STARBREAK_SALVAGE_PHASE_5_PLAN.md` for the active Phase 5 roadmap. `docs/STARBREAK_SALVAGE_PHASE_4_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`, and `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md` remain historical records for concluded phases.
 
@@ -458,7 +458,7 @@ Exit criteria:
 - Known seeds can reproduce lunar backgrounds/features.
 - Hazards telegraph clearly and stay under bullets.
 
-Status: partially implemented through work order 046. Lunar Surface now appears in deterministic generation for `LUNAR-SURFACE-LANE`, uses original crater/ridge/tower/wreck-shadow background primitives with muted terrain alpha, and has content/background/feature validation coverage. Lunar-specific landmark, hazard, route-condition, and pacing depth remains work order 047.
+Status: implemented through work orders 046 and 047. Lunar Surface now appears in deterministic generation for `LUNAR-SURFACE-LANE`, uses original crater/ridge/tower/wreck-shadow background primitives with muted terrain alpha, and has lunar-specific crater-shadow, comm-array, surface-relay, dust-plume, mining-laser, and surface-defense feature content. Optional sector pacing data now feeds the wave director for low-altitude spacing, and generation/background/feature/hazard/readability/route-condition/pacing tests cover the first pass.
 
 ### P5.5 - Destruction And Phase 5 Playtest Candidate
 

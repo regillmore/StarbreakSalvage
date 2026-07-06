@@ -29,6 +29,7 @@
 - Added run-end scrap breakdowns, upgrade affordability callouts, and Unlock Archive upgrade readiness/next-target status.
 - Added a short sector-exit beacon/toast sequence before route or victory handoff, with enemy pressure cleared, debug-state instrumentation, and reduced-motion simplification.
 - Added a deterministic Lunar Surface sector foundation with original crater, ridge, surface-array, and wreck-shadow background strata and a `LUNAR-SURFACE-LANE` seed route.
+- Added Lunar Surface crater-shadow, comm-array, and surface-relay landmarks plus dust-plume, mining-laser, and surface-defense hazard patterns with low-altitude encounter pacing hooks.
 - Added deterministic sector scroll plans, fixed-step distance tracking, HUD distance/speed readouts, debug distance counters, and subtle reduced-motion-aware starfield drift.
 - Added deterministic procedural parallax background plans for all five sectors, with original canvas-drawn stars, rails, debris, bloom strands, grid lines, and core fractures.
 - Moved normal directed wave spawning onto deterministic scroll-distance marks while retaining time-based fallback schedules and boss-gate timing.
@@ -78,6 +79,7 @@
 - Added run-summary progress model tests for scrap formatting, upgrade affordability detection, archive status text, save summary records, and Playwright summary callouts.
 - Added sector-exit sequence unit tests for timing, debug-fast completion, reduced-motion presentation, final-sector copy, and Playwright smoke coverage for the forced exit toast.
 - Added lunar sector generation, background-strata, feature-plan, and content-validation coverage for `LUNAR-SURFACE-LANE`.
+- Added lunar feature determinism, hazard readability metadata, wave-pacing, content validation, and route-conditioned lunar feature regression coverage.
 
 ### Planning
 

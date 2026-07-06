@@ -50,6 +50,49 @@ describe('WaveDirector', () => {
     expect(plan.spawnSchedule.map((spawn) => spawn.atSeconds)).toEqual([0.45, 1.8]);
   });
 
+  it('uses lunar encounter pacing hooks for low-altitude wave spacing', () => {
+    const run = generateRunSkeleton('LUNAR-SURFACE-LANE');
+    const sector = run.sectors[2];
+
+    if (!sector || sector.sectorId !== 'sector_lunar_surface' || !sector.encounterPacing) {
+      throw new Error('Expected paced lunar sector.');
+    }
+
+    const plan = createWaveDirectorPlan({
+      seed: `${run.seed}:combat:${sector.sectorId}`,
+      objective: sector.objective,
+      majorWaves: sector.majorWaves,
+      preferredFactionId: sector.bossFactionId,
+      scroll: sector.scroll,
+      pacing: sector.encounterPacing
+    });
+    const waveDistances = plan.waves.map((wave) => wave.startsAtDistance ?? 0);
+
+    expect(plan.encounterPacing).toEqual(sector.encounterPacing);
+    expect(waveDistances[0]).toBeCloseTo(sector.scroll.length * 0.16, 2);
+    expect(waveDistances[2]).toBeCloseTo(sector.scroll.length * 0.72, 2);
+    expect(plan.spawnSchedule.map((spawn) => spawn.waveLabel)).toEqual([
+      sector.majorWaves[0],
+      sector.majorWaves[0],
+      sector.majorWaves[1],
+      sector.majorWaves[1],
+      sector.majorWaves[2],
+      sector.majorWaves[2]
+    ]);
+    expect(plan.spawnSchedule.filter((_spawn, index) => index % 2 === 0).map((spawn) => spawn.xRatio)).toEqual([
+      0.56,
+      0.56,
+      0.56
+    ]);
+    expect(plan.spawnSchedule.filter((_spawn, index) => index % 2 === 1).every((spawn) => spawn.xRatio >= 0.14 && spawn.xRatio <= 0.86)).toBe(true);
+    expect(plan.spawnSchedule.every((spawn) => spawn.targetY >= 92 && spawn.targetY <= 158)).toBe(
+      true
+    );
+    expect(plan.spawnSchedule[1]?.atDistance).toBe(
+      (plan.spawnSchedule[0]?.atDistance ?? 0) + 34
+    );
+  });
+
   it('requires exit distance, issued waves, cleared enemies, and target kills before completion', () => {
     const plan = getPlan('STARBREAK-SMOKE', 0);
 
@@ -555,7 +598,8 @@ function getPlan(seed: string, sectorIndex: number) {
     objective: sector.objective,
     majorWaves: sector.majorWaves,
     preferredFactionId: sector.bossFactionId,
-    scroll: sector.scroll
+    scroll: sector.scroll,
+    pacing: sector.encounterPacing
   });
 }
 

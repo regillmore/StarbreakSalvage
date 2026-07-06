@@ -24,8 +24,8 @@ Make the run-to-run loop feel rewarding and legible while adding one strong new 
 - banked salvage/scrap now has a first upgrade loop, but balance must keep it focused on variety, information, and sidegrades;
 - the Upgrade Bay and run summaries now explain affordability, but future feedback should avoid turning summary screens into shops;
 - existing menus have first-pass upgrade icons, but later upgrade categories will need the same concise visual language;
-- sector completion currently routes forward correctly, but the completion moment can feel abrupt;
-- sector variety now has a first Lunar Surface background family, but lunar-specific hazards, landmarks, and encounter pacing still need depth;
+- sector completion now has a first exit/toast beat, but timing and copy still need playtest tuning;
+- sector variety now has Lunar Surface visuals, hazards, landmarks, and pacing hooks, but it still needs manual balance/readability smoke against dense combat;
 - player death produces a summary, but the combat-side destruction moment is still first-pass feedback.
 
 ## Phase 5 Milestones
@@ -88,7 +88,7 @@ Exit criteria:
 - Lunar terrain communicates altitude and speed without hiding bullets.
 - Content validation covers the new sector references.
 
-Status: partially implemented by work order 046. Lunar Surface can appear through the deterministic `LUNAR-SURFACE-LANE` route, with original crater/ridge/tower/wreck-shadow background strata, muted terrain layers, first-pass generic feature references, and content/background/feature tests. Lunar-specific landmarks, hazards, and encounter pacing remain work order 047.
+Status: implemented by work orders 046 and 047. Lunar Surface can appear through the deterministic `LUNAR-SURFACE-LANE` route, with original crater/ridge/tower/wreck-shadow background strata, muted terrain layers, crater-shadow/comm-array/surface-relay landmarks, dust-plume/mining-laser/surface-defense hazards, and optional low-altitude encounter-pacing data consumed by the wave director. Generation, background, feature, hazard-readability, route-conditioned feature, content, and wave-pacing tests cover the first pass.
 
 ### P5.6 - Destruction And Recovery Feedback
 

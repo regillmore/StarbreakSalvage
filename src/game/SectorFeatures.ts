@@ -10,7 +10,10 @@ export const SECTOR_LANDMARK_KINDS = [
   'vault_door',
   'convoy_shadow',
   'repair_platform',
-  'core_machinery'
+  'core_machinery',
+  'crater_shadow_band',
+  'comm_array_flyby',
+  'surface_relay'
 ] as const;
 
 export const SECTOR_HAZARD_KINDS = [
@@ -18,12 +21,17 @@ export const SECTOR_HAZARD_KINDS = [
   'warning_beam',
   'mine_belt',
   'salvage_storm',
-  'crush_gate'
+  'crush_gate',
+  'dust_plume',
+  'mining_laser',
+  'surface_defense_arc'
 ] as const;
 
 export type SectorLandmarkKind = (typeof SECTOR_LANDMARK_KINDS)[number];
 export type SectorHazardKind = (typeof SECTOR_HAZARD_KINDS)[number];
 export type SectorHazardPhase = 'telegraph' | 'active';
+export type SectorHazardRenderLayer = 'underBullets';
+export type SectorHazardCollisionShape = 'verticalBand';
 
 export interface SectorLandmarkPlan {
   readonly id: string;
@@ -90,6 +98,14 @@ export interface SectorHazardVisualState {
   readonly pulseScale: number;
 }
 
+export interface SectorHazardReadabilityMetadata {
+  readonly renderLayer: SectorHazardRenderLayer;
+  readonly collisionShape: SectorHazardCollisionShape;
+  readonly maxFillAlpha: number;
+  readonly maxStrokeAlpha: number;
+  readonly minTelegraphLead: number;
+}
+
 const LANDMARK_SLOTS = [0.17, 0.43, 0.72] as const;
 const HAZARD_SLOTS = [0.3, 0.58, 0.82] as const;
 const MIN_FEATURE_DISTANCE = 120;
@@ -100,7 +116,7 @@ const LANDMARK_CHOICES: Readonly<Record<SectorId, readonly SectorLandmarkKind[]>
   sector_trade_war_corridor: ['convoy_shadow', 'beacon_line', 'vault_door'],
   sector_bio_machine_bloom: ['repair_platform', 'beacon_line', 'core_machinery'],
   sector_corporate_kill_grid: ['beacon_line', 'vault_door', 'core_machinery'],
-  sector_lunar_surface: ['wreck_silhouette', 'beacon_line', 'convoy_shadow'],
+  sector_lunar_surface: ['crater_shadow_band', 'comm_array_flyby', 'surface_relay'],
   sector_core_wreck: ['core_machinery', 'wreck_silhouette', 'vault_door']
 };
 
@@ -109,7 +125,7 @@ const HAZARD_CHOICES: Readonly<Record<SectorId, readonly SectorHazardKind[]>> = 
   sector_trade_war_corridor: ['warning_beam', 'mine_belt', 'debris_lane'],
   sector_bio_machine_bloom: ['salvage_storm', 'debris_lane', 'mine_belt'],
   sector_corporate_kill_grid: ['warning_beam', 'crush_gate', 'mine_belt'],
-  sector_lunar_surface: ['debris_lane', 'warning_beam', 'mine_belt'],
+  sector_lunar_surface: ['dust_plume', 'mining_laser', 'surface_defense_arc'],
   sector_core_wreck: ['crush_gate', 'warning_beam', 'salvage_storm']
 };
 
@@ -119,7 +135,10 @@ const LANDMARK_LABELS: Readonly<Record<SectorLandmarkKind, string>> = {
   vault_door: 'vault door',
   convoy_shadow: 'convoy shadow',
   repair_platform: 'repair platform',
-  core_machinery: 'core machinery'
+  core_machinery: 'core machinery',
+  crater_shadow_band: 'crater shadow band',
+  comm_array_flyby: 'comm-array flyby',
+  surface_relay: 'surface relay'
 };
 
 const HAZARD_LABELS: Readonly<Record<SectorHazardKind, string>> = {
@@ -127,7 +146,10 @@ const HAZARD_LABELS: Readonly<Record<SectorHazardKind, string>> = {
   warning_beam: 'WARNING BEAM',
   mine_belt: 'MINE BELT',
   salvage_storm: 'SALVAGE STORM',
-  crush_gate: 'CRUSH GATE'
+  crush_gate: 'CRUSH GATE',
+  dust_plume: 'DUST PLUME',
+  mining_laser: 'MINING LASER',
+  surface_defense_arc: 'SURFACE ARC'
 };
 
 const HAZARD_METRICS: Readonly<
@@ -144,7 +166,21 @@ const HAZARD_METRICS: Readonly<
   warning_beam: { widthRatio: 0.12, activeSpan: 140, telegraphLead: 170 },
   mine_belt: { widthRatio: 0.32, activeSpan: 165, telegraphLead: 145 },
   salvage_storm: { widthRatio: 0.42, activeSpan: 210, telegraphLead: 150 },
-  crush_gate: { widthRatio: 0.28, activeSpan: 130, telegraphLead: 180 }
+  crush_gate: { widthRatio: 0.28, activeSpan: 130, telegraphLead: 180 },
+  dust_plume: { widthRatio: 0.34, activeSpan: 180, telegraphLead: 170 },
+  mining_laser: { widthRatio: 0.1, activeSpan: 125, telegraphLead: 190 },
+  surface_defense_arc: { widthRatio: 0.24, activeSpan: 155, telegraphLead: 175 }
+};
+
+const HAZARD_READABILITY: Readonly<Record<SectorHazardKind, SectorHazardReadabilityMetadata>> = {
+  debris_lane: createHazardReadability(120),
+  warning_beam: createHazardReadability(145),
+  mine_belt: createHazardReadability(120),
+  salvage_storm: createHazardReadability(120),
+  crush_gate: createHazardReadability(150),
+  dust_plume: createHazardReadability(140),
+  mining_laser: createHazardReadability(150),
+  surface_defense_arc: createHazardReadability(145)
 };
 
 const landmarkKindRegistry = new Set<string>(SECTOR_LANDMARK_KINDS);
@@ -261,6 +297,12 @@ export function getSectorHazardVisualState(
     lineWidth: active ? 2.4 : 2,
     pulseScale
   };
+}
+
+export function getSectorHazardReadability(
+  kind: SectorHazardKind
+): SectorHazardReadabilityMetadata {
+  return HAZARD_READABILITY[kind];
 }
 
 export function validateSectorFeaturePlan(
@@ -512,4 +554,14 @@ function validateRatio(
 
 function roundFeatureValue(value: number): number {
   return Math.round(value * 100) / 100;
+}
+
+function createHazardReadability(minTelegraphLead: number): SectorHazardReadabilityMetadata {
+  return {
+    renderLayer: 'underBullets',
+    collisionShape: 'verticalBand',
+    maxFillAlpha: 0.11,
+    maxStrokeAlpha: 0.88,
+    minTelegraphLead
+  };
 }

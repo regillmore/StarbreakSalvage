@@ -1202,6 +1202,60 @@ export class CanvasRenderer {
       return;
     }
 
+    if (kind === 'crater_shadow_band') {
+      context.fillStyle = '#111827';
+      context.strokeStyle = '#8aa4b8';
+      context.lineWidth = 1.5;
+      context.beginPath();
+      context.ellipse(0, 0, halfWidth, halfHeight * 0.62, -0.08, 0, Math.PI * 2);
+      context.fill();
+      context.globalAlpha *= 0.62;
+      context.beginPath();
+      context.ellipse(0, 0, halfWidth * 0.72, halfHeight * 0.34, -0.08, 0, Math.PI);
+      context.stroke();
+      return;
+    }
+
+    if (kind === 'comm_array_flyby') {
+      context.strokeStyle = '#7cf7ff';
+      context.fillStyle = '#1b2636';
+      context.lineWidth = 1.6;
+      for (const offset of [-0.32, 0, 0.32]) {
+        const x = offset * width;
+        context.beginPath();
+        context.moveTo(x, halfHeight);
+        context.lineTo(x, -halfHeight * 0.56);
+        context.stroke();
+        context.beginPath();
+        context.ellipse(x, -halfHeight * 0.72, width * 0.09, height * 0.12, -0.38, 0, Math.PI * 2);
+        context.fill();
+        context.stroke();
+      }
+      context.beginPath();
+      context.moveTo(-halfWidth * 0.62, halfHeight * 0.18);
+      context.lineTo(halfWidth * 0.62, -halfHeight * 0.08);
+      context.stroke();
+      return;
+    }
+
+    if (kind === 'surface_relay') {
+      context.fillStyle = '#172231';
+      context.strokeStyle = '#ffd166';
+      context.lineWidth = 1.7;
+      context.strokeRect(-halfWidth * 0.52, -halfHeight * 0.2, width * 0.36, height * 0.52);
+      context.strokeRect(halfWidth * 0.12, -halfHeight * 0.42, width * 0.32, height * 0.74);
+      for (const x of [-halfWidth * 0.34, halfWidth * 0.28]) {
+        context.beginPath();
+        context.moveTo(x, -halfHeight * 0.48);
+        context.lineTo(x, -halfHeight);
+        context.moveTo(x - width * 0.08, -halfHeight * 0.82);
+        context.lineTo(x + width * 0.08, -halfHeight * 0.82);
+        context.stroke();
+      }
+      context.fillRect(-halfWidth, halfHeight * 0.26, width, height * 0.12);
+      return;
+    }
+
     context.fillStyle = '#251b24';
     context.strokeStyle = '#ffd166';
     context.lineWidth = 2;
@@ -1249,6 +1303,25 @@ export class CanvasRenderer {
       return;
     }
 
+    if (activeHazard.hazard.kind === 'mining_laser') {
+      context.setLineDash([]);
+      context.lineWidth = activeHazard.phase === 'active' ? 3.2 : 2.2;
+      context.beginPath();
+      context.moveTo(rect.centerX, rect.top);
+      context.lineTo(rect.centerX, rect.bottom);
+      context.stroke();
+      context.globalAlpha *= 0.58;
+      for (let y = rect.top + 32; y < rect.bottom; y += 72) {
+        context.beginPath();
+        context.moveTo(rect.centerX - rect.width * 0.38, y - 16);
+        context.lineTo(rect.centerX + rect.width * 0.38, y + 16);
+        context.moveTo(rect.centerX + rect.width * 0.38, y - 16);
+        context.lineTo(rect.centerX - rect.width * 0.38, y + 16);
+        context.stroke();
+      }
+      return;
+    }
+
     if (activeHazard.hazard.kind === 'mine_belt') {
       context.setLineDash([]);
       for (let y = rect.top + 42, index = 0; y < rect.bottom; y += 88, index += 1) {
@@ -1266,6 +1339,22 @@ export class CanvasRenderer {
       return;
     }
 
+    if (activeHazard.hazard.kind === 'dust_plume') {
+      context.setLineDash([]);
+      for (let y = rect.top + 34, index = 0; y < rect.bottom; y += 58, index += 1) {
+        const x = rect.left + ((index * 41) % Math.max(1, rect.width));
+        context.beginPath();
+        context.moveTo(x - rect.width * 0.22, y + 10);
+        context.quadraticCurveTo(x, y - 18, x + rect.width * 0.28, y + 8);
+        context.stroke();
+        context.globalAlpha *= 0.96;
+        context.beginPath();
+        context.arc(x + rect.width * 0.12, y - 2, 4 + (index % 3), 0, Math.PI * 2);
+        context.stroke();
+      }
+      return;
+    }
+
     if (activeHazard.hazard.kind === 'salvage_storm') {
       context.setLineDash([]);
       for (let y = rect.top + 30, index = 0; y < rect.bottom; y += 46, index += 1) {
@@ -1273,6 +1362,20 @@ export class CanvasRenderer {
         context.beginPath();
         context.moveTo(x - 14, y - 6);
         context.lineTo(x + 18, y + 8);
+        context.stroke();
+      }
+      return;
+    }
+
+    if (activeHazard.hazard.kind === 'surface_defense_arc') {
+      context.setLineDash([]);
+      for (let y = rect.top + 36; y < rect.bottom; y += 74) {
+        context.beginPath();
+        context.arc(rect.centerX, y, rect.width * 0.44, Math.PI * 0.12, Math.PI * 0.88);
+        context.stroke();
+        context.beginPath();
+        context.moveTo(rect.left + rect.width * 0.18, y + 18);
+        context.lineTo(rect.right - rect.width * 0.18, y + 18);
         context.stroke();
       }
       return;
@@ -1304,10 +1407,12 @@ export class CanvasRenderer {
 
   private getSectorHazardColor(kind: ActiveSectorHazard['hazard']['kind']): string {
     if (this.settings.bulletContrast === 'high') {
-      return kind === 'warning_beam' || kind === 'crush_gate' ? '#ffef5f' : '#f8fbff';
+      return kind === 'warning_beam' || kind === 'crush_gate' || kind === 'mining_laser'
+        ? '#ffef5f'
+        : '#f8fbff';
     }
 
-    if (kind === 'warning_beam' || kind === 'crush_gate') {
+    if (kind === 'warning_beam' || kind === 'crush_gate' || kind === 'mining_laser') {
       return '#ffd166';
     }
 
@@ -1315,8 +1420,12 @@ export class CanvasRenderer {
       return '#ff6bd6';
     }
 
-    if (kind === 'salvage_storm') {
+    if (kind === 'salvage_storm' || kind === 'surface_defense_arc') {
       return '#7cf7ff';
+    }
+
+    if (kind === 'dust_plume') {
+      return '#c8d4e3';
     }
 
     return '#8aa4b8';

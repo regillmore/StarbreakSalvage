@@ -7,6 +7,7 @@ import { resolveSectorHazardCollisions } from '../../src/game/SectorHazards';
 import {
   getActiveSectorHazards,
   getSectorHazardCollisionRect,
+  getSectorHazardReadability,
   getSectorHazardVisualState,
   summarizeSectorFeaturePlan,
   validateSectorFeaturePlan,
@@ -49,21 +50,56 @@ describe('SectorFeatures', () => {
     expect(hazardKinds.size).toBeGreaterThanOrEqual(3);
   });
 
-  it('ships valid first-pass lunar surface features when the lunar lane appears', () => {
-    const run = generateRunSkeleton('LUNAR-SURFACE-LANE');
-    const lunarSector = run.sectors.find((sector) => sector.sectorId === 'sector_lunar_surface');
+  it('ships deterministic lunar-specific landmarks and hazard patterns', () => {
+    const first = getLunarSector();
+    const second = getLunarSector();
 
-    if (!lunarSector) {
-      throw new Error('Expected lunar sector.');
+    expect(validateSectorFeaturePlan(first.features, first.scroll.length)).toEqual([]);
+    expect(summarizeSectorFeaturePlan(first.features)).toEqual(
+      summarizeSectorFeaturePlan(second.features)
+    );
+    expect(first.features.landmarks.map((landmark) => landmark.kind)).toEqual(
+      expect.arrayContaining(['crater_shadow_band', 'comm_array_flyby', 'surface_relay'])
+    );
+    expect(first.features.hazards.map((hazard) => hazard.kind)).toEqual(
+      expect.arrayContaining(['dust_plume', 'mining_laser', 'surface_defense_arc'])
+    );
+  });
+
+  it('keeps lunar hazards telegraphed, collision-bounded, and rendered under bullets', () => {
+    const lunarSector = getLunarSector();
+    const hazard = lunarSector.features.hazards.find((candidate) => candidate.kind === 'mining_laser');
+
+    if (!hazard) {
+      throw new Error('Expected lunar mining laser hazard.');
     }
 
-    expect(validateSectorFeaturePlan(lunarSector.features, lunarSector.scroll.length)).toEqual([]);
-    expect(lunarSector.features.landmarks.map((landmark) => landmark.kind)).toEqual(
-      expect.arrayContaining(['wreck_silhouette', 'beacon_line'])
+    const metadata = getSectorHazardReadability(hazard.kind);
+    const rect = getSectorHazardCollisionRect(hazard, bounds);
+
+    expect(metadata.renderLayer).toBe('underBullets');
+    expect(metadata.collisionShape).toBe('verticalBand');
+    expect(metadata.maxFillAlpha).toBeLessThanOrEqual(0.11);
+    expect(hazard.startDistance - hazard.telegraphDistance).toBeGreaterThanOrEqual(
+      metadata.minTelegraphLead
     );
-    expect(lunarSector.features.hazards.map((hazard) => hazard.kind)).toEqual(
-      expect.arrayContaining(['debris_lane', 'warning_beam'])
+    expect(rect.top).toBe(bounds.padding);
+    expect(rect.bottom).toBe(bounds.height - bounds.padding);
+    expect(rect.width).toBeGreaterThanOrEqual(24);
+
+    expect(getActiveSectorHazards(lunarSector.features, hazard.telegraphDistance - 0.01)).toEqual(
+      []
     );
+    expect(
+      getActiveSectorHazards(lunarSector.features, hazard.telegraphDistance + 0.01).find(
+        (activeHazard) => activeHazard.hazard.id === hazard.id
+      )?.phase
+    ).toBe('telegraph');
+    expect(
+      getActiveSectorHazards(lunarSector.features, hazard.startDistance + 0.01).find(
+        (activeHazard) => activeHazard.hazard.id === hazard.id
+      )?.phase
+    ).toBe('active');
   });
 
   it('opens hazard telegraph and active phases from scroll distance', () => {
@@ -235,6 +271,18 @@ function getOpeningSector() {
 
   if (!sector) {
     throw new Error('Expected opening sector.');
+  }
+
+  return sector;
+}
+
+function getLunarSector() {
+  const sector = generateRunSkeleton('LUNAR-SURFACE-LANE').sectors.find(
+    (candidate) => candidate.sectorId === 'sector_lunar_surface'
+  );
+
+  if (!sector) {
+    throw new Error('Expected lunar sector.');
   }
 
   return sector;

@@ -19,6 +19,17 @@ export interface SectorObjectiveDefinition {
   readonly bossGate: boolean;
 }
 
+export interface SectorEncounterPacingDefinition {
+  readonly waveWindowStartRatio: number;
+  readonly waveWindowEndRatio: number;
+  readonly spawnSpacing: number;
+  readonly firstSpawnXRatio: number;
+  readonly flankXMinRatio: number;
+  readonly flankXMaxRatio: number;
+  readonly targetYMin: number;
+  readonly targetYMax: number;
+}
+
 export interface SectorDefinition {
   readonly id: SectorId;
   readonly name: string;
@@ -27,6 +38,7 @@ export interface SectorDefinition {
   readonly bossCandidates: readonly BossId[];
   readonly majorWavePool: readonly string[];
   readonly objective: SectorObjectiveDefinition;
+  readonly encounterPacing?: SectorEncounterPacingDefinition;
 }
 
 export const SECTORS: readonly SectorDefinition[] = [
@@ -113,6 +125,16 @@ export const SECTORS: readonly SectorDefinition[] = [
       waveCount: 3,
       spawnsPerWave: 2,
       bossGate: false
+    },
+    encounterPacing: {
+      waveWindowStartRatio: 0.16,
+      waveWindowEndRatio: 0.72,
+      spawnSpacing: 34,
+      firstSpawnXRatio: 0.56,
+      flankXMinRatio: 0.14,
+      flankXMaxRatio: 0.86,
+      targetYMin: 92,
+      targetYMax: 158
     }
   },
   {

@@ -101,6 +101,7 @@ Current Phase 5 coverage:
 - Work order 044 adds run-summary progress tests for earned/banked scrap formatting, newly affordable/available/next/completed upgrade callouts, archive upgrade status, save summary records, and Playwright summary assertions.
 - Work order 045 adds sector-exit sequence tests for normal/debug/reduced-motion/final-sector timing and Playwright smoke assertions for forced exit toast, debug exit progress, and route flow after the beat.
 - Work order 046 adds deterministic `LUNAR-SURFACE-LANE` generation coverage, Lunar Surface background-strata checks, first-pass feature-plan validation, and content breadth/reference validation.
+- Work order 047 adds lunar-specific feature determinism, hazard phase/readability/collision metadata tests, route-conditioned lunar feature regression coverage, sector pacing validation, and wave-director pacing checks.
 
 ## Known seed tests
 
@@ -137,7 +138,7 @@ Phase 5 should add these seed/save fixtures:
 - `UPGRADE-SEED-SNAPSHOT` - same seed tested under fresh and upgraded save states; implemented in work order 043 upgrade-effect snapshots.
 - `RUN-SCRAP-CALLOUT` - forced summary path that verifies earned/banked scrap and upgrade progress copy; implemented in the work order 044 Playwright summary smoke.
 - `EXIT-TOAST-CHECK` - forgiving sector completion path for exit/toast smoke; implemented through the work order 045 forced sector-complete Playwright path.
-- `LUNAR-SURFACE-LANE` - deterministic lunar sector/background/feature plan; implemented in work order 046 generation, background, and feature tests.
+- `LUNAR-SURFACE-LANE` - deterministic lunar sector/background/feature/pacing plan; implemented across work orders 046 and 047 generation, background, feature, route-condition, content, and wave-director tests.
 - `SHIP-BREAKUP-TEST` - deterministic death/destruction summary path.
 
 ## Content validation checklist
@@ -156,7 +157,7 @@ Phase 2 should extend this checklist as systems become real. In addition to the 
 - [ ] Curses are clearly marked.
 - [x] Ship appearance references, palettes, weapon mount hints, and HUD theme keys validate.
 - [x] Upgrade definitions, costs, prerequisites, effect references, and icon categories validate.
-- [x] Lunar sector background, first-pass feature, faction, and boss references validate.
+- [x] Lunar sector background, feature, pacing, faction, and boss references validate.
 
 ## Manual browser smoke matrix
 
@@ -189,7 +190,7 @@ Phase 5 performance checks should include Upgrade Bay DOM/icon rendering cost, u
 - [x] Contract preview model and selection smoke coverage exists.
 - [x] Contract theme propagation smoke coverage exists for route/shop/reward/transition/summary screens.
 - [x] Upgrade Bay, banked scrap state, and upgrade-influenced generation visible in tests/debug smoke.
-- [ ] Sector exit/toast, lunar sector, and destruction smoke paths exist.
+- [ ] Sector exit/toast and lunar sector smoke paths exist; destruction smoke remains work order 049 after rich destruction lands.
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [ ] Heavy combat debug scene documented.
 - [ ] Long-scroll debug scene documented.
