@@ -853,6 +853,7 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
 .game-hud {
   position: relative;
   display: grid;
+  grid-area: 1 / 1;
   align-items: start;
   align-content: start;
   max-width: 100vw;
@@ -1030,6 +1031,45 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
   white-space: normal;
 }
 
+.sector-exit-toast {
+  grid-area: 1 / 1;
+  align-self: center;
+  justify-self: center;
+  max-width: min(88vw, 34rem);
+  margin: 0;
+  padding: 0.72rem 0.95rem;
+  border: 1px solid rgba(124, 247, 255, 0.62);
+  border-left: 4px solid #ffd166;
+  border-radius: 7px;
+  color: #f8fbff;
+  background: rgba(4, 6, 18, 0.82);
+  box-shadow: 0 0 28px rgba(124, 247, 255, 0.22);
+  font-size: clamp(0.9rem, 2vw, 1.08rem);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  opacity: 0;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+  text-align: center;
+  text-transform: uppercase;
+  transform: translateY(0.6rem);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.sector-exit-toast[data-exit-state='active'] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+html[data-reduced-motion='true'] .sector-exit-toast {
+  box-shadow: none;
+  transform: none;
+  transition: none;
+}
+
 html[data-reduced-motion='true'] .cockpit-hud::before,
 html[data-performance-mode='true'] .cockpit-hud::before {
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--hud-trim) 14%, transparent) inset;
@@ -1037,7 +1077,8 @@ html[data-performance-mode='true'] .cockpit-hud::before {
 
 html[data-bullet-contrast='high'] .hud-meter,
 html[data-bullet-contrast='high'] .hud-pill,
-html[data-bullet-contrast='high'] .hud-theme-readout {
+html[data-bullet-contrast='high'] .hud-theme-readout,
+html[data-bullet-contrast='high'] .sector-exit-toast {
   border-color: rgba(248, 251, 255, 0.58);
   background: rgba(2, 4, 10, 0.86);
 }

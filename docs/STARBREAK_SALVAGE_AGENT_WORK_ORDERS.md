@@ -734,6 +734,8 @@ Acceptance criteria:
 - Debug completion shortcut remains useful.
 - Reduced motion simplifies the sequence.
 
+Status: implemented; objective completion now enters an explicit sector-exit sequence before route or victory handoff, clears enemy pressure, shows a DOM completion toast plus canvas beacon/corridor visuals, reports exit progress in the debug overlay, and uses a shorter static reduced-motion presentation. The debug sector-complete shortcut remains fast and can finish an active exit beat, and unit plus Playwright smoke coverage verify timing, reduced-motion state, and route flow after the toast.
+
 ## Work order 046 - Lunar surface sector foundation
 
 Goal: add a new low-altitude sector family.

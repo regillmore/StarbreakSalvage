@@ -99,6 +99,7 @@ Current Phase 5 coverage:
 - Work order 042 adds Upgrade Bay view-model tests plus a Playwright smoke fixture that opens the bay in a narrow high-contrast viewport, verifies icon/state copy, purchases an upgrade with banked scrap, and confirms persisted save/menu state.
 - Work order 043 adds same-save/same-seed upgrade generation snapshots for contract boards, route intel, market decoder shop output, relic dossier vault rewards, seed survey text, fresh-save viability, summary/debug exposure, and browser smoke that a purchased upgrade appears on the next contract board.
 - Work order 044 adds run-summary progress tests for earned/banked scrap formatting, newly affordable/available/next/completed upgrade callouts, archive upgrade status, save summary records, and Playwright summary assertions.
+- Work order 045 adds sector-exit sequence tests for normal/debug/reduced-motion/final-sector timing and Playwright smoke assertions for forced exit toast, debug exit progress, and route flow after the beat.
 
 ## Known seed tests
 
@@ -134,8 +135,8 @@ Phase 5 should add these seed/save fixtures:
 - `SCRAP-BAY-SMOKE` - progressed save fixture with enough scrap to buy a first upgrade; implemented in the work order 042 Playwright bay smoke.
 - `UPGRADE-SEED-SNAPSHOT` - same seed tested under fresh and upgraded save states; implemented in work order 043 upgrade-effect snapshots.
 - `RUN-SCRAP-CALLOUT` - forced summary path that verifies earned/banked scrap and upgrade progress copy; implemented in the work order 044 Playwright summary smoke.
+- `EXIT-TOAST-CHECK` - forgiving sector completion path for exit/toast smoke; implemented through the work order 045 forced sector-complete Playwright path.
 - `LUNAR-SURFACE-LANE` - deterministic lunar sector/background/feature plan.
-- `EXIT-TOAST-CHECK` - forgiving sector completion path for exit/toast smoke.
 - `SHIP-BREAKUP-TEST` - deterministic death/destruction summary path.
 
 ## Content validation checklist

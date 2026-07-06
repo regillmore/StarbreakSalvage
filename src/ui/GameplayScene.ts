@@ -61,6 +61,13 @@ import {
   type ScrollState
 } from '../game/ScrollState';
 import {
+  advanceSectorExitSequence,
+  createSectorExitSequence,
+  getSectorExitPresentation,
+  type SectorExitSequenceReason,
+  type SectorExitSequenceState
+} from '../game/SectorExitSequence';
+import {
   createWaveDirectorPlan,
   getObjectiveProgress,
   type WaveDirectorPlan
@@ -122,10 +129,13 @@ export class GameplayScene implements Scene {
   private readonly warningReadout: HTMLParagraphElement;
   private readonly itemReadout: HTMLParagraphElement;
   private readonly hintReadout: HTMLParagraphElement;
+  private readonly exitToast: HTMLParagraphElement;
   private readonly hullMeter: HudMeterElements;
   private readonly specialMeter: HudMeterElements;
   private readonly bombMeter: HudMeterElements;
   private readonly heatMeter: HudMeterElements;
+  private exitSequence: SectorExitSequenceState | null = null;
+  private exitSequenceResult: CombatRunResult | null = null;
   private sectorCompleted = false;
   private queuedSpecial = false;
   private queuedBomb = false;
@@ -197,6 +207,13 @@ export class GameplayScene implements Scene {
     this.hintReadout.className = 'hud-pill hud-pill-wide';
     this.hintReadout.dataset.testid = 'hint-readout';
 
+    this.exitToast = document.createElement('p');
+    this.exitToast.className = 'sector-exit-toast';
+    this.exitToast.dataset.testid = 'sector-exit-toast';
+    this.exitToast.dataset.exitState = 'idle';
+    this.exitToast.setAttribute('aria-live', 'polite');
+    this.exitToast.setAttribute('aria-hidden', 'true');
+
     this.hullMeter = createHudMeterElement(document, 'Hull integrity', 'HUL', 'hull-meter');
     this.specialMeter = createHudMeterElement(document, 'Special charge', 'SPC', 'special-meter');
     this.bombMeter = createHudMeterElement(document, 'Bomb stock', 'BMB', 'bomb-meter');
@@ -266,11 +283,16 @@ export class GameplayScene implements Scene {
     );
     chrome.append(themeReadout, meterStrip);
     hud.append(chrome, readoutStrip, this.positionReadout);
-    this.uiRoot.replaceChildren(hud);
+    this.uiRoot.replaceChildren(hud, this.exitToast);
+    this.syncExitSequenceUi();
     this.syncReadouts();
   }
 
   public update(dt: number): void {
+    if (this.updateSectorExitSequence(dt)) {
+      return;
+    }
+
     const scrollState = this.getScrollState();
     const state = this.getCombatState();
     const arenaBeforeScroll = this.updateBossArena(scrollState.distance, state);
@@ -340,16 +362,7 @@ export class GameplayScene implements Scene {
 
     if (!this.sectorCompleted && completionReason) {
       this.sectorCompleted = true;
-      const completionResult = forceCombatEnd(state, completionReason);
-
-      if (completionReason === 'victory') {
-        this.emitFeedback(['sectorClear', 'runEnd']);
-        this.onGameOver(completionResult);
-        return;
-      }
-
-      this.emitFeedback(['sectorClear']);
-      this.onSectorComplete(completionResult);
+      this.startSectorExitSequence(completionReason);
     }
   }
 
@@ -370,6 +383,10 @@ export class GameplayScene implements Scene {
         getActiveSectorHazards(this.getCurrentFeatures(), scroll.distance),
         bounds
       );
+    }
+
+    if (this.exitSequence) {
+      renderer.paintSectorExitSequence(getSectorExitPresentation(this.exitSequence), bounds);
     }
 
     for (const pickup of state.pickups) {
@@ -425,6 +442,18 @@ export class GameplayScene implements Scene {
   }
 
   public handleAction(action: InputAction): void {
+    if (this.exitSequence) {
+      if (action === 'pause' || action === 'back') {
+        this.onPause(this);
+      }
+
+      if (action === 'debugSectorComplete' && this.debugEnabled) {
+        this.finishSectorExitSequence();
+      }
+
+      return;
+    }
+
     if (action === 'special') {
       this.queuedSpecial = true;
     }
@@ -443,9 +472,8 @@ export class GameplayScene implements Scene {
     }
 
     if (action === 'debugSectorComplete' && this.debugEnabled) {
-      this.emitFeedback(['sectorClear']);
       this.sectorCompleted = true;
-      this.onSectorComplete(forceCombatEnd(this.getCombatState(), 'sectorComplete'));
+      this.startSectorExitSequence('sectorComplete', { debugFast: true });
       return;
     }
 
@@ -515,6 +543,11 @@ export class GameplayScene implements Scene {
       distance: scroll.distance,
       sectorLength: scroll.length,
       scrollSpeed: scroll.speed,
+      exitSequence: this.exitSequence
+        ? `${this.exitSequence.reason} ${Math.round(
+            getSectorExitPresentation(this.exitSequence).progress * 100
+          )}%`
+        : undefined,
       arenaPhase: this.bossArenaUpdate.phase,
       debugScenario: this.debugScenario ?? undefined,
       backgroundPrimitives: background.primitiveCount,
@@ -541,6 +574,84 @@ export class GameplayScene implements Scene {
       contractTheme: createContractThemeDebugState(this.contract),
       upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects)
     };
+  }
+
+  private startSectorExitSequence(
+    reason: SectorExitSequenceReason,
+    options: { readonly debugFast?: boolean } = {}
+  ): void {
+    if (this.exitSequenceResult) {
+      return;
+    }
+
+    const state = this.getCombatState();
+    const scroll = this.getScrollState();
+
+    state.scrollDistance = scroll.distance;
+    clearExitPressure(state);
+    this.exitSequence = createSectorExitSequence({
+      sectorName: this.getCurrentSectorName(),
+      sectorIndex: this.sectorIndex,
+      sectorCount: this.run.sectors.length,
+      reason,
+      reducedMotion: getHudThemeOptions(this.uiRoot.ownerDocument).reducedMotion,
+      debugFast: options.debugFast
+    });
+    this.exitSequenceResult = forceCombatEnd(state, reason);
+    this.emitFeedback(['sectorClear']);
+    this.syncExitSequenceUi();
+    this.syncReadouts();
+  }
+
+  private updateSectorExitSequence(dt: number): boolean {
+    if (!this.exitSequence) {
+      return false;
+    }
+
+    const complete = advanceSectorExitSequence(this.exitSequence, dt);
+    this.syncExitSequenceUi();
+    this.syncReadouts();
+
+    if (complete) {
+      this.finishSectorExitSequence();
+    }
+
+    return true;
+  }
+
+  private finishSectorExitSequence(): void {
+    const result = this.exitSequenceResult;
+
+    if (!result) {
+      return;
+    }
+
+    this.exitSequence = null;
+    this.exitSequenceResult = null;
+    this.syncExitSequenceUi();
+
+    if (result.reason === 'victory') {
+      this.emitFeedback(['runEnd']);
+      this.onGameOver(result);
+      return;
+    }
+
+    this.onSectorComplete(result);
+  }
+
+  private syncExitSequenceUi(): void {
+    if (!this.exitSequence) {
+      this.exitToast.dataset.exitState = 'idle';
+      this.exitToast.setAttribute('aria-hidden', 'true');
+      this.exitToast.textContent = '';
+      return;
+    }
+
+    const presentation = getSectorExitPresentation(this.exitSequence);
+    this.exitToast.dataset.exitState = 'active';
+    this.exitToast.dataset.exitMotion = presentation.motion;
+    this.exitToast.setAttribute('aria-hidden', 'false');
+    this.exitToast.textContent = presentation.toast;
   }
 
   private getCombatState(): CombatState {
@@ -658,6 +769,9 @@ export class GameplayScene implements Scene {
 
   private syncReadouts(): void {
     const state = this.getCombatState();
+    const exitPresentation = this.exitSequence
+      ? getSectorExitPresentation(this.exitSequence)
+      : null;
 
     this.positionReadout.textContent = `Player ${Math.round(state.player.x)},${Math.round(
       state.player.y
@@ -688,6 +802,14 @@ export class GameplayScene implements Scene {
       'Warning clear';
     this.itemReadout.textContent = this.getBuildReadout(state);
     this.hintReadout.textContent = this.getOnboardingHint(state);
+
+    if (exitPresentation) {
+      this.objectiveReadout.textContent = `${exitPresentation.title} | ${Math.round(
+        exitPresentation.progress * 100
+      )}%`;
+      this.warningReadout.textContent = exitPresentation.toast;
+      this.hintReadout.textContent = exitPresentation.hint;
+    }
   }
 
   private getCombatSeed(): string {
@@ -865,6 +987,14 @@ function getDebugLongScrollDistance(sectorLength: number): number {
   const exitLeadDistance = Math.max(0, length - DEBUG_LONG_SCROLL_EXIT_LEAD);
 
   return Math.min(lateDistance, exitLeadDistance);
+}
+
+function clearExitPressure(state: CombatState): void {
+  state.enemies = [];
+  state.projectiles = [];
+  state.telegraphs = [];
+  state.boss = null;
+  state.nextSpawnIndex = state.spawnSchedule.length;
 }
 
 function createHudMeterElement(

@@ -962,6 +962,10 @@ Acceptance:
 - Debug sector completion remains fast.
 - Reduced motion simplifies the sequence.
 
+Status:
+
+- Implemented in work order 045. Objective completion now enters an explicit exit sequence, clears enemy pressure, draws a beacon/corridor primitive, keeps route/victory handoff single-fire, and uses a shorter static reduced-motion presentation.
+
 ### AI2 - Completion toasts
 
 Acceptance:
@@ -972,7 +976,7 @@ Acceptance:
 
 Status:
 
-- Partially covered by work order 044 for run-end scrap and upgrade affordability callouts on summary/archive screens. In-game sector completion toast timing and route/reward transition punctuation remain work order 045.
+- Implemented across work orders 044 and 045. Run-end scrap and upgrade affordability callouts live on summary/archive screens, and sector completion now shows a non-blocking DOM toast with debug/E2E coverage before route or victory handoff.
 
 ## Epic AJ - Lunar surface sector
 

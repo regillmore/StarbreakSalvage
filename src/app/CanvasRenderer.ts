@@ -15,6 +15,7 @@ import {
   type SectorHazardCollisionRect,
   type VisibleSectorLandmark
 } from '../game/SectorFeatures';
+import type { SectorExitPresentation } from '../game/SectorExitSequence';
 import {
   advanceScreenShake,
   getScreenShakeOffset,
@@ -355,6 +356,70 @@ export class CanvasRenderer {
       this.paintSectorHazardPattern(activeHazard, rect, color, style);
       context.restore();
     }
+  }
+
+  public paintSectorExitSequence(
+    presentation: SectorExitPresentation,
+    bounds: CombatBounds = createDefaultCombatBounds()
+  ): void {
+    const { width, height } = bounds;
+    const context = this.context;
+    const centerX = width / 2;
+    const beaconY = Math.max(58, height * 0.13);
+    const gateWidth = width * (0.32 + presentation.progress * 0.24);
+    const beaconHeight = 32 + presentation.progress * 10;
+    const primary = this.settings.bulletContrast === 'high' ? '#ffffff' : '#7cf7ff';
+    const accent = this.settings.bulletContrast === 'high' ? '#ffef5f' : '#ffd166';
+
+    context.save();
+
+    if (presentation.corridorAlpha > 0) {
+      context.globalAlpha = presentation.corridorAlpha;
+      context.strokeStyle = primary;
+      context.lineWidth = 2;
+
+      for (let index = 0; index < 4; index += 1) {
+        const y = height - ((index * 150 + presentation.progress * 190) % (height + 120));
+        const inset = 44 + index * 8;
+
+        context.beginPath();
+        context.moveTo(inset, y);
+        context.lineTo(centerX - gateWidth * 0.52, beaconY + beaconHeight / 2);
+        context.moveTo(width - inset, y);
+        context.lineTo(centerX + gateWidth * 0.52, beaconY + beaconHeight / 2);
+        context.stroke();
+      }
+
+      context.globalAlpha = presentation.corridorAlpha * 0.44;
+      context.fillStyle = primary;
+      context.fillRect(0, 0, Math.max(8, 22 - presentation.progress * 6), height);
+      context.fillRect(width - Math.max(8, 22 - presentation.progress * 6), 0, 22, height);
+    }
+
+    context.translate(centerX, beaconY);
+    context.scale(presentation.pulseScale, presentation.pulseScale);
+    context.globalAlpha = presentation.beaconAlpha;
+    context.fillStyle = 'rgba(4, 6, 18, 0.72)';
+    context.strokeStyle = primary;
+    context.lineWidth = 2;
+    context.beginPath();
+    context.rect(-gateWidth / 2, -beaconHeight / 2, gateWidth, beaconHeight);
+    context.fill();
+    context.stroke();
+
+    context.globalAlpha = Math.min(1, presentation.beaconAlpha + 0.1);
+    context.strokeStyle = accent;
+    context.lineWidth = 1.4;
+    context.beginPath();
+    context.moveTo(-gateWidth * 0.38, 0);
+    context.lineTo(-gateWidth * 0.12, 0);
+    context.moveTo(gateWidth * 0.12, 0);
+    context.lineTo(gateWidth * 0.38, 0);
+    context.moveTo(0, -beaconHeight * 0.32);
+    context.lineTo(0, beaconHeight * 0.32);
+    context.stroke();
+
+    context.restore();
   }
 
   public paintGameplayFrame(): void {

@@ -160,6 +160,10 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByText('Outer Debris Field')).toBeVisible();
 
   await page.keyboard.press('8');
+  await expect(page.getByTestId('sector-exit-toast')).toContainText(
+    /Outer Debris Field clear \| route telemetry/
+  );
+  await expect(page.locator('.debug-overlay')).toContainText(/Exit sectorComplete \d+%/);
   await expect(page.getByRole('heading', { name: 'Choose Route' })).toBeVisible();
   await expect(page.locator('.route-panel')).toHaveAttribute('data-contract-theme', 'redline');
   await expect(page.getByTestId('contract-theme-strip')).toContainText(

@@ -76,7 +76,7 @@ Exit criteria:
 - Sector completion shows a short exit/toast beat before route/reward screens.
 - Toasts are readable, non-blocking, and respect reduced motion.
 
-Status: partially implemented by work order 044. Run summaries now explain earned and banked scrap, upgrade outlook, and newly available or next-target upgrade progress; the Unlock Archive also reports affordable upgrades and the next target. Sector completion exit/toast feedback remains work order 045.
+Status: implemented by work orders 044 and 045. Run summaries now explain earned and banked scrap, upgrade outlook, and newly available or next-target upgrade progress; the Unlock Archive also reports affordable upgrades and the next target. Sector completion now shows a short explicit exit beacon/toast beat before route or victory handoff, with reduced-motion simplification and debug smoke coverage.
 
 ### P5.5 - Lunar Surface Sector
 

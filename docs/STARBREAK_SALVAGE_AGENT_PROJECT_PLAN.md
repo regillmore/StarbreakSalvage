@@ -442,7 +442,7 @@ Exit criteria:
 - Run summaries explain earned and banked scrap.
 - Toasts are accessible and reduced-motion aware.
 
-Status: partially implemented through work order 044. Run summaries now show earned/banked scrap flow and upgrade affordability/next-target callouts without blocking seed sharing or route/item/unlock detail; Unlock Archive status also surfaces ready upgrades. Sector completion exit/toast feedback remains work order 045.
+Status: implemented through work order 045. Run summaries now show earned/banked scrap flow and upgrade affordability/next-target callouts without blocking seed sharing or route/item/unlock detail; Unlock Archive status also surfaces ready upgrades. Sector completion now enters a short explicit exit sequence with reduced enemy pressure, a DOM toast, canvas beacon/corridor visuals, debug progress, reduced-motion simplification, and reliable route/victory handoff.
 
 ### P5.4 - Lunar Surface Sector
 
