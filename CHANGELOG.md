@@ -131,6 +131,7 @@
 - Completed the Phase 7 longer-sector pacing pass for P7.5 deterministic arcs, relief windows, formation clusters, feature beats, boss approach timing, and summary/debug surfaces, leaving enemy-rich browser stress smoke for work order 069.
 - Completed the Phase 7 enemy-rich smoke pass for work order 069, setting up final release hardening, production preview evidence, and known-risk closeout for work order 070.
 - Completed Phase 7 as an enemy-behavior playtest candidate with release docs, local check/browser/preview evidence, known enemy balance risks, and the boss-release hazard fairness fix.
+- Concluded Phase 7 in planning docs and added the Phase 8 roadmap/work orders for richer hazard zones, destructibles/obstacles, loose currency, environmental stress smoke, and release hardening.
 - Started Phase 6 with a documented audit of the current 30-item catalog, repeated-reward risks, underrepresented archetypes, target item families, and bridge-effect follow-ups.
 - Formalized the Phase 6 item metadata contract and validation baseline before adding larger item batches.
 - Completed the first Phase 6 hook-surface expansion so work order 054 can add live catalog items against typed event payloads.

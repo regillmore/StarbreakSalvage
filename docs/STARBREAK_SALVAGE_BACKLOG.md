@@ -1441,3 +1441,131 @@ Acceptance:
 Status:
 
 - Implemented in work order 070. Phase 7 release docs now cover role coverage, variant rules, formation smoke, longer-sector tuning, release evidence, manual browser gaps, and follow-up balance risks. The closeout also fixed a boss-arena hazard blocker by deferring any hazard window hidden during arena lock until after a fresh post-boss telegraph lead, with unit regression coverage. Full check, escalated Playwright Chromium smoke, and production preview smoke provide local closeout evidence.
+
+## Epic AW - Rich hazard zones
+
+### AW1 - Hazard-zone schema
+
+Acceptance:
+
+- Hazard definitions describe family, sector/faction fit, telegraph timing, active damage shape, damage cooldown, safe-lane expectations, accessibility metadata, and boss-arena suppression behavior.
+- Existing hazards migrate into or map cleanly onto the typed contract.
+- Validation catches bad phase timing, unsupported shapes, missing accessibility data, and unsafe boss-release behavior.
+
+Status:
+
+- Planned for work order 072.
+
+### AW2 - Hazard behavior library
+
+Acceptance:
+
+- Multiple richer hazard families exist, such as sweep beams, pulse fields, drifting mine bands, collapsing columns, orbital shadows, plasma curtains, or dust fronts.
+- Hazards only damage after visible warning leads and validated active windows.
+- Reduced motion, performance mode, and high contrast simplify presentation without changing deterministic timing.
+
+Status:
+
+- Planned for work order 073.
+
+### AW3 - Hazard director and pacing
+
+Acceptance:
+
+- Hazard-zone schedules are generated deterministically from seed plus save/sector context.
+- Pressure and relief windows guide hazard density.
+- Boss-arena release keeps the work order 070 fairness rule: hidden warnings cannot become instant damage when the arena unlocks.
+
+Status:
+
+- Planned for work order 074.
+
+## Epic AX - Destructibles and obstacles
+
+### AX1 - Destructible and obstacle schema
+
+Acceptance:
+
+- Destructibles and obstacles have typed definitions for collision, hull, damage interaction, objective policy, reward policy, chain behavior, sector/faction fit, placement constraints, rendering cues, and debug labels.
+- Validation rejects impossible sizes, unsafe lane constraints, invalid rewards, missing policies, and missing cue metadata.
+- Placement helpers use fixed 640x720 combat-world coordinates.
+
+Status:
+
+- Planned for work order 075.
+
+### AX2 - Destructible interactions
+
+Acceptance:
+
+- Destructibles can take allowed weapon, bomb, special, hazard, or chain-reaction damage.
+- Rewards, item hooks, audio/VFX, cleanup, and debug counters are deterministic and bounded.
+- Destroying destructibles cannot desync objectives or target counts.
+
+Status:
+
+- Planned for work order 076.
+
+### AX3 - Obstacle lane safety
+
+Acceptance:
+
+- Obstacle layouts create navigation pressure without unavoidable walls, blocked exits, or viewport-dependent difficulty.
+- Layouts respect player spawn/exit corridors, boss approach locks, hazard overlays, enemy spawn lanes, and fixed-world bounds.
+- Debug summaries expose active obstacle/destructible counts.
+
+Status:
+
+- Planned for work order 077.
+
+## Epic AY - Loose currency and salvage flow
+
+### AY1 - Loose currency scatter
+
+Acceptance:
+
+- Scrap and credit scatter can originate from explicit event payloads or deterministic sector plans.
+- Scatter definitions cover drift, lifetime, pickup attraction, collection radius, cap rules, value tiers, route/sector bias, and feedback labels.
+- Loose currency behavior is deterministic and independent from viewport size.
+
+Status:
+
+- Planned for work order 078.
+
+### AY2 - Pickup economy and feedback
+
+Acceptance:
+
+- Active loose currency count/value is capped and visible in debug.
+- Run summaries and upgrade progress accurately include collected loose currency.
+- Banked scrap and credit income remain conservative enough for existing upgrade/shop pacing.
+
+Status:
+
+- Planned for work order 078.
+
+## Epic AZ - Phase 8 release and QA
+
+### AZ1 - Environmental stress smoke
+
+Acceptance:
+
+- Debug/test paths can force hazard-heavy, destructible-rich, obstacle-lane, and loose-currency-rich scenarios.
+- Browser smoke covers at least one environmental stress path where practical.
+- Existing item-storm, enemy-rich, dense-combat, forced-exit, destruction, and long-scroll smoke remain green.
+
+Status:
+
+- Planned for work order 079.
+
+### AZ2 - Environmental systems release checklist
+
+Acceptance:
+
+- README, changelog, performance notes, release checklist, QA docs, Phase 8 plan, backlog, and architecture notes cover environmental systems.
+- `npm run check`, E2E smoke where available, and production preview smoke pass before Phase 8 closeout.
+- Known environmental balance, economy, browser, and readability risks are documented.
+
+Status:
+
+- Planned for work order 080.

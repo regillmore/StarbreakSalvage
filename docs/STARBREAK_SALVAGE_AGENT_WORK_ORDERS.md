@@ -1169,6 +1169,176 @@ Acceptance criteria:
 
 Status: implemented; Phase 7 is closed as an enemy-behavior playtest candidate. The closeout audited and refreshed README, changelog, performance notes, Phase 7 plan, backlog, release checklist, QA docs, and architecture notes for role coverage, variant rules, formation smoke, longer-sector tuning, browser gaps, and follow-up balance risks. A boss-arena/hazard fairness blocker was fixed by deferring any sector hazard window that overlapped the hidden arena lock: when the boss dies and scrolling releases, that hazard restarts its warning lead before becoming damaging. Unit coverage pins the deferred boss-release hazard behavior alongside the existing sector feature collision tests; full check, escalated Playwright Chromium smoke, and production preview smoke provide the local release evidence.
 
+## Work order 071 - Phase 8 environmental planning refresh
+
+Goal: start Phase 8 with a coherent environmental systems roadmap.
+
+Prompt:
+
+> Refresh planning documentation for Phase 8 around richer hazard zones, destructibles/obstacles, and loose currency. Read AGENTS.md and the relevant docs first. Add or update a Phase 8 plan, work orders 071-080, backlog epics, QA/release guidance, architecture notes, performance notes, README links, changelog planning notes, and release checklist status. Keep the scope docs-only unless a blocking documentation inconsistency requires a small fix. Run checks appropriate for docs-only changes and summarize changed files.
+
+Acceptance criteria:
+
+- Phase 8 has 10 new work orders with clear sequencing and acceptance criteria.
+- Planning docs describe hazard-zone richness, destructible/obstacle systems, loose currency, debug smoke, and release hardening.
+- Docs preserve deterministic generation, fixed 640x720 combat-world parity, accessibility, and boss-release hazard fairness constraints.
+- Checks pass or any docs-only check limitation is documented.
+
+Status: implemented; Phase 8 planning is refreshed with `docs/STARBREAK_SALVAGE_PHASE_8_PLAN.md`, work orders 071-080, new backlog epics, QA seed/validation/performance guidance, architecture priorities, performance budgets, release checklist status, README planning links, and changelog notes. The plan frames richer hazard zones, destructibles/obstacles, loose currency, environmental debug smoke, and release hardening while preserving deterministic generation, fixed 640x720 combat-world parity, accessibility settings, and boss-release hazard fairness.
+
+## Work order 072 - Hazard-zone schema and current-feature audit
+
+Goal: turn hazards into validated content before adding new density.
+
+Prompt:
+
+> Audit current sector feature, hazard, landmark, pacing, boss-arena, debug, and accessibility code. Add a hazard-zone schema or registry that can describe hazard id, family, sector/faction fit, phase timing, telegraph shape, active damage shape, safe-lane expectation, damage cooldown, layering/readability metadata, reduced-motion/high-contrast/performance variants, boss-arena suppression behavior, and debug label. Migrate existing hazard definitions into the schema where practical. Add content validation and deterministic tests. Run checks.
+
+Acceptance criteria:
+
+- Existing hazard behavior is represented or mapped by a typed hazard-zone contract.
+- Validation catches duplicate IDs, unsupported shapes/families, invalid phase durations, invalid damage windows, missing accessibility metadata, and unsafe boss-arena behavior flags.
+- Hazard metadata stays data-driven and generated from explicit RNG streams, never `Math.random()`.
+- Tests cover current hazard plans and boss-release safety assumptions.
+
+Status: planned.
+
+## Work order 073 - Rich hazard-zone behavior library
+
+Goal: add distinct environmental danger patterns without sacrificing readability.
+
+Prompt:
+
+> Implement a first richer hazard-zone behavior library using the schema from work order 072. Add original patterns such as sweep beams, pulse fields, drifting mine bands, collapsing columns, orbital shadows, plasma curtains, dust fronts, or static warning gates. Keep active hazards below bullets and core actors, respect reduced motion/performance/high contrast settings, and use fixed combat-world units. Add deterministic tests for phase timing, collision windows, warning lead, damage cooldown, cleanup, and settings-aware render state. Run checks.
+
+Acceptance criteria:
+
+- At least five richer hazard-zone families exist with distinct telegraph and active-state behavior.
+- Collision can only deal damage during validated active windows after a visible warning lead.
+- Hazard rendering remains readable below bullets in normal and high-contrast modes.
+- Reduced motion and performance mode simplify presentation without changing generated hazard timing.
+
+Status: planned.
+
+## Work order 074 - Hazard director, pacing integration, and boss-release safety
+
+Goal: schedule richer hazards as part of sector pacing, not as surprise clutter.
+
+Prompt:
+
+> Integrate richer hazard zones with sector pacing, route pressure, relief windows, lunar/background context, formation clusters, and boss approach/release states. The director should generate deterministic hazard-zone schedules from seed plus save/sector context, process distance markers in order under frame catchup, and avoid overlapping hidden boss-arena locks without restarting a warning lead afterward. Update summaries/debug state with useful hazard-zone context. Add tests for known-seed schedules, relief-window spacing, route-conditioned hazard pressure, frame-catchup order, and boss-release deferral. Run checks.
+
+Acceptance criteria:
+
+- Hazard-zone schedules reproduce from seed plus save state.
+- Hazard density respects pressure and relief windows rather than stacking constant danger.
+- Frame catchup cannot skip, duplicate, or instantly activate distance-tied hazard phases.
+- Boss defeat cannot release an already-damaging hidden hazard without a fresh telegraph.
+
+Status: planned.
+
+## Work order 075 - Destructible and obstacle content schema
+
+Goal: define physical sector clutter as validated content.
+
+Prompt:
+
+> Add content contracts for destructibles and obstacles such as debris, cargo pods, shield gates, rock fields, surface pylons, wreck plates, salvage caches, and volatile canisters. Definitions should include id, family, collision shape, hull/durability, damage interaction, objective policy, reward policy, chain behavior, sector/faction fit, fixed-world placement constraints, rendering cues, audio/VFX cue names, accessibility metadata, and debug labels. Add validation and pure placement helpers where needed. Run checks.
+
+Acceptance criteria:
+
+- Destructibles and obstacles are represented by typed data rather than ad hoc scene branches.
+- Validation catches bad IDs, invalid shapes, impossible sizes, missing objective policy, unsupported rewards, unsafe lane constraints, and missing cue metadata.
+- Placement helpers use the fixed 640x720 combat world and are independent from viewport size.
+- Fresh sectors retain enough open lanes for fair movement.
+
+Status: planned.
+
+## Work order 076 - Destructible interactions, rewards, and chain reactions
+
+Goal: make destructibles useful, readable, and safe for objective/economy flow.
+
+Prompt:
+
+> Implement destructible runtime interactions from the schema. Destructibles should take weapon, bomb, special, hazard, or chain-reaction damage where allowed, spawn bounded rewards where allowed, trigger item hooks through explicit event payloads, and clean up through the normal fixed-step loop. Add compact original canvas cues, audio/VFX feedback, debug counters, and tests for destruction, reward drops, chain reactions, item-hook dispatch, cleanup, and objective safety. Run checks.
+
+Acceptance criteria:
+
+- Destroying destructibles cannot desync sector objectives or formation/enemy target counts.
+- Reward drops are deterministic, capped, and routed through existing pickup/economy systems.
+- Chain reactions are bounded and cannot create runaway entity/proc pressure.
+- Destructible cues remain readable in high contrast, reduced motion, and performance mode.
+
+Status: planned.
+
+## Work order 077 - Obstacle layouts, lane safety, and navigation pressure
+
+Goal: make obstacles shape movement without creating unfair walls.
+
+Prompt:
+
+> Add deterministic obstacle placement layouts that can create lanes, cover, gates, or navigation pressure across selected sectors. Placement should respect safe-lane guarantees, player spawn/exit corridors, boss approach locks, hazard overlays, enemy spawn lanes, and fixed combat-world bounds. Add validation and tests for no unavoidable walls, no blocked exit progress, frame-catchup cleanup, narrow/wide viewport parity, and long-sector obstacle pacing. Run checks.
+
+Acceptance criteria:
+
+- Obstacle layouts reproduce from seed plus sector context and remain in fixed-world units.
+- Safe-lane checks prevent unavoidable damage and hard movement blocks.
+- Obstacles cannot trap the player at sector exit, boss release, or route transition.
+- Debug summaries expose active obstacle/destructible counts for smoke.
+
+Status: planned.
+
+## Work order 078 - Loose currency scatter, pickup attraction, and economy feedback
+
+Goal: turn scrap and credits into moment-to-moment salvage lanes.
+
+Prompt:
+
+> Add loose currency scatter patterns for scrap and credits from enemies, destructibles, route events, hazards, and sector features. Define drift, lifetime, pickup attraction, collection radius, cap rules, value tiers, route/sector bias, debug counters, and feedback copy. Ensure pickup behavior is deterministic and settings-aware, with conservative economy tuning so banked scrap does not inflate too quickly. Add tests for scatter determinism, pickup magnet behavior, cap enforcement, summary/economy accounting, and fresh/progressed save paths. Run checks.
+
+Acceptance criteria:
+
+- Loose currency spawns from deterministic plans or explicit event payloads, not random per-frame behavior.
+- Pickup attraction and collection behave consistently across viewport sizes.
+- Active loose currency count/value is capped and visible in debug.
+- Run summaries and upgrade progress remain accurate after loose currency collection.
+
+Status: planned.
+
+## Work order 079 - Environmental debug smoke, accessibility, and performance hardening
+
+Goal: make the richer environmental layer inspectable before release closeout.
+
+Prompt:
+
+> Add debug/test paths for hazard-heavy, destructible-rich, obstacle-lane, and loose-currency-rich scenarios. Extend overlay or pure helpers with active hazard-zone counts, hazard family labels, destructible/obstacle counts, loose currency count/value, pickup cap state, and environmental stress budgets. Check high contrast, reduced motion, performance mode, narrow viewport, boss-release hazards, item-storm interactions, long-sector travel, and dense enemy pressure. Add Playwright smoke where practical and update QA/performance docs. Run checks.
+
+Acceptance criteria:
+
+- Debug/test tooling can inspect environmental pressure without private app-state access.
+- Browser smoke covers at least one environmental stress path where practical.
+- Accessibility settings keep bullets, hazards, obstacles, pickups, and HUD text readable.
+- Existing item-storm, enemy-rich, dense-combat, forced-exit, destruction, and long-scroll smoke remain green.
+
+Status: planned.
+
+## Work order 080 - Phase 8 environmental playtest release hardening
+
+Goal: ship an environmental systems playtest candidate.
+
+Prompt:
+
+> Audit the Phase 8 build for richer hazard zones, hazard director pacing, destructible interactions, obstacle lane safety, loose currency economy, deterministic generation, objective safety, boss-release hazard fairness, accessibility, performance, browser load, release docs, and manual smoke coverage. Fix blockers only. Update README, changelog, performance notes, Phase 8 plan, backlog, release checklist, QA docs, and architecture notes. Run `npm run check`, Playwright smoke with escalation if available, and production preview smoke. Summarize known environmental balance, economy, browser, and readability risks.
+
+Acceptance criteria:
+
+- Full checks and production preview smoke pass.
+- E2E smoke passes or local browser/AppData blockers are clearly documented.
+- Release docs document hazard-zone coverage, destructible/obstacle rules, loose currency tuning, debug smoke, and manual browser gaps.
+- Phase 8 can be declared complete or explicitly deferred with documented blockers.
+
+Status: planned.
+
 ## Review subagent prompt
 
 Use after a feature PR:

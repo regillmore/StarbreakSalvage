@@ -116,6 +116,26 @@ Phase 7 expands enemy behavior, variants, formations, and sector length. Keep th
 - The existing dense-combat pocket, item-storm pocket, forced exit/destruction shortcuts, and quiet long-scroll traversal should stay green as enemy systems grow.
 - Measure sustained long-sector pressure before expanding projectile or particle caps.
 
+## Phase 8 Environment Budget Targets
+
+Phase 8 expands the environmental layer. Keep the first richer pass visible, deterministic, and capped before raising density.
+
+- Hazard-zone definitions should stay data-only and validated. Richer behavior should be selected at generation time, not through per-frame random branches.
+- Active richer hazard zones should start with a conservative cap of 3-4 simultaneous active/telegraphing zones, excluding static background landmarks.
+- Hazards should render below bullets, enemies, pickups, and the player. Do not increase hazard opacity or animation density without high-contrast and reduced-motion smoke.
+- Hazard collision should use simple rect/circle/arc or lane checks from generated shapes. Avoid per-pixel collision and avoid scanning inactive schedule entries every tick.
+- The hazard director should use pressure and relief windows from sector pacing rather than stacking hazards continuously across a long sector.
+- Destructibles and obstacles should start with a conservative active-field budget of roughly 12-16 physical objects before profiling supports more.
+- Destructible chain reactions should have explicit per-event caps for destroyed objects, spawned rewards, effects, and item-hook dispatch.
+- Obstacle placement must stay in fixed 640x720 combat-world units so viewport changes do not alter lane width, collision difficulty, or pickup access.
+- Loose currency should use capped active counts and value totals. Start with a budget near current pickup density and raise only after item-storm/enemy-rich smoke remains readable.
+- Pickup magnet logic should scan only active pickups/currency and avoid allocating helper objects per frame.
+- Debug overlays should expose active hazard-zone count/families, destructible/obstacle count, loose currency count/value, pickup cap state, and environmental stress-budget state.
+- Performance mode may reduce hazard animation detail, destructible debris, pickup trails, and loose currency sparkle density, but must not change generated timing, collision shapes, or economy values.
+- Reduced motion should lower environmental animation and travel streaks while preserving telegraph clarity.
+- High-contrast mode should outline bullets and keep hazard/destructible/currency cues distinct from projectile warnings.
+- The boss-release hazard fairness rule from work order 070 remains a performance/readability requirement: hazards hidden during arena lock must restart a post-release warning before damage.
+
 ## Debug and Playtest Scenarios
 
 Enable debug tools with `?debug=1` on a local, preview, or Pages URL.
@@ -134,6 +154,8 @@ Enable debug tools with `?debug=1` on a local, preview, or Pages URL.
 - `K` forces a debug run summary.
 
 The item-storm pocket is deterministic and intentionally stays below the Phase 2 alpha active-field budget while exercising every registered hook surface through a large forced loadout. The dense pocket is deterministic and intentionally stays below the Phase 2 alpha active-field budget of 80 entities. The enemy-rich pocket is deterministic and stays below that same budget while making role, variant, formation, projectile, telegraph, and long-sector pacing telemetry visible in one browser path. The long-scroll traversal is deterministic and intentionally quiet so background/feature rendering can be inspected without combat pressure. The forced-destruction path is deterministic and bounded so death-to-summary timing can be tested without relying on combat damage. Work order 049 also exposes progression, upgrade readiness, run resource, and sector-plan telemetry in the debug overlay, while work order 059 exposes item count, hook pressure, proc budget state, and build identity, so browser smoke can verify banked scrap, `LUNAR-SURFACE-LANE`, exit, destruction, hook-heavy item paths, and enemy-rich stress without reading private app state. Use these to confirm the debug overlay remains responsive, bullets remain readable in standard and high-contrast modes, screen shake respects reduced motion, distance/speed/destruction counters behave correctly, viewport/HUD/input metrics remain stable, hook applications stay under the 48-item per-event budget, enemy projectile/telegraph budgets stay under the Phase 7 stress caps, and the round can still be abandoned or summarized.
+
+Phase 8 should add or extend a debug path for environmental stress, with active hazard-zone families, destructible/obstacle count, loose currency count/value, pickup cap state, and environmental stress-budget telemetry visible through `?debug=1`. Keep any new shortcut deterministic and bounded, and verify it alongside the existing item-storm, enemy-rich, dense-combat, forced-exit, destruction, and long-scroll paths.
 
 ## Current Boss Phase Volleys
 
@@ -192,3 +214,12 @@ The debug overlay total entity count includes player, enemies, boss, bullets, pi
 - Longer sectors can become exhausting if pressure lacks relief windows. Favor mid-sector punctuation, landmarks, and formation beats over continuous enemy density.
 - Enemy-rich sectors can interact with the Phase 6 item catalog in surprising ways. Keep item-storm, dense-combat, and formation stress paths separate and then test combined pressure intentionally.
 - Boss-gated sectors suppress hazards during arena locks; future hazard density increases should keep the work order 070 deferred-release contract so a hidden warning cannot become damaging on the same moment the boss dies.
+
+## Phase 8 Playtest Risks
+
+- Rich hazard zones can hide bullets or player hit feedback if their active fills, warning outlines, and background motion share too much contrast.
+- Obstacle layouts can accidentally become hard walls if safe-lane validation misses spawn corridors, exit corridors, boss locks, or hazard overlap.
+- Destructible rewards and loose currency can inflate scrap/credit income. Keep source/value telemetry visible before raising drop rates.
+- Pickup magnet behavior can feel different across window sizes if it uses presentation coordinates instead of fixed combat-world coordinates.
+- Chain reactions can create runaway pickups, effects, or item hook dispatch if caps are not enforced in the same event path.
+- Environmental density can combine badly with enemy-rich and item-storm paths. Test hazard/destructible/currency stress independently first, then combine intentionally.

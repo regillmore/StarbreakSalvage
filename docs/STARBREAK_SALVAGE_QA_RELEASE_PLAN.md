@@ -139,6 +139,20 @@ Phase 7 enriches enemy behavior and longer-sector pacing. Add tests closest to t
 - boss arena release regressions where a distance-tied hazard telegraph was hidden during the locked fight; work order 070 adds unit coverage proving such hazards restart their warning lead after boss defeat before they can damage the player;
 - regression coverage that keeps `HOOK-STORM-SMOKE`, dense combat, forced exit, forced destruction, and quiet long-scroll paths green while enemy behavior grows.
 
+## Phase 8 QA focus
+
+Phase 8 enriches environmental pressure and loose salvage flow. Add tests closest to the risk:
+
+- hazard-zone metadata validation for family, sector/faction fit, telegraph timing, active damage shape, damage cooldown, safe-lane expectation, accessibility metadata, and boss-arena suppression behavior;
+- richer hazard behavior tests for phase timing, warning lead, active collision windows, damage cooldowns, frame-catchup order, cleanup, reduced-motion/high-contrast/performance render state, and post-boss release deferral;
+- hazard director snapshots for route pressure, relief-window spacing, lunar/background context, formation-cluster interaction, boss approach/release state, and known-seed schedule reproducibility;
+- destructible and obstacle schema validation for collision shape, hull, damage interactions, objective policy, reward policy, chain behavior, placement constraints, rendering cues, audio/VFX cue names, and debug labels;
+- destructible runtime tests for weapon/special/bomb/hazard damage, deterministic rewards, bounded chain reactions, item-hook dispatch, cleanup, and objective safety;
+- obstacle placement tests for safe lanes, player spawn and exit corridors, boss approach locks, hazard overlays, enemy spawn lanes, frame-catchup cleanup, fixed-world placement, and viewport parity;
+- loose currency tests for scatter determinism, pickup magnet behavior, collection radius, lifetime, cap enforcement, value accounting, upgrade progress, and fresh/progressed save paths;
+- browser smoke for at least one environmental stress path under debug, high contrast, reduced motion, performance mode, and narrow viewport where practical;
+- regression coverage that keeps item-storm, enemy-rich, dense-combat, forced-exit, forced-destruction, boss-release hazard, and quiet long-scroll paths green while environmental density grows.
+
 ## Known seed tests
 
 - `STARBREAK-SMOKE` — stable forgiving smoke path.
@@ -197,9 +211,18 @@ Phase 7 should add these seed/save fixtures:
 - `SUPPORT-DRONE-NEST` - support/disruptor role fixture for shield, escort, deploy, or hazard-mark behavior.
 - `BOSS-HAZARD-RELEASE` - boss-gated hazard handoff fixture for verifying hidden arena-lock hazards get a fresh post-defeat telegraph before damage; first covered by work order 070 unit regression.
 
+Phase 8 should add these seed/save fixtures:
+
+- `HAZARD-ZONE-GAUNTLET` - richer hazard-zone schedule fixture for sweep/pulse/drift/collapse families.
+- `BOSS-HAZARD-GAUNTLET` - boss-gated hazard schedule fixture that preserves the post-defeat telegraph fairness rule under denser hazard plans.
+- `DESTRUCTIBLE-SALVAGE-FIELD` - destructible-rich fixture for damage, reward, chain reaction, and cleanup coverage.
+- `OBSTACLE-LANE-CHECK` - obstacle placement fixture for safe-lane, exit-corridor, and viewport-parity checks.
+- `LOOSE-SCRAP-RAIN` - loose currency scatter and pickup-magnet fixture for economy accounting.
+- `ENVIRONMENT-STRESS-SMOKE` - debug-only environmental pressure pocket for active hazard, destructible/obstacle, loose currency, and stress-budget telemetry.
+
 ## Content validation checklist
 
-Phase 2 should extend this checklist as systems become real. In addition to the existing entries, content validation should cover ship stat ranges, objective references, wave references, implemented hook coverage, and unlock-gated pools for fresh and progressed saves. Phase 3 should extend it again for sector length ranges, scroll-speed modifiers, background-plan references, landmark references, hazard references, and distance marker ordering. Phase 4 should extend it again for ship appearance references, HUD theme keys, preview assets/primitives, and input/display settings defaults. Phase 5 should extend it again for upgrade definitions, upgrade prerequisites, upgrade effect references, icon categories, lunar sector references, lunar feature references, and destruction cue metadata. Phase 6 should extend it again for item family/source metadata, implementation status, unlock/discovery gates, source-weighted pools, synergy cluster references, and item card presentation data. Phase 7 should extend it again for enemy role metadata, movement/attack family references, variant eligibility, formation definitions, and longer-sector pacing references.
+Phase 2 should extend this checklist as systems become real. In addition to the existing entries, content validation should cover ship stat ranges, objective references, wave references, implemented hook coverage, and unlock-gated pools for fresh and progressed saves. Phase 3 should extend it again for sector length ranges, scroll-speed modifiers, background-plan references, landmark references, hazard references, and distance marker ordering. Phase 4 should extend it again for ship appearance references, HUD theme keys, preview assets/primitives, and input/display settings defaults. Phase 5 should extend it again for upgrade definitions, upgrade prerequisites, upgrade effect references, icon categories, lunar sector references, lunar feature references, and destruction cue metadata. Phase 6 should extend it again for item family/source metadata, implementation status, unlock/discovery gates, source-weighted pools, synergy cluster references, and item card presentation data. Phase 7 should extend it again for enemy role metadata, movement/attack family references, variant eligibility, formation definitions, and longer-sector pacing references. Phase 8 should extend it again for richer hazard-zone definitions, destructible/obstacle definitions, loose currency scatter rules, safe-lane placement constraints, environmental stress budgets, and pickup economy caps.
 
 - [ ] No duplicate IDs.
 - [ ] Every item tag is registered.
@@ -222,6 +245,9 @@ Phase 2 should extend this checklist as systems become real. In addition to the 
 - [x] Formation definitions validate member roles, offsets, timing, bounds, clear rewards, and break/cleanup behavior.
 - [x] Longer-sector pacing validates length bands, pressure/relief windows, formation marks, and boss approach references.
 - [x] Current enemy role audit helper covers faction-pattern classes, target roles, wave-label semantics, spawn model, and objective-risk notes before Phase 7 schema work.
+- [ ] Rich hazard-zone definitions validate family, phase timing, telegraph/damage shapes, safe-lane expectations, accessibility metadata, and boss-arena suppression behavior.
+- [ ] Destructible/obstacle definitions validate collision shape, hull, damage interactions, objective policy, reward policy, chain behavior, placement constraints, cue metadata, and debug labels.
+- [ ] Loose currency scatter rules validate value tiers, drift/lifetime, pickup attraction, cap rules, route/sector bias, and economy accounting.
 
 ## Manual browser smoke matrix
 
@@ -249,6 +275,8 @@ Phase 7 performance checks should include active role counts, upgraded variant c
 
 Work order 070 closes Phase 7 with release-hardening evidence and a boss-release hazard regression. Locked boss arenas still suppress hazards for readability, but overlapping hidden hazard windows now restart their telegraph lead when the arena releases so damage cannot occur on the boss-death handoff.
 
+Phase 8 performance checks should include active hazard-zone count, hazard family label count, destructible/obstacle count, loose currency count/value, pickup attraction cost, chain-reaction caps, environmental stress budgets, and whether richer environmental pressure hides bullets or extends per-frame collision scans beyond current dense/enemy-rich pockets.
+
 - [x] FPS overlay available behind debug flag.
 - [x] Projectile count visible in debug mode.
 - [ ] Particle count visible in debug mode.
@@ -267,6 +295,8 @@ Work order 070 closes Phase 7 with release-hardening evidence and a boss-release
 - [x] Role-specific attack profiles have deterministic cadence, telegraph, and projectile-budget tests for current and registered Phase 7 attack families.
 - [x] Active formation counts visible in debug once work order 066 lands.
 - [x] Long-sector pressure visible in debug/summaries after work order 068 and in browser stress smoke after work order 069.
+- [ ] Active hazard-zone, destructible/obstacle, loose currency, and environmental stress-budget counters visible in debug once Phase 8 lands.
+- [ ] Environmental stress smoke covers at least one hazard/destructible/obstacle/currency path where practical.
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [x] Heavy combat debug scene documented.
 - [x] Long-scroll debug scene documented.

@@ -404,6 +404,54 @@ src/game/EnemyRolePressure.ts
 - Summaries and debug overlays should expose length, pressure band, role/variant/formation counts, and route-conditioned reasons where useful.
 - Performance mode and reduced motion may simplify presentation, but should not change combat generation or objective requirements.
 
+## Phase 8 architecture priorities
+
+Phase 8 turns environmental pressure into a richer game layer. Keep hazard zones, destructibles, obstacles, and loose currency generated from seed plus save/sector context, then consumed by fixed-step simulation and canvas rendering without per-frame randomization.
+
+### Environmental feature model
+
+- Treat environmental content as data first: hazard zones, destructibles, obstacles, and loose currency scatter rules should have stable IDs, validation, debug labels, sector/faction fit, and accessibility metadata.
+- Keep placement in fixed 640x720 combat-world units. Viewport size can change presentation scale, but not lane widths, collision shapes, pickup pull, or hazard timing.
+- Generate environmental schedules once per sector or event from explicit RNG forks. Runtime systems should consume indexed plans and process crossed distance markers in order.
+- Avoid coupling environmental generation to canvas colors, DOM state, or current browser dimensions.
+
+Recommended module direction:
+
+```text
+src/content/hazardZones.ts
+src/content/destructibles.ts
+src/game/EnvironmentDirector.ts
+src/game/Destructibles.ts
+src/game/LooseCurrency.ts
+```
+
+### Hazard zones
+
+- Hazard definitions should describe phase timing, telegraph shape, active damage shape, damage cooldown, safe-lane expectation, visual layer, reduced-motion/high-contrast/performance variants, and boss-arena suppression behavior.
+- Hazard director logic should integrate with `SectorPacing` pressure and relief windows rather than simply raising density.
+- Collision damage must only occur after a visible warning lead. If a boss arena hides a hazard warning during lock, preserve the work order 070 release contract by restarting a post-release telegraph before damage can occur.
+- Rendering should keep hazards below bullets, enemies, pickups, and the player. Richer hazard art should use low-alpha fills, clear outlines, and compact labels before adding animated effects.
+
+### Destructibles and obstacles
+
+- Destructibles and obstacles should share content validation for collision shape, hull, damage interaction, objective policy, reward policy, chain behavior, placement constraints, cue metadata, and debug label.
+- Destructible damage should flow through explicit systems for weapon, special, bomb, hazard, or chain-reaction hits. Reward drops and item hook events should use existing deterministic pickup/economy and hook dispatch paths.
+- Chain reactions must be bounded by per-tick or per-event caps so they cannot create runaway entity, pickup, or proc pressure.
+- Obstacles should have placement safety checks for player spawn lanes, exit corridors, boss approach/release, hazard overlap, enemy spawn lanes, and fixed-world bounds.
+
+### Loose currency
+
+- Loose scrap/credit scatter should originate from deterministic plans or explicit event payloads, not ad hoc frame checks.
+- Pickup attraction should use the same combat-world coordinate model as existing pickups so viewport scaling does not change collection difficulty.
+- Active loose currency count/value should be capped and visible in debug. Summary and Upgrade Bay progress should remain accurate after collection.
+- Economy tuning should stay conservative until playtest data proves that loose scrap does not inflate permanent upgrade pacing or shop purchasing power.
+
+### Environmental debug and performance
+
+- Debug overlays should expose active hazard-zone counts/families, destructible/obstacle counts, loose currency count/value, pickup cap state, and environmental stress budgets.
+- Environmental stress paths should coexist with item-storm, enemy-rich, dense-combat, forced-exit, forced-destruction, and long-scroll smoke without hiding bullets or exceeding the current alpha field budget.
+- Performance mode and reduced motion may simplify draw density, effects, and animation, but should not alter generated plans, collision timing, objective requirements, or pickup economy.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.
