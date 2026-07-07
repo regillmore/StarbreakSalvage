@@ -152,6 +152,8 @@ The registered item hook surface now covers `onFire`, `onProjectileSpawn`, `onEn
 
 `src/game/BuildSynergy.ts` is the read model for player-facing build identity. It scores item instances by family, tags, and acquisition order, then formats compact HUD, reward/shop, and run-summary copy. Keep it presentation-oriented: it should explain the build, not alter item hooks, rewards, or combat state.
 
+`src/game/ItemStress.ts` is the read/debug model for item-heavy smoke. It owns the deterministic item-storm loadout, fresh/unlocked reward-shop-vault pool previews, and item hook pressure summaries used by tests and the debug overlay. Keep it out of normal run generation; production acquisition should continue through `Rewards`, `Shops`, `SectorRewards`, and save-state unlock filters.
+
 `src/ui/ItemCardViewModel.ts` and `src/ui/ItemCard.ts` are the shared item presentation layer for reward choices, shops, run summary cards, and discovered archive items. They should stay deterministic and data-only from item metadata plus local context; do not let card rendering change reward pools, prices, save state, or item hook behavior.
 
 Use deterministic hook order:

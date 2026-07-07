@@ -1107,6 +1107,10 @@ Acceptance:
 - Debug or test helpers can report active item count, active hook count, proc budget, and build identity where useful.
 - Dense item interactions have deterministic smoke or integration coverage.
 
+Status:
+
+- Implemented in work order 059. `src/game/ItemStress.ts` provides item count, unique count, active hook surfaces, hook applications, peak proc pressure, skipped proc applications, and build identity for forced and test loadouts. The gameplay debug overlay now prints those values behind `?debug=1`, and unit coverage verifies normal and over-budget loadouts.
+
 ## Epic AN - Catalog expansion and pool curation
 
 ### AN1 - Item expansion batch
@@ -1204,6 +1208,10 @@ Acceptance:
 - Automated or documented smoke covers an item-heavy reward/shop/vault path.
 - Debug tooling can exercise rich item pools and dense synergy combat.
 - Performance notes document item hook and UI budgets.
+
+Status:
+
+- Implemented in work order 059. The `HOOK-STORM-SMOKE` browser path uses debug key `6` to force a 22-item loadout across all 13 hook surfaces, a bounded enemy/projectile field, and overlay item/hook/proc/build telemetry. Pure tests preview fresh and fully unlocked combat/shop/vault pools to catch unlock-gated item availability and rich inventory drift before the Phase 6 release hardening pass.
 
 ### AP3 - Phase 6 release checklist
 

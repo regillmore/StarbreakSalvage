@@ -648,6 +648,7 @@ export class GameApp {
       ? [`Destruction ${debugState.destructionSequence}`]
       : [];
     const scenarioDebug = debugState.debugScenario ? [`Scenario ${debugState.debugScenario}`] : [];
+    const itemDebug = createItemDebugLines(debugState.items);
     const inputDebug = debugState.inputMode ? [`Input ${debugState.inputMode}`] : [];
     const hudDebug = debugState.hudMode ? [`HUD ${debugState.hudMode}`] : [];
     const themeDebug = debugState.contractTheme
@@ -670,6 +671,7 @@ export class GameApp {
       ...exitDebug,
       ...destructionDebug,
       ...scenarioDebug,
+      ...itemDebug,
       ...inputDebug,
       ...hudDebug,
       ...themeDebug,
@@ -696,6 +698,23 @@ export class GameApp {
       unlockedIds: this.saveData.unlockedIds
     });
   }
+}
+
+function createItemDebugLines(items: SceneDebugState['items']): readonly string[] {
+  if (!items || items.itemCount === 0) {
+    return [];
+  }
+
+  const peakHook = items.peakHookName
+    ? `${items.peakHookName} ${items.peakHookApplications}/${items.procBudget}`
+    : `none 0/${items.procBudget}`;
+
+  return [
+    `Items ${items.itemCount} (${items.uniqueItemCount} unique)`,
+    `Hooks ${items.activeHookTypes}/${items.totalHookTypes} ${items.hookApplications} apps`,
+    `Proc ${peakHook} skip ${items.skippedHookApplications}`,
+    items.buildLabel
+  ];
 }
 
 function createProgressionDebugLines(

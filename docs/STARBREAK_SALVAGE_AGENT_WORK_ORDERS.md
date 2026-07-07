@@ -976,6 +976,8 @@ Acceptance criteria:
 - Proc budgets and item effect risks are documented.
 - Existing Phase 5 smoke remains green.
 
+Status: implemented; `src/game/ItemStress.ts` now exposes a deterministic 22-item hook-heavy debug loadout, item-loadout pressure summaries, and fresh/unlocked reward-shop-vault pool previews. Debug key `6` behind `?debug=1` forces the item-storm combat pocket and adds overlay item count, active hook count, proc cap state, and build identity. Unit tests cover the stress model and pool previews, while Playwright smoke covers the `HOOK-STORM-SMOKE` item-storm path.
+
 ## Work order 060 - Phase 6 playtest release hardening
 
 Goal: ship an item-catalog playtest candidate.

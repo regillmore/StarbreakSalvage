@@ -15,6 +15,7 @@ import {
   createCombatState,
   forceCombatEnd,
   getCombatEntityCounts,
+  prepareDebugItemStormScenario,
   prepareDebugLongScrollScenario,
   spawnDebugDenseCombatScenario,
   spawnBoss,
@@ -27,6 +28,7 @@ import type { BossId } from '../content/bosses';
 import type { ShipStats } from '../content/ships';
 import { createBuildSynergyModel, formatBuildSynergyHud } from '../game/BuildSynergy';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
+import { createItemLoadoutStressModel, createItemStormLoadout } from '../game/ItemStress';
 import type { ItemInstance } from '../game/Rewards';
 import { getSectorCompletionReason } from '../game/RunOutcome';
 import type { RouteCombatModifier } from '../game/RouteEvents';
@@ -539,6 +541,16 @@ export class GameplayScene implements Scene {
       this.syncReadouts();
     }
 
+    if (action === 'debugItemStorm' && this.debugEnabled) {
+      const state = this.getCombatState();
+      const feedbackBefore = createCombatFeedbackSnapshot(state);
+      prepareDebugItemStormScenario(state, this.getCombatBounds(), createItemStormLoadout());
+      this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
+      this.sectorCompleted = false;
+      this.debugScenario = 'item-storm';
+      this.syncReadouts();
+    }
+
     if (action === 'debugLongScroll' && this.debugEnabled) {
       const state = this.getCombatState();
       const feedbackBefore = createCombatFeedbackSnapshot(state);
@@ -619,6 +631,7 @@ export class GameplayScene implements Scene {
       inputMode: this.input.getActiveInputMode(),
       hudMode: hudTheme.mode,
       contractTheme: createContractThemeDebugState(this.contract),
+      items: createItemLoadoutStressModel(combatState.items),
       upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects),
       progression: {
         runCredits: this.startingCredits + combatState.player.credits,

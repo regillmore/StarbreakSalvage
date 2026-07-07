@@ -119,6 +119,7 @@ Phase 6 expands the item catalog and hook surface. Add tests closest to the risk
 - item unlock and discovery migration/import/export/corruption repair if save shape changes;
 - synergy cluster detection, tie-breaking, HUD/summary copy, and narrow-layout build identity presentation; work order 057 adds unit coverage and E2E smoke assertions for HUD plus reward/shop build-fit lines;
 - item card view models for reward, shop, vault, archive, and summary surfaces, including high-contrast and keyboard focus state; work order 058 adds shared model coverage and E2E checks for shop, reward, summary, and archive item cards;
+- item-heavy stress helpers for forced hook-heavy combat, fresh/unlocked reward-shop-vault pool previews, active hook pressure, proc cap reporting, and build identity; work order 059 adds pure coverage plus a `HOOK-STORM-SMOKE` Playwright debug path;
 - browser smoke for at least one item-heavy reward/shop/vault path and one dense synergy combat/debug path.
 
 ## Known seed tests
@@ -162,9 +163,9 @@ Phase 5 should add these seed/save fixtures:
 Phase 6 should add these seed/save fixtures:
 
 - `ITEM-CATALOG-AUDIT` - stable fixture for catalog metadata and reward pool sampling.
-- `HOOK-STORM-SMOKE` - item-heavy combat fixture with multiple hook families active under proc budget limits.
+- `HOOK-STORM-SMOKE` - item-heavy combat fixture with multiple hook families active under proc budget limits; implemented in work order 059 through the `6` item-storm debug shortcut and browser smoke.
 - `SHOP-VAULT-STACK` - reward/shop/vault route path for item source weighting smoke.
-- `UNLOCKED-ITEM-FAMILIES` - progressed save fixture that verifies unlock-gated item families and discovery records.
+- `UNLOCKED-ITEM-FAMILIES` - progressed save fixture that verifies unlock-gated item families and discovery records; first covered in work order 059 through pure fresh/unlocked reward-shop-vault pool preview tests.
 - `LUNAR-RELIC-CATALOG` - lunar/faction/source-biased item pool fixture for sector-themed items.
 
 ## Content validation checklist
@@ -203,7 +204,7 @@ Phase 2 performance checks should include wave/objective count, projectile count
 
 Phase 3 performance checks should also include background primitive count, parallax layer count, distance traveled, scroll speed, active distance markers, active landmarks, active hazards, and long-scroll scenarios that run longer than a normal sector.
 
-Current first-pass instrumentation exposes granular combat counts, background primitive/layer counts, active landmark/hazard counts, distance, speed, active input mode, HUD mode, viewport size/class/presentation scale, DPR, canvas pixel size, safe-frame origin/size, fixed combat world size, banked scrap, upgrade readiness, run resources, current sector id/name/background/pacing, exit progress, destruction progress, a dense-combat debug pocket, forced exit/destruction shortcuts, and a quiet late-sector long-scroll traversal behind `?debug=1`. Production preview smoke passed for work order 050; manual non-Chromium and real-device browser validation still need to close the checklist.
+Current first-pass instrumentation exposes granular combat counts, background primitive/layer counts, active landmark/hazard counts, distance, speed, active input mode, HUD mode, viewport size/class/presentation scale, DPR, canvas pixel size, safe-frame origin/size, fixed combat world size, banked scrap, upgrade readiness, run resources, current sector id/name/background/pacing, exit progress, destruction progress, item count, active hook count, proc cap state, build identity, a dense-combat debug pocket, an item-storm hook stress pocket, forced exit/destruction shortcuts, and a quiet late-sector long-scroll traversal behind `?debug=1`. Production preview smoke passed for work order 050; manual non-Chromium and real-device browser validation still need to close the checklist.
 
 Phase 4 performance checks should include viewport/presentation scale, safe-frame size, fixed-world hazard/enemy spacing parity, HUD rendering density, preview rendering cost, mouse input update behavior, ship cue rendering cost, non-combat theme DOM cost, and whether themed HUD/ship cues add measurable overhead in dense and long-scroll debug scenarios.
 
@@ -223,6 +224,7 @@ Phase 6 performance checks should include item hook dispatch cost, proc budget l
 - [x] Contract theme propagation smoke coverage exists for route/shop/reward/transition/summary screens.
 - [x] Upgrade Bay, banked scrap state, and upgrade-influenced generation visible in tests/debug smoke.
 - [x] Sector exit/toast, destruction, and lunar browser smoke paths exist.
+- [x] Item hook pressure, proc cap state, and build identity visible in debug smoke.
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [x] Heavy combat debug scene documented.
 - [x] Long-scroll debug scene documented.

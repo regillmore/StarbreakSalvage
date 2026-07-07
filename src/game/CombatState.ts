@@ -209,7 +209,7 @@ export interface CombatState {
   grazedProjectileIds: Set<number>;
   spawnSchedule: readonly EnemySpawn[];
   readonly weapon: WeaponDefinition;
-  readonly items: readonly ItemInstance[];
+  items: readonly ItemInstance[];
   volleyIndex: number;
   stats: CombatStats;
   ended: boolean;
@@ -568,6 +568,137 @@ export function spawnDebugDenseCombatScenario(state: CombatState, bounds: Combat
     radius: 82,
     ttl: 0.32,
     maxTtl: 0.32
+  });
+}
+
+export function prepareDebugItemStormScenario(
+  state: CombatState,
+  bounds: CombatBounds,
+  items: readonly ItemInstance[]
+): void {
+  state.items = [...items];
+  state.enemies = [];
+  state.projectiles = [];
+  state.telegraphs = [];
+  state.effects = [];
+  state.pickups = [];
+  state.boss = null;
+  state.bossSpawned = true;
+  state.nextSpawnIndex = state.spawnSchedule.length;
+  state.grazedProjectileIds.clear();
+
+  const centerX = bounds.width / 2;
+  const topY = Math.max(78, bounds.height * 0.12);
+  state.player.x = centerX;
+  state.player.y = bounds.height * 0.78;
+  state.player.fireCooldown = 0;
+  state.player.weaponHeat = 0;
+  state.player.weaponOverheatSeconds = 0;
+  state.player.invulnerableSeconds = 0.85;
+  state.player.specialCharge = state.player.maxSpecialCharge;
+  state.player.specialCooldown = 0;
+  state.player.specialActiveSeconds = 0;
+  state.player.bombs = state.player.maxBombs;
+  state.player.bombCooldown = 0;
+
+  const factionIds: readonly FactionId[] = [
+    'faction_corporate_ledger',
+    'faction_scrap_court',
+    'faction_bloom_hive',
+    'faction_void_corsairs'
+  ];
+
+  for (let index = 0; index < 10; index += 1) {
+    const row = Math.floor(index / 5);
+    const column = index % 5;
+    const factionId = factionIds[index % factionIds.length] ?? 'faction_corporate_ledger';
+    state.enemies.push({
+      id: getNextEntityId(state),
+      factionId,
+      x: centerX + (column - 2) * 82,
+      y: topY + row * 52,
+      radius: 16,
+      hull: column === 2 ? 3 : 2,
+      maxHull: column === 2 ? 3 : 2,
+      drift: (column - 2) * 18,
+      targetY: topY + row * 52,
+      fireCooldown: 1.2 + index * 0.04
+    });
+  }
+
+  for (let index = 0; index < 30; index += 1) {
+    const factionId = factionIds[index % factionIds.length] ?? 'faction_corporate_ledger';
+    const nearGraze = index < 6;
+    const column = index % 6;
+    const row = Math.floor(index / 6);
+    const side = index % 2 === 0 ? -1 : 1;
+    state.projectiles.push({
+      id: getNextEntityId(state),
+      owner: 'enemy',
+      x: nearGraze
+        ? state.player.x + side * (40 + (index % 3) * 3)
+        : centerX + (column - 2.5) * 62,
+      y: nearGraze ? state.player.y - 14 + row * 10 : topY + 128 + row * 34,
+      vx: nearGraze ? side * 4 : (column - 2.5) * 10,
+      vy: nearGraze ? 126 : 164 + row * 9,
+      radius: nearGraze ? 5 : 5 + (index % 2),
+      damage: 1,
+      ttl: nearGraze ? 2.6 : 3.6,
+      tags:
+        factionId === 'faction_void_corsairs'
+          ? ['phase']
+          : index % 5 === 0
+            ? ['missile']
+            : ['plasma'],
+      procDepth: 0,
+      factionId
+    });
+  }
+
+  for (const offset of [-104, 104]) {
+    state.telegraphs.push({
+      id: getNextEntityId(state),
+      kind: 'lane',
+      factionId: 'faction_corporate_ledger',
+      label: 'ITEM HOOK STORM',
+      x: centerX + offset,
+      y: topY + 64,
+      radius: 0,
+      width: 38,
+      height: bounds.height,
+      ttl: 1.4,
+      maxTtl: 1.4
+    });
+  }
+
+  state.pickups.push({
+    id: getNextEntityId(state),
+    kind: 'credit',
+    x: state.player.x - 56,
+    y: state.player.y - 80,
+    vx: 0,
+    vy: 18,
+    radius: 7,
+    value: 4
+  });
+  state.pickups.push({
+    id: getNextEntityId(state),
+    kind: 'salvage',
+    x: state.player.x + 56,
+    y: state.player.y - 78,
+    vx: 0,
+    vy: 18,
+    radius: 7,
+    value: 2
+  });
+  state.effects.push({
+    id: getNextEntityId(state),
+    kind: 'special',
+    x: state.player.x,
+    y: state.player.y,
+    radius: 92,
+    ttl: 0.36,
+    maxTtl: 0.36
   });
 }
 

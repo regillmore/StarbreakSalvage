@@ -36,6 +36,7 @@
 - Added expanded item hook surfaces for graze, special use, bomb use, sector start, route choice, shop entry, reward generation, and boss phase changes.
 - Expanded the Phase 6 item catalog to 60 original items, adding live effects across lunar/surface, route/economy, boss-pressure, graze, special, bomb, shop, reward, and sector-start hooks while keeping starter rewards free of prototype and cursed entries.
 - Added source-weighted item pool profiles for starter, combat, shop, vault, elite, boss, faction, lunar, and route contexts, with compact source hints on reward and shop cards.
+- Added item-storm debug instrumentation with a forced 22-item loadout across all 13 hook surfaces, hook/proc/build overlay telemetry, and fresh/unlocked reward-shop-vault pool previews for item-heavy smoke.
 - Added deterministic sector scroll plans, fixed-step distance tracking, HUD distance/speed readouts, debug distance counters, and subtle reduced-motion-aware starfield drift.
 - Added deterministic procedural parallax background plans for all five sectors, with original canvas-drawn stars, rails, debris, bloom strands, grid lines, and core fractures.
 - Moved normal directed wave spawning onto deterministic scroll-distance marks while retaining time-based fallback schedules and boss-gate timing.
@@ -54,6 +55,7 @@
 - Added hook validation and unit coverage for newly registered hook names, deterministic hook ordering, inert future hook surfaces, and bounded dispatch/proc limits.
 - Refreshed catalog audit, item hook, content validation, and deterministic shop/vault snapshots for the 60-item Phase 6 expansion.
 - Added item pool profile validation and known-seed source-weighted reward/shop/vault/lunar snapshots.
+- Added unit coverage for item-stress loadouts, proc cap reporting, fresh/unlocked item pool previews, and Playwright smoke for the `HOOK-STORM-SMOKE` item-storm debug path.
 - Added wave director and objective completion tests, including known-seed objective snapshots and boss-gate coverage.
 - Added combat tests for special charge/use, bomb mitigation, graze detection, remapped special/bomb controls, and reduced-motion effect rendering.
 - Added validation and gameplay tests for ship stat contracts, weapon references, weapon patterns, heat/reload behavior, and starting economy.

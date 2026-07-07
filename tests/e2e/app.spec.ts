@@ -397,6 +397,42 @@ test('reaches and instruments the deterministic lunar sector smoke path', async 
   expect(browserErrors).toEqual([]);
 });
 
+test('exposes item-heavy hook storm debug instrumentation', async ({ page }) => {
+  const browserErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') {
+      browserErrors.push(message.text());
+    }
+  });
+  page.on('pageerror', (error) => browserErrors.push(error.message));
+
+  await page.goto('./?debug=1&seed=HOOK-STORM-SMOKE');
+
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
+
+  await page.keyboard.press('Enter');
+  await expectGameplaySector(page, 'Outer Debris Field');
+
+  await page.keyboard.press('6');
+  await expect(page.getByTestId('boss-warning')).toContainText('ITEM HOOK STORM');
+  await expect(page.locator('.debug-overlay')).toContainText('Scenario item-storm');
+  await expect(page.locator('.debug-overlay')).toContainText('Items 22 (22 unique)');
+  await expect(page.locator('.debug-overlay')).toContainText(/Hooks 13\/13 \d+ apps/);
+  await expect(page.locator('.debug-overlay')).toContainText(/Proc on[A-Za-z]+ \d+\/48 skip 0/);
+  await expect(page.locator('.debug-overlay')).toContainText(/Build .+ \| 22 items/);
+  await expect(page.locator('.debug-overlay')).toContainText('Projectiles 30 (P0/E30)');
+  await expect(page.locator('.debug-overlay')).toContainText('Telegraphs 2');
+  await expect(page.getByTestId('item-readout')).toContainText(/Build .+ \| 22 items/);
+
+  await page.keyboard.down(' ');
+  await expect(page.getByTestId('combat-status')).toContainText(/Shots [1-9]/);
+  await expect(page.getByTestId('combat-status')).toContainText(/Hooks [1-9]/);
+  await page.keyboard.up(' ');
+
+  expect(browserErrors).toEqual([]);
+});
+
 test('launches gameplay with reduced motion and high contrast settings by keyboard', async ({
   page
 }) => {

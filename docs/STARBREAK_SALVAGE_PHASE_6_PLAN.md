@@ -23,7 +23,7 @@ Refresh, enrich, and expand the item catalog into a durable build-crafting found
 
 - the item catalog has reached the first 60-item Phase 6 target, and source weighting now gives shop, vault, lunar, route, faction, elite, and boss contexts a first pass of curated identity;
 - several item effects are intentionally lightweight placeholders and need clearer live behavior or explicit "planned effect" treatment;
-- expanded hook surfaces now have first live users across graze, special, bomb, sector, route, shop, reward, and boss phase events, but balance and proc readability need playtest data;
+- expanded hook surfaces now have first live users across graze, special, bomb, sector, route, shop, reward, and boss phase events, plus a deterministic item-storm debug path that exposes hook pressure and proc cap state; balance still needs playtest data;
 - shop/vault/reward pools now have source weighting and first unlock-gated family tiers, but need more playtest balance before the catalog grows much further;
 - item UI currently exposes names and text, but future scale will need better icons, tags, comparison, and build summary grouping;
 - item discovery and family progress now have a first archive surface, but reward/shop cards and run summary still need richer presentation.
@@ -111,6 +111,8 @@ Exit criteria:
 - `npm run check`, Playwright smoke, and production preview smoke pass.
 - Release docs cover item count, hook coverage, pool/gating behavior, discovery UI, and known balance risks.
 - Manual smoke matrix includes at least one item-heavy reward/shop/vault path and one dense synergy combat path.
+
+Status: in progress through work order 059. Item-stress instrumentation now covers a forced 22-item combat loadout, all 13 hook surfaces, proc cap state, build identity, and fresh/unlocked combat-shop-vault pool previews. Work order 060 still needs the final release-hardening audit, production preview smoke, and deployment-facing browser notes.
 
 ## Recommended Phase 6 Sequence
 

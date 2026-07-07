@@ -1,4 +1,5 @@
 import type { CanvasRenderer } from './CanvasRenderer';
+import type { ItemLoadoutStressModel } from '../game/ItemStress';
 import type { InputAction } from '../systems/InputSystem';
 import type { ContractThemeDebugState } from '../ui/ContractTheme';
 
@@ -28,6 +29,7 @@ export interface SceneDebugState {
   readonly inputMode?: string;
   readonly hudMode?: string;
   readonly contractTheme?: ContractThemeDebugState;
+  readonly items?: ItemLoadoutStressModel;
   readonly upgradeEffects?: readonly string[];
   readonly progression?: {
     readonly salvageBank?: number;

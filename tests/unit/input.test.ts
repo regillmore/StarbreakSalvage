@@ -28,6 +28,7 @@ describe('input helpers', () => {
     expect(primaryActionForKey('1')).toBe('debugBossOne');
     expect(primaryActionForKey('4')).toBe('debugBossFour');
     expect(primaryActionForKey('5')).toBe('debugBossFive');
+    expect(primaryActionForKey('6')).toBe('debugItemStorm');
     expect(primaryActionForKey('0')).toBe('debugDenseCombat');
     expect(primaryActionForKey('7')).toBe('debugDestroyPlayer');
     expect(primaryActionForKey('8')).toBe('debugSectorComplete');
