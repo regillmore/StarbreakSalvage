@@ -75,26 +75,26 @@ describe('run upgrade effects', () => {
         "shop": {
           "discount": 1,
           "itemIds": [
-            "item_overkill_ledger",
+            "item_coupon_cascade_fuse",
+            "item_ambush_insurance_stamp",
             "item_credit_reroute_fuse",
-            "item_missile_splinter_warrant",
-            "item_split_prism",
-            "item_plasma_lens_array",
+            "item_convoy_receipt_printer",
+            "item_salvage_magnet",
           ],
           "prices": [
-            9,
+            4,
+            5,
             3,
             5,
             5,
-            7,
           ],
           "stockBonus": 1,
         },
         "vaultRewards": [
-          "item_shield_revenge_contract",
-          "item_plasma_bloom_filter",
+          "item_phase_grazer",
+          "item_prototype_vent_script",
+          "item_relic_ash_compass",
           "item_cursed_hull_plate",
-          "item_phase_anchor_spool",
         ],
       }
     `);

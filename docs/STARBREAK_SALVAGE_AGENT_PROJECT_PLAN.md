@@ -526,7 +526,7 @@ Exit criteria:
 - Fresh saves stay understandable and complete.
 - Known-seed snapshots cover item pool outputs.
 
-Status: first catalog growth pass implemented by work order 054. The item catalog now has 60 original definitions with validated family/source/unlock/status/stacking/UI metadata and live hook behavior for every declared new hook. Starter rewards now expose 27 readable entries while avoiding prototype/cursed items, combat rewards expose 51 entries, vault rewards expose 20 entries, and deterministic shop/vault snapshots were refreshed for the expanded pools. Source-specific weighting remains P6.4 follow-up work.
+Status: implemented through work orders 054 and 055. The item catalog now has 60 original definitions with validated family/source/unlock/status/stacking/UI metadata and live hook behavior for every declared new hook. Starter rewards now expose 27 readable entries while avoiding prototype/cursed items, combat rewards expose 51 entries, and vault rewards expose 20 entries. Reward generation now applies validated source/rarity/family/tag weight profiles for starter, combat, shop, vault, elite, boss, faction, lunar, and route contexts while preserving seeded shop/reward/vault reproducibility from seed plus save/unlock state.
 
 ### P6.4 - Unlocks, Discovery, And Synergy Identity
 

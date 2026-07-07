@@ -7,6 +7,8 @@ import {
   ITEM_ARCHETYPES,
   ITEM_HOOKS,
   ITEM_IMPLEMENTATION_STATUSES,
+  ITEM_POOL_PROFILE_IDS,
+  ITEM_POOL_WEIGHT_PROFILES,
   ITEM_SOURCES,
   ITEM_STACKING_MODES,
   ITEMS,
@@ -17,6 +19,7 @@ import {
   type ItemHook,
   type ItemId,
   type ItemDefinition,
+  type ItemPoolWeightProfileDefinition,
   type RewardPoolDefinition
 } from './items';
 import { SECTORS, type SectorDefinition } from './sectors';
@@ -48,6 +51,7 @@ export interface ContentValidationInput {
   readonly factions?: readonly FactionDefinition[];
   readonly items?: readonly ItemDefinition[];
   readonly itemHookImplementations?: ItemHookImplementationRegistry;
+  readonly itemPoolWeightProfiles?: readonly ItemPoolWeightProfileDefinition[];
   readonly itemUnlocks?: Readonly<Partial<Record<ItemId, UnlockId>>>;
   readonly rewardPools?: readonly RewardPoolDefinition[];
   readonly sectors?: readonly SectorDefinition[];
@@ -66,6 +70,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const itemHookImplementations = createItemHookImplementationRegistry(
     input.itemHookImplementations
   );
+  const itemPoolWeightProfiles = input.itemPoolWeightProfiles ?? ITEM_POOL_WEIGHT_PROFILES;
   const itemUnlocks = input.itemUnlocks ?? ITEM_UNLOCKS;
   const rewardPools = input.rewardPools ?? REWARD_POOLS;
   const sectors = input.sectors ?? SECTORS;
@@ -87,6 +92,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const hookRegistry = new Set<string>(ITEM_HOOKS);
   const itemRarities = new Set(['common', 'uncommon', 'rare', 'prototype', 'cursed']);
   const itemFamilies = new Set<string>(ITEM_FAMILIES);
+  const itemPoolProfileIds = new Set<string>(ITEM_POOL_PROFILE_IDS);
   const itemSources = new Set<string>(ITEM_SOURCES);
   const itemUnlockTiers = new Set<string>(ITEM_UNLOCK_TIERS);
   const itemImplementationStatuses = new Set<string>(ITEM_IMPLEMENTATION_STATUSES);
@@ -579,8 +585,15 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   }
 
   const rewardedItemIds = new Set<string>();
+  const rewardPoolIds = new Set<string>();
 
   for (const pool of rewardPools) {
+    if (rewardPoolIds.has(pool.id)) {
+      errors.push(`Duplicate reward pool id: ${pool.id}`);
+    }
+
+    rewardPoolIds.add(pool.id);
+
     if (pool.itemIds.length === 0) {
       errors.push(`Reward pool ${pool.id} must not be empty`);
     }
@@ -606,6 +619,15 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
       errors.push(`Item ${item.id} must appear in at least one reward pool`);
     }
   }
+
+  validateItemPoolWeightProfiles(errors, itemPoolWeightProfiles, items, rewardPools, {
+    profileIds: itemPoolProfileIds,
+    rewardPoolIds,
+    sources: itemSources,
+    rarities: itemRarities,
+    families: itemFamilies,
+    tags: tagRegistry
+  });
 
   for (const [itemId, unlockId] of Object.entries(itemUnlocks) as [ItemId, UnlockId][]) {
     if (!itemIds.has(itemId)) {
@@ -710,6 +732,129 @@ interface ItemMetadataRegistries {
   readonly implementationStatuses: ReadonlySet<string>;
   readonly stackingModes: ReadonlySet<string>;
   readonly uiTags: ReadonlySet<string>;
+}
+
+interface ItemPoolProfileRegistries {
+  readonly profileIds: ReadonlySet<string>;
+  readonly rewardPoolIds: ReadonlySet<string>;
+  readonly sources: ReadonlySet<string>;
+  readonly rarities: ReadonlySet<string>;
+  readonly families: ReadonlySet<string>;
+  readonly tags: ReadonlySet<string>;
+}
+
+function validateItemPoolWeightProfiles(
+  errors: string[],
+  profiles: readonly ItemPoolWeightProfileDefinition[],
+  items: readonly ItemDefinition[],
+  rewardPools: readonly RewardPoolDefinition[],
+  registries: ItemPoolProfileRegistries
+): void {
+  const seenProfileIds = new Set<string>();
+  const itemById = new Map(items.map((item) => [item.id, item]));
+  const poolById = new Map(rewardPools.map((pool) => [pool.id, pool]));
+
+  for (const profile of profiles) {
+    const owner = `Item pool profile ${profile.id}`;
+
+    if (seenProfileIds.has(profile.id)) {
+      errors.push(`Duplicate item pool profile id: ${profile.id}`);
+    }
+
+    seenProfileIds.add(profile.id);
+
+    if (!registries.profileIds.has(profile.id)) {
+      errors.push(`${owner} has invalid id`);
+    }
+
+    if (!profile.label.trim()) {
+      errors.push(`${owner} must have a label`);
+    }
+
+    if (profile.poolIds.length === 0) {
+      errors.push(`${owner} must reference at least one reward pool`);
+    }
+
+    for (const poolId of profile.poolIds) {
+      if (!registries.rewardPoolIds.has(poolId)) {
+        errors.push(`${owner} references missing reward pool: ${String(poolId)}`);
+      }
+    }
+
+    for (const duplicatePoolId of getDuplicateStrings(profile.poolIds)) {
+      errors.push(`${owner} has duplicate reward pool: ${duplicatePoolId}`);
+    }
+
+    validateWeightMap(errors, owner, 'source', profile.sourceWeights, registries.sources);
+    validateWeightMap(errors, owner, 'family', profile.familyWeights ?? {}, registries.families);
+    validateWeightMap(errors, owner, 'tag', profile.tagWeights ?? {}, registries.tags);
+
+    let hasPositiveRarity = false;
+
+    for (const rarity of registries.rarities) {
+      const value = profile.rarityWeights[rarity as keyof typeof profile.rarityWeights];
+
+      if (value === undefined) {
+        errors.push(`${owner} is missing rarity weight: ${rarity}`);
+        continue;
+      }
+
+      if (!Number.isFinite(value) || value < 0) {
+        errors.push(`${owner} has invalid rarity weight for ${rarity}`);
+      }
+
+      if (value !== undefined && value > 0) {
+        hasPositiveRarity = true;
+      }
+    }
+
+    for (const rarity of Object.keys(profile.rarityWeights)) {
+      if (!registries.rarities.has(rarity)) {
+        errors.push(`${owner} has invalid rarity weight: ${rarity}`);
+      }
+    }
+
+    if (!hasPositiveRarity) {
+      errors.push(`${owner} must allow at least one rarity`);
+    }
+
+    const candidateIds = new Set(
+      profile.poolIds.flatMap((poolId) => poolById.get(poolId)?.itemIds ?? [])
+    );
+    const hasEligibleCandidate = [...candidateIds].some((itemId) => {
+      const item = itemById.get(itemId);
+
+      return item ? profile.rarityWeights[item.rarity] > 0 : false;
+    });
+
+    if (!hasEligibleCandidate) {
+      errors.push(`${owner} must leave at least one eligible candidate`);
+    }
+  }
+
+  for (const profileId of registries.profileIds) {
+    if (!seenProfileIds.has(profileId)) {
+      errors.push(`Missing item pool profile: ${profileId}`);
+    }
+  }
+}
+
+function validateWeightMap(
+  errors: string[],
+  owner: string,
+  label: string,
+  weights: Readonly<Record<string, number>> | Readonly<Partial<Record<string, number>>>,
+  registry: ReadonlySet<string>
+): void {
+  for (const [key, value] of Object.entries(weights)) {
+    if (!registry.has(key)) {
+      errors.push(`${owner} has invalid ${label} weight: ${key}`);
+    }
+
+    if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+      errors.push(`${owner} has invalid ${label} weight for ${key}`);
+    }
+  }
 }
 
 function validateItemMetadata(
@@ -899,7 +1044,12 @@ function validateEncounterPacing(errors: string[], sector: SectorDefinition): vo
     'waveWindowEndRatio',
     pacing.waveWindowEndRatio
   );
-  validatePositiveNumber(errors, `Sector ${sector.id} encounter pacing`, 'spawnSpacing', pacing.spawnSpacing);
+  validatePositiveNumber(
+    errors,
+    `Sector ${sector.id} encounter pacing`,
+    'spawnSpacing',
+    pacing.spawnSpacing
+  );
   validateUnitNumber(
     errors,
     `Sector ${sector.id} encounter pacing`,
@@ -918,8 +1068,18 @@ function validateEncounterPacing(errors: string[], sector: SectorDefinition): vo
     'flankXMaxRatio',
     pacing.flankXMaxRatio
   );
-  validatePositiveNumber(errors, `Sector ${sector.id} encounter pacing`, 'targetYMin', pacing.targetYMin);
-  validatePositiveNumber(errors, `Sector ${sector.id} encounter pacing`, 'targetYMax', pacing.targetYMax);
+  validatePositiveNumber(
+    errors,
+    `Sector ${sector.id} encounter pacing`,
+    'targetYMin',
+    pacing.targetYMin
+  );
+  validatePositiveNumber(
+    errors,
+    `Sector ${sector.id} encounter pacing`,
+    'targetYMax',
+    pacing.targetYMax
+  );
 
   if (pacing.waveWindowStartRatio >= pacing.waveWindowEndRatio) {
     errors.push(`Sector ${sector.id} encounter pacing must order wave window ratios`);

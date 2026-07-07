@@ -57,7 +57,11 @@ export class ShopScene implements Scene {
       priceDiscount,
       count: 4 + stockBonus,
       unlockedIds: this.run.unlockedIds,
-      itemInstances: this.session.itemInstances
+      itemInstances: this.session.itemInstances,
+      sectorId: sector.sectorId,
+      sectorRole: sector.sectorName,
+      bossFactionId: sector.bossFactionId,
+      bossGate: sector.objective.bossRequired
     });
     const shell = document.createElement('main');
     shell.className = 'scene-panel scene-panel-wide shop-panel';
@@ -101,7 +105,7 @@ export class ShopScene implements Scene {
 
       const meta = document.createElement('span');
       meta.className = 'choice-meta';
-      meta.textContent = `${item.item.rarity} | ${item.price} credits`;
+      meta.textContent = `${item.item.rarity} | ${item.sourceHint} | ${item.price} credits`;
 
       const effect = document.createElement('span');
       effect.className = 'choice-body';

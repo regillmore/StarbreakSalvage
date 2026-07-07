@@ -6,10 +6,12 @@ import { BOSSES, type BossDefinition } from '../../src/content/bosses';
 import { validateContent } from '../../src/content/contentValidation';
 import { FACTIONS, type FactionDefinition } from '../../src/content/factions';
 import {
+  ITEM_POOL_WEIGHT_PROFILES,
   ITEM_ARCHETYPES,
   ITEMS,
   REWARD_POOLS,
   type ItemDefinition,
+  type ItemPoolWeightProfileDefinition,
   type RewardPoolDefinition
 } from '../../src/content/items';
 import { SECTORS, type SectorDefinition } from '../../src/content/sectors';
@@ -554,6 +556,56 @@ describe('validateContent', () => {
     });
 
     expect(errors).toContain('Reward pool starter references missing item: item_missing');
+  });
+
+  it('rejects invalid item pool weight profiles', () => {
+    const baseProfile = ITEM_POOL_WEIGHT_PROFILES[0];
+
+    if (!baseProfile) {
+      throw new Error('Expected at least one item pool weight profile.');
+    }
+
+    const invalidProfile = {
+      ...baseProfile,
+      id: 'moon-market',
+      label: '',
+      poolIds: ['starter', 'missing_pool', 'starter'],
+      sourceWeights: {
+        starter: 1,
+        moon: 2
+      },
+      rarityWeights: {
+        common: 1,
+        uncommon: 1,
+        rare: 0.5,
+        prototype: 0,
+        cursed: 0,
+        mythic: 1
+      },
+      familyWeights: {
+        'laser-split': 1,
+        saucer: 2
+      },
+      tagWeights: {
+        laser: 1,
+        sparkle: 2
+      }
+    } as unknown as ItemPoolWeightProfileDefinition;
+    const errors = validateContent({
+      itemPoolWeightProfiles: [invalidProfile]
+    });
+
+    expect(errors).toContain('Item pool profile moon-market has invalid id');
+    expect(errors).toContain('Item pool profile moon-market must have a label');
+    expect(errors).toContain(
+      'Item pool profile moon-market references missing reward pool: missing_pool'
+    );
+    expect(errors).toContain('Item pool profile moon-market has duplicate reward pool: starter');
+    expect(errors).toContain('Item pool profile moon-market has invalid source weight: moon');
+    expect(errors).toContain('Item pool profile moon-market has invalid family weight: saucer');
+    expect(errors).toContain('Item pool profile moon-market has invalid tag weight: sparkle');
+    expect(errors).toContain('Item pool profile moon-market has invalid rarity weight: mythic');
+    expect(errors).toContain('Missing item pool profile: starter');
   });
 
   it('rejects empty reward pools', () => {

@@ -1,4 +1,5 @@
 import { type ItemDefinition, type ItemId, type ItemRarity } from '../content/items';
+import type { FactionId } from '../content/factions';
 import type { UnlockId } from '../content/unlocks';
 import { createRng } from '../core/rng';
 import { applyItemHooks } from './ItemHooks';
@@ -8,6 +9,7 @@ export interface ShopInventoryItem {
   readonly slot: number;
   readonly item: ItemDefinition;
   readonly price: number;
+  readonly sourceHint: string;
 }
 
 export const SHOP_REROLL_COST = 2;
@@ -31,6 +33,10 @@ export function generateShopInventory(options: {
   readonly count?: number;
   readonly unlockedIds?: readonly UnlockId[];
   readonly itemInstances?: readonly ItemInstance[];
+  readonly sectorId?: string;
+  readonly sectorRole?: string;
+  readonly bossFactionId?: FactionId;
+  readonly bossGate?: boolean;
 }): ShopInventoryItem[] {
   const shopSeed = `${options.seed}:sector-${options.sectorIndex}:reroll-${options.rerollCount}`;
   const priceRng = createRng(shopSeed).fork('prices');
@@ -44,15 +50,24 @@ export function generateShopInventory(options: {
   const rewardChoices = generateRewardChoices({
     seed: shopSeed,
     poolId: 'combat',
+    poolProfileId: 'shop',
     count: Math.max(1, Math.floor(shopPayload.itemCount)),
     biasTags: shopPayload.biasTags,
     excludeItemIds: options.excludeItemIds ?? [],
-    unlockedIds: options.unlockedIds
+    unlockedIds: options.unlockedIds,
+    context: {
+      routeKind: 'shop',
+      sectorId: options.sectorId,
+      sectorRole: options.sectorRole,
+      bossFactionId: options.bossFactionId,
+      bossGate: options.bossGate
+    }
   });
 
   return rewardChoices.map((choice, slot) => ({
     slot,
     item: choice.item,
+    sourceHint: choice.sourceHint,
     price: Math.max(
       2,
       getShopPrice(choice.item, options.sectorIndex, priceRng.int(-1, 2)) -

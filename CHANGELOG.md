@@ -35,6 +35,7 @@
 - Added compact item metadata for Phase 6 catalog scale, including family, source hints, unlock tier, implementation status, stackability, and UI tags.
 - Added expanded item hook surfaces for graze, special use, bomb use, sector start, route choice, shop entry, reward generation, and boss phase changes.
 - Expanded the Phase 6 item catalog to 60 original items, adding live effects across lunar/surface, route/economy, boss-pressure, graze, special, bomb, shop, reward, and sector-start hooks while keeping starter rewards free of prototype and cursed entries.
+- Added source-weighted item pool profiles for starter, combat, shop, vault, elite, boss, faction, lunar, and route contexts, with compact source hints on reward and shop cards.
 - Added deterministic sector scroll plans, fixed-step distance tracking, HUD distance/speed readouts, debug distance counters, and subtle reduced-motion-aware starfield drift.
 - Added deterministic procedural parallax background plans for all five sectors, with original canvas-drawn stars, rails, debris, bloom strands, grid lines, and core fractures.
 - Moved normal directed wave spawning onto deterministic scroll-distance marks while retaining time-based fallback schedules and boss-gate timing.
@@ -52,6 +53,7 @@
 - Added item metadata validation for family/source/status/stacking/UI tags, bridge/planned implementation notes, reward-pool source drift, unlock-gate drift, and unsupported starter rarity/source combinations.
 - Added hook validation and unit coverage for newly registered hook names, deterministic hook ordering, inert future hook surfaces, and bounded dispatch/proc limits.
 - Refreshed catalog audit, item hook, content validation, and deterministic shop/vault snapshots for the 60-item Phase 6 expansion.
+- Added item pool profile validation and known-seed source-weighted reward/shop/vault/lunar snapshots.
 - Added wave director and objective completion tests, including known-seed objective snapshots and boss-gate coverage.
 - Added combat tests for special charge/use, bomb mitigation, graze detection, remapped special/bomb controls, and reduced-motion effect rendering.
 - Added validation and gameplay tests for ship stat contracts, weapon references, weapon patterns, heat/reload behavior, and starting economy.

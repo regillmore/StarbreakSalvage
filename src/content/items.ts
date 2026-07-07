@@ -63,6 +63,18 @@ export const ITEM_SOURCES = [
   'unlock'
 ] as const;
 
+export const ITEM_POOL_PROFILE_IDS = [
+  'starter',
+  'combat',
+  'shop',
+  'vault',
+  'elite',
+  'boss',
+  'faction',
+  'lunar',
+  'route'
+] as const;
+
 export const ITEM_UNLOCK_TIERS = ['baseline', 'advanced', 'unlock'] as const;
 export const ITEM_IMPLEMENTATION_STATUSES = ['live', 'bridge', 'planned'] as const;
 export const ITEM_STACKING_MODES = ['unique', 'stackable'] as const;
@@ -98,11 +110,13 @@ export type ItemTag = (typeof ITEM_TAGS)[number];
 export type ItemHook = (typeof ITEM_HOOKS)[number];
 export type ItemFamily = (typeof ITEM_FAMILIES)[number];
 export type ItemSource = (typeof ITEM_SOURCES)[number];
+export type ItemPoolProfileId = (typeof ITEM_POOL_PROFILE_IDS)[number];
 export type ItemUnlockTier = (typeof ITEM_UNLOCK_TIERS)[number];
 export type ItemImplementationStatus = (typeof ITEM_IMPLEMENTATION_STATUSES)[number];
 export type ItemStackingMode = (typeof ITEM_STACKING_MODES)[number];
 export type ItemUiTag = (typeof ITEM_UI_TAGS)[number];
 export type ItemRarity = 'common' | 'uncommon' | 'rare' | 'prototype' | 'cursed';
+export type RewardPoolId = 'starter' | 'combat' | 'vault';
 
 export type ItemId =
   | 'item_chain_arc_capacitor'
@@ -188,8 +202,18 @@ export interface ItemMetadata {
 }
 
 export interface RewardPoolDefinition {
-  readonly id: 'starter' | 'combat' | 'vault';
+  readonly id: RewardPoolId;
   readonly itemIds: readonly ItemId[];
+}
+
+export interface ItemPoolWeightProfileDefinition {
+  readonly id: ItemPoolProfileId;
+  readonly label: string;
+  readonly poolIds: readonly RewardPoolId[];
+  readonly sourceWeights: Readonly<Partial<Record<ItemSource, number>>>;
+  readonly rarityWeights: Readonly<Record<ItemRarity, number>>;
+  readonly familyWeights?: Readonly<Partial<Record<ItemFamily, number>>>;
+  readonly tagWeights?: Readonly<Partial<Record<ItemTag, number>>>;
 }
 
 export interface ItemArchetypeDefinition {
@@ -1390,6 +1414,251 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_capital_wound_ledger',
       'item_telegraph_rewrite_quill'
     ]
+  }
+];
+
+export const ITEM_POOL_WEIGHT_PROFILES: readonly ItemPoolWeightProfileDefinition[] = [
+  {
+    id: 'starter',
+    label: 'Starter',
+    poolIds: ['starter'],
+    sourceWeights: {
+      starter: 3,
+      combat: 1
+    },
+    rarityWeights: {
+      common: 1.3,
+      uncommon: 0.9,
+      rare: 0.35,
+      prototype: 0,
+      cursed: 0
+    },
+    familyWeights: {
+      'laser-split': 1.15,
+      'drone-copy': 1.15,
+      'shield-revenge': 1.1,
+      'credit-shop': 1.1
+    }
+  },
+  {
+    id: 'combat',
+    label: 'Combat',
+    poolIds: ['combat'],
+    sourceWeights: {
+      combat: 1.6,
+      starter: 0.8,
+      route: 1.2,
+      lunar: 1.2,
+      boss: 1.15,
+      unlock: 1.25
+    },
+    rarityWeights: {
+      common: 1,
+      uncommon: 1,
+      rare: 0.75,
+      prototype: 0.28,
+      cursed: 0
+    }
+  },
+  {
+    id: 'shop',
+    label: 'Shop',
+    poolIds: ['combat'],
+    sourceWeights: {
+      shop: 4,
+      route: 1.8,
+      combat: 1,
+      starter: 0.8
+    },
+    rarityWeights: {
+      common: 1.25,
+      uncommon: 1,
+      rare: 0.55,
+      prototype: 0.15,
+      cursed: 0
+    },
+    familyWeights: {
+      'credit-shop': 3,
+      'route-economy': 2,
+      'heat-prototype': 1.2,
+      'drone-copy': 1.15
+    },
+    tagWeights: {
+      credit: 2,
+      magnet: 1.6,
+      heat: 1.25,
+      drone: 1.15
+    }
+  },
+  {
+    id: 'vault',
+    label: 'Vault',
+    poolIds: ['vault'],
+    sourceWeights: {
+      vault: 4,
+      route: 1.4,
+      boss: 1.25,
+      unlock: 1.25
+    },
+    rarityWeights: {
+      common: 0.05,
+      uncommon: 0.7,
+      rare: 1.5,
+      prototype: 1.1,
+      cursed: 1.25
+    },
+    familyWeights: {
+      'curse-relic': 3,
+      'phase-graze': 1.6,
+      'heat-prototype': 1.3,
+      'boss-pressure': 1.2
+    },
+    tagWeights: {
+      curse: 2,
+      relic: 2,
+      phase: 1.35,
+      ricochet: 1.2
+    }
+  },
+  {
+    id: 'elite',
+    label: 'Elite',
+    poolIds: ['combat', 'vault'],
+    sourceWeights: {
+      elite: 4,
+      boss: 2,
+      combat: 1,
+      vault: 0.9,
+      unlock: 1.2
+    },
+    rarityWeights: {
+      common: 0.4,
+      uncommon: 1,
+      rare: 1.35,
+      prototype: 0.55,
+      cursed: 0.2
+    },
+    familyWeights: {
+      'missile-overkill': 1.8,
+      'drone-copy': 1.5,
+      'boss-pressure': 1.4
+    },
+    tagWeights: {
+      overkill: 1.8,
+      missile: 1.5,
+      drone: 1.4
+    }
+  },
+  {
+    id: 'boss',
+    label: 'Boss',
+    poolIds: ['combat', 'vault'],
+    sourceWeights: {
+      boss: 4,
+      elite: 1.8,
+      vault: 1.5,
+      combat: 1,
+      unlock: 1.2
+    },
+    rarityWeights: {
+      common: 0.2,
+      uncommon: 0.8,
+      rare: 1.6,
+      prototype: 0.9,
+      cursed: 0.4
+    },
+    familyWeights: {
+      'boss-pressure': 4,
+      'shield-revenge': 1.4,
+      'missile-overkill': 1.3,
+      'phase-graze': 1.2
+    },
+    tagWeights: {
+      shield: 1.3,
+      overkill: 1.25,
+      phase: 1.2
+    }
+  },
+  {
+    id: 'faction',
+    label: 'Faction',
+    poolIds: ['combat', 'vault'],
+    sourceWeights: {
+      faction: 4,
+      elite: 2,
+      combat: 1,
+      vault: 0.8,
+      unlock: 1.15
+    },
+    rarityWeights: {
+      common: 0.6,
+      uncommon: 1,
+      rare: 1.25,
+      prototype: 0.45,
+      cursed: 0.45
+    },
+    familyWeights: {
+      'drone-copy': 1.35,
+      'laser-split': 1.3,
+      'missile-overkill': 1.25,
+      'phase-graze': 1.25
+    }
+  },
+  {
+    id: 'lunar',
+    label: 'Lunar',
+    poolIds: ['combat', 'vault'],
+    sourceWeights: {
+      lunar: 4,
+      route: 1.5,
+      combat: 1,
+      vault: 0.8
+    },
+    rarityWeights: {
+      common: 0.9,
+      uncommon: 1.1,
+      rare: 1.15,
+      prototype: 0.45,
+      cursed: 0.2
+    },
+    familyWeights: {
+      'lunar-surface': 4,
+      'route-economy': 1.4,
+      'laser-split': 1.25
+    },
+    tagWeights: {
+      scrap: 1.6,
+      laser: 1.4,
+      phase: 1.2
+    }
+  },
+  {
+    id: 'route',
+    label: 'Route',
+    poolIds: ['combat', 'vault'],
+    sourceWeights: {
+      route: 4,
+      shop: 2,
+      combat: 1,
+      vault: 0.9
+    },
+    rarityWeights: {
+      common: 1.2,
+      uncommon: 1,
+      rare: 0.75,
+      prototype: 0.25,
+      cursed: 0.25
+    },
+    familyWeights: {
+      'route-economy': 4,
+      'credit-shop': 2,
+      'curse-relic': 1.25
+    },
+    tagWeights: {
+      credit: 1.8,
+      scrap: 1.6,
+      curse: 1.2
+    }
   }
 ];
 

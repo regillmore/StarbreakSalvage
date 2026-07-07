@@ -4,7 +4,7 @@
 
 Phase 5 is concluded after work order 050 validation. It gave the run-to-run loop a clearer spine: banked scrap now buys persistent upgrade entries, the Upgrade Bay explains costs and states, purchased upgrades influence future seeded runs, sector completion has a short exit/toast beat, Lunar Surface adds a distinct low-altitude sector family, and player destruction now has bounded ship-breakup feedback before summary.
 
-The game is still early for the long-term roguelike goal. The current 60-item catalog now proves the hook pipeline, archetype model, and first Phase 6 expansion pass, but future runs still need stronger source weighting, unlockable variety, synergy identity, and item presentation without sacrificing deterministic generation or readable combat.
+The game is still early for the long-term roguelike goal. The current 60-item catalog now proves the hook pipeline, archetype model, first Phase 6 expansion pass, and first source-weighted acquisition pass, but future runs still need unlockable variety, synergy identity, deeper item presentation, and more playtest tuning without sacrificing deterministic generation or readable combat.
 
 ## Phase 6 Product Goal
 
@@ -21,7 +21,7 @@ Refresh, enrich, and expand the item catalog into a durable build-crafting found
 
 ## Current Gap
 
-- the item catalog has reached the first 60-item Phase 6 target, but reward source weighting still needs to make shop, vault, lunar, route, faction, and boss identity feel curated rather than globally shuffled;
+- the item catalog has reached the first 60-item Phase 6 target, and source weighting now gives shop, vault, lunar, route, faction, elite, and boss contexts a first pass of curated identity;
 - several item effects are intentionally lightweight placeholders and need clearer live behavior or explicit "planned effect" treatment;
 - expanded hook surfaces now have first live users across graze, special, bomb, sector, route, shop, reward, and boss phase events, but balance and proc readability need playtest data;
 - shop/vault/reward pools need stronger rarity, faction, sector, route, and unlock controls before the catalog grows much further;
@@ -75,6 +75,8 @@ Exit criteria:
 - Reward, shop, vault, boss, faction, lunar, and unlock-gated item pools are deterministic from seed plus save state.
 - Pool weights are testable and can be sampled for known seeds.
 - Fresh saves retain enough variety for complete runs.
+
+Status: first pass implemented by work order 055. Reward generation now uses validated item pool weight profiles for starter, combat, shop, vault, elite, boss, faction, lunar, and route contexts. Weights combine source metadata, rarity, family, tags, route kind, sector identity, boss/faction context, contract bias, upgrade bias, and save/unlock filtering while keeping known-seed shop/reward/vault outputs reproducible. Unlock-gated family expansion remains work order 056.
 
 ### P6.5 - Synergy And Build Identity
 

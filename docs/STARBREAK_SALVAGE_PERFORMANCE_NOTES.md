@@ -79,6 +79,7 @@ Phase 6 expands the item catalog and hook surface. Keep the first larger catalog
 - Item hook dispatch should stay explicit, deterministic, and bounded by proc budgets. New hooks should avoid scanning unrelated state every frame.
 - Work order 053 adds typed hook surfaces for combat, sector, route, shop, reward, and boss phase events plus a default dispatch application cap of 48 hook-owning item instances per event.
 - Work order 054 reaches 60 items without adding production dependencies or per-frame catalog scans. New effects attach to existing event dispatch, reward/shop/vault sampling remains generation-time, and the newly live hooks are covered by deterministic unit tests rather than debug-only behavior.
+- Work order 055 keeps acquisition curation generation-time only: source/rarity/family/tag profiles are applied when reward/shop/vault choices are created, and source hints are static card text.
 - Prefer generation-time pool sampling over per-frame item filtering. Reward, shop, vault, boss, faction, lunar, and unlock-gated pools should be derived from seed plus save state when the relevant screen or encounter is created.
 - Large reward/shop/archive item card surfaces should use stable DOM nodes or compact render passes rather than rebuilding excessive nested markup on hover.
 - Item icons, if added, should be inline SVG, CSS, or canvas primitives with high-contrast fallbacks; avoid image assets.
@@ -145,7 +146,7 @@ The debug overlay total entity count includes player, enemies, boss, bullets, pi
 
 ## Phase 6 Playtest Risks
 
-- The first 60-item catalog can still dilute rewards if source weighting stays flat. Track implementation status and reward source intent explicitly.
+- The first source-weighted profiles are tuning guesses. Track implementation status and reward source intent explicitly, then revisit weights with playtest data.
 - New hooks can create runaway proc chains if ordering and budgets are not enforced. Tests should cover multi-item interactions before adding dense effects.
 - Reward pool weighting can become opaque. Source hints and summaries should explain why rare, cursed, lunar, faction, or boss items appeared.
 - Unlock-gated item families can starve fresh saves if baseline pools shrink too far. Keep fresh-save pool sufficiency covered by deterministic tests.

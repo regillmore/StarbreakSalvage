@@ -1,4 +1,5 @@
-import type { RouteKind, RunSkeleton, StartingContract } from './Generation';
+import type { ItemPoolProfileId } from '../content/items';
+import type { RouteKind, RunSkeleton, SectorRoute, StartingContract } from './Generation';
 import {
   getCurrentSector,
   getOwnedItemIds,
@@ -41,15 +42,60 @@ export function generateSectorRewardChoices(options: {
       ...upgradeBiasTags
     ]
   });
+  const poolProfileId = getSectorRewardPoolProfileId(
+    rewardPayload.poolId,
+    options.routeKind,
+    sector
+  );
 
   return generateRewardChoices({
     seed: `${sector.rewardPoolSeed}:sector-${sector.index}:route-${options.routeKind}`,
     poolId: rewardPayload.poolId,
+    poolProfileId,
     count: Math.max(1, Math.floor(rewardPayload.choiceCount)),
     biasTags: rewardPayload.biasTags,
     excludeItemIds: getOwnedItemIds(options.session),
-    unlockedIds: options.run.unlockedIds
+    unlockedIds: options.run.unlockedIds,
+    context: {
+      routeKind: options.routeKind,
+      sectorId: sector.sectorId,
+      sectorRole: sector.sectorName,
+      bossFactionId: sector.bossFactionId,
+      bossGate: sector.objective.bossRequired
+    }
   });
+}
+
+function getSectorRewardPoolProfileId(
+  poolId: 'starter' | 'combat' | 'vault',
+  routeKind: RouteKind,
+  sector: SectorRoute
+): ItemPoolProfileId {
+  if (poolId === 'vault') {
+    return 'vault';
+  }
+
+  if (routeKind === 'elite') {
+    return 'elite';
+  }
+
+  if (routeKind === 'factionAmbush') {
+    return 'faction';
+  }
+
+  if (sector.sectorId === 'sector_lunar_surface') {
+    return 'lunar';
+  }
+
+  if (sector.objective.bossRequired) {
+    return 'boss';
+  }
+
+  if (routeKind === 'shop' || routeKind === 'repair' || routeKind === 'glitch') {
+    return 'route';
+  }
+
+  return 'combat';
 }
 
 function getRouteBiasTags(routeKind: RouteKind): readonly string[] {

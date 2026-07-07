@@ -908,6 +908,8 @@ Acceptance criteria:
 - Fresh saves still receive complete, understandable item choices.
 - Pool weights are data-driven and validated.
 
+Status: implemented; reward generation now uses validated data-driven pool profiles for starter, combat, shop, vault, elite, boss, faction, lunar, and route contexts. The selector remains deterministic from seed plus save/unlock state, but weights now account for rarity, item source metadata, family, tags, route kind, sector identity, boss/faction context, and contract/upgrade bias tags. Reward and shop cards show compact source hints, and known-seed tests cover shop, elite, vault, and lunar reward outputs while preserving fresh-save starter safety.
+
 ## Work order 056 - Unlock-gated item families and discovery records
 
 Goal: use permanent progression to widen item variety.

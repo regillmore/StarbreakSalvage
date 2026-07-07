@@ -1,13 +1,14 @@
 # Starbreak Salvage - Item Catalog Audit
 
-Work orders 051-054 baseline. This document records the current item catalog after the first Phase 6 expansion pack. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
+Work orders 051-055 baseline. This document records the current item catalog after the first Phase 6 expansion pack and source-weighted acquisition pass. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
 
 ## Current Shape
 
 | Measure                | Current | Phase 6 target                                                                                |
 | ---------------------- | ------- | --------------------------------------------------------------------------------------------- |
 | Total item definitions | 60      | Reached the first expansion target                                                            |
-| Reward pools           | 3       | Starter, combat, shop, vault, elite, boss, faction, lunar, and unlock-gated source pools      |
+| Candidate reward pools | 3       | Starter, combat, and vault remain the broad candidate buckets                                 |
+| Weight profiles        | 9       | Starter, combat, shop, vault, elite, boss, faction, lunar, and route contexts are weighted    |
 | Hook names             | 13      | Add item discovery or collection hooks only if later systems need them                        |
 | Locked item ids        | 1       | Multiple unlock-gated families, not just individual items                                     |
 | Archetype records      | 8       | Keep legacy archetypes and use metadata families for lunar, route, and boss-pressure identity |
@@ -23,7 +24,7 @@ Work order 052 formalized compact item metadata:
 - `stacking` records unique versus stackable intent before duplicate item rewards become possible.
 - `uiTags` gives item cards a short, validated badge vocabulary without parsing gameplay tags.
 
-Validation requires reward-pool membership to match source metadata, unlock-gated items to carry both an unlock tier and unlock source, every declared hook to have an implementation, and prototype/cursed items to stay out of starter sources.
+Validation requires reward-pool membership to match source metadata, item pool weight profiles to reference valid pools/sources/rarities/families/tags, unlock-gated items to carry both an unlock tier and unlock source, every declared hook to have an implementation, and prototype/cursed items to stay out of starter sources.
 
 ## Rarity Coverage
 
@@ -55,15 +56,31 @@ Validation requires reward-pool membership to match source metadata, unlock-gate
 
 Work order 054 gave the work order 053 hook surface its first live users. Item discovery remains a possible later hook only if the save/discovery model needs it.
 
-## Reward Pool Coverage
+## Candidate Reward Pool Coverage
 
-| Pool    | Items | Rarity mix                                   | Notes                                                                     |
-| ------- | ----- | -------------------------------------------- | ------------------------------------------------------------------------- |
-| Starter | 27    | 14 common, 9 uncommon, 4 rare                | No prototype or cursed entries, which keeps fresh starts readable.        |
-| Combat  | 51    | 14 common, 18 uncommon, 17 rare, 2 prototype | Also feeds shops, so combat and shop identity still overlap heavily.      |
-| Vault   | 20    | 2 uncommon, 11 rare, 4 prototype, 3 cursed   | Stronger source identity and less repetition, but still uses a flat pool. |
+| Pool    | Items | Rarity mix                                   | Notes                                                                   |
+| ------- | ----- | -------------------------------------------- | ----------------------------------------------------------------------- |
+| Starter | 27    | 14 common, 9 uncommon, 4 rare                | No prototype or cursed entries, which keeps fresh starts readable.      |
+| Combat  | 51    | 14 common, 18 uncommon, 17 rare, 2 prototype | Feeds combat, shop, elite, boss, faction, lunar, and route profiles.    |
+| Vault   | 20    | 2 uncommon, 11 rare, 4 prototype, 3 cursed   | Feeds vault plus high-pressure profiles when rare/cursed pressure fits. |
 
-Current repeated-reward risk: shops still use the combat pool, and route/faction/lunar/boss sources are metadata rather than first-class weighted pools. Work order 055 should make source-specific curation real instead of only relying on larger global pools.
+The broad candidate pools are intentionally small in number; source identity now comes from the weight profile layer rather than separate hard-filtered lists for every surface.
+
+## Weight Profile Coverage
+
+| Profile | Candidate pools | Primary role                                                                             |
+| ------- | --------------- | ---------------------------------------------------------------------------------------- |
+| Starter | starter         | Safe fresh-run field kits; common/uncommon-forward, no prototype/cursed weights.         |
+| Combat  | combat          | Baseline post-sector rewards with moderate rare/prototype pressure.                      |
+| Shop    | combat          | Market inventory biased toward shop, route, credit, magnet, heat, and drone entries.     |
+| Vault   | vault           | Relic/cursed/prototype-leaning rewards with phase and curse identity.                    |
+| Elite   | combat, vault   | Higher-pressure rewards biased toward elite, boss, overkill, missile, and drone entries. |
+| Boss    | combat, vault   | Boss-gated rewards biased toward boss-pressure, shield, overkill, and phase entries.     |
+| Faction | combat, vault   | Faction ambush rewards with faction-specific tag bias from boss faction context.         |
+| Lunar   | combat, vault   | Lunar Surface rewards biased toward lunar, route, scrap, laser, and phase entries.       |
+| Route   | combat, vault   | Repair/shop/glitch-style rewards biased toward route economy and credit flow.            |
+
+Known-seed tests now sample shop, elite, vault, and lunar reward surfaces, and upgrade snapshots cover progressed-save shop/vault behavior.
 
 ## Source Metadata Coverage
 
@@ -114,7 +131,7 @@ Current repeated-reward risk: shops still use the combat pool, and route/faction
 | Missile/Overkill | 6     | Reached the first expansion target; needs weighting and build identity next.                                  |
 | Drone/Copy       | 6     | Good base for side drones, mirror shots, escorts, and command effects.                                        |
 | Shield/Revenge   | 5     | Reached the first expansion target; defensive balance should avoid rewarding intentional damage too strongly. |
-| Credit/Shop      | 6     | Healthy base; should gain source weighting rather than flat discounts only.                                   |
+| Credit/Shop      | 6     | Healthy base; now has first-pass shop/source weighting rather than flat discounts only.                       |
 | Curse/Relic      | 6     | Reached the first expansion target; still needs clearer risk/reward and unlock discovery.                     |
 | Phase/Graze      | 5     | Has direct graze hooks now.                                                                                   |
 | Heat/Prototype   | 5     | Has special-use and projectile heat behavior, but downside identity is still light.                           |
@@ -145,15 +162,15 @@ These items have live behavior today, but their text or fantasy points toward fu
 | ----------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | Ricochet License  | Extends plasma projectile lifetime.                              | Add true edge-bounce or lane-reflection behavior once projectile boundary hooks are safe.                      |
 | Phase Grazer      | Adds phase shots and participates in current graze charge logic. | Decide whether to keep this as a fire-hook phase source or move more of the fantasy onto direct graze rewards. |
-| Vault Parasite    | Pays extra salvage on kills.                                     | Connect to vault/source weighting or curse/relic reward flow.                                                  |
+| Vault Parasite    | Pays extra salvage on kills.                                     | Consider deeper curse/relic reward flow beyond the current vault weighting.                                    |
 | Cursed Hull Plate | Fires curse-themed revenge shards on hit.                        | Add an explicit cost/downside or update copy if the item stays purely retaliatory.                             |
 
 No shipped item is a pure no-op: current validation requires every declared hook to have an implementation. Work order 052 formalized live, bridge, and planned implementation status in item metadata.
 
-## Risks For 055-060
+## Risks For 056-060
 
-- Adding more items before source weighting will make rewards repeat less by count but not by feel.
 - New hook surfaces can create runaway proc chains unless proc order and budgets stay tested as item count grows.
 - Unlock-gated item families can starve fresh saves if baseline pools are narrowed too soon.
 - Item cards can get too dense once rarity, source, tags, implementation state, and unlock state all appear together; compact view models should come before decorative art.
 - The first expansion prioritizes breadth; balance tuning still needs real playtest evidence.
+- Weight profiles are first-pass tuning and should be revisited with live playtest data before adding many more items.

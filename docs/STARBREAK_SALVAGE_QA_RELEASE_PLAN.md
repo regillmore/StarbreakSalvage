@@ -114,6 +114,7 @@ Phase 6 expands the item catalog and hook surface. Add tests closest to the risk
 - item metadata validation for family, source hints, unlock tier, implementation status, uniqueness/stackability, effect text, rarity, and reward-pool placement; work order 052 adds source/pool drift, unlock-gate drift, bridge/planned note, duplicate metadata, and unsupported starter rarity/source fixtures;
 - hook registration, dispatch ordering, proc limits, and multi-item interaction tests for new hook points such as graze, special, bomb, sector start, route choice, shop entry, reward generation, and boss phase events; work order 053 registers/wires the first expanded hook surface and adds bounded-dispatch coverage;
 - first expansion pack coverage for the 60-item catalog, starter/combat/vault pool breadth, newly live hook surfaces, and deterministic shop/vault snapshots; work order 054 adds item hook tests and refreshes the catalog audit expectations;
+- source-weighted item pool profile validation and known-seed shop, elite reward, vault reward, and lunar reward snapshots; work order 055 adds the first deterministic acquisition weighting coverage;
 - known-seed snapshots for reward, shop, vault, boss, faction, lunar, and unlock-gated item pools under fresh and progressed saves;
 - item unlock and discovery migration/import/export/corruption repair if save shape changes;
 - synergy cluster detection, tie-breaking, HUD/summary copy, and narrow-layout build identity presentation;
@@ -185,7 +186,8 @@ Phase 2 should extend this checklist as systems become real. In addition to the 
 - [x] Lunar sector background, feature, pacing, faction, and boss references validate.
 - [x] Item family, source, implementation status, unlock gate, and reward-pool source metadata validate after Phase 6 schema work.
 - [x] The first Phase 6 catalog expansion validates at 60 items with declared hook implementations and source-aligned starter/combat/vault pools.
-- [ ] Item discovery gates, source-weighted pools, synergy cluster references, and item card presentation data validate after later Phase 6 work.
+- [x] Source-weighted item pool profiles validate for reward-pool, source, rarity, family, and tag references.
+- [ ] Item discovery gates, unlock-gated family pools, synergy cluster references, and item card presentation data validate after later Phase 6 work.
 
 ## Manual browser smoke matrix
 

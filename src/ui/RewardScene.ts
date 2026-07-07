@@ -75,7 +75,7 @@ export class RewardScene implements Scene {
 
       const meta = document.createElement('span');
       meta.className = 'choice-meta';
-      meta.textContent = choice.item.rarity;
+      meta.textContent = `${choice.item.rarity} | ${choice.sourceHint}`;
 
       const body = document.createElement('span');
       body.className = 'choice-body';

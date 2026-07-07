@@ -1129,6 +1129,10 @@ Acceptance:
 - Known-seed snapshots cover reward, shop, and vault item outputs.
 - Rare, prototype, and cursed items do not flood early fresh-save runs.
 
+Status:
+
+- First pass implemented in work order 055. Starter, combat, shop, vault, elite, boss, faction, lunar, and route contexts now use validated rarity/source/family/tag weight profiles, with deterministic known-seed coverage for shop, elite, vault, and lunar reward outputs. Save/unlock state still filters locked items, while broader unlock-gated item-family weighting remains planned for work order 056.
+
 ### AN3 - Sector and faction item identity
 
 Acceptance:
@@ -1136,6 +1140,10 @@ Acceptance:
 - Lunar, faction, boss, and route-themed items can appear from appropriate sources.
 - Source hints are visible when useful.
 - Pool weighting remains deterministic from seed plus save state.
+
+Status:
+
+- First pass implemented in work order 055. Reward and shop cards now show compact source hints, and route kind, Lunar Surface sectors, boss-gated sectors, and boss faction context all feed the deterministic item weighting layer.
 
 ## Epic AO - Unlocks, discovery, and build identity
 
