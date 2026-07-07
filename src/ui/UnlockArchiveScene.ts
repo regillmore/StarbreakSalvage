@@ -1,11 +1,14 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import { ACHIEVEMENTS } from '../content/achievements';
+import { getItemById } from '../content/items';
 import { UNLOCKS } from '../content/unlocks';
 import { UPGRADES } from '../content/upgrades';
 import type { SaveData } from '../core/saveData';
 import type { Scene } from '../app/Scene';
 import type { InputAction } from '../systems/InputSystem';
 import { createItemDiscoveryArchiveModel } from './ItemDiscoveryArchive';
+import { appendItemCardContent } from './ItemCard';
+import { createItemCardViewModel } from './ItemCardViewModel';
 import { createArchiveUpgradeProgressModel } from './RunSummaryProgress';
 
 export interface SaveImportResult {
@@ -137,6 +140,34 @@ export class UnlockArchiveScene implements Scene {
       itemFamilyGrid.append(item);
     }
 
+    const discoveredItemTitle = document.createElement('h2');
+    discoveredItemTitle.className = 'archive-section-title';
+    discoveredItemTitle.textContent = `Discovered Items ${itemDiscovery.discoveredItemCount}/${itemDiscovery.totalItemCount}`;
+
+    const discoveredItemGrid = document.createElement('div');
+    discoveredItemGrid.className = 'archive-grid item-card-grid';
+    discoveredItemGrid.dataset.testid = 'discovered-item-list';
+
+    if (saveData.discoveredItemIds.length === 0) {
+      const note = document.createElement('p');
+      note.className = 'summary-note archive-empty-note';
+      note.textContent = 'No item cards recorded yet.';
+      discoveredItemGrid.append(note);
+    } else {
+      for (const itemId of saveData.discoveredItemIds) {
+        const card = document.createElement('article');
+        card.className = 'archive-item-card';
+        appendItemCardContent(
+          card,
+          createItemCardViewModel(getItemById(itemId), {
+            sourceLabel: 'Discovered'
+          }),
+          { titleTag: 'h2', compact: true }
+        );
+        discoveredItemGrid.append(card);
+      }
+    }
+
     const saveBox = document.createElement('textarea');
     saveBox.className = 'save-textarea';
     saveBox.dataset.testid = 'save-import-box';
@@ -208,6 +239,8 @@ export class UnlockArchiveScene implements Scene {
       unlockGrid,
       itemFamilyTitle,
       itemFamilyGrid,
+      discoveredItemTitle,
+      discoveredItemGrid,
       saveBox,
       controls,
       status

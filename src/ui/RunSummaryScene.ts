@@ -1,6 +1,7 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene, SceneDebugState } from '../app/Scene';
 import { ACHIEVEMENTS } from '../content/achievements';
+import { getItemById } from '../content/items';
 import { getUnlockById } from '../content/unlocks';
 import type { SaveData, SaveUpdateResult } from '../core/saveData';
 import { createBuildSynergyModel, formatBuildSynergySummary } from '../game/BuildSynergy';
@@ -20,6 +21,8 @@ import {
   formatContractThemeSummary,
   getContractThemeOptions
 } from './ContractTheme';
+import { appendItemCardContent } from './ItemCard';
+import { createItemCardViewModel } from './ItemCardViewModel';
 import { createRunSummaryProgressModel } from './RunSummaryProgress';
 
 export class RunSummaryScene implements Scene {
@@ -128,6 +131,7 @@ export class RunSummaryScene implements Scene {
       createContractThemeStrip(this.uiRoot.ownerDocument, theme),
       title,
       stats,
+      this.createItemSummaryGrid(),
       scrapBreakdown,
       upgradeCallout,
       seedShare,
@@ -161,6 +165,41 @@ export class RunSummaryScene implements Scene {
 
   private getUnlockSummaryText(): string {
     return formatUnlockSummary(this.saveUpdate);
+  }
+
+  private createItemSummaryGrid(): HTMLElement {
+    const wrapper = document.createElement('section');
+    wrapper.className = 'summary-item-section';
+    wrapper.dataset.testid = 'summary-item-list';
+    wrapper.setAttribute('aria-label', 'Run item cards');
+
+    if (this.itemInstances.length === 0) {
+      const note = document.createElement('p');
+      note.className = 'summary-note';
+      note.textContent = 'No item cards recorded.';
+      wrapper.append(note);
+      return wrapper;
+    }
+
+    const grid = document.createElement('div');
+    grid.className = 'summary-item-grid';
+
+    for (const instance of this.itemInstances) {
+      const card = document.createElement('article');
+      card.className = 'summary-item-card';
+      appendItemCardContent(
+        card,
+        createItemCardViewModel(getItemById(instance.itemId), {
+          sourceLabel: 'Run item',
+          acquisitionOrder: instance.acquisitionOrder
+        }),
+        { compact: true, includeEffect: false, includeSynergy: false }
+      );
+      grid.append(card);
+    }
+
+    wrapper.append(grid);
+    return wrapper;
   }
 
   private createSeedShareControl(): HTMLElement {

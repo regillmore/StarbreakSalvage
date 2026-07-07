@@ -80,9 +80,10 @@ Phase 6 expands the item catalog and hook surface. Keep the first larger catalog
 - Work order 053 adds typed hook surfaces for combat, sector, route, shop, reward, and boss phase events plus a default dispatch application cap of 48 hook-owning item instances per event.
 - Work order 054 reaches 60 items without adding production dependencies or per-frame catalog scans. New effects attach to existing event dispatch, reward/shop/vault sampling remains generation-time, and the newly live hooks are covered by deterministic unit tests rather than debug-only behavior.
 - Work order 055 keeps acquisition curation generation-time only: source/rarity/family/tag profiles are applied when reward/shop/vault choices are created, and source hints are static card text.
+- Work order 058 keeps item presentation screen-time only: shared item-card view models are derived when reward, shop, summary, or archive DOM is entered, and inline SVG family icons are static primitives with no per-frame rendering cost.
 - Prefer generation-time pool sampling over per-frame item filtering. Reward, shop, vault, boss, faction, lunar, and unlock-gated pools should be derived from seed plus save state when the relevant screen or encounter is created.
 - Large reward/shop/archive item card surfaces should use stable DOM nodes or compact render passes rather than rebuilding excessive nested markup on hover.
-- Item icons, if added, should be inline SVG, CSS, or canvas primitives with high-contrast fallbacks; avoid image assets.
+- Item icons should stay inline SVG, CSS, or canvas primitives with high-contrast fallbacks; avoid image assets.
 - Item discovery and archive filtering should remain local-only and save-safe. Do not add telemetry or network calls.
 - Dense synergy combat should expose enough debug state to inspect active item count, hook count, build identity, and proc budget before increasing projectile or particle density.
 - New item effects should prefer conditional behavior, alternate projectiles, economy, routing, shields, cooldowns, or source weighting over unconditional damage multipliers.

@@ -100,7 +100,7 @@ Exit criteria:
 - Unlock Archive can show item discovery/progress without spoiling everything by default.
 - Keyboard, narrow viewport, high-contrast, and reduced-motion treatment remain usable.
 
-Status: first archive pass implemented by work order 056. Save schema v4 records discovered item IDs and family IDs, migrates older saves, and the Unlock Archive shows family progress plus locked/partial/unlocked hints without listing locked item details. Reward/shop card iconography, tag badges, and item-heavy narrow-layout polish remain work order 058.
+Status: implemented by work orders 056 and 058. Save schema v4 records discovered item IDs and family IDs, migrates older saves, and the Unlock Archive shows family progress plus locked/partial/unlocked hints without listing locked item details. Reward choices, shops, run summary, and discovered archive items now share item-card view models with original inline SVG family icons, rarity/family/source/effect-state metadata, tag badges, high-contrast styling, and responsive grids.
 
 ### P6.7 - Phase 6 Item Playtest Candidate
 

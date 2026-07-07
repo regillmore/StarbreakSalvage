@@ -20,6 +20,8 @@ import {
   createContractThemeStrip,
   getContractThemeOptions
 } from './ContractTheme';
+import { appendItemCardContent } from './ItemCard';
+import { createItemCardViewModel } from './ItemCardViewModel';
 
 export class ShopScene implements Scene {
   public readonly id = 'shop';
@@ -100,23 +102,14 @@ export class ShopScene implements Scene {
         }
       });
 
-      const name = document.createElement('span');
-      name.className = 'choice-title';
-      name.textContent = item.item.name;
-
-      const meta = document.createElement('span');
-      meta.className = 'choice-meta';
-      meta.textContent = `${item.item.rarity} | ${item.sourceHint} | ${item.price} credits`;
-
-      const effect = document.createElement('span');
-      effect.className = 'choice-body';
-      effect.textContent = item.item.effect;
-
-      const synergy = document.createElement('span');
-      synergy.className = 'choice-meta';
-      synergy.textContent = formatProspectiveBuildSynergy(this.session.itemInstances, item.item.id);
-
-      buyButton.append(name, meta, effect, synergy);
+      appendItemCardContent(
+        buyButton,
+        createItemCardViewModel(item.item, {
+          sourceLabel: item.sourceHint,
+          price: item.price,
+          synergyText: formatProspectiveBuildSynergy(this.session.itemInstances, item.item.id)
+        })
+      );
       shopGrid.append(buyButton);
     }
 

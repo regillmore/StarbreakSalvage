@@ -1193,6 +1193,10 @@ Acceptance:
 - Keyboard, pointer, high-contrast, reduced-motion, and narrow viewport paths remain usable.
 - No external item art is introduced.
 
+Status:
+
+- Implemented in work order 058. Shared item-card view models and DOM helpers now render reward, shop, run-summary, and discovered-archive cards with inline SVG family icons, rarity/family/source/effect-state copy, UI-tag badges, build-fit context, and responsive/high-contrast styling.
+
 ### AP2 - Item-heavy smoke
 
 Acceptance:

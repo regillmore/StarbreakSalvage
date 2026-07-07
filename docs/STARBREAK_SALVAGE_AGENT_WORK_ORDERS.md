@@ -959,6 +959,8 @@ Acceptance criteria:
 - Narrow/high-contrast layouts stay readable.
 - Presentation changes do not alter deterministic generation.
 
+Status: implemented; item presentation now uses shared `ItemCardViewModel` and `ItemCard` helpers across reward choices, shops, run summary item cards, and Unlock Archive discovered items. Cards show original inline SVG family icons, rarity/family/source/effect-state metadata, UI-tag badges, build-fit copy where relevant, and compact run/archive layouts with high-contrast and narrow-grid treatment. Unit tests cover item-card view model copy, and E2E smoke checks shop, reward, summary, and archive item-card surfaces.
+
 ## Work order 059 - Item stress smoke and balance instrumentation
 
 Goal: make item-heavy runs measurable before release hardening.

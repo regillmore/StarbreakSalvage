@@ -14,6 +14,8 @@ import {
   createContractThemeStrip,
   getContractThemeOptions
 } from './ContractTheme';
+import { appendItemCardContent } from './ItemCard';
+import { createItemCardViewModel } from './ItemCardViewModel';
 
 export class RewardScene implements Scene {
   public readonly id = 'reward';
@@ -70,26 +72,14 @@ export class RewardScene implements Scene {
       rewardButton.type = 'button';
       rewardButton.addEventListener('click', () => this.onSelectItem(choice.item.id));
 
-      const name = document.createElement('span');
-      name.className = 'choice-title';
-      name.textContent = `Take ${choice.item.name}`;
-
-      const meta = document.createElement('span');
-      meta.className = 'choice-meta';
-      meta.textContent = `${choice.item.rarity} | ${choice.sourceHint}`;
-
-      const body = document.createElement('span');
-      body.className = 'choice-body';
-      body.textContent = choice.item.effect;
-
-      const synergy = document.createElement('span');
-      synergy.className = 'choice-meta';
-      synergy.textContent = formatProspectiveBuildSynergy(
-        this.session.itemInstances,
-        choice.item.id
+      appendItemCardContent(
+        rewardButton,
+        createItemCardViewModel(choice.item, {
+          sourceLabel: choice.sourceHint,
+          synergyText: formatProspectiveBuildSynergy(this.session.itemInstances, choice.item.id)
+        }),
+        { titlePrefix: 'Take ' }
       );
-
-      rewardButton.append(name, meta, body, synergy);
       rewardGrid.append(rewardButton);
     }
 

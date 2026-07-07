@@ -178,12 +178,26 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByRole('heading', { name: 'Shop' })).toBeVisible();
   await expect(page.locator('.shop-panel')).toHaveAttribute('data-contract-theme', 'redline');
   await expect(page.locator('.shop-card').first()).toContainText('Build fit:');
+  await expect(
+    page
+      .locator('.shop-card')
+      .first()
+      .getByRole('img', { name: /item icon/ })
+  ).toBeVisible();
+  await expect(page.locator('.shop-card').first()).toContainText(/Live effect|Bridge effect/);
 
   await page.getByRole('button', { name: /Reroll/ }).click();
   await page.getByRole('button', { name: 'Leave Shop' }).click();
   await expect(page.getByRole('heading', { name: 'Choose Reward' })).toBeVisible();
   await expect(page.locator('.reward-panel')).toHaveAttribute('data-contract-theme', 'redline');
   await expect(page.locator('.reward-card').first()).toContainText('Build fit:');
+  await expect(
+    page
+      .locator('.reward-card')
+      .first()
+      .getByRole('img', { name: /item icon/ })
+  ).toBeVisible();
+  await expect(page.locator('.reward-card').first()).toContainText(/Live effect|Bridge effect/);
 
   await page.getByRole('button', { name: /Take / }).first().click();
   await expect(page.getByRole('heading', { name: /Entering Trade War Corridor/ })).toBeVisible();
@@ -224,6 +238,13 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByText(/redline theme \| needle silhouette/)).toBeVisible();
   await expect(page.getByText('permadeath', { exact: true })).toBeVisible();
   await expect(page.getByText('Loss: ship destroyed and contract closed.')).toBeVisible();
+  await expect(page.getByTestId('summary-item-list')).toContainText('Split Prism');
+  await expect(page.getByTestId('summary-item-list')).toContainText('Laser Split');
+  await expect(
+    page.getByTestId('summary-item-list').getByRole('img', {
+      name: 'Split Prism Laser Split item icon'
+    })
+  ).toBeVisible();
   await expect(page.getByTestId('scrap-breakdown')).toContainText(
     /Earned \+\d+ kg \| Bank \d+ -> \d+ kg/
   );
@@ -240,6 +261,8 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
 
   await page.getByRole('button', { name: 'Unlock Archive' }).click();
   await expect(page.getByRole('heading', { name: 'Unlock Archive' })).toBeVisible();
+  await expect(page.getByTestId('discovered-item-list')).toContainText('Split Prism');
+  await expect(page.getByTestId('discovered-item-list')).toContainText('Live effect');
 
   await page.getByRole('button', { name: 'Export Save' }).click();
   const exportedSave = await page.getByTestId('save-import-box').inputValue();
