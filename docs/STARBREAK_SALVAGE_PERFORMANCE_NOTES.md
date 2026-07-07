@@ -77,6 +77,7 @@ Phase 6 expands the item catalog and hook surface. Keep the first larger catalog
 - Item definitions should remain data-only and validated in tests. Large item batches should not add production dependencies or external assets.
 - Work order 052 keeps schema growth data-only: family/source/unlock/status/stacking/UI-tag metadata is resolved by content validation and audit helpers, not by per-frame gameplay systems.
 - Item hook dispatch should stay explicit, deterministic, and bounded by proc budgets. New hooks should avoid scanning unrelated state every frame.
+- Work order 053 adds typed hook surfaces for combat, sector, route, shop, reward, and boss phase events plus a default dispatch application cap of 48 hook-owning item instances per event.
 - Prefer generation-time pool sampling over per-frame item filtering. Reward, shop, vault, boss, faction, lunar, and unlock-gated pools should be derived from seed plus save state when the relevant screen or encounter is created.
 - Large reward/shop/archive item card surfaces should use stable DOM nodes or compact render passes rather than rebuilding excessive nested markup on hover.
 - Item icons, if added, should be inline SVG, CSS, or canvas primitives with high-contrast fallbacks; avoid image assets.

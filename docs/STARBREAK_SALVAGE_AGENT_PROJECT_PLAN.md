@@ -510,6 +510,8 @@ Exit criteria:
 - Proc order and proc limits are tested.
 - Existing item behavior and seeded generation remain stable.
 
+Status: implemented by work order 053. New hook names are registered and validated for graze, special, bomb, sector start, route selection, shop entry, reward generation, and boss phase changes. The dispatcher now has typed payloads plus a bounded report path, and combat/route/shop/reward systems call the hooks at deterministic event boundaries without changing the current catalog behavior.
+
 ### P6.3 - Catalog Growth And Pool Curation
 
 Scope:

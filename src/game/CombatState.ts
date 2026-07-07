@@ -69,6 +69,7 @@ export interface PlayerState {
   specialCharge: number;
   readonly maxSpecialCharge: number;
   readonly specialChargeMultiplier: number;
+  specialFireRateMultiplier: number;
   specialCooldown: number;
   specialActiveSeconds: number;
   bombs: number;
@@ -296,6 +297,8 @@ export interface CombatStateOptions {
   readonly enemyFireDelayMultiplier?: number;
   readonly bossHullBonus?: number;
   readonly sectorLength?: number | null;
+  readonly sectorIndex?: number;
+  readonly sectorId?: string;
 }
 
 export function createCombatState(
@@ -337,6 +340,7 @@ export function createCombatState(
       specialCharge: clamp(shipStats.specialInitialCharge, 0, SPECIAL_MAX_CHARGE),
       maxSpecialCharge: SPECIAL_MAX_CHARGE,
       specialChargeMultiplier: shipStats.specialChargeMultiplier,
+      specialFireRateMultiplier: SPECIAL_FIRE_RATE_MULTIPLIER,
       specialCooldown: 0,
       specialActiveSeconds: 0,
       bombs: maxBombs,
@@ -372,6 +376,11 @@ export function createCombatState(
     },
     ended: false
   };
+
+  applySectorStartHooks(state, {
+    sectorIndex: options.sectorIndex ?? 0,
+    sectorId: options.sectorId ?? 'unknown-sector'
+  });
 
   if (options.bossSpawnAtSeconds === 0) {
     spawnBoss(state, bossDefinition.id, bounds);
@@ -713,7 +722,8 @@ function updatePlayer(
     spawnPlayerProjectiles(state, firePayload.projectiles);
     addWeaponHeat(state);
 
-    const specialMultiplier = player.specialActiveSeconds > 0 ? SPECIAL_FIRE_RATE_MULTIPLIER : 1;
+    const specialMultiplier =
+      player.specialActiveSeconds > 0 ? player.specialFireRateMultiplier : 1;
     player.fireCooldown =
       state.weapon.fireCooldownSeconds * player.fireRateMultiplier * specialMultiplier;
     state.stats = {
@@ -721,6 +731,37 @@ function updatePlayer(
       shotsFired: state.stats.shotsFired + firePayload.projectiles.length,
       itemTriggers: state.stats.itemTriggers + Math.max(0, firePayload.projectiles.length - 1)
     };
+  }
+}
+
+function applySectorStartHooks(
+  state: CombatState,
+  context: { readonly sectorIndex: number; readonly sectorId: string }
+): void {
+  const payload = applyItemHooks('onSectorStart', state.items, {
+    sectorIndex: context.sectorIndex,
+    sectorId: context.sectorId,
+    creditsBonus: 0,
+    salvageBonus: 0,
+    specialChargeBonus: 0,
+    fireRateMultiplier: state.player.fireRateMultiplier
+  });
+
+  if (payload.creditsBonus > 0) {
+    state.player.credits += Math.floor(payload.creditsBonus);
+  }
+
+  if (payload.salvageBonus > 0) {
+    state.player.salvage += Math.floor(payload.salvageBonus);
+  }
+
+  if (payload.specialChargeBonus > 0) {
+    gainSpecialCharge(state, payload.specialChargeBonus);
+  }
+
+  if (payload.fireRateMultiplier < state.player.fireRateMultiplier) {
+    state.player.fireRateMultiplier = payload.fireRateMultiplier;
+    state.player.fireRateBoostSeconds = Math.max(state.player.fireRateBoostSeconds, 2);
   }
 }
 
@@ -823,9 +864,27 @@ function activateSpecial(state: CombatState): void {
     return;
   }
 
+  const specialPayload = applyItemHooks('onSpecialUsed', state.items, {
+    projectiles: [-130, 0, 130].map((vx) => ({
+      x: player.x,
+      y: player.y - player.radius,
+      vx,
+      vy: -820,
+      radius: 6,
+      damage: 1.25,
+      ttl: 1.35,
+      tags: ['phase', 'laser'],
+      procDepth: 1
+    })),
+    activeSeconds: SPECIAL_ACTIVE_SECONDS,
+    cooldownSeconds: SPECIAL_COOLDOWN_SECONDS,
+    fireRateMultiplier: SPECIAL_FIRE_RATE_MULTIPLIER
+  });
+
   player.specialCharge = 0;
-  player.specialCooldown = SPECIAL_COOLDOWN_SECONDS;
-  player.specialActiveSeconds = SPECIAL_ACTIVE_SECONDS;
+  player.specialCooldown = Math.max(0.1, specialPayload.cooldownSeconds);
+  player.specialActiveSeconds = Math.max(0.1, specialPayload.activeSeconds);
+  player.specialFireRateMultiplier = clamp(specialPayload.fireRateMultiplier, 0.2, 1);
   state.effects.push({
     id: getNextEntityId(state),
     kind: 'special',
@@ -836,25 +895,14 @@ function activateSpecial(state: CombatState): void {
     maxTtl: 0.42
   });
 
-  spawnPlayerProjectiles(
-    state,
-    [-130, 0, 130].map((vx) => ({
-      x: player.x,
-      y: player.y - player.radius,
-      vx,
-      vy: -820,
-      radius: 6,
-      damage: 1.25,
-      ttl: 1.35,
-      tags: ['phase', 'laser'],
-      procDepth: 1
-    }))
-  );
+  spawnPlayerProjectiles(state, specialPayload.projectiles);
 
   state.stats = {
     ...state.stats,
-    shotsFired: state.stats.shotsFired + 3,
-    specialsUsed: state.stats.specialsUsed + 1
+    shotsFired: state.stats.shotsFired + specialPayload.projectiles.length,
+    specialsUsed: state.stats.specialsUsed + 1,
+    itemTriggers:
+      state.stats.itemTriggers + Math.max(0, specialPayload.projectiles.length - 3)
   };
 }
 
@@ -868,11 +916,22 @@ function activateBomb(state: CombatState, bounds: CombatBounds): void {
   const cancelledProjectiles = state.projectiles.filter(
     (projectile) => projectile.owner === 'enemy'
   ).length;
+  const bombPayload = applyItemHooks('onBombUsed', state.items, {
+    damage: BOMB_DAMAGE,
+    bossDamageRatio: BOMB_BOSS_DAMAGE_RATIO,
+    invulnerabilitySeconds: BOMB_INVULNERABILITY_SECONDS,
+    cooldownSeconds: BOMB_COOLDOWN_SECONDS,
+    effectRadius: Math.max(bounds.width, bounds.height) * 0.55,
+    cancelledProjectiles
+  });
   const enemyIdsToRemove = new Set<number>();
 
   player.bombs -= 1;
-  player.bombCooldown = BOMB_COOLDOWN_SECONDS;
-  player.invulnerableSeconds = Math.max(player.invulnerableSeconds, BOMB_INVULNERABILITY_SECONDS);
+  player.bombCooldown = Math.max(0.1, bombPayload.cooldownSeconds);
+  player.invulnerableSeconds = Math.max(
+    player.invulnerableSeconds,
+    bombPayload.invulnerabilitySeconds
+  );
   state.projectiles = state.projectiles.filter((projectile) => projectile.owner !== 'enemy');
   state.telegraphs = [];
   state.effects.push({
@@ -880,7 +939,7 @@ function activateBomb(state: CombatState, bounds: CombatBounds): void {
     kind: 'bomb',
     x: player.x,
     y: player.y,
-    radius: Math.max(bounds.width, bounds.height) * 0.55,
+    radius: Math.max(1, bombPayload.effectRadius),
     ttl: 0.58,
     maxTtl: 0.58
   });
@@ -901,7 +960,7 @@ function activateBomb(state: CombatState, bounds: CombatBounds): void {
         vx: 0,
         vy: 0,
         radius: enemy.radius,
-        damage: BOMB_DAMAGE,
+        damage: Math.max(0, bombPayload.damage),
         ttl: 0,
         tags: ['bomb', 'plasma'],
         procDepth: 1
@@ -913,7 +972,10 @@ function activateBomb(state: CombatState, bounds: CombatBounds): void {
   const boss = state.boss;
 
   if (boss && boss.hull > 1) {
-    const damage = Math.min(boss.hull - 1, Math.max(1, boss.maxHull * BOMB_BOSS_DAMAGE_RATIO));
+    const damage = Math.min(
+      boss.hull - 1,
+      Math.max(1, boss.maxHull * Math.max(0, bombPayload.bossDamageRatio))
+    );
     boss.hull = applyDamage(boss.hull, damage).hull;
     refreshBossPhase(state, boss);
     boss.attackCooldown = Math.max(boss.attackCooldown, 0.75);
@@ -1076,6 +1138,7 @@ function refreshBossPhase(state: CombatState, boss: BossState): void {
     return;
   }
 
+  const previousPhaseIndex = boss.phaseIndex;
   boss.phaseIndex = phaseIndex;
   boss.phaseLabel = phase.label;
   boss.phaseStartedAtHullRatio = phase.startsAtHullRatio;
@@ -1092,6 +1155,28 @@ function refreshBossPhase(state: CombatState, boss: BossState): void {
     Math.min(0.65, boss.currentAttackCadenceSeconds * 0.5)
   );
   state.telegraphs = [];
+
+  const phasePayload = applyItemHooks('onBossPhaseChanged', state.items, {
+    bossId: boss.bossId,
+    previousPhaseIndex,
+    phaseIndex,
+    phaseLabel: phase.label,
+    attackCooldownSeconds: boss.attackCooldown,
+    telegraphSeconds: boss.currentTelegraphDuration,
+    specialChargeGain: 0,
+    clearEnemyProjectiles: false
+  });
+
+  boss.attackCooldown = Math.max(0.1, phasePayload.attackCooldownSeconds);
+  boss.currentTelegraphDuration = Math.max(0.1, phasePayload.telegraphSeconds);
+
+  if (phasePayload.specialChargeGain > 0) {
+    gainSpecialCharge(state, phasePayload.specialChargeGain);
+  }
+
+  if (phasePayload.clearEnemyProjectiles) {
+    state.projectiles = state.projectiles.filter((projectile) => projectile.owner !== 'enemy');
+  }
 }
 
 function getBossPhaseForHull(
@@ -1196,25 +1281,44 @@ function resolveGraze(state: CombatState): void {
     }
 
     state.grazedProjectileIds.add(projectile.id);
-    gainSpecialCharge(
-      state,
-      hasItem(state.items, 'item_phase_grazer')
+    const grazePayload = applyItemHooks('onGraze', state.items, {
+      projectileTags: projectile.tags,
+      specialChargeGain: hasItem(state.items, 'item_phase_grazer')
         ? SPECIAL_CHARGE_PER_GRAZE * 1.55
-        : SPECIAL_CHARGE_PER_GRAZE
-    );
+        : SPECIAL_CHARGE_PER_GRAZE,
+      bonusSalvage: 0,
+      fireRateMultiplier: state.player.fireRateMultiplier,
+      effectRadius: 34
+    });
+
+    gainSpecialCharge(state, grazePayload.specialChargeGain);
+
+    if (grazePayload.bonusSalvage > 0) {
+      state.player.salvage += Math.floor(grazePayload.bonusSalvage);
+    }
+
+    if (grazePayload.fireRateMultiplier < state.player.fireRateMultiplier) {
+      state.player.fireRateMultiplier = grazePayload.fireRateMultiplier;
+      state.player.fireRateBoostSeconds = Math.max(state.player.fireRateBoostSeconds, 1.2);
+    }
+
     state.effects.push({
       id: getNextEntityId(state),
       kind: 'graze',
       x: projectile.x,
       y: projectile.y,
-      radius: 34,
+      radius: Math.max(1, grazePayload.effectRadius),
       ttl: 0.26,
       maxTtl: 0.26
     });
     state.stats = {
       ...state.stats,
       grazes: state.stats.grazes + 1,
-      itemTriggers: state.stats.itemTriggers + Number(hasItem(state.items, 'item_phase_grazer'))
+      itemTriggers:
+        state.stats.itemTriggers +
+        Number(hasItem(state.items, 'item_phase_grazer')) +
+        Number(grazePayload.bonusSalvage > 0) +
+        Number(grazePayload.fireRateMultiplier < 1)
     };
   }
 }

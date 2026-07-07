@@ -2,6 +2,7 @@ import type { ItemId } from '../content/items';
 import type { ShipStats } from '../content/ships';
 import type { UnlockId } from '../content/unlocks';
 import type { CombatRunResult } from './CombatState';
+import { applyItemHooks } from './ItemHooks';
 import type {
   RouteKind,
   RouteOption,
@@ -105,14 +106,73 @@ export function applyRouteOutcome(
   route: RouteOption,
   outcome: AppliedRouteOutcome
 ): void {
-  recordRouteChoice(session, sector, route, outcome);
+  const adjustedOutcome = applyRouteChosenHooks(session, sector, route, outcome);
 
-  session.credits = Math.max(0, session.credits + outcome.effects.creditsDelta);
-  session.salvage = Math.max(0, session.salvage + outcome.effects.salvageDelta);
-  session.hullPatch = Math.max(0, session.hullPatch + outcome.effects.hullPatchDelta);
-  session.curse = Math.max(0, session.curse + outcome.effects.curseDelta);
-  session.relicsRecovered = Math.max(0, session.relicsRecovered + outcome.effects.relicDelta);
-  session.routeOutcomes = [...session.routeOutcomes, outcome];
+  recordRouteChoice(session, sector, route, adjustedOutcome);
+
+  session.credits = Math.max(0, session.credits + adjustedOutcome.effects.creditsDelta);
+  session.salvage = Math.max(0, session.salvage + adjustedOutcome.effects.salvageDelta);
+  session.hullPatch = Math.max(0, session.hullPatch + adjustedOutcome.effects.hullPatchDelta);
+  session.curse = Math.max(0, session.curse + adjustedOutcome.effects.curseDelta);
+  session.relicsRecovered = Math.max(
+    0,
+    session.relicsRecovered + adjustedOutcome.effects.relicDelta
+  );
+  session.routeOutcomes = [...session.routeOutcomes, adjustedOutcome];
+}
+
+function applyRouteChosenHooks(
+  session: RunSessionState,
+  sector: SectorRoute,
+  route: RouteOption,
+  outcome: AppliedRouteOutcome
+): AppliedRouteOutcome {
+  const payload = applyItemHooks('onRouteChosen', session.itemInstances, {
+    routeKind: route.kind,
+    sectorIndex: sector.index,
+    creditsDelta: outcome.effects.creditsDelta,
+    salvageDelta: outcome.effects.salvageDelta,
+    hullPatchDelta: outcome.effects.hullPatchDelta,
+    curseDelta: outcome.effects.curseDelta,
+    relicDelta: outcome.effects.relicDelta,
+    rewardChoiceBonus: outcome.effects.reward.choiceBonus,
+    rewardCreditBonus: outcome.effects.reward.creditBonus,
+    rewardBiasTags: outcome.effects.reward.biasTags,
+    rewardPoolIdOverride: outcome.effects.reward.poolIdOverride,
+    shopDiscount: outcome.effects.shop?.discount ?? 0,
+    shopStockBonus: outcome.effects.shop?.stockBonus ?? 0,
+    shopBiasTags: outcome.effects.shop?.biasTags ?? []
+  });
+  const hasShopPayload =
+    outcome.effects.shop !== null ||
+    payload.shopDiscount !== 0 ||
+    payload.shopStockBonus !== 0 ||
+    payload.shopBiasTags.length > 0;
+
+  return {
+    ...outcome,
+    effects: {
+      ...outcome.effects,
+      creditsDelta: payload.creditsDelta,
+      salvageDelta: payload.salvageDelta,
+      hullPatchDelta: payload.hullPatchDelta,
+      curseDelta: payload.curseDelta,
+      relicDelta: payload.relicDelta,
+      reward: {
+        choiceBonus: payload.rewardChoiceBonus,
+        creditBonus: payload.rewardCreditBonus,
+        biasTags: payload.rewardBiasTags,
+        poolIdOverride: payload.rewardPoolIdOverride
+      },
+      shop: hasShopPayload
+        ? {
+            discount: payload.shopDiscount,
+            stockBonus: payload.shopStockBonus,
+            biasTags: payload.shopBiasTags
+          }
+        : null
+    }
+  };
 }
 
 export function getEffectiveShipStats(

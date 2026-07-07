@@ -1,7 +1,8 @@
 import { type ItemDefinition, type ItemId, type ItemRarity } from '../content/items';
 import type { UnlockId } from '../content/unlocks';
 import { createRng } from '../core/rng';
-import { generateRewardChoices } from './Rewards';
+import { applyItemHooks } from './ItemHooks';
+import { generateRewardChoices, type ItemInstance } from './Rewards';
 
 export interface ShopInventoryItem {
   readonly slot: number;
@@ -29,14 +30,22 @@ export function generateShopInventory(options: {
   readonly priceDiscount?: number;
   readonly count?: number;
   readonly unlockedIds?: readonly UnlockId[];
+  readonly itemInstances?: readonly ItemInstance[];
 }): ShopInventoryItem[] {
   const shopSeed = `${options.seed}:sector-${options.sectorIndex}:reroll-${options.rerollCount}`;
   const priceRng = createRng(shopSeed).fork('prices');
+  const shopPayload = applyItemHooks('onShopEntered', options.itemInstances ?? [], {
+    sectorIndex: options.sectorIndex,
+    rerollCount: options.rerollCount,
+    itemCount: options.count ?? SHOP_ITEM_COUNT,
+    priceDiscount: options.priceDiscount ?? 0,
+    biasTags: options.biasTags ?? []
+  });
   const rewardChoices = generateRewardChoices({
     seed: shopSeed,
     poolId: 'combat',
-    count: options.count ?? SHOP_ITEM_COUNT,
-    biasTags: options.biasTags ?? [],
+    count: Math.max(1, Math.floor(shopPayload.itemCount)),
+    biasTags: shopPayload.biasTags,
     excludeItemIds: options.excludeItemIds ?? [],
     unlockedIds: options.unlockedIds
   });
@@ -47,7 +56,7 @@ export function generateShopInventory(options: {
     price: Math.max(
       2,
       getShopPrice(choice.item, options.sectorIndex, priceRng.int(-1, 2)) -
-        (options.priceDiscount ?? 0)
+        shopPayload.priceDiscount
     )
   }));
 }

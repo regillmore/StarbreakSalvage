@@ -1088,6 +1088,10 @@ Acceptance:
 - Hook order is deterministic and documented.
 - Proc limits prevent runaway chains.
 
+Status:
+
+- Implemented in work order 053. The new hook names are registered, typed, validated, and wired through combat, route, reward, and shop boundaries, with unit coverage for deterministic dispatch order and an application cap. Existing items keep their previous behavior because the new hook implementation lists are empty until expansion items opt in.
+
 ### AM2 - Live effect conversion
 
 Acceptance:

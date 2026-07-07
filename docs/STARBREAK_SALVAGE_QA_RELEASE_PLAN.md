@@ -112,7 +112,7 @@ Phase 6 expands the item catalog and hook surface. Add tests closest to the risk
 
 - item catalog audit coverage for current rarity, tag, hook, reward-pool, archetype, unlock, and bridge-effect baselines; work order 051 adds the first helper and unit coverage;
 - item metadata validation for family, source hints, unlock tier, implementation status, uniqueness/stackability, effect text, rarity, and reward-pool placement; work order 052 adds source/pool drift, unlock-gate drift, bridge/planned note, duplicate metadata, and unsupported starter rarity/source fixtures;
-- hook registration, dispatch ordering, proc limits, and multi-item interaction tests for new hook points such as graze, special, bomb, sector start, route choice, shop entry, reward generation, and boss phase events;
+- hook registration, dispatch ordering, proc limits, and multi-item interaction tests for new hook points such as graze, special, bomb, sector start, route choice, shop entry, reward generation, and boss phase events; work order 053 registers/wires the first expanded hook surface and adds bounded-dispatch coverage;
 - known-seed snapshots for reward, shop, vault, boss, faction, lunar, and unlock-gated item pools under fresh and progressed saves;
 - item unlock and discovery migration/import/export/corruption repair if save shape changes;
 - synergy cluster detection, tie-breaking, HUD/summary copy, and narrow-layout build identity presentation;
@@ -171,7 +171,7 @@ Phase 2 should extend this checklist as systems become real. In addition to the 
 
 - [ ] No duplicate IDs.
 - [ ] Every item tag is registered.
-- [ ] Every hook name is registered.
+- [x] Every hook name is registered.
 - [ ] Every ship references valid weapon/item IDs.
 - [ ] Every wave references valid enemy IDs.
 - [ ] Every sector references valid factions/bosses.

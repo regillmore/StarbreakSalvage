@@ -23,7 +23,7 @@ Refresh, enrich, and expand the item catalog into a durable build-crafting found
 
 - the item catalog has a solid 30-entry first pass, but the reward pool repeats too quickly for a long roguelike arc;
 - several item effects are intentionally lightweight placeholders and need clearer live behavior or explicit "planned effect" treatment;
-- hook coverage is narrow, centered on firing, projectile spawn, kills, hits, and pickups;
+- expanded hook surfaces now exist, but current item effects are still mostly centered on firing, projectile spawn, kills, hits, and pickups;
 - shop/vault/reward pools need stronger rarity, faction, sector, route, and unlock controls before the catalog grows;
 - item UI currently exposes names and text, but future scale will need better icons, tags, comparison, and build summary grouping;
 - unlocks widen item pools, but item discovery and collection progress are not yet a first-class surface.
@@ -51,6 +51,8 @@ Exit criteria:
 - New hook points cover at least graze, special use, bomb use, sector start, route selection, shop pricing, reward roll, and boss phase events where practical.
 - Hook order remains deterministic and bounded.
 - Tests cover proc limits and multi-item ordering.
+
+Status: implemented by work order 053. The hook schema now includes graze, special use, bomb use, sector start, route choice, shop entry, reward generation, and boss phase change events. Combat and non-combat systems invoke typed payloads at those boundaries, content validation requires implementation entries for any item that declares a hook, and unit tests cover deterministic ordering, inert future surfaces, and bounded dispatch/proc limits. Work order 054 can now add live items against these surfaces.
 
 ### P6.3 - Catalog Expansion Pack
 

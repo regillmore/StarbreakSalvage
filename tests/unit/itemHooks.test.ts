@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { applyItemHooks, getOrderedItemInstances } from '../../src/game/ItemHooks';
+import {
+  applyItemHooks,
+  applyItemHooksWithReport,
+  getOrderedItemInstances
+} from '../../src/game/ItemHooks';
 import type { ItemInstance } from '../../src/game/Rewards';
 
 const baseProjectile = {
@@ -28,6 +32,52 @@ describe('item hook ordering', () => {
       'item_chain_arc_capacitor',
       'item_salvage_magnet'
     ]);
+  });
+
+  it('reports deterministic hook order and enforces an application cap', () => {
+    const instances: ItemInstance[] = [
+      { itemId: 'item_salvage_dividend_chip', acquisitionOrder: 2 },
+      { itemId: 'item_laser_tax_stamp', acquisitionOrder: 0 },
+      { itemId: 'item_vault_parasite', acquisitionOrder: 1 }
+    ];
+    const report = applyItemHooksWithReport(
+      'onEnemyKilled',
+      instances,
+      {
+        projectileTags: ['laser'],
+        overkillDamage: 0,
+        bonusSalvage: 0,
+        blastDamage: 0,
+        arcDamage: 0
+      },
+      { maxApplications: 2 }
+    );
+
+    expect(report.appliedItemIds).toEqual(['item_laser_tax_stamp', 'item_vault_parasite']);
+    expect(report.skippedItemIds).toEqual(['item_salvage_dividend_chip']);
+    expect(report.payload.bonusSalvage).toBe(2);
+  });
+
+  it('keeps future hook surfaces inert until items declare implementations', () => {
+    const instances: ItemInstance[] = [
+      { itemId: 'item_phase_grazer', acquisitionOrder: 0 },
+      { itemId: 'item_overheat_oracle', acquisitionOrder: 1 }
+    ];
+    const payload = applyItemHooks('onGraze', instances, {
+      projectileTags: ['phase'],
+      specialChargeGain: 0.1,
+      bonusSalvage: 0,
+      fireRateMultiplier: 1,
+      effectRadius: 34
+    });
+
+    expect(payload).toEqual({
+      projectileTags: ['phase'],
+      specialChargeGain: 0.1,
+      bonusSalvage: 0,
+      fireRateMultiplier: 1,
+      effectRadius: 34
+    });
   });
 });
 

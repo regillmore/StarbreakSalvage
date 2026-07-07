@@ -1,5 +1,12 @@
-import { getItemById, type ItemId, type ItemTag } from '../content/items';
+import {
+  getItemById,
+  type ItemId,
+  type ItemTag,
+  type RewardPoolDefinition
+} from '../content/items';
 import { getItemNames, type ItemInstance } from './Rewards';
+import type { BossId } from '../content/bosses';
+import type { RouteKind } from './Generation';
 
 export interface ProjectileBlueprint {
   readonly x: number;
@@ -40,15 +47,113 @@ export interface PickupCollectedPayload {
   readonly fireRateMultiplier: number;
 }
 
+export interface GrazePayload {
+  readonly projectileTags: readonly ItemTag[];
+  readonly specialChargeGain: number;
+  readonly bonusSalvage: number;
+  readonly fireRateMultiplier: number;
+  readonly effectRadius: number;
+}
+
+export interface SpecialUsedPayload {
+  readonly projectiles: readonly ProjectileBlueprint[];
+  readonly activeSeconds: number;
+  readonly cooldownSeconds: number;
+  readonly fireRateMultiplier: number;
+}
+
+export interface BombUsedPayload {
+  readonly damage: number;
+  readonly bossDamageRatio: number;
+  readonly invulnerabilitySeconds: number;
+  readonly cooldownSeconds: number;
+  readonly effectRadius: number;
+  readonly cancelledProjectiles: number;
+}
+
+export interface SectorStartPayload {
+  readonly sectorIndex: number;
+  readonly sectorId: string;
+  readonly creditsBonus: number;
+  readonly salvageBonus: number;
+  readonly specialChargeBonus: number;
+  readonly fireRateMultiplier: number;
+}
+
+export interface RouteChosenPayload {
+  readonly routeKind: RouteKind;
+  readonly sectorIndex: number;
+  readonly creditsDelta: number;
+  readonly salvageDelta: number;
+  readonly hullPatchDelta: number;
+  readonly curseDelta: number;
+  readonly relicDelta: number;
+  readonly rewardChoiceBonus: number;
+  readonly rewardCreditBonus: number;
+  readonly rewardBiasTags: readonly ItemTag[];
+  readonly rewardPoolIdOverride: RewardPoolDefinition['id'] | null;
+  readonly shopDiscount: number;
+  readonly shopStockBonus: number;
+  readonly shopBiasTags: readonly ItemTag[];
+}
+
+export interface ShopEnteredPayload {
+  readonly sectorIndex: number;
+  readonly rerollCount: number;
+  readonly itemCount: number;
+  readonly priceDiscount: number;
+  readonly biasTags: readonly string[];
+}
+
+export interface RewardGeneratedPayload {
+  readonly routeKind: RouteKind;
+  readonly sectorIndex: number;
+  readonly poolId: RewardPoolDefinition['id'];
+  readonly choiceCount: number;
+  readonly biasTags: readonly string[];
+}
+
+export interface BossPhaseChangedPayload {
+  readonly bossId: BossId;
+  readonly previousPhaseIndex: number;
+  readonly phaseIndex: number;
+  readonly phaseLabel: string;
+  readonly attackCooldownSeconds: number;
+  readonly telegraphSeconds: number;
+  readonly specialChargeGain: number;
+  readonly clearEnemyProjectiles: boolean;
+}
+
 export type ItemHookPayloadByName = {
   readonly onFire: FirePayload;
   readonly onProjectileSpawn: ProjectileSpawnPayload;
   readonly onEnemyKilled: EnemyKilledPayload;
   readonly onPlayerHit: PlayerHitPayload;
   readonly onPickupCollected: PickupCollectedPayload;
+  readonly onGraze: GrazePayload;
+  readonly onSpecialUsed: SpecialUsedPayload;
+  readonly onBombUsed: BombUsedPayload;
+  readonly onSectorStart: SectorStartPayload;
+  readonly onRouteChosen: RouteChosenPayload;
+  readonly onShopEntered: ShopEnteredPayload;
+  readonly onRewardGenerated: RewardGeneratedPayload;
+  readonly onBossPhaseChanged: BossPhaseChangedPayload;
 };
 
 export type ItemHookName = keyof ItemHookPayloadByName;
+
+export const DEFAULT_ITEM_HOOK_APPLICATION_LIMIT = 48;
+
+export interface ItemHookDispatchOptions {
+  readonly maxApplications?: number;
+}
+
+export interface ItemHookDispatchReport<THook extends ItemHookName> {
+  readonly payload: ItemHookPayloadByName[THook];
+  readonly appliedItemIds: readonly ItemId[];
+  readonly skippedItemIds: readonly ItemId[];
+  readonly maxApplications: number;
+}
 
 export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly ItemId[]>> = {
   onFire: [
@@ -91,7 +196,15 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_salvage_magnet',
     'item_credit_reroute_fuse',
     'item_magnetized_tithe_box'
-  ]
+  ],
+  onGraze: [],
+  onSpecialUsed: [],
+  onBombUsed: [],
+  onSectorStart: [],
+  onRouteChosen: [],
+  onShopEntered: [],
+  onRewardGenerated: [],
+  onBossPhaseChanged: []
 };
 
 export function applyItemHooks<THook extends ItemHookName>(
@@ -99,11 +212,45 @@ export function applyItemHooks<THook extends ItemHookName>(
   instances: readonly ItemInstance[],
   payload: ItemHookPayloadByName[THook]
 ): ItemHookPayloadByName[THook] {
-  return getOrderedItemInstances(instances).reduce(
-    (currentPayload, instance) =>
-      applySingleItemHook(hook, instance.itemId, instances, currentPayload),
-    payload
+  return applyItemHooksWithReport(hook, instances, payload).payload;
+}
+
+export function applyItemHooksWithReport<THook extends ItemHookName>(
+  hook: THook,
+  instances: readonly ItemInstance[],
+  payload: ItemHookPayloadByName[THook],
+  options: ItemHookDispatchOptions = {}
+): ItemHookDispatchReport<THook> {
+  const maxApplications = Math.max(
+    0,
+    Math.floor(options.maxApplications ?? DEFAULT_ITEM_HOOK_APPLICATION_LIMIT)
   );
+  const appliedItemIds: ItemId[] = [];
+  const skippedItemIds: ItemId[] = [];
+  let currentPayload = payload;
+
+  for (const instance of getOrderedItemInstances(instances)) {
+    const item = getItemById(instance.itemId);
+
+    if (!item.hooks.includes(hook)) {
+      continue;
+    }
+
+    if (appliedItemIds.length >= maxApplications) {
+      skippedItemIds.push(instance.itemId);
+      continue;
+    }
+
+    currentPayload = applySingleItemHook(hook, instance.itemId, instances, currentPayload);
+    appliedItemIds.push(instance.itemId);
+  }
+
+  return {
+    payload: currentPayload,
+    appliedItemIds,
+    skippedItemIds,
+    maxApplications
+  };
 }
 
 export function getOrderedItemInstances(instances: readonly ItemInstance[]): ItemInstance[] {
@@ -157,6 +304,40 @@ function applySingleItemHook<THook extends ItemHookName>(
       return applyOnPickupCollected(
         itemId,
         payload as PickupCollectedPayload
+      ) as ItemHookPayloadByName[THook];
+    case 'onGraze':
+      return applyOnGraze(itemId, payload as GrazePayload) as ItemHookPayloadByName[THook];
+    case 'onSpecialUsed':
+      return applyOnSpecialUsed(
+        itemId,
+        payload as SpecialUsedPayload
+      ) as ItemHookPayloadByName[THook];
+    case 'onBombUsed':
+      return applyOnBombUsed(itemId, payload as BombUsedPayload) as ItemHookPayloadByName[THook];
+    case 'onSectorStart':
+      return applyOnSectorStart(
+        itemId,
+        payload as SectorStartPayload
+      ) as ItemHookPayloadByName[THook];
+    case 'onRouteChosen':
+      return applyOnRouteChosen(
+        itemId,
+        payload as RouteChosenPayload
+      ) as ItemHookPayloadByName[THook];
+    case 'onShopEntered':
+      return applyOnShopEntered(
+        itemId,
+        payload as ShopEnteredPayload
+      ) as ItemHookPayloadByName[THook];
+    case 'onRewardGenerated':
+      return applyOnRewardGenerated(
+        itemId,
+        payload as RewardGeneratedPayload
+      ) as ItemHookPayloadByName[THook];
+    case 'onBossPhaseChanged':
+      return applyOnBossPhaseChanged(
+        itemId,
+        payload as BossPhaseChangedPayload
       ) as ItemHookPayloadByName[THook];
   }
 }
@@ -673,6 +854,44 @@ function applyOnPickupCollected(
     };
   }
 
+  return payload;
+}
+
+function applyOnGraze(_itemId: ItemId, payload: GrazePayload): GrazePayload {
+  return payload;
+}
+
+function applyOnSpecialUsed(_itemId: ItemId, payload: SpecialUsedPayload): SpecialUsedPayload {
+  return payload;
+}
+
+function applyOnBombUsed(_itemId: ItemId, payload: BombUsedPayload): BombUsedPayload {
+  return payload;
+}
+
+function applyOnSectorStart(_itemId: ItemId, payload: SectorStartPayload): SectorStartPayload {
+  return payload;
+}
+
+function applyOnRouteChosen(_itemId: ItemId, payload: RouteChosenPayload): RouteChosenPayload {
+  return payload;
+}
+
+function applyOnShopEntered(_itemId: ItemId, payload: ShopEnteredPayload): ShopEnteredPayload {
+  return payload;
+}
+
+function applyOnRewardGenerated(
+  _itemId: ItemId,
+  payload: RewardGeneratedPayload
+): RewardGeneratedPayload {
+  return payload;
+}
+
+function applyOnBossPhaseChanged(
+  _itemId: ItemId,
+  payload: BossPhaseChangedPayload
+): BossPhaseChangedPayload {
   return payload;
 }
 

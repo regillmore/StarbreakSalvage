@@ -687,6 +687,18 @@ function createItemHookImplementationRegistry(
     onPlayerHit: new Set(overrides?.onPlayerHit ?? ITEM_HOOK_IMPLEMENTATIONS.onPlayerHit),
     onPickupCollected: new Set(
       overrides?.onPickupCollected ?? ITEM_HOOK_IMPLEMENTATIONS.onPickupCollected
+    ),
+    onGraze: new Set(overrides?.onGraze ?? ITEM_HOOK_IMPLEMENTATIONS.onGraze),
+    onSpecialUsed: new Set(overrides?.onSpecialUsed ?? ITEM_HOOK_IMPLEMENTATIONS.onSpecialUsed),
+    onBombUsed: new Set(overrides?.onBombUsed ?? ITEM_HOOK_IMPLEMENTATIONS.onBombUsed),
+    onSectorStart: new Set(overrides?.onSectorStart ?? ITEM_HOOK_IMPLEMENTATIONS.onSectorStart),
+    onRouteChosen: new Set(overrides?.onRouteChosen ?? ITEM_HOOK_IMPLEMENTATIONS.onRouteChosen),
+    onShopEntered: new Set(overrides?.onShopEntered ?? ITEM_HOOK_IMPLEMENTATIONS.onShopEntered),
+    onRewardGenerated: new Set(
+      overrides?.onRewardGenerated ?? ITEM_HOOK_IMPLEMENTATIONS.onRewardGenerated
+    ),
+    onBossPhaseChanged: new Set(
+      overrides?.onBossPhaseChanged ?? ITEM_HOOK_IMPLEMENTATIONS.onBossPhaseChanged
     )
   };
 }

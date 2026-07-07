@@ -148,6 +148,8 @@ Item definitions should keep scale-oriented metadata next to gameplay tags and h
 
 Validation should reject metadata drift before generation uses it. Reward-pool membership must match source metadata, unlock-gated items must carry unlock tier/source intent, and bridge/planned items must explain their implementation gap.
 
+The registered item hook surface now covers `onFire`, `onProjectileSpawn`, `onEnemyKilled`, `onPlayerHit`, `onPickupCollected`, `onGraze`, `onSpecialUsed`, `onBombUsed`, `onSectorStart`, `onRouteChosen`, `onShopEntered`, `onRewardGenerated`, and `onBossPhaseChanged`. New item content should declare only hooks that have explicit implementation entries and tests.
+
 Use deterministic hook order:
 
 1. base weapon emits payload;
@@ -157,7 +159,7 @@ Use deterministic hook order:
 5. temporary buffs;
 6. final caps/safety pass.
 
-Each hook receives a payload and returns either a modified payload or event side effects. Prevent unbounded recursion with `procDepth` or per-event budgets.
+Each hook receives a payload and returns either a modified payload or event side effects. Prevent unbounded recursion with `procDepth` or per-event budgets; the dispatch helper exposes a bounded report path for proc-budget tests.
 
 ## Save system
 

@@ -5,6 +5,7 @@ import {
   getRewardModifiersForSector,
   type RunSessionState
 } from './RunSession';
+import { applyItemHooks } from './ItemHooks';
 import { generateRewardChoices, type RewardChoice } from './Rewards';
 import { getRewardUpgradeBiasTags, getRewardUpgradeChoiceBonus } from './UpgradeEffects';
 
@@ -28,17 +29,24 @@ export function generateSectorRewardChoices(options: {
     options.routeKind
   );
   const upgradeBiasTags = getRewardUpgradeBiasTags(options.run.upgradeEffects, options.routeKind);
-
-  return generateRewardChoices({
-    seed: `${sector.rewardPoolSeed}:sector-${sector.index}:route-${options.routeKind}`,
+  const rewardPayload = applyItemHooks('onRewardGenerated', options.session.itemInstances, {
+    routeKind: options.routeKind,
+    sectorIndex: sector.index,
     poolId,
-    count: options.count ?? 3 + choiceBonus + upgradeChoiceBonus,
+    choiceCount: options.count ?? 3 + choiceBonus + upgradeChoiceBonus,
     biasTags: [
       ...options.contract.itemBias,
       ...getRouteBiasTags(options.routeKind),
       ...modifierBiasTags,
       ...upgradeBiasTags
-    ],
+    ]
+  });
+
+  return generateRewardChoices({
+    seed: `${sector.rewardPoolSeed}:sector-${sector.index}:route-${options.routeKind}`,
+    poolId: rewardPayload.poolId,
+    count: Math.max(1, Math.floor(rewardPayload.choiceCount)),
+    biasTags: rewardPayload.biasTags,
     excludeItemIds: getOwnedItemIds(options.session),
     unlockedIds: options.run.unlockedIds
   });

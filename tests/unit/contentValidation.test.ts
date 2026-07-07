@@ -503,6 +503,28 @@ describe('validateContent', () => {
     expect(errors).toContain('Item item_split_prism declares onFire without an implementation');
   });
 
+  it('validates newly registered item hook implementation entries', () => {
+    const itemWithFutureHook = {
+      ...baseItem,
+      hooks: ['onGraze']
+    } as unknown as ItemDefinition;
+    const items = ITEMS.map((item) => (item.id === baseItem.id ? itemWithFutureHook : item));
+    const missingErrors = validateContent({ items });
+    const implementedErrors = validateContent({
+      items,
+      itemHookImplementations: {
+        onGraze: [baseItem.id]
+      }
+    });
+
+    expect(missingErrors).toContain(
+      'Item item_chain_arc_capacitor declares onGraze without an implementation'
+    );
+    expect(implementedErrors).not.toContain(
+      'Item item_chain_arc_capacitor declares onGraze without an implementation'
+    );
+  });
+
   it('rejects item content that is not present in any reward pool', () => {
     const errors = validateContent({
       rewardPools: [

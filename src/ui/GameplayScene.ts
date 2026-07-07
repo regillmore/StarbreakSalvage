@@ -801,7 +801,9 @@ export class GameplayScene implements Scene {
       enemyHullBonus: this.getEnemyHullBonus(),
       enemyFireDelayMultiplier: this.getEnemyFireDelayMultiplier(),
       bossHullBonus: this.getBossHullBonus(),
-      sectorLength: this.getCurrentScrollPlan().length
+      sectorLength: this.getCurrentScrollPlan().length,
+      sectorIndex: this.sectorIndex,
+      sectorId: this.getCurrentSector().sectorId
     });
     return this.combatState;
   }

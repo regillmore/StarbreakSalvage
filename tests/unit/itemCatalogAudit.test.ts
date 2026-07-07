@@ -25,7 +25,15 @@ describe('item catalog audit', () => {
       onProjectileSpawn: 5,
       onEnemyKilled: 9,
       onPlayerHit: 5,
-      onPickupCollected: 4
+      onPickupCollected: 4,
+      onGraze: 0,
+      onSpecialUsed: 0,
+      onBombUsed: 0,
+      onSectorStart: 0,
+      onRouteChosen: 0,
+      onShopEntered: 0,
+      onRewardGenerated: 0,
+      onBossPhaseChanged: 0
     });
     expect(audit.tagCounts).toMatchObject({
       credit: 6,

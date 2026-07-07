@@ -874,6 +874,8 @@ Acceptance criteria:
 - Existing items continue to behave as before.
 - Future item effects can attach without reaching into unrelated systems.
 
+Status: implemented; `onGraze`, `onSpecialUsed`, `onBombUsed`, `onSectorStart`, `onRouteChosen`, `onShopEntered`, `onRewardGenerated`, and `onBossPhaseChanged` are registered in the item hook schema, typed in the hook dispatcher, and wired through combat, sector start, route outcomes, shop entry, reward generation, and boss phase transitions. Dispatch now exposes a bounded report path for proc-budget tests, while the current catalog remains behavior-compatible because no existing item declares the new hooks yet.
+
 ## Work order 054 - First item catalog expansion pack
 
 Goal: increase reward variety with original, validated item content.

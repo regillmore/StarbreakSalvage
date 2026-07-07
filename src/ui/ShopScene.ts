@@ -56,7 +56,8 @@ export class ShopScene implements Scene {
       excludeItemIds: getOwnedItemIds(this.session),
       priceDiscount,
       count: 4 + stockBonus,
-      unlockedIds: this.run.unlockedIds
+      unlockedIds: this.run.unlockedIds,
+      itemInstances: this.session.itemInstances
     });
     const shell = document.createElement('main');
     shell.className = 'scene-panel scene-panel-wide shop-panel';

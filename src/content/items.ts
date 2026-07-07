@@ -25,7 +25,15 @@ export const ITEM_HOOKS = [
   'onProjectileSpawn',
   'onEnemyKilled',
   'onPlayerHit',
-  'onPickupCollected'
+  'onPickupCollected',
+  'onGraze',
+  'onSpecialUsed',
+  'onBombUsed',
+  'onSectorStart',
+  'onRouteChosen',
+  'onShopEntered',
+  'onRewardGenerated',
+  'onBossPhaseChanged'
 ] as const;
 
 export const ITEM_FAMILIES = [

@@ -11,7 +11,7 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 | ----------------------------- | --------------- | ---------------------------------------------------------------------------------------- |
 | TypeScript typecheck          | Pass            | `npm run check`                                                                          |
 | ESLint                        | Pass            | `npm run check`                                                                          |
-| Unit and deterministic tests  | Pass            | `cmd /c npm run check` - 42 files, 239 tests                                             |
+| Unit and deterministic tests  | Pass            | `cmd /c npm run check` - 42 files, 242 tests                                             |
 | Production build              | Pass            | `npm run check` - Vite build created `dist/`                                             |
 | Playwright Chromium smoke     | Pass            | `npm run test:e2e` - 7 Chromium smoke tests with Codex escalation; sandboxed runs cannot read the AppData browser cache. |
 | Production preview asset load | Pass            | Local preview returned HTTP 200 for `/StarbreakSalvage/`, `index-Dyy_322f.js`, and `index-1DNERhC2.css` |
@@ -67,7 +67,7 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 | Ship destruction      | Pass   | Player destruction has a bounded deterministic debris/cockpit/transponder sequence with reduced-motion/performance/high-contrast variants and forced-destruction smoke coverage.                                                                                  |
 | Deterministic content | Pass   | Upgrade-influenced generation, lunar sector generation, exit/destruction state, and debug instrumentation are covered by unit/deterministic tests plus 7 Chromium smoke tests.                                                                                     |
 | Browser load          | Pass   | `npm run check`, Playwright Chromium smoke, and local production preview asset-path smoke passed for work order 050.                                                                                                                                              |
-| Phase 6 readiness     | Pass   | Phase 6 planning and work orders now target item-catalog depth. Work orders 051-052 have established the audit plus metadata/validation baseline before hook expansion, catalog growth, reward pool weighting, unlock-gated item families, synergy identity, item presentation, and item-heavy smoke coverage. |
+| Phase 6 readiness     | Pass   | Phase 6 planning and work orders now target item-catalog depth. Work orders 051-053 have established the audit, metadata/validation baseline, and expanded hook surface before catalog growth, reward pool weighting, unlock-gated item families, synergy identity, item presentation, and item-heavy smoke coverage. |
 
 ## Manual Browser Smoke
 

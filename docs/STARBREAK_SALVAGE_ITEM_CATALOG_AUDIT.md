@@ -1,6 +1,6 @@
 # Starbreak Salvage - Item Catalog Audit
 
-Work orders 051-052 baseline. This document records the current item catalog before Phase 6 starts expanding hooks, reward pools, unlocks, and presentation. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
+Work orders 051-053 baseline. This document records the current item catalog before Phase 6 starts expanding item count, reward pools, unlocks, and presentation. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
 
 ## Current Shape
 
@@ -8,7 +8,7 @@ Work orders 051-052 baseline. This document records the current item catalog bef
 | ------- | ------- | -------------- |
 | Total item definitions | 30 | At least 60 in the first expansion pass |
 | Reward pools | 3 | Starter, combat, shop, vault, elite, boss, faction, lunar, and unlock-gated source pools |
-| Hook names | 5 | Add graze, special, bomb, sector, route, shop, reward, and boss-phase hooks where practical |
+| Hook names | 13 | Add item discovery or collection hooks only if later systems need them |
 | Locked item ids | 1 | Multiple unlock-gated families, not just individual items |
 | Archetype records | 8 | Keep legacy archetypes and add lunar, route, boss-pressure, and discovery-oriented families |
 
@@ -44,8 +44,16 @@ The current catalog remains behavior-compatible with the pre-052 reward pools. V
 | `onEnemyKilled` | 9 | Salvage payouts, arc/blast follow-ups, overkill/relic rewards. |
 | `onPlayerHit` | 5 | Shield, revenge, armor, and curse retaliation. |
 | `onPickupCollected` | 4 | Credit/salvage pickup fire-rate boosts. |
+| `onGraze` | 0 | Registered and wired for future near-miss effects. |
+| `onSpecialUsed` | 0 | Registered and wired for future special-use effects. |
+| `onBombUsed` | 0 | Registered and wired for future bomb-mitigation effects. |
+| `onSectorStart` | 0 | Registered and wired for future sector-entry effects. |
+| `onRouteChosen` | 0 | Registered and wired for future route/economy effects. |
+| `onShopEntered` | 0 | Registered and wired for future shop-pricing or stock effects. |
+| `onRewardGenerated` | 0 | Registered and wired for future reward-roll effects. |
+| `onBossPhaseChanged` | 0 | Registered and wired for future boss-pressure effects. |
 
-Missing Phase 6 hooks: graze, special use, bomb use, sector start, route chosen, shop entered, reward generated, boss phase changed, and item discovery. These should be added only where the surrounding system can expose deterministic payloads.
+Work order 053 added the first expanded hook surface. No current item declares the new hooks yet, so work order 054 should add live effects intentionally rather than treating these zero-count rows as defects. Item discovery remains a possible later hook only if the save/discovery model needs it.
 
 ## Reward Pool Coverage
 
@@ -139,6 +147,6 @@ Count guidance for work order 054:
 
 - Schema growth can become busywork unless each new field protects generation, presentation, or validation.
 - Adding many combat items before adding source pools will make rewards repeat less by count but not by feel.
-- New hook surfaces can create runaway proc chains unless proc order and budgets are tested first.
+- New hook surfaces can create runaway proc chains unless proc order and budgets stay tested as item count grows.
 - Unlock-gated item families can starve fresh saves if baseline pools are narrowed too soon.
 - Item cards can get too dense once rarity, source, tags, implementation state, and unlock state all appear together; compact view models should come before decorative art.
