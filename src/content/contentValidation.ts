@@ -3,6 +3,12 @@ import { ACHIEVEMENTS, type AchievementDefinition } from './achievements';
 import { BACKGROUNDS, BACKGROUND_LAYER_KINDS, type BackgroundDefinition } from './backgrounds';
 import { FACTIONS, type FactionDefinition } from './factions';
 import {
+  ENEMY_VARIANTS,
+  ENEMY_VARIANT_ENCOUNTER_TYPES,
+  ENEMY_VARIANT_IDS,
+  type EnemyVariantDefinition
+} from './enemyVariants';
+import {
   ITEM_FAMILIES,
   ITEM_ARCHETYPES,
   ITEM_HOOKS,
@@ -66,6 +72,7 @@ export interface ContentValidationInput {
   readonly achievements?: readonly AchievementDefinition[];
   readonly backgrounds?: readonly BackgroundDefinition[];
   readonly bosses?: readonly BossDefinition[];
+  readonly enemyVariants?: readonly EnemyVariantDefinition[];
   readonly factions?: readonly FactionDefinition[];
   readonly items?: readonly ItemDefinition[];
   readonly itemHookImplementations?: ItemHookImplementationRegistry;
@@ -84,6 +91,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const achievements = input.achievements ?? ACHIEVEMENTS;
   const backgrounds = input.backgrounds ?? BACKGROUNDS;
   const bosses = input.bosses ?? BOSSES;
+  const enemyVariants = input.enemyVariants ?? ENEMY_VARIANTS;
   const factions = input.factions ?? FACTIONS;
   const items = input.items ?? ITEMS;
   const itemHookImplementations = createItemHookImplementationRegistry(
@@ -130,6 +138,8 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const enemyReadabilityTiers = new Set<string>(ENEMY_READABILITY_TIERS);
   const enemyFactionFits = new Set<string>(ENEMY_FACTION_FITS);
   const enemyObjectivePolicies = new Set<string>(ENEMY_OBJECTIVE_POLICIES);
+  const enemyVariantIds = new Set<string>(ENEMY_VARIANT_IDS);
+  const enemyVariantEncounterTypes = new Set<string>(ENEMY_VARIANT_ENCOUNTER_TYPES);
   const backgroundLayerKinds = new Set<string>(BACKGROUND_LAYER_KINDS);
   const unlockKinds = new Set(['ship', 'item', 'faction', 'bossPractice', 'music', 'challenge']);
   const upgradeCategories = new Set<string>(UPGRADE_CATEGORIES);
@@ -322,6 +332,14 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
       objectivePolicies: enemyObjectivePolicies
     });
   }
+
+  validateEnemyVariantDefinitions(errors, enemyVariants, factions, {
+    variantIds: enemyVariantIds,
+    variantEligibilities: enemyVariantEligibilities,
+    roles: enemyRoles,
+    factions: factionIds,
+    encounterTypes: enemyVariantEncounterTypes
+  });
 
   for (const boss of bosses) {
     if (bossIds.has(boss.id)) {
@@ -813,6 +831,14 @@ interface EnemyRoleMetadataRegistries {
   readonly objectivePolicies: ReadonlySet<string>;
 }
 
+interface EnemyVariantDefinitionRegistries {
+  readonly variantIds: ReadonlySet<string>;
+  readonly variantEligibilities: ReadonlySet<string>;
+  readonly roles: ReadonlySet<string>;
+  readonly factions: ReadonlySet<string>;
+  readonly encounterTypes: ReadonlySet<string>;
+}
+
 function validateEnemyRoleMetadata(
   errors: string[],
   faction: FactionDefinition,
@@ -820,8 +846,7 @@ function validateEnemyRoleMetadata(
   registries: EnemyRoleMetadataRegistries
 ): void {
   const metadata = (faction as Partial<FactionDefinition>).enemyRole as
-    | EnemyRoleMetadata
-    | undefined;
+    EnemyRoleMetadata | undefined;
   const owner = `Faction ${faction.id} enemy role`;
 
   if (!metadata) {
@@ -892,6 +917,138 @@ function validateEnemyRoleMetadata(
 
   if (!metadata.debugLabel.trim()) {
     errors.push(`${owner} must have a debug label`);
+  }
+}
+
+function validateEnemyVariantDefinitions(
+  errors: string[],
+  variants: readonly EnemyVariantDefinition[],
+  factions: readonly FactionDefinition[],
+  registries: EnemyVariantDefinitionRegistries
+): void {
+  const seenVariantIds = new Set<string>();
+
+  for (const variant of variants) {
+    const owner = `Enemy variant ${String(variant.id)}`;
+
+    if (seenVariantIds.has(variant.id)) {
+      errors.push(`Duplicate enemy variant id: ${variant.id}`);
+    }
+
+    seenVariantIds.add(variant.id);
+
+    if (!registries.variantIds.has(variant.id)) {
+      errors.push(`${owner} has invalid id`);
+    }
+
+    if (!variant.name.trim()) {
+      errors.push(`${owner} must have a name`);
+    }
+
+    if (!variant.debugLabel.trim()) {
+      errors.push(`${owner} must have a debug label`);
+    }
+
+    if (!variant.summary.trim()) {
+      errors.push(`${owner} must have a summary`);
+    }
+
+    validateStringList(
+      errors,
+      owner,
+      'eligibility',
+      variant.eligibility,
+      registries.variantEligibilities
+    );
+
+    if (variant.eligibility.includes('baseline')) {
+      errors.push(`${owner} must not use baseline eligibility`);
+    }
+
+    validateNonNegativeInteger(errors, owner, 'minSectorIndex', variant.minSectorIndex);
+    validatePositiveNumber(errors, owner, 'weight', variant.weight);
+    validateNonNegativeInteger(errors, owner, 'hullBonus', variant.hullBonus);
+    validatePositiveNumber(errors, owner, 'fireDelayMultiplier', variant.fireDelayMultiplier);
+    validatePositiveNumber(errors, owner, 'driftMultiplier', variant.driftMultiplier);
+    validatePositiveNumber(errors, owner, 'radiusScale', variant.radiusScale);
+    validateNonNegativeInteger(errors, owner, 'bonusSalvage', variant.bonusSalvage);
+
+    if (variant.hullBonus > 2) {
+      errors.push(`${owner} must keep hullBonus at or below 2`);
+    }
+
+    if (variant.fireDelayMultiplier < 0.75 || variant.fireDelayMultiplier > 1.25) {
+      errors.push(`${owner} must keep fireDelayMultiplier between 0.75 and 1.25`);
+    }
+
+    if (variant.driftMultiplier < 0.75 || variant.driftMultiplier > 1.45) {
+      errors.push(`${owner} must keep driftMultiplier between 0.75 and 1.45`);
+    }
+
+    if (variant.radiusScale < 0.85 || variant.radiusScale > 1.2) {
+      errors.push(`${owner} must keep radiusScale between 0.85 and 1.2`);
+    }
+
+    if (variant.bonusSalvage > 4) {
+      errors.push(`${owner} must keep bonusSalvage at or below 4`);
+    }
+
+    if (variant.allowedRoles) {
+      validateStringList(errors, owner, 'allowed role', variant.allowedRoles, registries.roles);
+    }
+
+    if (variant.allowedFactions) {
+      validateStringList(
+        errors,
+        owner,
+        'allowed faction',
+        variant.allowedFactions,
+        registries.factions
+      );
+    }
+
+    if (variant.encounterTypes) {
+      validateStringList(
+        errors,
+        owner,
+        'encounter type',
+        variant.encounterTypes,
+        registries.encounterTypes
+      );
+    }
+
+    if (!variant.cue.label.trim()) {
+      errors.push(`${owner} must have a cue label`);
+    }
+
+    if (variant.cue.label.length > 4) {
+      errors.push(`${owner} cue label must be 4 characters or fewer`);
+    }
+
+    validateHexColor(errors, `${owner} cue`, 'fill', variant.cue.fill);
+    validateHexColor(errors, `${owner} cue`, 'stroke', variant.cue.stroke);
+
+    const matchingFactions = factions.filter((faction) => {
+      const metadata = faction.enemyRole;
+      const roleAllowed =
+        !variant.allowedRoles ||
+        variant.allowedRoles.length === 0 ||
+        variant.allowedRoles.includes(metadata.role);
+      const factionAllowed =
+        !variant.allowedFactions ||
+        variant.allowedFactions.length === 0 ||
+        variant.allowedFactions.includes(faction.id);
+
+      return (
+        roleAllowed &&
+        factionAllowed &&
+        variant.eligibility.some((eligibility) => metadata.variantEligibility.includes(eligibility))
+      );
+    });
+
+    if (matchingFactions.length === 0) {
+      errors.push(`${owner} must match at least one current faction role`);
+    }
   }
 }
 

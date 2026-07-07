@@ -188,6 +188,90 @@ describe('CombatState', () => {
     expect(state.enemies.map((enemy) => enemy.id)).toEqual(spawnedIds);
   });
 
+  it('applies enemy variant stat modifiers when scheduled spawns enter', () => {
+    const state = createCombatState(bounds, 'VARIANT-SPAWN-STATS', {
+      enemyHullBonus: 1,
+      enemyFireDelayMultiplier: 0.8,
+      bossSpawnAtSeconds: null,
+      spawnSchedule: [
+        {
+          atSeconds: 0,
+          waveIndex: 0,
+          waveLabel: 'variant_test',
+          xRatio: 0.8,
+          targetY: 120,
+          hull: 2,
+          fireDelay: 1,
+          factionId: 'faction_scrap_court',
+          variantId: 'variant_armored'
+        }
+      ]
+    });
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
+
+    const enemy = state.enemies[0];
+    expect(enemy?.variantId).toBe('variant_armored');
+    expect(enemy?.maxHull).toBe(4);
+    expect(enemy?.hull).toBe(4);
+    expect(enemy?.radius).toBeCloseTo(18.36);
+    expect(enemy?.drift).toBeCloseTo(9.216);
+    expect(enemy?.fireCooldown).toBeCloseTo(0.84 - 1 / 60);
+  });
+
+  it('drops variant bonus salvage through the normal defeat path', () => {
+    const state = createCombatState(bounds, 'VARIANT-SALVAGE-DROP', {
+      bossSpawnAtSeconds: null,
+      spawnSchedule: [
+        {
+          atSeconds: 0,
+          waveIndex: 0,
+          waveLabel: 'variant_salvage_test',
+          xRatio: 0.5,
+          targetY: 120,
+          hull: 2,
+          fireDelay: 1,
+          factionId: 'faction_scrap_court',
+          variantId: 'variant_salvage_rich'
+        }
+      ]
+    });
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
+
+    const enemy = state.enemies[0];
+    if (!enemy) {
+      throw new Error('Expected variant enemy to spawn.');
+    }
+
+    enemy.x = state.player.x;
+    enemy.y = state.player.y - 120;
+    enemy.hull = 1;
+    state.projectiles.push({
+      id: 4401,
+      owner: 'player',
+      x: enemy.x,
+      y: enemy.y,
+      vx: 0,
+      vy: 0,
+      radius: 8,
+      damage: 1,
+      ttl: 1,
+      tags: ['laser'],
+      procDepth: 0
+    });
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
+
+    expect(state.enemies).toHaveLength(0);
+    expect(state.stats.enemiesDestroyed).toBe(1);
+    expect(
+      state.pickups
+        .filter((pickup) => pickup.kind === 'salvage')
+        .reduce((total, pickup) => total + pickup.value, 0)
+    ).toBe(3);
+  });
+
   it('telegraphs then fires the void corsair phase skirmish pattern', () => {
     const state = createCombatState(bounds, 'VOID-CORSAIR-PATTERN', {
       skipEnemyWaves: true

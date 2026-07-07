@@ -1,5 +1,6 @@
 import { getBossById, type BossId } from '../content/bosses';
 import { getFactionById, type FactionId } from '../content/factions';
+import { getEnemyVariantById, type EnemyVariantId } from '../content/enemyVariants';
 import type { ShipAppearance, ShipSilhouette, ShipWeaponMountHint } from '../content/ships';
 import type { BulletContrast } from '../core/settingsData';
 import { clamp } from '../core/math';
@@ -26,10 +27,7 @@ import {
 import { generateStarfield, type Star, starCountForViewport } from '../core/starfield';
 import { createDefaultCombatBounds } from '../game/CombatGeometry';
 import type { CombatBounds } from '../game/CombatState';
-import {
-  getPlayerShipCueState,
-  type PlayerShipCueState
-} from './ShipCombatCues';
+import { getPlayerShipCueState, type PlayerShipCueState } from './ShipCombatCues';
 import { calculateViewportLayout, type ViewportLayout } from './ViewportLayout';
 import type { PlayerDestructionPresentation } from '../game/PlayerDestruction';
 
@@ -75,6 +73,7 @@ export interface PlayerRenderState {
 
 export interface EnemyRenderState {
   readonly factionId: FactionId;
+  readonly variantId?: EnemyVariantId | null;
   readonly x: number;
   readonly y: number;
   readonly radius: number;
@@ -928,9 +927,14 @@ export class CanvasRenderer {
     const context = this.context;
     const healthRatio = clamp(enemy.hull / enemy.maxHull, 0, 1);
     const faction = getFactionById(enemy.factionId);
+    const variant = enemy.variantId ? getEnemyVariantById(enemy.variantId) : null;
 
     context.save();
     context.translate(enemy.x, enemy.y);
+
+    if (variant) {
+      this.paintEnemyVariantCue(enemy, variant.cue);
+    }
 
     context.fillStyle = faction.palette.hull;
     context.strokeStyle = faction.palette.trim;
@@ -1000,6 +1004,51 @@ export class CanvasRenderer {
     context.fillStyle = faction.palette.trim;
     context.fillRect(-enemy.radius, enemy.radius + 6, enemy.radius * 2 * healthRatio, 4);
 
+    context.restore();
+  }
+
+  private paintEnemyVariantCue(
+    enemy: EnemyRenderState,
+    cue: { readonly label: string; readonly fill: string; readonly stroke: string }
+  ): void {
+    const context = this.context;
+    const stroke = this.settings.bulletContrast === 'high' ? '#ffffff' : cue.stroke;
+    const fill = this.settings.bulletContrast === 'high' ? '#050712' : cue.fill;
+    const badgeWidth = Math.max(24, cue.label.length * 7 + 9);
+    const badgeHeight = 13;
+    const ringRadius = enemy.radius * 1.34;
+
+    context.save();
+    context.globalAlpha = this.settings.reducedMotion ? 0.82 : 0.92;
+    context.strokeStyle = stroke;
+    context.lineWidth = 2.2;
+    context.beginPath();
+    context.arc(0, 0, ringRadius, 0, Math.PI * 2);
+    context.stroke();
+
+    context.globalAlpha = this.settings.reducedMotion ? 0.72 : 0.84;
+    context.beginPath();
+    context.moveTo(-ringRadius, -enemy.radius * 0.26);
+    context.lineTo(-ringRadius - 6, -enemy.radius * 0.58);
+    context.moveTo(ringRadius, -enemy.radius * 0.26);
+    context.lineTo(ringRadius + 6, -enemy.radius * 0.58);
+    context.moveTo(-ringRadius, enemy.radius * 0.26);
+    context.lineTo(-ringRadius - 6, enemy.radius * 0.58);
+    context.moveTo(ringRadius, enemy.radius * 0.26);
+    context.lineTo(ringRadius + 6, enemy.radius * 0.58);
+    context.stroke();
+
+    context.globalAlpha = 0.96;
+    context.fillStyle = fill;
+    context.strokeStyle = stroke;
+    context.lineWidth = 1;
+    context.fillRect(-badgeWidth / 2, -enemy.radius - badgeHeight - 8, badgeWidth, badgeHeight);
+    context.strokeRect(-badgeWidth / 2, -enemy.radius - badgeHeight - 8, badgeWidth, badgeHeight);
+    context.fillStyle = stroke;
+    context.font = '8px system-ui, sans-serif';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText(cue.label, 0, -enemy.radius - badgeHeight / 2 - 8);
     context.restore();
   }
 
@@ -1702,7 +1751,15 @@ export class CanvasRenderer {
     } else if (primitive.kind === 'shadow') {
       context.globalAlpha = alpha * 0.72;
       context.beginPath();
-      context.ellipse(0, 0, Math.max(size * 1.4, lineLength * 0.5), Math.max(size, lineWidth * 4), 0, 0, Math.PI * 2);
+      context.ellipse(
+        0,
+        0,
+        Math.max(size * 1.4, lineLength * 0.5),
+        Math.max(size, lineWidth * 4),
+        0,
+        0,
+        Math.PI * 2
+      );
       context.fill();
     } else {
       this.paintAngularBackgroundShape(primitive, size, lineLength, lineWidth);

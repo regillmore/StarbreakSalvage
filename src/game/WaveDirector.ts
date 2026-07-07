@@ -1,5 +1,6 @@
 import type { SectorEncounterPacingDefinition } from '../content/sectors';
 import { FACTIONS, type FactionId } from '../content/factions';
+import { chooseEnemyVariant, type EnemyVariantEncounterType } from '../content/enemyVariants';
 import { clamp } from '../core/math';
 import { createRng, type Rng } from '../core/rng';
 import type { CombatState, EnemySpawn } from './CombatState';
@@ -56,6 +57,10 @@ export interface WaveDirectorOptions {
   readonly availableFactionIds?: readonly FactionId[];
   readonly scroll?: Pick<SectorScrollPlan, 'length' | 'baseSpeed'>;
   readonly pacing?: SectorEncounterPacingDefinition | null;
+  readonly sectorIndex?: number;
+  readonly routePressure?: boolean;
+  readonly challenge?: boolean;
+  readonly eliteEncounter?: boolean;
 }
 
 const DISTANCE_WAVE_WINDOW_START_RATIO = 0.12;
@@ -98,7 +103,14 @@ export function createWaveDirectorPlan(options: WaveDirectorOptions): WaveDirect
       wave,
       preferredFactionId: options.preferredFactionId,
       availableFactionIds: options.availableFactionIds ?? FACTIONS.map((faction) => faction.id),
-      pacing
+      pacing,
+      variantContext: {
+        sectorIndex: Math.max(0, Math.floor(options.sectorIndex ?? 0)),
+        routePressure: options.routePressure ?? false,
+        challenge: options.challenge ?? false,
+        eliteEncounter: options.eliteEncounter ?? false,
+        bossRequired: options.objective.bossRequired
+      }
     })
   );
 
@@ -209,10 +221,45 @@ function createWaveSpawns(options: {
   readonly preferredFactionId: FactionId;
   readonly availableFactionIds: readonly FactionId[];
   readonly pacing: SectorEncounterPacingDefinition;
+  readonly variantContext: WaveVariantContext;
 }): EnemySpawn[] {
   const spawns: EnemySpawn[] = [];
 
   for (let spawnIndex = 0; spawnIndex < options.wave.spawnCount; spawnIndex += 1) {
+    const xRatio =
+      spawnIndex === 0
+        ? options.pacing.firstSpawnXRatio
+        : options.rng.int(
+            Math.round(options.pacing.flankXMinRatio * 100),
+            Math.round(options.pacing.flankXMaxRatio * 100)
+          ) / 100;
+    const targetY = options.rng.int(
+      Math.round(options.pacing.targetYMin),
+      Math.round(options.pacing.targetYMax)
+    );
+    const hull = options.wave.index >= 2 || spawnIndex > 1 ? 3 : 2;
+    const fireDelay = options.rng.int(80, 145) / 100;
+    const factionId = chooseFaction(
+      options.rng,
+      options.preferredFactionId,
+      options.availableFactionIds
+    );
+    const encounterType = getWaveEncounterType(options.wave.label, options.variantContext);
+    const variantId = chooseEnemyVariant(
+      {
+        factionId,
+        sectorIndex: options.variantContext.sectorIndex,
+        waveIndex: options.wave.index,
+        spawnIndex,
+        waveLabel: options.wave.label,
+        routePressure: options.variantContext.routePressure,
+        challenge: options.variantContext.challenge,
+        elite: options.variantContext.eliteEncounter || encounterType === 'elite',
+        encounterType
+      },
+      options.rng.fork(`variant-${spawnIndex + 1}-${factionId}`)
+    );
+
     spawns.push({
       atSeconds: roundSeconds(options.wave.startsAtSeconds + spawnIndex * 0.32),
       atDistance:
@@ -221,24 +268,49 @@ function createWaveSpawns(options: {
           : roundDistance(options.wave.startsAtDistance + spawnIndex * options.pacing.spawnSpacing),
       waveIndex: options.wave.index,
       waveLabel: options.wave.label,
-      xRatio:
-        spawnIndex === 0
-          ? options.pacing.firstSpawnXRatio
-          : options.rng.int(
-              Math.round(options.pacing.flankXMinRatio * 100),
-              Math.round(options.pacing.flankXMaxRatio * 100)
-            ) / 100,
-      targetY: options.rng.int(
-        Math.round(options.pacing.targetYMin),
-        Math.round(options.pacing.targetYMax)
-      ),
-      hull: options.wave.index >= 2 || spawnIndex > 1 ? 3 : 2,
-      fireDelay: options.rng.int(80, 145) / 100,
-      factionId: chooseFaction(options.rng, options.preferredFactionId, options.availableFactionIds)
+      xRatio,
+      targetY,
+      hull,
+      fireDelay,
+      factionId,
+      ...(variantId ? { variantId } : {})
     });
   }
 
   return spawns;
+}
+
+interface WaveVariantContext {
+  readonly sectorIndex: number;
+  readonly routePressure: boolean;
+  readonly challenge: boolean;
+  readonly eliteEncounter: boolean;
+  readonly bossRequired: boolean;
+}
+
+function getWaveEncounterType(
+  waveLabel: string,
+  context: WaveVariantContext
+): EnemyVariantEncounterType {
+  const normalizedLabel = waveLabel.toLowerCase();
+
+  if (normalizedLabel.includes('elite')) {
+    return 'elite';
+  }
+
+  if (normalizedLabel.includes('ambush') || normalizedLabel.includes('intercept')) {
+    return 'ambush';
+  }
+
+  if (context.eliteEncounter) {
+    return 'elite';
+  }
+
+  if (context.bossRequired) {
+    return 'bossGate';
+  }
+
+  return 'normal';
 }
 
 function chooseFaction(
@@ -277,7 +349,9 @@ function normalizeEncounterPacing(
     0.92
   );
   const targetYMin = Math.round(clamp(pacing.targetYMin, 64, 220));
-  const targetYMax = Math.round(clamp(Math.max(pacing.targetYMax, targetYMin + 4), targetYMin + 4, 240));
+  const targetYMax = Math.round(
+    clamp(Math.max(pacing.targetYMax, targetYMin + 4), targetYMin + 4, 240)
+  );
 
   return {
     waveWindowStartRatio,

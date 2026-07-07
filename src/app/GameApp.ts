@@ -719,9 +719,7 @@ function createItemDebugLines(items: SceneDebugState['items']): readonly string[
   ];
 }
 
-function createEnemyRoleDebugLines(
-  enemyRoles: SceneDebugState['enemyRoles']
-): readonly string[] {
+function createEnemyRoleDebugLines(enemyRoles: SceneDebugState['enemyRoles']): readonly string[] {
   if (!enemyRoles || enemyRoles.totalEnemies === 0) {
     return [];
   }
@@ -732,12 +730,15 @@ function createEnemyRoleDebugLines(
   const objectiveSummary = enemyRoles.objectivePolicyCounts
     .map((policyCount) => `${policyCount.objectivePolicy}:${policyCount.count}`)
     .join(' ');
+  const variantSummary = enemyRoles.variantCounts
+    .map((variantCount) => `${variantCount.label}:${variantCount.count}`)
+    .join(' ');
 
   return [
     `Roles ${roleSummary}`,
-    `Enemy meta V${enemyRoles.variantCount} F${enemyRoles.formationCount}${
-      objectiveSummary ? ` ${objectiveSummary}` : ''
-    }`
+    `Enemy meta V${enemyRoles.variantCount}${variantSummary ? ` ${variantSummary}` : ''} F${
+      enemyRoles.formationCount
+    }${objectiveSummary ? ` ${objectiveSummary}` : ''}`
   ];
 }
 

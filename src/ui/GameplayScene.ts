@@ -836,7 +836,11 @@ export class GameplayScene implements Scene {
       preferredFactionId: sector.bossFactionId,
       availableFactionIds: this.run.availableFactionIds,
       scroll: this.getCurrentScrollPlan(),
-      pacing: sector.encounterPacing
+      pacing: sector.encounterPacing,
+      sectorIndex: this.sectorIndex,
+      routePressure: this.hasEnemyVariantRoutePressure(),
+      challenge: this.hasEnemyVariantChallengePressure(),
+      eliteEncounter: this.hasEnemyVariantElitePressure()
     });
 
     return this.wavePlan;
@@ -1097,6 +1101,32 @@ export class GameplayScene implements Scene {
 
   private getBossHullBonus(): number {
     return this.combatModifiers.reduce((total, modifier) => total + modifier.bossHullBonus, 0);
+  }
+
+  private hasEnemyVariantRoutePressure(): boolean {
+    return (
+      this.getEnemyHullBonus() > 0 ||
+      this.getEnemyFireDelayMultiplier() < 0.99 ||
+      this.sectorConditions.modifiers.some(
+        (modifier) =>
+          modifier.hazardDensityDelta > 0 ||
+          modifier.scrollSpeedMultiplier > 1 ||
+          modifier.source === 'glitch' ||
+          modifier.source === 'factionAmbush'
+      )
+    );
+  }
+
+  private hasEnemyVariantChallengePressure(): boolean {
+    return this.sectorConditions.modifiers.some(
+      (modifier) => modifier.source === 'challenge_debt_ceiling'
+    );
+  }
+
+  private hasEnemyVariantElitePressure(): boolean {
+    return this.sectorConditions.modifiers.some(
+      (modifier) => modifier.source === 'elite' || modifier.source === 'factionAmbush'
+    );
   }
 
   private emitFeedback(cues: readonly CombatFeedbackCue[]): void {

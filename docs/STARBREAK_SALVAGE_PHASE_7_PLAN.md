@@ -44,7 +44,7 @@ Exit criteria:
 - Content validation can catch missing or unsupported role metadata when implementation begins.
 - Phase 7 role targets are clear enough for focused implementation.
 
-Status: implemented by work orders 061 and 062. The current baseline is documented in `docs/STARBREAK_SALVAGE_ENEMY_ROLE_AUDIT.md`: normal enemies are currently four faction-pattern classes, sector wave labels are semantic rather than behavioral, all normal enemies share radius and 2-3 base hull, normal attacks are not telegraphed, and objective accounting is safe for current kill paths but needs explicit policy before retreating, spawned, shielded, or formation enemies land. A pure helper in `src/content/enemyRoleAudit.ts` and unit coverage lock that audit; current faction-pattern classes now carry validated role metadata and active role-pressure debug summaries without changing runtime behavior.
+Status: implemented by work orders 061 and 062. The current baseline is documented in `docs/STARBREAK_SALVAGE_ENEMY_ROLE_AUDIT.md`: normal enemies are currently four faction-pattern classes, sector wave labels are semantic rather than behavioral, all normal enemies share a compact spawn/durability model, and objective accounting is safe for current kill paths but needs explicit policy before retreating, spawned, shielded, or formation enemies land. A pure helper in `src/content/enemyRoleAudit.ts` and unit coverage lock that audit; current faction-pattern classes now carry validated role metadata and active role-pressure debug summaries without changing runtime behavior.
 
 ### P7.2 - Role-Specific Behavior Expansion
 
@@ -75,6 +75,8 @@ Exit criteria:
 - Variants add decision pressure without unclear damage spikes.
 - Variant selection is seeded and validated.
 - Starter sectors remain forgiving on fresh saves.
+
+Status: implemented through work order 065. `src/content/enemyVariants.ts` defines six first-pass variants: armored, overclocked, evasive, volatile, shielded, and salvage-rich. The wave director selects optional variant IDs from seeded per-spawn RNG forks using sector depth, faction role eligibility, route pressure, challenge flags, elite wave labels, and boss-gate context. Combat applies only visible durability, cadence, drift/profile, and salvage-reward modifiers; no variant increases contact or bullet damage. Canvas enemies draw a ring plus compact cue label, content validation catches invalid variant rules, and the debug overlay reports active variant counts alongside role and formation pressure.
 
 ### P7.4 - Formation Director
 

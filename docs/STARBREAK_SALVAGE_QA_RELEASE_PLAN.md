@@ -131,7 +131,7 @@ Phase 7 enriches enemy behavior and longer-sector pacing. Add tests closest to t
 - enemy role audit and metadata validation for role, pressure type, movement family, attack family, variant eligibility, formation eligibility, readability tier, and faction fit; work order 061 adds the first pure audit helper and documents the four current faction-pattern classes, while work order 062 adds validated role metadata and active role-pressure summaries;
 - role-specific movement tests for fixed-step determinism, arena bounds, cleanup, frame-catchup stability, and no offscreen soft locks; work order 063 adds deterministic movement-profile coverage for current and future movement families;
 - attack cadence and telegraph tests for deterministic timing, projectile budgets, high-contrast readability, and reduced-motion simplification; work order 064 adds pure attack-profile budget coverage plus combat-loop cadence regression coverage;
-- upgraded variant selection snapshots for fresh saves, later sectors, faction routes, elite routes, challenge flags, and boss-adjacent pressure;
+- upgraded variant selection snapshots for fresh saves, later sectors, faction routes, elite routes, challenge flags, and boss-adjacent pressure; work order 065 adds known-seed variant schedules, validation, spawn-modifier, bonus-salvage, and debug-summary coverage;
 - formation definition validation for member roles, offsets, timing, entry style, spacing, break conditions, and fixed-world bounds;
 - formation wave tests for frame-catchup spawn order, simultaneous kills, secondary item kills, despawns, body collisions, objective progress, and sector-complete handoff;
 - longer-sector generation snapshots for route-conditioned length bands, pressure/relief windows, formation clusters, hazard/landmark pacing, and boss approach timing;
@@ -232,7 +232,7 @@ Phase 2 performance checks should include wave/objective count, projectile count
 
 Phase 3 performance checks should also include background primitive count, parallax layer count, distance traveled, scroll speed, active distance markers, active landmarks, active hazards, and long-scroll scenarios that run longer than a normal sector.
 
-Current first-pass instrumentation exposes granular combat counts, background primitive/layer counts, active landmark/hazard counts, distance, speed, active input mode, HUD mode, viewport size/class/presentation scale, DPR, canvas pixel size, safe-frame origin/size, fixed combat world size, banked scrap, upgrade readiness, run resources, current sector id/name/background/pacing, exit progress, destruction progress, item count, active hook count, proc cap state, build identity, a dense-combat debug pocket, an item-storm hook stress pocket, forced exit/destruction shortcuts, and a quiet late-sector long-scroll traversal behind `?debug=1`. Production preview smoke passed for work orders 050 and 060; manual non-Chromium and real-device browser validation still need to close the checklist.
+Current first-pass instrumentation exposes granular combat counts, active enemy role/variant counts, background primitive/layer counts, active landmark/hazard counts, distance, speed, active input mode, HUD mode, viewport size/class/presentation scale, DPR, canvas pixel size, safe-frame origin/size, fixed combat world size, banked scrap, upgrade readiness, run resources, current sector id/name/background/pacing, exit progress, destruction progress, item count, active hook count, proc cap state, build identity, a dense-combat debug pocket, an item-storm hook stress pocket, forced exit/destruction shortcuts, and a quiet late-sector long-scroll traversal behind `?debug=1`. Production preview smoke passed for work orders 050 and 060; manual non-Chromium and real-device browser validation still need to close the checklist.
 
 Phase 4 performance checks should include viewport/presentation scale, safe-frame size, fixed-world hazard/enemy spacing parity, HUD rendering density, preview rendering cost, mouse input update behavior, ship cue rendering cost, non-combat theme DOM cost, and whether themed HUD/ship cues add measurable overhead in dense and long-scroll debug scenarios.
 
@@ -255,10 +255,10 @@ Phase 7 performance checks should include active role counts, upgraded variant c
 - [x] Upgrade Bay, banked scrap state, and upgrade-influenced generation visible in tests/debug smoke.
 - [x] Sector exit/toast, destruction, and lunar browser smoke paths exist.
 - [x] Item hook pressure, proc cap state, and build identity visible in debug smoke.
-- [x] Active enemy role counts and variant/formation placeholders visible in debug once Phase 7 schema instrumentation lands.
+- [x] Active enemy role and upgraded-variant counts visible in debug once Phase 7 schema and variant instrumentation lands.
 - [x] Role-specific movement profiles have deterministic bounds and profile-difference tests for the current Phase 7 roster.
 - [x] Role-specific attack profiles have deterministic cadence, telegraph, and projectile-budget tests for current and registered Phase 7 attack families.
-- [ ] Upgraded variant, active formation, and long-sector pressure visible in debug smoke once later Phase 7 systems land.
+- [ ] Active formation and long-sector pressure visible in debug smoke once later Phase 7 systems land.
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [x] Heavy combat debug scene documented.
 - [x] Long-scroll debug scene documented.

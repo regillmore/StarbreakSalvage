@@ -48,6 +48,7 @@
 - Added five-boss debug spawn shortcuts, granular debug performance counters, a deterministic dense-combat performance pocket, and a quiet long-scroll traversal shortcut behind `?debug=1`.
 - Fixed objective target desyncs where secondary item effects or enemy body collisions could clear enemies without advancing target progress.
 - Added metadata-driven normal enemy attack profiles with role-specific cooldowns, telegraph labels, aim styles, projectile shapes, and bounded bullet counts for bruisers, screeners, disruptors, and scouts.
+- Added deterministic upgraded enemy variants for armored, overclocked, evasive, volatile, shielded, and salvage-rich targets, with sector/faction/route/challenge gates, conservative modifiers, bonus salvage hooks, canvas ring/badge cues, and debug variant counts.
 
 ### Testing
 
@@ -62,6 +63,7 @@
 - Added validated enemy role metadata for current faction-pattern classes plus debug role-pressure summaries with variant/formation placeholders for Phase 7 schema work.
 - Added metadata-driven enemy movement profiles so bruisers drift, screeners hold lanes, disruptors sway, and scouts skate laterally while remaining clamped to the fixed combat world.
 - Added deterministic enemy attack profile tests covering registered attack families, projectile/telegraph budgets, aimed scout needles, hazard-mark alternation, and combat-loop cadence replay.
+- Added enemy variant tests for fresh-sector guardrails, known-seed variant schedules, faction eligibility, content validation, spawn stat modifiers, bonus salvage drops, and debug pressure summaries.
 - Added wave director and objective completion tests, including known-seed objective snapshots and boss-gate coverage.
 - Added combat tests for special charge/use, bomb mitigation, graze detection, remapped special/bomb controls, and reduced-motion effect rendering.
 - Added validation and gameplay tests for ship stat contracts, weapon references, weapon patterns, heat/reload behavior, and starting economy.
@@ -115,6 +117,7 @@
 - Formalized Phase 7 enemy role schema and validation before movement, attack, variant, or formation behavior changes.
 - Completed the Phase 7 role-specific movement pass while leaving attack cadence, variants, formations, and objective policy unchanged for follow-up work orders.
 - Completed the Phase 7 role-specific normal attack pass, finishing P7.2 behavior expansion while leaving variants, formations, longer-sector pacing, and objective-policy expansion for later work orders.
+- Completed the Phase 7 upgraded-variant pass for P7.3, leaving formation definitions, longer-sector pacing, enemy-rich smoke, and broader variant reward/unlock hooks for later work orders.
 - Started Phase 6 with a documented audit of the current 30-item catalog, repeated-reward risks, underrepresented archetypes, target item families, and bridge-effect follow-ups.
 - Formalized the Phase 6 item metadata contract and validation baseline before adding larger item batches.
 - Completed the first Phase 6 hook-surface expansion so work order 054 can add live catalog items against typed event payloads.

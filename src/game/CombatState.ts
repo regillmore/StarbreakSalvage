@@ -4,11 +4,8 @@ import {
   type BossId,
   type BossPatternId
 } from '../content/bosses';
-import {
-  FACTIONS,
-  getFactionById,
-  type FactionId
-} from '../content/factions';
+import { FACTIONS, getFactionById, type FactionId } from '../content/factions';
+import { getEnemyVariantById, type EnemyVariantId } from '../content/enemyVariants';
 import type { ItemTag } from '../content/items';
 import type { ShipStats, WeaponId } from '../content/ships';
 import { getWeaponById, type WeaponDefinition } from '../content/weapons';
@@ -103,6 +100,7 @@ export interface ProjectileState {
 export interface EnemyState {
   readonly id: number;
   readonly factionId: FactionId;
+  readonly variantId?: EnemyVariantId | null;
   x: number;
   y: number;
   readonly radius: number;
@@ -235,6 +233,7 @@ export interface EnemySpawn {
   readonly hull: number;
   readonly fireDelay: number;
   readonly factionId: FactionId;
+  readonly variantId?: EnemyVariantId | null;
 }
 
 export interface CombatRunResult {
@@ -648,9 +647,7 @@ export function prepareDebugItemStormScenario(
     state.projectiles.push({
       id: getNextEntityId(state),
       owner: 'enemy',
-      x: nearGraze
-        ? state.player.x + side * (40 + (index % 3) * 3)
-        : centerX + (column - 2.5) * 62,
+      x: nearGraze ? state.player.x + side * (40 + (index % 3) * 3) : centerX + (column - 2.5) * 62,
       y: nearGraze ? state.player.y - 14 + row * 10 : topY + 128 + row * 34,
       vx: nearGraze ? side * 4 : (column - 2.5) * 10,
       vy: nearGraze ? 126 : 164 + row * 9,
@@ -1045,8 +1042,7 @@ function activateSpecial(state: CombatState): void {
     ...state.stats,
     shotsFired: state.stats.shotsFired + specialPayload.projectiles.length,
     specialsUsed: state.stats.specialsUsed + 1,
-    itemTriggers:
-      state.stats.itemTriggers + Math.max(0, specialPayload.projectiles.length - 3)
+    itemTriggers: state.stats.itemTriggers + Math.max(0, specialPayload.projectiles.length - 3)
   };
 }
 
@@ -1170,22 +1166,27 @@ function spawnDueEnemies(state: CombatState, bounds: CombatBounds): void {
       return;
     }
 
-    const maxHull = spawn.hull + state.enemyHullBonus;
+    const variant = spawn.variantId ? getEnemyVariantById(spawn.variantId) : null;
+    const maxHull = spawn.hull + state.enemyHullBonus + (variant?.hullBonus ?? 0);
 
     const x = clamp(spawn.xRatio, 0.1, 0.9) * bounds.width;
 
     state.enemies.push({
       id: getNextEntityId(state),
       factionId: spawn.factionId,
+      variantId: spawn.variantId ?? null,
       x,
       y: -24,
-      radius: 17,
+      radius: 17 * (variant?.radiusScale ?? 1),
       hull: maxHull,
       maxHull,
-      drift: (spawn.xRatio - 0.5) * 32,
+      drift: (spawn.xRatio - 0.5) * 32 * (variant?.driftMultiplier ?? 1),
       targetY: spawn.targetY,
       homeX: x,
-      fireCooldown: Math.max(0.35, spawn.fireDelay * state.enemyFireDelayMultiplier)
+      fireCooldown: Math.max(
+        0.35,
+        spawn.fireDelay * state.enemyFireDelayMultiplier * (variant?.fireDelayMultiplier ?? 1)
+      )
     });
     state.nextSpawnIndex += 1;
   }
@@ -1235,7 +1236,9 @@ function updateEnemyAttack(
       enemy.pendingAttackFamily = null;
       enemy.attackWindupSeconds = 0;
       enemy.fireCooldown =
-        getEnemyAttackProfile(attackFamily).cooldownSeconds * state.enemyFireDelayMultiplier;
+        getEnemyAttackProfile(attackFamily).cooldownSeconds *
+        state.enemyFireDelayMultiplier *
+        getEnemyVariantFireDelayMultiplier(enemy);
     }
 
     return;
@@ -1989,7 +1992,11 @@ function recordEnemyDefeat(
   enemyIdsToRemove.add(enemy.id);
 
   if (options.dropPickups ?? true) {
-    spawnEnemyDefeatPickups(state, enemy, options.bonusSalvage ?? 0);
+    spawnEnemyDefeatPickups(
+      state,
+      enemy,
+      (options.bonusSalvage ?? 0) + getEnemyVariantBonusSalvage(enemy)
+    );
   }
 
   state.stats = {
@@ -2003,6 +2010,14 @@ function recordEnemyDefeat(
   }
 
   return true;
+}
+
+function getEnemyVariantFireDelayMultiplier(enemy: EnemyState): number {
+  return enemy.variantId ? getEnemyVariantById(enemy.variantId).fireDelayMultiplier : 1;
+}
+
+function getEnemyVariantBonusSalvage(enemy: EnemyState): number {
+  return enemy.variantId ? getEnemyVariantById(enemy.variantId).bonusSalvage : 0;
 }
 
 function getDistanceSquared(

@@ -357,12 +357,14 @@ Phase 7 adds richer enemy roles, upgraded variants, formations, and longer secto
 - Work order 062 adds `src/content/enemyRoles.ts` registries, `enemyRole` metadata on current faction-pattern classes, validation in `contentValidation`, and `src/game/EnemyRolePressure.ts` debug summaries. Later movement, attack, variant, and formation work should consume these fields instead of adding new faction-name branches.
 - Work order 063 adds `src/systems/EnemyMovement.ts`; movement systems should continue consuming `movementFamily` metadata, stable `homeX` anchors, fixed-step `dt`, and explicit `CombatBounds` rather than viewport dimensions.
 - Work order 064 adds `src/systems/EnemyAttack.ts`; normal attack systems should continue consuming `attackFamily` metadata for cooldowns, windup duration, telegraph label/kind, aim style, projectile speed/radius, tags, and budgets. `CombatState` owns the small pending-windup state on each enemy, while the attack module stays pure and returns telegraph/projectile blueprints.
+- Work order 065 adds `src/content/enemyVariants.ts`; wave generation should select variant IDs from seeded per-spawn RNG forks, while combat/render/debug consume the selected descriptor rather than inferring from faction names.
 - Add an objective policy field before implementing retreating, spawned, shielded, or formation enemies so target counts cannot desync from field cleanup.
 
 Recommended module direction:
 
 ```text
 src/content/enemies.ts
+src/content/enemyVariants.ts
 src/game/EnemyRoles.ts
 src/systems/EnemyMovement.ts
 src/systems/EnemyAttack.ts
@@ -374,6 +376,7 @@ src/systems/EnemyAttack.ts
 - Variants should apply typed modifiers or behavior flags that are validated against enemy role metadata.
 - Fresh saves and early sectors must retain a forgiving baseline pool.
 - Visual/readability cues should be deterministic and tied to the same variant descriptor used by simulation and debug summaries.
+- Current first-pass modifiers are deliberately conservative: hull bonus, attack-cooldown multiplier, lateral drift/profile scale, radius scale, and bonus salvage. Do not add hidden damage spikes; if later variants add shielding, escorting, or commander behavior, keep the cue, cleanup, objective policy, and tests in the same descriptor pipeline.
 
 ### Formations
 

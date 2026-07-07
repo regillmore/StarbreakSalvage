@@ -4,6 +4,7 @@ import { ACHIEVEMENTS, type AchievementDefinition } from '../../src/content/achi
 import { BACKGROUNDS, type BackgroundDefinition } from '../../src/content/backgrounds';
 import { BOSSES, type BossDefinition } from '../../src/content/bosses';
 import { validateContent } from '../../src/content/contentValidation';
+import { ENEMY_VARIANTS, type EnemyVariantDefinition } from '../../src/content/enemyVariants';
 import { FACTIONS, type FactionDefinition } from '../../src/content/factions';
 import {
   ITEM_POOL_WEIGHT_PROFILES,
@@ -26,6 +27,7 @@ const baseItem = ITEMS[0] as ItemDefinition;
 const baseBackground = BACKGROUNDS[0] as BackgroundDefinition;
 const baseFaction = FACTIONS[0] as FactionDefinition;
 const baseBoss = BOSSES[0] as BossDefinition;
+const baseEnemyVariant = ENEMY_VARIANTS[0] as EnemyVariantDefinition;
 const baseSector = SECTORS[0] as SectorDefinition;
 const baseShip = SHIPS[0] as ShipDefinition;
 const baseUnlock = UNLOCKS[0] as UnlockDefinition;
@@ -161,6 +163,74 @@ describe('validateContent', () => {
     });
 
     expect(errors).toContain(`Duplicate enemy class id: ${baseFaction.enemyRole.classId}`);
+  });
+
+  it('rejects invalid enemy variant definitions', () => {
+    const errors = validateContent({
+      enemyVariants: [
+        baseEnemyVariant,
+        {
+          ...baseEnemyVariant,
+          name: 'Duplicate Armored'
+        },
+        {
+          ...baseEnemyVariant,
+          id: 'variant_missing',
+          name: '',
+          debugLabel: '',
+          summary: '',
+          eligibility: ['baseline', 'moon'],
+          minSectorIndex: -1,
+          weight: 0,
+          allowedRoles: ['raider'],
+          allowedFactions: ['faction_missing'],
+          encounterTypes: ['surprise'],
+          hullBonus: 3,
+          fireDelayMultiplier: 0.5,
+          driftMultiplier: 2,
+          radiusScale: 0.5,
+          bonusSalvage: 5,
+          cue: {
+            label: 'LONGER',
+            fill: 'orange',
+            stroke: '#ffffff'
+          }
+        } as unknown as EnemyVariantDefinition
+      ]
+    });
+
+    expect(errors).toContain(`Duplicate enemy variant id: ${baseEnemyVariant.id}`);
+    expect(errors).toContain('Enemy variant variant_missing has invalid id');
+    expect(errors).toContain('Enemy variant variant_missing must have a name');
+    expect(errors).toContain('Enemy variant variant_missing must have a debug label');
+    expect(errors).toContain('Enemy variant variant_missing must have a summary');
+    expect(errors).toContain('Enemy variant variant_missing must not use baseline eligibility');
+    expect(errors).toContain('Enemy variant variant_missing has invalid eligibility: moon');
+    expect(errors).toContain('Enemy variant variant_missing must have non-negative minSectorIndex');
+    expect(errors).toContain('Enemy variant variant_missing must have positive weight');
+    expect(errors).toContain('Enemy variant variant_missing must keep hullBonus at or below 2');
+    expect(errors).toContain(
+      'Enemy variant variant_missing must keep fireDelayMultiplier between 0.75 and 1.25'
+    );
+    expect(errors).toContain(
+      'Enemy variant variant_missing must keep driftMultiplier between 0.75 and 1.45'
+    );
+    expect(errors).toContain(
+      'Enemy variant variant_missing must keep radiusScale between 0.85 and 1.2'
+    );
+    expect(errors).toContain('Enemy variant variant_missing must keep bonusSalvage at or below 4');
+    expect(errors).toContain('Enemy variant variant_missing has invalid allowed role: raider');
+    expect(errors).toContain(
+      'Enemy variant variant_missing has invalid allowed faction: faction_missing'
+    );
+    expect(errors).toContain('Enemy variant variant_missing has invalid encounter type: surprise');
+    expect(errors).toContain(
+      'Enemy variant variant_missing cue label must be 4 characters or fewer'
+    );
+    expect(errors).toContain('Enemy variant variant_missing cue must have fill as a #RRGGBB color');
+    expect(errors).toContain(
+      'Enemy variant variant_missing must match at least one current faction role'
+    );
   });
 
   it('rejects invalid boss phase definitions', () => {

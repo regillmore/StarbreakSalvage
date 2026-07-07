@@ -1265,7 +1265,7 @@ Acceptance:
 
 Status:
 
-- Implemented in work order 062. `EnemyRolePressure` summarizes active role counts and objective-policy counts from current enemies, with variant and formation placeholders held at zero until those systems exist; the debug overlay reports role pressure during gameplay.
+- Implemented in work orders 062 and 065. `EnemyRolePressure` summarizes active role counts, objective-policy counts, and active upgraded variant counts from current enemies, with formation placeholders held at zero until formations exist; the debug overlay reports role and variant pressure during gameplay.
 
 ## Epic AR - Enemy behavior differentiation
 
@@ -1311,6 +1311,10 @@ Acceptance:
 - Fresh opening sectors remain forgiving.
 - Variant eligibility validates against enemy role metadata.
 
+Status:
+
+- Implemented in work order 065. `src/content/enemyVariants.ts` defines validated first-pass armored, overclocked, evasive, volatile, shielded, and salvage-rich variants with role/faction/eligibility gates. The wave director selects variants from seeded per-spawn RNG forks based on sector depth, route pressure, challenge flags, elite wave labels, boss-gate context, and faction eligibility while preserving variant-free fresh opening sectors.
+
 ### AS2 - Elite modifier readability
 
 Acceptance:
@@ -1319,6 +1323,10 @@ Acceptance:
 - Variants change decisions before raw damage spikes.
 - Summary/debug surfaces can expose variant pressure for playtesting.
 
+Status:
+
+- Implemented in work order 065 for six first-pass variants. Combat applies visible durability, attack-cadence, drift/profile, and salvage-reward modifiers without raising enemy damage; canvas rendering adds deterministic ring/badge cues with high-contrast fallback, and the debug overlay reports active variant totals plus compact labels.
+
 ### AS3 - Variant reward and unlock hooks
 
 Acceptance:
@@ -1326,6 +1334,10 @@ Acceptance:
 - Variant and elite encounters can bias rewards or discovery hooks deterministically where appropriate.
 - Reward changes are explained through existing route/reward copy.
 - Unlock and fresh-save pool sufficiency remain intact.
+
+Status:
+
+- Partially covered in work order 065 through per-enemy bonus salvage for volatile, shielded, and salvage-rich variants. Broader post-encounter reward, discovery, and unlock hooks remain deferred until formation and enemy-rich route integration work.
 
 ## Epic AT - Formation and squad director
 

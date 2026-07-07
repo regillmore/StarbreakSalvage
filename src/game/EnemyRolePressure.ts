@@ -5,6 +5,11 @@ import {
   type EnemyObjectivePolicy,
   type EnemyRoleId
 } from '../content/enemyRoles';
+import {
+  ENEMY_VARIANT_IDS,
+  getEnemyVariantById,
+  type EnemyVariantId
+} from '../content/enemyVariants';
 import { getFactionById } from '../content/factions';
 import type { CombatState, EnemyState } from './CombatState';
 
@@ -19,10 +24,17 @@ export interface EnemyObjectivePolicyCount {
   readonly count: number;
 }
 
+export interface EnemyVariantCount {
+  readonly variantId: EnemyVariantId;
+  readonly label: string;
+  readonly count: number;
+}
+
 export interface EnemyRolePressureSummary {
   readonly totalEnemies: number;
   readonly roleCounts: readonly EnemyRoleCount[];
   readonly objectivePolicyCounts: readonly EnemyObjectivePolicyCount[];
+  readonly variantCounts: readonly EnemyVariantCount[];
   readonly variantCount: number;
   readonly formationCount: number;
 }
@@ -34,10 +46,11 @@ export function createEnemyRolePressureSummary(
 }
 
 export function createEnemyRolePressureSummaryFromEnemies(
-  enemies: readonly Pick<EnemyState, 'factionId'>[]
+  enemies: readonly Pick<EnemyState, 'factionId' | 'variantId'>[]
 ): EnemyRolePressureSummary {
   const roleCounts = new Map<EnemyRoleId, number>();
   const objectivePolicyCounts = new Map<EnemyObjectivePolicy, number>();
+  const variantCounts = new Map<EnemyVariantId, number>();
 
   for (const enemy of enemies) {
     const metadata = getFactionById(enemy.factionId).enemyRole;
@@ -46,7 +59,17 @@ export function createEnemyRolePressureSummaryFromEnemies(
       metadata.objectivePolicy,
       (objectivePolicyCounts.get(metadata.objectivePolicy) ?? 0) + 1
     );
+
+    if (enemy.variantId) {
+      variantCounts.set(enemy.variantId, (variantCounts.get(enemy.variantId) ?? 0) + 1);
+    }
   }
+
+  const variantEntries = ENEMY_VARIANT_IDS.map((variantId) => ({
+    variantId,
+    label: getEnemyVariantById(variantId).debugLabel,
+    count: variantCounts.get(variantId) ?? 0
+  })).filter((entry) => entry.count > 0);
 
   return {
     totalEnemies: enemies.length,
@@ -59,7 +82,8 @@ export function createEnemyRolePressureSummaryFromEnemies(
       objectivePolicy,
       count: objectivePolicyCounts.get(objectivePolicy) ?? 0
     })).filter((entry) => entry.count > 0),
-    variantCount: 0,
+    variantCounts: variantEntries,
+    variantCount: variantEntries.reduce((total, entry) => total + entry.count, 0),
     formationCount: 0
   };
 }

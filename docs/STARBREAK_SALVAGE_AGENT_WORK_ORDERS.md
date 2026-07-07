@@ -1082,6 +1082,8 @@ Acceptance criteria:
 - Fresh opening sectors do not become unfair.
 - Debug or summary surfaces can expose variant pressure for playtesting.
 
+Status: implemented; upgraded enemy variants are now defined in `src/content/enemyVariants.ts` and validated with enemy role/faction eligibility. The wave director chooses optional variant IDs deterministically from a forked per-spawn RNG using sector depth, route pressure, challenge flags, elite/boss-gate context, and faction eligibility while keeping fresh opening sectors variant-free. Combat applies conservative visible modifiers for armored, overclocked, evasive, volatile, shielded, and salvage-rich enemies without damage spikes, the renderer adds ring/badge cues, the debug overlay reports active variant pressure, and unit coverage pins selection, validation, spawn modifiers, reward drops, and role-pressure summaries.
+
 ## Work order 066 - Formation definitions and squad spawning
 
 Goal: create tactical enemy shapes that are deterministic and readable.
