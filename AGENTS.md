@@ -41,7 +41,7 @@ npm run check     # typecheck + lint + test + build
 
 After modifying code, run the narrowest relevant tests first, then `npm run check` before declaring the task complete. If Playwright browsers are not installed in a local environment, say so and run every other check.
 
-Local Codex note: `npm run test:e2e` may need escalation on Windows because Playwright launches Chromium from `%LOCALAPPDATA%\ms-playwright`, which the sandbox cannot read by default. If E2E reports a missing `chromium_headless_shell` executable even after install, rerun the E2E command with escalation for AppData visibility.
+Local Codex note: `npm run test:e2e` will need escalation on Windows because Playwright launches Chromium from `%LOCALAPPDATA%\ms-playwright`, which the sandbox cannot read by default. E2E will report a missing `chromium_headless_shell` executable even after install, so rerun the E2E command with escalation for AppData visibility.
 
 ## Code style and architecture rules
 
