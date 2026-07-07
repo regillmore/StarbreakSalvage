@@ -24,9 +24,9 @@ Refresh, enrich, and expand the item catalog into a durable build-crafting found
 - the item catalog has reached the first 60-item Phase 6 target, and source weighting now gives shop, vault, lunar, route, faction, elite, and boss contexts a first pass of curated identity;
 - several item effects are intentionally lightweight placeholders and need clearer live behavior or explicit "planned effect" treatment;
 - expanded hook surfaces now have first live users across graze, special, bomb, sector, route, shop, reward, and boss phase events, but balance and proc readability need playtest data;
-- shop/vault/reward pools need stronger rarity, faction, sector, route, and unlock controls before the catalog grows much further;
+- shop/vault/reward pools now have source weighting and first unlock-gated family tiers, but need more playtest balance before the catalog grows much further;
 - item UI currently exposes names and text, but future scale will need better icons, tags, comparison, and build summary grouping;
-- unlocks widen item pools, but item discovery and collection progress are not yet a first-class surface.
+- item discovery and family progress now have a first archive surface, but reward/shop cards and run summary still need richer presentation.
 
 ## Phase 6 Milestones
 
@@ -76,7 +76,7 @@ Exit criteria:
 - Pool weights are testable and can be sampled for known seeds.
 - Fresh saves retain enough variety for complete runs.
 
-Status: first pass implemented by work order 055. Reward generation now uses validated item pool weight profiles for starter, combat, shop, vault, elite, boss, faction, lunar, and route contexts. Weights combine source metadata, rarity, family, tags, route kind, sector identity, boss/faction context, contract bias, upgrade bias, and save/unlock filtering while keeping known-seed shop/reward/vault outputs reproducible. Unlock-gated family expansion remains work order 056.
+Status: implemented by work orders 055 and 056. Reward generation now uses validated item pool weight profiles for starter, combat, shop, vault, elite, boss, faction, lunar, and route contexts. Weights combine source metadata, rarity, family, tags, route kind, sector identity, boss/faction context, contract bias, upgrade bias, and save/unlock filtering while keeping known-seed shop/reward/vault outputs reproducible. Advanced curse/relic, classified heat/prototype, and advanced boss-pressure tiers now enter future pools only after their related permanent unlocks, while fresh saves retain baseline item variety.
 
 ### P6.5 - Synergy And Build Identity
 
@@ -97,6 +97,8 @@ Exit criteria:
 - Item cards expose tags, rarity, pool/source hints, and concise effect state.
 - Unlock Archive can show item discovery/progress without spoiling everything by default.
 - Keyboard, narrow viewport, high-contrast, and reduced-motion treatment remain usable.
+
+Status: first archive pass implemented by work order 056. Save schema v4 records discovered item IDs and family IDs, migrates older saves, and the Unlock Archive shows family progress plus locked/partial/unlocked hints without listing locked item details. Reward/shop card iconography, tag badges, and item-heavy narrow-layout polish remain work order 058.
 
 ### P6.7 - Phase 6 Item Playtest Candidate
 

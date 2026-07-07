@@ -1,11 +1,17 @@
 import { ACHIEVEMENTS, type AchievementId } from '../content/achievements';
+import { getItemById, ITEM_FAMILIES, ITEMS, type ItemFamily, type ItemId } from '../content/items';
 import { getUnlockById, UNLOCKS, type UnlockId } from '../content/unlocks';
-import { getUpgradeById, UPGRADES, type UpgradeDefinition, type UpgradeId } from '../content/upgrades';
+import {
+  getUpgradeById,
+  UPGRADES,
+  type UpgradeDefinition,
+  type UpgradeId
+} from '../content/upgrades';
 import type { CombatEndReason } from '../game/CombatState';
 
-export const SAVE_STORAGE_KEY = 'starbreak.save.v3';
-export const LEGACY_SAVE_STORAGE_KEYS = ['starbreak.save.v2'] as const;
-export const SAVE_SCHEMA_VERSION = 3;
+export const SAVE_STORAGE_KEY = 'starbreak.save.v4';
+export const LEGACY_SAVE_STORAGE_KEYS = ['starbreak.save.v3', 'starbreak.save.v2'] as const;
+export const SAVE_SCHEMA_VERSION = 4;
 
 export interface StorageLike {
   getItem(key: string): string | null;
@@ -47,6 +53,8 @@ export interface SaveData {
   readonly unlockedIds: readonly UnlockId[];
   readonly purchasedUpgradeIds: readonly UpgradeId[];
   readonly achievementIds: readonly AchievementId[];
+  readonly discoveredItemIds: readonly ItemId[];
+  readonly discoveredItemFamilyIds: readonly ItemFamily[];
   readonly stats: SaveStats;
   readonly lastRun: LastRunSummary | null;
 }
@@ -71,6 +79,7 @@ export interface RunSaveRecord {
   readonly creditsRecovered: number;
   readonly salvageRecovered: number;
   readonly itemTriggers: number;
+  readonly itemIds?: readonly ItemId[];
 }
 
 export interface SaveUpdateResult {
@@ -121,6 +130,18 @@ interface SaveDataV2 {
   readonly lastRun?: unknown;
 }
 
+interface SaveDataV3 {
+  readonly version: 3;
+  readonly salvageBank?: number;
+  readonly unlockedIds?: readonly string[];
+  readonly purchasedUpgradeIds?: readonly string[];
+  readonly achievementIds?: readonly string[];
+  readonly discoveredItemIds?: readonly string[];
+  readonly discoveredItemFamilyIds?: readonly string[];
+  readonly stats?: Record<string, unknown>;
+  readonly lastRun?: unknown;
+}
+
 export function createDefaultSaveData(): SaveData {
   return {
     version: SAVE_SCHEMA_VERSION,
@@ -128,6 +149,8 @@ export function createDefaultSaveData(): SaveData {
     unlockedIds: [],
     purchasedUpgradeIds: [],
     achievementIds: [],
+    discoveredItemIds: [],
+    discoveredItemFamilyIds: [],
     stats: {
       runsEnded: 0,
       deaths: 0,
@@ -185,6 +208,10 @@ export function loadSaveData(storage: StorageLike): SaveLoadResult {
 
 export function writeSaveData(storage: StorageLike, data: SaveData): void {
   storage.setItem(SAVE_STORAGE_KEY, exportSaveData(data));
+
+  for (const legacyKey of LEGACY_SAVE_STORAGE_KEYS) {
+    storage.removeItem(legacyKey);
+  }
 }
 
 export function resetSaveData(storage: StorageLike): SaveData {
@@ -212,6 +239,10 @@ export function importSaveData(serialized: string): SaveData {
 
   if (parsed.version === 2) {
     return migrateV2Save(parsed as unknown as SaveDataV2);
+  }
+
+  if (parsed.version === 3) {
+    return migrateV3Save(parsed as unknown as SaveDataV3);
   }
 
   if (parsed.version !== SAVE_SCHEMA_VERSION) {
@@ -246,6 +277,12 @@ export function applyRunRecordToSave(current: SaveData, record: RunSaveRecord): 
   const unlockedIds = new Set(current.unlockedIds);
   const newAchievementIds: AchievementId[] = [];
   const newUnlockIds: UnlockId[] = [];
+  const runDiscoveredItemIds = sanitizeItemIds(record.itemIds ?? []);
+  const discoveredItemIds = mergeUniqueItemIds(current.discoveredItemIds, runDiscoveredItemIds);
+  const discoveredItemFamilyIds = sanitizeItemFamilyIds([
+    ...current.discoveredItemFamilyIds,
+    ...runDiscoveredItemIds.map(getItemFamilyId)
+  ]);
 
   for (const achievement of ACHIEVEMENTS) {
     if (achievementIds.has(achievement.id)) {
@@ -277,6 +314,8 @@ export function applyRunRecordToSave(current: SaveData, record: RunSaveRecord): 
       unlockedIds: [...unlockedIds],
       purchasedUpgradeIds: current.purchasedUpgradeIds,
       achievementIds: [...achievementIds],
+      discoveredItemIds,
+      discoveredItemFamilyIds,
       stats: updatedStats,
       lastRun: {
         seed: record.seed,
@@ -400,18 +439,36 @@ function migrateV2Save(data: SaveDataV2): SaveData {
   return normalizeSaveData({
     ...data,
     version: SAVE_SCHEMA_VERSION,
-    purchasedUpgradeIds: []
+    purchasedUpgradeIds: [],
+    discoveredItemIds: [],
+    discoveredItemFamilyIds: []
+  });
+}
+
+function migrateV3Save(data: SaveDataV3): SaveData {
+  return normalizeSaveData({
+    ...data,
+    version: SAVE_SCHEMA_VERSION,
+    discoveredItemIds: data.discoveredItemIds ?? [],
+    discoveredItemFamilyIds: data.discoveredItemFamilyIds ?? []
   });
 }
 
 function normalizeSaveData(input: Record<string, unknown>): SaveData {
   const stats = isRecord(input.stats) ? input.stats : {};
+  const discoveredItemIds = sanitizeItemIds(input.discoveredItemIds);
+  const discoveredItemFamilyIds = sanitizeItemFamilyIds([
+    ...sanitizeItemFamilyIds(input.discoveredItemFamilyIds),
+    ...discoveredItemIds.map(getItemFamilyId)
+  ]);
   const normalized: SaveData = {
     version: SAVE_SCHEMA_VERSION,
     salvageBank: sanitizeCount(input.salvageBank),
     unlockedIds: sanitizeUnlockIds(input.unlockedIds),
     purchasedUpgradeIds: sanitizeUpgradeIds(input.purchasedUpgradeIds),
     achievementIds: sanitizeAchievementIds(input.achievementIds),
+    discoveredItemIds,
+    discoveredItemFamilyIds,
     stats: {
       runsEnded: sanitizeCount(stats.runsEnded),
       deaths: sanitizeCount(stats.deaths),
@@ -489,6 +546,35 @@ function sanitizeUpgradeIds(value: unknown): UpgradeId[] {
 
   const validIds = new Set(UPGRADES.map((upgrade) => upgrade.id));
   return uniqueStrings(value).filter((id): id is UpgradeId => validIds.has(id as UpgradeId));
+}
+
+function sanitizeItemIds(value: unknown): ItemId[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const validIds = new Set(ITEMS.map((item) => item.id));
+  return uniqueStrings(value).filter((id): id is ItemId => validIds.has(id as ItemId));
+}
+
+function sanitizeItemFamilyIds(value: unknown): ItemFamily[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const validIds = new Set<string>(ITEM_FAMILIES);
+  return uniqueStrings(value).filter((id): id is ItemFamily => validIds.has(id));
+}
+
+function mergeUniqueItemIds(
+  currentItemIds: readonly ItemId[],
+  discoveredItemIds: readonly ItemId[]
+): ItemId[] {
+  return [...new Set([...currentItemIds, ...discoveredItemIds])];
+}
+
+function getItemFamilyId(itemId: ItemId): ItemFamily {
+  return getItemById(itemId).metadata.family;
 }
 
 function getKnownUnlockIds(): UnlockId[] {

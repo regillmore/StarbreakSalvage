@@ -520,7 +520,8 @@ export class GameApp {
       enemiesDestroyed: result.enemiesDestroyed + previousEnemies,
       creditsRecovered: Math.max(result.credits, this.runSession.credits),
       salvageRecovered: Math.max(result.salvage, this.runSession.salvage),
-      itemTriggers: result.itemTriggers + previousTriggers
+      itemTriggers: result.itemTriggers + previousTriggers,
+      itemIds: this.runSession.itemInstances.map((item) => item.itemId)
     };
   }
 

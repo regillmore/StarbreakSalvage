@@ -1,11 +1,20 @@
 import { type BossId } from '../content/bosses';
 import { FACTIONS, type FactionDefinition, type FactionId } from '../content/factions';
-import type { ItemId } from '../content/items';
+import { getItemById, type ItemFamily, type ItemId, type ItemUnlockTier } from '../content/items';
 import { SHIPS, type ShipDefinition, type ShipId } from '../content/ships';
 import { UNLOCKS, type UnlockId } from '../content/unlocks';
 
 export interface UnlockAccess {
   readonly unlockedIds?: readonly UnlockId[];
+}
+
+export interface ItemFamilyGateDefinition {
+  readonly family: ItemFamily;
+  readonly unlockId: UnlockId;
+  readonly unlockTiers: readonly ItemUnlockTier[];
+  readonly label: string;
+  readonly summary: string;
+  readonly lockedHint: string;
 }
 
 export interface ChallengeSeedDefinition {
@@ -43,6 +52,33 @@ export const SHIP_UNLOCKS: Readonly<Partial<Record<ShipId, UnlockId>>> = {
 export const ITEM_UNLOCKS: Readonly<Partial<Record<ItemId, UnlockId>>> = {
   item_overheat_oracle: 'unlock_item_executive_override'
 };
+
+export const ITEM_FAMILY_GATES: readonly ItemFamilyGateDefinition[] = [
+  {
+    family: 'curse-relic',
+    unlockId: 'unlock_ship_relic_thief',
+    unlockTiers: ['advanced'],
+    label: 'Relic Theft Dossier',
+    summary: 'opens cursed relic tables for vault and route rewards',
+    lockedHint: 'Survey routes and recover enough records to expose the Relic Thief trail.'
+  },
+  {
+    family: 'heat-prototype',
+    unlockId: 'unlock_item_executive_override',
+    unlockTiers: ['unlock'],
+    label: 'Executive Prototype Waiver',
+    summary: 'permits classified heat prototypes to enter combat and vault rewards',
+    lockedHint: 'Recover a larger credit float to convince sponsors to release prototypes.'
+  },
+  {
+    family: 'boss-pressure',
+    unlockId: 'unlock_boss_auditor_drill',
+    unlockTiers: ['advanced'],
+    label: 'Boss Pressure Brief',
+    summary: 'adds high-pressure boss countermeasures after a confirmed boss salvage',
+    lockedHint: 'Defeat a boss to unlock pressure analysis for future contracts.'
+  }
+];
 
 export const FACTION_UNLOCKS: Readonly<Partial<Record<FactionId, UnlockId>>> = {
   faction_bloom_hive: 'unlock_faction_bloom_hive'
@@ -105,6 +141,24 @@ export function getAvailableBossPracticeIds(access: UnlockAccess = {}): BossId[]
     .map(([bossId]) => bossId);
 }
 
+export function getItemFamilyGate(family: ItemFamily): ItemFamilyGateDefinition | undefined {
+  return ITEM_FAMILY_GATES.find((gate) => gate.family === family);
+}
+
+export function isItemFamilyTierUnlocked(
+  family: ItemFamily,
+  unlockTier: ItemUnlockTier,
+  access: UnlockAccess = {}
+): boolean {
+  const gate = getItemFamilyGate(family);
+
+  if (!gate || !gate.unlockTiers.includes(unlockTier)) {
+    return true;
+  }
+
+  return hasUnlock(access, gate.unlockId);
+}
+
 export function isShipUnlocked(shipId: ShipId, access: UnlockAccess = {}): boolean {
   if (BASELINE_SHIP_IDS.includes(shipId)) {
     return true;
@@ -114,7 +168,12 @@ export function isShipUnlocked(shipId: ShipId, access: UnlockAccess = {}): boole
 }
 
 export function isItemUnlocked(itemId: ItemId, access: UnlockAccess = {}): boolean {
-  return hasRequiredUnlock(ITEM_UNLOCKS[itemId], access);
+  const item = getItemById(itemId);
+
+  return (
+    hasRequiredUnlock(ITEM_UNLOCKS[itemId], access) &&
+    isItemFamilyTierUnlocked(item.metadata.family, item.metadata.unlockTier, access)
+  );
 }
 
 export function isFactionUnlocked(factionId: FactionId, access: UnlockAccess = {}): boolean {

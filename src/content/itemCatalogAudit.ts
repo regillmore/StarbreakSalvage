@@ -22,7 +22,11 @@ import {
   type RewardPoolDefinition
 } from './items';
 import { ITEM_HOOK_IMPLEMENTATIONS } from '../game/ItemHooks';
-import { ITEM_UNLOCKS } from '../game/UnlockGates';
+import {
+  ITEM_FAMILY_GATES,
+  ITEM_UNLOCKS,
+  type ItemFamilyGateDefinition
+} from '../game/UnlockGates';
 
 const ITEM_RARITIES = ['common', 'uncommon', 'rare', 'prototype', 'cursed'] as const;
 
@@ -71,14 +75,18 @@ export interface ItemCatalogAudit {
   readonly bridgeEffectNotes: readonly BridgeEffectAuditNote[];
 }
 
-export function createItemCatalogAudit(options: {
-  readonly items?: readonly ItemDefinition[];
-  readonly rewardPools?: readonly RewardPoolDefinition[];
-  readonly itemUnlocks?: Readonly<Partial<Record<ItemId, unknown>>>;
-} = {}): ItemCatalogAudit {
+export function createItemCatalogAudit(
+  options: {
+    readonly items?: readonly ItemDefinition[];
+    readonly rewardPools?: readonly RewardPoolDefinition[];
+    readonly itemUnlocks?: Readonly<Partial<Record<ItemId, unknown>>>;
+    readonly itemFamilyGates?: readonly ItemFamilyGateDefinition[];
+  } = {}
+): ItemCatalogAudit {
   const items = options.items ?? ITEMS;
   const rewardPools = options.rewardPools ?? REWARD_POOLS;
   const itemUnlocks = options.itemUnlocks ?? ITEM_UNLOCKS;
+  const itemFamilyGates = options.itemFamilyGates ?? ITEM_FAMILY_GATES;
   const itemById = new Map(items.map((item) => [item.id, item]));
   const rewardedItemIds = new Set<ItemId>(rewardPools.flatMap((pool) => pool.itemIds));
   const tagCounts = createCountRecord(ITEM_TAGS);
@@ -162,7 +170,7 @@ export function createItemCatalogAudit(options: {
     poolAudits,
     archetypeAudits,
     underrepresentedArchetypeIds,
-    lockedItemIds: Object.keys(itemUnlocks).sort() as ItemId[],
+    lockedItemIds: getLockedItemIds(items, itemUnlocks, itemFamilyGates),
     bridgeEffectNotes: createBridgeEffectNotes(items)
   };
 }
@@ -173,6 +181,24 @@ export function getImplementedHookItemIds(hook: ItemHook): readonly ItemId[] {
 
 function createCountRecord<TKey extends string>(keys: readonly TKey[]): Record<TKey, number> {
   return Object.fromEntries(keys.map((key) => [key, 0])) as Record<TKey, number>;
+}
+
+function getLockedItemIds(
+  items: readonly ItemDefinition[],
+  itemUnlocks: Readonly<Partial<Record<ItemId, unknown>>>,
+  itemFamilyGates: readonly ItemFamilyGateDefinition[]
+): ItemId[] {
+  const lockedIds = new Set(Object.keys(itemUnlocks) as ItemId[]);
+
+  for (const item of items) {
+    const gate = itemFamilyGates.find((candidate) => candidate.family === item.metadata.family);
+
+    if (gate?.unlockTiers.includes(item.metadata.unlockTier)) {
+      lockedIds.add(item.id);
+    }
+  }
+
+  return [...lockedIds].sort();
 }
 
 function createBridgeEffectNotes(items: readonly ItemDefinition[]): BridgeEffectAuditNote[] {

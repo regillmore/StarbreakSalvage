@@ -109,7 +109,16 @@ describe('item catalog audit', () => {
       lunar: 5,
       route: 6
     });
-    expect(audit.lockedItemIds).toEqual(['item_overheat_oracle']);
+    expect(audit.lockedItemIds).toEqual([
+      'item_capital_wound_ledger',
+      'item_curse_eater_gasket',
+      'item_curse_interest_bond',
+      'item_cursed_hull_plate',
+      'item_overheat_oracle',
+      'item_relic_ash_compass',
+      'item_relic_index_codex',
+      'item_vault_parasite'
+    ]);
   });
 
   it('flags implementation gaps without changing item content', () => {

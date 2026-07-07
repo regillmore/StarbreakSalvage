@@ -59,16 +59,16 @@ export const UNLOCKS: readonly UnlockDefinition[] = [
     kind: 'ship',
     name: 'Relic Thief',
     summary: 'a curse-biased starter contract that favors vault routes',
-    effect: 'Adds Relic Thief to future contract boards.',
-    grants: ['Ship: Relic Thief']
+    effect: 'Adds Relic Thief to future contract boards and opens cursed relic reward files.',
+    grants: ['Ship: Relic Thief', 'Item Family: Curse Relic']
   },
   {
     id: 'unlock_item_executive_override',
     kind: 'item',
     name: 'Executive Override',
     summary: 'a prototype survival clause for future reward pools',
-    effect: 'Adds Overheat Oracle to combat and vault reward pools.',
-    grants: ['Item: Overheat Oracle']
+    effect: 'Adds Overheat Oracle and classified heat prototypes to combat and vault rewards.',
+    grants: ['Item: Overheat Oracle', 'Item Family: Heat Prototype Classified Tier']
   },
   {
     id: 'unlock_challenge_debt_ceiling',
@@ -83,8 +83,8 @@ export const UNLOCKS: readonly UnlockDefinition[] = [
     kind: 'bossPractice',
     name: 'Auditor Drill',
     summary: 'a future practice entry for direct boss rehearsal',
-    effect: 'Marks Auditor Drone XL as available for boss practice.',
-    grants: ['Boss Practice: Auditor Drone XL']
+    effect: 'Marks Auditor Drone XL as available for boss practice and opens boss-pressure files.',
+    grants: ['Boss Practice: Auditor Drone XL', 'Item Family: Boss Pressure Classified Tier']
   },
   {
     id: 'unlock_faction_bloom_hive',

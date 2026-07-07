@@ -5,6 +5,7 @@ import { UPGRADES } from '../content/upgrades';
 import type { SaveData } from '../core/saveData';
 import type { Scene } from '../app/Scene';
 import type { InputAction } from '../systems/InputSystem';
+import { createItemDiscoveryArchiveModel } from './ItemDiscoveryArchive';
 import { createArchiveUpgradeProgressModel } from './RunSummaryProgress';
 
 export interface SaveImportResult {
@@ -29,13 +30,14 @@ export class UnlockArchiveScene implements Scene {
   public enter(): void {
     const saveData = this.getSaveData();
     const upgradeProgress = createArchiveUpgradeProgressModel(saveData);
+    const itemDiscovery = createItemDiscoveryArchiveModel(saveData);
     const shell = document.createElement('main');
     shell.className = 'scene-panel scene-panel-wide archive-panel';
     shell.setAttribute('aria-labelledby', 'archive-title');
 
     const eyebrow = document.createElement('p');
     eyebrow.className = 'eyebrow';
-    eyebrow.textContent = `Salvage Bank ${saveData.salvageBank} kg | Unlocks ${saveData.unlockedIds.length}/${UNLOCKS.length} | Upgrades ${saveData.purchasedUpgradeIds.length}/${UPGRADES.length} | Ready ${upgradeProgress.availableUpgradeCount}`;
+    eyebrow.textContent = `Salvage Bank ${saveData.salvageBank} kg | Unlocks ${saveData.unlockedIds.length}/${UNLOCKS.length} | Upgrades ${saveData.purchasedUpgradeIds.length}/${UPGRADES.length} | Items ${itemDiscovery.discoveredItemCount}/${itemDiscovery.totalItemCount} | Ready ${upgradeProgress.availableUpgradeCount}`;
 
     const title = document.createElement('h1');
     title.id = 'archive-title';
@@ -97,6 +99,42 @@ export class UnlockArchiveScene implements Scene {
 
       item.append(name, meta, body, effect, grants);
       unlockGrid.append(item);
+    }
+
+    const itemFamilyTitle = document.createElement('h2');
+    itemFamilyTitle.className = 'archive-section-title';
+    itemFamilyTitle.textContent = `Item Families ${itemDiscovery.discoveredFamilyCount}/${itemDiscovery.totalFamilyCount}`;
+
+    const itemFamilyGrid = document.createElement('div');
+    itemFamilyGrid.className = 'archive-grid';
+    itemFamilyGrid.dataset.testid = 'item-family-list';
+
+    for (const family of itemDiscovery.entries) {
+      const item = document.createElement('article');
+      item.className = 'archive-item';
+      item.dataset.unlocked =
+        family.state === 'available' || family.state === 'unlocked' ? 'true' : 'false';
+      item.dataset.familyState = family.state;
+
+      const name = document.createElement('h2');
+      name.textContent = family.label;
+
+      const meta = document.createElement('p');
+      meta.className = 'choice-meta';
+      meta.textContent = family.statusText;
+
+      const body = document.createElement('p');
+      body.className = 'choice-body';
+      body.textContent = family.hintText;
+
+      const gate = document.createElement('p');
+      gate.className = 'choice-meta';
+      gate.textContent = family.gateLabel
+        ? `Gate ${family.gateLabel} via ${family.unlockName ?? 'archive unlock'}`
+        : 'Gate none';
+
+      item.append(name, meta, body, gate);
+      itemFamilyGrid.append(item);
     }
 
     const saveBox = document.createElement('textarea');
@@ -163,7 +201,17 @@ export class UnlockArchiveScene implements Scene {
     status.textContent =
       this.statusText === 'Archive ready.' ? upgradeProgress.statusText : this.statusText;
 
-    shell.append(eyebrow, title, stats, unlockGrid, saveBox, controls, status);
+    shell.append(
+      eyebrow,
+      title,
+      stats,
+      unlockGrid,
+      itemFamilyTitle,
+      itemFamilyGrid,
+      saveBox,
+      controls,
+      status
+    );
     this.uiRoot.replaceChildren(shell);
     backButton.focus();
   }

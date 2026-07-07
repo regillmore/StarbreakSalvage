@@ -8,7 +8,8 @@ import {
   getAvailableBossPracticeIds,
   getAvailableChallengeSeeds,
   getAvailableFactionIds,
-  getAvailableShips
+  getAvailableShips,
+  getItemFamilyGate
 } from '../../src/game/UnlockGates';
 import { createWaveDirectorPlan } from '../../src/game/WaveDirector';
 
@@ -47,11 +48,19 @@ describe('unlock gates', () => {
       count: 99,
       unlockedIds: freshSave.unlockedIds
     }).map((choice) => choice.item.id);
+    const vaultRewards = generateRewardChoices({
+      seed: 'FRESH-VAULT-POOL',
+      poolId: 'vault',
+      count: 99,
+      unlockedIds: freshSave.unlockedIds
+    }).map((choice) => choice.item.id);
     const starterLoadout = generateStartingItemLoadout(run.seed, contract, {
       unlockedIds: freshSave.unlockedIds
     });
 
     expect(combatRewards).not.toContain('item_overheat_oracle');
+    expect(combatRewards).not.toContain('item_capital_wound_ledger');
+    expect(vaultRewards).not.toContain('item_curse_interest_bond');
     expect(starterLoadout).toHaveLength(3);
     expect(starterLoadout.map((item) => item.itemId)).toContain('item_split_prism');
     expect(starterLoadout.map((item) => item.itemId)).toContain('item_chain_arc_capacitor');
@@ -81,6 +90,7 @@ describe('unlock gates', () => {
   it('unlocks ships, items, factions, challenge seeds, and boss practice flags', () => {
     const unlockedIds = [
       'unlock_ship_phase_courier',
+      'unlock_ship_relic_thief',
       'unlock_item_executive_override',
       'unlock_faction_bloom_hive',
       'unlock_challenge_debt_ceiling',
@@ -92,12 +102,21 @@ describe('unlock gates', () => {
       count: 99,
       unlockedIds
     }).map((choice) => choice.item.id);
+    const vaultRewards = generateRewardChoices({
+      seed: 'UNLOCKED-VAULT-POOL',
+      poolId: 'vault',
+      count: 99,
+      unlockedIds
+    }).map((choice) => choice.item.id);
 
     expect(getAvailableShips({ unlockedIds }).map((ship) => ship.id)).toContain(
       'ship_phase_courier'
     );
     expect(getAvailableFactionIds({ unlockedIds })).toContain('faction_bloom_hive');
     expect(combatRewards).toContain('item_overheat_oracle');
+    expect(combatRewards).toContain('item_capital_wound_ledger');
+    expect(vaultRewards).toContain('item_curse_interest_bond');
+    expect(getItemFamilyGate('curse-relic')?.unlockId).toBe('unlock_ship_relic_thief');
     expect(getAvailableChallengeSeeds({ unlockedIds }).map((challenge) => challenge.id)).toEqual([
       'challenge_debt_ceiling'
     ]);

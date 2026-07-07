@@ -1,0 +1,52 @@
+import { describe, expect, it } from 'vitest';
+
+import { createDefaultSaveData } from '../../src/core/saveData';
+import { createItemDiscoveryArchiveModel } from '../../src/ui/ItemDiscoveryArchive';
+
+describe('item discovery archive', () => {
+  it('shows fresh-save family gates without spoiling locked item names', () => {
+    const model = createItemDiscoveryArchiveModel(createDefaultSaveData());
+    const curseRelic = model.entries.find((entry) => entry.family === 'curse-relic');
+    const heatPrototype = model.entries.find((entry) => entry.family === 'heat-prototype');
+
+    expect(model.discoveredItemCount).toBe(0);
+    expect(curseRelic).toEqual(
+      expect.objectContaining({
+        state: 'locked',
+        statusText: 'Locked | 0/6 discovered',
+        gateLabel: 'Relic Theft Dossier',
+        unlockName: 'Relic Thief'
+      })
+    );
+    expect(curseRelic?.hintText).not.toContain('Relic Ash Compass');
+    expect(heatPrototype?.state).toBe('partial');
+    expect(heatPrototype?.statusText).toBe(
+      'Core available, classified tier locked | 0/5 discovered'
+    );
+  });
+
+  it('shows unlocked family progress from discovery records', () => {
+    const model = createItemDiscoveryArchiveModel({
+      ...createDefaultSaveData(),
+      unlockedIds: [
+        'unlock_ship_relic_thief',
+        'unlock_item_executive_override',
+        'unlock_boss_auditor_drill'
+      ],
+      discoveredItemIds: ['item_split_prism', 'item_relic_ash_compass'],
+      discoveredItemFamilyIds: ['laser-split', 'curse-relic']
+    });
+    const curseRelic = model.entries.find((entry) => entry.family === 'curse-relic');
+
+    expect(model.discoveredItemCount).toBe(2);
+    expect(model.discoveredFamilyCount).toBe(2);
+    expect(curseRelic).toEqual(
+      expect.objectContaining({
+        state: 'unlocked',
+        statusText: 'Unlocked | 1/6 discovered',
+        discoveredItemNames: ['Relic Ash Compass']
+      })
+    );
+    expect(curseRelic?.hintText).toContain('Recorded: Relic Ash Compass');
+  });
+});

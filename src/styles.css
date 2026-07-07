@@ -520,9 +520,7 @@ html[data-performance-mode='true'] .ship-preview-mounts {
 
 html[data-bullet-contrast='high'] .ship-preview-frame {
   border-color: rgba(248, 251, 255, 0.64);
-  background:
-    linear-gradient(135deg, rgba(248, 251, 255, 0.12), transparent),
-    rgba(2, 4, 10, 0.88);
+  background: linear-gradient(135deg, rgba(248, 251, 255, 0.12), transparent), rgba(2, 4, 10, 0.88);
   box-shadow: none;
 }
 
@@ -631,6 +629,14 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
   gap: 0.75rem;
 }
 
+.archive-section-title {
+  margin: 0.4rem 0 0;
+  color: #f8fbff;
+  font-size: 1.05rem;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
 .upgrade-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -685,8 +691,7 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
 .upgrade-card[data-state='purchased'] {
   border-color: rgba(114, 242, 167, 0.58);
   background:
-    linear-gradient(160deg, rgba(34, 88, 64, 0.34), rgba(10, 14, 34, 0.68)),
-    rgba(10, 14, 34, 0.74);
+    linear-gradient(160deg, rgba(34, 88, 64, 0.34), rgba(10, 14, 34, 0.68)), rgba(10, 14, 34, 0.74);
 }
 
 .upgrade-card[data-state='locked'],

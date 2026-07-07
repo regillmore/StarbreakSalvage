@@ -925,6 +925,8 @@ Acceptance criteria:
 - Unlock Archive can show item-family progress or discovery hints.
 - Fresh saves remain complete and balanced.
 
+Status: implemented; advanced curse/relic, classified heat/prototype, and advanced boss-pressure items now use deterministic family-tier unlock gates while baseline item families remain available for fresh saves. Save schema v4 records discovered item IDs and derived family IDs, migrates v1-v3 saves safely, and preserves discovery state through import/export. The Unlock Archive now shows item-family progress, locked/partial/unlocked states, and non-spoiler hints for gated families.
+
 ## Work order 057 - Synergy clusters and build identity readouts
 
 Goal: make item combinations legible and exciting.

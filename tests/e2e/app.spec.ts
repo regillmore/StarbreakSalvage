@@ -1,11 +1,13 @@
 import { expect, test, type Page } from '@playwright/test';
 
 const SCRAP_BAY_SAVE = {
-  version: 3,
+  version: 4,
   salvageBank: 8,
   unlockedIds: [],
   purchasedUpgradeIds: [],
   achievementIds: [],
+  discoveredItemIds: [],
+  discoveredItemFamilyIds: [],
   stats: {
     runsEnded: 1,
     deaths: 0,
@@ -132,7 +134,9 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('item-readout')).toContainText('Split Prism');
   await expect(page.locator('.debug-overlay')).toContainText('Theme redline/Debt Runner');
   await expect(page.locator('.debug-overlay')).toContainText('HUD standard');
-  await expect(page.locator('.debug-overlay')).toContainText(/Viewport \d+x\d+ \w+ @[0-9.]+ DPR [0-9.]+/);
+  await expect(page.locator('.debug-overlay')).toContainText(
+    /Viewport \d+x\d+ \w+ @[0-9.]+ DPR [0-9.]+/
+  );
   await expect(page.locator('.debug-overlay')).toContainText(/Canvas \d+x\d+/);
   await expect(page.locator('.debug-overlay')).toContainText(/Safe \d+,\d+ \d+x\d+/);
 
@@ -237,8 +241,10 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
 
   await page.getByRole('button', { name: 'Export Save' }).click();
   const exportedSave = await page.getByTestId('save-import-box').inputValue();
-  expect(exportedSave).toContain('"version": 3');
+  expect(exportedSave).toContain('"version": 4');
   expect(exportedSave).toContain('"purchasedUpgradeIds":');
+  expect(exportedSave).toContain('"discoveredItemIds":');
+  expect(exportedSave).toContain('"discoveredItemFamilyIds":');
 
   await page.getByRole('button', { name: 'Reset Save' }).click();
   await expect(page.getByTestId('save-status')).toContainText('Save reset.');
@@ -268,7 +274,7 @@ test('opens the Upgrade Bay and purchases an upgrade from banked scrap', async (
   await page.setViewportSize({ width: 390, height: 700 });
   await page.addInitScript(
     ({ save, settings }) => {
-      window.localStorage.setItem('starbreak.save.v3', JSON.stringify(save));
+      window.localStorage.setItem('starbreak.save.v4', JSON.stringify(save));
       window.localStorage.setItem('starbreak.settings.v1', JSON.stringify(settings));
     },
     { save: SCRAP_BAY_SAVE, settings: HIGH_CONTRAST_SETTINGS }
@@ -313,7 +319,7 @@ test('opens the Upgrade Bay and purchases an upgrade from banked scrap', async (
   await expect(surveyRig).toContainText('Installed in the archive.');
 
   const savedUpgradeIds = await page.evaluate(() => {
-    const raw = window.localStorage.getItem('starbreak.save.v3');
+    const raw = window.localStorage.getItem('starbreak.save.v4');
     return raw ? JSON.parse(raw).purchasedUpgradeIds : [];
   });
   expect(savedUpgradeIds).toEqual(['upgrade_contract_survey_rig']);
@@ -524,7 +530,9 @@ test('keeps the gameplay HUD and safe frame readable in a narrow viewport', asyn
 
   await page.keyboard.press('Enter');
   await expectGameplaySector(page, 'Outer Debris Field');
-  await expect(page.locator('.debug-overlay')).toContainText('Viewport 390x700 narrow @0.57 DPR 1.00');
+  await expect(page.locator('.debug-overlay')).toContainText(
+    'Viewport 390x700 narrow @0.57 DPR 1.00'
+  );
   await expect(page.locator('.debug-overlay')).toContainText('Canvas 390x700');
   await expect(page.locator('.debug-overlay')).toContainText('Safe 14,204 362x407');
   await expect(page.locator('.debug-overlay')).toContainText('World 640x720');
@@ -549,7 +557,9 @@ async function forceCompleteSectorAndEnterNext(page: Page, nextSectorName: strin
   await expect(page.getByRole('heading', { name: 'Choose Route' })).toBeVisible();
 
   await chooseFirstRouteAndReward(page);
-  await expect(page.getByRole('heading', { name: new RegExp(`Entering ${nextSectorName}`) })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: new RegExp(`Entering ${nextSectorName}`) })
+  ).toBeVisible();
 
   await page.getByRole('button', { name: 'Enter Sector' }).click();
   await expectGameplaySector(page, nextSectorName);

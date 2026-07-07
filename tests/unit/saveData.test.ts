@@ -41,6 +41,8 @@ describe('saveData', () => {
     expect(save.salvageBank).toBe(0);
     expect(save.unlockedIds).toEqual([]);
     expect(save.purchasedUpgradeIds).toEqual([]);
+    expect(save.discoveredItemIds).toEqual([]);
+    expect(save.discoveredItemFamilyIds).toEqual([]);
   });
 
   it('loads corrupted localStorage safely as a repaired default', () => {
@@ -106,6 +108,8 @@ describe('saveData', () => {
     expect(migrated.stats.runsEnded).toBe(2);
     expect(migrated.lastRun?.seed).toBe('OLD-V2');
     expect(migrated.purchasedUpgradeIds).toEqual([]);
+    expect(migrated.discoveredItemIds).toEqual([]);
+    expect(migrated.discoveredItemFamilyIds).toEqual([]);
   });
 
   it('round-trips through export and import', () => {
@@ -122,7 +126,8 @@ describe('saveData', () => {
       enemiesDestroyed: 2,
       creditsRecovered: 14,
       salvageRecovered: 3,
-      itemTriggers: 1
+      itemTriggers: 1,
+      itemIds: ['item_split_prism', 'item_relic_ash_compass']
     }).data;
     const save = purchaseUpgrade(
       {
@@ -132,7 +137,28 @@ describe('saveData', () => {
       'upgrade_contract_survey_rig'
     ).data;
 
+    expect(save.discoveredItemIds).toEqual(['item_split_prism', 'item_relic_ash_compass']);
+    expect(save.discoveredItemFamilyIds).toEqual(['laser-split', 'curse-relic']);
     expect(importSaveData(exportSaveData(save))).toEqual(save);
+  });
+
+  it('normalizes imported discovery records and derives item families', () => {
+    const imported = importSaveData(
+      JSON.stringify({
+        version: SAVE_SCHEMA_VERSION,
+        salvageBank: 0,
+        unlockedIds: [],
+        purchasedUpgradeIds: [],
+        achievementIds: [],
+        discoveredItemIds: ['item_split_prism', 'missing_item', 'item_split_prism'],
+        discoveredItemFamilyIds: ['route-economy', 'missing_family'],
+        stats: {},
+        lastRun: null
+      })
+    );
+
+    expect(imported.discoveredItemIds).toEqual(['item_split_prism']);
+    expect(imported.discoveredItemFamilyIds).toEqual(['route-economy', 'laser-split']);
   });
 
   it('preserves victory records through stats and import normalization', () => {
@@ -303,15 +329,15 @@ describe('saveData', () => {
       'upgrade_salvage_escrow_index'
     ]);
 
-    storage.setItem(LEGACY_SAVE_STORAGE_KEYS[0], '{"version":2,"salvageBank":5}');
+    storage.setItem(LEGACY_SAVE_STORAGE_KEYS[1], '{"version":2,"salvageBank":5}');
     expect(resetSaveData(storage)).toEqual(createDefaultSaveData());
     expect(storage.getItem(SAVE_STORAGE_KEY)).toBeNull();
-    expect(storage.getItem(LEGACY_SAVE_STORAGE_KEYS[0])).toBeNull();
+    expect(storage.getItem(LEGACY_SAVE_STORAGE_KEYS[1])).toBeNull();
   });
 
   it('loads legacy v2 storage and marks it for repair/write-forward', () => {
     const storage = new MemoryStorage();
-    storage.setItem(LEGACY_SAVE_STORAGE_KEYS[0], '{"version":2,"salvageBank":7}');
+    storage.setItem(LEGACY_SAVE_STORAGE_KEYS[1], '{"version":2,"salvageBank":7}');
 
     const loaded = loadSaveData(storage);
 
@@ -320,5 +346,21 @@ describe('saveData', () => {
     expect(loaded.data.version).toBe(SAVE_SCHEMA_VERSION);
     expect(loaded.data.salvageBank).toBe(7);
     expect(loaded.data.purchasedUpgradeIds).toEqual([]);
+  });
+
+  it('loads legacy v3 storage and preserves discovery records when present', () => {
+    const storage = new MemoryStorage();
+    storage.setItem(
+      LEGACY_SAVE_STORAGE_KEYS[0],
+      '{"version":3,"salvageBank":7,"discoveredItemIds":["item_split_prism"]}'
+    );
+
+    const loaded = loadSaveData(storage);
+
+    expect(loaded.repaired).toBe(true);
+    expect(loaded.error).toBeNull();
+    expect(loaded.data.version).toBe(SAVE_SCHEMA_VERSION);
+    expect(loaded.data.discoveredItemIds).toEqual(['item_split_prism']);
+    expect(loaded.data.discoveredItemFamilyIds).toEqual(['laser-split']);
   });
 });

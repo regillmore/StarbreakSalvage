@@ -1131,7 +1131,7 @@ Acceptance:
 
 Status:
 
-- First pass implemented in work order 055. Starter, combat, shop, vault, elite, boss, faction, lunar, and route contexts now use validated rarity/source/family/tag weight profiles, with deterministic known-seed coverage for shop, elite, vault, and lunar reward outputs. Save/unlock state still filters locked items, while broader unlock-gated item-family weighting remains planned for work order 056.
+- Implemented across work orders 055 and 056. Starter, combat, shop, vault, elite, boss, faction, lunar, and route contexts now use validated rarity/source/family/tag weight profiles, with deterministic known-seed coverage for shop, elite, vault, and lunar reward outputs. Save/unlock state filters direct item locks and advanced/classified family-tier locks while preserving fresh-save baseline variety.
 
 ### AN3 - Sector and faction item identity
 
@@ -1155,6 +1155,10 @@ Acceptance:
 - Unlock Archive explains newly available families.
 - Fresh saves retain sufficient baseline item variety.
 
+Status:
+
+- Implemented in work order 056. Advanced curse/relic, classified heat/prototype, and advanced boss-pressure tiers are gated by permanent unlocks, and the Unlock Archive shows locked, partial, and unlocked family states without listing locked item details.
+
 ### AO2 - Item discovery records
 
 Acceptance:
@@ -1162,6 +1166,10 @@ Acceptance:
 - Save data can track discovered items or families if added.
 - Migration/import/export preserve discovery state.
 - Corrupted discovery data repairs safely.
+
+Status:
+
+- Implemented in work order 056. Save schema v4 records discovered item IDs and derived family IDs, migrates v1-v3 saves, repairs invalid imported discovery records, and exports/imports the new discovery state.
 
 ### AO3 - Synergy cluster detection
 

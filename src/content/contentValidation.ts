@@ -20,6 +20,7 @@ import {
   type ItemId,
   type ItemDefinition,
   type ItemPoolWeightProfileDefinition,
+  type ItemUnlockTier,
   type RewardPoolDefinition
 } from './items';
 import { SECTORS, type SectorDefinition } from './sectors';
@@ -40,7 +41,11 @@ import {
 } from './upgrades';
 import { WEAPONS, type WeaponDefinition } from './weapons';
 import { ITEM_HOOK_IMPLEMENTATIONS } from '../game/ItemHooks';
-import { ITEM_UNLOCKS } from '../game/UnlockGates';
+import {
+  ITEM_FAMILY_GATES,
+  ITEM_UNLOCKS,
+  type ItemFamilyGateDefinition
+} from '../game/UnlockGates';
 
 export type ItemHookImplementationRegistry = Readonly<Partial<Record<ItemHook, readonly ItemId[]>>>;
 
@@ -51,6 +56,7 @@ export interface ContentValidationInput {
   readonly factions?: readonly FactionDefinition[];
   readonly items?: readonly ItemDefinition[];
   readonly itemHookImplementations?: ItemHookImplementationRegistry;
+  readonly itemFamilyGates?: readonly ItemFamilyGateDefinition[];
   readonly itemPoolWeightProfiles?: readonly ItemPoolWeightProfileDefinition[];
   readonly itemUnlocks?: Readonly<Partial<Record<ItemId, UnlockId>>>;
   readonly rewardPools?: readonly RewardPoolDefinition[];
@@ -70,6 +76,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const itemHookImplementations = createItemHookImplementationRegistry(
     input.itemHookImplementations
   );
+  const itemFamilyGates = input.itemFamilyGates ?? ITEM_FAMILY_GATES;
   const itemPoolWeightProfiles = input.itemPoolWeightProfiles ?? ITEM_POOL_WEIGHT_PROFILES;
   const itemUnlocks = input.itemUnlocks ?? ITEM_UNLOCKS;
   const rewardPools = input.rewardPools ?? REWARD_POOLS;
@@ -639,6 +646,12 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     }
   }
 
+  validateItemFamilyGates(errors, itemFamilyGates, items, {
+    families: itemFamilies,
+    unlockTiers: itemUnlockTiers,
+    unlockIds
+  });
+
   const representedArchetypeCount = ITEM_ARCHETYPES.filter((archetype) =>
     items.some(
       (item) =>
@@ -741,6 +754,81 @@ interface ItemPoolProfileRegistries {
   readonly rarities: ReadonlySet<string>;
   readonly families: ReadonlySet<string>;
   readonly tags: ReadonlySet<string>;
+}
+
+interface ItemFamilyGateRegistries {
+  readonly families: ReadonlySet<string>;
+  readonly unlockTiers: ReadonlySet<string>;
+  readonly unlockIds: ReadonlySet<string>;
+}
+
+function validateItemFamilyGates(
+  errors: string[],
+  gates: readonly ItemFamilyGateDefinition[],
+  items: readonly ItemDefinition[],
+  registries: ItemFamilyGateRegistries
+): void {
+  const seenFamilies = new Set<string>();
+
+  for (const gate of gates) {
+    const owner = `Item family gate ${gate.family}`;
+
+    if (seenFamilies.has(gate.family)) {
+      errors.push(`Duplicate item family gate: ${gate.family}`);
+    }
+
+    seenFamilies.add(gate.family);
+
+    if (!registries.families.has(gate.family)) {
+      errors.push(`${owner} references invalid family`);
+    }
+
+    if (!registries.unlockIds.has(gate.unlockId)) {
+      errors.push(`${owner} references missing unlock: ${gate.unlockId}`);
+    }
+
+    if (!gate.label.trim()) {
+      errors.push(`${owner} must have a label`);
+    }
+
+    if (!gate.summary.trim()) {
+      errors.push(`${owner} must have summary text`);
+    }
+
+    if (!gate.lockedHint.trim()) {
+      errors.push(`${owner} must have locked hint text`);
+    }
+
+    if (gate.unlockTiers.length === 0) {
+      errors.push(`${owner} must gate at least one unlock tier`);
+    }
+
+    for (const duplicateTier of getDuplicateStrings(gate.unlockTiers)) {
+      errors.push(`${owner} has duplicate unlock tier: ${duplicateTier}`);
+    }
+
+    for (const unlockTier of gate.unlockTiers) {
+      if (!registries.unlockTiers.has(unlockTier)) {
+        errors.push(`${owner} has invalid unlock tier: ${unlockTier}`);
+      }
+    }
+
+    const gatedItems = items.filter(
+      (item) =>
+        item.metadata.family === gate.family &&
+        gate.unlockTiers.includes(item.metadata.unlockTier as ItemUnlockTier)
+    );
+
+    if (gatedItems.length === 0) {
+      errors.push(`${owner} must match at least one item`);
+    }
+
+    for (const item of gatedItems) {
+      if (item.metadata.sources.includes('starter')) {
+        errors.push(`${owner} must not gate starter item ${item.id}`);
+      }
+    }
+  }
 }
 
 function validateItemPoolWeightProfiles(

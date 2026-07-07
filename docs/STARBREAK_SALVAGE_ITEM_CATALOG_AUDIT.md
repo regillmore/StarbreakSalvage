@@ -1,6 +1,6 @@
 # Starbreak Salvage - Item Catalog Audit
 
-Work orders 051-055 baseline. This document records the current item catalog after the first Phase 6 expansion pack and source-weighted acquisition pass. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
+Work orders 051-056 baseline. This document records the current item catalog after the first Phase 6 expansion pack, source-weighted acquisition pass, and unlock-gated family tier pass. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
 
 ## Current Shape
 
@@ -10,7 +10,7 @@ Work orders 051-055 baseline. This document records the current item catalog aft
 | Candidate reward pools | 3       | Starter, combat, and vault remain the broad candidate buckets                                 |
 | Weight profiles        | 9       | Starter, combat, shop, vault, elite, boss, faction, lunar, and route contexts are weighted    |
 | Hook names             | 13      | Add item discovery or collection hooks only if later systems need them                        |
-| Locked item ids        | 1       | Multiple unlock-gated families, not just individual items                                     |
+| Locked item ids        | 8       | Direct item gates plus advanced/classified family-tier gates                                  |
 | Archetype records      | 8       | Keep legacy archetypes and use metadata families for lunar, route, and boss-pressure identity |
 
 ## Schema Metadata
@@ -24,7 +24,7 @@ Work order 052 formalized compact item metadata:
 - `stacking` records unique versus stackable intent before duplicate item rewards become possible.
 - `uiTags` gives item cards a short, validated badge vocabulary without parsing gameplay tags.
 
-Validation requires reward-pool membership to match source metadata, item pool weight profiles to reference valid pools/sources/rarities/families/tags, unlock-gated items to carry both an unlock tier and unlock source, every declared hook to have an implementation, and prototype/cursed items to stay out of starter sources.
+Validation requires reward-pool membership to match source metadata, item pool weight profiles to reference valid pools/sources/rarities/families/tags, item and family unlock gates to reference valid unlocks and item tiers, every declared hook to have an implementation, and prototype/cursed items to stay out of starter sources.
 
 ## Rarity Coverage
 
@@ -54,7 +54,7 @@ Validation requires reward-pool membership to match source metadata, item pool w
 | `onRewardGenerated`  | 3          | Reward choice and tag-bias effects.                                 |
 | `onBossPhaseChanged` | 5          | Boss telegraph, cooldown, clear, and charge pressure effects.       |
 
-Work order 054 gave the work order 053 hook surface its first live users. Item discovery remains a possible later hook only if the save/discovery model needs it.
+Work order 054 gave the work order 053 hook surface its first live users. Item discovery is currently recorded from run inventory at summary time, so a dedicated collection hook remains optional unless future mid-run archive UI needs it.
 
 ## Candidate Reward Pool Coverage
 
@@ -132,7 +132,7 @@ Known-seed tests now sample shop, elite, vault, and lunar reward surfaces, and u
 | Drone/Copy       | 6     | Good base for side drones, mirror shots, escorts, and command effects.                                        |
 | Shield/Revenge   | 5     | Reached the first expansion target; defensive balance should avoid rewarding intentional damage too strongly. |
 | Credit/Shop      | 6     | Healthy base; now has first-pass shop/source weighting rather than flat discounts only.                       |
-| Curse/Relic      | 6     | Reached the first expansion target; still needs clearer risk/reward and unlock discovery.                     |
+| Curse/Relic      | 6     | Advanced vault/route entries are locked behind the Relic Thief dossier; risk/reward tuning still needs work.  |
 | Phase/Graze      | 5     | Has direct graze hooks now.                                                                                   |
 | Heat/Prototype   | 5     | Has special-use and projectile heat behavior, but downside identity is still light.                           |
 | Lunar/Surface    | 5     | First source-driven sector family is present.                                                                 |
@@ -167,10 +167,10 @@ These items have live behavior today, but their text or fantasy points toward fu
 
 No shipped item is a pure no-op: current validation requires every declared hook to have an implementation. Work order 052 formalized live, bridge, and planned implementation status in item metadata.
 
-## Risks For 056-060
+## Risks For 057-060
 
 - New hook surfaces can create runaway proc chains unless proc order and budgets stay tested as item count grows.
-- Unlock-gated item families can starve fresh saves if baseline pools are narrowed too soon.
+- Unlock-gated item families can starve fresh saves if future gates target baseline or starter items.
 - Item cards can get too dense once rarity, source, tags, implementation state, and unlock state all appear together; compact view models should come before decorative art.
 - The first expansion prioritizes breadth; balance tuning still needs real playtest evidence.
 - Weight profiles are first-pass tuning and should be revisited with live playtest data before adding many more items.

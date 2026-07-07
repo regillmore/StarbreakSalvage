@@ -20,6 +20,7 @@ import { UNLOCKS, type UnlockDefinition } from '../../src/content/unlocks';
 import { UPGRADES, type UpgradeDefinition } from '../../src/content/upgrades';
 import { WEAPONS, type WeaponDefinition } from '../../src/content/weapons';
 import { ITEM_HOOK_IMPLEMENTATIONS } from '../../src/game/ItemHooks';
+import type { ItemFamilyGateDefinition } from '../../src/game/UnlockGates';
 
 const baseItem = ITEMS[0] as ItemDefinition;
 const baseBackground = BACKGROUNDS[0] as BackgroundDefinition;
@@ -606,6 +607,40 @@ describe('validateContent', () => {
     expect(errors).toContain('Item pool profile moon-market has invalid tag weight: sparkle');
     expect(errors).toContain('Item pool profile moon-market has invalid rarity weight: mythic');
     expect(errors).toContain('Missing item pool profile: starter');
+  });
+
+  it('rejects invalid item family gates', () => {
+    const invalidGate = {
+      family: 'ghost-family',
+      unlockId: 'missing_unlock',
+      unlockTiers: ['advanced', 'advanced', 'mythic'],
+      label: '',
+      summary: '',
+      lockedHint: ''
+    } as unknown as ItemFamilyGateDefinition;
+    const emptyGate = {
+      family: 'laser-split',
+      unlockId: baseUnlock.id,
+      unlockTiers: ['unlock'],
+      label: 'Empty Gate',
+      summary: 'no matching item tier',
+      lockedHint: 'no matching item tier'
+    } as ItemFamilyGateDefinition;
+    const errors = validateContent({
+      itemFamilyGates: [invalidGate, emptyGate]
+    });
+
+    expect(errors).toContain('Item family gate ghost-family references invalid family');
+    expect(errors).toContain(
+      'Item family gate ghost-family references missing unlock: missing_unlock'
+    );
+    expect(errors).toContain('Item family gate ghost-family must have a label');
+    expect(errors).toContain('Item family gate ghost-family must have summary text');
+    expect(errors).toContain('Item family gate ghost-family must have locked hint text');
+    expect(errors).toContain('Item family gate ghost-family has duplicate unlock tier: advanced');
+    expect(errors).toContain('Item family gate ghost-family has invalid unlock tier: mythic');
+    expect(errors).toContain('Item family gate ghost-family must match at least one item');
+    expect(errors).toContain('Item family gate laser-split must match at least one item');
   });
 
   it('rejects empty reward pools', () => {
