@@ -150,6 +150,8 @@ Validation should reject metadata drift before generation uses it. Reward-pool m
 
 The registered item hook surface now covers `onFire`, `onProjectileSpawn`, `onEnemyKilled`, `onPlayerHit`, `onPickupCollected`, `onGraze`, `onSpecialUsed`, `onBombUsed`, `onSectorStart`, `onRouteChosen`, `onShopEntered`, `onRewardGenerated`, and `onBossPhaseChanged`. New item content should declare only hooks that have explicit implementation entries and tests.
 
+`src/game/BuildSynergy.ts` is the read model for player-facing build identity. It scores item instances by family, tags, and acquisition order, then formats compact HUD, reward/shop, and run-summary copy. Keep it presentation-oriented: it should explain the build, not alter item hooks, rewards, or combat state.
+
 Use deterministic hook order:
 
 1. base weapon emits payload;

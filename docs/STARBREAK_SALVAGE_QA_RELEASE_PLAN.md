@@ -117,7 +117,7 @@ Phase 6 expands the item catalog and hook surface. Add tests closest to the risk
 - source-weighted item pool profile validation and known-seed shop, elite reward, vault reward, and lunar reward snapshots; work order 055 adds the first deterministic acquisition weighting coverage;
 - known-seed snapshots for reward, shop, vault, boss, faction, lunar, and unlock-gated item pools under fresh and progressed saves;
 - item unlock and discovery migration/import/export/corruption repair if save shape changes;
-- synergy cluster detection, tie-breaking, HUD/summary copy, and narrow-layout build identity presentation;
+- synergy cluster detection, tie-breaking, HUD/summary copy, and narrow-layout build identity presentation; work order 057 adds unit coverage and E2E smoke assertions for HUD plus reward/shop build-fit lines;
 - item card view models for reward, shop, vault, archive, and summary surfaces, including high-contrast and keyboard focus state;
 - browser smoke for at least one item-heavy reward/shop/vault path and one dense synergy combat/debug path.
 

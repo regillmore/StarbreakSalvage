@@ -1,6 +1,7 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene, SceneDebugState } from '../app/Scene';
 import type { ItemId } from '../content/items';
+import { formatProspectiveBuildSynergy } from '../game/BuildSynergy';
 import type { RouteOption, RunSkeleton, StartingContract } from '../game/Generation';
 import { generateSectorRewardChoices } from '../game/SectorRewards';
 import { getCurrentSector, getRouteCreditReward, type RunSessionState } from '../game/RunSession';
@@ -81,7 +82,14 @@ export class RewardScene implements Scene {
       body.className = 'choice-body';
       body.textContent = choice.item.effect;
 
-      rewardButton.append(name, meta, body);
+      const synergy = document.createElement('span');
+      synergy.className = 'choice-meta';
+      synergy.textContent = formatProspectiveBuildSynergy(
+        this.session.itemInstances,
+        choice.item.id
+      );
+
+      rewardButton.append(name, meta, body, synergy);
       rewardGrid.append(rewardButton);
     }
 

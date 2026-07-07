@@ -1179,6 +1179,10 @@ Acceptance:
 - HUD, rewards, shops, or summaries can surface compact build identity.
 - Detection and tie-breaking are deterministic and tested.
 
+Status:
+
+- Implemented in work order 057. Eleven synergy clusters are detected from item family, tags, and acquisition order; HUD, reward/shop cards, and run summary now surface compact build identity and prospective build-fit copy.
+
 ## Epic AP - Item presentation and Phase 6 release
 
 ### AP1 - Item card presentation

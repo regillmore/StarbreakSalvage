@@ -131,7 +131,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('verb-readout')).toContainText('Special');
   await expect(page.getByTestId('weapon-readout')).toContainText('Heat');
   await expect(page.getByTestId('boss-readout')).toContainText('Boss');
-  await expect(page.getByTestId('item-readout')).toContainText('Split Prism');
+  await expect(page.getByTestId('item-readout')).toContainText('Prism Battery');
   await expect(page.locator('.debug-overlay')).toContainText('Theme redline/Debt Runner');
   await expect(page.locator('.debug-overlay')).toContainText('HUD standard');
   await expect(page.locator('.debug-overlay')).toContainText(
@@ -177,11 +177,13 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.getByTestId('route-shop').click();
   await expect(page.getByRole('heading', { name: 'Shop' })).toBeVisible();
   await expect(page.locator('.shop-panel')).toHaveAttribute('data-contract-theme', 'redline');
+  await expect(page.locator('.shop-card').first()).toContainText('Build fit:');
 
   await page.getByRole('button', { name: /Reroll/ }).click();
   await page.getByRole('button', { name: 'Leave Shop' }).click();
   await expect(page.getByRole('heading', { name: 'Choose Reward' })).toBeVisible();
   await expect(page.locator('.reward-panel')).toHaveAttribute('data-contract-theme', 'redline');
+  await expect(page.locator('.reward-card').first()).toContainText('Build fit:');
 
   await page.getByRole('button', { name: /Take / }).first().click();
   await expect(page.getByRole('heading', { name: /Entering Trade War Corridor/ })).toBeVisible();

@@ -1,11 +1,13 @@
 # AGENTS.md — Starbreak Salvage
 
 ## Mission
+
 Build **Starbreak Salvage**, a single-player browser-based 2D vertical scrolling roguelike shooter for GitHub Pages. The game should evoke original DOS-era sci-fi arcade energy while using only original code, text, audio, and art. No copied Tyrian assets, names, music, characters, UI, sprites, or proprietary data.
 
 The target experience: quick runs, crisp movement, readable bullet chaos, randomized starting ship contracts, seeded sectors, item synergies, permadeath, and permanent unlocks that expand variety rather than simply increasing raw power.
 
 ## Product pillars
+
 1. **Instant browser play** — no backend, no accounts, no network requirement after page load.
 2. **Readable arcade intensity** — 60 FPS target, clear enemy bullets, responsive controls, generous hit feedback.
 3. **Build-crafting chaos** — item tags and event hooks combine into surprising but explainable synergies.
@@ -14,6 +16,7 @@ The target experience: quick runs, crisp movement, readable bullet chaos, random
 6. **Small, maintainable codebase** — TypeScript, data-driven content, tests for deterministic systems, minimal dependencies.
 
 ## Recommended stack
+
 - TypeScript + Vite for a static GitHub Pages build.
 - Canvas 2D for the main game renderer.
 - Web Audio API or tiny generated audio layer for effects/music, with a mute option.
@@ -22,6 +25,7 @@ The target experience: quick runs, crisp movement, readable bullet chaos, random
 - Playwright for smoke/E2E tests covering load, start run, basic controls, pause, and seeded run screen.
 
 ## Repository commands
+
 Until the scaffold exists, agents should create these scripts in `package.json`:
 
 ```bash
@@ -37,7 +41,10 @@ npm run check     # typecheck + lint + test + build
 
 After modifying code, run the narrowest relevant tests first, then `npm run check` before declaring the task complete. If Playwright browsers are not installed in a local environment, say so and run every other check.
 
+Local Codex note: `npm run test:e2e` may need escalation on Windows because Playwright launches Chromium from `%LOCALAPPDATA%\ms-playwright`, which the sandbox cannot read by default. If E2E reports a missing `chromium_headless_shell` executable even after install, rerun the E2E command with escalation for AppData visibility.
+
 ## Code style and architecture rules
+
 - Prefer clear TypeScript types over clever abstractions.
 - Keep gameplay content data-driven: items, ships, waves, factions, bosses, shops, and unlocks should live in content tables or small content modules.
 - Keep engine systems deterministic where feasible. Pass an explicit RNG object into generation logic; never call `Math.random()` in run generation or gameplay systems.
@@ -50,7 +57,9 @@ After modifying code, run the narrowest relevant tests first, then `npm run chec
 - Name files and symbols for behavior, not implementation fashion.
 
 ## Determinism contract
+
 Seeded runs must reproduce:
+
 - starting contract choices,
 - sector list and route options,
 - elite/shop/vault/repair encounters,
@@ -62,6 +71,7 @@ Seeded runs must reproduce:
 Do **not** promise bit-perfect bullet simulation across every browser. The product goal is deterministic content generation and consistent gameplay feel, not multiplayer lockstep.
 
 ## Agent workflow
+
 1. Read this file and the relevant docs in `docs/` before editing.
 2. Summarize your understanding of the task and identify affected modules.
 3. Make focused changes only. Do not opportunistically rewrite unrelated code.
@@ -70,7 +80,9 @@ Do **not** promise bit-perfect bullet simulation across every browser. The produ
 6. Report: changed files, behavior added, tests run, screenshots/GIF notes if visual, and follow-up risks.
 
 ## Pull request expectations
+
 A good PR includes:
+
 - a tight scope;
 - a player-visible summary;
 - technical notes;
@@ -79,6 +91,7 @@ A good PR includes:
 - follow-up issue suggestions only when useful.
 
 ## Safety, licensing, and originality
+
 - Do not copy assets from commercial games.
 - Placeholder art/audio must be clearly marked and generated/original.
 - Avoid trademarked names in in-game content.
@@ -86,7 +99,9 @@ A good PR includes:
 - Respect accessibility: keyboard support, remapping, pause, reduced motion/screen shake, color contrast options, and audio mute.
 
 ## Definition of Done
+
 A task is done when:
+
 - the game still builds and loads;
 - core tests pass;
 - new deterministic behavior has tests;

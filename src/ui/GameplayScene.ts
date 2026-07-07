@@ -2,7 +2,6 @@ import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene, SceneDebugState } from '../app/Scene';
 import { calculateViewportLayout, type ViewportLayout } from '../app/ViewportLayout';
 import type { Vector2 } from '../core/math';
-import { getItemById } from '../content/items';
 import {
   createBossArenaState,
   formatBossArenaReadout,
@@ -26,17 +25,13 @@ import {
 } from '../game/CombatState';
 import type { BossId } from '../content/bosses';
 import type { ShipStats } from '../content/ships';
+import { createBuildSynergyModel, formatBuildSynergyHud } from '../game/BuildSynergy';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
-import { describeItemLoadout } from '../game/ItemHooks';
 import type { ItemInstance } from '../game/Rewards';
 import { getSectorCompletionReason } from '../game/RunOutcome';
 import type { RouteCombatModifier } from '../game/RouteEvents';
 import { getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
-import {
-  createHudMeterModel,
-  createHudThemeModel,
-  type HudThemeOptions
-} from './HudTheme';
+import { createHudMeterModel, createHudThemeModel, type HudThemeOptions } from './HudTheme';
 import { createContractThemeDebugState } from './ContractTheme';
 import {
   applySectorConditionsToBossArena,
@@ -1012,22 +1007,15 @@ export class GameplayScene implements Scene {
     syncHudMeter(
       this.heatMeter,
       createHudMeterModel(state.player.weaponHeat, state.weapon.overheatLimit),
-      state.player.weaponOverheatSeconds > 0 || state.player.weaponHeat >= state.weapon.overheatLimit
+      state.player.weaponOverheatSeconds > 0 ||
+        state.player.weaponHeat >= state.weapon.overheatLimit
         ? 'danger'
         : 'steady'
     );
   }
 
   private getBuildReadout(state: CombatState): string {
-    if (state.items.length === 0) {
-      return 'Build no items';
-    }
-
-    const names = state.items.map((item) => getItemById(item.itemId).name);
-    const compactNames = names.slice(0, 3).join(' + ');
-    const overflow = names.length > 3 ? ` +${names.length - 3}` : '';
-    const hookSummary = describeItemLoadout(state.items);
-    return `Build ${compactNames}${overflow} | ${hookSummary}`;
+    return formatBuildSynergyHud(createBuildSynergyModel(state.items));
   }
 
   private getOnboardingHint(state: CombatState): string {

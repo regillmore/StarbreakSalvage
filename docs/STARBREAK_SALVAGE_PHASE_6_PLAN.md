@@ -88,6 +88,8 @@ Exit criteria:
 - Run summaries and HUD/build readouts can group notable item families.
 - Synergies remain bounded and readable in dense combat.
 
+Status: implemented by work order 057. `BuildSynergy` defines eleven named clusters from item families and tags, including the legacy archetype lanes plus lunar, route, and boss-pressure identities. Acquisition order breaks ties deterministically, the HUD shows compact primary/secondary build identity, reward and shop cards show prospective build fit, and run summaries record the final build identity.
+
 ### P6.6 - Item Discovery And Presentation
 
 Make a larger catalog readable in menus, rewards, shops, archives, and summaries.

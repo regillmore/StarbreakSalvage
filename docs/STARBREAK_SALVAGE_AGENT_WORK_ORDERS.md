@@ -942,6 +942,8 @@ Acceptance criteria:
 - Cluster detection is deterministic and tested.
 - Copy remains concise on narrow layouts.
 
+Status: implemented; `BuildSynergy` now defines eleven deterministic clusters covering the eight legacy archetypes plus lunar, route, and boss-pressure identities. Cluster scoring uses item families, tags, and acquisition-order tie-breaking, with compact HUD, reward/shop build-fit, and run-summary readouts. Unit tests cover cluster coverage, scoring, tie-breaking, prospective copy, and empty-build copy.
+
 ## Work order 058 - Item card, shop, reward, and archive presentation
 
 Goal: make a larger catalog readable to players.

@@ -470,6 +470,7 @@ export class GameApp {
         this.lastRunResult,
         this.runSession.routeHistory,
         this.runSession.routeOutcomes,
+        this.runSession.itemInstances,
         this.saveData,
         this.lastSaveUpdate,
         () => {

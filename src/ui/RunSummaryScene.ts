@@ -3,10 +3,12 @@ import type { Scene, SceneDebugState } from '../app/Scene';
 import { ACHIEVEMENTS } from '../content/achievements';
 import { getUnlockById } from '../content/unlocks';
 import type { SaveData, SaveUpdateResult } from '../core/saveData';
+import { createBuildSynergyModel, formatBuildSynergySummary } from '../game/BuildSynergy';
 import type { CombatRunResult } from '../game/CombatState';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import type { RouteHistoryEntry } from '../game/RunSession';
 import type { AppliedRouteOutcome } from '../game/RouteEvents';
+import type { ItemInstance } from '../game/Rewards';
 import { formatSectorConditionTimeline } from '../game/SectorConditions';
 import { formatRunUpgradeEffects, getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import type { InputAction } from '../systems/InputSystem';
@@ -30,6 +32,7 @@ export class RunSummaryScene implements Scene {
     private readonly result: CombatRunResult | null,
     private readonly routeHistory: readonly RouteHistoryEntry[],
     private readonly routeOutcomes: readonly AppliedRouteOutcome[],
+    private readonly itemInstances: readonly ItemInstance[],
     private readonly saveData: SaveData,
     private readonly saveUpdate: SaveUpdateResult | null,
     private readonly onBackToMenu: () => void
@@ -80,6 +83,7 @@ export class RunSummaryScene implements Scene {
       ['Scrap Flow', progress.scrapBreakdownText],
       ['Upgrade Outlook', progress.upgradeProgressText],
       ['Banked Salvage', `${this.saveData.salvageBank} kg`],
+      ['Build Identity', formatBuildSynergySummary(createBuildSynergyModel(this.itemInstances))],
       ['Items', this.result?.itemNames.join(', ') ?? 'none'],
       ['Unlock Reasons', formatUnlockReasons(this.saveUpdate)]
     ];

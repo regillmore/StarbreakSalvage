@@ -1,6 +1,7 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene, SceneDebugState } from '../app/Scene';
 import type { ItemId } from '../content/items';
+import { formatProspectiveBuildSynergy } from '../game/BuildSynergy';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import {
   getCurrentSector,
@@ -111,7 +112,11 @@ export class ShopScene implements Scene {
       effect.className = 'choice-body';
       effect.textContent = item.item.effect;
 
-      buyButton.append(name, meta, effect);
+      const synergy = document.createElement('span');
+      synergy.className = 'choice-meta';
+      synergy.textContent = formatProspectiveBuildSynergy(this.session.itemInstances, item.item.id);
+
+      buyButton.append(name, meta, effect, synergy);
       shopGrid.append(buyButton);
     }
 
