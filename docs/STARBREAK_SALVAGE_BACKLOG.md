@@ -1277,6 +1277,10 @@ Acceptance:
 - Movement stays inside the fixed 640x720 combat world.
 - Profiles cannot strand enemies or block sector completion indefinitely.
 
+Status:
+
+- Implemented in work order 063 for the four current normal-enemy roles. Movement now reads validated metadata: bruisers drift, screeners hold lanes, disruptors sway organically, and scouts skate laterally. Future sniper/carrier/support movement families remain registered for later content.
+
 ### AR2 - Attack cadences and telegraphs
 
 Acceptance:

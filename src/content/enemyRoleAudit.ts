@@ -258,7 +258,7 @@ export function createEnemyRoleAudit(
     ],
     phase7NextSteps: [
       'add validated role metadata without changing behavior in work order 062',
-      'separate movement family from faction identity before adding new movement profiles',
+      'keep movement family separated from faction identity as role profiles expand',
       'separate attack family from faction identity before adding role cadences and telegraphs',
       'define objective policy for retreating, spawned, shielded, and formation enemies',
       'add debug summaries for active role, variant, formation, and long-sector pressure'

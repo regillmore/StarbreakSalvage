@@ -1048,6 +1048,8 @@ Acceptance criteria:
 - No movement profile can strand enemies offscreen or block sector completion indefinitely.
 - Debug/dense smoke still stays within entity and readability budgets.
 
+Status: implemented; `src/systems/EnemyMovement.ts` now drives normal enemy movement from validated `movementFamily` metadata. The four current roles have distinct fixed-step profiles: bruisers drift with heavy lane pressure, screeners hold lanes tightly, disruptors sway in wider organic arcs, and scouts skate laterally with stronger flank motion. Movement is clamped inside the combat world, direct debug scenarios now preserve home anchors, attacks/spawns/objective policy remain unchanged, and unit tests cover deterministic replay, profile differences, bounds, and large-step entry safety.
+
 ## Work order 064 - Role-specific attack cadences and telegraphs
 
 Goal: differentiate enemy pressure without unreadable bullet spam.

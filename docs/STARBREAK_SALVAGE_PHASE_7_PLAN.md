@@ -60,6 +60,8 @@ Exit criteria:
 - Role behavior has unit or deterministic tests where practical.
 - Debug overlays can expose active role counts for smoke.
 
+Status: in progress through work order 063. Current role movement is now metadata-driven and deterministic: bruiser/drift, screener/lane-hold, disruptor/organic-sway, and scout/phase-skirmish profiles move distinctly while staying clamped to the fixed combat world. Work order 064 still needs role-specific attack cadence and telegraph language before P7.2 is complete.
+
 ### P7.3 - Upgraded Variants And Elite Identity
 
 Scope:

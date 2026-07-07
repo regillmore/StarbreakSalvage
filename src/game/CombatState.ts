@@ -17,6 +17,7 @@ import { clamp, type Vector2 } from '../core/math';
 import { createRng } from '../core/rng';
 import { circlesOverlap } from '../systems/CollisionSystem';
 import { applyDamage } from '../systems/DamageSystem';
+import { updateEnemyMovement } from '../systems/EnemyMovement';
 import {
   applyItemHooks,
   hasItem,
@@ -104,6 +105,7 @@ export interface EnemyState {
   readonly maxHull: number;
   readonly drift: number;
   readonly targetY: number;
+  readonly homeX?: number;
   fireCooldown: number;
 }
 
@@ -408,7 +410,7 @@ export function updateCombatState(
   updatePlayer(state, input, safeDt, bounds);
   spawnDueEnemies(state, bounds);
   spawnDueBoss(state, bounds);
-  updateEnemies(state, safeDt);
+  updateEnemies(state, safeDt, bounds);
   updateBoss(state, safeDt, bounds);
   updateProjectiles(state, safeDt, bounds);
   updateTelegraphs(state, safeDt);
@@ -510,16 +512,18 @@ export function spawnDebugDenseCombatScenario(state: CombatState, bounds: Combat
     const row = Math.floor(index / 4);
     const column = index % 4;
     const factionId = factionIds[index % factionIds.length] ?? 'faction_corporate_ledger';
+    const x = centerX + (column - 1.5) * 88;
     state.enemies.push({
       id: getNextEntityId(state),
       factionId,
-      x: centerX + (column - 1.5) * 88,
+      x,
       y: topY + row * 48,
       radius: 17,
       hull: row === 2 ? 3 : 2,
       maxHull: row === 2 ? 3 : 2,
       drift: (column - 1.5) * 24,
       targetY: topY + row * 48,
+      homeX: x,
       fireCooldown: 0.45 + index * 0.03
     });
   }
@@ -612,16 +616,18 @@ export function prepareDebugItemStormScenario(
     const row = Math.floor(index / 5);
     const column = index % 5;
     const factionId = factionIds[index % factionIds.length] ?? 'faction_corporate_ledger';
+    const x = centerX + (column - 2) * 82;
     state.enemies.push({
       id: getNextEntityId(state),
       factionId,
-      x: centerX + (column - 2) * 82,
+      x,
       y: topY + row * 52,
       radius: 16,
       hull: column === 2 ? 3 : 2,
       maxHull: column === 2 ? 3 : 2,
       drift: (column - 2) * 18,
       targetY: topY + row * 52,
+      homeX: x,
       fireCooldown: 1.2 + index * 0.04
     });
   }
@@ -1146,16 +1152,19 @@ function spawnDueEnemies(state: CombatState, bounds: CombatBounds): void {
 
     const maxHull = spawn.hull + state.enemyHullBonus;
 
+    const x = clamp(spawn.xRatio, 0.1, 0.9) * bounds.width;
+
     state.enemies.push({
       id: getNextEntityId(state),
       factionId: spawn.factionId,
-      x: clamp(spawn.xRatio, 0.1, 0.9) * bounds.width,
+      x,
       y: -24,
       radius: 17,
       hull: maxHull,
       maxHull,
       drift: (spawn.xRatio - 0.5) * 32,
       targetY: spawn.targetY,
+      homeX: x,
       fireCooldown: Math.max(0.35, spawn.fireDelay * state.enemyFireDelayMultiplier)
     });
     state.nextSpawnIndex += 1;
@@ -1182,24 +1191,11 @@ function spawnDueBoss(state: CombatState, bounds: CombatBounds): void {
   spawnBoss(state, state.bossId, bounds);
 }
 
-function updateEnemies(state: CombatState, dt: number): void {
+function updateEnemies(state: CombatState, dt: number, bounds: CombatBounds): void {
   for (const enemy of state.enemies) {
     const faction = getFactionById(enemy.factionId);
 
-    if (enemy.y < enemy.targetY) {
-      enemy.y += getEnemyEntrySpeed(faction.enemyPattern) * dt;
-    } else if (faction.enemyPattern === 'laneBurst') {
-      enemy.x += enemy.drift * 0.2 * dt;
-    } else if (faction.enemyPattern === 'sporeSpread') {
-      enemy.x += Math.sin(state.timeSeconds * 3 + enemy.id) * 28 * dt;
-      enemy.y += Math.cos(state.timeSeconds * 2 + enemy.id) * 8 * dt;
-    } else if (faction.enemyPattern === 'phaseSkirmish') {
-      enemy.x += (Math.sin(state.timeSeconds * 4.2 + enemy.id) * 58 + enemy.drift * 0.3) * dt;
-      enemy.y += Math.cos(state.timeSeconds * 2.4 + enemy.id) * 10 * dt;
-    } else {
-      enemy.x += enemy.drift * dt;
-      enemy.y += Math.sin(state.timeSeconds * 2 + enemy.id) * 8 * dt;
-    }
+    updateEnemyMovement(enemy, faction.enemyRole.movementFamily, state.timeSeconds, dt, bounds);
 
     enemy.fireCooldown -= dt;
 
@@ -1854,22 +1850,6 @@ function spawnEnemyProjectile(
     procDepth: 0,
     ...projectile
   });
-}
-
-function getEnemyEntrySpeed(pattern: FactionEnemyPattern): number {
-  if (pattern === 'laneBurst') {
-    return 135;
-  }
-
-  if (pattern === 'sporeSpread') {
-    return 98;
-  }
-
-  if (pattern === 'phaseSkirmish') {
-    return 124;
-  }
-
-  return 115;
 }
 
 function getEnemyFireCooldown(pattern: FactionEnemyPattern): number {

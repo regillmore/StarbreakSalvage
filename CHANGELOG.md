@@ -59,6 +59,7 @@
 - Verified the Phase 6 closeout with `npm run check`, 8-test Playwright Chromium smoke, and production preview asset-path smoke under `/StarbreakSalvage/`.
 - Added a repeatable Phase 7 enemy role audit helper and unit coverage for the current faction-pattern class baseline, wave-label semantics, target role set, spawn model, and objective-safety risks.
 - Added validated enemy role metadata for current faction-pattern classes plus debug role-pressure summaries with variant/formation placeholders for Phase 7 schema work.
+- Added metadata-driven enemy movement profiles so bruisers drift, screeners hold lanes, disruptors sway, and scouts skate laterally while remaining clamped to the fixed combat world.
 - Added wave director and objective completion tests, including known-seed objective snapshots and boss-gate coverage.
 - Added combat tests for special charge/use, bomb mitigation, graze detection, remapped special/bomb controls, and reduced-motion effect rendering.
 - Added validation and gameplay tests for ship stat contracts, weapon references, weapon patterns, heat/reload behavior, and starting economy.
@@ -110,6 +111,7 @@
 - Concluded Phase 6 in planning docs and added the Phase 7 roadmap/work orders for enemy role differentiation, upgraded enemy variants, formations, longer sectors, and enemy-behavior release hardening.
 - Started Phase 7 with a documented enemy role audit covering current movement, attack cadence, durability, spawn context, objective interaction, readability gaps, and work order 062 schema handoff.
 - Formalized Phase 7 enemy role schema and validation before movement, attack, variant, or formation behavior changes.
+- Completed the Phase 7 role-specific movement pass while leaving attack cadence, variants, formations, and objective policy unchanged for follow-up work orders.
 - Started Phase 6 with a documented audit of the current 30-item catalog, repeated-reward risks, underrepresented archetypes, target item families, and bridge-effect follow-ups.
 - Formalized the Phase 6 item metadata contract and validation baseline before adding larger item batches.
 - Completed the first Phase 6 hook-surface expansion so work order 054 can add live catalog items against typed event payloads.

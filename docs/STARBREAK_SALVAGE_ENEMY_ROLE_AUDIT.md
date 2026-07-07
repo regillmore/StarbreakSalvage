@@ -114,6 +114,8 @@ Implemented metadata fields:
 
 Work order 062 adds these fields to the current faction-pattern classes and validates them through content tests. Runtime behavior is unchanged: attack family still matches the current faction `enemyPattern`, and all current normal enemies use `objectivePolicy: requiredTarget`.
 
+Work order 063 consumes `movementFamily` metadata through `src/systems/EnemyMovement.ts`. Bruiser, screener, disruptor, and scout movement now differ in play while attack cadence, projectile patterns, variants, formations, and objective policy remain unchanged.
+
 Suggested next tests:
 
 - Wave labels can be audited against intended role, variant, or formation families.

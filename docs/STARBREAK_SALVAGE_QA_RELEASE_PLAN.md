@@ -129,7 +129,7 @@ Work order 060 closes Phase 6 as an item-catalog playtest candidate. Release evi
 Phase 7 enriches enemy behavior and longer-sector pacing. Add tests closest to the risk:
 
 - enemy role audit and metadata validation for role, pressure type, movement family, attack family, variant eligibility, formation eligibility, readability tier, and faction fit; work order 061 adds the first pure audit helper and documents the four current faction-pattern classes, while work order 062 adds validated role metadata and active role-pressure summaries;
-- role-specific movement tests for fixed-step determinism, arena bounds, cleanup, frame-catchup stability, and no offscreen soft locks;
+- role-specific movement tests for fixed-step determinism, arena bounds, cleanup, frame-catchup stability, and no offscreen soft locks; work order 063 adds deterministic movement-profile coverage for current and future movement families;
 - attack cadence and telegraph tests for deterministic timing, projectile budgets, high-contrast readability, and reduced-motion simplification;
 - upgraded variant selection snapshots for fresh saves, later sectors, faction routes, elite routes, challenge flags, and boss-adjacent pressure;
 - formation definition validation for member roles, offsets, timing, entry style, spacing, break conditions, and fixed-world bounds;
@@ -256,6 +256,7 @@ Phase 7 performance checks should include active role counts, upgraded variant c
 - [x] Sector exit/toast, destruction, and lunar browser smoke paths exist.
 - [x] Item hook pressure, proc cap state, and build identity visible in debug smoke.
 - [x] Active enemy role counts and variant/formation placeholders visible in debug once Phase 7 schema instrumentation lands.
+- [x] Role-specific movement profiles have deterministic bounds and profile-difference tests for the current Phase 7 roster.
 - [ ] Upgraded variant, active formation, and long-sector pressure visible in debug smoke once later Phase 7 systems land.
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [x] Heavy combat debug scene documented.
