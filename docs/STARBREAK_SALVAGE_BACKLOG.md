@@ -1289,6 +1289,10 @@ Acceptance:
 - Projectile and telegraph budgets remain bounded.
 - High-contrast and reduced-motion modes keep attacks readable.
 
+Status:
+
+- Implemented in work order 064 for the four current normal-enemy roles. Attack behavior now reads validated metadata: bruisers warn and fire slower heavy scrap volleys, screeners show short lane warnings before paired bolts, disruptors mark a ring before spore spreads, and scouts give quick fan warnings before aimed phase needles. Future charged-shot, lane-curtain, deploy-burst, support-pulse, and hazard-mark profiles are registered for later classes.
+
 ### AR3 - Support and disruption behaviors
 
 Acceptance:

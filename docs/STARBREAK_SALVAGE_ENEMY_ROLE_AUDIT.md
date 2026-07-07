@@ -7,7 +7,7 @@ Work order 061 baseline. This document records the current normal-enemy behavior
 - Current normal enemies are effectively four faction-pattern classes: `driftShot`, `laneBurst`, `sporeSpread`, and `phaseSkirmish`.
 - Sector `majorWavePool` labels provide encounter flavor and deterministic scheduling, but they do not yet select distinct enemy classes, formations, variants, or attack families.
 - All normal enemies share radius `17`, a simple health bar, and base hull `2-3` before route modifiers.
-- Normal enemy attacks are not telegraphed. Bosses and sector hazards have telegraph state; normal enemies fire directly after their cooldown.
+- Normal enemy attacks are now telegraphed through attack-family profiles. Bosses and sector hazards still use their own telegraph timing, while normal enemies use shorter per-role warning labels before firing.
 - Objective support targets are counted from `enemiesDestroyed - bossesDefeated`, capped by required normal kills, and completion also requires all spawns issued plus an empty normal enemy field.
 - Current kill accounting is robust for projectile kills, body-collision clears, and item side-effect kills. Future retreating, spawned, shielded, or formation enemies need explicit objective policy before implementation.
 
@@ -15,10 +15,10 @@ Work order 061 baseline. This document records the current normal-enemy behavior
 
 | Faction | Current class | Phase 7 target role | Silhouette | Movement | Attack cadence | Projectile pressure | Durability |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Scrap Court | drift bruiser seed | bruiser | Jagged scrap shard | Enters at 115 units/s, then drifts from spawn lane with light sine wobble | 1.25s | 1 large missile-tagged shot with drift-influenced x velocity | 2 hull early, 3 hull later |
-| Corporate Ledger | lane screener seed | screener | Diamond audit frame | Enters at 135 units/s, then nearly fixed lane hold | 1.05s | 2 narrow vertical plasma bolts from side offsets | 2 hull early, 3 hull later |
-| Bloom Hive | spread controller seed | disruptor | Five-lobed organic cluster | Enters at 98 units/s, then organic x/y sway | 1.45s | 3 slow plasma spores spreading left, center, and right | 2 hull early, 3 hull later |
-| Void Corsairs | flank scout seed | scout | Thin needle raider | Enters at 124 units/s, then strong lateral skating with y sway | 1.18s | 2 small phase needles crossing outward | 2 hull early, 3 hull later |
+| Scrap Court | drift bruiser seed | bruiser | Jagged scrap shard | Enters at 104 units/s, then drifts from spawn lane with heavy lane bias | 1.55s after warning | Fan warning into 2 heavy missile/scrap shots with drift-influenced x velocity | 2 hull early, 3 hull later |
+| Corporate Ledger | lane screener seed | screener | Diamond audit frame | Enters at 138 units/s, then tight lane hold | 1.05s after warning | Lane warning into 2 narrow vertical plasma bolts from side offsets | 2 hull early, 3 hull later |
+| Bloom Hive | spread controller seed | disruptor | Five-lobed organic cluster | Enters at 96 units/s, then organic x/y sway | 1.60s after warning | Ring warning into 3 slow plasma spores spreading left, center, and right | 2 hull early, 3 hull later |
+| Void Corsairs | flank scout seed | scout | Thin needle raider | Enters at 128 units/s, then strong lateral skating with y sway | 0.95s after warning | Fan warning into 2 small phase needles aimed toward the player | 2 hull early, 3 hull later |
 
 ## Spawn And Wave Model
 
@@ -45,8 +45,8 @@ These labels are a useful Phase 7 design vocabulary. They should become role, va
 
 - **Scout** - partially represented by Void Corsair lateral skating, but no dive, retreat, flank entry, or fragile-fast stat profile exists yet.
 - **Bruiser** - partially represented by Scrap Court heavy shots and later 3-hull spawns, but no broad body, slow hold, shielding, or close-pressure behavior exists yet.
-- **Sniper** - not represented by normal enemies. Bosses have telegraphs, but normal enemies have no charged aimed-shot language.
-- **Screener** - best represented by Corporate Ledger lane holds and paired bolts, but normal enemies do not telegraph or coordinate lane curtains.
+- **Sniper** - not represented by normal enemies. A charged-shot attack family exists for future content, but no normal enemy class uses it yet.
+- **Screener** - best represented by Corporate Ledger lane holds, lane warnings, and paired bolts, but normal enemies do not coordinate multi-enemy lane curtains yet.
 - **Carrier** - not represented by normal enemies. Carrier fantasy exists in boss naming, not in deploy behavior.
 - **Support** - not represented by normal enemies. No shield, heal, buff, or marking state exists.
 - **Disruptor** - partially represented by Bloom spread and sector hazards, but no enemy-owned mine, hazard mark, or short-lived zone behavior exists.
@@ -114,7 +114,9 @@ Implemented metadata fields:
 
 Work order 062 adds these fields to the current faction-pattern classes and validates them through content tests. Runtime behavior is unchanged: attack family still matches the current faction `enemyPattern`, and all current normal enemies use `objectivePolicy: requiredTarget`.
 
-Work order 063 consumes `movementFamily` metadata through `src/systems/EnemyMovement.ts`. Bruiser, screener, disruptor, and scout movement now differ in play while attack cadence, projectile patterns, variants, formations, and objective policy remain unchanged.
+Work order 063 consumes `movementFamily` metadata through `src/systems/EnemyMovement.ts`. Bruiser, screener, disruptor, and scout movement now differ in play; variants, formations, and objective policy remain unchanged.
+
+Work order 064 consumes `attackFamily` metadata through `src/systems/EnemyAttack.ts`. Bruiser, screener, disruptor, and scout attacks now have distinct cooldowns, telegraph durations/labels, aim styles, projectile speeds/radii, tags, and bounded projectile counts. Future charged-shot, lane-curtain, deploy-burst, support-pulse, and hazard-mark families are profiled but not assigned to shipped normal enemy classes yet.
 
 Suggested next tests:
 

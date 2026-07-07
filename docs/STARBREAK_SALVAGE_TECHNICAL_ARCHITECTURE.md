@@ -356,6 +356,7 @@ Phase 7 adds richer enemy roles, upgraded variants, formations, and longer secto
 - Work order 061 records the current audit baseline in `src/content/enemyRoleAudit.ts` and `docs/STARBREAK_SALVAGE_ENEMY_ROLE_AUDIT.md`; work order 062 turns that audit language into validated content metadata before behavior changes.
 - Work order 062 adds `src/content/enemyRoles.ts` registries, `enemyRole` metadata on current faction-pattern classes, validation in `contentValidation`, and `src/game/EnemyRolePressure.ts` debug summaries. Later movement, attack, variant, and formation work should consume these fields instead of adding new faction-name branches.
 - Work order 063 adds `src/systems/EnemyMovement.ts`; movement systems should continue consuming `movementFamily` metadata, stable `homeX` anchors, fixed-step `dt`, and explicit `CombatBounds` rather than viewport dimensions.
+- Work order 064 adds `src/systems/EnemyAttack.ts`; normal attack systems should continue consuming `attackFamily` metadata for cooldowns, windup duration, telegraph label/kind, aim style, projectile speed/radius, tags, and budgets. `CombatState` owns the small pending-windup state on each enemy, while the attack module stays pure and returns telegraph/projectile blueprints.
 - Add an objective policy field before implementing retreating, spawned, shielded, or formation enemies so target counts cannot desync from field cleanup.
 
 Recommended module direction:
@@ -364,7 +365,7 @@ Recommended module direction:
 src/content/enemies.ts
 src/game/EnemyRoles.ts
 src/systems/EnemyMovement.ts
-src/systems/EnemyAttacks.ts
+src/systems/EnemyAttack.ts
 ```
 
 ### Upgraded variants

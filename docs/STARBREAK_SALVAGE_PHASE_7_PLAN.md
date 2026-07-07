@@ -60,7 +60,7 @@ Exit criteria:
 - Role behavior has unit or deterministic tests where practical.
 - Debug overlays can expose active role counts for smoke.
 
-Status: in progress through work order 063. Current role movement is now metadata-driven and deterministic: bruiser/drift, screener/lane-hold, disruptor/organic-sway, and scout/phase-skirmish profiles move distinctly while staying clamped to the fixed combat world. Work order 064 still needs role-specific attack cadence and telegraph language before P7.2 is complete.
+Status: implemented through work orders 063 and 064. Current role movement is metadata-driven and deterministic: bruiser/drift, screener/lane-hold, disruptor/organic-sway, and scout/phase-skirmish profiles move distinctly while staying clamped to the fixed combat world. Normal enemy attacks now also read validated attack-family metadata, with distinct cooldowns, telegraph durations/labels, aim styles, projectile speeds/radii, and bounded projectile counts for bruiser, screener, disruptor, and scout roles. Future sniper/carrier/support/hazard attack families have first-pass profiles ready for new enemy classes.
 
 ### P7.3 - Upgraded Variants And Elite Identity
 

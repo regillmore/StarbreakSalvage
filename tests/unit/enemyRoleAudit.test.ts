@@ -39,20 +39,24 @@ describe('enemy role audit', () => {
 
     expect(scrapCourt.baselineRole).toBe('drift bruiser seed');
     expect(scrapCourt.phase7TargetRole).toBe('bruiser');
-    expect(scrapCourt.entrySpeed).toBe(115);
-    expect(scrapCourt.projectileCount).toBe(1);
-    expect(scrapCourt.projectileTags).toEqual(['missile']);
+    expect(scrapCourt.entrySpeed).toBe(104);
+    expect(scrapCourt.attackCadenceSeconds).toBe(1.55);
+    expect(scrapCourt.projectileCount).toBe(2);
+    expect(scrapCourt.projectileTags).toEqual(['missile', 'scrap']);
 
     expect(corporateLedger.phase7TargetRole).toBe('screener');
-    expect(corporateLedger.entrySpeed).toBe(135);
+    expect(corporateLedger.entrySpeed).toBe(138);
     expect(corporateLedger.attackCadenceSeconds).toBe(1.05);
     expect(corporateLedger.projectileCount).toBe(2);
 
     expect(bloomHive.phase7TargetRole).toBe('disruptor');
-    expect(bloomHive.entrySpeed).toBe(98);
+    expect(bloomHive.entrySpeed).toBe(96);
+    expect(bloomHive.attackCadenceSeconds).toBe(1.6);
     expect(bloomHive.projectileCount).toBe(3);
 
     expect(voidCorsairs.phase7TargetRole).toBe('scout');
+    expect(voidCorsairs.entrySpeed).toBe(128);
+    expect(voidCorsairs.attackCadenceSeconds).toBe(0.95);
     expect(voidCorsairs.projectileTags).toEqual(['phase']);
 
     expect(audit.spawnModel).toMatchObject({

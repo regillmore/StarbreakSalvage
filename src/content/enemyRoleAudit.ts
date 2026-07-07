@@ -91,12 +91,13 @@ const PATTERN_AUDITS: Readonly<Record<FactionEnemyPattern, EnemyPatternAudit>> =
     baselineRole: 'drift bruiser seed',
     phase7TargetRole: 'bruiser',
     pressureType: 'attrition',
-    movementFamily: 'enters to target Y, then drifts from spawn lane with a small sine wobble',
-    entrySpeed: 115,
-    attackCadenceSeconds: 1.25,
-    projectileSummary: 'one large downward missile-tagged scrap shot with drift-influenced x velocity',
-    projectileCount: 1,
-    projectileTags: ['missile'],
+    movementFamily: 'enters steadily, then drifts from spawn lane with heavy lane bias',
+    entrySpeed: 104,
+    attackCadenceSeconds: 1.55,
+    projectileSummary:
+      'telegraphed fan warning into two heavy missile/scrap shots with drift-influenced x velocity',
+    projectileCount: 2,
+    projectileTags: ['missile', 'scrap'],
     durabilitySummary: 'normal spawns use 2 hull early and 3 hull in later wave positions',
     currentStrengths: [
       'large projectile reads clearly',
@@ -116,10 +117,11 @@ const PATTERN_AUDITS: Readonly<Record<FactionEnemyPattern, EnemyPatternAudit>> =
     baselineRole: 'lane screener seed',
     phase7TargetRole: 'screener',
     pressureType: 'lane',
-    movementFamily: 'fast entry to target Y, then nearly fixed lane hold with minimal drift',
-    entrySpeed: 135,
+    movementFamily: 'fast entry to target Y, then tight lane hold with minimal drift',
+    entrySpeed: 138,
     attackCadenceSeconds: 1.05,
-    projectileSummary: 'two narrow vertical plasma bolts fired from left and right offsets',
+    projectileSummary:
+      'short lane warning into two narrow vertical plasma bolts fired from left and right offsets',
     projectileCount: 2,
     projectileTags: ['plasma'],
     durabilitySummary: 'normal spawns use 2 hull early and 3 hull in later wave positions',
@@ -128,7 +130,7 @@ const PATTERN_AUDITS: Readonly<Record<FactionEnemyPattern, EnemyPatternAudit>> =
       'lane hold maps well to future screen and formation roles'
     ],
     gaps: [
-      'normal enemies do not telegraph lane fire',
+      'single screeners warn a lane but do not coordinate multi-enemy curtains yet',
       'wave labels imply grids and turrets but do not change behavior yet'
     ],
     riskNotes: [
@@ -142,9 +144,10 @@ const PATTERN_AUDITS: Readonly<Record<FactionEnemyPattern, EnemyPatternAudit>> =
     phase7TargetRole: 'disruptor',
     pressureType: 'spread',
     movementFamily: 'slow entry, then organic sway in x and y around target Y',
-    entrySpeed: 98,
-    attackCadenceSeconds: 1.45,
-    projectileSummary: 'three slow plasma spores spreading left, center, and right',
+    entrySpeed: 96,
+    attackCadenceSeconds: 1.6,
+    projectileSummary:
+      'ring warning into three slow plasma spores spreading left, center, and right',
     projectileCount: 3,
     projectileTags: ['plasma'],
     durabilitySummary: 'normal spawns use 2 hull early and 3 hull in later wave positions',
@@ -166,10 +169,10 @@ const PATTERN_AUDITS: Readonly<Record<FactionEnemyPattern, EnemyPatternAudit>> =
     baselineRole: 'flank scout seed',
     phase7TargetRole: 'scout',
     pressureType: 'pursuit',
-    movementFamily: 'quick entry, then strong sinusoidal lateral skating with slight y sway',
-    entrySpeed: 124,
-    attackCadenceSeconds: 1.18,
-    projectileSummary: 'two small phase needles crossing outward from the enemy',
+    movementFamily: 'quick entry, then strong lateral skating with slight y sway',
+    entrySpeed: 128,
+    attackCadenceSeconds: 0.95,
+    projectileSummary: 'short fan warning into two small phase needles aimed toward the player',
     projectileCount: 2,
     projectileTags: ['phase'],
     durabilitySummary: 'normal spawns use 2 hull early and 3 hull in later wave positions',
@@ -253,13 +256,13 @@ export function createEnemyRoleAudit(
       'normal enemy classes are currently faction patterns, not reusable role metadata',
       'semantic wave labels do not alter enemy class, formation, or attack behavior yet',
       'all normal enemies share radius, health-bar treatment, and 2-3 base hull',
-      'normal enemy attacks have no telegraph state; only bosses and sector hazards telegraph',
-      'there are no upgraded variants, formation memberships, support states, or role counters'
+      'normal enemy telegraphs are per-enemy only; wave labels do not coordinate squad attacks yet',
+      'there are no upgraded variants, formation memberships, or support states'
     ],
     phase7NextSteps: [
       'add validated role metadata without changing behavior in work order 062',
       'keep movement family separated from faction identity as role profiles expand',
-      'separate attack family from faction identity before adding role cadences and telegraphs',
+      'keep attack family separated from faction identity as role profiles expand',
       'define objective policy for retreating, spawned, shielded, and formation enemies',
       'add debug summaries for active role, variant, formation, and long-sector pressure'
     ]

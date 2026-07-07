@@ -188,7 +188,7 @@ describe('CombatState', () => {
     expect(state.enemies.map((enemy) => enemy.id)).toEqual(spawnedIds);
   });
 
-  it('fires the void corsair phase skirmish pattern', () => {
+  it('telegraphs then fires the void corsair phase skirmish pattern', () => {
     const state = createCombatState(bounds, 'VOID-CORSAIR-PATTERN', {
       skipEnemyWaves: true
     });
@@ -202,16 +202,67 @@ describe('CombatState', () => {
       maxHull: 2,
       drift: 0,
       targetY: 120,
+      homeX: state.player.x,
       fireCooldown: 0.01
     });
 
     updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
 
-    const enemyProjectiles = state.projectiles.filter((projectile) => projectile.owner === 'enemy');
     expect(state.enemies[0]?.factionId).toBe('faction_void_corsairs');
+    expect(state.telegraphs.map((telegraph) => telegraph.label)).toEqual(['PHASE TAP']);
+    expect(state.projectiles.filter((projectile) => projectile.owner === 'enemy')).toHaveLength(0);
+
+    for (let frame = 0; frame < 12; frame += 1) {
+      updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
+    }
+
+    const enemyProjectiles = state.projectiles.filter((projectile) => projectile.owner === 'enemy');
     expect(enemyProjectiles).toHaveLength(2);
     expect(enemyProjectiles.every((projectile) => projectile.tags.includes('phase'))).toBe(true);
-    expect(enemyProjectiles.map((projectile) => projectile.vx)).toEqual([-82, 82]);
+    expect(enemyProjectiles[0]?.vx).toBeLessThan(enemyProjectiles[1]?.vx ?? 0);
+    expect(enemyProjectiles.every((projectile) => projectile.vy > 250)).toBe(true);
+  });
+
+  it('keeps normal enemy attack cadence deterministic and bounded', () => {
+    const first = createRoleAttackTestState();
+    const second = createRoleAttackTestState();
+
+    for (let frame = 0; frame < 40; frame += 1) {
+      updateCombatState(first, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
+      updateCombatState(second, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
+    }
+
+    const firstEnemyProjectiles = first.projectiles.filter(
+      (projectile) => projectile.owner === 'enemy'
+    );
+    const secondEnemyProjectiles = second.projectiles.filter(
+      (projectile) => projectile.owner === 'enemy'
+    );
+
+    expect(
+      firstEnemyProjectiles.map((projectile) => [
+        projectile.factionId,
+        Math.round(projectile.x),
+        Math.round(projectile.y),
+        Math.round(projectile.vx),
+        Math.round(projectile.vy),
+        projectile.radius,
+        projectile.tags.join('+')
+      ])
+    ).toEqual(
+      secondEnemyProjectiles.map((projectile) => [
+        projectile.factionId,
+        Math.round(projectile.x),
+        Math.round(projectile.y),
+        Math.round(projectile.vx),
+        Math.round(projectile.vy),
+        projectile.radius,
+        projectile.tags.join('+')
+      ])
+    );
+    expect(firstEnemyProjectiles).toHaveLength(9);
+    expect(first.telegraphs.length).toBeLessThanOrEqual(4);
+    expect(getCombatEntityCount(first)).toBeLessThanOrEqual(80);
   });
 
   it.each([
@@ -584,6 +635,72 @@ describe('CombatState', () => {
     expect(getObjectiveProgress(plan, state).complete).toBe(true);
   });
 });
+
+function createRoleAttackTestState() {
+  const state = createCombatState(bounds, 'ROLE-ATTACK-CADENCE', {
+    skipEnemyWaves: true
+  });
+  state.player.x = 320;
+  state.player.y = 650;
+  state.player.invulnerableSeconds = 10;
+  state.enemies.push(
+    {
+      id: 701,
+      factionId: 'faction_scrap_court',
+      x: 176,
+      y: 132,
+      radius: 17,
+      hull: 2,
+      maxHull: 2,
+      drift: -18,
+      targetY: 132,
+      homeX: 176,
+      fireCooldown: 0.01
+    },
+    {
+      id: 702,
+      factionId: 'faction_corporate_ledger',
+      x: 272,
+      y: 132,
+      radius: 17,
+      hull: 2,
+      maxHull: 2,
+      drift: 0,
+      targetY: 132,
+      homeX: 272,
+      fireCooldown: 0.01
+    },
+    {
+      id: 703,
+      factionId: 'faction_bloom_hive',
+      x: 368,
+      y: 132,
+      radius: 17,
+      hull: 2,
+      maxHull: 2,
+      drift: 0,
+      targetY: 132,
+      homeX: 368,
+      fireCooldown: 0.01
+    },
+    {
+      id: 704,
+      factionId: 'faction_void_corsairs',
+      x: 464,
+      y: 132,
+      radius: 17,
+      hull: 2,
+      maxHull: 2,
+      drift: 18,
+      targetY: 132,
+      homeX: 464,
+      fireCooldown: 0.01
+    }
+  );
+  state.nextId = 1000;
+
+  return state;
+}
 
 function createOneTargetPlan() {
   return createWaveDirectorPlan({

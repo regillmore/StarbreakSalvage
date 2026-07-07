@@ -130,7 +130,7 @@ Phase 7 enriches enemy behavior and longer-sector pacing. Add tests closest to t
 
 - enemy role audit and metadata validation for role, pressure type, movement family, attack family, variant eligibility, formation eligibility, readability tier, and faction fit; work order 061 adds the first pure audit helper and documents the four current faction-pattern classes, while work order 062 adds validated role metadata and active role-pressure summaries;
 - role-specific movement tests for fixed-step determinism, arena bounds, cleanup, frame-catchup stability, and no offscreen soft locks; work order 063 adds deterministic movement-profile coverage for current and future movement families;
-- attack cadence and telegraph tests for deterministic timing, projectile budgets, high-contrast readability, and reduced-motion simplification;
+- attack cadence and telegraph tests for deterministic timing, projectile budgets, high-contrast readability, and reduced-motion simplification; work order 064 adds pure attack-profile budget coverage plus combat-loop cadence regression coverage;
 - upgraded variant selection snapshots for fresh saves, later sectors, faction routes, elite routes, challenge flags, and boss-adjacent pressure;
 - formation definition validation for member roles, offsets, timing, entry style, spacing, break conditions, and fixed-world bounds;
 - formation wave tests for frame-catchup spawn order, simultaneous kills, secondary item kills, despawns, body collisions, objective progress, and sector-complete handoff;
@@ -257,6 +257,7 @@ Phase 7 performance checks should include active role counts, upgraded variant c
 - [x] Item hook pressure, proc cap state, and build identity visible in debug smoke.
 - [x] Active enemy role counts and variant/formation placeholders visible in debug once Phase 7 schema instrumentation lands.
 - [x] Role-specific movement profiles have deterministic bounds and profile-difference tests for the current Phase 7 roster.
+- [x] Role-specific attack profiles have deterministic cadence, telegraph, and projectile-budget tests for current and registered Phase 7 attack families.
 - [ ] Upgraded variant, active formation, and long-sector pressure visible in debug smoke once later Phase 7 systems land.
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [x] Heavy combat debug scene documented.

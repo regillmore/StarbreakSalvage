@@ -1065,6 +1065,8 @@ Acceptance criteria:
 - High-contrast and reduced-motion settings preserve clarity.
 - Known-seed or unit tests prove attack cadence is deterministic.
 
+Status: implemented; `src/systems/EnemyAttack.ts` now drives normal enemy attack cadence, telegraph duration, warning label, aim style, projectile speed/radius, tags, and projectile budgets from validated `attackFamily` metadata. Current roles now warn before firing: bruisers use slower heavy scrap volleys, screeners use short lane warnings and paired bolts, disruptors use ring-marked spore spreads, and scouts use quick fan warnings into aimed phase needles. Future charged, curtain, deploy, support, and hazard-mark families are profiled for later enemy classes. Combat state now tracks normal-enemy windups, cancels pending windups on bombs, gates warnings until enemies enter their hold band, and unit tests cover deterministic cadence plus projectile/telegraph budgets.
+
 ## Work order 065 - Upgraded enemy variants and elite modifiers
 
 Goal: add tactical escalation through clear variants.

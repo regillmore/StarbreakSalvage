@@ -6,7 +6,7 @@ The boss/faction alpha keeps projectile counts intentionally small while the sim
 
 - Common enemies should average 1-3 bullets per attack.
 - Boss attacks should stay at or below 12 bullets per volley in normal alpha play.
-- Telegraphs should appear before boss volleys and expire quickly; they count toward debug entity totals.
+- Telegraphs should appear before boss and role-specific normal volleys and expire quickly; they count toward debug entity totals.
 - Phase changes may swap attack patterns or cadence, but should reset stale telegraphs before showing the next warning.
 - A typical active field should stay under 80 total entities during Phase 2 alpha play.
 - Future dense patterns should add pooling only after profiling shows allocation pressure.
@@ -98,6 +98,7 @@ Phase 7 expands enemy behavior, variants, formations, and sector length. Keep th
 - Work order 061 keeps behavior unchanged and documents the current baseline: four faction-pattern enemy classes, 24 semantic wave labels, shared normal-enemy radius 17, 2-3 base hull, no normal-enemy telegraphs, and objective accounting that is safe for current kill paths but not yet policy-rich enough for retreating or spawned enemies.
 - Work order 062 adds data-only enemy role metadata and debug summaries for active role counts, required-target objective policy counts, and zeroed variant/formation placeholders. It does not change spawn schedules, movement, attack cadence, projectile count, or objective accounting.
 - Work order 063 moves normal enemies through metadata-driven movement profiles while keeping spawn schedules, attack cadence, projectile count, and objective accounting unchanged. Profiles clamp to combat-world bounds and use stable home anchors so debug dense/item-storm scenarios do not drift out of frame.
+- Work order 064 moves normal enemy attacks through metadata-driven profiles. Current and registered Phase 7 attack families emit at most 3 projectiles and at most 3 telegraphs per attack, use short windups before firing, and cancel pending normal-enemy windups when bombs clear danger. This raises normal telegraph presence but keeps the dense/item-storm pockets below their existing manual budgets until later enemy-rich smoke is added.
 - Enemy role metadata should be data-driven and validated. Behavior systems should read explicit role/movement/attack families rather than infer from display names or faction strings.
 - Movement profiles should stay fixed-step and clamped to the 640x720 combat world. Retreating, escorting, hovering, and lane-holding roles must have cleanup or timeout behavior so objectives cannot stall.
 - Attack-role differentiation should prefer cadence, angle, aim style, telegraph timing, and position pressure over simply adding more bullets.

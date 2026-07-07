@@ -7,7 +7,6 @@ import {
 import {
   FACTIONS,
   getFactionById,
-  type FactionEnemyPattern,
   type FactionId
 } from '../content/factions';
 import type { ItemTag } from '../content/items';
@@ -17,7 +16,13 @@ import { clamp, type Vector2 } from '../core/math';
 import { createRng } from '../core/rng';
 import { circlesOverlap } from '../systems/CollisionSystem';
 import { applyDamage } from '../systems/DamageSystem';
+import {
+  createEnemyAttackProjectiles,
+  createEnemyAttackTelegraphs,
+  getEnemyAttackProfile
+} from '../systems/EnemyAttack';
 import { updateEnemyMovement } from '../systems/EnemyMovement';
+import type { EnemyAttackFamily } from '../content/enemyRoles';
 import {
   applyItemHooks,
   hasItem,
@@ -107,6 +112,9 @@ export interface EnemyState {
   readonly targetY: number;
   readonly homeX?: number;
   fireCooldown: number;
+  pendingAttackFamily?: EnemyAttackFamily | null;
+  attackWindupSeconds?: number;
+  attackSequence?: number;
 }
 
 export interface BossState {
@@ -259,7 +267,6 @@ export interface CombatEntityCounts {
   readonly telegraphs: number;
 }
 
-const ENEMY_PROJECTILE_SPEED = 285;
 const PLAYER_DAMAGE_INVULNERABILITY_SECONDS = 0.55;
 const DEFAULT_BOSS_ID: BossId = 'boss_auditor_drone_xl';
 const SPECIAL_MAX_CHARGE = 1;
@@ -1071,6 +1078,7 @@ function activateBomb(state: CombatState, bounds: CombatBounds): void {
   );
   state.projectiles = state.projectiles.filter((projectile) => projectile.owner !== 'enemy');
   state.telegraphs = [];
+  cancelPendingEnemyAttacks(state, 0.5);
   state.effects.push({
     id: getNextEntityId(state),
     kind: 'bomb',
@@ -1126,6 +1134,18 @@ function activateBomb(state: CombatState, bounds: CombatBounds): void {
     bombsUsed: state.stats.bombsUsed + 1,
     enemyProjectilesCancelled: state.stats.enemyProjectilesCancelled + cancelledProjectiles
   };
+}
+
+function cancelPendingEnemyAttacks(state: CombatState, cooldownFloorSeconds: number): void {
+  for (const enemy of state.enemies) {
+    if (!enemy.pendingAttackFamily) {
+      continue;
+    }
+
+    enemy.pendingAttackFamily = null;
+    enemy.attackWindupSeconds = 0;
+    enemy.fireCooldown = Math.max(enemy.fireCooldown, cooldownFloorSeconds);
+  }
 }
 
 function spawnPlayerProjectiles(
@@ -1196,14 +1216,57 @@ function updateEnemies(state: CombatState, dt: number, bounds: CombatBounds): vo
     const faction = getFactionById(enemy.factionId);
 
     updateEnemyMovement(enemy, faction.enemyRole.movementFamily, state.timeSeconds, dt, bounds);
-
-    enemy.fireCooldown -= dt;
-
-    if (enemy.fireCooldown <= 0) {
-      fireEnemyPattern(state, enemy, faction.enemyPattern);
-      enemy.fireCooldown = getEnemyFireCooldown(faction.enemyPattern);
-    }
+    updateEnemyAttack(state, enemy, faction.enemyRole.attackFamily, dt, bounds);
   }
+}
+
+function updateEnemyAttack(
+  state: CombatState,
+  enemy: EnemyState,
+  attackFamily: EnemyAttackFamily,
+  dt: number,
+  bounds: CombatBounds
+): void {
+  if (enemy.pendingAttackFamily) {
+    enemy.attackWindupSeconds = Math.max(0, (enemy.attackWindupSeconds ?? 0) - dt);
+
+    if (enemy.attackWindupSeconds <= 0) {
+      fireEnemyAttack(state, enemy, enemy.pendingAttackFamily);
+      enemy.pendingAttackFamily = null;
+      enemy.attackWindupSeconds = 0;
+      enemy.fireCooldown =
+        getEnemyAttackProfile(attackFamily).cooldownSeconds * state.enemyFireDelayMultiplier;
+    }
+
+    return;
+  }
+
+  enemy.fireCooldown -= dt;
+
+  if (enemy.fireCooldown <= 0 && enemy.y >= enemy.targetY - 1) {
+    startEnemyAttackWindup(state, enemy, attackFamily, bounds);
+  }
+}
+
+function startEnemyAttackWindup(
+  state: CombatState,
+  enemy: EnemyState,
+  attackFamily: EnemyAttackFamily,
+  bounds: CombatBounds
+): void {
+  const profile = getEnemyAttackProfile(attackFamily);
+  const telegraphs = createEnemyAttackTelegraphs(enemy, attackFamily, state.player, bounds);
+
+  for (const telegraph of telegraphs) {
+    state.telegraphs.push({
+      id: getNextEntityId(state),
+      ...telegraph
+    });
+  }
+
+  enemy.pendingAttackFamily = attackFamily;
+  enemy.attackWindupSeconds = profile.telegraphSeconds;
+  enemy.fireCooldown = 0;
 }
 
 function updateBoss(state: CombatState, dt: number, bounds: CombatBounds): void {
@@ -1657,73 +1720,24 @@ function damagePlayer(state: CombatState, damage: number): void {
   };
 }
 
-function fireEnemyPattern(
+function fireEnemyAttack(
   state: CombatState,
   enemy: EnemyState,
-  pattern: FactionEnemyPattern
+  attackFamily: EnemyAttackFamily
 ): void {
-  if (pattern === 'laneBurst') {
-    for (const offset of [-7, 7]) {
-      spawnEnemyProjectile(state, {
-        x: enemy.x + offset,
-        y: enemy.y + enemy.radius,
-        vx: 0,
-        vy: ENEMY_PROJECTILE_SPEED + 35,
-        radius: 5,
-        damage: 1,
-        ttl: 3.2,
-        tags: ['plasma'],
-        factionId: enemy.factionId
-      });
-    }
-    return;
+  const attackSequence = enemy.attackSequence ?? 0;
+  const projectiles = createEnemyAttackProjectiles(
+    enemy,
+    attackFamily,
+    state.player,
+    attackSequence
+  );
+
+  for (const projectile of projectiles) {
+    spawnEnemyProjectile(state, projectile);
   }
 
-  if (pattern === 'sporeSpread') {
-    for (const vx of [-92, 0, 92]) {
-      spawnEnemyProjectile(state, {
-        x: enemy.x,
-        y: enemy.y + enemy.radius,
-        vx,
-        vy: ENEMY_PROJECTILE_SPEED * 0.72,
-        radius: 5,
-        damage: 1,
-        ttl: 3.6,
-        tags: ['plasma'],
-        factionId: enemy.factionId
-      });
-    }
-    return;
-  }
-
-  if (pattern === 'phaseSkirmish') {
-    for (const vx of [-82, 82]) {
-      spawnEnemyProjectile(state, {
-        x: enemy.x,
-        y: enemy.y + enemy.radius,
-        vx,
-        vy: ENEMY_PROJECTILE_SPEED * 0.82,
-        radius: 4,
-        damage: 1,
-        ttl: 3.4,
-        tags: ['phase'],
-        factionId: enemy.factionId
-      });
-    }
-    return;
-  }
-
-  spawnEnemyProjectile(state, {
-    x: enemy.x,
-    y: enemy.y + enemy.radius,
-    vx: enemy.drift * 0.45,
-    vy: ENEMY_PROJECTILE_SPEED * 0.86,
-    radius: 7,
-    damage: 1,
-    ttl: 4,
-    tags: ['missile'],
-    factionId: enemy.factionId
-  });
+  enemy.attackSequence = attackSequence + 1;
 }
 
 function getBossProjectileCount(baseCount: number, boss: BossState): number {
@@ -1850,22 +1864,6 @@ function spawnEnemyProjectile(
     procDepth: 0,
     ...projectile
   });
-}
-
-function getEnemyFireCooldown(pattern: FactionEnemyPattern): number {
-  if (pattern === 'laneBurst') {
-    return 1.05;
-  }
-
-  if (pattern === 'sporeSpread') {
-    return 1.45;
-  }
-
-  if (pattern === 'phaseSkirmish') {
-    return 1.18;
-  }
-
-  return 1.25;
 }
 
 function spawnEnemyDefeatPickups(
