@@ -122,6 +122,22 @@ Phase 6 expands the item catalog and hook surface. Add tests closest to the risk
 - item-heavy stress helpers for forced hook-heavy combat, fresh/unlocked reward-shop-vault pool previews, active hook pressure, proc cap reporting, and build identity; work order 059 adds pure coverage plus a `HOOK-STORM-SMOKE` Playwright debug path;
 - browser smoke for at least one item-heavy reward/shop/vault path and one dense synergy combat/debug path.
 
+Work order 060 closes Phase 6 as an item-catalog playtest candidate. Release evidence should keep covering the 60-item catalog, 13 registered hook surfaces, source-weighted reward/shop/vault pools, unlock/discovery behavior, item-card presentation, item-storm smoke, and known balance/readability/manual-browser gaps.
+
+## Phase 7 QA focus
+
+Phase 7 enriches enemy behavior and longer-sector pacing. Add tests closest to the risk:
+
+- enemy role audit and metadata validation for role, pressure type, movement family, attack family, variant eligibility, formation eligibility, readability tier, and faction fit;
+- role-specific movement tests for fixed-step determinism, arena bounds, cleanup, frame-catchup stability, and no offscreen soft locks;
+- attack cadence and telegraph tests for deterministic timing, projectile budgets, high-contrast readability, and reduced-motion simplification;
+- upgraded variant selection snapshots for fresh saves, later sectors, faction routes, elite routes, challenge flags, and boss-adjacent pressure;
+- formation definition validation for member roles, offsets, timing, entry style, spacing, break conditions, and fixed-world bounds;
+- formation wave tests for frame-catchup spawn order, simultaneous kills, secondary item kills, despawns, body collisions, objective progress, and sector-complete handoff;
+- longer-sector generation snapshots for route-conditioned length bands, pressure/relief windows, formation clusters, hazard/landmark pacing, and boss approach timing;
+- browser smoke for at least one enemy-rich formation or upgraded-variant path under debug, high contrast, reduced motion, performance mode, and narrow viewport where practical;
+- regression coverage that keeps `HOOK-STORM-SMOKE`, dense combat, forced exit, forced destruction, and quiet long-scroll paths green while enemy behavior grows.
+
 ## Known seed tests
 
 - `STARBREAK-SMOKE` — stable forgiving smoke path.
@@ -168,9 +184,17 @@ Phase 6 should add these seed/save fixtures:
 - `UNLOCKED-ITEM-FAMILIES` - progressed save fixture that verifies unlock-gated item families and discovery records; first covered in work order 059 through pure fresh/unlocked reward-shop-vault pool preview tests.
 - `LUNAR-RELIC-CATALOG` - lunar/faction/source-biased item pool fixture for sector-themed items.
 
+Phase 7 should add these seed/save fixtures:
+
+- `ROLE-LADDER-SMOKE` - opening-to-midsector path that exposes multiple enemy roles without boss pressure.
+- `VARIANT-ESCALATION-GRID` - later-sector path for upgraded and elite variant selection snapshots.
+- `FORMATION-WEDGE-TEST` - deterministic formation spawn, break, and objective-clear fixture.
+- `LONG-SECTOR-CARAVAN` - extended sector with pressure/relief windows, formation clusters, and debug scroll metrics.
+- `SUPPORT-DRONE-NEST` - support/disruptor role fixture for shield, escort, deploy, or hazard-mark behavior.
+
 ## Content validation checklist
 
-Phase 2 should extend this checklist as systems become real. In addition to the existing entries, content validation should cover ship stat ranges, objective references, wave references, implemented hook coverage, and unlock-gated pools for fresh and progressed saves. Phase 3 should extend it again for sector length ranges, scroll-speed modifiers, background-plan references, landmark references, hazard references, and distance marker ordering. Phase 4 should extend it again for ship appearance references, HUD theme keys, preview assets/primitives, and input/display settings defaults. Phase 5 should extend it again for upgrade definitions, upgrade prerequisites, upgrade effect references, icon categories, lunar sector references, lunar feature references, and destruction cue metadata. Phase 6 should extend it again for item family/source metadata, implementation status, unlock/discovery gates, source-weighted pools, synergy cluster references, and item card presentation data.
+Phase 2 should extend this checklist as systems become real. In addition to the existing entries, content validation should cover ship stat ranges, objective references, wave references, implemented hook coverage, and unlock-gated pools for fresh and progressed saves. Phase 3 should extend it again for sector length ranges, scroll-speed modifiers, background-plan references, landmark references, hazard references, and distance marker ordering. Phase 4 should extend it again for ship appearance references, HUD theme keys, preview assets/primitives, and input/display settings defaults. Phase 5 should extend it again for upgrade definitions, upgrade prerequisites, upgrade effect references, icon categories, lunar sector references, lunar feature references, and destruction cue metadata. Phase 6 should extend it again for item family/source metadata, implementation status, unlock/discovery gates, source-weighted pools, synergy cluster references, and item card presentation data. Phase 7 should extend it again for enemy role metadata, movement/attack family references, variant eligibility, formation definitions, and longer-sector pacing references.
 
 - [ ] No duplicate IDs.
 - [ ] Every item tag is registered.
@@ -188,7 +212,10 @@ Phase 2 should extend this checklist as systems become real. In addition to the 
 - [x] Item family, source, implementation status, unlock gate, and reward-pool source metadata validate after Phase 6 schema work.
 - [x] The first Phase 6 catalog expansion validates at 60 items with declared hook implementations and source-aligned starter/combat/vault pools.
 - [x] Source-weighted item pool profiles validate for reward-pool, source, rarity, family, and tag references.
-- [ ] Item discovery gates, unlock-gated family pools, synergy cluster references, and item card presentation data validate after later Phase 6 work.
+- [x] Item discovery gates, unlock-gated family pools, synergy cluster references, and item card presentation data validate after later Phase 6 work.
+- [ ] Enemy role, pressure, movement, attack, variant, formation, readability, and faction-fit metadata validate after Phase 7 schema work.
+- [ ] Formation definitions validate member roles, offsets, timing, bounds, and break/cleanup behavior.
+- [ ] Longer-sector pacing validates length bands, pressure/relief windows, formation marks, and boss approach references.
 
 ## Manual browser smoke matrix
 
@@ -204,13 +231,15 @@ Phase 2 performance checks should include wave/objective count, projectile count
 
 Phase 3 performance checks should also include background primitive count, parallax layer count, distance traveled, scroll speed, active distance markers, active landmarks, active hazards, and long-scroll scenarios that run longer than a normal sector.
 
-Current first-pass instrumentation exposes granular combat counts, background primitive/layer counts, active landmark/hazard counts, distance, speed, active input mode, HUD mode, viewport size/class/presentation scale, DPR, canvas pixel size, safe-frame origin/size, fixed combat world size, banked scrap, upgrade readiness, run resources, current sector id/name/background/pacing, exit progress, destruction progress, item count, active hook count, proc cap state, build identity, a dense-combat debug pocket, an item-storm hook stress pocket, forced exit/destruction shortcuts, and a quiet late-sector long-scroll traversal behind `?debug=1`. Production preview smoke passed for work order 050; manual non-Chromium and real-device browser validation still need to close the checklist.
+Current first-pass instrumentation exposes granular combat counts, background primitive/layer counts, active landmark/hazard counts, distance, speed, active input mode, HUD mode, viewport size/class/presentation scale, DPR, canvas pixel size, safe-frame origin/size, fixed combat world size, banked scrap, upgrade readiness, run resources, current sector id/name/background/pacing, exit progress, destruction progress, item count, active hook count, proc cap state, build identity, a dense-combat debug pocket, an item-storm hook stress pocket, forced exit/destruction shortcuts, and a quiet late-sector long-scroll traversal behind `?debug=1`. Production preview smoke passed for work orders 050 and 060; manual non-Chromium and real-device browser validation still need to close the checklist.
 
 Phase 4 performance checks should include viewport/presentation scale, safe-frame size, fixed-world hazard/enemy spacing parity, HUD rendering density, preview rendering cost, mouse input update behavior, ship cue rendering cost, non-combat theme DOM cost, and whether themed HUD/ship cues add measurable overhead in dense and long-scroll debug scenarios.
 
 Phase 5 performance checks should include Upgrade Bay DOM/icon rendering cost, upgrade-state generation branching, toast queue overhead, lunar background/feature primitive counts, lunar hazard readability, and ship destruction particle/debris budgets in reduced motion/performance modes.
 
 Phase 6 performance checks should include item hook dispatch cost, proc budget limits, reward/shop/vault pool sampling cost, large item card DOM rendering, archive filtering, and dense synergy combat readability.
+
+Phase 7 performance checks should include active role counts, upgraded variant counts, formation membership counts, long-sector wave spacing, projectile/telegraph budgets under role-specific attacks, and whether longer sectors create sustained CPU/render pressure beyond existing dense and item-storm pockets.
 
 - [x] FPS overlay available behind debug flag.
 - [x] Projectile count visible in debug mode.
@@ -225,6 +254,7 @@ Phase 6 performance checks should include item hook dispatch cost, proc budget l
 - [x] Upgrade Bay, banked scrap state, and upgrade-influenced generation visible in tests/debug smoke.
 - [x] Sector exit/toast, destruction, and lunar browser smoke paths exist.
 - [x] Item hook pressure, proc cap state, and build identity visible in debug smoke.
+- [ ] Enemy role, variant, formation, and long-sector pressure visible in debug smoke once Phase 7 instrumentation lands.
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [x] Heavy combat debug scene documented.
 - [x] Long-scroll debug scene documented.

@@ -89,6 +89,23 @@ Phase 6 expands the item catalog and hook surface. Keep the first larger catalog
 - Dense synergy combat should expose enough debug state to inspect active item count, hook count, build identity, and proc budget before increasing projectile or particle density.
 - New item effects should prefer conditional behavior, alternate projectiles, economy, routing, shields, cooldowns, or source weighting over unconditional damage multipliers.
 
+Phase 6 closeout: work order 060 treats the 60-item catalog as a playtest candidate, not a final balance state. `npm run check`, Playwright Chromium smoke, and production preview asset-path smoke passed locally for the release-hardening pass. Late-run proc balance, reward repetition, item-card density on real mobile devices, and non-Chromium browser checks remain manual playtest risks.
+
+## Phase 7 Enemy Behavior Budget Targets
+
+Phase 7 expands enemy behavior, variants, formations, and sector length. Keep the first richer enemy pass tactical and observable before raising raw density.
+
+- Enemy role metadata should be data-driven and validated. Behavior systems should read explicit role/movement/attack families rather than infer from display names or faction strings.
+- Movement profiles should stay fixed-step and clamped to the 640x720 combat world. Retreating, escorting, hovering, and lane-holding roles must have cleanup or timeout behavior so objectives cannot stall.
+- Attack-role differentiation should prefer cadence, angle, aim style, telegraph timing, and position pressure over simply adding more bullets.
+- Upgraded variants should change behavior, durability, rewards, or vulnerability windows with clear visual cues. Avoid hidden damage spikes or invisible speed multipliers.
+- Formation definitions should be resolved at wave generation/spawn time from seed plus save state. Do not let formation members call random functions while entering or breaking.
+- Formation spawning should process crossed distance markers in order and expose member counts so frame catchup cannot skip or duplicate squad entries.
+- Longer sectors should use pressure and relief windows, landmark/hazard pacing, and formation clusters. Avoid constant maximum enemy density over a stretched distance.
+- Debug overlays should eventually expose active role count, upgraded variant count, active formation label/member count, long-sector pressure band, projectile count, and telegraph count together.
+- The existing dense-combat pocket, item-storm pocket, forced exit/destruction shortcuts, and quiet long-scroll traversal should stay green as enemy systems grow.
+- Measure sustained long-sector pressure before expanding projectile or particle caps.
+
 ## Debug and Playtest Scenarios
 
 Enable debug tools with `?debug=1` on a local, preview, or Pages URL.
@@ -155,3 +172,11 @@ The debug overlay total entity count includes player, enemies, boss, bullets, pi
 - Unlock-gated item families can starve fresh saves if baseline pools shrink too far. Keep fresh-save pool sufficiency covered by deterministic tests.
 - Item card and archive UI can become too dense on narrow screens. Favor concise tags, clear rarity/source labels, and accessible text over decorative clutter.
 - Item-storm smoke confirms the current 22-item forced loadout stays below proc caps, but real late-run inventories can still overemphasize unconditional projectile multiplication. Keep future proc-heavy items conditional, budgeted, and visible in the debug overlay.
+
+## Phase 7 Playtest Risks
+
+- Stronger roles can become unreadable if movement, projectile, and telegraph cues all change at once. Add one pressure dimension at a time and keep high-contrast smoke active.
+- Upgraded variants can feel unfair if their cue is cosmetic but their damage or speed spike is mechanical. Make the cue and rule visible before increasing punishment.
+- Formations can reintroduce objective target desyncs if simultaneous kills, secondary item effects, body collisions, despawns, or break rewards bypass the same kill-accounting path.
+- Longer sectors can become exhausting if pressure lacks relief windows. Favor mid-sector punctuation, landmarks, and formation beats over continuous enemy density.
+- Enemy-rich sectors can interact with the Phase 6 item catalog in surprising ways. Keep item-storm, dense-combat, and formation stress paths separate and then test combined pressure intentionally.

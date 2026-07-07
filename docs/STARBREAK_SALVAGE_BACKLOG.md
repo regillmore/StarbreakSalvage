@@ -1220,3 +1220,159 @@ Acceptance:
 - README, changelog, performance notes, release checklist, and QA docs cover item expansion.
 - `npm run check`, E2E smoke, and production preview smoke pass before Phase 6 closeout.
 - Known item balance, browser, and readability risks are documented.
+
+Status:
+
+- Implemented in work order 060. Phase 6 is closed as an item-catalog playtest candidate with documented 60-item catalog scale, 13-hook coverage, source-weighted reward/shop/vault pools, unlock/discovery behavior, shared item cards, item-heavy stress smoke, known item balance risks, manual browser gaps, and Phase 7 enemy-behavior planning.
+
+## Phase 7 backlog additions
+
+Phase 7 starts after the item-catalog playtest candidate. The goal is richer enemy behavior: stronger class/role differentiation, upgraded enemy variants, formation-aware waves, and longer-sector pacing that feels authored rather than stretched.
+
+## Epic AQ - Enemy role taxonomy
+
+### AQ1 - Enemy role audit
+
+Acceptance:
+
+- Current enemy classes are documented by role, movement, attack cadence, durability, faction fit, spawn context, objective interaction, and readability.
+- Role gaps and risk areas are explicit before behavior changes.
+- Deterministic behavior remains unchanged.
+
+### AQ2 - Role metadata schema
+
+Acceptance:
+
+- Enemy content carries validated role, pressure, movement, attack, variant, formation, readability, and faction-fit metadata.
+- Invalid metadata is caught by tests.
+- Existing waves keep deterministic outputs.
+
+### AQ3 - Role debug summaries
+
+Acceptance:
+
+- Debug or pure helpers can report active enemy role counts.
+- Role-pressure summaries are suitable for Playwright smoke and manual playtest notes.
+- Overlay additions do not add per-frame expensive scans beyond existing entity passes.
+
+## Epic AR - Enemy behavior differentiation
+
+### AR1 - Movement profiles
+
+Acceptance:
+
+- Priority roles such as scout, bruiser, sniper, screener, carrier, support, and disruptor have distinct deterministic movement profiles.
+- Movement stays inside the fixed 640x720 combat world.
+- Profiles cannot strand enemies or block sector completion indefinitely.
+
+### AR2 - Attack cadences and telegraphs
+
+Acceptance:
+
+- Priority roles have distinct firing cadence, aim style, projectile shape/speed, or telegraph language.
+- Projectile and telegraph budgets remain bounded.
+- High-contrast and reduced-motion modes keep attacks readable.
+
+### AR3 - Support and disruption behaviors
+
+Acceptance:
+
+- Non-damage roles can add escort, shielding, pulse, spawn, lane-control, or hazard-marking pressure without hidden damage spikes.
+- Support behaviors expose clear visual and audio/readability cues.
+- Tests cover deterministic timing and cleanup.
+
+## Epic AS - Upgraded variants and elites
+
+### AS1 - Variant rules
+
+Acceptance:
+
+- Upgraded variants are data-driven, seeded, and gated by sector depth, faction, route pressure, challenge flags, or encounter type.
+- Fresh opening sectors remain forgiving.
+- Variant eligibility validates against enemy role metadata.
+
+### AS2 - Elite modifier readability
+
+Acceptance:
+
+- Elite modifiers such as armored, overclocked, evasive, volatile, shielded, escort, commander, or salvage-rich have clear visual cues.
+- Variants change decisions before raw damage spikes.
+- Summary/debug surfaces can expose variant pressure for playtesting.
+
+### AS3 - Variant reward and unlock hooks
+
+Acceptance:
+
+- Variant and elite encounters can bias rewards or discovery hooks deterministically where appropriate.
+- Reward changes are explained through existing route/reward copy.
+- Unlock and fresh-save pool sufficiency remain intact.
+
+## Epic AT - Formation and squad director
+
+### AT1 - Formation definitions
+
+Acceptance:
+
+- Formation definitions include member roles, offsets, timing, entry style, spacing, break conditions, and cleanup behavior.
+- Definitions validate against enemy roles and fixed-world bounds.
+- No external formation assets are introduced.
+
+### AT2 - Formation spawning
+
+Acceptance:
+
+- Formation members spawn in deterministic order through the wave director.
+- Frame catchup cannot skip or duplicate members.
+- Formations stay readable and avoid incoherent overlap.
+
+### AT3 - Objective and reward safety
+
+Acceptance:
+
+- Simultaneous formation kills, secondary item kills, despawns, and body collisions all advance objectives consistently.
+- Formation waves cannot soft-lock sector completion.
+- Optional formation rewards and route/faction biases reproduce from seed plus save state.
+
+## Epic AU - Longer sector pacing
+
+### AU1 - Longer length bands
+
+Acceptance:
+
+- Selected sectors/routes can use longer deterministic length bands.
+- Length changes are visible in debug and summaries.
+- Route-conditioned length remains reproducible.
+
+### AU2 - Encounter arcs
+
+Acceptance:
+
+- Longer sectors use mid-sector beats, relief windows, formation clusters, hazards, landmarks, and boss approach changes rather than constant pressure.
+- Wave and formation spacing tests cover pressure/relief ordering.
+- Boss and final-sector handoffs remain reliable.
+
+### AU3 - Long-sector performance budget
+
+Acceptance:
+
+- Enemy-rich long-sector smoke exposes entity, projectile, telegraph, role, variant, formation, and scroll metrics.
+- Performance mode and reduced motion simplify visuals without changing deterministic gameplay.
+- Manual browser gaps are documented.
+
+## Epic AV - Phase 7 release and QA
+
+### AV1 - Enemy stress smoke
+
+Acceptance:
+
+- Debug/test tooling can force at least one enemy-rich formation/variant path.
+- Browser smoke covers role, variant, formation, and long-sector pressure where practical.
+- Existing item-storm and long-scroll smoke remain green.
+
+### AV2 - Enemy behavior release checklist
+
+Acceptance:
+
+- README, changelog, performance notes, release checklist, QA docs, Phase 7 plan, backlog, and architecture notes cover enemy behavior expansion.
+- `npm run check`, E2E smoke, and production preview smoke pass before Phase 7 closeout.
+- Known enemy balance, browser, readability, and longer-sector risks are documented.

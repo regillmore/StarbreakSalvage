@@ -344,6 +344,54 @@ Phase 4 adds display/input/identity polish without turning presentation into a s
 - Critical state still needs text and semantic DOM exposure for accessibility.
 - Reduced motion, performance mode, and high-contrast bullet settings should simplify cockpit styling and preserve bullet readability.
 
+## Phase 7 architecture priorities
+
+Phase 7 adds richer enemy roles, upgraded variants, formations, and longer sectors. Keep these systems content-driven and deterministic rather than embedding one-off behavior branches in the scene.
+
+### Enemy role metadata
+
+- Enemy definitions should carry explicit role metadata such as role, pressure type, movement family, attack family, variant eligibility, formation eligibility, readability tier, and faction fit.
+- Validation should reject unsupported role/movement/attack families, missing faction fits, invalid variant references, and formation-ineligible enemies used in formation definitions.
+- Role metadata should describe behavior and pressure, not presentation fashion. Rendering can consume role cues, but generation and simulation should not infer behavior from colors or labels.
+
+Recommended module direction:
+
+```text
+src/content/enemies.ts
+src/game/EnemyRoles.ts
+src/systems/EnemyMovement.ts
+src/systems/EnemyAttacks.ts
+```
+
+### Upgraded variants
+
+- Variant selection should be generated from seed plus save state, sector depth, faction, route pressure, challenge flags, and encounter type.
+- Variants should apply typed modifiers or behavior flags that are validated against enemy role metadata.
+- Fresh saves and early sectors must retain a forgiving baseline pool.
+- Visual/readability cues should be deterministic and tied to the same variant descriptor used by simulation and debug summaries.
+
+### Formations
+
+- Formation definitions should list member roles/enemies, offsets, entry timing, spacing, break conditions, cleanup behavior, and optional reward hooks.
+- Formation generation belongs near wave/sector planning. Runtime spawning should consume a generated plan and process crossed distance markers in order.
+- Formation members must share the normal enemy kill/accounting path so simultaneous kills, item side-effect kills, body collisions, and despawns cannot desync objectives.
+- Formation placement should use fixed combat-world units, not viewport dimensions.
+
+Recommended module direction:
+
+```text
+src/content/formations.ts
+src/game/FormationDirector.ts
+src/game/EnemyVariants.ts
+```
+
+### Longer sectors
+
+- Longer-sector pacing should extend generated sector conditions with pressure bands, relief windows, formation clusters, landmark beats, and boss approach changes.
+- Avoid per-frame random decisions. Generate the schedule once, then let fixed-step simulation consume it.
+- Summaries and debug overlays should expose length, pressure band, role/variant/formation counts, and route-conditioned reasons where useful.
+- Performance mode and reduced motion may simplify presentation, but should not change combat generation or objective requirements.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

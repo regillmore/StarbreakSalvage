@@ -993,6 +993,162 @@ Acceptance criteria:
 - Release docs document item count, hook coverage, reward pools, unlock/discovery state, and manual browser gaps.
 - Phase 6 can be declared complete or explicitly deferred with documented blockers.
 
+Status: implemented; Phase 6 is documented as complete as an item-catalog playtest candidate. Release, QA, performance, README, changelog, backlog, technical architecture, Phase 6, and Phase 7 planning docs now record the 60-item catalog, 13-hook item surface, source-weighted pools, unlock/discovery state, item-heavy smoke coverage, remaining item balance/browser risks, and the next enemy-behavior roadmap. Full check, escalated Playwright Chromium smoke, and production preview asset-path smoke passed locally for the closeout.
+
+## Phase 7 work orders
+
+Phase 7 begins after work order 060 validation and concludes the item-catalog playtest candidate. Its purpose is to make combat pressure richer and longer-sector play more tactical: audit enemy roles, formalize enemy metadata, differentiate movement and attack roles, add upgraded variants, create formation-aware waves, extend sector pacing, and harden readability/performance around longer enemy-rich sectors. Preserve deterministic wave, variant, formation, and sector-length behavior from seed plus save state.
+
+## Work order 061 - Phase 7 enemy role taxonomy and audit
+
+Goal: define the enemy behavior language before changing combat.
+
+Prompt:
+
+> Read `AGENTS.md` first. Then read the Phase 7 plan, current enemy/faction/wave content, wave director, collision/objective code, renderer, performance notes, QA plan, and relevant tests. Audit current enemy classes for role, silhouette, movement, attack cadence, durability, faction identity, spawn context, objective interaction, and readability. Add a concise enemy role audit doc or generated helper if useful. Do not add broad behavior changes yet. Update planning/backlog docs with role targets, gaps, and risk areas. Run checks.
+
+Acceptance criteria:
+
+- Current enemy roles and gaps are documented.
+- Phase 7 target roles and pressure types are clear.
+- Objective-desync, readability, and performance risks are identified before implementation.
+- Deterministic behavior is unchanged except for docs or pure audit helpers.
+
+## Work order 062 - Enemy schema, role validation, and debug counters
+
+Goal: make enemy roles data-driven and observable.
+
+Prompt:
+
+> Add role-oriented enemy metadata and validation for class, role, pressure type, movement family, attack family, variant eligibility, formation eligibility, readability tier, and faction fit where practical. Keep content data explicit and avoid new runtime dependencies. Extend debug/test read models with active enemy role counts and variant/formation placeholders if useful. Add unit tests for metadata validation and known content coverage. Update README/debug and architecture notes. Run checks.
+
+Acceptance criteria:
+
+- Enemy content carries validated role metadata.
+- Invalid role, movement, attack, faction, or formation metadata is caught by tests.
+- Debug or pure helpers can summarize active enemy role pressure.
+- Existing wave generation and gameplay remain deterministic.
+
+## Work order 063 - Role-specific movement profiles
+
+Goal: make enemy roles recognizable before adding more bullets.
+
+Prompt:
+
+> Implement distinct deterministic movement profiles for priority roles such as scout, bruiser, sniper, screener, carrier, support, and disruptor. Favor position, timing, lane pressure, retreats, escorts, and hover behavior over raw speed. Keep movement inside the fixed 640x720 combat world and stable under frame catchup. Add tests for profile bounds, deterministic updates, cleanup, and reduced-motion/readability interactions where practical. Update performance notes. Run checks.
+
+Acceptance criteria:
+
+- At least four roles have visibly different movement behavior.
+- Movement remains fixed-step, deterministic, and clamped to the combat world.
+- No movement profile can strand enemies offscreen or block sector completion indefinitely.
+- Debug/dense smoke still stays within entity and readability budgets.
+
+## Work order 064 - Role-specific attack cadences and telegraphs
+
+Goal: differentiate enemy pressure without unreadable bullet spam.
+
+Prompt:
+
+> Add role-specific attack cadence, projectile shape/speed, aim style, and telegraph language for priority enemy roles. Examples include sniper charge shots, screener lane curtains, carrier deploy bursts, support pulses, disruptor hazard marks, and bruiser close-range volleys. Keep projectiles readable over all current sector backgrounds and high-contrast mode. Add deterministic cadence and projectile-budget tests. Update QA/performance notes. Run checks.
+
+Acceptance criteria:
+
+- Role attacks have distinct timing and pressure profiles.
+- Projectile and telegraph budgets remain bounded.
+- High-contrast and reduced-motion settings preserve clarity.
+- Known-seed or unit tests prove attack cadence is deterministic.
+
+## Work order 065 - Upgraded enemy variants and elite modifiers
+
+Goal: add tactical escalation through clear variants.
+
+Prompt:
+
+> Add deterministic upgraded enemy variants and elite modifiers such as armored, overclocked, evasive, volatile, shielded, escort, commander, or salvage-rich. Variants should be gated by sector depth, faction, route pressure, challenge flags, or encounter type, and should use clear visual/readability cues. Avoid hidden damage spikes and preserve fresh-save generosity. Add validation and known-seed tests for variant selection. Update README/debug, release, and performance notes. Run checks.
+
+Acceptance criteria:
+
+- Variant rules are data-driven, seeded, and validated.
+- Variants change player decisions through clear behavior or durability cues.
+- Fresh opening sectors do not become unfair.
+- Debug or summary surfaces can expose variant pressure for playtesting.
+
+## Work order 066 - Formation definitions and squad spawning
+
+Goal: create tactical enemy shapes that are deterministic and readable.
+
+Prompt:
+
+> Add formation definitions for squads such as wedge, column, ring, screen, escort, pincer, staggered lane, or convoy. Integrate formation spawning with existing wave schedules while preserving distance-marker ordering and frame-catchup safety. Formations should define roles, offsets, timing, entry style, spacing, optional break condition, and cleanup behavior. Add tests for formation generation, spawn order, bounds, and determinism. Run checks.
+
+Acceptance criteria:
+
+- Formation definitions are content-driven and validated.
+- Spawned formations stay inside the fixed combat world and do not overlap incoherently.
+- Frame catchup cannot skip or duplicate formation members.
+- Formation spawning does not break current objective progress.
+
+## Work order 067 - Formation-wave integration and objective safety
+
+Goal: make formations work with sector objectives, rewards, and routes.
+
+Prompt:
+
+> Connect formations to wave director pacing, route-conditioned pressure, faction identity, optional rewards, and objective completion. Ensure simultaneous formation kills, secondary item kills, despawns, and body collisions all advance objectives consistently. Add regression coverage for multi-kill formation clears and sector-complete handoff. Update QA notes with formation smoke seeds. Run checks.
+
+Acceptance criteria:
+
+- Formation waves can appear in normal sector schedules without soft locks.
+- Objective target counts cannot desync when formation members die together or through secondary effects.
+- Route/faction conditions can bias formation types deterministically.
+- Tests cover formation clear, despawn, and sector-completion paths.
+
+## Work order 068 - Longer sector pacing and encounter arcs
+
+Goal: make longer sectors feel authored instead of stretched.
+
+Prompt:
+
+> Extend sector length and encounter pacing for selected routes/sectors with mid-sector beats, relief windows, formation clusters, hazard/background landmarks, and boss-approach pacing. Avoid constant maximum enemy density. Update summaries/debug state to explain longer-sector modifiers. Add deterministic tests for length bands, wave/formation spacing, relief intervals, and route-conditioned longer-sector outputs. Run checks.
+
+Acceptance criteria:
+
+- Longer sectors use clear pacing arcs with pressure and relief windows.
+- Route-conditioned length and encounter density reproduce from seed plus save state.
+- Debug/summaries expose useful longer-sector context.
+- Long sectors stay within performance and readability budgets.
+
+## Work order 069 - Enemy readability, accessibility, and stress smoke
+
+Goal: harden the richer enemy ecosystem before release closeout.
+
+Prompt:
+
+> Add debug and smoke paths for enemy-rich sectors, upgraded variants, and formation pressure. Extend overlay or pure helpers with role counts, variant counts, formation labels, long-sector pressure, and projectile/telegraph budgets. Check high-contrast, reduced-motion, performance mode, narrow viewport, and item-storm interactions. Add Playwright smoke where practical and update QA/performance docs. Run checks.
+
+Acceptance criteria:
+
+- Debug/test tooling can inspect role, variant, formation, and long-sector pressure.
+- Browser smoke covers at least one enemy-rich formation or variant path.
+- Accessibility settings keep enemy bullets and telegraphs readable.
+- Existing item-storm and long-scroll smoke remain green.
+
+## Work order 070 - Phase 7 enemy playtest release hardening
+
+Goal: ship an enemy-behavior playtest candidate.
+
+Prompt:
+
+> Audit the Phase 7 build for role differentiation, upgraded variants, formation behavior, longer-sector pacing, deterministic wave/variant/formation generation, objective safety, readability, accessibility, performance, browser load, release docs, and manual smoke coverage. Fix blockers only. Update README, changelog, performance notes, Phase 7 plan, backlog, release checklist, QA docs, and architecture notes. Run `npm run check`, Playwright smoke if available, and production preview smoke. Summarize known enemy balance risks, browser gaps, and follow-up issues.
+
+Acceptance criteria:
+
+- Full checks and production preview smoke pass.
+- E2E smoke passes or local browser-install blockers are clearly documented.
+- Release docs document role coverage, variant rules, formation smoke, longer-sector tuning, and manual browser gaps.
+- Phase 7 can be declared complete or explicitly deferred with documented blockers.
+
 ## Review subagent prompt
 
 Use after a feature PR:

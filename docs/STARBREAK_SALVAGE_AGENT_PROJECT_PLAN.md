@@ -33,9 +33,11 @@ Phase 4 is complete as of validated work order 040. It added display/input/ident
 
 Phase 5 is complete as of validated work order 050. It added progression and sector-feedback depth: banked scrap purpose, upgrade bay icons and purchases, upgrade-influenced future runs, run-end scrap feedback, sector completion exits/toasts, a lunar surface sector family with hazards and pacing, richer player ship destruction, and release/debug smoke coverage.
 
-Phase 6 begins from that progression/sector-feedback candidate. Its goal is item-catalog depth: item taxonomy, expanded metadata and validation, broader hook surfaces, larger original item batches, reward/shop/vault pool weighting, unlock-gated item families, synergy identity, item presentation, and item-heavy smoke coverage.
+Phase 6 is complete as of validated work order 060. It added item-catalog depth: item taxonomy, expanded metadata and validation, broader hook surfaces, a 60-item catalog, reward/shop/vault pool weighting, unlock-gated item families, discovery records, synergy identity, item-card presentation, item-heavy smoke coverage, and release documentation.
 
-See `docs/STARBREAK_SALVAGE_PHASE_6_PLAN.md` for the active Phase 6 roadmap. `docs/STARBREAK_SALVAGE_PHASE_5_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_4_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`, and `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md` remain historical records for concluded phases.
+Phase 7 begins from that item-catalog playtest candidate. Its goal is enemy behavior depth: stronger enemy class/role differentiation, upgraded enemy variants, enemy formations, longer sectors, richer pacing arcs, and smoke coverage for enemy-heavy pressure.
+
+See `docs/STARBREAK_SALVAGE_PHASE_7_PLAN.md` for the active Phase 7 roadmap. `docs/STARBREAK_SALVAGE_PHASE_6_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_5_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_4_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`, and `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md` remain historical records for concluded phases.
 
 ## Milestones
 
@@ -556,6 +558,80 @@ Exit criteria:
 - Release docs cover item count, hook coverage, pool/gating behavior, discovery UI, item-heavy smoke, and balance risks.
 - No severe item-system blockers remain for the next playtest.
 
+Status: complete through work order 060. The 60-item catalog, expanded hook surface, source-weighted pools, unlock/discovery state, item presentation, stress smoke, and release docs are in place. Remaining item work is balance and future catalog breadth.
+
+## Phase 7 milestones
+
+### P7.1 - Enemy Role Taxonomy And Audit
+
+Scope:
+
+- Audit current enemy classes, factions, waves, movement, attack cadence, objective interactions, and readability.
+- Define target enemy roles and pressure types before implementation.
+- Add validation direction for enemy role metadata.
+
+Exit criteria:
+
+- Current gaps and target roles are documented.
+- Role metadata and validation needs are clear.
+- Existing deterministic behavior remains unchanged.
+
+### P7.2 - Role-Specific Behavior Expansion
+
+Scope:
+
+- Give priority roles distinct movement, attack cadence, projectile, and telegraph behavior.
+- Keep behavior fixed-step, deterministic, and readable under accessibility settings.
+- Expose active role pressure in debug/test helpers.
+
+Exit criteria:
+
+- At least four roles feel mechanically distinct.
+- Role behavior cannot strand enemies or desync objectives.
+- Tests cover deterministic timing, bounds, and cleanup.
+
+### P7.3 - Variants And Formations
+
+Scope:
+
+- Add deterministic upgraded variants with clear cues and early-sector safeguards.
+- Add formation definitions and squad spawning through the wave director.
+- Preserve objective accounting for simultaneous, secondary, body-collision, and despawn clears.
+
+Exit criteria:
+
+- Variants and formations reproduce from seed plus save state.
+- Formation wave clears cannot soft-lock sector completion.
+- Debug/smoke can inspect variant and formation pressure.
+
+### P7.4 - Longer Enemy-Rich Sector Arcs
+
+Scope:
+
+- Extend selected sector length bands with pressure windows, relief intervals, formation clusters, landmarks, hazards, and boss approach pacing.
+- Avoid constant maximum density.
+- Update summaries/debug state for longer-sector context.
+
+Exit criteria:
+
+- Longer sectors feel paced rather than padded.
+- Route-conditioned length and encounter density remain deterministic.
+- Performance/readability budgets hold in browser smoke.
+
+### P7.5 - Phase 7 Enemy Playtest Candidate
+
+Scope:
+
+- Harden enemy role, variant, formation, and longer-sector behavior for deployment.
+- Update release, QA, performance, README, changelog, backlog, and architecture docs.
+- Run full checks, Playwright smoke, and production preview smoke.
+
+Exit criteria:
+
+- `npm run check`, Playwright smoke, and production preview smoke pass.
+- Release docs cover role coverage, variant rules, formation smoke, longer-sector tuning, and known risks.
+- No severe enemy-system blockers remain for the next playtest.
+
 ## Dependency map
 
 ```text
@@ -591,6 +667,11 @@ M0 scaffold
                                                           -> P6.3 catalog growth and pool curation
                                                             -> P6.4 unlocks, discovery, and synergy identity
                                                               -> P6.5 item playtest candidate
+                                                                -> P7.1 enemy role taxonomy and audit
+                                                                  -> P7.2 role-specific behavior expansion
+                                                                    -> P7.3 variants and formations
+                                                                      -> P7.4 longer enemy-rich sector arcs
+                                                                        -> P7.5 enemy playtest candidate
 ```
 
 Parallelizable:
