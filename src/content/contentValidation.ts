@@ -46,6 +46,19 @@ import {
   ITEM_UNLOCKS,
   type ItemFamilyGateDefinition
 } from '../game/UnlockGates';
+import {
+  ENEMY_ATTACK_FAMILIES,
+  ENEMY_CLASS_IDS,
+  ENEMY_FACTION_FITS,
+  ENEMY_FORMATION_ELIGIBILITIES,
+  ENEMY_MOVEMENT_FAMILIES,
+  ENEMY_OBJECTIVE_POLICIES,
+  ENEMY_PRESSURE_TYPES,
+  ENEMY_READABILITY_TIERS,
+  ENEMY_ROLE_IDS,
+  ENEMY_VARIANT_ELIGIBILITIES,
+  type EnemyRoleMetadata
+} from './enemyRoles';
 
 export type ItemHookImplementationRegistry = Readonly<Partial<Record<ItemHook, readonly ItemId[]>>>;
 
@@ -107,6 +120,16 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const itemUiTags = new Set<string>(ITEM_UI_TAGS);
   const factionPatterns = new Set(['driftShot', 'laneBurst', 'sporeSpread', 'phaseSkirmish']);
   const factionShapes = new Set(['jagged', 'diamond', 'organic', 'needle']);
+  const enemyClassIds = new Set<string>(ENEMY_CLASS_IDS);
+  const enemyRoles = new Set<string>(ENEMY_ROLE_IDS);
+  const enemyPressureTypes = new Set<string>(ENEMY_PRESSURE_TYPES);
+  const enemyMovementFamilies = new Set<string>(ENEMY_MOVEMENT_FAMILIES);
+  const enemyAttackFamilies = new Set<string>(ENEMY_ATTACK_FAMILIES);
+  const enemyVariantEligibilities = new Set<string>(ENEMY_VARIANT_ELIGIBILITIES);
+  const enemyFormationEligibilities = new Set<string>(ENEMY_FORMATION_ELIGIBILITIES);
+  const enemyReadabilityTiers = new Set<string>(ENEMY_READABILITY_TIERS);
+  const enemyFactionFits = new Set<string>(ENEMY_FACTION_FITS);
+  const enemyObjectivePolicies = new Set<string>(ENEMY_OBJECTIVE_POLICIES);
   const backgroundLayerKinds = new Set<string>(BACKGROUND_LAYER_KINDS);
   const unlockKinds = new Set(['ship', 'item', 'faction', 'bossPractice', 'music', 'challenge']);
   const upgradeCategories = new Set<string>(UPGRADE_CATEGORIES);
@@ -265,6 +288,8 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     }
   }
 
+  const seenEnemyClassIds = new Set<string>();
+
   for (const faction of factions) {
     if (factionIds.has(faction.id)) {
       errors.push(`Duplicate faction id: ${faction.id}`);
@@ -283,6 +308,19 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     if (!faction.summary.trim()) {
       errors.push(`Faction ${faction.id} must have behavior notes`);
     }
+
+    validateEnemyRoleMetadata(errors, faction, seenEnemyClassIds, {
+      classIds: enemyClassIds,
+      roles: enemyRoles,
+      pressureTypes: enemyPressureTypes,
+      movementFamilies: enemyMovementFamilies,
+      attackFamilies: enemyAttackFamilies,
+      variantEligibilities: enemyVariantEligibilities,
+      formationEligibilities: enemyFormationEligibilities,
+      readabilityTiers: enemyReadabilityTiers,
+      factionFits: enemyFactionFits,
+      objectivePolicies: enemyObjectivePolicies
+    });
   }
 
   for (const boss of bosses) {
@@ -762,6 +800,101 @@ interface ItemFamilyGateRegistries {
   readonly unlockIds: ReadonlySet<string>;
 }
 
+interface EnemyRoleMetadataRegistries {
+  readonly classIds: ReadonlySet<string>;
+  readonly roles: ReadonlySet<string>;
+  readonly pressureTypes: ReadonlySet<string>;
+  readonly movementFamilies: ReadonlySet<string>;
+  readonly attackFamilies: ReadonlySet<string>;
+  readonly variantEligibilities: ReadonlySet<string>;
+  readonly formationEligibilities: ReadonlySet<string>;
+  readonly readabilityTiers: ReadonlySet<string>;
+  readonly factionFits: ReadonlySet<string>;
+  readonly objectivePolicies: ReadonlySet<string>;
+}
+
+function validateEnemyRoleMetadata(
+  errors: string[],
+  faction: FactionDefinition,
+  seenClassIds: Set<string>,
+  registries: EnemyRoleMetadataRegistries
+): void {
+  const metadata = (faction as Partial<FactionDefinition>).enemyRole as
+    | EnemyRoleMetadata
+    | undefined;
+  const owner = `Faction ${faction.id} enemy role`;
+
+  if (!metadata) {
+    errors.push(`${owner} must define metadata`);
+    return;
+  }
+
+  if (!registries.classIds.has(metadata.classId)) {
+    errors.push(`${owner} has invalid class id: ${String(metadata.classId)}`);
+  }
+
+  if (seenClassIds.has(metadata.classId)) {
+    errors.push(`Duplicate enemy class id: ${String(metadata.classId)}`);
+  }
+
+  seenClassIds.add(metadata.classId);
+
+  if (!registries.roles.has(metadata.role)) {
+    errors.push(`${owner} has invalid role: ${String(metadata.role)}`);
+  }
+
+  if (!registries.pressureTypes.has(metadata.pressureType)) {
+    errors.push(`${owner} has invalid pressure type: ${String(metadata.pressureType)}`);
+  }
+
+  if (!registries.movementFamilies.has(metadata.movementFamily)) {
+    errors.push(`${owner} has invalid movement family: ${String(metadata.movementFamily)}`);
+  }
+
+  if (!registries.attackFamilies.has(metadata.attackFamily)) {
+    errors.push(`${owner} has invalid attack family: ${String(metadata.attackFamily)}`);
+  }
+
+  if (metadata.attackFamily !== faction.enemyPattern) {
+    errors.push(`${owner} attack family must match current enemy pattern`);
+  }
+
+  validateStringList(
+    errors,
+    owner,
+    'variant eligibility',
+    metadata.variantEligibility,
+    registries.variantEligibilities
+  );
+  validateStringList(
+    errors,
+    owner,
+    'formation eligibility',
+    metadata.formationEligibility,
+    registries.formationEligibilities
+  );
+
+  if (!metadata.formationEligibility.includes('solo')) {
+    errors.push(`${owner} must allow solo formation eligibility`);
+  }
+
+  if (!registries.readabilityTiers.has(metadata.readabilityTier)) {
+    errors.push(`${owner} has invalid readability tier: ${String(metadata.readabilityTier)}`);
+  }
+
+  if (!registries.factionFits.has(metadata.factionFit)) {
+    errors.push(`${owner} has invalid faction fit: ${String(metadata.factionFit)}`);
+  }
+
+  if (!registries.objectivePolicies.has(metadata.objectivePolicy)) {
+    errors.push(`${owner} has invalid objective policy: ${String(metadata.objectivePolicy)}`);
+  }
+
+  if (!metadata.debugLabel.trim()) {
+    errors.push(`${owner} must have a debug label`);
+  }
+}
+
 function validateItemFamilyGates(
   errors: string[],
   gates: readonly ItemFamilyGateDefinition[],
@@ -942,6 +1075,28 @@ function validateWeightMap(
     if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
       errors.push(`${owner} has invalid ${label} weight for ${key}`);
     }
+  }
+}
+
+function validateStringList(
+  errors: string[],
+  owner: string,
+  label: string,
+  values: readonly string[],
+  registry: ReadonlySet<string>
+): void {
+  if (values.length === 0) {
+    errors.push(`${owner} must list at least one ${label}`);
+  }
+
+  for (const value of values) {
+    if (!registry.has(value)) {
+      errors.push(`${owner} has invalid ${label}: ${String(value)}`);
+    }
+  }
+
+  for (const duplicateValue of getDuplicateStrings(values)) {
+    errors.push(`${owner} has duplicate ${label}: ${duplicateValue}`);
   }
 }
 

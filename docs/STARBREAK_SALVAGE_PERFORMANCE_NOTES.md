@@ -96,6 +96,7 @@ Phase 6 closeout: work order 060 treats the 60-item catalog as a playtest candid
 Phase 7 expands enemy behavior, variants, formations, and sector length. Keep the first richer enemy pass tactical and observable before raising raw density.
 
 - Work order 061 keeps behavior unchanged and documents the current baseline: four faction-pattern enemy classes, 24 semantic wave labels, shared normal-enemy radius 17, 2-3 base hull, no normal-enemy telegraphs, and objective accounting that is safe for current kill paths but not yet policy-rich enough for retreating or spawned enemies.
+- Work order 062 adds data-only enemy role metadata and debug summaries for active role counts, required-target objective policy counts, and zeroed variant/formation placeholders. It does not change spawn schedules, movement, attack cadence, projectile count, or objective accounting.
 - Enemy role metadata should be data-driven and validated. Behavior systems should read explicit role/movement/attack families rather than infer from display names or faction strings.
 - Movement profiles should stay fixed-step and clamped to the 640x720 combat world. Retreating, escorting, hovering, and lane-holding roles must have cleanup or timeout behavior so objectives cannot stall.
 - Attack-role differentiation should prefer cadence, angle, aim style, telegraph timing, and position pressure over simply adding more bullets.

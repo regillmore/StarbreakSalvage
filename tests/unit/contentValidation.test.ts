@@ -89,6 +89,80 @@ describe('validateContent', () => {
     expect(errors).toContain(`Faction ${baseFaction.id} must have behavior notes`);
   });
 
+  it('rejects invalid enemy role metadata', () => {
+    const errors = validateContent({
+      factions: [
+        {
+          ...baseFaction,
+          enemyRole: {
+            ...baseFaction.enemyRole,
+            classId: 'class_missing',
+            role: 'raider',
+            pressureType: 'fog',
+            movementFamily: 'warp',
+            attackFamily: 'laserSweep',
+            variantEligibility: [],
+            formationEligibility: ['orbit'],
+            readabilityTier: 'invisible',
+            factionFit: 'alien',
+            objectivePolicy: 'free',
+            debugLabel: ''
+          }
+        } as unknown as FactionDefinition
+      ]
+    });
+
+    expect(errors).toContain(
+      `Faction ${baseFaction.id} enemy role has invalid class id: class_missing`
+    );
+    expect(errors).toContain(`Faction ${baseFaction.id} enemy role has invalid role: raider`);
+    expect(errors).toContain(`Faction ${baseFaction.id} enemy role has invalid pressure type: fog`);
+    expect(errors).toContain(
+      `Faction ${baseFaction.id} enemy role has invalid movement family: warp`
+    );
+    expect(errors).toContain(
+      `Faction ${baseFaction.id} enemy role has invalid attack family: laserSweep`
+    );
+    expect(errors).toContain(
+      `Faction ${baseFaction.id} enemy role attack family must match current enemy pattern`
+    );
+    expect(errors).toContain(
+      `Faction ${baseFaction.id} enemy role must list at least one variant eligibility`
+    );
+    expect(errors).toContain(
+      `Faction ${baseFaction.id} enemy role has invalid formation eligibility: orbit`
+    );
+    expect(errors).toContain(
+      `Faction ${baseFaction.id} enemy role must allow solo formation eligibility`
+    );
+    expect(errors).toContain(
+      `Faction ${baseFaction.id} enemy role has invalid readability tier: invisible`
+    );
+    expect(errors).toContain(`Faction ${baseFaction.id} enemy role has invalid faction fit: alien`);
+    expect(errors).toContain(
+      `Faction ${baseFaction.id} enemy role has invalid objective policy: free`
+    );
+    expect(errors).toContain(`Faction ${baseFaction.id} enemy role must have a debug label`);
+  });
+
+  it('rejects duplicate enemy class ids', () => {
+    const ledgerFaction = FACTIONS[1] as FactionDefinition;
+    const errors = validateContent({
+      factions: [
+        baseFaction,
+        {
+          ...ledgerFaction,
+          enemyRole: {
+            ...ledgerFaction.enemyRole,
+            classId: baseFaction.enemyRole.classId
+          }
+        }
+      ]
+    });
+
+    expect(errors).toContain(`Duplicate enemy class id: ${baseFaction.enemyRole.classId}`);
+  });
+
   it('rejects invalid boss phase definitions', () => {
     const basePhase = baseBoss.phases[0];
 

@@ -98,7 +98,7 @@ Recommended policy for work order 062:
 
 ## Work Order 062 Handoff
 
-Suggested metadata fields:
+Implemented metadata fields:
 
 - `role`
 - `pressureType`
@@ -109,11 +109,13 @@ Suggested metadata fields:
 - `readabilityTier`
 - `factionFit`
 - `objectivePolicy`
+- `classId`
+- `debugLabel`
 
-Suggested first tests:
+Work order 062 adds these fields to the current faction-pattern classes and validates them through content tests. Runtime behavior is unchanged: attack family still matches the current faction `enemyPattern`, and all current normal enemies use `objectivePolicy: requiredTarget`.
 
-- Every faction or enemy definition has a valid role entry.
-- Every role maps to a known movement and attack family.
-- Fresh opening sectors retain at least one simple low-pressure enemy role.
+Suggested next tests:
+
 - Wave labels can be audited against intended role, variant, or formation families.
 - Objective policies reject retreating/spawned/formation enemies without explicit target accounting.
+- Debug smoke can assert active role counts once enemy-rich Phase 7 scenarios land.

@@ -1,4 +1,5 @@
 import type { CanvasRenderer } from './CanvasRenderer';
+import type { EnemyRolePressureSummary } from '../game/EnemyRolePressure';
 import type { ItemLoadoutStressModel } from '../game/ItemStress';
 import type { InputAction } from '../systems/InputSystem';
 import type { ContractThemeDebugState } from '../ui/ContractTheme';
@@ -30,6 +31,7 @@ export interface SceneDebugState {
   readonly hudMode?: string;
   readonly contractTheme?: ContractThemeDebugState;
   readonly items?: ItemLoadoutStressModel;
+  readonly enemyRoles?: EnemyRolePressureSummary;
   readonly upgradeEffects?: readonly string[];
   readonly progression?: {
     readonly salvageBank?: number;

@@ -649,6 +649,7 @@ export class GameApp {
       : [];
     const scenarioDebug = debugState.debugScenario ? [`Scenario ${debugState.debugScenario}`] : [];
     const itemDebug = createItemDebugLines(debugState.items);
+    const enemyRoleDebug = createEnemyRoleDebugLines(debugState.enemyRoles);
     const inputDebug = debugState.inputMode ? [`Input ${debugState.inputMode}`] : [];
     const hudDebug = debugState.hudMode ? [`HUD ${debugState.hudMode}`] : [];
     const themeDebug = debugState.contractTheme
@@ -672,6 +673,7 @@ export class GameApp {
       ...destructionDebug,
       ...scenarioDebug,
       ...itemDebug,
+      ...enemyRoleDebug,
       ...inputDebug,
       ...hudDebug,
       ...themeDebug,
@@ -714,6 +716,28 @@ function createItemDebugLines(items: SceneDebugState['items']): readonly string[
     `Hooks ${items.activeHookTypes}/${items.totalHookTypes} ${items.hookApplications} apps`,
     `Proc ${peakHook} skip ${items.skippedHookApplications}`,
     items.buildLabel
+  ];
+}
+
+function createEnemyRoleDebugLines(
+  enemyRoles: SceneDebugState['enemyRoles']
+): readonly string[] {
+  if (!enemyRoles || enemyRoles.totalEnemies === 0) {
+    return [];
+  }
+
+  const roleSummary = enemyRoles.roleCounts
+    .map((roleCount) => `${roleCount.role}:${roleCount.count}`)
+    .join(' ');
+  const objectiveSummary = enemyRoles.objectivePolicyCounts
+    .map((policyCount) => `${policyCount.objectivePolicy}:${policyCount.count}`)
+    .join(' ');
+
+  return [
+    `Roles ${roleSummary}`,
+    `Enemy meta V${enemyRoles.variantCount} F${enemyRoles.formationCount}${
+      objectiveSummary ? ` ${objectiveSummary}` : ''
+    }`
   ];
 }
 

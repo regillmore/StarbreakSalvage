@@ -1031,6 +1031,8 @@ Acceptance criteria:
 - Debug or pure helpers can summarize active enemy role pressure.
 - Existing wave generation and gameplay remain deterministic.
 
+Status: implemented; current faction-pattern enemy classes now carry explicit role metadata for class id, role, pressure type, movement family, attack family, variant eligibility, formation eligibility, readability tier, faction fit, objective policy, and debug label. Content validation catches invalid role/movement/attack/formation/faction/objective metadata and duplicate class ids. `src/game/EnemyRolePressure.ts` summarizes active role and objective-policy counts with zeroed variant/formation placeholders for debug, and the overlay reports role pressure without changing wave generation or combat behavior.
+
 ## Work order 063 - Role-specific movement profiles
 
 Goal: make enemy roles recognizable before adding more bullets.

@@ -1251,6 +1251,10 @@ Acceptance:
 - Invalid metadata is caught by tests.
 - Existing waves keep deterministic outputs.
 
+Status:
+
+- Implemented in work order 062. Current faction-pattern classes carry validated role metadata for class id, role, pressure type, movement family, attack family, variant eligibility, formation eligibility, readability tier, faction fit, objective policy, and debug label; existing wave schedules and combat behavior remain unchanged.
+
 ### AQ3 - Role debug summaries
 
 Acceptance:
@@ -1258,6 +1262,10 @@ Acceptance:
 - Debug or pure helpers can report active enemy role counts.
 - Role-pressure summaries are suitable for Playwright smoke and manual playtest notes.
 - Overlay additions do not add per-frame expensive scans beyond existing entity passes.
+
+Status:
+
+- Implemented in work order 062. `EnemyRolePressure` summarizes active role counts and objective-policy counts from current enemies, with variant and formation placeholders held at zero until those systems exist; the debug overlay reports role pressure during gameplay.
 
 ## Epic AR - Enemy behavior differentiation
 

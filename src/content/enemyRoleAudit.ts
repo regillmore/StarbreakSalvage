@@ -6,106 +6,24 @@ import {
   type FactionId,
   type FactionVisualShape
 } from './factions';
+import {
+  PHASE_7_TARGET_ENEMY_ROLES,
+  type EnemyClassId,
+  type EnemyPressureType,
+  type EnemyRoleId,
+  type EnemyRoleMetadata,
+  type Phase7EnemyRoleTarget
+} from './enemyRoles';
 import { SECTORS, type SectorDefinition, type SectorId } from './sectors';
 
-export type Phase7EnemyRoleId =
-  | 'scout'
-  | 'bruiser'
-  | 'sniper'
-  | 'screener'
-  | 'carrier'
-  | 'support'
-  | 'disruptor';
-
-export type EnemyPressureType =
-  | 'lane'
-  | 'spread'
-  | 'burst'
-  | 'pursuit'
-  | 'support'
-  | 'hazard'
-  | 'attrition';
-
-export interface Phase7EnemyRoleTarget {
-  readonly id: Phase7EnemyRoleId;
-  readonly label: string;
-  readonly pressureType: EnemyPressureType;
-  readonly intendedMovement: string;
-  readonly intendedAttack: string;
-  readonly currentCoverage: string;
-  readonly implementationRisk: string;
-}
-
-export const PHASE_7_TARGET_ENEMY_ROLES: readonly Phase7EnemyRoleTarget[] = [
-  {
-    id: 'scout',
-    label: 'Scout',
-    pressureType: 'pursuit',
-    intendedMovement: 'fast entry, shallow dives, retreats, and flank probes',
-    intendedAttack: 'light single shots or short aimed taps',
-    currentCoverage: 'partially implied by phase skirmish lateral motion',
-    implementationRisk: 'must not outrun the fixed arena or become impossible on narrow views'
-  },
-  {
-    id: 'bruiser',
-    label: 'Bruiser',
-    pressureType: 'attrition',
-    intendedMovement: 'slow lane pressure, broad bodies, and predictable holds',
-    intendedAttack: 'few heavy shots or close-range volleys',
-    currentCoverage: 'partially covered by Scrap Court drift shots and higher hull spawns',
-    implementationRisk: 'extra durability must not stall objective completion'
-  },
-  {
-    id: 'sniper',
-    label: 'Sniper',
-    pressureType: 'burst',
-    intendedMovement: 'holds aim lines, repositions between charged attacks',
-    intendedAttack: 'telegraphed aimed shot with clear windup',
-    currentCoverage: 'not represented by normal enemies; bosses use telegraphs',
-    implementationRisk: 'aimed pressure needs telegraphing before precision damage'
-  },
-  {
-    id: 'screener',
-    label: 'Screener',
-    pressureType: 'lane',
-    intendedMovement: 'lane holds, columns, and horizontal screen control',
-    intendedAttack: 'paired bolts, curtains, or short lane warnings',
-    currentCoverage: 'covered best by Corporate Ledger lane burst enemies',
-    implementationRisk: 'lane pressure can hide behind hazards without high-contrast checks'
-  },
-  {
-    id: 'carrier',
-    label: 'Carrier',
-    pressureType: 'support',
-    intendedMovement: 'slow protected entry with deploy or escort timing',
-    intendedAttack: 'spawn drones, mines, or delayed payloads',
-    currentCoverage: 'only boss fantasy currently covers carrier behavior',
-    implementationRisk: 'spawned children must share objective accounting rules'
-  },
-  {
-    id: 'support',
-    label: 'Support',
-    pressureType: 'support',
-    intendedMovement: 'hover near allies, retreat when isolated, keep readable spacing',
-    intendedAttack: 'shield, heal, pulse, buff, or mark rather than direct bullet spam',
-    currentCoverage: 'not represented by normal enemies',
-    implementationRisk: 'support effects need clear state copy and cleanup on death'
-  },
-  {
-    id: 'disruptor',
-    label: 'Disruptor',
-    pressureType: 'hazard',
-    intendedMovement: 'sets short-lived danger zones, then relocates or exits',
-    intendedAttack: 'hazard marks, mines, or route-condition pressure',
-    currentCoverage: 'sector hazards cover this pressure outside enemy entities',
-    implementationRisk: 'hazard markers must stay below bullets and not duplicate sector hazards'
-  }
-];
+export { PHASE_7_TARGET_ENEMY_ROLES } from './enemyRoles';
+export type { EnemyPressureType, Phase7EnemyRoleTarget };
+export type Phase7EnemyRoleId = EnemyRoleId;
 
 export interface EnemyPatternAudit {
   readonly enemyPattern: FactionEnemyPattern;
   readonly baselineRole: string;
-  readonly phase7TargetRole: Phase7EnemyRoleId;
+  readonly phase7TargetRole: EnemyRoleId;
   readonly pressureType: EnemyPressureType;
   readonly movementFamily: string;
   readonly entrySpeed: number;
@@ -129,9 +47,11 @@ export interface EnemySpawnContextAudit {
 
 export interface CurrentEnemyRoleAuditEntry extends EnemyPatternAudit {
   readonly factionId: FactionId;
+  readonly classId: EnemyClassId;
   readonly factionName: string;
   readonly factionSummary: string;
   readonly visualShape: FactionVisualShape;
+  readonly metadata: EnemyRoleMetadata;
   readonly silhouetteSummary: string;
   readonly spawnContexts: readonly EnemySpawnContextAudit[];
   readonly objectiveInteraction: string;
@@ -357,9 +277,11 @@ function createFactionAuditEntry(
   return {
     ...patternAudit,
     factionId: faction.id,
+    classId: faction.enemyRole.classId,
     factionName: faction.name,
     factionSummary: faction.summary,
     visualShape: faction.visualShape,
+    metadata: faction.enemyRole,
     silhouetteSummary: SILHOUETTE_SUMMARIES[faction.visualShape],
     spawnContexts: getSpawnContextsForFaction(faction.id, sectors, bosses, bossById),
     objectiveInteraction:

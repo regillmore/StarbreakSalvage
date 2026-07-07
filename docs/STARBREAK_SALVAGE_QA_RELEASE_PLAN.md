@@ -128,7 +128,7 @@ Work order 060 closes Phase 6 as an item-catalog playtest candidate. Release evi
 
 Phase 7 enriches enemy behavior and longer-sector pacing. Add tests closest to the risk:
 
-- enemy role audit and metadata validation for role, pressure type, movement family, attack family, variant eligibility, formation eligibility, readability tier, and faction fit; work order 061 adds the first pure audit helper and documents the four current faction-pattern classes;
+- enemy role audit and metadata validation for role, pressure type, movement family, attack family, variant eligibility, formation eligibility, readability tier, and faction fit; work order 061 adds the first pure audit helper and documents the four current faction-pattern classes, while work order 062 adds validated role metadata and active role-pressure summaries;
 - role-specific movement tests for fixed-step determinism, arena bounds, cleanup, frame-catchup stability, and no offscreen soft locks;
 - attack cadence and telegraph tests for deterministic timing, projectile budgets, high-contrast readability, and reduced-motion simplification;
 - upgraded variant selection snapshots for fresh saves, later sectors, faction routes, elite routes, challenge flags, and boss-adjacent pressure;
@@ -213,7 +213,7 @@ Phase 2 should extend this checklist as systems become real. In addition to the 
 - [x] The first Phase 6 catalog expansion validates at 60 items with declared hook implementations and source-aligned starter/combat/vault pools.
 - [x] Source-weighted item pool profiles validate for reward-pool, source, rarity, family, and tag references.
 - [x] Item discovery gates, unlock-gated family pools, synergy cluster references, and item card presentation data validate after later Phase 6 work.
-- [ ] Enemy role, pressure, movement, attack, variant, formation, readability, and faction-fit metadata validate after Phase 7 schema work.
+- [x] Enemy role, pressure, movement, attack, variant, formation, readability, and faction-fit metadata validate after Phase 7 schema work.
 - [ ] Formation definitions validate member roles, offsets, timing, bounds, and break/cleanup behavior.
 - [ ] Longer-sector pacing validates length bands, pressure/relief windows, formation marks, and boss approach references.
 - [x] Current enemy role audit helper covers faction-pattern classes, target roles, wave-label semantics, spawn model, and objective-risk notes before Phase 7 schema work.
@@ -255,7 +255,8 @@ Phase 7 performance checks should include active role counts, upgraded variant c
 - [x] Upgrade Bay, banked scrap state, and upgrade-influenced generation visible in tests/debug smoke.
 - [x] Sector exit/toast, destruction, and lunar browser smoke paths exist.
 - [x] Item hook pressure, proc cap state, and build identity visible in debug smoke.
-- [ ] Enemy role, variant, formation, and long-sector pressure visible in debug smoke once Phase 7 instrumentation lands.
+- [x] Active enemy role counts and variant/formation placeholders visible in debug once Phase 7 schema instrumentation lands.
+- [ ] Upgraded variant, active formation, and long-sector pressure visible in debug smoke once later Phase 7 systems land.
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [x] Heavy combat debug scene documented.
 - [x] Long-scroll debug scene documented.

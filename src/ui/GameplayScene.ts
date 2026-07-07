@@ -27,6 +27,7 @@ import {
 import type { BossId } from '../content/bosses';
 import type { ShipStats } from '../content/ships';
 import { createBuildSynergyModel, formatBuildSynergyHud } from '../game/BuildSynergy';
+import { createEnemyRolePressureSummary } from '../game/EnemyRolePressure';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import { createItemLoadoutStressModel, createItemStormLoadout } from '../game/ItemStress';
 import type { ItemInstance } from '../game/Rewards';
@@ -632,6 +633,7 @@ export class GameplayScene implements Scene {
       hudMode: hudTheme.mode,
       contractTheme: createContractThemeDebugState(this.contract),
       items: createItemLoadoutStressModel(combatState.items),
+      enemyRoles: createEnemyRolePressureSummary(combatState),
       upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects),
       progression: {
         runCredits: this.startingCredits + combatState.player.credits,

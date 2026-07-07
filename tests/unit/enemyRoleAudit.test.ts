@@ -20,6 +20,12 @@ describe('enemy role audit', () => {
       'sporeSpread',
       'phaseSkirmish'
     ]);
+    expect(audit.entries.map((entry) => [entry.classId, entry.metadata.debugLabel])).toEqual([
+      ['class_scrap_drifter', 'bruiser/drift'],
+      ['class_ledger_screener', 'screener/lane'],
+      ['class_bloom_spreader', 'disruptor/spread'],
+      ['class_void_skirmisher', 'scout/phase']
+    ]);
     expect(audit.entries.every((entry) => entry.spawnContexts.length > 0)).toBe(true);
     expect(audit.uniqueMajorWaveLabels).toHaveLength(24);
   });
