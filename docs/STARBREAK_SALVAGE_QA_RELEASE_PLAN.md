@@ -245,7 +245,7 @@ Phase 2 should extend this checklist as systems become real. In addition to the 
 - [x] Formation definitions validate member roles, offsets, timing, bounds, clear rewards, and break/cleanup behavior.
 - [x] Longer-sector pacing validates length bands, pressure/relief windows, formation marks, and boss approach references.
 - [x] Current enemy role audit helper covers faction-pattern classes, target roles, wave-label semantics, spawn model, and objective-risk notes before Phase 7 schema work.
-- [ ] Rich hazard-zone definitions validate family, phase timing, telegraph/damage shapes, safe-lane expectations, accessibility metadata, and boss-arena suppression behavior.
+- [x] Rich hazard-zone definitions validate family, phase timing, telegraph/damage shapes, safe-lane expectations, accessibility metadata, and boss-arena suppression behavior after work order 072 schema work.
 - [ ] Destructible/obstacle definitions validate collision shape, hull, damage interactions, objective policy, reward policy, chain behavior, placement constraints, cue metadata, and debug labels.
 - [ ] Loose currency scatter rules validate value tiers, drift/lifetime, pickup attraction, cap rules, route/sector bias, and economy accounting.
 

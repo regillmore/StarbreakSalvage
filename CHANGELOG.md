@@ -72,6 +72,7 @@
 - Added sector-pacing tests for route-conditioned long arcs, relief windows, explicit wave spacing, formation-cluster waves, feature beats, boss handoffs, run-summary timelines, and encounter-pacing validation.
 - Added enemy-rich stress tests for the `E` debug shortcut, role-pressure budgets, active pacing-beat labels, and a narrow high-contrast Playwright smoke path through Lunar Surface.
 - Added a boss-release hazard regression proving hidden arena-lock hazards defer collision damage until their post-release warning lead has elapsed.
+- Added the Phase 8 hazard-zone schema and validation baseline for current hazards, including timing metrics, safe-lane expectations, readability metadata, and boss-arena suppression policy.
 - Added wave director and objective completion tests, including known-seed objective snapshots and boss-gate coverage.
 - Added combat tests for special charge/use, bomb mitigation, graze detection, remapped special/bomb controls, and reduced-motion effect rendering.
 - Added validation and gameplay tests for ship stat contracts, weapon references, weapon patterns, heat/reload behavior, and starting economy.
@@ -132,6 +133,7 @@
 - Completed the Phase 7 enemy-rich smoke pass for work order 069, setting up final release hardening, production preview evidence, and known-risk closeout for work order 070.
 - Completed Phase 7 as an enemy-behavior playtest candidate with release docs, local check/browser/preview evidence, known enemy balance risks, and the boss-release hazard fairness fix.
 - Concluded Phase 7 in planning docs and added the Phase 8 roadmap/work orders for richer hazard zones, destructibles/obstacles, loose currency, environmental stress smoke, and release hardening.
+- Started Phase 8 implementation with the hazard-zone schema/audit pass, leaving richer hazard behavior and director pacing for work orders 073-074.
 - Started Phase 6 with a documented audit of the current 30-item catalog, repeated-reward risks, underrepresented archetypes, target item families, and bridge-effect follow-ups.
 - Formalized the Phase 6 item metadata contract and validation baseline before adding larger item batches.
 - Completed the first Phase 6 hook-surface expansion so work order 054 can add live catalog items against typed event payloads.

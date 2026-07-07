@@ -2,6 +2,7 @@ import { getBossById, type BossId } from '../content/bosses';
 import { getFactionById, type FactionId } from '../content/factions';
 import { getEnemyFormationById, type EnemyFormationId } from '../content/enemyFormations';
 import { getEnemyVariantById, type EnemyVariantId } from '../content/enemyVariants';
+import { getHazardZoneColor } from '../content/hazardZones';
 import type { ShipAppearance, ShipSilhouette, ShipWeaponMountHint } from '../content/ships';
 import type { BulletContrast } from '../core/settingsData';
 import { clamp } from '../core/math';
@@ -1604,29 +1605,7 @@ export class CanvasRenderer {
   }
 
   private getSectorHazardColor(kind: ActiveSectorHazard['hazard']['kind']): string {
-    if (this.settings.bulletContrast === 'high') {
-      return kind === 'warning_beam' || kind === 'crush_gate' || kind === 'mining_laser'
-        ? '#ffef5f'
-        : '#f8fbff';
-    }
-
-    if (kind === 'warning_beam' || kind === 'crush_gate' || kind === 'mining_laser') {
-      return '#ffd166';
-    }
-
-    if (kind === 'mine_belt') {
-      return '#ff6bd6';
-    }
-
-    if (kind === 'salvage_storm' || kind === 'surface_defense_arc') {
-      return '#7cf7ff';
-    }
-
-    if (kind === 'dust_plume') {
-      return '#c8d4e3';
-    }
-
-    return '#8aa4b8';
+    return getHazardZoneColor(kind, this.settings.bulletContrast === 'high');
   }
 
   private paintGeneratedBackground(plan: BackgroundPlan, scrollOffset: number): void {

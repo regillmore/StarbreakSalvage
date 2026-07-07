@@ -121,6 +121,7 @@ Phase 7 expands enemy behavior, variants, formations, and sector length. Keep th
 Phase 8 expands the environmental layer. Keep the first richer pass visible, deterministic, and capped before raising density.
 
 - Hazard-zone definitions should stay data-only and validated. Richer behavior should be selected at generation time, not through per-frame random branches.
+- Work order 072 keeps the first hazard-zone pass data-only: existing hazards now read metrics, readability colors, safe-lane expectations, damage/cooldown metadata, and boss-arena suppression policy from `src/content/hazardZones.ts` without increasing active hazard counts.
 - Active richer hazard zones should start with a conservative cap of 3-4 simultaneous active/telegraphing zones, excluding static background landmarks.
 - Hazards should render below bullets, enemies, pickups, and the player. Do not increase hazard opacity or animation density without high-contrast and reduced-motion smoke.
 - Hazard collision should use simple rect/circle/arc or lane checks from generated shapes. Avoid per-pixel collision and avoid scanning inactive schedule entries every tick.

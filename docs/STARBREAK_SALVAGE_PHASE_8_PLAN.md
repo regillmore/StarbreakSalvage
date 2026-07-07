@@ -45,7 +45,7 @@ Exit criteria:
 - Hazard, destructible, obstacle, and loose currency schema targets are clear before implementation.
 - The plan preserves deterministic generation, fixed-world layout parity, and boss-release hazard fairness.
 
-Status: started by work order 071. Schema audit and implementation entry work remains planned for work order 072.
+Status: started by work order 071 and advanced by work order 072. Phase 8 planning is refreshed, and the first hazard-zone schema/registry now covers existing hazards, validation, timing metadata, readability metadata, and boss-arena suppression behavior. Destructible/obstacle and loose-currency schema work remains planned for later Phase 8 work orders.
 
 ### P8.2 - Richer Hazard Zones
 

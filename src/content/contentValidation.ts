@@ -74,6 +74,20 @@ import {
   ENEMY_VARIANT_ELIGIBILITIES,
   type EnemyRoleMetadata
 } from './enemyRoles';
+import {
+  HAZARD_ZONE_BOSS_ARENA_POLICIES,
+  HAZARD_ZONE_COLLISION_SHAPES,
+  HAZARD_ZONE_DAMAGE_SHAPES,
+  HAZARD_ZONE_DEFINITIONS,
+  HAZARD_ZONE_FAMILIES,
+  HAZARD_ZONE_IDS,
+  HAZARD_ZONE_RENDER_LAYERS,
+  HAZARD_ZONE_SAFE_LANE_POLICIES,
+  HAZARD_ZONE_SCHEDULE_SOURCES,
+  HAZARD_ZONE_SETTINGS_VARIANTS,
+  HAZARD_ZONE_TELEGRAPH_SHAPES,
+  type HazardZoneDefinition
+} from './hazardZones';
 
 export type ItemHookImplementationRegistry = Readonly<Partial<Record<ItemHook, readonly ItemId[]>>>;
 
@@ -84,6 +98,7 @@ export interface ContentValidationInput {
   readonly enemyFormations?: readonly EnemyFormationDefinition[];
   readonly enemyVariants?: readonly EnemyVariantDefinition[];
   readonly factions?: readonly FactionDefinition[];
+  readonly hazardZones?: readonly HazardZoneDefinition[];
   readonly items?: readonly ItemDefinition[];
   readonly itemHookImplementations?: ItemHookImplementationRegistry;
   readonly itemFamilyGates?: readonly ItemFamilyGateDefinition[];
@@ -104,6 +119,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const enemyFormations = input.enemyFormations ?? ENEMY_FORMATIONS;
   const enemyVariants = input.enemyVariants ?? ENEMY_VARIANTS;
   const factions = input.factions ?? FACTIONS;
+  const hazardZones = input.hazardZones ?? HAZARD_ZONE_DEFINITIONS;
   const items = input.items ?? ITEMS;
   const itemHookImplementations = createItemHookImplementationRegistry(
     input.itemHookImplementations
@@ -156,6 +172,16 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const enemyFormationCleanupPolicies = new Set<string>(ENEMY_FORMATION_CLEANUP_POLICIES);
   const enemyVariantIds = new Set<string>(ENEMY_VARIANT_IDS);
   const enemyVariantEncounterTypes = new Set<string>(ENEMY_VARIANT_ENCOUNTER_TYPES);
+  const hazardZoneIds = new Set<string>(HAZARD_ZONE_IDS);
+  const hazardZoneFamilies = new Set<string>(HAZARD_ZONE_FAMILIES);
+  const hazardZoneTelegraphShapes = new Set<string>(HAZARD_ZONE_TELEGRAPH_SHAPES);
+  const hazardZoneDamageShapes = new Set<string>(HAZARD_ZONE_DAMAGE_SHAPES);
+  const hazardZoneSafeLanePolicies = new Set<string>(HAZARD_ZONE_SAFE_LANE_POLICIES);
+  const hazardZoneRenderLayers = new Set<string>(HAZARD_ZONE_RENDER_LAYERS);
+  const hazardZoneCollisionShapes = new Set<string>(HAZARD_ZONE_COLLISION_SHAPES);
+  const hazardZoneSettingsVariants = new Set<string>(HAZARD_ZONE_SETTINGS_VARIANTS);
+  const hazardZoneBossArenaPolicies = new Set<string>(HAZARD_ZONE_BOSS_ARENA_POLICIES);
+  const hazardZoneScheduleSources = new Set<string>(HAZARD_ZONE_SCHEDULE_SOURCES);
   const backgroundLayerKinds = new Set<string>(BACKGROUND_LAYER_KINDS);
   const unlockKinds = new Set(['ship', 'item', 'faction', 'bossPractice', 'music', 'challenge']);
   const upgradeCategories = new Set<string>(UPGRADE_CATEGORIES);
@@ -166,6 +192,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const shipSilhouettes = new Set<string>(SHIP_SILHOUETTES);
   const shipMountHints = new Set<string>(SHIP_WEAPON_MOUNT_HINTS);
   const shipHudThemeKeys = new Set<string>(SHIP_HUD_THEME_KEYS);
+  const canonicalSectorIds = new Set<string>(SECTORS.map((sector) => sector.id));
 
   if (items.length < 30) {
     errors.push('Content must define at least 30 items');
@@ -364,6 +391,20 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     breakConditions: enemyFormationBreakConditions,
     cleanupPolicies: enemyFormationCleanupPolicies,
     encounterTypes: enemyVariantEncounterTypes
+  });
+  validateHazardZoneDefinitions(errors, hazardZones, {
+    ids: hazardZoneIds,
+    families: hazardZoneFamilies,
+    sectors: canonicalSectorIds,
+    factions: factionIds,
+    telegraphShapes: hazardZoneTelegraphShapes,
+    damageShapes: hazardZoneDamageShapes,
+    safeLanePolicies: hazardZoneSafeLanePolicies,
+    renderLayers: hazardZoneRenderLayers,
+    collisionShapes: hazardZoneCollisionShapes,
+    settingsVariants: hazardZoneSettingsVariants,
+    bossArenaPolicies: hazardZoneBossArenaPolicies,
+    scheduleSources: hazardZoneScheduleSources
   });
 
   for (const boss of bosses) {
@@ -872,6 +913,220 @@ interface EnemyFormationDefinitionRegistries {
   readonly breakConditions: ReadonlySet<string>;
   readonly cleanupPolicies: ReadonlySet<string>;
   readonly encounterTypes: ReadonlySet<string>;
+}
+
+interface HazardZoneDefinitionRegistries {
+  readonly ids: ReadonlySet<string>;
+  readonly families: ReadonlySet<string>;
+  readonly sectors: ReadonlySet<string>;
+  readonly factions: ReadonlySet<string>;
+  readonly telegraphShapes: ReadonlySet<string>;
+  readonly damageShapes: ReadonlySet<string>;
+  readonly safeLanePolicies: ReadonlySet<string>;
+  readonly renderLayers: ReadonlySet<string>;
+  readonly collisionShapes: ReadonlySet<string>;
+  readonly settingsVariants: ReadonlySet<string>;
+  readonly bossArenaPolicies: ReadonlySet<string>;
+  readonly scheduleSources: ReadonlySet<string>;
+}
+
+function validateHazardZoneDefinitions(
+  errors: string[],
+  hazardZones: readonly HazardZoneDefinition[],
+  registries: HazardZoneDefinitionRegistries
+): void {
+  const seenHazardZoneIds = new Set<string>();
+
+  for (const hazard of hazardZones) {
+    const owner = `Hazard zone ${String(hazard.id)}`;
+
+    if (seenHazardZoneIds.has(hazard.id)) {
+      errors.push(`Duplicate hazard zone id: ${String(hazard.id)}`);
+    }
+
+    seenHazardZoneIds.add(hazard.id);
+
+    if (!registries.ids.has(hazard.id)) {
+      errors.push(`${owner} has invalid id`);
+    }
+
+    if (!registries.families.has(hazard.family)) {
+      errors.push(`${owner} has invalid family: ${String(hazard.family)}`);
+    }
+
+    if (!hazard.label.trim()) {
+      errors.push(`${owner} must have a label`);
+    }
+
+    if (!hazard.debugLabel.trim()) {
+      errors.push(`${owner} must have a debug label`);
+    }
+
+    if (!hazard.summary.trim()) {
+      errors.push(`${owner} must have a summary`);
+    }
+
+    if (hazard.sectorFit.length === 0) {
+      errors.push(`${owner} must list at least one sector fit`);
+    }
+
+    validateStringList(errors, owner, 'sector fit', hazard.sectorFit, registries.sectors);
+
+    if (hazard.factionFit !== 'any') {
+      validateStringList(errors, owner, 'faction fit', hazard.factionFit, registries.factions);
+    }
+
+    if (!registries.telegraphShapes.has(hazard.telegraphShape)) {
+      errors.push(`${owner} has invalid telegraph shape: ${String(hazard.telegraphShape)}`);
+    }
+
+    if (!registries.damageShapes.has(hazard.activeDamageShape)) {
+      errors.push(`${owner} has invalid active damage shape: ${String(hazard.activeDamageShape)}`);
+    }
+
+    for (const source of registries.scheduleSources) {
+      const metrics = hazard.metrics[source as keyof HazardZoneDefinition['metrics']];
+
+      if (!metrics) {
+        errors.push(`${owner} must define ${source} metrics`);
+        continue;
+      }
+
+      validateUnitNumber(errors, `${owner} ${source} metrics`, 'widthRatio', metrics.widthRatio);
+      validatePositiveNumber(
+        errors,
+        `${owner} ${source} metrics`,
+        'activeSpan',
+        metrics.activeSpan
+      );
+      validatePositiveNumber(
+        errors,
+        `${owner} ${source} metrics`,
+        'telegraphLead',
+        metrics.telegraphLead
+      );
+
+      if (metrics.widthRatio < 0.05 || metrics.widthRatio > 0.5) {
+        errors.push(`${owner} ${source} metrics must keep widthRatio between 0.05 and 0.5`);
+      }
+    }
+
+    validatePositiveNumber(
+      errors,
+      `${owner} phase`,
+      'minTelegraphLead',
+      hazard.phase.minTelegraphLead
+    );
+    validatePositiveNumber(errors, `${owner} phase`, 'minActiveSpan', hazard.phase.minActiveSpan);
+    validatePositiveNumber(errors, owner, 'damage', hazard.damage);
+    validatePositiveNumber(errors, owner, 'damageCooldownSeconds', hazard.damageCooldownSeconds);
+
+    if (hazard.damage > 2) {
+      errors.push(`${owner} must keep damage at or below 2`);
+    }
+
+    if (hazard.damageCooldownSeconds < 0.2) {
+      errors.push(`${owner} must keep damageCooldownSeconds at or above 0.2`);
+    }
+
+    if (!registries.safeLanePolicies.has(hazard.safeLane.policy)) {
+      errors.push(`${owner} has invalid safe-lane policy: ${String(hazard.safeLane.policy)}`);
+    }
+
+    validateUnitNumber(
+      errors,
+      `${owner} safe lane`,
+      'minSafeWidthRatio',
+      hazard.safeLane.minSafeWidthRatio
+    );
+
+    if (hazard.safeLane.minSafeWidthRatio < 0.25) {
+      errors.push(`${owner} safe lane must keep minSafeWidthRatio at or above 0.25`);
+    }
+
+    const widestMetric = Math.max(
+      ...Object.values(hazard.metrics).map((metrics) => metrics.widthRatio)
+    );
+
+    if (hazard.safeLane.minSafeWidthRatio > 1 - widestMetric) {
+      errors.push(`${owner} safe lane cannot exceed remaining arena width`);
+    }
+
+    if (!registries.bossArenaPolicies.has(hazard.bossArenaPolicy)) {
+      errors.push(`${owner} has invalid boss arena policy: ${String(hazard.bossArenaPolicy)}`);
+    }
+
+    if (hazard.bossArenaPolicy !== 'hideAndDefer') {
+      errors.push(`${owner} must hide and defer during locked boss arenas`);
+    }
+
+    if (!registries.renderLayers.has(hazard.readability.renderLayer)) {
+      errors.push(
+        `${owner} readability has invalid render layer: ${String(hazard.readability.renderLayer)}`
+      );
+    }
+
+    if (hazard.readability.renderLayer !== 'underBullets') {
+      errors.push(`${owner} readability must render under bullets`);
+    }
+
+    if (!registries.collisionShapes.has(hazard.readability.collisionShape)) {
+      errors.push(
+        `${owner} readability has invalid collision shape: ${String(
+          hazard.readability.collisionShape
+        )}`
+      );
+    }
+
+    validateUnitNumber(
+      errors,
+      `${owner} readability`,
+      'maxFillAlpha',
+      hazard.readability.maxFillAlpha
+    );
+    validateUnitNumber(
+      errors,
+      `${owner} readability`,
+      'maxStrokeAlpha',
+      hazard.readability.maxStrokeAlpha
+    );
+
+    if (hazard.readability.maxFillAlpha > 0.14) {
+      errors.push(`${owner} readability must keep maxFillAlpha at or below 0.14`);
+    }
+
+    if (hazard.readability.maxStrokeAlpha > 0.95) {
+      errors.push(`${owner} readability must keep maxStrokeAlpha at or below 0.95`);
+    }
+
+    if (hazard.readability.minTelegraphLead !== hazard.phase.minTelegraphLead) {
+      errors.push(`${owner} readability minTelegraphLead must match phase metadata`);
+    }
+
+    validateHexColor(errors, `${owner} readability`, 'normalColor', hazard.readability.normalColor);
+    validateHexColor(
+      errors,
+      `${owner} readability`,
+      'highContrastColor',
+      hazard.readability.highContrastColor
+    );
+
+    if (!registries.settingsVariants.has(hazard.readability.reducedMotionVariant)) {
+      errors.push(
+        `${owner} readability has invalid reduced motion variant: ${String(
+          hazard.readability.reducedMotionVariant
+        )}`
+      );
+    }
+
+    if (!registries.settingsVariants.has(hazard.readability.performanceVariant)) {
+      errors.push(
+        `${owner} readability has invalid performance variant: ${String(
+          hazard.readability.performanceVariant
+        )}`
+      );
+    }
+  }
 }
 
 function validateEnemyRoleMetadata(

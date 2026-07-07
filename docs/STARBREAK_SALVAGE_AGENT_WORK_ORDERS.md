@@ -1201,7 +1201,7 @@ Acceptance criteria:
 - Hazard metadata stays data-driven and generated from explicit RNG streams, never `Math.random()`.
 - Tests cover current hazard plans and boss-release safety assumptions.
 
-Status: planned.
+Status: implemented; `src/content/hazardZones.ts` now defines the first typed hazard-zone registry for the eight existing hazard kinds, including family, sector/faction fit, telegraph/damage shapes, per-source phase metrics, damage cooldown metadata, safe-lane policy, readability colors/layers/settings variants, and the boss-arena `hideAndDefer` policy. `SectorFeatures`, `SectorConditions`, `SectorPacing`, and `CanvasRenderer` now consume the registry while preserving current sector, route-condition, and pacing timings. Content validation rejects malformed hazard-zone definitions, generated feature validation checks registered warning/active spans and damage, and unit coverage pins shipped definitions, current plans, invalid schema fixtures, viewport-safe hazard ratios, and boss-release deferral assumptions.
 
 ## Work order 073 - Rich hazard-zone behavior library
 

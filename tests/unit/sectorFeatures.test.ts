@@ -14,6 +14,12 @@ import {
   type SectorFeaturePlan
 } from '../../src/game/SectorFeatures';
 import { calculateViewportLayout } from '../../src/app/ViewportLayout';
+import {
+  HAZARD_ZONE_DEFINITIONS,
+  HAZARD_ZONE_IDS,
+  getHazardZoneDefinition,
+  getHazardZoneMetrics
+} from '../../src/content/hazardZones';
 
 const bounds: CombatBounds = {
   width: 640,
@@ -50,6 +56,39 @@ describe('SectorFeatures', () => {
     expect(hazardKinds.size).toBeGreaterThanOrEqual(3);
   });
 
+  it('maps every current hazard kind to a hazard-zone definition', () => {
+    expect(HAZARD_ZONE_DEFINITIONS.map((definition) => definition.id)).toEqual([
+      ...HAZARD_ZONE_IDS
+    ]);
+
+    for (const definition of HAZARD_ZONE_DEFINITIONS) {
+      expect(definition.bossArenaPolicy).toBe('hideAndDefer');
+      expect(definition.readability.renderLayer).toBe('underBullets');
+      expect(definition.readability.minTelegraphLead).toBe(definition.phase.minTelegraphLead);
+
+      for (const source of ['sector', 'condition', 'pacing'] as const) {
+        const metrics = getHazardZoneMetrics(definition.id, source);
+
+        expect(metrics.telegraphLead).toBeGreaterThanOrEqual(definition.phase.minTelegraphLead);
+        expect(metrics.activeSpan).toBeGreaterThanOrEqual(definition.phase.minActiveSpan);
+        expect(metrics.widthRatio).toBeGreaterThan(0);
+        expect(metrics.widthRatio).toBeLessThanOrEqual(0.5);
+      }
+    }
+
+    for (const sector of generateRunSkeleton('STARBREAK-SMOKE').sectors) {
+      for (const hazard of sector.features.hazards) {
+        const definition = getHazardZoneDefinition(hazard.kind);
+
+        expect(hazard.label).toBe(definition.label);
+        expect(hazard.damage).toBe(definition.damage);
+        expect(hazard.startDistance - hazard.telegraphDistance).toBeGreaterThanOrEqual(
+          definition.phase.minTelegraphLead
+        );
+      }
+    }
+  });
+
   it('ships deterministic lunar-specific landmarks and hazard patterns', () => {
     const first = getLunarSector();
     const second = getLunarSector();
@@ -68,7 +107,9 @@ describe('SectorFeatures', () => {
 
   it('keeps lunar hazards telegraphed, collision-bounded, and rendered under bullets', () => {
     const lunarSector = getLunarSector();
-    const hazard = lunarSector.features.hazards.find((candidate) => candidate.kind === 'mining_laser');
+    const hazard = lunarSector.features.hazards.find(
+      (candidate) => candidate.kind === 'mining_laser'
+    );
 
     if (!hazard) {
       throw new Error('Expected lunar mining laser hazard.');
@@ -172,13 +213,9 @@ describe('SectorFeatures', () => {
     expect(deferredAtRelease?.phase).toBe('telegraph');
     expect(deferredAtRelease?.phaseProgress).toBe(0);
 
-    const releaseCollision = resolveSectorHazardCollisions(
-      state,
-      plan,
-      releaseDistance,
-      bounds,
-      { deferOverlappingFromDistance: releaseDistance }
-    );
+    const releaseCollision = resolveSectorHazardCollisions(state, plan, releaseDistance, bounds, {
+      deferOverlappingFromDistance: releaseDistance
+    });
 
     expect(releaseCollision.hitHazardIds).toEqual([]);
     expect(state.stats.damageTaken).toBe(0);
@@ -303,6 +340,27 @@ describe('SectorFeatures', () => {
     );
     expect(errors).toContain(
       'Sector feature plan sector_outer_debris_field hazard duplicate must have positive damage'
+    );
+  });
+
+  it('rejects valid hazard ids with unsafe registered phase windows', () => {
+    const baseHazard = getRequiredHazard();
+    const definition = getHazardZoneDefinition(baseHazard.kind);
+    const startDistance = 240;
+    const badPlan = createSingleHazardPlan({
+      ...baseHazard,
+      telegraphDistance: startDistance - definition.phase.minTelegraphLead + 1,
+      startDistance,
+      endDistance: startDistance + definition.phase.minActiveSpan - 1
+    });
+
+    const errors = validateSectorFeaturePlan(badPlan, 500);
+
+    expect(errors).toContain(
+      `Sector feature plan ${badPlan.sectorId} hazard ${baseHazard.id} telegraph lead is below ${definition.phase.minTelegraphLead}`
+    );
+    expect(errors).toContain(
+      `Sector feature plan ${badPlan.sectorId} hazard ${baseHazard.id} active span is below ${definition.phase.minActiveSpan}`
     );
   });
 });

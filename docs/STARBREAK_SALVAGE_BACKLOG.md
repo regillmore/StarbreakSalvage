@@ -1454,7 +1454,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 072.
+- Implemented in work order 072. The first hazard-zone registry covers all current hazard IDs with family, fit, telegraph/damage shape, sector/condition/pacing metrics, phase minimums, damage/cooldown, safe-lane expectations, readability colors/layers/settings variants, and `hideAndDefer` boss-arena behavior. Current feature, route-condition, pacing, renderer, validation, and tests consume or verify that registry without changing hazard density.
 
 ### AW2 - Hazard behavior library
 

@@ -7,6 +7,7 @@ import { validateContent } from '../../src/content/contentValidation';
 import { ENEMY_FORMATIONS, type EnemyFormationDefinition } from '../../src/content/enemyFormations';
 import { ENEMY_VARIANTS, type EnemyVariantDefinition } from '../../src/content/enemyVariants';
 import { FACTIONS, type FactionDefinition } from '../../src/content/factions';
+import { HAZARD_ZONE_DEFINITIONS, type HazardZoneDefinition } from '../../src/content/hazardZones';
 import {
   ITEM_POOL_WEIGHT_PROFILES,
   ITEM_ARCHETYPES,
@@ -30,6 +31,7 @@ const baseFaction = FACTIONS[0] as FactionDefinition;
 const baseBoss = BOSSES[0] as BossDefinition;
 const baseEnemyFormation = ENEMY_FORMATIONS[0] as EnemyFormationDefinition;
 const baseEnemyVariant = ENEMY_VARIANTS[0] as EnemyVariantDefinition;
+const baseHazardZone = HAZARD_ZONE_DEFINITIONS[0] as HazardZoneDefinition;
 const baseSector = SECTORS[0] as SectorDefinition;
 const baseShip = SHIPS[0] as ShipDefinition;
 const baseUnlock = UNLOCKS[0] as UnlockDefinition;
@@ -333,6 +335,104 @@ describe('validateContent', () => {
     );
     expect(errors).toContain(
       'Enemy formation formation_missing must match at least one current faction formation eligibility'
+    );
+  });
+
+  it('rejects invalid hazard zone definitions', () => {
+    const errors = validateContent({
+      hazardZones: [
+        baseHazardZone,
+        {
+          ...baseHazardZone,
+          label: 'Duplicate Debris'
+        },
+        {
+          ...baseHazardZone,
+          id: 'hazard_missing',
+          family: 'rift',
+          label: '',
+          debugLabel: '',
+          summary: '',
+          sectorFit: [],
+          factionFit: ['faction_missing'],
+          telegraphShape: 'spiral',
+          activeDamageShape: 'circle',
+          metrics: {
+            sector: { widthRatio: 0.9, activeSpan: 0, telegraphLead: 0 },
+            condition: { widthRatio: 0.04, activeSpan: 0, telegraphLead: 0 }
+          },
+          phase: { minTelegraphLead: 0, minActiveSpan: 0 },
+          damage: 3,
+          damageCooldownSeconds: 0.1,
+          safeLane: { policy: 'pinch', minSafeWidthRatio: 0.9 },
+          bossArenaPolicy: 'damageThrough',
+          readability: {
+            renderLayer: 'overBullets',
+            collisionShape: 'circle',
+            maxFillAlpha: 0.4,
+            maxStrokeAlpha: 1,
+            minTelegraphLead: 12,
+            normalColor: 'orange',
+            highContrastColor: '#ffffff',
+            reducedMotionVariant: 'swirl',
+            performanceVariant: 'dense'
+          }
+        } as unknown as HazardZoneDefinition
+      ]
+    });
+
+    expect(errors).toContain(`Duplicate hazard zone id: ${baseHazardZone.id}`);
+    expect(errors).toContain('Hazard zone hazard_missing has invalid id');
+    expect(errors).toContain('Hazard zone hazard_missing has invalid family: rift');
+    expect(errors).toContain('Hazard zone hazard_missing must have a label');
+    expect(errors).toContain('Hazard zone hazard_missing must have a debug label');
+    expect(errors).toContain('Hazard zone hazard_missing must have a summary');
+    expect(errors).toContain('Hazard zone hazard_missing must list at least one sector fit');
+    expect(errors).toContain('Hazard zone hazard_missing has invalid faction fit: faction_missing');
+    expect(errors).toContain('Hazard zone hazard_missing has invalid telegraph shape: spiral');
+    expect(errors).toContain('Hazard zone hazard_missing has invalid active damage shape: circle');
+    expect(errors).toContain(
+      'Hazard zone hazard_missing sector metrics must keep widthRatio between 0.05 and 0.5'
+    );
+    expect(errors).toContain('Hazard zone hazard_missing must define pacing metrics');
+    expect(errors).toContain('Hazard zone hazard_missing must keep damage at or below 2');
+    expect(errors).toContain(
+      'Hazard zone hazard_missing must keep damageCooldownSeconds at or above 0.2'
+    );
+    expect(errors).toContain('Hazard zone hazard_missing has invalid safe-lane policy: pinch');
+    expect(errors).toContain(
+      'Hazard zone hazard_missing safe lane cannot exceed remaining arena width'
+    );
+    expect(errors).toContain(
+      'Hazard zone hazard_missing has invalid boss arena policy: damageThrough'
+    );
+    expect(errors).toContain(
+      'Hazard zone hazard_missing must hide and defer during locked boss arenas'
+    );
+    expect(errors).toContain(
+      'Hazard zone hazard_missing readability has invalid render layer: overBullets'
+    );
+    expect(errors).toContain('Hazard zone hazard_missing readability must render under bullets');
+    expect(errors).toContain(
+      'Hazard zone hazard_missing readability has invalid collision shape: circle'
+    );
+    expect(errors).toContain(
+      'Hazard zone hazard_missing readability must keep maxFillAlpha at or below 0.14'
+    );
+    expect(errors).toContain(
+      'Hazard zone hazard_missing readability must keep maxStrokeAlpha at or below 0.95'
+    );
+    expect(errors).toContain(
+      'Hazard zone hazard_missing readability minTelegraphLead must match phase metadata'
+    );
+    expect(errors).toContain(
+      'Hazard zone hazard_missing readability must have normalColor as a #RRGGBB color'
+    );
+    expect(errors).toContain(
+      'Hazard zone hazard_missing readability has invalid reduced motion variant: swirl'
+    );
+    expect(errors).toContain(
+      'Hazard zone hazard_missing readability has invalid performance variant: dense'
     );
   });
 

@@ -1,4 +1,15 @@
 import type { SectorDefinition, SectorId } from '../content/sectors';
+import {
+  HAZARD_ZONE_CHOICES,
+  HAZARD_ZONE_IDS,
+  getHazardZoneDefinition,
+  getHazardZoneMetrics,
+  getHazardZoneReadability,
+  type HazardZoneCollisionShape,
+  type HazardZoneId,
+  type HazardZoneReadabilityMetadata,
+  type HazardZoneRenderLayer
+} from '../content/hazardZones';
 import { clamp } from '../core/math';
 import type { Rng } from '../core/rng';
 import type { CombatBounds } from './CombatState';
@@ -16,22 +27,13 @@ export const SECTOR_LANDMARK_KINDS = [
   'surface_relay'
 ] as const;
 
-export const SECTOR_HAZARD_KINDS = [
-  'debris_lane',
-  'warning_beam',
-  'mine_belt',
-  'salvage_storm',
-  'crush_gate',
-  'dust_plume',
-  'mining_laser',
-  'surface_defense_arc'
-] as const;
+export const SECTOR_HAZARD_KINDS = HAZARD_ZONE_IDS;
 
 export type SectorLandmarkKind = (typeof SECTOR_LANDMARK_KINDS)[number];
-export type SectorHazardKind = (typeof SECTOR_HAZARD_KINDS)[number];
+export type SectorHazardKind = HazardZoneId;
 export type SectorHazardPhase = 'telegraph' | 'active';
-export type SectorHazardRenderLayer = 'underBullets';
-export type SectorHazardCollisionShape = 'verticalBand';
+export type SectorHazardRenderLayer = HazardZoneRenderLayer;
+export type SectorHazardCollisionShape = HazardZoneCollisionShape;
 
 export interface SectorLandmarkPlan {
   readonly id: string;
@@ -108,13 +110,7 @@ export interface SectorHazardVisualState {
   readonly pulseScale: number;
 }
 
-export interface SectorHazardReadabilityMetadata {
-  readonly renderLayer: SectorHazardRenderLayer;
-  readonly collisionShape: SectorHazardCollisionShape;
-  readonly maxFillAlpha: number;
-  readonly maxStrokeAlpha: number;
-  readonly minTelegraphLead: number;
-}
+export type SectorHazardReadabilityMetadata = HazardZoneReadabilityMetadata;
 
 const LANDMARK_SLOTS = [0.17, 0.43, 0.72] as const;
 const HAZARD_SLOTS = [0.3, 0.58, 0.82] as const;
@@ -130,15 +126,6 @@ const LANDMARK_CHOICES: Readonly<Record<SectorId, readonly SectorLandmarkKind[]>
   sector_core_wreck: ['core_machinery', 'wreck_silhouette', 'vault_door']
 };
 
-const HAZARD_CHOICES: Readonly<Record<SectorId, readonly SectorHazardKind[]>> = {
-  sector_outer_debris_field: ['debris_lane', 'mine_belt', 'salvage_storm'],
-  sector_trade_war_corridor: ['warning_beam', 'mine_belt', 'debris_lane'],
-  sector_bio_machine_bloom: ['salvage_storm', 'debris_lane', 'mine_belt'],
-  sector_corporate_kill_grid: ['warning_beam', 'crush_gate', 'mine_belt'],
-  sector_lunar_surface: ['dust_plume', 'mining_laser', 'surface_defense_arc'],
-  sector_core_wreck: ['crush_gate', 'warning_beam', 'salvage_storm']
-};
-
 const LANDMARK_LABELS: Readonly<Record<SectorLandmarkKind, string>> = {
   wreck_silhouette: 'wreck silhouette',
   beacon_line: 'beacon line',
@@ -149,48 +136,6 @@ const LANDMARK_LABELS: Readonly<Record<SectorLandmarkKind, string>> = {
   crater_shadow_band: 'crater shadow band',
   comm_array_flyby: 'comm-array flyby',
   surface_relay: 'surface relay'
-};
-
-const HAZARD_LABELS: Readonly<Record<SectorHazardKind, string>> = {
-  debris_lane: 'DEBRIS LANE',
-  warning_beam: 'WARNING BEAM',
-  mine_belt: 'MINE BELT',
-  salvage_storm: 'SALVAGE STORM',
-  crush_gate: 'CRUSH GATE',
-  dust_plume: 'DUST PLUME',
-  mining_laser: 'MINING LASER',
-  surface_defense_arc: 'SURFACE ARC'
-};
-
-const HAZARD_METRICS: Readonly<
-  Record<
-    SectorHazardKind,
-    {
-      readonly widthRatio: number;
-      readonly activeSpan: number;
-      readonly telegraphLead: number;
-    }
-  >
-> = {
-  debris_lane: { widthRatio: 0.2, activeSpan: 190, telegraphLead: 150 },
-  warning_beam: { widthRatio: 0.12, activeSpan: 140, telegraphLead: 170 },
-  mine_belt: { widthRatio: 0.32, activeSpan: 165, telegraphLead: 145 },
-  salvage_storm: { widthRatio: 0.42, activeSpan: 210, telegraphLead: 150 },
-  crush_gate: { widthRatio: 0.28, activeSpan: 130, telegraphLead: 180 },
-  dust_plume: { widthRatio: 0.34, activeSpan: 180, telegraphLead: 170 },
-  mining_laser: { widthRatio: 0.1, activeSpan: 125, telegraphLead: 190 },
-  surface_defense_arc: { widthRatio: 0.24, activeSpan: 155, telegraphLead: 175 }
-};
-
-const HAZARD_READABILITY: Readonly<Record<SectorHazardKind, SectorHazardReadabilityMetadata>> = {
-  debris_lane: createHazardReadability(120),
-  warning_beam: createHazardReadability(145),
-  mine_belt: createHazardReadability(120),
-  salvage_storm: createHazardReadability(120),
-  crush_gate: createHazardReadability(150),
-  dust_plume: createHazardReadability(140),
-  mining_laser: createHazardReadability(150),
-  surface_defense_arc: createHazardReadability(145)
 };
 
 const landmarkKindRegistry = new Set<string>(SECTOR_LANDMARK_KINDS);
@@ -341,7 +286,7 @@ export function getSectorHazardVisualState(
 export function getSectorHazardReadability(
   kind: SectorHazardKind
 ): SectorHazardReadabilityMetadata {
-  return HAZARD_READABILITY[kind];
+  return getHazardZoneReadability(kind);
 }
 
 export function validateSectorFeaturePlan(
@@ -448,6 +393,30 @@ export function validateSectorFeaturePlan(
       errors.push(`Sector feature plan ${plan.sectorId} hazard ${hazard.id} must have a label`);
     }
 
+    if (hazardKindRegistry.has(hazard.kind)) {
+      const definition = getHazardZoneDefinition(hazard.kind);
+      const telegraphLead = hazard.startDistance - hazard.telegraphDistance;
+      const activeSpan = hazard.endDistance - hazard.startDistance;
+
+      if (telegraphLead < definition.phase.minTelegraphLead) {
+        errors.push(
+          `Sector feature plan ${plan.sectorId} hazard ${hazard.id} telegraph lead is below ${definition.phase.minTelegraphLead}`
+        );
+      }
+
+      if (activeSpan < definition.phase.minActiveSpan) {
+        errors.push(
+          `Sector feature plan ${plan.sectorId} hazard ${hazard.id} active span is below ${definition.phase.minActiveSpan}`
+        );
+      }
+
+      if (hazard.damage !== definition.damage) {
+        errors.push(
+          `Sector feature plan ${plan.sectorId} hazard ${hazard.id} damage must match ${definition.damage}`
+        );
+      }
+    }
+
     previousHazardStart = hazard.startDistance;
   }
 
@@ -505,12 +474,13 @@ function createHazards(
   rng: Rng
 ): SectorHazardPlan[] {
   const hazardCount = scroll.sectorIndex >= 3 ? 3 : 2;
-  const choices = rng.shuffle(HAZARD_CHOICES[sector.id]).slice(0, hazardCount);
+  const choices = rng.shuffle(HAZARD_ZONE_CHOICES[sector.id]).slice(0, hazardCount);
 
   return HAZARD_SLOTS.slice(0, hazardCount)
     .map((slot, index) => {
       const kind = choices[index] ?? 'debris_lane';
-      const metrics = HAZARD_METRICS[kind];
+      const metrics = getHazardZoneMetrics(kind, 'sector');
+      const definition = getHazardZoneDefinition(kind);
       const startDistance = roundFeatureValue(
         clamp(
           scroll.length * slot + rng.int(-80, 85),
@@ -536,8 +506,8 @@ function createHazards(
         endDistance,
         xRatio: rng.int(18, 82) / 100,
         widthRatio: roundFeatureValue(clamp(metrics.widthRatio + rng.int(-3, 4) / 100, 0.08, 0.5)),
-        damage: 1,
-        label: HAZARD_LABELS[kind]
+        damage: definition.damage,
+        label: definition.label
       };
     })
     .sort((left, right) => left.startDistance - right.startDistance);
@@ -593,14 +563,4 @@ function validateRatio(
 
 function roundFeatureValue(value: number): number {
   return Math.round(value * 100) / 100;
-}
-
-function createHazardReadability(minTelegraphLead: number): SectorHazardReadabilityMetadata {
-  return {
-    renderLayer: 'underBullets',
-    collisionShape: 'verticalBand',
-    maxFillAlpha: 0.11,
-    maxStrokeAlpha: 0.88,
-    minTelegraphLead
-  };
 }

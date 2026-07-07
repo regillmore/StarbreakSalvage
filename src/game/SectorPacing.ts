@@ -1,4 +1,10 @@
 import type { SectorEncounterPacingDefinition } from '../content/sectors';
+import {
+  DEFAULT_HAZARD_ZONE_PACING_CHOICES,
+  HAZARD_ZONE_PACING_CHOICES,
+  getHazardZoneDefinition,
+  getHazardZoneMetrics
+} from '../content/hazardZones';
 import { clamp } from '../core/math';
 import type { BossArenaPlan } from './BossArena';
 import {
@@ -106,16 +112,7 @@ const SECTOR_LANDMARK_CHOICES: Readonly<Record<string, readonly SectorLandmarkKi
   sector_core_wreck: ['core_machinery', 'wreck_silhouette']
 };
 
-const SECTOR_HAZARD_CHOICES: Readonly<Record<string, readonly SectorHazardKind[]>> = {
-  sector_outer_debris_field: ['debris_lane', 'mine_belt'],
-  sector_trade_war_corridor: ['warning_beam', 'mine_belt'],
-  sector_bio_machine_bloom: ['salvage_storm', 'mine_belt'],
-  sector_corporate_kill_grid: ['warning_beam', 'crush_gate'],
-  sector_lunar_surface: ['dust_plume', 'mining_laser', 'surface_defense_arc'],
-  sector_core_wreck: ['crush_gate', 'warning_beam']
-};
 const DEFAULT_LANDMARK_CHOICES: readonly SectorLandmarkKind[] = ['wreck_silhouette', 'beacon_line'];
-const DEFAULT_HAZARD_CHOICES: readonly SectorHazardKind[] = ['debris_lane', 'mine_belt'];
 
 const LANDMARK_LABELS: Readonly<Record<SectorLandmarkKind, string>> = {
   wreck_silhouette: 'pacing wreck silhouette',
@@ -650,7 +647,8 @@ function createPacingHazard(
 ): SectorHazardPlan {
   const kind = chooseHazardKind(sectorId, pacing, index);
   const id = `${sectorId}_pacing_hazard_${pacing.arcKind}_${index + 1}`;
-  const metrics = getHazardMetrics(kind);
+  const metrics = getHazardZoneMetrics(kind, 'pacing');
+  const definition = getHazardZoneDefinition(kind);
   const startDistance = roundPacingValue(clamp(scroll.length * ratio, 180, scroll.length - 180));
   const endDistance = roundPacingValue(
     clamp(startDistance + metrics.activeSpan, startDistance + 70, scroll.length - 35)
@@ -664,7 +662,7 @@ function createPacingHazard(
     endDistance,
     xRatio: ratioFromKey(`${id}:x`, 0.18, 0.82),
     widthRatio: metrics.widthRatio,
-    damage: 1,
+    damage: definition.damage,
     label: HAZARD_LABELS[kind]
   };
 }
@@ -699,32 +697,10 @@ function chooseHazardKind(
     return sectorId === 'sector_core_wreck' ? 'crush_gate' : 'warning_beam';
   }
 
-  const choices = SECTOR_HAZARD_CHOICES[sectorId] ?? DEFAULT_HAZARD_CHOICES;
+  const choices =
+    HAZARD_ZONE_PACING_CHOICES[sectorId as keyof typeof HAZARD_ZONE_PACING_CHOICES] ??
+    DEFAULT_HAZARD_ZONE_PACING_CHOICES;
   return choices[index % choices.length] ?? 'debris_lane';
-}
-
-function getHazardMetrics(kind: SectorHazardKind): {
-  readonly widthRatio: number;
-  readonly activeSpan: number;
-  readonly telegraphLead: number;
-} {
-  switch (kind) {
-    case 'warning_beam':
-    case 'mining_laser':
-      return { widthRatio: 0.11, activeSpan: 125, telegraphLead: 180 };
-    case 'crush_gate':
-      return { widthRatio: 0.28, activeSpan: 125, telegraphLead: 180 };
-    case 'salvage_storm':
-      return { widthRatio: 0.42, activeSpan: 200, telegraphLead: 150 };
-    case 'dust_plume':
-      return { widthRatio: 0.34, activeSpan: 170, telegraphLead: 165 };
-    case 'surface_defense_arc':
-      return { widthRatio: 0.24, activeSpan: 150, telegraphLead: 170 };
-    case 'mine_belt':
-      return { widthRatio: 0.32, activeSpan: 155, telegraphLead: 145 };
-    default:
-      return { widthRatio: 0.2, activeSpan: 170, telegraphLead: 145 };
-  }
 }
 
 function createPacingSummary(

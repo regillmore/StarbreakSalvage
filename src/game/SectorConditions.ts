@@ -1,4 +1,5 @@
 import type { UnlockId } from '../content/unlocks';
+import { getHazardZoneDefinition, getHazardZoneMetrics } from '../content/hazardZones';
 import { clamp } from '../core/math';
 import type { BossArenaPlan } from './BossArena';
 import type { RouteKind, RunSkeleton } from './Generation';
@@ -164,26 +165,6 @@ const CONDITION_HAZARD_LABELS: Readonly<Record<SectorHazardKind, string>> = {
   dust_plume: 'ROUTE DUST',
   mining_laser: 'ROUTE LASER',
   surface_defense_arc: 'ROUTE ARC'
-};
-
-const CONDITION_HAZARD_METRICS: Readonly<
-  Record<
-    SectorHazardKind,
-    {
-      readonly widthRatio: number;
-      readonly activeSpan: number;
-      readonly telegraphLead: number;
-    }
-  >
-> = {
-  debris_lane: { widthRatio: 0.2, activeSpan: 175, telegraphLead: 145 },
-  warning_beam: { widthRatio: 0.12, activeSpan: 130, telegraphLead: 170 },
-  mine_belt: { widthRatio: 0.32, activeSpan: 160, telegraphLead: 145 },
-  salvage_storm: { widthRatio: 0.42, activeSpan: 205, telegraphLead: 150 },
-  crush_gate: { widthRatio: 0.28, activeSpan: 125, telegraphLead: 180 },
-  dust_plume: { widthRatio: 0.34, activeSpan: 175, telegraphLead: 165 },
-  mining_laser: { widthRatio: 0.1, activeSpan: 120, telegraphLead: 185 },
-  surface_defense_arc: { widthRatio: 0.24, activeSpan: 150, telegraphLead: 170 }
 };
 
 export function createSectorConditionPlan(
@@ -481,7 +462,8 @@ function createConditionHazard(
   index: number
 ): SectorHazardPlan {
   const kind = modifier.hazardKind ?? 'debris_lane';
-  const metrics = CONDITION_HAZARD_METRICS[kind];
+  const metrics = getHazardZoneMetrics(kind, 'condition');
+  const definition = getHazardZoneDefinition(kind);
   const id = `${scroll.sectorId}_condition_hazard_${modifier.source}_${index + 1}`;
   const distanceRatio = clamp(
     0.46 + index * 0.16 + ratioFromKey(`${id}:distance`, 0, 0.12),
@@ -503,7 +485,7 @@ function createConditionHazard(
     endDistance,
     xRatio: ratioFromKey(`${id}:x`, 0.18, 0.82),
     widthRatio: metrics.widthRatio,
-    damage: 1,
+    damage: definition.damage,
     label: CONDITION_HAZARD_LABELS[kind]
   };
 }
