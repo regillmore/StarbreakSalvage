@@ -358,7 +358,7 @@ Phase 7 adds richer enemy roles, upgraded variants, formations, and longer secto
 - Work order 063 adds `src/systems/EnemyMovement.ts`; movement systems should continue consuming `movementFamily` metadata, stable `homeX` anchors, fixed-step `dt`, and explicit `CombatBounds` rather than viewport dimensions.
 - Work order 064 adds `src/systems/EnemyAttack.ts`; normal attack systems should continue consuming `attackFamily` metadata for cooldowns, windup duration, telegraph label/kind, aim style, projectile speed/radius, tags, and budgets. `CombatState` owns the small pending-windup state on each enemy, while the attack module stays pure and returns telegraph/projectile blueprints.
 - Work order 065 adds `src/content/enemyVariants.ts`; wave generation should select variant IDs from seeded per-spawn RNG forks, while combat/render/debug consume the selected descriptor rather than inferring from faction names.
-- Work order 066 adds `src/content/enemyFormations.ts`; wave generation should select formation IDs from seeded per-wave RNG forks, expand existing multi-member waves into ordered spawn entries, and keep combat runtime spawning as an indexed schedule consumer rather than a formation-aware randomizer.
+- Work orders 066 and 067 add `src/content/enemyFormations.ts`; wave generation should select formation IDs from seeded per-wave RNG forks, apply deterministic route/encounter/faction weighting, expand existing multi-member waves into ordered spawn entries with shared formation instance IDs, and keep combat runtime spawning as an indexed schedule consumer rather than a formation-aware randomizer.
 - Add an objective policy field before implementing retreating, spawned, shielded, or formation enemies so target counts cannot desync from field cleanup.
 
 Recommended module direction:
@@ -385,7 +385,7 @@ src/systems/EnemyAttack.ts
 - Formation generation belongs near wave/sector planning. Runtime spawning should consume a generated plan and process crossed distance markers in order.
 - Formation members must share the normal enemy kill/accounting path so simultaneous kills, item side-effect kills, body collisions, and despawns cannot desync objectives.
 - Formation placement should use fixed combat-world units, not viewport dimensions.
-- Current first-pass formations are annotations on normal enemies: the wave director applies member offsets/timing before combat sees `EnemySpawn` entries, combat preserves formation IDs/member indexes on `EnemyState`, the renderer draws compact arcs/labels, and debug pressure summaries count active formation labels. Deeper break behavior, optional rewards, and route-conditioned formation bias should stay in this content-driven path.
+- Current first-pass formations are annotations on normal enemies: the wave director applies member offsets/timing before combat sees `EnemySpawn` entries, combat preserves formation IDs, instance IDs, and member indexes on `EnemyState`, the renderer draws compact arcs/labels, and debug pressure summaries count active formation labels. Clear rewards and route-conditioned formation bias stay in this content-driven path; deeper break/retreat behavior remains future work.
 
 Recommended module direction:
 

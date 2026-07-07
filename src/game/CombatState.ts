@@ -5,7 +5,7 @@ import {
   type BossPatternId
 } from '../content/bosses';
 import { FACTIONS, getFactionById, type FactionId } from '../content/factions';
-import type { EnemyFormationId } from '../content/enemyFormations';
+import { getEnemyFormationById, type EnemyFormationId } from '../content/enemyFormations';
 import { getEnemyVariantById, type EnemyVariantId } from '../content/enemyVariants';
 import type { ItemTag } from '../content/items';
 import type { ShipStats, WeaponId } from '../content/ships';
@@ -103,6 +103,7 @@ export interface EnemyState {
   readonly factionId: FactionId;
   readonly variantId?: EnemyVariantId | null;
   readonly formationId?: EnemyFormationId | null;
+  readonly formationInstanceId?: string | null;
   readonly formationLabel?: string | null;
   readonly formationMemberIndex?: number | null;
   readonly formationMemberCount?: number | null;
@@ -220,6 +221,7 @@ export interface CombatState {
   pickups: PickupState[];
   effects: CombatEffectState[];
   grazedProjectileIds: Set<number>;
+  formationRewardsClaimed: Set<string>;
   spawnSchedule: readonly EnemySpawn[];
   readonly weapon: WeaponDefinition;
   items: readonly ItemInstance[];
@@ -240,6 +242,7 @@ export interface EnemySpawn {
   readonly factionId: FactionId;
   readonly variantId?: EnemyVariantId | null;
   readonly formationId?: EnemyFormationId | null;
+  readonly formationInstanceId?: string | null;
   readonly formationLabel?: string | null;
   readonly formationMemberIndex?: number | null;
   readonly formationMemberCount?: number | null;
@@ -373,6 +376,7 @@ export function createCombatState(
     pickups: [],
     effects: [],
     grazedProjectileIds: new Set<number>(),
+    formationRewardsClaimed: new Set<string>(),
     spawnSchedule:
       options.spawnSchedule ??
       (options.skipEnemyWaves ? [] : createEnemySpawnSchedule(seed, bossDefinition.factionId)),
@@ -1185,6 +1189,7 @@ function spawnDueEnemies(state: CombatState, bounds: CombatBounds): void {
       factionId: spawn.factionId,
       variantId: spawn.variantId ?? null,
       formationId: spawn.formationId ?? null,
+      formationInstanceId: spawn.formationInstanceId ?? null,
       formationLabel: spawn.formationLabel ?? null,
       formationMemberIndex: spawn.formationMemberIndex ?? null,
       formationMemberCount: spawn.formationMemberCount ?? null,
@@ -1692,7 +1697,22 @@ function cleanupEntities(state: CombatState, bounds: CombatBounds): void {
       projectile.x > -80 &&
       projectile.x < bounds.width + 80
   );
-  state.enemies = state.enemies.filter((enemy) => enemy.y < bounds.height + enemy.radius * 2);
+
+  const despawnedEnemyIds = new Set<number>();
+
+  for (const enemy of state.enemies) {
+    if (enemy.y >= bounds.height + enemy.radius * 2) {
+      recordEnemyDefeat(state, enemy, despawnedEnemyIds, {
+        dropPickups: false,
+        grantSpecialCharge: false
+      });
+    }
+  }
+
+  if (despawnedEnemyIds.size > 0) {
+    state.enemies = state.enemies.filter((enemy) => !despawnedEnemyIds.has(enemy.id));
+  }
+
   state.telegraphs = state.telegraphs.filter((telegraph) => telegraph.ttl > 0);
   state.effects = state.effects.filter((effect) => effect.ttl > 0);
 
@@ -2008,7 +2028,9 @@ function recordEnemyDefeat(
     spawnEnemyDefeatPickups(
       state,
       enemy,
-      (options.bonusSalvage ?? 0) + getEnemyVariantBonusSalvage(enemy)
+      (options.bonusSalvage ?? 0) +
+        getEnemyVariantBonusSalvage(enemy) +
+        getEnemyFormationClearBonusSalvage(state, enemy, enemyIdsToRemove)
     );
   }
 
@@ -2031,6 +2053,43 @@ function getEnemyVariantFireDelayMultiplier(enemy: EnemyState): number {
 
 function getEnemyVariantBonusSalvage(enemy: EnemyState): number {
   return enemy.variantId ? getEnemyVariantById(enemy.variantId).bonusSalvage : 0;
+}
+
+function getEnemyFormationClearBonusSalvage(
+  state: CombatState,
+  enemy: EnemyState,
+  enemyIdsToRemove: ReadonlySet<number>
+): number {
+  if (!enemy.formationId || !enemy.formationInstanceId) {
+    return 0;
+  }
+
+  if (state.formationRewardsClaimed.has(enemy.formationInstanceId)) {
+    return 0;
+  }
+
+  const allFormationSpawnsIssued = state.spawnSchedule.every(
+    (spawn, index) =>
+      spawn.formationInstanceId !== enemy.formationInstanceId || index < state.nextSpawnIndex
+  );
+
+  if (!allFormationSpawnsIssued) {
+    return 0;
+  }
+
+  const hasActiveFormationMember = state.enemies.some(
+    (other) =>
+      other.formationInstanceId === enemy.formationInstanceId && !enemyIdsToRemove.has(other.id)
+  );
+
+  if (hasActiveFormationMember) {
+    return 0;
+  }
+
+  const bonusSalvage = getEnemyFormationById(enemy.formationId).clearBonusSalvage;
+  state.formationRewardsClaimed.add(enemy.formationInstanceId);
+
+  return bonusSalvage;
 }
 
 function getDistanceSquared(

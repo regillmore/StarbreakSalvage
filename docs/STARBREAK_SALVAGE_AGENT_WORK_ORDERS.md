@@ -1116,6 +1116,8 @@ Acceptance criteria:
 - Route/faction conditions can bias formation types deterministically.
 - Tests cover formation clear, despawn, and sector-completion paths.
 
+Status: implemented; formation selection now uses deterministic route, encounter, faction-role, and faction-shape weighting while preserving seeded per-wave RNG forks. Formation spawns carry instance IDs for one-time clear rewards, definitions declare small clear-bonus salvage values, and combat routes simultaneous kills, item side-effect kills, despawns, and body collisions through shared objective accounting. Unit coverage now pins route/faction bias, formation instance grouping, multi-kill clears, secondary item clears, despawn clears, body-collision clears, and distance-sector completion handoff.
+
 ## Work order 068 - Longer sector pacing and encounter arcs
 
 Goal: make longer sectors feel authored instead of stretched.

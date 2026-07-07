@@ -253,6 +253,7 @@ function createWaveSpawns(options: {
       )
     : null;
   const formation = formationId ? getEnemyFormationById(formationId) : null;
+  const formationInstanceId = formation ? getFormationInstanceId(options.wave, formation.id) : null;
   let anchorXRatio = options.pacing.firstSpawnXRatio;
   let anchorTargetY = Math.round((options.pacing.targetYMin + options.pacing.targetYMax) / 2);
 
@@ -338,6 +339,7 @@ function createWaveSpawns(options: {
       ...(formation
         ? {
             formationId: formation.id,
+            formationInstanceId,
             formationLabel: formation.debugLabel,
             formationMemberIndex: spawnIndex,
             formationMemberCount: options.wave.spawnCount
@@ -347,6 +349,10 @@ function createWaveSpawns(options: {
   }
 
   return spawns;
+}
+
+function getFormationInstanceId(wave: DirectedWave, formationId: string): string {
+  return `wave-${wave.index + 1}-${formationId}`;
 }
 
 function getFormationXRatio(anchorXRatio: number, xOffset: number): number {

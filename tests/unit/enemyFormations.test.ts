@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import {
   getEligibleEnemyFormations,
-  getEnemyFormationChance
+  getEnemyFormationById,
+  getEnemyFormationChance,
+  getEnemyFormationSelectionWeight
 } from '../../src/content/enemyFormations';
 import {
   createCombatState,
@@ -78,30 +80,30 @@ describe('enemy formations', () => {
       [
         {
           "atDistance": 192,
-          "faction": "faction_corporate_ledger",
-          "formation": "screen",
+          "faction": "faction_scrap_court",
+          "formation": "escort",
           "member": "1/3",
-          "targetY": 150,
-          "wave": "elite_wedge_probe",
-          "x": 248,
-        },
-        {
-          "atDistance": 240,
-          "faction": "faction_corporate_ledger",
-          "formation": "screen",
-          "member": "2/3",
-          "targetY": 150,
+          "targetY": 132,
           "wave": "elite_wedge_probe",
           "x": 320,
         },
         {
-          "atDistance": 288,
+          "atDistance": 246,
           "faction": "faction_corporate_ledger",
-          "formation": "screen",
-          "member": "3/3",
-          "targetY": 150,
+          "formation": "escort",
+          "member": "2/3",
+          "targetY": 174,
           "wave": "elite_wedge_probe",
-          "x": 392,
+          "x": 266,
+        },
+        {
+          "atDistance": 286,
+          "faction": "faction_corporate_ledger",
+          "formation": "escort",
+          "member": "3/3",
+          "targetY": 174,
+          "wave": "elite_wedge_probe",
+          "x": 374,
         },
         {
           "atDistance": 560,
@@ -132,30 +134,30 @@ describe('enemy formations', () => {
         },
         {
           "atDistance": 928,
-          "faction": "faction_scrap_court",
-          "formation": "escort",
+          "faction": "faction_void_corsairs",
+          "formation": "pincer",
           "member": "1/3",
-          "targetY": 78,
+          "targetY": 100,
+          "wave": "late_salvage_screen",
+          "x": 216,
+        },
+        {
+          "atDistance": 968,
+          "faction": "faction_void_corsairs",
+          "formation": "pincer",
+          "member": "2/3",
+          "targetY": 100,
+          "wave": "late_salvage_screen",
+          "x": 424,
+        },
+        {
+          "atDistance": 1032,
+          "faction": "faction_void_corsairs",
+          "formation": "pincer",
+          "member": "3/3",
+          "targetY": 130,
           "wave": "late_salvage_screen",
           "x": 320,
-        },
-        {
-          "atDistance": 982,
-          "faction": "faction_corporate_ledger",
-          "formation": "escort",
-          "member": "2/3",
-          "targetY": 120,
-          "wave": "late_salvage_screen",
-          "x": 266,
-        },
-        {
-          "atDistance": 1022,
-          "faction": "faction_corporate_ledger",
-          "formation": "escort",
-          "member": "3/3",
-          "targetY": 120,
-          "wave": "late_salvage_screen",
-          "x": 374,
         },
       ]
     `);
@@ -176,8 +178,10 @@ describe('enemy formations', () => {
     for (const waveIndex of new Set(formationSpawns.map((spawn) => spawn.waveIndex))) {
       const waveMembers = formationSpawns.filter((spawn) => spawn.waveIndex === waveIndex);
       const uniqueMemberIndexes = new Set(waveMembers.map((spawn) => spawn.formationMemberIndex));
+      const uniqueInstanceIds = new Set(waveMembers.map((spawn) => spawn.formationInstanceId));
 
       expect(uniqueMemberIndexes.size).toBe(waveMembers.length);
+      expect(uniqueInstanceIds.size).toBe(1);
       expect(waveMembers.map((spawn) => spawn.atSeconds)).toEqual(
         [...waveMembers.map((spawn) => spawn.atSeconds)].sort((a, b) => a - b)
       );
@@ -275,6 +279,37 @@ describe('enemy formations', () => {
         encounterType: 'elite'
       })
     ).toBe(0.86);
+  });
+
+  it('biases route and encounter formation weights deterministically', () => {
+    const baseContext = {
+      preferredFactionId: 'faction_void_corsairs' as const,
+      availableFactionIds: ['faction_scrap_court' as const, 'faction_void_corsairs' as const],
+      sectorIndex: 4,
+      waveIndex: 1,
+      spawnCount: 3,
+      waveLabel: 'ambush_pressure',
+      challenge: false,
+      elite: false,
+      encounterType: 'ambush' as const
+    };
+    const pincer = getEnemyFormationById('formation_pincer');
+    const convoy = getEnemyFormationById('formation_convoy');
+    const relaxedPincerWeight = getEnemyFormationSelectionWeight(
+      { ...baseContext, routePressure: false },
+      pincer
+    );
+    const pressuredPincerWeight = getEnemyFormationSelectionWeight(
+      { ...baseContext, routePressure: true },
+      pincer
+    );
+    const pressuredConvoyWeight = getEnemyFormationSelectionWeight(
+      { ...baseContext, routePressure: true },
+      convoy
+    );
+
+    expect(pressuredPincerWeight).toBeGreaterThan(relaxedPincerWeight);
+    expect(pressuredPincerWeight).toBeGreaterThan(pressuredConvoyWeight);
   });
 });
 

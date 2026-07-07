@@ -59,6 +59,7 @@ export interface EnemyFormationDefinition {
   readonly minMembers: number;
   readonly maxMembers: number;
   readonly weight: number;
+  readonly clearBonusSalvage: number;
   readonly spacing: number;
   readonly entryStyle: EnemyFormationEntryStyle;
   readonly breakCondition: EnemyFormationBreakCondition;
@@ -93,6 +94,7 @@ export const ENEMY_FORMATIONS: readonly EnemyFormationDefinition[] = [
     minMembers: 2,
     maxMembers: 3,
     weight: 3.2,
+    clearBonusSalvage: 1,
     spacing: 56,
     entryStyle: 'group',
     breakCondition: 'leaderDefeat',
@@ -118,6 +120,7 @@ export const ENEMY_FORMATIONS: readonly EnemyFormationDefinition[] = [
     minMembers: 2,
     maxMembers: 3,
     weight: 2.9,
+    clearBonusSalvage: 1,
     spacing: 48,
     entryStyle: 'staggered',
     breakCondition: 'none',
@@ -143,6 +146,7 @@ export const ENEMY_FORMATIONS: readonly EnemyFormationDefinition[] = [
     minMembers: 2,
     maxMembers: 3,
     weight: 3,
+    clearBonusSalvage: 1,
     spacing: 72,
     entryStyle: 'group',
     breakCondition: 'halfCleared',
@@ -168,6 +172,7 @@ export const ENEMY_FORMATIONS: readonly EnemyFormationDefinition[] = [
     minMembers: 2,
     maxMembers: 3,
     weight: 1.8,
+    clearBonusSalvage: 2,
     spacing: 54,
     entryStyle: 'staggered',
     breakCondition: 'leaderDefeat',
@@ -193,6 +198,7 @@ export const ENEMY_FORMATIONS: readonly EnemyFormationDefinition[] = [
     minMembers: 2,
     maxMembers: 3,
     weight: 2.4,
+    clearBonusSalvage: 1,
     spacing: 104,
     entryStyle: 'flank',
     breakCondition: 'halfCleared',
@@ -218,6 +224,7 @@ export const ENEMY_FORMATIONS: readonly EnemyFormationDefinition[] = [
     minMembers: 2,
     maxMembers: 3,
     weight: 1.9,
+    clearBonusSalvage: 2,
     spacing: 52,
     entryStyle: 'staggered',
     breakCondition: 'leaderDefeat',
@@ -243,6 +250,7 @@ export const ENEMY_FORMATIONS: readonly EnemyFormationDefinition[] = [
     minMembers: 4,
     maxMembers: 4,
     weight: 1.4,
+    clearBonusSalvage: 2,
     spacing: 62,
     entryStyle: 'orbit',
     breakCondition: 'halfCleared',
@@ -269,6 +277,7 @@ export const ENEMY_FORMATIONS: readonly EnemyFormationDefinition[] = [
     minMembers: 2,
     maxMembers: 3,
     weight: 2.2,
+    clearBonusSalvage: 1,
     spacing: 58,
     entryStyle: 'staggered',
     breakCondition: 'none',
@@ -343,20 +352,51 @@ export function chooseEnemyFormation(
     return null;
   }
 
-  const preferredRole = getFactionById(context.preferredFactionId).enemyRole.role;
-
   return rng.weightedChoice(
     eligibleFormations.map((formation) => ({
       item: formation.id,
-      weight:
-        formation.weight *
-        (formation.preferredRoles?.includes(preferredRole) ? 1.4 : 1) *
-        (getFactionById(context.preferredFactionId).enemyRole.formationEligibility.includes(
-          formation.shape
-        )
-          ? 1.25
-          : 1)
+      weight: getEnemyFormationSelectionWeight(context, formation)
     }))
+  );
+}
+
+export function getEnemyFormationSelectionWeight(
+  context: EnemyFormationSelectionContext,
+  formation: EnemyFormationDefinition
+): number {
+  const preferredMetadata = getFactionById(context.preferredFactionId).enemyRole;
+  const preferredRoleMultiplier = formation.preferredRoles?.includes(preferredMetadata.role)
+    ? 1.4
+    : 1;
+  const preferredShapeMultiplier = preferredMetadata.formationEligibility.includes(formation.shape)
+    ? 1.25
+    : 1;
+  const routeMultiplier = context.routePressure
+    ? getRoutePressureFormationMultiplier(formation.shape)
+    : 1;
+  const encounterMultiplier = getEncounterFormationMultiplier(
+    context.encounterType,
+    formation.shape
+  );
+  const challengeMultiplier =
+    context.challenge && ['ring', 'staggeredLane', 'pincer'].includes(formation.shape) ? 1.14 : 1;
+  const availableShapeMatches = getAvailableFactionIds(context.availableFactionIds).filter(
+    (factionId) =>
+      getFactionById(factionId).enemyRole.formationEligibility.includes(formation.shape)
+  ).length;
+  const factionIdentityMultiplier = Math.min(
+    1.3,
+    1 + Math.max(0, availableShapeMatches - 1) * 0.06
+  );
+
+  return (
+    formation.weight *
+    preferredRoleMultiplier *
+    preferredShapeMultiplier *
+    routeMultiplier *
+    encounterMultiplier *
+    challengeMultiplier *
+    factionIdentityMultiplier
   );
 }
 
@@ -417,6 +457,40 @@ export function chooseFormationMemberFaction(
   }
 
   return fallbackFactionId;
+}
+
+function getRoutePressureFormationMultiplier(shape: EnemyFormationShape): number {
+  switch (shape) {
+    case 'convoy':
+    case 'escort':
+      return 1.28;
+    case 'pincer':
+    case 'staggeredLane':
+      return 1.18;
+    case 'screen':
+      return 1.1;
+    default:
+      return 1;
+  }
+}
+
+function getEncounterFormationMultiplier(
+  encounterType: EnemyVariantEncounterType,
+  shape: EnemyFormationShape
+): number {
+  if (encounterType === 'ambush' && (shape === 'pincer' || shape === 'wedge')) {
+    return 1.35;
+  }
+
+  if (encounterType === 'elite' && ['escort', 'screen', 'column'].includes(shape)) {
+    return 1.24;
+  }
+
+  if (encounterType === 'bossGate' && ['escort', 'convoy', 'ring'].includes(shape)) {
+    return 1.18;
+  }
+
+  return 1;
 }
 
 function getAvailableFactionIds(availableFactionIds: readonly FactionId[]): readonly FactionId[] {

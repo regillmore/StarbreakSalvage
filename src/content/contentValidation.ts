@@ -996,6 +996,7 @@ function validateEnemyFormationDefinitions(
     validatePositiveInteger(errors, owner, 'minMembers', formation.minMembers);
     validatePositiveInteger(errors, owner, 'maxMembers', formation.maxMembers);
     validatePositiveNumber(errors, owner, 'weight', formation.weight);
+    validateNonNegativeInteger(errors, owner, 'clearBonusSalvage', formation.clearBonusSalvage);
     validatePositiveNumber(errors, owner, 'spacing', formation.spacing);
 
     if (formation.minMembers > formation.maxMembers) {
@@ -1008,6 +1009,10 @@ function validateEnemyFormationDefinitions(
 
     if (formation.spacing < 36) {
       errors.push(`${owner} must keep spacing readable`);
+    }
+
+    if (formation.clearBonusSalvage > 3) {
+      errors.push(`${owner} must keep clearBonusSalvage at or below 3`);
     }
 
     if (!registries.entryStyles.has(formation.entryStyle)) {

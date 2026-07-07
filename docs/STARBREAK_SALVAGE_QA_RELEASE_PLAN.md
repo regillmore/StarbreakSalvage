@@ -133,7 +133,7 @@ Phase 7 enriches enemy behavior and longer-sector pacing. Add tests closest to t
 - attack cadence and telegraph tests for deterministic timing, projectile budgets, high-contrast readability, and reduced-motion simplification; work order 064 adds pure attack-profile budget coverage plus combat-loop cadence regression coverage;
 - upgraded variant selection snapshots for fresh saves, later sectors, faction routes, elite routes, challenge flags, and boss-adjacent pressure; work order 065 adds known-seed variant schedules, validation, spawn-modifier, bonus-salvage, and debug-summary coverage;
 - formation definition validation for member roles, offsets, timing, entry style, spacing, break conditions, and fixed-world bounds; work order 066 adds validation fixtures plus known-seed formation schedule/bounds coverage;
-- formation wave tests for frame-catchup spawn order, simultaneous kills, secondary item kills, despawns, body collisions, objective progress, and sector-complete handoff; work order 066 covers frame-catchup spawn order and duplicate prevention, while work order 067 should cover simultaneous-kill and sector-complete handoff regressions;
+- formation wave tests for frame-catchup spawn order, simultaneous kills, secondary item kills, despawns, body collisions, objective progress, and sector-complete handoff; work order 066 covers frame-catchup spawn order and duplicate prevention, while work order 067 covers route/faction formation bias, formation instance grouping, one-time clear rewards, simultaneous-kill clears, secondary item clears, despawn clears, body-collision clears, and distance-sector handoff regressions;
 - longer-sector generation snapshots for route-conditioned length bands, pressure/relief windows, formation clusters, hazard/landmark pacing, and boss approach timing;
 - browser smoke for at least one enemy-rich formation or upgraded-variant path under debug, high contrast, reduced motion, performance mode, and narrow viewport where practical;
 - regression coverage that keeps `HOOK-STORM-SMOKE`, dense combat, forced exit, forced destruction, and quiet long-scroll paths green while enemy behavior grows.
@@ -190,7 +190,7 @@ Phase 7 should add these seed/save fixtures:
 - `VARIANT-ESCALATION-GRID` - later-sector path for upgraded and elite variant selection snapshots.
 - `FORMATION-SQUAD-GRID` - deterministic formation spawn schedule fixture for wedge/screen/escort coverage; first covered by work order 066.
 - `FORMATION-CATCHUP-GRID` - frame-catchup fixture proving formation members do not skip or duplicate when scroll jumps across markers; first covered by work order 066.
-- `FORMATION-WEDGE-TEST` - deterministic formation break and objective-clear fixture for work order 067.
+- `FORMATION-WEDGE-TEST` - deterministic formation objective-clear fixture for work order 067; covered by unit regressions for simultaneous formation kills, secondary item kills, despawns, body collisions, and distance-sector completion.
 - `LONG-SECTOR-CARAVAN` - extended sector with pressure/relief windows, formation clusters, and debug scroll metrics.
 - `SUPPORT-DRONE-NEST` - support/disruptor role fixture for shield, escort, deploy, or hazard-mark behavior.
 
@@ -216,7 +216,7 @@ Phase 2 should extend this checklist as systems become real. In addition to the 
 - [x] Source-weighted item pool profiles validate for reward-pool, source, rarity, family, and tag references.
 - [x] Item discovery gates, unlock-gated family pools, synergy cluster references, and item card presentation data validate after later Phase 6 work.
 - [x] Enemy role, pressure, movement, attack, variant, formation, readability, and faction-fit metadata validate after Phase 7 schema work.
-- [x] Formation definitions validate member roles, offsets, timing, bounds, and break/cleanup behavior.
+- [x] Formation definitions validate member roles, offsets, timing, bounds, clear rewards, and break/cleanup behavior.
 - [ ] Longer-sector pacing validates length bands, pressure/relief windows, formation marks, and boss approach references.
 - [x] Current enemy role audit helper covers faction-pattern classes, target roles, wave-label semantics, spawn model, and objective-risk notes before Phase 7 schema work.
 

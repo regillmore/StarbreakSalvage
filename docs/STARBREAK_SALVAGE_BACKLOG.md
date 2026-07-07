@@ -1373,6 +1373,10 @@ Acceptance:
 - Formation waves cannot soft-lock sector completion.
 - Optional formation rewards and route/faction biases reproduce from seed plus save state.
 
+Status:
+
+- Implemented in work order 067. Formation spawns now carry instance IDs so clear rewards are claimed once per squad, definitions declare small clear-bonus salvage values, and deterministic route/encounter/faction weighting biases formation type without changing the indexed spawn queue. Combat routes simultaneous projectile kills, item side-effect kills, body collisions, and offscreen despawns through shared defeat accounting, so objective target counts and sector-complete handoff stay in sync.
+
 ## Epic AU - Longer sector pacing
 
 ### AU1 - Longer length bands

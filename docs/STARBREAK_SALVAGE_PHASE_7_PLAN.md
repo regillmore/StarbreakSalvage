@@ -92,7 +92,7 @@ Exit criteria:
 - Formations remain inside the fixed 640x720 combat world.
 - Defeating or breaking formations cannot desync objective progress.
 
-Status: first pass implemented through work order 066. `src/content/enemyFormations.ts` defines eight validated squad shapes with member role intent, offsets, stagger timing, entry style, spacing, break condition, cleanup policy, and cue metadata. Wave planning selects optional formations from seeded per-wave RNG forks and expands existing multi-member waves into ordered spawn entries, so scroll-distance catchup still advances through one spawn index per due member without skipping or duplicating. Combat/render/debug now carry formation IDs, member indexes, compact canvas cues, and active formation counts. Deeper route weighting, optional rewards, break behavior, simultaneous-kill regression coverage, and sector-complete objective safety are intentionally left to work order 067.
+Status: implemented through work orders 066 and 067. `src/content/enemyFormations.ts` defines eight validated squad shapes with member role intent, offsets, stagger timing, entry style, spacing, break condition, cleanup policy, cue metadata, and small clear-bonus salvage values. Wave planning selects optional formations from seeded per-wave RNG forks with deterministic route, encounter, faction-role, and faction-shape weighting, then expands existing multi-member waves into ordered spawn entries with shared formation instance IDs. Combat/render/debug carry formation IDs, member indexes, compact canvas cues, and active formation counts, while simultaneous formation kills, secondary item kills, despawns, and body collisions all route through objective accounting so sector completion cannot wait on vanished squad members. Deeper break behavior remains deferred.
 
 ### P7.5 - Longer Sector Pacing
 
@@ -137,4 +137,4 @@ Exit criteria:
 
 ## Phase 7 Definition Of Done
 
-Phase 7 is done when enemy classes have recognizable roles, upgraded variants and formations create tactical changes without hidden unfairness, longer sectors feel paced rather than stretched, seeded wave/variant/formation outputs remain reproducible, objective progress cannot desync from simultaneous or secondary kills, and automated plus browser smoke coverage can protect enemy behavior as sectors grow longer.
+Phase 7 is done when enemy classes have recognizable roles, upgraded variants and formations create tactical changes without hidden unfairness, longer sectors feel paced rather than stretched, seeded wave/variant/formation outputs remain reproducible, objective progress cannot desync from simultaneous, secondary, collision, or despawn clears, and automated plus browser smoke coverage can protect enemy behavior as sectors grow longer.

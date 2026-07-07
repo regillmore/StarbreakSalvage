@@ -254,6 +254,7 @@ describe('validateContent', () => {
           minMembers: 0,
           maxMembers: 5,
           weight: 0,
+          clearBonusSalvage: 5,
           spacing: 12,
           entryStyle: 'teleport',
           breakCondition: 'panic',
@@ -288,6 +289,9 @@ describe('validateContent', () => {
     );
     expect(errors).toContain('Enemy formation formation_missing must have positive minMembers');
     expect(errors).toContain('Enemy formation formation_missing must have positive weight');
+    expect(errors).toContain(
+      'Enemy formation formation_missing must keep clearBonusSalvage at or below 3'
+    );
     expect(errors).toContain(
       'Enemy formation formation_missing must define enough member slots for maxMembers'
     );

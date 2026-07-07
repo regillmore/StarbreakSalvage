@@ -9,7 +9,9 @@ import {
   spawnDebugDenseCombatScenario,
   spawnBoss,
   updateCombatState,
-  type CombatBounds
+  type CombatBounds,
+  type CombatState,
+  type EnemySpawn
 } from '../../src/game/CombatState';
 import { createWaveDirectorPlan, getObjectiveProgress } from '../../src/game/WaveDirector';
 
@@ -718,6 +720,100 @@ describe('CombatState', () => {
     expect(state.stats.damageTaken).toBe(1);
     expect(getObjectiveProgress(plan, state).complete).toBe(true);
   });
+
+  it('counts simultaneous formation member kills and completes a distance sector', () => {
+    const formationSpawns = createFormationSpawnSchedule('formation-objective-simultaneous', 3);
+    const plan = createFormationTargetPlan(3, 900);
+    const state = createCombatState(bounds, 'FORMATION-SIMULTANEOUS-CLEAR', {
+      spawnSchedule: formationSpawns,
+      bossSpawnAtSeconds: null
+    });
+    state.nextSpawnIndex = formationSpawns.length;
+    state.scrollDistance = 900;
+    addFormationEnemy(state, formationSpawns[0], 1201, 240, 180);
+    addFormationEnemy(state, formationSpawns[1], 1202, 320, 180);
+    addFormationEnemy(state, formationSpawns[2], 1203, 400, 180);
+    state.projectiles.push(
+      createPlayerProjectile(1301, 240, 180, ['laser']),
+      createPlayerProjectile(1302, 320, 180, ['laser']),
+      createPlayerProjectile(1303, 400, 180, ['laser'])
+    );
+
+    updateCombatState(
+      state,
+      { movement: { x: 0, y: 0 }, fire: false, scrollDistance: 900 },
+      1 / 60,
+      bounds
+    );
+
+    expect(state.enemies).toHaveLength(0);
+    expect(state.stats.enemiesDestroyed).toBe(3);
+    expect(sumPickupValue(state, 'salvage')).toBe(4);
+    expect(getObjectiveProgress(plan, state).complete).toBe(true);
+  });
+
+  it('counts item side-effect clears across formation members once', () => {
+    const formationSpawns = createFormationSpawnSchedule('formation-objective-arc', 2);
+    const plan = createFormationTargetPlan(2);
+    const state = createCombatState(bounds, 'FORMATION-ARC-CLEAR', {
+      spawnSchedule: formationSpawns,
+      bossSpawnAtSeconds: null,
+      items: [
+        { itemId: 'item_split_prism', acquisitionOrder: 0 },
+        { itemId: 'item_chain_arc_capacitor', acquisitionOrder: 1 }
+      ]
+    });
+    state.nextSpawnIndex = formationSpawns.length;
+    addFormationEnemy(state, formationSpawns[0], 1401, 300, 180, 1);
+    addFormationEnemy(state, formationSpawns[1], 1402, 328, 180, 0.5);
+    state.projectiles.push(createPlayerProjectile(1403, 300, 180, ['laser']));
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
+
+    expect(state.enemies).toHaveLength(0);
+    expect(state.stats.enemiesDestroyed).toBe(2);
+    expect(sumPickupValue(state, 'salvage')).toBe(3);
+    expect(getObjectiveProgress(plan, state).complete).toBe(true);
+  });
+
+  it('counts despawned formation members as cleared targets without rewards', () => {
+    const formationSpawns = createFormationSpawnSchedule('formation-objective-despawn', 2);
+    const plan = createFormationTargetPlan(2);
+    const state = createCombatState(bounds, 'FORMATION-DESPAWN-CLEAR', {
+      spawnSchedule: formationSpawns,
+      bossSpawnAtSeconds: null
+    });
+    state.nextSpawnIndex = formationSpawns.length;
+    addFormationEnemy(state, formationSpawns[0], 1501, 300, bounds.height + 50, 1, 1000);
+    addFormationEnemy(state, formationSpawns[1], 1502, 340, bounds.height + 50, 1, 1000);
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
+
+    expect(state.enemies).toHaveLength(0);
+    expect(state.stats.enemiesDestroyed).toBe(2);
+    expect(state.pickups).toHaveLength(0);
+    expect(getObjectiveProgress(plan, state).complete).toBe(true);
+  });
+
+  it('counts body-collided formation members as objective clears', () => {
+    const formationSpawns = createFormationSpawnSchedule('formation-objective-body', 2);
+    const plan = createFormationTargetPlan(2);
+    const state = createCombatState(bounds, 'FORMATION-BODY-CLEAR', {
+      spawnSchedule: formationSpawns,
+      bossSpawnAtSeconds: null
+    });
+    state.nextSpawnIndex = formationSpawns.length;
+    addFormationEnemy(state, formationSpawns[0], 1601, state.player.x, state.player.y);
+    addFormationEnemy(state, formationSpawns[1], 1602, state.player.x + 4, state.player.y);
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
+
+    expect(state.enemies).toHaveLength(0);
+    expect(state.stats.enemiesDestroyed).toBe(2);
+    expect(state.stats.damageTaken).toBe(1);
+    expect(state.pickups).toHaveLength(0);
+    expect(getObjectiveProgress(plan, state).complete).toBe(true);
+  });
 });
 
 function createRoleAttackTestState() {
@@ -818,4 +914,112 @@ function createTwoTargetPlan() {
     majorWaves: ['regression_pair'],
     preferredFactionId: 'faction_corporate_ledger'
   });
+}
+
+function createFormationTargetPlan(requiredEnemyKills: number, sectorLength: number | null = null) {
+  return createWaveDirectorPlan({
+    seed: 'FORMATION-OBJECTIVE-PLAN',
+    objective: {
+      kind: 'clearWaves',
+      label: 'Formation Objective Sweep',
+      requiredWaves: 1,
+      spawnsPerWave: requiredEnemyKills,
+      requiredEnemyKills,
+      bossRequired: false,
+      bossSpawnAtSeconds: null
+    },
+    majorWaves: ['formation_objective'],
+    preferredFactionId: 'faction_corporate_ledger',
+    scroll:
+      sectorLength === null
+        ? undefined
+        : {
+            length: sectorLength,
+            baseSpeed: 100
+          },
+    enableFormations: false
+  });
+}
+
+function createFormationSpawnSchedule(
+  formationInstanceId: string,
+  spawnCount: number
+): readonly EnemySpawn[] {
+  return Array.from({ length: spawnCount }, (_, index) => ({
+    atSeconds: 0,
+    atDistance: null,
+    waveIndex: 0,
+    waveLabel: 'formation_objective',
+    xRatio: 0.4 + index * 0.08,
+    targetY: 140,
+    hull: 1,
+    fireDelay: 10,
+    factionId: 'faction_corporate_ledger',
+    formationId: 'formation_wedge',
+    formationInstanceId,
+    formationLabel: 'wedge',
+    formationMemberIndex: index,
+    formationMemberCount: spawnCount
+  }));
+}
+
+function addFormationEnemy(
+  state: CombatState,
+  spawn: EnemySpawn | undefined,
+  id: number,
+  x: number,
+  y: number,
+  hull = 1,
+  targetY = y
+): void {
+  if (!spawn) {
+    throw new Error('Missing formation spawn fixture');
+  }
+
+  state.enemies.push({
+    id,
+    factionId: spawn.factionId,
+    variantId: spawn.variantId ?? null,
+    formationId: spawn.formationId ?? null,
+    formationInstanceId: spawn.formationInstanceId ?? null,
+    formationLabel: spawn.formationLabel ?? null,
+    formationMemberIndex: spawn.formationMemberIndex ?? null,
+    formationMemberCount: spawn.formationMemberCount ?? null,
+    x,
+    y,
+    radius: 17,
+    hull,
+    maxHull: hull,
+    drift: 0,
+    targetY,
+    homeX: x,
+    fireCooldown: 10
+  });
+}
+
+function createPlayerProjectile(
+  id: number,
+  x: number,
+  y: number,
+  tags: readonly ('laser' | 'missile' | 'plasma')[]
+) {
+  return {
+    id,
+    owner: 'player' as const,
+    x,
+    y,
+    vx: 0,
+    vy: 0,
+    radius: 8,
+    damage: 1,
+    ttl: 1,
+    tags,
+    procDepth: 0
+  };
+}
+
+function sumPickupValue(state: CombatState, kind: 'credit' | 'salvage'): number {
+  return state.pickups
+    .filter((pickup) => pickup.kind === kind)
+    .reduce((total, pickup) => total + pickup.value, 0);
 }
