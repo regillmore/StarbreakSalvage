@@ -134,7 +134,7 @@ Phase 7 enriches enemy behavior and longer-sector pacing. Add tests closest to t
 - upgraded variant selection snapshots for fresh saves, later sectors, faction routes, elite routes, challenge flags, and boss-adjacent pressure; work order 065 adds known-seed variant schedules, validation, spawn-modifier, bonus-salvage, and debug-summary coverage;
 - formation definition validation for member roles, offsets, timing, entry style, spacing, break conditions, and fixed-world bounds; work order 066 adds validation fixtures plus known-seed formation schedule/bounds coverage;
 - formation wave tests for frame-catchup spawn order, simultaneous kills, secondary item kills, despawns, body collisions, objective progress, and sector-complete handoff; work order 066 covers frame-catchup spawn order and duplicate prevention, while work order 067 covers route/faction formation bias, formation instance grouping, one-time clear rewards, simultaneous-kill clears, secondary item clears, despawn clears, body-collision clears, and distance-sector handoff regressions;
-- longer-sector generation snapshots for route-conditioned length bands, pressure/relief windows, formation clusters, hazard/landmark pacing, and boss approach timing;
+- longer-sector generation snapshots for route-conditioned length bands, pressure/relief windows, formation clusters, hazard/landmark pacing, and boss approach timing; work order 068 adds `SectorPacing` unit coverage for route-conditioned arcs, explicit wave ratios, formation-cluster waves, feature beats, boss handoffs, run-summary timelines, and encounter-pacing validation;
 - browser smoke for at least one enemy-rich formation or upgraded-variant path under debug, high contrast, reduced motion, performance mode, and narrow viewport where practical;
 - regression coverage that keeps `HOOK-STORM-SMOKE`, dense combat, forced exit, forced destruction, and quiet long-scroll paths green while enemy behavior grows.
 
@@ -191,7 +191,7 @@ Phase 7 should add these seed/save fixtures:
 - `FORMATION-SQUAD-GRID` - deterministic formation spawn schedule fixture for wedge/screen/escort coverage; first covered by work order 066.
 - `FORMATION-CATCHUP-GRID` - frame-catchup fixture proving formation members do not skip or duplicate when scroll jumps across markers; first covered by work order 066.
 - `FORMATION-WEDGE-TEST` - deterministic formation objective-clear fixture for work order 067; covered by unit regressions for simultaneous formation kills, secondary item kills, despawns, body collisions, and distance-sector completion.
-- `LONG-SECTOR-CARAVAN` - extended sector with pressure/relief windows, formation clusters, and debug scroll metrics.
+- `LONG-SECTOR-CARAVAN` - extended sector with pressure/relief windows, formation clusters, and debug scroll metrics; first covered by work order 068 route-conditioned pacing and wave-plan unit tests.
 - `SUPPORT-DRONE-NEST` - support/disruptor role fixture for shield, escort, deploy, or hazard-mark behavior.
 
 ## Content validation checklist
@@ -217,7 +217,7 @@ Phase 2 should extend this checklist as systems become real. In addition to the 
 - [x] Item discovery gates, unlock-gated family pools, synergy cluster references, and item card presentation data validate after later Phase 6 work.
 - [x] Enemy role, pressure, movement, attack, variant, formation, readability, and faction-fit metadata validate after Phase 7 schema work.
 - [x] Formation definitions validate member roles, offsets, timing, bounds, clear rewards, and break/cleanup behavior.
-- [ ] Longer-sector pacing validates length bands, pressure/relief windows, formation marks, and boss approach references.
+- [x] Longer-sector pacing validates length bands, pressure/relief windows, formation marks, and boss approach references.
 - [x] Current enemy role audit helper covers faction-pattern classes, target roles, wave-label semantics, spawn model, and objective-risk notes before Phase 7 schema work.
 
 ## Manual browser smoke matrix
@@ -261,7 +261,7 @@ Phase 7 performance checks should include active role counts, upgraded variant c
 - [x] Role-specific movement profiles have deterministic bounds and profile-difference tests for the current Phase 7 roster.
 - [x] Role-specific attack profiles have deterministic cadence, telegraph, and projectile-budget tests for current and registered Phase 7 attack families.
 - [x] Active formation counts visible in debug once work order 066 lands.
-- [ ] Long-sector pressure visible in debug smoke once later Phase 7 systems land.
+- [x] Long-sector pressure visible in debug/summaries after work order 068; browser stress smoke remains for work order 069.
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [x] Heavy combat debug scene documented.
 - [x] Long-scroll debug scene documented.

@@ -22,6 +22,7 @@ export interface SectorObjectiveDefinition {
 export interface SectorEncounterPacingDefinition {
   readonly waveWindowStartRatio: number;
   readonly waveWindowEndRatio: number;
+  readonly waveDistanceRatios?: readonly number[];
   readonly spawnSpacing: number;
   readonly firstSpawnXRatio: number;
   readonly flankXMinRatio: number;

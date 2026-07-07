@@ -398,6 +398,7 @@ src/game/EnemyRolePressure.ts
 ### Longer sectors
 
 - Longer-sector pacing should extend generated sector conditions with pressure bands, relief windows, formation clusters, landmark beats, and boss approach changes.
+- The first implementation lives in `src/game/SectorPacing.ts`: gameplay derives route-conditioned scroll/features/arena first, then applies the pacing layer for final scroll length, encounter-pacing ratios, sparse feature beats, and boss approach scaling. Keep this layer deterministic and avoid mutating the base run skeleton.
 - Avoid per-frame random decisions. Generate the schedule once, then let fixed-step simulation consume it.
 - Summaries and debug overlays should expose length, pressure band, role/variant/formation counts, and route-conditioned reasons where useful.
 - Performance mode and reduced motion may simplify presentation, but should not change combat generation or objective requirements.

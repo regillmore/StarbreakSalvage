@@ -68,6 +68,7 @@ export interface WaveDirectorOptions {
   readonly challenge?: boolean;
   readonly eliteEncounter?: boolean;
   readonly enableFormations?: boolean;
+  readonly formationClusterWaves?: readonly number[];
 }
 
 const DISTANCE_WAVE_WINDOW_START_RATIO = 0.12;
@@ -87,6 +88,7 @@ const DEFAULT_ENCOUNTER_PACING: SectorEncounterPacingDefinition = {
 
 export function createWaveDirectorPlan(options: WaveDirectorOptions): WaveDirectorPlan {
   const pacing = normalizeEncounterPacing(options.pacing);
+  const formationClusterWaveIndexes = new Set(options.formationClusterWaves ?? []);
   const waves = options.majorWaves
     .slice(0, options.objective.requiredWaves)
     .map((label, index) => ({
@@ -118,7 +120,8 @@ export function createWaveDirectorPlan(options: WaveDirectorOptions): WaveDirect
         eliteEncounter: options.eliteEncounter ?? false,
         bossRequired: options.objective.bossRequired
       },
-      enableFormations: options.enableFormations ?? true
+      enableFormations: options.enableFormations ?? true,
+      formationCluster: formationClusterWaveIndexes.has(wave.index)
     })
   );
 
@@ -202,6 +205,13 @@ function getWaveStartDistance(options: {
   const requiredWaves = Math.max(1, Math.floor(options.requiredWaves));
   const waveIndex = Math.min(Math.max(0, Math.floor(options.waveIndex)), requiredWaves - 1);
   const maxSpawnOffset = Math.max(0, options.spawnsPerWave - 1) * options.pacing.spawnSpacing;
+  const explicitRatio = options.pacing.waveDistanceRatios?.[waveIndex];
+
+  if (explicitRatio !== undefined && Number.isFinite(explicitRatio)) {
+    const maxDistance = Math.max(0, scroll.length - maxSpawnOffset - 80);
+    return roundDistance(clamp(scroll.length * explicitRatio, 0, maxDistance));
+  }
+
   const firstDistance =
     options.bossSpawnAtSeconds === null
       ? scroll.length * options.pacing.waveWindowStartRatio
@@ -231,6 +241,7 @@ function createWaveSpawns(options: {
   readonly pacing: SectorEncounterPacingDefinition;
   readonly variantContext: WaveVariantContext;
   readonly enableFormations: boolean;
+  readonly formationCluster: boolean;
 }): EnemySpawn[] {
   const spawns: EnemySpawn[] = [];
   const encounterType = getWaveEncounterType(options.wave.label, options.variantContext);
@@ -244,7 +255,8 @@ function createWaveSpawns(options: {
     routePressure: options.variantContext.routePressure,
     challenge: options.variantContext.challenge,
     elite: options.variantContext.eliteEncounter || encounterType === 'elite',
-    encounterType
+    encounterType,
+    formationCluster: options.formationCluster
   };
   const formationId = options.enableFormations
     ? chooseEnemyFormation(
@@ -439,6 +451,11 @@ function normalizeEncounterPacing(
   return {
     waveWindowStartRatio,
     waveWindowEndRatio,
+    ...(pacing.waveDistanceRatios
+      ? {
+          waveDistanceRatios: pacing.waveDistanceRatios.map((ratio) => clamp(ratio, 0.04, 0.92))
+        }
+      : {}),
     spawnSpacing: Math.max(12, pacing.spawnSpacing),
     firstSpawnXRatio: clamp(pacing.firstSpawnXRatio, 0.08, 0.92),
     flankXMinRatio,

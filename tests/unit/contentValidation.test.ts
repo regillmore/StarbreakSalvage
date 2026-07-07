@@ -550,6 +550,7 @@ describe('validateContent', () => {
           encounterPacing: {
             waveWindowStartRatio: 0.8,
             waveWindowEndRatio: 0.2,
+            waveDistanceRatios: [0.4, 1.2, 0.3],
             spawnSpacing: 0,
             firstSpawnXRatio: 1.2,
             flankXMinRatio: 0.9,
@@ -566,6 +567,12 @@ describe('validateContent', () => {
     );
     expect(errors).toContain(
       'Sector sector_outer_debris_field encounter pacing must have positive spawnSpacing'
+    );
+    expect(errors).toContain(
+      'Sector sector_outer_debris_field encounter pacing waveDistanceRatios 2 must have ratio between 0 and 1'
+    );
+    expect(errors).toContain(
+      'Sector sector_outer_debris_field encounter pacing must order waveDistanceRatios'
     );
     expect(errors).toContain(
       'Sector sector_outer_debris_field encounter pacing must have firstSpawnXRatio between 0 and 1'

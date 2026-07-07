@@ -7,6 +7,11 @@ import {
   createSectorConditionPlan,
   formatSectorConditionReadout
 } from '../game/SectorConditions';
+import {
+  applySectorPacingToScroll,
+  createSectorPacingPlan,
+  formatSectorPacingReadout
+} from '../game/SectorPacing';
 import { getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import type { InputAction } from '../systems/InputSystem';
 import {
@@ -35,7 +40,15 @@ export class SectorTransitionScene implements Scene {
       sectorIndex: this.session.currentSectorIndex,
       routeOutcomes: this.session.routeOutcomes
     });
-    const scroll = applySectorConditionsToScroll(sector.scroll, conditions);
+    const routeConditionedScroll = applySectorConditionsToScroll(sector.scroll, conditions);
+    const pacing = createSectorPacingPlan({
+      runSeed: this.run.seed,
+      sector,
+      sectorIndex: this.session.currentSectorIndex,
+      conditions,
+      scroll: routeConditionedScroll
+    });
+    const scroll = applySectorPacingToScroll(routeConditionedScroll, pacing);
     const shell = document.createElement('main');
     shell.className = 'scene-panel transition-panel';
     shell.setAttribute('aria-labelledby', 'transition-title');
@@ -67,9 +80,13 @@ export class SectorTransitionScene implements Scene {
 
     const conditionLine = document.createElement('p');
     conditionLine.className = 'transition-copy';
-    conditionLine.textContent = `${formatSectorConditionReadout(
-      conditions
-    )} | Cruise ${Math.round(scroll.baseSpeed)}u/s`;
+    conditionLine.textContent = [
+      formatSectorConditionReadout(conditions),
+      pacing.arcKind === 'standard' ? null : formatSectorPacingReadout(pacing),
+      `Cruise ${Math.round(scroll.baseSpeed)}u/s`
+    ]
+      .filter((part): part is string => part !== null)
+      .join(' | ');
 
     const waveLine = document.createElement('p');
     waveLine.className = 'transition-copy';
@@ -109,6 +126,19 @@ export class SectorTransitionScene implements Scene {
 
   public getDebugState(): SceneDebugState {
     const sector = getCurrentSector(this.run, this.session);
+    const conditions = createSectorConditionPlan({
+      run: this.run,
+      sectorIndex: this.session.currentSectorIndex,
+      routeOutcomes: this.session.routeOutcomes
+    });
+    const routeConditionedScroll = applySectorConditionsToScroll(sector.scroll, conditions);
+    const pacing = createSectorPacingPlan({
+      runSeed: this.run.seed,
+      sector,
+      sectorIndex: this.session.currentSectorIndex,
+      conditions,
+      scroll: routeConditionedScroll
+    });
 
     return {
       seed: this.run.seed,
@@ -124,7 +154,8 @@ export class SectorTransitionScene implements Scene {
         id: sector.sectorId,
         name: sector.sectorName,
         backgroundId: sector.background.id,
-        encounterPacing: sector.encounterPacing ? 'paced' : undefined
+        encounterPacing: sector.encounterPacing ? 'paced' : undefined,
+        pacing: pacing.arcKind === 'standard' ? undefined : pacing.debugLabel
       }
     };
   }

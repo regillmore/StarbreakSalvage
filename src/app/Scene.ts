@@ -47,6 +47,7 @@ export interface SceneDebugState {
     readonly name: string;
     readonly backgroundId?: string;
     readonly encounterPacing?: string;
+    readonly pacing?: string;
   };
   readonly backgroundPrimitives?: number;
   readonly backgroundLayers?: number;

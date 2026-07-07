@@ -1387,6 +1387,10 @@ Acceptance:
 - Length changes are visible in debug and summaries.
 - Route-conditioned length remains reproducible.
 
+Status:
+
+- Implemented in work order 068. A deterministic `SectorPacing` layer now runs after route-conditioned sector modifiers and applies modest length multipliers to selected route-pressure, lunar, boss, and late-run sectors. Gameplay, transition screens, debug plan strings, and run summaries report the active long-sector arc.
+
 ### AU2 - Encounter arcs
 
 Acceptance:
@@ -1395,6 +1399,10 @@ Acceptance:
 - Wave and formation spacing tests cover pressure/relief ordering.
 - Boss and final-sector handoffs remain reliable.
 
+Status:
+
+- Implemented in work order 068. Pacing plans now provide explicit wave-distance ratios, relief windows, formation-cluster wave indexes, landmark/hazard beats, and boss-approach scaling. The wave director consumes those ratios and cluster marks, and unit coverage protects route-conditioned relief ordering, forced formation clusters, feature insertion, and boss arena handoff.
+
 ### AU3 - Long-sector performance budget
 
 Acceptance:
@@ -1402,6 +1410,10 @@ Acceptance:
 - Enemy-rich long-sector smoke exposes entity, projectile, telegraph, role, variant, formation, and scroll metrics.
 - Performance mode and reduced motion simplify visuals without changing deterministic gameplay.
 - Manual browser gaps are documented.
+
+Status:
+
+- Partially implemented in work order 068. Longer-sector pacing adds sparse landmarks/hazards and wider wave spacing instead of constant density, with debug summaries exposing the active arc. Full enemy-rich browser smoke and accessibility/performance matrix coverage remain for work order 069.
 
 ## Epic AV - Phase 7 release and QA
 

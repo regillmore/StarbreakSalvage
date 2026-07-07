@@ -108,6 +108,8 @@ Exit criteria:
 - Route-conditioned length and pressure remain reproducible.
 - Performance and browser smoke cover at least one long enemy-rich sector.
 
+Status: implemented through work order 068. `SectorPacing` derives a deterministic post-route pacing plan per sector, applying modest length bands, pressure/relief beats, explicit wave-distance ratios, formation-cluster wave indexes, background landmark beats, sparse hazard beats, and boss-approach scaling while preserving fixed-step simulation and base run generation. Gameplay and transition screens consume the paced scroll plan, the wave director uses explicit ratio marks and cluster waves, debug/summary surfaces describe active pacing, and unit coverage protects route-conditioned long arcs, formation spacing, boss handoff timing, and pacing validation. Browser enemy-rich stress smoke remains for work order 069.
+
 ### P7.6 - Phase 7 Enemy Playtest Candidate
 
 Scope:

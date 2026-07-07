@@ -81,6 +81,7 @@ export interface EnemyFormationSelectionContext {
   readonly challenge: boolean;
   readonly elite: boolean;
   readonly encounterType: EnemyVariantEncounterType;
+  readonly formationCluster?: boolean;
 }
 
 export const ENEMY_FORMATIONS: readonly EnemyFormationDefinition[] = [
@@ -348,7 +349,11 @@ export function chooseEnemyFormation(
   const eligibleFormations = getEligibleEnemyFormations(context);
   const chance = getEnemyFormationChance(context);
 
-  if (eligibleFormations.length === 0 || chance <= 0 || rng.nextFloat() >= chance) {
+  if (
+    eligibleFormations.length === 0 ||
+    chance <= 0 ||
+    (!context.formationCluster && rng.nextFloat() >= chance)
+  ) {
     return null;
   }
 
@@ -378,6 +383,10 @@ export function getEnemyFormationSelectionWeight(
     context.encounterType,
     formation.shape
   );
+  const clusterMultiplier =
+    context.formationCluster && ['escort', 'convoy', 'pincer', 'ring'].includes(formation.shape)
+      ? 1.22
+      : 1;
   const challengeMultiplier =
     context.challenge && ['ring', 'staggeredLane', 'pincer'].includes(formation.shape) ? 1.14 : 1;
   const availableShapeMatches = getAvailableFactionIds(context.availableFactionIds).filter(
@@ -395,6 +404,7 @@ export function getEnemyFormationSelectionWeight(
     preferredShapeMultiplier *
     routeMultiplier *
     encounterMultiplier *
+    clusterMultiplier *
     challengeMultiplier *
     factionIdentityMultiplier
   );
@@ -423,11 +433,18 @@ export function getEnemyFormationChance(context: EnemyFormationSelectionContext)
     chance += 0.06;
   }
 
+  if (context.formationCluster) {
+    chance += 0.18;
+  }
+
   if (context.challenge) {
     chance += 0.06;
   }
 
-  return Math.min(0.86, Math.max(0, Math.round(chance * 1000) / 1000));
+  return Math.min(
+    context.formationCluster ? 0.96 : 0.86,
+    Math.max(0, Math.round(chance * 1000) / 1000)
+  );
 }
 
 export function chooseFormationMemberFaction(

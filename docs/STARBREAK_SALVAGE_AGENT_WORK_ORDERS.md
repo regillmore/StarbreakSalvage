@@ -1133,6 +1133,8 @@ Acceptance criteria:
 - Debug/summaries expose useful longer-sector context.
 - Long sectors stay within performance and readability budgets.
 
+Status: implemented; `src/game/SectorPacing.ts` now derives deterministic pacing arcs after route-conditioned sector modifiers, stretching selected routes and later sectors with pressure bands, relief windows, explicit wave-distance ratios, formation-cluster wave marks, landmark/hazard beats, and boss-approach adjustments without changing the base run skeleton. Gameplay, sector transitions, debug overlay plan strings, and run summaries expose the active pacing context. Wave planning now consumes explicit ratios and cluster marks, while unit coverage pins route-conditioned length bands, relief intervals, formation-cluster spacing, boss approach handoff, pacing timelines, and encounter-pacing validation.
+
 ## Work order 069 - Enemy readability, accessibility, and stress smoke
 
 Goal: harden the richer enemy ecosystem before release closeout.

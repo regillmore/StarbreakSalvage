@@ -1646,6 +1646,22 @@ function validateEncounterPacing(errors: string[], sector: SectorDefinition): vo
     'spawnSpacing',
     pacing.spawnSpacing
   );
+  if (pacing.waveDistanceRatios) {
+    for (const [index, ratio] of pacing.waveDistanceRatios.entries()) {
+      validateUnitNumber(
+        errors,
+        `Sector ${sector.id} encounter pacing waveDistanceRatios ${index + 1}`,
+        'ratio',
+        ratio
+      );
+
+      const previousRatio = pacing.waveDistanceRatios[index - 1];
+
+      if (previousRatio !== undefined && ratio <= previousRatio) {
+        errors.push(`Sector ${sector.id} encounter pacing must order waveDistanceRatios`);
+      }
+    }
+  }
   validateUnitNumber(
     errors,
     `Sector ${sector.id} encounter pacing`,

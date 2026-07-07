@@ -610,7 +610,8 @@ export class GameApp {
           `Plan ${[
             debugState.sector.id,
             debugState.sector.backgroundId,
-            debugState.sector.encounterPacing
+            debugState.sector.encounterPacing,
+            debugState.sector.pacing
           ]
             .filter((part): part is string => Boolean(part))
             .join('/')}`

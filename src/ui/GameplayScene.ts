@@ -43,6 +43,15 @@ import {
   formatSectorConditionReadout,
   type SectorConditionPlan
 } from '../game/SectorConditions';
+import {
+  applySectorPacingToBossArena,
+  applySectorPacingToEncounterPacing,
+  applySectorPacingToFeatures,
+  applySectorPacingToScroll,
+  createSectorPacingPlan,
+  formatSectorPacingReadout,
+  type SectorPacingPlan
+} from '../game/SectorPacing';
 import { resolveSectorHazardCollisions } from '../game/SectorHazards';
 import {
   getActiveSectorHazards,
@@ -110,6 +119,8 @@ export class GameplayScene implements Scene {
   private combatState: CombatState | null = null;
   private wavePlan: WaveDirectorPlan | null = null;
   private scrollState: ScrollState | null = null;
+  private routeConditionedScroll: SectorScrollPlan | null = null;
+  private sectorPacingPlan: SectorPacingPlan | null = null;
   private conditionedScroll: SectorScrollPlan | null = null;
   private conditionedFeatures: SectorFeaturePlan | null = null;
   private conditionedArena: BossArenaPlan | null | undefined;
@@ -644,7 +655,11 @@ export class GameplayScene implements Scene {
         id: currentSector.sectorId,
         name: currentSector.sectorName,
         backgroundId: currentSector.background.id,
-        encounterPacing: currentSector.encounterPacing ? 'paced' : undefined
+        encounterPacing: currentSector.encounterPacing ? 'paced' : undefined,
+        pacing:
+          this.getSectorPacingPlan().arcKind === 'standard'
+            ? undefined
+            : this.getSectorPacingPlan().debugLabel
       }
     };
   }
@@ -829,6 +844,12 @@ export class GameplayScene implements Scene {
       throw new Error(`No sector exists at index ${this.sectorIndex}.`);
     }
 
+    const sectorPacing = this.getSectorPacingPlan();
+    const encounterPacing = applySectorPacingToEncounterPacing(
+      sector.encounterPacing,
+      sectorPacing
+    );
+
     this.wavePlan = createWaveDirectorPlan({
       seed: this.getCombatSeed(),
       objective: sector.objective,
@@ -836,11 +857,12 @@ export class GameplayScene implements Scene {
       preferredFactionId: sector.bossFactionId,
       availableFactionIds: this.run.availableFactionIds,
       scroll: this.getCurrentScrollPlan(),
-      pacing: sector.encounterPacing,
+      pacing: encounterPacing,
       sectorIndex: this.sectorIndex,
-      routePressure: this.hasEnemyVariantRoutePressure(),
+      routePressure: this.hasEnemyVariantRoutePressure() || sectorPacing.arcKind !== 'standard',
       challenge: this.hasEnemyVariantChallengePressure(),
-      eliteEncounter: this.hasEnemyVariantElitePressure()
+      eliteEncounter: this.hasEnemyVariantElitePressure(),
+      formationClusterWaves: sectorPacing.formationClusterWaveIndexes
     });
 
     return this.wavePlan;
@@ -857,34 +879,70 @@ export class GameplayScene implements Scene {
   }
 
   private getCurrentScrollPlan(): SectorScrollPlan {
-    this.conditionedScroll ??= applySectorConditionsToScroll(
-      this.getCurrentSector().scroll,
-      this.sectorConditions
+    this.conditionedScroll ??= applySectorPacingToScroll(
+      this.getRouteConditionedScrollPlan(),
+      this.getSectorPacingPlan()
     );
     return this.conditionedScroll;
   }
 
   private getCurrentFeatures(): SectorFeaturePlan {
-    this.conditionedFeatures ??= applySectorConditionsToFeatures(
-      this.getCurrentSector().features,
-      this.getCurrentSector().scroll,
-      this.getCurrentScrollPlan(),
-      this.sectorConditions
-    );
+    if (!this.conditionedFeatures) {
+      const routeConditionedFeatures = applySectorConditionsToFeatures(
+        this.getCurrentSector().features,
+        this.getCurrentSector().scroll,
+        this.getRouteConditionedScrollPlan(),
+        this.sectorConditions
+      );
+
+      this.conditionedFeatures = applySectorPacingToFeatures(
+        routeConditionedFeatures,
+        this.getCurrentScrollPlan(),
+        this.getSectorPacingPlan()
+      );
+    }
+
     return this.conditionedFeatures;
   }
 
   private getCurrentArenaPlan(): BossArenaPlan | null {
     if (this.conditionedArena === undefined) {
-      this.conditionedArena = applySectorConditionsToBossArena(
+      const routeConditionedScroll = this.getRouteConditionedScrollPlan();
+      const routeConditionedArena = applySectorConditionsToBossArena(
         this.getCurrentSector().arena,
         this.getCurrentSector().scroll,
-        this.getCurrentScrollPlan(),
+        routeConditionedScroll,
         this.sectorConditions
+      );
+
+      this.conditionedArena = applySectorPacingToBossArena(
+        routeConditionedArena,
+        routeConditionedScroll,
+        this.getCurrentScrollPlan(),
+        this.getSectorPacingPlan()
       );
     }
 
     return this.conditionedArena;
+  }
+
+  private getRouteConditionedScrollPlan(): SectorScrollPlan {
+    this.routeConditionedScroll ??= applySectorConditionsToScroll(
+      this.getCurrentSector().scroll,
+      this.sectorConditions
+    );
+    return this.routeConditionedScroll;
+  }
+
+  private getSectorPacingPlan(): SectorPacingPlan {
+    this.sectorPacingPlan ??= createSectorPacingPlan({
+      runSeed: this.run.seed,
+      sector: this.getCurrentSector(),
+      sectorIndex: this.sectorIndex,
+      conditions: this.sectorConditions,
+      scroll: this.getRouteConditionedScrollPlan()
+    });
+    return this.sectorPacingPlan;
   }
 
   private updateBossArena(distance: number, state: CombatState): BossArenaUpdate {
@@ -1066,8 +1124,16 @@ export class GameplayScene implements Scene {
     }
 
     if (state.stats.shotsFired === 0) {
-      if (this.sectorConditions.modifiers.length > 0) {
-        return formatSectorConditionReadout(this.sectorConditions);
+      const pacing = this.getSectorPacingPlan();
+      const sectorReadouts = [
+        this.sectorConditions.modifiers.length > 0
+          ? formatSectorConditionReadout(this.sectorConditions)
+          : null,
+        pacing.arcKind !== 'standard' ? formatSectorPacingReadout(pacing) : null
+      ].filter((readout): readout is string => readout !== null);
+
+      if (sectorReadouts.length > 0) {
+        return sectorReadouts.join(' | ');
       }
 
       return 'Hint Hold fire, move through gaps, and survive to the sector exit.';
