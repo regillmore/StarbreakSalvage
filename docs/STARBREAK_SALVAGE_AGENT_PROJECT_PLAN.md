@@ -576,6 +576,8 @@ Exit criteria:
 - Role metadata and validation needs are clear.
 - Existing deterministic behavior remains unchanged.
 
+Status: implemented by work order 061. The enemy role audit documents the current four faction-pattern classes, semantic wave labels, shared spawn/durability model, objective accounting paths, target Phase 7 roles, and soft-lock/readability/performance risks, with a pure helper and unit tests preserving the baseline.
+
 ### P7.2 - Role-Specific Behavior Expansion
 
 Scope:

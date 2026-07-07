@@ -128,7 +128,7 @@ Work order 060 closes Phase 6 as an item-catalog playtest candidate. Release evi
 
 Phase 7 enriches enemy behavior and longer-sector pacing. Add tests closest to the risk:
 
-- enemy role audit and metadata validation for role, pressure type, movement family, attack family, variant eligibility, formation eligibility, readability tier, and faction fit;
+- enemy role audit and metadata validation for role, pressure type, movement family, attack family, variant eligibility, formation eligibility, readability tier, and faction fit; work order 061 adds the first pure audit helper and documents the four current faction-pattern classes;
 - role-specific movement tests for fixed-step determinism, arena bounds, cleanup, frame-catchup stability, and no offscreen soft locks;
 - attack cadence and telegraph tests for deterministic timing, projectile budgets, high-contrast readability, and reduced-motion simplification;
 - upgraded variant selection snapshots for fresh saves, later sectors, faction routes, elite routes, challenge flags, and boss-adjacent pressure;
@@ -216,6 +216,7 @@ Phase 2 should extend this checklist as systems become real. In addition to the 
 - [ ] Enemy role, pressure, movement, attack, variant, formation, readability, and faction-fit metadata validate after Phase 7 schema work.
 - [ ] Formation definitions validate member roles, offsets, timing, bounds, and break/cleanup behavior.
 - [ ] Longer-sector pacing validates length bands, pressure/relief windows, formation marks, and boss approach references.
+- [x] Current enemy role audit helper covers faction-pattern classes, target roles, wave-label semantics, spawn model, and objective-risk notes before Phase 7 schema work.
 
 ## Manual browser smoke matrix
 

@@ -44,6 +44,8 @@ Exit criteria:
 - Content validation can catch missing or unsupported role metadata when implementation begins.
 - Phase 7 role targets are clear enough for focused implementation.
 
+Status: implemented by work order 061. The current baseline is documented in `docs/STARBREAK_SALVAGE_ENEMY_ROLE_AUDIT.md`: normal enemies are currently four faction-pattern classes, sector wave labels are semantic rather than behavioral, all normal enemies share radius and 2-3 base hull, normal attacks are not telegraphed, and objective accounting is safe for current kill paths but needs explicit policy before retreating, spawned, shielded, or formation enemies land. A pure helper in `src/content/enemyRoleAudit.ts` and unit coverage lock that audit without changing runtime behavior.
+
 ### P7.2 - Role-Specific Behavior Expansion
 
 Scope:

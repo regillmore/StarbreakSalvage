@@ -1014,6 +1014,8 @@ Acceptance criteria:
 - Objective-desync, readability, and performance risks are identified before implementation.
 - Deterministic behavior is unchanged except for docs or pure audit helpers.
 
+Status: implemented; `docs/STARBREAK_SALVAGE_ENEMY_ROLE_AUDIT.md` now records the current four faction-pattern enemy classes, 24 semantic wave labels, shared normal-enemy spawn/durability model, objective-accounting paths, role gaps, and Phase 7 target roles. `src/content/enemyRoleAudit.ts` adds a pure repeatable audit helper with unit coverage, leaving live combat behavior unchanged for work order 062 schema work.
+
 ## Work order 062 - Enemy schema, role validation, and debug counters
 
 Goal: make enemy roles data-driven and observable.

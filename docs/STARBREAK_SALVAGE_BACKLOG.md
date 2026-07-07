@@ -1239,6 +1239,10 @@ Acceptance:
 - Role gaps and risk areas are explicit before behavior changes.
 - Deterministic behavior remains unchanged.
 
+Status:
+
+- Implemented in work order 061. The enemy role audit documents the four current faction-pattern classes, wave-label semantics, shared spawn/durability model, objective accounting paths, target Phase 7 roles, and soft-lock/readability/performance risks before schema work begins.
+
 ### AQ2 - Role metadata schema
 
 Acceptance:
