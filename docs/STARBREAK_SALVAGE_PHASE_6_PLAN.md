@@ -4,7 +4,7 @@
 
 Phase 5 is concluded after work order 050 validation. It gave the run-to-run loop a clearer spine: banked scrap now buys persistent upgrade entries, the Upgrade Bay explains costs and states, purchased upgrades influence future seeded runs, sector completion has a short exit/toast beat, Lunar Surface adds a distinct low-altitude sector family, and player destruction now has bounded ship-breakup feedback before summary.
 
-The game is still item-light for the long-term roguelike goal. The current 30-item catalog proves the hook pipeline and archetype model, but future runs need more surprising build texture, more unlockable variety, and stronger item presentation without sacrificing deterministic generation or readable combat.
+The game is still early for the long-term roguelike goal. The current 60-item catalog now proves the hook pipeline, archetype model, and first Phase 6 expansion pass, but future runs still need stronger source weighting, unlockable variety, synergy identity, and item presentation without sacrificing deterministic generation or readable combat.
 
 ## Phase 6 Product Goal
 
@@ -21,10 +21,10 @@ Refresh, enrich, and expand the item catalog into a durable build-crafting found
 
 ## Current Gap
 
-- the item catalog has a solid 30-entry first pass, but the reward pool repeats too quickly for a long roguelike arc;
+- the item catalog has reached the first 60-item Phase 6 target, but reward source weighting still needs to make shop, vault, lunar, route, faction, and boss identity feel curated rather than globally shuffled;
 - several item effects are intentionally lightweight placeholders and need clearer live behavior or explicit "planned effect" treatment;
-- expanded hook surfaces now exist, but current item effects are still mostly centered on firing, projectile spawn, kills, hits, and pickups;
-- shop/vault/reward pools need stronger rarity, faction, sector, route, and unlock controls before the catalog grows;
+- expanded hook surfaces now have first live users across graze, special, bomb, sector, route, shop, reward, and boss phase events, but balance and proc readability need playtest data;
+- shop/vault/reward pools need stronger rarity, faction, sector, route, and unlock controls before the catalog grows much further;
 - item UI currently exposes names and text, but future scale will need better icons, tags, comparison, and build summary grouping;
 - unlocks widen item pools, but item discovery and collection progress are not yet a first-class surface.
 
@@ -63,6 +63,8 @@ Exit criteria:
 - The catalog reaches at least 60 total items in the first expansion pass.
 - Each new item has tags, rarity, pool placement, effect text, and either live behavior or explicit implementation status.
 - Existing starter balance remains friendly to fresh saves.
+
+Status: implemented by work order 054. The catalog now contains 60 original item definitions, with the first expansion batch filling all target family lanes and adding live behavior for the newly expanded hook surfaces. Starter rewards grew to 27 common/uncommon-forward entries without prototype or cursed items, combat grew to 51 entries, vault grew to 20 entries, and known shop/vault snapshots were updated for deterministic generation.
 
 ### P6.4 - Reward Pool And Gating Depth
 

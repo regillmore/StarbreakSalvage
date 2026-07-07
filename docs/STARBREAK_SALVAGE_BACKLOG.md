@@ -1090,7 +1090,7 @@ Acceptance:
 
 Status:
 
-- Implemented in work order 053. The new hook names are registered, typed, validated, and wired through combat, route, reward, and shop boundaries, with unit coverage for deterministic dispatch order and an application cap. Existing items keep their previous behavior because the new hook implementation lists are empty until expansion items opt in.
+- Implemented in work order 053, then populated by work order 054. The new hook names are registered, typed, validated, and wired through combat, route, reward, and shop boundaries, with unit coverage for deterministic dispatch order and an application cap. Expansion items now opt into graze, special, bomb, sector, route, shop, reward, and boss-phase hook surfaces.
 
 ### AM2 - Live effect conversion
 
@@ -1116,6 +1116,10 @@ Acceptance:
 - Catalog reaches at least 60 total items in the first Phase 6 expansion.
 - New items are original, validated, and assigned to source pools.
 - Fresh saves remain readable and playable.
+
+Status:
+
+- Implemented in work order 054. The catalog now has 60 original item definitions, all new entries carry validated metadata and live declared hook behavior, starter rewards remain common/uncommon-forward without prototype/cursed entries, and deterministic shop/vault snapshots were refreshed for the expanded pools.
 
 ### AN2 - Reward source pools
 

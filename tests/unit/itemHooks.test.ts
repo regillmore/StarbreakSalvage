@@ -259,4 +259,204 @@ describe('item synergies', () => {
       hitPayload.revengeProjectiles.some((projectile) => projectile.tags.includes('relic'))
     ).toBe(true);
   });
+
+  it('applies first expansion volley hooks for split, missile, and sidecar items', () => {
+    const instances: ItemInstance[] = [
+      { itemId: 'item_lane_splitter_chisel', acquisitionOrder: 0 },
+      { itemId: 'item_wake_missile_abacus', acquisitionOrder: 1 },
+      { itemId: 'item_sidecar_drone_bay', acquisitionOrder: 2 }
+    ];
+    const payload = applyItemHooks('onFire', instances, {
+      volleyIndex: 60,
+      projectiles: [baseProjectile]
+    });
+
+    expect(payload.projectiles.length).toBeGreaterThan(4);
+    expect(payload.projectiles.some((projectile) => projectile.tags.includes('split'))).toBe(true);
+    expect(payload.projectiles.some((projectile) => projectile.tags.includes('missile'))).toBe(
+      true
+    );
+    expect(payload.projectiles.some((projectile) => projectile.tags.includes('drone'))).toBe(true);
+  });
+
+  it('applies first expansion projectile spawn hooks', () => {
+    const instances: ItemInstance[] = [
+      { itemId: 'item_arc_window_invoice', acquisitionOrder: 0 },
+      { itemId: 'item_signal_clone_stamp', acquisitionOrder: 1 },
+      { itemId: 'item_heat_signature_loop', acquisitionOrder: 2 }
+    ];
+    const payload = applyItemHooks('onProjectileSpawn', instances, {
+      projectile: {
+        ...baseProjectile,
+        tags: ['plasma', 'drone', 'heat'],
+        damage: 1,
+        ttl: 1
+      }
+    });
+
+    expect(payload.projectile.tags).toContain('arc');
+    expect(payload.projectile.tags).toContain('heat');
+    expect(payload.projectile.damage).toBeGreaterThan(1);
+    expect(payload.projectile.ttl).toBeGreaterThan(1);
+  });
+
+  it('applies first expansion graze, special, and bomb hooks', () => {
+    const grazePayload = applyItemHooks(
+      'onGraze',
+      [
+        { itemId: 'item_near_miss_tachometer', acquisitionOrder: 0 },
+        { itemId: 'item_phase_wake_suture', acquisitionOrder: 1 }
+      ],
+      {
+        projectileTags: ['phase'],
+        specialChargeGain: 0.1,
+        bonusSalvage: 0,
+        fireRateMultiplier: 1,
+        effectRadius: 34
+      }
+    );
+    const specialPayload = applyItemHooks(
+      'onSpecialUsed',
+      [{ itemId: 'item_prototype_vent_script', acquisitionOrder: 0 }],
+      {
+        projectiles: [baseProjectile],
+        activeSeconds: 1,
+        cooldownSeconds: 2,
+        fireRateMultiplier: 1
+      }
+    );
+    const bombPayload = applyItemHooks(
+      'onBombUsed',
+      [{ itemId: 'item_excess_warhead_clause', acquisitionOrder: 0 }],
+      {
+        damage: 5,
+        bossDamageRatio: 0.05,
+        invulnerabilitySeconds: 0.8,
+        cooldownSeconds: 8,
+        effectRadius: 120,
+        cancelledProjectiles: 3
+      }
+    );
+
+    expect(grazePayload.specialChargeGain).toBeGreaterThan(0.1);
+    expect(grazePayload.fireRateMultiplier).toBeLessThan(1);
+    expect(grazePayload.effectRadius).toBeGreaterThan(34);
+    expect(specialPayload.projectiles).toHaveLength(2);
+    expect(specialPayload.cooldownSeconds).toBeLessThan(2);
+    expect(specialPayload.fireRateMultiplier).toBeLessThan(1);
+    expect(bombPayload.damage).toBeGreaterThan(5);
+    expect(bombPayload.bossDamageRatio).toBeGreaterThan(0.05);
+    expect(bombPayload.effectRadius).toBeGreaterThan(120);
+  });
+
+  it('applies first expansion sector, route, shop, and reward hooks', () => {
+    const sectorPayload = applyItemHooks(
+      'onSectorStart',
+      [
+        { itemId: 'item_crater_shadow_lens', acquisitionOrder: 0 },
+        { itemId: 'item_surface_beacon_drone', acquisitionOrder: 1 },
+        { itemId: 'item_exit_toll_transponder', acquisitionOrder: 2 }
+      ],
+      {
+        sectorIndex: 2,
+        sectorId: 'sector_lunar_surface',
+        creditsBonus: 0,
+        salvageBonus: 0,
+        specialChargeBonus: 0,
+        fireRateMultiplier: 1
+      }
+    );
+    const routePayload = applyItemHooks(
+      'onRouteChosen',
+      [
+        { itemId: 'item_curse_interest_bond', acquisitionOrder: 0 },
+        { itemId: 'item_route_ledger_spool', acquisitionOrder: 1 }
+      ],
+      {
+        routeKind: 'vault',
+        sectorIndex: 3,
+        creditsDelta: 0,
+        salvageDelta: 0,
+        hullPatchDelta: 0,
+        curseDelta: 0,
+        relicDelta: 0,
+        rewardChoiceBonus: 0,
+        rewardCreditBonus: 0,
+        rewardBiasTags: [],
+        rewardPoolIdOverride: null,
+        shopDiscount: 0,
+        shopStockBonus: 0,
+        shopBiasTags: []
+      }
+    );
+    const shopPayload = applyItemHooks(
+      'onShopEntered',
+      [
+        { itemId: 'item_coupon_cascade_fuse', acquisitionOrder: 0 },
+        { itemId: 'item_convoy_receipt_printer', acquisitionOrder: 1 }
+      ],
+      {
+        sectorIndex: 2,
+        rerollCount: 1,
+        itemCount: 4,
+        priceDiscount: 0,
+        biasTags: []
+      }
+    );
+    const rewardPayload = applyItemHooks(
+      'onRewardGenerated',
+      [
+        { itemId: 'item_relic_ash_compass', acquisitionOrder: 0 },
+        { itemId: 'item_mining_laser_transit', acquisitionOrder: 1 }
+      ],
+      {
+        routeKind: 'vault',
+        sectorIndex: 3,
+        poolId: 'vault',
+        choiceCount: 4,
+        biasTags: []
+      }
+    );
+
+    expect(sectorPayload.creditsBonus).toBe(2);
+    expect(sectorPayload.salvageBonus).toBe(1);
+    expect(sectorPayload.specialChargeBonus).toBeGreaterThan(0.1);
+    expect(routePayload.salvageDelta).toBe(2);
+    expect(routePayload.curseDelta).toBe(1);
+    expect(routePayload.rewardChoiceBonus).toBe(1);
+    expect(routePayload.rewardCreditBonus).toBe(1);
+    expect(shopPayload.itemCount).toBe(5);
+    expect(shopPayload.priceDiscount).toBe(1);
+    expect(shopPayload.biasTags).toContain('drone');
+    expect(rewardPayload.choiceCount).toBe(5);
+    expect(rewardPayload.biasTags).toEqual(['relic', 'phase', 'laser', 'plasma']);
+  });
+
+  it('applies first expansion boss phase pressure hooks', () => {
+    const payload = applyItemHooks(
+      'onBossPhaseChanged',
+      [
+        { itemId: 'item_oathbound_deflector', acquisitionOrder: 0 },
+        { itemId: 'item_phase_breaker_subpoena', acquisitionOrder: 1 },
+        { itemId: 'item_warning_siren_lattice', acquisitionOrder: 2 },
+        { itemId: 'item_capital_wound_ledger', acquisitionOrder: 3 },
+        { itemId: 'item_telegraph_rewrite_quill', acquisitionOrder: 4 }
+      ],
+      {
+        bossId: 'boss_auditor_drone_xl',
+        previousPhaseIndex: 1,
+        phaseIndex: 2,
+        phaseLabel: 'Breach',
+        attackCooldownSeconds: 1,
+        telegraphSeconds: 0.8,
+        specialChargeGain: 0,
+        clearEnemyProjectiles: false
+      }
+    );
+
+    expect(payload.attackCooldownSeconds).toBeGreaterThan(1.3);
+    expect(payload.telegraphSeconds).toBeGreaterThan(1);
+    expect(payload.specialChargeGain).toBeGreaterThan(0.35);
+    expect(payload.clearEnemyProjectiles).toBe(true);
+  });
 });

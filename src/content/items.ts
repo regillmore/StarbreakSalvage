@@ -134,7 +134,37 @@ export type ItemId =
   | 'item_relic_index_codex'
   | 'item_arc_welder_drone'
   | 'item_plasma_bloom_filter'
-  | 'item_salvage_dividend_chip';
+  | 'item_salvage_dividend_chip'
+  | 'item_lane_splitter_chisel'
+  | 'item_arc_window_invoice'
+  | 'item_wake_missile_abacus'
+  | 'item_excess_warhead_clause'
+  | 'item_sidecar_drone_bay'
+  | 'item_signal_clone_stamp'
+  | 'item_reactive_plating_grid'
+  | 'item_oathbound_deflector'
+  | 'item_coupon_cascade_fuse'
+  | 'item_market_echo_locator'
+  | 'item_relic_ash_compass'
+  | 'item_curse_interest_bond'
+  | 'item_near_miss_tachometer'
+  | 'item_phase_wake_suture'
+  | 'item_heat_signature_loop'
+  | 'item_prototype_vent_script'
+  | 'item_crater_shadow_lens'
+  | 'item_regolith_scoop_array'
+  | 'item_surface_beacon_drone'
+  | 'item_mining_laser_transit'
+  | 'item_low_orbit_ore_scrip'
+  | 'item_route_ledger_spool'
+  | 'item_ambush_insurance_stamp'
+  | 'item_exit_toll_transponder'
+  | 'item_convoy_receipt_printer'
+  | 'item_phase_breaker_subpoena'
+  | 'item_warning_siren_lattice'
+  | 'item_capital_wound_ledger'
+  | 'item_boss_bounty_stamp'
+  | 'item_telegraph_rewrite_quill';
 
 export interface ItemDefinition {
   readonly id: ItemId;
@@ -405,7 +435,8 @@ export const ITEMS: readonly ItemDefinition[] = [
       sources: ['combat', 'vault'],
       unlockTier: 'baseline',
       implementationStatus: 'bridge',
-      implementationNote: 'Adds phase shots now; a dedicated graze hook should carry more of the identity.',
+      implementationNote:
+        'Adds phase shots now; a dedicated graze hook should carry more of the identity.',
       stacking: 'unique',
       uiTags: ['phase']
     }
@@ -733,6 +764,516 @@ export const ITEMS: readonly ItemDefinition[] = [
       stacking: 'unique',
       uiTags: ['route', 'salvage']
     }
+  },
+  {
+    id: 'item_lane_splitter_chisel',
+    name: 'Lane Splitter Chisel',
+    rarity: 'uncommon',
+    tags: ['split', 'laser'],
+    hooks: ['onFire'],
+    effect: 'every sixth volley carves two narrow side-lane laser cuts',
+    weight: 8,
+    metadata: {
+      family: 'laser-split',
+      sources: ['starter', 'combat'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['laser', 'split']
+    }
+  },
+  {
+    id: 'item_arc_window_invoice',
+    name: 'Arc Window Invoice',
+    rarity: 'rare',
+    tags: ['arc', 'plasma'],
+    hooks: ['onProjectileSpawn'],
+    effect: 'arc and plasma shots gain a brighter invoice charge',
+    weight: 6,
+    metadata: {
+      family: 'laser-split',
+      sources: ['combat', 'vault'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['arc', 'plasma']
+    }
+  },
+  {
+    id: 'item_wake_missile_abacus',
+    name: 'Wake Missile Abacus',
+    rarity: 'common',
+    tags: ['missile'],
+    hooks: ['onFire'],
+    effect: 'every fifth volley adds a counted wake missile',
+    weight: 11,
+    metadata: {
+      family: 'missile-overkill',
+      sources: ['starter', 'combat'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['missile']
+    }
+  },
+  {
+    id: 'item_excess_warhead_clause',
+    name: 'Excess Warhead Clause',
+    rarity: 'rare',
+    tags: ['overkill', 'missile', 'bomb'],
+    hooks: ['onEnemyKilled', 'onBombUsed'],
+    effect: 'heavy overkill and bombs push wider blast pressure',
+    weight: 6,
+    metadata: {
+      family: 'missile-overkill',
+      sources: ['combat', 'vault'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['overkill', 'bomb']
+    }
+  },
+  {
+    id: 'item_sidecar_drone_bay',
+    name: 'Sidecar Drone Bay',
+    rarity: 'common',
+    tags: ['drone'],
+    hooks: ['onFire'],
+    effect: 'every fourth volley dispatches a sidecar drone shot',
+    weight: 11,
+    metadata: {
+      family: 'drone-copy',
+      sources: ['starter', 'combat'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['drone']
+    }
+  },
+  {
+    id: 'item_signal_clone_stamp',
+    name: 'Signal Clone Stamp',
+    rarity: 'rare',
+    tags: ['drone', 'arc'],
+    hooks: ['onProjectileSpawn'],
+    effect: 'drone shots carry a stamped arc signature',
+    weight: 6,
+    metadata: {
+      family: 'drone-copy',
+      sources: ['combat'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['drone', 'arc']
+    }
+  },
+  {
+    id: 'item_reactive_plating_grid',
+    name: 'Reactive Plating Grid',
+    rarity: 'common',
+    tags: ['armor', 'shield'],
+    hooks: ['onPlayerHit'],
+    effect: 'hull plating spits two small shield shards when hit',
+    weight: 11,
+    metadata: {
+      family: 'shield-revenge',
+      sources: ['starter', 'combat'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['armor', 'shield']
+    }
+  },
+  {
+    id: 'item_oathbound_deflector',
+    name: 'Oathbound Deflector',
+    rarity: 'uncommon',
+    tags: ['shield', 'revenge'],
+    hooks: ['onBossPhaseChanged'],
+    effect: 'boss phase breaks feed the deflector a little special charge',
+    weight: 7,
+    metadata: {
+      family: 'shield-revenge',
+      sources: ['combat', 'boss'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['shield', 'boss']
+    }
+  },
+  {
+    id: 'item_coupon_cascade_fuse',
+    name: 'Coupon Cascade Fuse',
+    rarity: 'common',
+    tags: ['credit'],
+    hooks: ['onShopEntered'],
+    effect: 'shops trim prices by one credit while this fuse is installed',
+    weight: 11,
+    metadata: {
+      family: 'credit-shop',
+      sources: ['starter', 'combat', 'shop'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['credit', 'shop']
+    }
+  },
+  {
+    id: 'item_market_echo_locator',
+    name: 'Market Echo Locator',
+    rarity: 'uncommon',
+    tags: ['credit', 'magnet'],
+    hooks: ['onRewardGenerated'],
+    effect: 'shop and repair routes echo one extra reward choice',
+    weight: 8,
+    metadata: {
+      family: 'credit-shop',
+      sources: ['combat', 'shop'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['credit', 'shop']
+    }
+  },
+  {
+    id: 'item_relic_ash_compass',
+    name: 'Relic Ash Compass',
+    rarity: 'rare',
+    tags: ['relic', 'phase'],
+    hooks: ['onRewardGenerated'],
+    effect: 'vault rewards gain a relic-biased extra reading',
+    weight: 5,
+    metadata: {
+      family: 'curse-relic',
+      sources: ['vault'],
+      unlockTier: 'advanced',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['relic', 'vault']
+    }
+  },
+  {
+    id: 'item_curse_interest_bond',
+    name: 'Curse Interest Bond',
+    rarity: 'cursed',
+    tags: ['curse', 'credit'],
+    hooks: ['onRouteChosen'],
+    effect: 'vault and glitch routes pay more salvage but accrue more curse',
+    weight: 4,
+    metadata: {
+      family: 'curse-relic',
+      sources: ['vault', 'route'],
+      unlockTier: 'advanced',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['curse', 'route']
+    }
+  },
+  {
+    id: 'item_near_miss_tachometer',
+    name: 'Near-Miss Tachometer',
+    rarity: 'common',
+    tags: ['phase'],
+    hooks: ['onGraze'],
+    effect: 'grazes build a little extra special charge',
+    weight: 11,
+    metadata: {
+      family: 'phase-graze',
+      sources: ['starter', 'combat'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['phase']
+    }
+  },
+  {
+    id: 'item_phase_wake_suture',
+    name: 'Phase Wake Suture',
+    rarity: 'uncommon',
+    tags: ['phase', 'ricochet'],
+    hooks: ['onGraze'],
+    effect: 'phase grazes briefly sharpen the firing cadence',
+    weight: 7,
+    metadata: {
+      family: 'phase-graze',
+      sources: ['combat', 'vault'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['phase']
+    }
+  },
+  {
+    id: 'item_heat_signature_loop',
+    name: 'Heat Signature Loop',
+    rarity: 'uncommon',
+    tags: ['heat', 'plasma'],
+    hooks: ['onProjectileSpawn'],
+    effect: 'heat and plasma shots keep a little more signature energy',
+    weight: 8,
+    metadata: {
+      family: 'heat-prototype',
+      sources: ['combat'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['heat', 'plasma']
+    }
+  },
+  {
+    id: 'item_prototype_vent_script',
+    name: 'Prototype Vent Script',
+    rarity: 'rare',
+    tags: ['heat'],
+    hooks: ['onSpecialUsed'],
+    effect: 'special bursts vent longer and add one prototype heat shot',
+    weight: 6,
+    metadata: {
+      family: 'heat-prototype',
+      sources: ['combat', 'vault'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['heat', 'prototype']
+    }
+  },
+  {
+    id: 'item_crater_shadow_lens',
+    name: 'Crater Shadow Lens',
+    rarity: 'common',
+    tags: ['phase', 'plasma'],
+    hooks: ['onSectorStart'],
+    effect: 'lunar sector starts grant a small phase charge reading',
+    weight: 10,
+    metadata: {
+      family: 'lunar-surface',
+      sources: ['starter', 'combat', 'lunar'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['lunar', 'phase']
+    }
+  },
+  {
+    id: 'item_regolith_scoop_array',
+    name: 'Regolith Scoop Array',
+    rarity: 'uncommon',
+    tags: ['scrap', 'magnet'],
+    hooks: ['onPickupCollected'],
+    effect: 'salvage pickups briefly tighten the firing cadence',
+    weight: 8,
+    metadata: {
+      family: 'lunar-surface',
+      sources: ['combat', 'lunar'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['lunar', 'salvage']
+    }
+  },
+  {
+    id: 'item_surface_beacon_drone',
+    name: 'Surface Beacon Drone',
+    rarity: 'rare',
+    tags: ['drone', 'phase'],
+    hooks: ['onSectorStart'],
+    effect: 'lunar entries start with a beacon salvage ping',
+    weight: 5,
+    metadata: {
+      family: 'lunar-surface',
+      sources: ['combat', 'lunar'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['lunar', 'drone']
+    }
+  },
+  {
+    id: 'item_mining_laser_transit',
+    name: 'Mining Laser Transit',
+    rarity: 'rare',
+    tags: ['laser', 'plasma'],
+    hooks: ['onRewardGenerated'],
+    effect: 'lunar and vault rewards bias toward laser salvage tools',
+    weight: 5,
+    metadata: {
+      family: 'lunar-surface',
+      sources: ['combat', 'vault', 'lunar'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['lunar', 'laser']
+    }
+  },
+  {
+    id: 'item_low_orbit_ore_scrip',
+    name: 'Low-Orbit Ore Scrip',
+    rarity: 'common',
+    tags: ['credit', 'scrap'],
+    hooks: ['onRouteChosen'],
+    effect: 'low-risk route choices refund a small ore credit',
+    weight: 10,
+    metadata: {
+      family: 'lunar-surface',
+      sources: ['starter', 'combat', 'lunar', 'route'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['lunar', 'credit']
+    }
+  },
+  {
+    id: 'item_route_ledger_spool',
+    name: 'Route Ledger Spool',
+    rarity: 'common',
+    tags: ['credit', 'scrap'],
+    hooks: ['onRouteChosen'],
+    effect: 'route rewards carry one extra credit in the ledger',
+    weight: 11,
+    metadata: {
+      family: 'route-economy',
+      sources: ['starter', 'combat', 'route'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['route', 'credit']
+    }
+  },
+  {
+    id: 'item_ambush_insurance_stamp',
+    name: 'Ambush Insurance Stamp',
+    rarity: 'uncommon',
+    tags: ['armor', 'credit'],
+    hooks: ['onRouteChosen'],
+    effect: 'elite and ambush routes pay a small insurance salvage claim',
+    weight: 7,
+    metadata: {
+      family: 'route-economy',
+      sources: ['combat', 'route', 'elite', 'faction'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['route', 'armor']
+    }
+  },
+  {
+    id: 'item_exit_toll_transponder',
+    name: 'Exit Toll Transponder',
+    rarity: 'rare',
+    tags: ['credit', 'scrap'],
+    hooks: ['onSectorStart'],
+    effect: 'later sectors start with a modest toll refund',
+    weight: 6,
+    metadata: {
+      family: 'route-economy',
+      sources: ['combat', 'route'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['route', 'credit']
+    }
+  },
+  {
+    id: 'item_convoy_receipt_printer',
+    name: 'Convoy Receipt Printer',
+    rarity: 'uncommon',
+    tags: ['credit', 'drone'],
+    hooks: ['onShopEntered'],
+    effect: 'rerolled shops print one extra convoy receipt choice',
+    weight: 7,
+    metadata: {
+      family: 'route-economy',
+      sources: ['combat', 'route', 'shop'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['route', 'shop']
+    }
+  },
+  {
+    id: 'item_phase_breaker_subpoena',
+    name: 'Phase Breaker Subpoena',
+    rarity: 'rare',
+    tags: ['phase', 'overkill'],
+    hooks: ['onBossPhaseChanged'],
+    effect: 'late boss phases clear pressure and feed special charge',
+    weight: 5,
+    metadata: {
+      family: 'boss-pressure',
+      sources: ['combat', 'boss'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['boss', 'phase']
+    }
+  },
+  {
+    id: 'item_warning_siren_lattice',
+    name: 'Warning Siren Lattice',
+    rarity: 'common',
+    tags: ['shield', 'phase'],
+    hooks: ['onBossPhaseChanged'],
+    effect: 'boss phase warnings linger longer and slow the next volley',
+    weight: 10,
+    metadata: {
+      family: 'boss-pressure',
+      sources: ['starter', 'combat', 'boss'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['boss', 'shield']
+    }
+  },
+  {
+    id: 'item_capital_wound_ledger',
+    name: 'Capital Wound Ledger',
+    rarity: 'prototype',
+    tags: ['overkill', 'credit'],
+    hooks: ['onBossPhaseChanged'],
+    effect: 'boss phase wounds stall attacks and spike special charge',
+    weight: 4,
+    metadata: {
+      family: 'boss-pressure',
+      sources: ['combat', 'vault', 'boss'],
+      unlockTier: 'advanced',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['boss', 'overkill']
+    }
+  },
+  {
+    id: 'item_boss_bounty_stamp',
+    name: 'Boss Bounty Stamp',
+    rarity: 'uncommon',
+    tags: ['credit', 'scrap'],
+    hooks: ['onEnemyKilled'],
+    effect: 'high-pressure kills stamp a little extra salvage',
+    weight: 7,
+    metadata: {
+      family: 'boss-pressure',
+      sources: ['combat', 'boss', 'elite'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['boss', 'salvage']
+    }
+  },
+  {
+    id: 'item_telegraph_rewrite_quill',
+    name: 'Telegraph Rewrite Quill',
+    rarity: 'rare',
+    tags: ['ricochet', 'phase'],
+    hooks: ['onBossPhaseChanged'],
+    effect: 'boss phase scripts gain slower, clearer warning timing',
+    weight: 5,
+    metadata: {
+      family: 'boss-pressure',
+      sources: ['combat', 'vault', 'boss'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['boss', 'phase']
+    }
   }
 ];
 
@@ -756,7 +1297,17 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_credit_reroute_fuse',
       'item_magnetized_tithe_box',
       'item_arc_welder_drone',
-      'item_salvage_dividend_chip'
+      'item_salvage_dividend_chip',
+      'item_lane_splitter_chisel',
+      'item_wake_missile_abacus',
+      'item_sidecar_drone_bay',
+      'item_reactive_plating_grid',
+      'item_coupon_cascade_fuse',
+      'item_near_miss_tachometer',
+      'item_crater_shadow_lens',
+      'item_low_orbit_ore_scrip',
+      'item_route_ledger_spool',
+      'item_warning_siren_lattice'
     ]
   },
   {
@@ -784,7 +1335,35 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_overheat_oracle',
       'item_arc_welder_drone',
       'item_plasma_bloom_filter',
-      'item_salvage_dividend_chip'
+      'item_salvage_dividend_chip',
+      'item_lane_splitter_chisel',
+      'item_arc_window_invoice',
+      'item_wake_missile_abacus',
+      'item_excess_warhead_clause',
+      'item_sidecar_drone_bay',
+      'item_signal_clone_stamp',
+      'item_reactive_plating_grid',
+      'item_oathbound_deflector',
+      'item_coupon_cascade_fuse',
+      'item_market_echo_locator',
+      'item_near_miss_tachometer',
+      'item_phase_wake_suture',
+      'item_heat_signature_loop',
+      'item_prototype_vent_script',
+      'item_crater_shadow_lens',
+      'item_regolith_scoop_array',
+      'item_surface_beacon_drone',
+      'item_mining_laser_transit',
+      'item_low_orbit_ore_scrip',
+      'item_route_ledger_spool',
+      'item_ambush_insurance_stamp',
+      'item_exit_toll_transponder',
+      'item_convoy_receipt_printer',
+      'item_phase_breaker_subpoena',
+      'item_warning_siren_lattice',
+      'item_capital_wound_ledger',
+      'item_boss_bounty_stamp',
+      'item_telegraph_rewrite_quill'
     ]
   },
   {
@@ -800,7 +1379,16 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_curse_eater_gasket',
       'item_overheat_oracle',
       'item_relic_index_codex',
-      'item_plasma_bloom_filter'
+      'item_plasma_bloom_filter',
+      'item_arc_window_invoice',
+      'item_excess_warhead_clause',
+      'item_relic_ash_compass',
+      'item_curse_interest_bond',
+      'item_phase_wake_suture',
+      'item_prototype_vent_script',
+      'item_mining_laser_transit',
+      'item_capital_wound_ledger',
+      'item_telegraph_rewrite_quill'
     ]
   }
 ];

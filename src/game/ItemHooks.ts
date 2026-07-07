@@ -164,14 +164,20 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_mirror_turret',
     'item_missile_splinter_warrant',
     'item_overheat_oracle',
-    'item_arc_welder_drone'
+    'item_arc_welder_drone',
+    'item_lane_splitter_chisel',
+    'item_wake_missile_abacus',
+    'item_sidecar_drone_bay'
   ],
   onProjectileSpawn: [
     'item_chain_arc_capacitor',
     'item_ricochet_license',
     'item_plasma_lens_array',
     'item_phase_anchor_spool',
-    'item_plasma_bloom_filter'
+    'item_plasma_bloom_filter',
+    'item_arc_window_invoice',
+    'item_signal_clone_stamp',
+    'item_heat_signature_loop'
   ],
   onEnemyKilled: [
     'item_chain_arc_capacitor',
@@ -182,29 +188,52 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_scrap_saints_relay',
     'item_bombardier_tithe',
     'item_relic_index_codex',
-    'item_salvage_dividend_chip'
+    'item_salvage_dividend_chip',
+    'item_excess_warhead_clause',
+    'item_boss_bounty_stamp'
   ],
   onPlayerHit: [
     'item_shield_dynamo',
     'item_cursed_hull_plate',
     'item_revenge_beam',
     'item_shield_revenge_contract',
-    'item_curse_eater_gasket'
+    'item_curse_eater_gasket',
+    'item_reactive_plating_grid'
   ],
   onPickupCollected: [
     'item_coin_operated_cannon',
     'item_salvage_magnet',
     'item_credit_reroute_fuse',
-    'item_magnetized_tithe_box'
+    'item_magnetized_tithe_box',
+    'item_regolith_scoop_array'
   ],
-  onGraze: [],
-  onSpecialUsed: [],
-  onBombUsed: [],
-  onSectorStart: [],
-  onRouteChosen: [],
-  onShopEntered: [],
-  onRewardGenerated: [],
-  onBossPhaseChanged: []
+  onGraze: ['item_near_miss_tachometer', 'item_phase_wake_suture'],
+  onSpecialUsed: ['item_prototype_vent_script'],
+  onBombUsed: ['item_excess_warhead_clause'],
+  onSectorStart: [
+    'item_crater_shadow_lens',
+    'item_surface_beacon_drone',
+    'item_exit_toll_transponder'
+  ],
+  onRouteChosen: [
+    'item_curse_interest_bond',
+    'item_low_orbit_ore_scrip',
+    'item_route_ledger_spool',
+    'item_ambush_insurance_stamp'
+  ],
+  onShopEntered: ['item_coupon_cascade_fuse', 'item_convoy_receipt_printer'],
+  onRewardGenerated: [
+    'item_market_echo_locator',
+    'item_relic_ash_compass',
+    'item_mining_laser_transit'
+  ],
+  onBossPhaseChanged: [
+    'item_oathbound_deflector',
+    'item_phase_breaker_subpoena',
+    'item_warning_siren_lattice',
+    'item_capital_wound_ledger',
+    'item_telegraph_rewrite_quill'
+  ]
 };
 
 export function applyItemHooks<THook extends ItemHookName>(
@@ -399,6 +428,44 @@ function applyOnProjectileSpawn(
         damage: payload.projectile.damage * 1.1,
         radius: Math.max(payload.projectile.radius + 1, payload.projectile.radius * 1.14),
         ttl: payload.projectile.ttl + 0.1
+      }
+    };
+  }
+
+  if (
+    itemId === 'item_arc_window_invoice' &&
+    hasAnyTag(payload.projectile.tags, ['arc', 'plasma'])
+  ) {
+    return {
+      projectile: {
+        ...payload.projectile,
+        damage: payload.projectile.damage * 1.06,
+        ttl: payload.projectile.ttl + 0.12,
+        tags: addTags(payload.projectile.tags, ['arc'])
+      }
+    };
+  }
+
+  if (itemId === 'item_signal_clone_stamp' && hasAnyTag(payload.projectile.tags, ['drone'])) {
+    return {
+      projectile: {
+        ...payload.projectile,
+        damage: payload.projectile.damage * 1.08,
+        tags: addTags(payload.projectile.tags, ['arc'])
+      }
+    };
+  }
+
+  if (
+    itemId === 'item_heat_signature_loop' &&
+    hasAnyTag(payload.projectile.tags, ['heat', 'plasma'])
+  ) {
+    return {
+      projectile: {
+        ...payload.projectile,
+        damage: payload.projectile.damage * 1.05,
+        ttl: payload.projectile.ttl + 0.18,
+        tags: addTags(payload.projectile.tags, ['heat'])
       }
     };
   }
@@ -612,6 +679,79 @@ function applyOnFire(
     };
   }
 
+  if (itemId === 'item_lane_splitter_chisel' && payload.volleyIndex % 6 === 0) {
+    const seedProjectile = payload.projectiles[0];
+
+    if (!seedProjectile || seedProjectile.procDepth > 0) {
+      return payload;
+    }
+
+    return {
+      ...payload,
+      projectiles: [
+        ...payload.projectiles,
+        ...[-64, 64].map((vx) => ({
+          ...seedProjectile,
+          vx: seedProjectile.vx + vx,
+          damage: Math.max(0.35, seedProjectile.damage * 0.48),
+          radius: Math.max(3, seedProjectile.radius * 0.72),
+          tags: addTags(seedProjectile.tags, ['split', 'laser']),
+          procDepth: seedProjectile.procDepth + 1
+        }))
+      ]
+    };
+  }
+
+  if (itemId === 'item_wake_missile_abacus' && payload.volleyIndex % 5 === 0) {
+    const seedProjectile = payload.projectiles[0];
+
+    if (!seedProjectile) {
+      return payload;
+    }
+
+    return {
+      ...payload,
+      projectiles: [
+        ...payload.projectiles,
+        {
+          ...seedProjectile,
+          vy: seedProjectile.vy * 0.84,
+          damage: Math.max(0.45, seedProjectile.damage * 0.82),
+          radius: seedProjectile.radius + 1,
+          ttl: seedProjectile.ttl + 0.3,
+          tags: addTags(seedProjectile.tags, ['missile']),
+          procDepth: seedProjectile.procDepth + 1
+        }
+      ]
+    };
+  }
+
+  if (itemId === 'item_sidecar_drone_bay' && payload.volleyIndex % 4 === 0) {
+    const seedProjectile = payload.projectiles[0];
+
+    if (!seedProjectile) {
+      return payload;
+    }
+
+    const side = payload.volleyIndex % 8 === 0 ? -1 : 1;
+
+    return {
+      ...payload,
+      projectiles: [
+        ...payload.projectiles,
+        {
+          ...seedProjectile,
+          x: seedProjectile.x + side * 30,
+          vx: seedProjectile.vx + side * 42,
+          damage: Math.max(0.35, seedProjectile.damage * 0.45),
+          radius: Math.max(3, seedProjectile.radius * 0.72),
+          tags: addTags(seedProjectile.tags, ['drone']),
+          procDepth: seedProjectile.procDepth + 1
+        }
+      ]
+    };
+  }
+
   return payload;
 }
 
@@ -700,6 +840,27 @@ function applyOnEnemyKilled(
   }
 
   if (itemId === 'item_salvage_dividend_chip') {
+    return {
+      ...payload,
+      bonusSalvage: payload.bonusSalvage + 1
+    };
+  }
+
+  if (
+    itemId === 'item_excess_warhead_clause' &&
+    (payload.overkillDamage >= 2 || hasAnyTag(payload.projectileTags, ['missile', 'overkill']))
+  ) {
+    return {
+      ...payload,
+      bonusSalvage: payload.bonusSalvage + (payload.overkillDamage >= 2 ? 1 : 0),
+      blastDamage: payload.blastDamage + 0.75
+    };
+  }
+
+  if (
+    itemId === 'item_boss_bounty_stamp' &&
+    hasAnyTag(payload.projectileTags, ['phase', 'overkill', 'missile'])
+  ) {
     return {
       ...payload,
       bonusSalvage: payload.bonusSalvage + 1
@@ -819,6 +980,26 @@ function applyOnPlayerHit(
     };
   }
 
+  if (itemId === 'item_reactive_plating_grid') {
+    return {
+      ...payload,
+      revengeProjectiles: [
+        ...payload.revengeProjectiles,
+        ...[-52, 52].map((vx) => ({
+          x: 0,
+          y: -2,
+          vx,
+          vy: -560,
+          radius: 4,
+          damage: Math.max(0.4, payload.damage * 0.35),
+          ttl: 0.7,
+          tags: ['shield', 'armor'] as const,
+          procDepth: 1
+        }))
+      ]
+    };
+  }
+
   return payload;
 }
 
@@ -854,44 +1035,260 @@ function applyOnPickupCollected(
     };
   }
 
+  if (itemId === 'item_regolith_scoop_array' && payload.kind === 'salvage') {
+    return {
+      ...payload,
+      fireRateMultiplier: payload.fireRateMultiplier * 0.86
+    };
+  }
+
   return payload;
 }
 
-function applyOnGraze(_itemId: ItemId, payload: GrazePayload): GrazePayload {
+function applyOnGraze(itemId: ItemId, payload: GrazePayload): GrazePayload {
+  if (itemId === 'item_near_miss_tachometer') {
+    return {
+      ...payload,
+      specialChargeGain: payload.specialChargeGain + 0.04,
+      effectRadius: payload.effectRadius + 6
+    };
+  }
+
+  if (itemId === 'item_phase_wake_suture' && hasAnyTag(payload.projectileTags, ['phase'])) {
+    return {
+      ...payload,
+      specialChargeGain: payload.specialChargeGain + 0.025,
+      fireRateMultiplier: payload.fireRateMultiplier * 0.9,
+      effectRadius: payload.effectRadius + 10
+    };
+  }
+
   return payload;
 }
 
-function applyOnSpecialUsed(_itemId: ItemId, payload: SpecialUsedPayload): SpecialUsedPayload {
+function applyOnSpecialUsed(itemId: ItemId, payload: SpecialUsedPayload): SpecialUsedPayload {
+  if (itemId === 'item_prototype_vent_script') {
+    const seedProjectile = payload.projectiles[0];
+
+    if (!seedProjectile) {
+      return {
+        ...payload,
+        activeSeconds: payload.activeSeconds + 0.3,
+        cooldownSeconds: Math.max(0.4, payload.cooldownSeconds - 0.15),
+        fireRateMultiplier: payload.fireRateMultiplier * 0.92
+      };
+    }
+
+    return {
+      ...payload,
+      projectiles: [
+        ...payload.projectiles,
+        {
+          ...seedProjectile,
+          vx: 0,
+          vy: seedProjectile.vy * 1.08,
+          damage: Math.max(0.5, seedProjectile.damage * 0.75),
+          radius: Math.max(4, seedProjectile.radius * 0.9),
+          ttl: seedProjectile.ttl + 0.1,
+          tags: addTags(seedProjectile.tags, ['heat', 'plasma']),
+          procDepth: seedProjectile.procDepth + 1
+        }
+      ],
+      activeSeconds: payload.activeSeconds + 0.3,
+      cooldownSeconds: Math.max(0.4, payload.cooldownSeconds - 0.15),
+      fireRateMultiplier: payload.fireRateMultiplier * 0.92
+    };
+  }
+
   return payload;
 }
 
-function applyOnBombUsed(_itemId: ItemId, payload: BombUsedPayload): BombUsedPayload {
+function applyOnBombUsed(itemId: ItemId, payload: BombUsedPayload): BombUsedPayload {
+  if (itemId === 'item_excess_warhead_clause') {
+    return {
+      ...payload,
+      damage: payload.damage + 0.35,
+      bossDamageRatio: payload.bossDamageRatio + 0.015,
+      cooldownSeconds: payload.cooldownSeconds + 0.05,
+      effectRadius: payload.effectRadius * 1.08
+    };
+  }
+
   return payload;
 }
 
-function applyOnSectorStart(_itemId: ItemId, payload: SectorStartPayload): SectorStartPayload {
+function applyOnSectorStart(itemId: ItemId, payload: SectorStartPayload): SectorStartPayload {
+  const isLunarSector = payload.sectorId.includes('lunar');
+
+  if (itemId === 'item_crater_shadow_lens') {
+    return {
+      ...payload,
+      specialChargeBonus: payload.specialChargeBonus + (isLunarSector ? 0.08 : 0.02)
+    };
+  }
+
+  if (itemId === 'item_surface_beacon_drone' && isLunarSector) {
+    return {
+      ...payload,
+      salvageBonus: payload.salvageBonus + 1,
+      specialChargeBonus: payload.specialChargeBonus + 0.05
+    };
+  }
+
+  if (itemId === 'item_exit_toll_transponder') {
+    return {
+      ...payload,
+      creditsBonus: payload.creditsBonus + Math.min(3, Math.max(1, payload.sectorIndex))
+    };
+  }
+
   return payload;
 }
 
-function applyOnRouteChosen(_itemId: ItemId, payload: RouteChosenPayload): RouteChosenPayload {
+function applyOnRouteChosen(itemId: ItemId, payload: RouteChosenPayload): RouteChosenPayload {
+  if (
+    itemId === 'item_curse_interest_bond' &&
+    (payload.routeKind === 'vault' || payload.routeKind === 'glitch')
+  ) {
+    return {
+      ...payload,
+      salvageDelta: payload.salvageDelta + 2,
+      curseDelta: payload.curseDelta + 1,
+      rewardChoiceBonus: payload.rewardChoiceBonus + 1
+    };
+  }
+
+  if (
+    itemId === 'item_low_orbit_ore_scrip' &&
+    (payload.routeKind === 'shop' || payload.routeKind === 'repair')
+  ) {
+    return {
+      ...payload,
+      creditsDelta: payload.creditsDelta + 1
+    };
+  }
+
+  if (itemId === 'item_route_ledger_spool') {
+    return {
+      ...payload,
+      rewardCreditBonus: payload.rewardCreditBonus + 1
+    };
+  }
+
+  if (
+    itemId === 'item_ambush_insurance_stamp' &&
+    (payload.routeKind === 'elite' || payload.routeKind === 'factionAmbush')
+  ) {
+    return {
+      ...payload,
+      salvageDelta: payload.salvageDelta + 1,
+      rewardBiasTags: addTags(payload.rewardBiasTags, ['armor', 'credit'])
+    };
+  }
+
   return payload;
 }
 
-function applyOnShopEntered(_itemId: ItemId, payload: ShopEnteredPayload): ShopEnteredPayload {
+function applyOnShopEntered(itemId: ItemId, payload: ShopEnteredPayload): ShopEnteredPayload {
+  if (itemId === 'item_coupon_cascade_fuse') {
+    return {
+      ...payload,
+      priceDiscount: payload.priceDiscount + 1,
+      biasTags: [...payload.biasTags, 'credit']
+    };
+  }
+
+  if (itemId === 'item_convoy_receipt_printer' && payload.rerollCount > 0) {
+    return {
+      ...payload,
+      itemCount: payload.itemCount + 1,
+      biasTags: [...payload.biasTags, 'drone', 'credit']
+    };
+  }
+
   return payload;
 }
 
 function applyOnRewardGenerated(
-  _itemId: ItemId,
+  itemId: ItemId,
   payload: RewardGeneratedPayload
 ): RewardGeneratedPayload {
+  if (
+    itemId === 'item_market_echo_locator' &&
+    (payload.routeKind === 'shop' || payload.routeKind === 'repair')
+  ) {
+    return {
+      ...payload,
+      choiceCount: payload.choiceCount + 1,
+      biasTags: [...payload.biasTags, 'credit', 'magnet']
+    };
+  }
+
+  if (itemId === 'item_relic_ash_compass' && payload.poolId === 'vault') {
+    return {
+      ...payload,
+      choiceCount: payload.choiceCount + 1,
+      biasTags: [...payload.biasTags, 'relic', 'phase']
+    };
+  }
+
+  if (
+    itemId === 'item_mining_laser_transit' &&
+    (payload.routeKind === 'vault' || payload.routeKind === 'factionAmbush')
+  ) {
+    return {
+      ...payload,
+      biasTags: [...payload.biasTags, 'laser', 'plasma']
+    };
+  }
+
   return payload;
 }
 
 function applyOnBossPhaseChanged(
-  _itemId: ItemId,
+  itemId: ItemId,
   payload: BossPhaseChangedPayload
 ): BossPhaseChangedPayload {
+  if (itemId === 'item_oathbound_deflector') {
+    return {
+      ...payload,
+      attackCooldownSeconds: payload.attackCooldownSeconds + 0.05,
+      specialChargeGain: payload.specialChargeGain + 0.08
+    };
+  }
+
+  if (itemId === 'item_phase_breaker_subpoena') {
+    return {
+      ...payload,
+      specialChargeGain: payload.specialChargeGain + 0.12,
+      clearEnemyProjectiles: payload.clearEnemyProjectiles || payload.phaseIndex >= 2
+    };
+  }
+
+  if (itemId === 'item_warning_siren_lattice') {
+    return {
+      ...payload,
+      attackCooldownSeconds: payload.attackCooldownSeconds + 0.1,
+      telegraphSeconds: payload.telegraphSeconds + 0.15
+    };
+  }
+
+  if (itemId === 'item_capital_wound_ledger') {
+    return {
+      ...payload,
+      attackCooldownSeconds: payload.attackCooldownSeconds + 0.18,
+      specialChargeGain: payload.specialChargeGain + 0.18
+    };
+  }
+
+  if (itemId === 'item_telegraph_rewrite_quill') {
+    return {
+      ...payload,
+      attackCooldownSeconds: payload.attackCooldownSeconds + 0.05,
+      telegraphSeconds: payload.telegraphSeconds + 0.22
+    };
+  }
+
   return payload;
 }
 

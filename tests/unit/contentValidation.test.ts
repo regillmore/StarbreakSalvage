@@ -35,7 +35,7 @@ describe('validateContent', () => {
     expect(validateContent()).toEqual([]);
   });
 
-  it('ships the phase 2 content breadth targets', () => {
+  it('ships the current content breadth targets', () => {
     const rewardedItemIds = new Set(REWARD_POOLS.flatMap((pool) => pool.itemIds));
     const representedArchetypes = ITEM_ARCHETYPES.filter((archetype) =>
       ITEMS.some(
@@ -44,7 +44,7 @@ describe('validateContent', () => {
       )
     );
 
-    expect(ITEMS).toHaveLength(30);
+    expect(ITEMS).toHaveLength(60);
     expect(FACTIONS).toHaveLength(4);
     expect(BACKGROUNDS).toHaveLength(6);
     expect(UPGRADES.length).toBeGreaterThanOrEqual(6);
@@ -456,9 +456,7 @@ describe('validateContent', () => {
     expect(errors).toContain('Item item_chain_arc_capacitor has invalid source: moon');
     expect(errors).toContain('Item item_chain_arc_capacitor has duplicate source: starter');
     expect(errors).toContain('Item item_chain_arc_capacitor has invalid unlock tier: vip');
-    expect(errors).toContain(
-      'Item item_chain_arc_capacitor must explain bridge implementation'
-    );
+    expect(errors).toContain('Item item_chain_arc_capacitor must explain bridge implementation');
     expect(errors).toContain('Item item_chain_arc_capacitor has invalid stacking mode: infinite');
     expect(errors).toContain('Item item_chain_arc_capacitor has invalid UI tag: sparkle');
     expect(errors).toContain('Item item_chain_arc_capacitor has duplicate UI tag: laser');
@@ -487,7 +485,9 @@ describe('validateContent', () => {
       }
     });
 
-    expect(errors).toContain('Item item_chain_arc_capacitor appears in combat pool without combat source');
+    expect(errors).toContain(
+      'Item item_chain_arc_capacitor appears in combat pool without combat source'
+    );
     expect(errors).toContain(
       'Item item_chain_arc_capacitor references missing unlock gate: unlock_missing'
     );

@@ -891,6 +891,8 @@ Acceptance criteria:
 - Starter pools stay readable for fresh saves.
 - Reward, shop, and vault generation snapshots remain deterministic.
 
+Status: implemented; the catalog now has 60 original item definitions with the first Phase 6 expansion covering laser/split, missile/overkill, drone/copy, shield/revenge, credit/shop, curse/relic, phase/graze, heat/prototype, lunar/surface, route/economy, and boss-pressure families. All new items have validated metadata, reward-pool placement, and live hook behavior across the expanded hook surface where declared. Starter remains common/uncommon-forward with no prototype or cursed entries, while deterministic shop and vault snapshots were updated for the larger pools.
+
 ## Work order 055 - Reward pools, rarity, and source weighting
 
 Goal: make item acquisition feel curated rather than flat random.
