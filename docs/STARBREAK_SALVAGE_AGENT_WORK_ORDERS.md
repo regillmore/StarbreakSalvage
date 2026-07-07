@@ -1150,6 +1150,8 @@ Acceptance criteria:
 - Accessibility settings keep enemy bullets and telegraphs readable.
 - Existing item-storm and long-scroll smoke remain green.
 
+Status: implemented; the debug toolset now includes an `E` enemy-rich stress pocket with 10 active enemies, all first-pass variant badges, multiple formation labels, 36 enemy projectiles, 4 telegraphs, and compact role/variant/formation/budget overlay telemetry. Long-sector debug state now reports the active pacing arc/beat, and the enemy role summary reports projectile and telegraph counts against stress budgets. Unit coverage pins the input binding, deterministic enemy-rich pocket, role-pressure budgets, and pacing beat helper. Playwright smoke drives a narrow, high-contrast, reduced-motion, performance-mode run into Lunar Surface, triggers the enemy-rich pocket, and verifies role, variant, formation, long-sector pacing, projectile, and telegraph readouts while existing item-storm and long-scroll smoke remain covered.
+
 ## Work order 070 - Phase 7 enemy playtest release hardening
 
 Goal: ship an enemy-behavior playtest candidate.

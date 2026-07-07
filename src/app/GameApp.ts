@@ -615,7 +615,10 @@ export class GameApp {
           ]
             .filter((part): part is string => Boolean(part))
             .join('/')}`
-        ]
+        ].filter((line) => line.length > 0)
+      : [];
+    const sectorPacingDebug = debugState.sector?.pacingBeat
+      ? [`Pacing ${debugState.sector.pacingBeat}`]
       : [];
     const viewportDebug =
       debugState.viewport === undefined
@@ -681,6 +684,7 @@ export class GameApp {
       ...upgradeDebug,
       ...progressionDebug,
       ...sectorDebug,
+      ...sectorPacingDebug,
       ...backgroundDebug,
       ...featureDebug,
       ...viewportDebug
@@ -740,6 +744,9 @@ function createEnemyRoleDebugLines(enemyRoles: SceneDebugState['enemyRoles']): r
 
   return [
     `Roles ${roleSummary}`,
+    `Enemy budget E${enemyRoles.enemyProjectiles}/${enemyRoles.enemyProjectileBudget} T${enemyRoles.telegraphs}/${enemyRoles.telegraphBudget} ${
+      enemyRoles.withinStressBudget ? 'ok' : 'over'
+    }`,
     `Enemy meta V${enemyRoles.variantCount}${variantSummary ? ` ${variantSummary}` : ''} F${
       enemyRoles.formationCount
     }${formationSummary ? ` ${formationSummary}` : ''}${

@@ -594,6 +594,261 @@ export function spawnDebugDenseCombatScenario(state: CombatState, bounds: Combat
   });
 }
 
+export function prepareDebugEnemyRichScenario(state: CombatState, bounds: CombatBounds): void {
+  state.enemies = [];
+  state.projectiles = [];
+  state.telegraphs = [];
+  state.effects = [];
+  state.pickups = [];
+  state.boss = null;
+  state.bossSpawned = true;
+  state.nextSpawnIndex = state.spawnSchedule.length;
+  state.formationRewardsClaimed.clear();
+
+  const centerX = bounds.width / 2;
+  const topY = Math.max(78, bounds.height * 0.12);
+  state.player.x = centerX;
+  state.player.y = bounds.height * 0.8;
+  state.player.invulnerableSeconds = 0.75;
+
+  const enemyBlueprints: ReadonlyArray<{
+    readonly factionId: FactionId;
+    readonly variantId: EnemyVariantId;
+    readonly formationId: EnemyFormationId;
+    readonly formationInstanceId: string;
+    readonly formationLabel: string;
+    readonly formationMemberIndex: number;
+    readonly formationMemberCount: number;
+    readonly x: number;
+    readonly y: number;
+    readonly hull: number;
+    readonly fireCooldown: number;
+  }> = [
+    {
+      factionId: 'faction_corporate_ledger',
+      variantId: 'variant_armored',
+      formationId: 'formation_screen',
+      formationInstanceId: 'debug-screen',
+      formationLabel: 'screen',
+      formationMemberIndex: 0,
+      formationMemberCount: 3,
+      x: centerX - 160,
+      y: topY,
+      hull: 3,
+      fireCooldown: 0.26
+    },
+    {
+      factionId: 'faction_corporate_ledger',
+      variantId: 'variant_shielded',
+      formationId: 'formation_screen',
+      formationInstanceId: 'debug-screen',
+      formationLabel: 'screen',
+      formationMemberIndex: 1,
+      formationMemberCount: 3,
+      x: centerX,
+      y: topY + 8,
+      hull: 3,
+      fireCooldown: 0.3
+    },
+    {
+      factionId: 'faction_bloom_hive',
+      variantId: 'variant_volatile',
+      formationId: 'formation_screen',
+      formationInstanceId: 'debug-screen',
+      formationLabel: 'screen',
+      formationMemberIndex: 2,
+      formationMemberCount: 3,
+      x: centerX + 160,
+      y: topY,
+      hull: 2,
+      fireCooldown: 0.34
+    },
+    {
+      factionId: 'faction_void_corsairs',
+      variantId: 'variant_evasive',
+      formationId: 'formation_pincer',
+      formationInstanceId: 'debug-pincer',
+      formationLabel: 'pincer',
+      formationMemberIndex: 0,
+      formationMemberCount: 2,
+      x: centerX - 210,
+      y: topY + 72,
+      hull: 2,
+      fireCooldown: 0.28
+    },
+    {
+      factionId: 'faction_scrap_court',
+      variantId: 'variant_salvage_rich',
+      formationId: 'formation_pincer',
+      formationInstanceId: 'debug-pincer',
+      formationLabel: 'pincer',
+      formationMemberIndex: 1,
+      formationMemberCount: 2,
+      x: centerX + 210,
+      y: topY + 72,
+      hull: 3,
+      fireCooldown: 0.36
+    },
+    {
+      factionId: 'faction_scrap_court',
+      variantId: 'variant_armored',
+      formationId: 'formation_escort',
+      formationInstanceId: 'debug-escort',
+      formationLabel: 'escort',
+      formationMemberIndex: 0,
+      formationMemberCount: 2,
+      x: centerX - 72,
+      y: topY + 132,
+      hull: 3,
+      fireCooldown: 0.4
+    },
+    {
+      factionId: 'faction_corporate_ledger',
+      variantId: 'variant_overclocked',
+      formationId: 'formation_escort',
+      formationInstanceId: 'debug-escort',
+      formationLabel: 'escort',
+      formationMemberIndex: 1,
+      formationMemberCount: 2,
+      x: centerX + 72,
+      y: topY + 132,
+      hull: 2,
+      fireCooldown: 0.24
+    },
+    {
+      factionId: 'faction_bloom_hive',
+      variantId: 'variant_volatile',
+      formationId: 'formation_staggered_lane',
+      formationInstanceId: 'debug-stagger',
+      formationLabel: 'stagger',
+      formationMemberIndex: 0,
+      formationMemberCount: 3,
+      x: centerX - 132,
+      y: topY + 196,
+      hull: 2,
+      fireCooldown: 0.46
+    },
+    {
+      factionId: 'faction_void_corsairs',
+      variantId: 'variant_evasive',
+      formationId: 'formation_staggered_lane',
+      formationInstanceId: 'debug-stagger',
+      formationLabel: 'stagger',
+      formationMemberIndex: 1,
+      formationMemberCount: 3,
+      x: centerX + 12,
+      y: topY + 210,
+      hull: 2,
+      fireCooldown: 0.32
+    },
+    {
+      factionId: 'faction_corporate_ledger',
+      variantId: 'variant_shielded',
+      formationId: 'formation_staggered_lane',
+      formationInstanceId: 'debug-stagger',
+      formationLabel: 'stagger',
+      formationMemberIndex: 2,
+      formationMemberCount: 3,
+      x: centerX + 156,
+      y: topY + 224,
+      hull: 3,
+      fireCooldown: 0.38
+    }
+  ];
+
+  for (const blueprint of enemyBlueprints) {
+    const variant = getEnemyVariantById(blueprint.variantId);
+    const maxHull = blueprint.hull + variant.hullBonus;
+
+    state.enemies.push({
+      id: getNextEntityId(state),
+      factionId: blueprint.factionId,
+      variantId: blueprint.variantId,
+      formationId: blueprint.formationId,
+      formationInstanceId: blueprint.formationInstanceId,
+      formationLabel: blueprint.formationLabel,
+      formationMemberIndex: blueprint.formationMemberIndex,
+      formationMemberCount: blueprint.formationMemberCount,
+      x: blueprint.x,
+      y: blueprint.y,
+      radius: 17 * variant.radiusScale,
+      hull: maxHull,
+      maxHull,
+      drift: (blueprint.x - centerX) * 0.08 * variant.driftMultiplier,
+      targetY: blueprint.y,
+      homeX: blueprint.x,
+      fireCooldown: blueprint.fireCooldown * variant.fireDelayMultiplier
+    });
+  }
+
+  const factionIds: readonly FactionId[] = [
+    'faction_corporate_ledger',
+    'faction_scrap_court',
+    'faction_bloom_hive',
+    'faction_void_corsairs'
+  ];
+
+  for (let index = 0; index < 36; index += 1) {
+    const column = index % 6;
+    const row = Math.floor(index / 6);
+    const factionId = factionIds[index % factionIds.length] ?? 'faction_corporate_ledger';
+    state.projectiles.push({
+      id: getNextEntityId(state),
+      owner: 'enemy',
+      x: centerX + (column - 2.5) * 62,
+      y: topY + 280 + row * 26,
+      vx: (column - 2.5) * 9,
+      vy: 150 + row * 8,
+      radius: 5 + (index % 3),
+      damage: 1,
+      ttl: 3.2,
+      tags:
+        factionId === 'faction_void_corsairs'
+          ? ['phase']
+          : index % 4 === 0
+            ? ['missile']
+            : ['plasma'],
+      procDepth: 0,
+      factionId
+    });
+  }
+
+  for (const [index, offset] of [-168, -56, 56, 168].entries()) {
+    state.telegraphs.push({
+      id: getNextEntityId(state),
+      kind: index === 1 ? 'fan' : 'lane',
+      factionId: factionIds[index] ?? 'faction_corporate_ledger',
+      label: index === 1 ? 'ENEMY RICH FAN' : 'ENEMY RICH LANE',
+      x: centerX + offset,
+      y: topY + 156,
+      radius: index === 1 ? 132 : 0,
+      width: index === 1 ? 0 : 32,
+      height: bounds.height,
+      ttl: 4,
+      maxTtl: 4
+    });
+  }
+
+  state.effects.push({
+    id: getNextEntityId(state),
+    kind: 'special',
+    x: centerX,
+    y: topY + 160,
+    radius: 96,
+    ttl: 0.34,
+    maxTtl: 0.34
+  });
+  state.effects.push({
+    id: getNextEntityId(state),
+    kind: 'graze',
+    x: centerX + 118,
+    y: topY + 84,
+    radius: 46,
+    ttl: 0.28,
+    maxTtl: 0.28
+  });
+}
+
 export function prepareDebugItemStormScenario(
   state: CombatState,
   bounds: CombatBounds,

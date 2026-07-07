@@ -433,6 +433,64 @@ test('exposes item-heavy hook storm debug instrumentation', async ({ page }) => 
   expect(browserErrors).toEqual([]);
 });
 
+test('exposes enemy-rich formation pressure under high-contrast narrow smoke', async ({ page }) => {
+  test.setTimeout(90_000);
+
+  const browserErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') {
+      browserErrors.push(message.text());
+    }
+  });
+  page.on('pageerror', (error) => browserErrors.push(error.message));
+  await page.setViewportSize({ width: 390, height: 700 });
+  await page.addInitScript((settings) => {
+    window.localStorage.setItem('starbreak.settings.v1', JSON.stringify(settings));
+  }, HIGH_CONTRAST_SETTINGS);
+
+  await page.goto('./?debug=1&seed=LUNAR-SURFACE-LANE');
+
+  await expect(page.locator('html')).toHaveAttribute('data-reduced-motion', 'true');
+  await expect(page.locator('html')).toHaveAttribute('data-bullet-contrast', 'high');
+  await expect(page.locator('html')).toHaveAttribute('data-performance-mode', 'true');
+
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
+
+  await page.keyboard.press('Enter');
+  await expectGameplaySector(page, 'Outer Debris Field', 1);
+
+  await forceCompleteSectorAndEnterNext(page, 'Trade War Corridor');
+  await forceCompleteSectorAndEnterNext(page, 'Lunar Surface');
+  await expectGameplaySector(page, 'Lunar Surface');
+  await expect(page.getByTestId('cockpit-hud')).toHaveAttribute('data-hud-mode', 'contrast');
+  await expect(page.locator('.debug-overlay')).toContainText('Viewport 390x700 narrow');
+  await expect(page.locator('.debug-overlay')).toContainText(
+    /Plan sector_lunar_surface\/background_lunar_surface\/paced\/[A-Za-z]+/
+  );
+  await expect(page.locator('.debug-overlay')).toContainText(
+    /Pacing (Vault transit|Low-orbit traverse|Intercept run|Shear corridor|Long caravan|Boss approach)/
+  );
+
+  await page.keyboard.press('E');
+  await expect(page.getByTestId('boss-warning')).toContainText('ENEMY RICH LANE');
+  await expect(page.locator('.debug-overlay')).toContainText('Scenario enemy-rich');
+  await expect(page.locator('.debug-overlay')).toContainText('Enemies 10');
+  await expect(page.locator('.debug-overlay')).toContainText('Projectiles 36 (P0/E36)');
+  await expect(page.locator('.debug-overlay')).toContainText('Telegraphs 4');
+  await expect(page.locator('.debug-overlay')).toContainText(
+    'Roles scout:2 bruiser:2 screener:4 disruptor:2'
+  );
+  await expect(page.locator('.debug-overlay')).toContainText('Enemy budget E36/54 T4/6 ok');
+  await expect(page.locator('.debug-overlay')).toContainText(/Enemy meta V10 .*F10/);
+  await expect(page.locator('.debug-overlay')).toContainText('screen:3');
+  await expect(page.locator('.debug-overlay')).toContainText('pincer:2');
+  await expect(page.locator('.debug-overlay')).toContainText('escort:2');
+  await expect(page.locator('.debug-overlay')).toContainText('stagger:3');
+
+  expect(browserErrors).toEqual([]);
+});
+
 test('launches gameplay with reduced motion and high contrast settings by keyboard', async ({
   page
 }) => {

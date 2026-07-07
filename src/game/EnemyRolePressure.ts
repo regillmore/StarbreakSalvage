@@ -18,6 +18,9 @@ import {
 import { getFactionById } from '../content/factions';
 import type { CombatState, EnemyState } from './CombatState';
 
+export const ENEMY_PROJECTILE_STRESS_BUDGET = 54;
+export const ENEMY_TELEGRAPH_STRESS_BUDGET = 6;
+
 export interface EnemyRoleCount {
   readonly role: EnemyRoleId;
   readonly label: string;
@@ -49,16 +52,25 @@ export interface EnemyRolePressureSummary {
   readonly variantCount: number;
   readonly formationCounts: readonly EnemyFormationCount[];
   readonly formationCount: number;
+  readonly enemyProjectiles: number;
+  readonly enemyProjectileBudget: number;
+  readonly telegraphs: number;
+  readonly telegraphBudget: number;
+  readonly withinStressBudget: boolean;
 }
 
 export function createEnemyRolePressureSummary(
-  state: Pick<CombatState, 'enemies'>
+  state: Pick<CombatState, 'enemies' | 'projectiles' | 'telegraphs'>
 ): EnemyRolePressureSummary {
-  return createEnemyRolePressureSummaryFromEnemies(state.enemies);
+  return createEnemyRolePressureSummaryFromEnemies(state.enemies, {
+    enemyProjectiles: state.projectiles.filter((projectile) => projectile.owner === 'enemy').length,
+    telegraphs: state.telegraphs.length
+  });
 }
 
 export function createEnemyRolePressureSummaryFromEnemies(
-  enemies: readonly Pick<EnemyState, 'factionId' | 'variantId' | 'formationId'>[]
+  enemies: readonly Pick<EnemyState, 'factionId' | 'variantId' | 'formationId'>[],
+  pressure: { readonly enemyProjectiles?: number; readonly telegraphs?: number } = {}
 ): EnemyRolePressureSummary {
   const roleCounts = new Map<EnemyRoleId, number>();
   const objectivePolicyCounts = new Map<EnemyObjectivePolicy, number>();
@@ -92,6 +104,8 @@ export function createEnemyRolePressureSummaryFromEnemies(
     label: getEnemyFormationById(formationId).debugLabel,
     count: formationCounts.get(formationId) ?? 0
   })).filter((entry) => entry.count > 0);
+  const enemyProjectiles = pressure.enemyProjectiles ?? 0;
+  const telegraphs = pressure.telegraphs ?? 0;
 
   return {
     totalEnemies: enemies.length,
@@ -107,6 +121,13 @@ export function createEnemyRolePressureSummaryFromEnemies(
     variantCounts: variantEntries,
     variantCount: variantEntries.reduce((total, entry) => total + entry.count, 0),
     formationCounts: formationEntries,
-    formationCount: formationEntries.reduce((total, entry) => total + entry.count, 0)
+    formationCount: formationEntries.reduce((total, entry) => total + entry.count, 0),
+    enemyProjectiles,
+    enemyProjectileBudget: ENEMY_PROJECTILE_STRESS_BUDGET,
+    telegraphs,
+    telegraphBudget: ENEMY_TELEGRAPH_STRESS_BUDGET,
+    withinStressBudget:
+      enemyProjectiles <= ENEMY_PROJECTILE_STRESS_BUDGET &&
+      telegraphs <= ENEMY_TELEGRAPH_STRESS_BUDGET
   };
 }

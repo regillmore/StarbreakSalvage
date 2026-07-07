@@ -45,6 +45,24 @@ describe('EnemyRolePressure', () => {
       { formationId: 'formation_staggered_lane', label: 'stagger', count: 1 }
     ]);
     expect(summary.formationCount).toBe(3);
+    expect(summary.enemyProjectiles).toBe(0);
+    expect(summary.enemyProjectileBudget).toBe(54);
+    expect(summary.telegraphs).toBe(0);
+    expect(summary.telegraphBudget).toBe(6);
+    expect(summary.withinStressBudget).toBe(true);
+  });
+
+  it('summarizes projectile and telegraph stress budgets', () => {
+    const summary = createEnemyRolePressureSummaryFromEnemies(
+      [{ factionId: 'faction_corporate_ledger' }],
+      { enemyProjectiles: 36, telegraphs: 4 }
+    );
+
+    expect(summary.enemyProjectiles).toBe(36);
+    expect(summary.enemyProjectileBudget).toBe(54);
+    expect(summary.telegraphs).toBe(4);
+    expect(summary.telegraphBudget).toBe(6);
+    expect(summary.withinStressBudget).toBe(true);
   });
 
   it('keeps empty fields quiet for non-combat debug states', () => {
@@ -57,7 +75,12 @@ describe('EnemyRolePressure', () => {
       variantCounts: [],
       variantCount: 0,
       formationCounts: [],
-      formationCount: 0
+      formationCount: 0,
+      enemyProjectiles: 0,
+      enemyProjectileBudget: 54,
+      telegraphs: 0,
+      telegraphBudget: 6,
+      withinStressBudget: true
     });
   });
 });

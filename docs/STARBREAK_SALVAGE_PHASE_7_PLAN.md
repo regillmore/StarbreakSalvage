@@ -124,6 +124,8 @@ Exit criteria:
 - Release docs cover role coverage, variant rules, formation smoke, longer-sector tuning, and manual browser gaps.
 - Severe soft-lock, objective-desync, readability, or performance blockers are fixed or explicitly deferred.
 
+Status: in progress through work order 069. Enemy-rich debug smoke now covers active roles, upgraded variants, formation labels, long-sector pacing state, projectile budgets, telegraph budgets, high-contrast/reduced-motion/performance settings, and narrow viewport behavior. Final Phase 7 release hardening, production preview evidence, and known-risk closeout remain for work order 070.
+
 ## Recommended Phase 7 Sequence
 
 1. Work order 061 - Phase 7 enemy role taxonomy and audit.

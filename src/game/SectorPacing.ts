@@ -354,6 +354,40 @@ export function formatSectorPacingTimeline(
   return entries.length > 0 ? entries.join(' | ') : 'standard pacing';
 }
 
+export function getActiveSectorPacingBeat(
+  pacing: SectorPacingPlan,
+  distance: number,
+  sectorLength: number
+): SectorPacingBeat | null {
+  if (pacing.arcKind === 'standard' || sectorLength <= 0) {
+    return null;
+  }
+
+  const progressRatio = clamp(distance / sectorLength, 0, 1);
+
+  return (
+    pacing.beats.find(
+      (beat) => progressRatio >= beat.startRatio && progressRatio <= beat.endRatio
+    ) ?? null
+  );
+}
+
+export function formatSectorPacingBeatDebug(
+  pacing: SectorPacingPlan,
+  distance: number,
+  sectorLength: number
+): string | null {
+  if (pacing.arcKind === 'standard') {
+    return null;
+  }
+
+  const activeBeat = getActiveSectorPacingBeat(pacing, distance, sectorLength);
+
+  return activeBeat
+    ? `${pacing.label} ${activeBeat.kind}:${activeBeat.label}`
+    : `${pacing.label} travel`;
+}
+
 export function summarizeSectorPacingPlan(pacing: SectorPacingPlan): unknown {
   return {
     sectorIndex: pacing.sectorIndex,

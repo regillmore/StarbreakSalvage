@@ -20,6 +20,7 @@ import {
   applySectorPacingToFeatures,
   applySectorPacingToScroll,
   createSectorPacingPlan,
+  formatSectorPacingBeatDebug,
   formatSectorPacingReadout,
   formatSectorPacingTimeline,
   summarizeSectorPacingPlan
@@ -42,6 +43,13 @@ describe('SectorPacing', () => {
     expect(first.pacing.reliefWindows).toHaveLength(1);
     expect(first.pacing.formationClusterWaveIndexes).toEqual([1]);
     expect(formatSectorPacingReadout(first.pacing)).toContain('Sector pacing: Intercept run');
+    expect(
+      formatSectorPacingBeatDebug(
+        first.pacing,
+        first.scroll.length * (first.pacing.waveDistanceRatios[0] ?? 0),
+        first.scroll.length
+      )
+    ).toBe('Intercept run pressure:wave 1');
   });
 
   it('spaces waves with explicit long-sector ratios and forces formation-cluster waves', () => {

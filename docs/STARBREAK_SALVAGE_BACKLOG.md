@@ -1413,7 +1413,8 @@ Acceptance:
 
 Status:
 
-- Partially implemented in work order 068. Longer-sector pacing adds sparse landmarks/hazards and wider wave spacing instead of constant density, with debug summaries exposing the active arc. Full enemy-rich browser smoke and accessibility/performance matrix coverage remain for work order 069.
+- Started in work order 068. Longer-sector pacing adds sparse landmarks/hazards and wider wave spacing instead of constant density, with debug summaries exposing the active arc.
+- Completed in work order 069 for Chromium smoke. The `E` debug pocket exposes active role, variant, formation, projectile, telegraph, and stress-budget telemetry on a long-sector Lunar Surface path under narrow, high-contrast, reduced-motion, and performance-mode settings. Manual non-Chromium browser coverage remains for release hardening.
 
 ## Epic AV - Phase 7 release and QA
 
@@ -1424,6 +1425,10 @@ Acceptance:
 - Debug/test tooling can force at least one enemy-rich formation/variant path.
 - Browser smoke covers role, variant, formation, and long-sector pressure where practical.
 - Existing item-storm and long-scroll smoke remain green.
+
+Status:
+
+- Implemented in work order 069. Debug key `E` forces a deterministic enemy-rich formation/variant pocket, overlay summaries show role/variant/formation counts plus projectile/telegraph budgets, and Playwright smoke verifies the path on a paced Lunar Surface sector with accessibility settings active.
 
 ### AV2 - Enemy behavior release checklist
 

@@ -16,6 +16,7 @@ import {
   forceCombatEnd,
   getCombatEntityCounts,
   prepareDebugItemStormScenario,
+  prepareDebugEnemyRichScenario,
   prepareDebugLongScrollScenario,
   spawnDebugDenseCombatScenario,
   spawnBoss,
@@ -49,6 +50,7 @@ import {
   applySectorPacingToFeatures,
   applySectorPacingToScroll,
   createSectorPacingPlan,
+  formatSectorPacingBeatDebug,
   formatSectorPacingReadout,
   type SectorPacingPlan
 } from '../game/SectorPacing';
@@ -563,6 +565,16 @@ export class GameplayScene implements Scene {
       this.syncReadouts();
     }
 
+    if (action === 'debugEnemyRich' && this.debugEnabled) {
+      const state = this.getCombatState();
+      const feedbackBefore = createCombatFeedbackSnapshot(state);
+      prepareDebugEnemyRichScenario(state, this.getCombatBounds());
+      this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
+      this.sectorCompleted = false;
+      this.debugScenario = 'enemy-rich';
+      this.syncReadouts();
+    }
+
     if (action === 'debugLongScroll' && this.debugEnabled) {
       const state = this.getCombatState();
       const feedbackBefore = createCombatFeedbackSnapshot(state);
@@ -597,6 +609,7 @@ export class GameplayScene implements Scene {
     const currentSector = this.getCurrentSector();
     const combatState = this.getCombatState();
     const entityCounts = getCombatEntityCounts(combatState);
+    const sectorPacing = this.getSectorPacingPlan();
     const hudTheme = createHudThemeModel(
       this.contract.shipAppearance,
       getHudThemeOptions(this.uiRoot.ownerDocument)
@@ -656,10 +669,9 @@ export class GameplayScene implements Scene {
         name: currentSector.sectorName,
         backgroundId: currentSector.background.id,
         encounterPacing: currentSector.encounterPacing ? 'paced' : undefined,
-        pacing:
-          this.getSectorPacingPlan().arcKind === 'standard'
-            ? undefined
-            : this.getSectorPacingPlan().debugLabel
+        pacing: sectorPacing.arcKind === 'standard' ? undefined : sectorPacing.debugLabel,
+        pacingBeat:
+          formatSectorPacingBeatDebug(sectorPacing, scroll.distance, scroll.length) ?? undefined
       }
     };
   }

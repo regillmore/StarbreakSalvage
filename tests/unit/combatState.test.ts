@@ -5,6 +5,7 @@ import {
   forceCombatEnd,
   getCombatEntityCounts,
   getCombatEntityCount,
+  prepareDebugEnemyRichScenario,
   prepareDebugLongScrollScenario,
   spawnDebugDenseCombatScenario,
   spawnBoss,
@@ -480,6 +481,64 @@ describe('CombatState', () => {
       pickupsAndEffects: 0,
       telegraphs: 0
     });
+  });
+
+  it('creates a deterministic enemy-rich debug scenario with readable budgets', () => {
+    const first = createCombatState(bounds, 'ENEMY-RICH-DEBUG-TEST', {
+      skipEnemyWaves: true
+    });
+    const second = createCombatState(bounds, 'ENEMY-RICH-DEBUG-TEST', {
+      skipEnemyWaves: true
+    });
+
+    prepareDebugEnemyRichScenario(first, bounds);
+    prepareDebugEnemyRichScenario(second, bounds);
+
+    expect(
+      first.enemies.map((enemy) => [
+        enemy.factionId,
+        enemy.variantId,
+        enemy.formationLabel,
+        enemy.formationMemberIndex,
+        enemy.x,
+        enemy.y,
+        enemy.hull
+      ])
+    ).toEqual(
+      second.enemies.map((enemy) => [
+        enemy.factionId,
+        enemy.variantId,
+        enemy.formationLabel,
+        enemy.formationMemberIndex,
+        enemy.x,
+        enemy.y,
+        enemy.hull
+      ])
+    );
+    expect(first.enemies).toHaveLength(10);
+    expect(first.enemies.filter((enemy) => enemy.variantId !== null)).toHaveLength(10);
+    expect(first.enemies.filter((enemy) => enemy.formationId !== null)).toHaveLength(10);
+    expect(first.projectiles.filter((projectile) => projectile.owner === 'enemy')).toHaveLength(36);
+    expect(first.telegraphs.map((telegraph) => telegraph.label)).toEqual([
+      'ENEMY RICH LANE',
+      'ENEMY RICH FAN',
+      'ENEMY RICH LANE',
+      'ENEMY RICH LANE'
+    ]);
+    expect(getCombatEntityCounts(first)).toEqual({
+      total: 53,
+      player: 1,
+      enemies: 10,
+      boss: 0,
+      projectiles: 36,
+      playerProjectiles: 0,
+      enemyProjectiles: 36,
+      pickups: 0,
+      effects: 2,
+      pickupsAndEffects: 2,
+      telegraphs: 4
+    });
+    expect(getCombatEntityCount(first)).toBeLessThanOrEqual(80);
   });
 
   it('activates special with charge, burst shots, active time, and cooldown', () => {
