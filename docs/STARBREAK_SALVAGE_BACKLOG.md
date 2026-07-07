@@ -604,7 +604,7 @@ Acceptance:
 
 Status:
 
-- First pass implemented in work order 025 with deterministic debris lane, warning beam, mine belt, salvage storm, and crush gate windows. Hazards telegraph before becoming active, damage through the normal player-hit path, render under bullets at low alpha, and have unit coverage for determinism, validation, collision, and reduced-motion styling.
+- First pass implemented in work order 025 with deterministic debris lane, warning beam, mine belt, salvage storm, and crush gate windows. Hazards telegraph before becoming active, damage through the normal player-hit path, render under bullets at low alpha, and have unit coverage for determinism, validation, collision, and reduced-motion styling. Work order 070 adds a boss-release guard: hazards whose telegraph/active window was hidden during an arena lock restart their warning lead after the boss dies before they can damage the player.
 
 ## Epic V - Boss arenas
 
@@ -618,7 +618,7 @@ Acceptance:
 
 Status:
 
-- First pass implemented in work order 026 with deterministic arena approach/lock/release distances, approach slowing, arena scroll locks, and post-defeat exit travel. Route-conditioned boss approach variants are now covered by work order 027; visual arena framing remains a follow-up.
+- First pass implemented in work order 026 with deterministic arena approach/lock/release distances, approach slowing, arena scroll locks, and post-defeat exit travel. Route-conditioned boss approach variants are now covered by work order 027, and work order 070 protects the release handoff so hidden overlapping hazards cannot activate immediately on boss death. Visual arena framing remains a follow-up.
 
 ### V2 - Debug compatibility
 
@@ -1437,3 +1437,7 @@ Acceptance:
 - README, changelog, performance notes, release checklist, QA docs, Phase 7 plan, backlog, and architecture notes cover enemy behavior expansion.
 - `npm run check`, E2E smoke, and production preview smoke pass before Phase 7 closeout.
 - Known enemy balance, browser, readability, and longer-sector risks are documented.
+
+Status:
+
+- Implemented in work order 070. Phase 7 release docs now cover role coverage, variant rules, formation smoke, longer-sector tuning, release evidence, manual browser gaps, and follow-up balance risks. The closeout also fixed a boss-arena hazard blocker by deferring any hazard window hidden during arena lock until after a fresh post-boss telegraph lead, with unit regression coverage. Full check, escalated Playwright Chromium smoke, and production preview smoke provide local closeout evidence.

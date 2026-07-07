@@ -81,6 +81,16 @@ export interface ActiveSectorHazard {
   readonly phaseProgress: number;
 }
 
+export interface SectorHazardActivationOptions {
+  readonly deferOverlappingFromDistance?: number | null;
+}
+
+interface SectorHazardActivationWindow {
+  readonly telegraphDistance: number;
+  readonly startDistance: number;
+  readonly endDistance: number;
+}
+
 export interface SectorHazardCollisionRect {
   readonly left: number;
   readonly top: number;
@@ -228,32 +238,61 @@ export function getVisibleSectorLandmarks(
 
 export function getActiveSectorHazards(
   plan: SectorFeaturePlan,
-  distance: number
+  distance: number,
+  options: SectorHazardActivationOptions = {}
 ): readonly ActiveSectorHazard[] {
   const active: ActiveSectorHazard[] = [];
 
   for (const hazard of plan.hazards) {
-    if (distance < hazard.telegraphDistance || distance > hazard.endDistance) {
+    const window = getHazardActivationWindow(hazard, options.deferOverlappingFromDistance);
+
+    if (distance < window.telegraphDistance || distance > window.endDistance) {
       continue;
     }
 
-    const phase: SectorHazardPhase = distance < hazard.startDistance ? 'telegraph' : 'active';
-    const totalSpan = Math.max(1, hazard.endDistance - hazard.telegraphDistance);
+    const phase: SectorHazardPhase = distance < window.startDistance ? 'telegraph' : 'active';
+    const totalSpan = Math.max(1, window.endDistance - window.telegraphDistance);
     const phaseSpan =
       phase === 'telegraph'
-        ? Math.max(1, hazard.startDistance - hazard.telegraphDistance)
-        : Math.max(1, hazard.endDistance - hazard.startDistance);
-    const phaseStart = phase === 'telegraph' ? hazard.telegraphDistance : hazard.startDistance;
+        ? Math.max(1, window.startDistance - window.telegraphDistance)
+        : Math.max(1, window.endDistance - window.startDistance);
+    const phaseStart = phase === 'telegraph' ? window.telegraphDistance : window.startDistance;
 
     active.push({
       hazard,
       phase,
-      progress: roundFeatureValue(clamp((distance - hazard.telegraphDistance) / totalSpan, 0, 1)),
+      progress: roundFeatureValue(clamp((distance - window.telegraphDistance) / totalSpan, 0, 1)),
       phaseProgress: roundFeatureValue(clamp((distance - phaseStart) / phaseSpan, 0, 1))
     });
   }
 
   return active;
+}
+
+function getHazardActivationWindow(
+  hazard: SectorHazardPlan,
+  deferOverlappingFromDistance?: number | null
+): SectorHazardActivationWindow {
+  if (
+    typeof deferOverlappingFromDistance !== 'number' ||
+    !Number.isFinite(deferOverlappingFromDistance) ||
+    hazard.telegraphDistance >= deferOverlappingFromDistance ||
+    hazard.endDistance <= deferOverlappingFromDistance
+  ) {
+    return hazard;
+  }
+
+  const telegraphLead = Math.max(1, hazard.startDistance - hazard.telegraphDistance);
+  const activeSpan = Math.max(1, hazard.endDistance - hazard.startDistance);
+  const telegraphDistance = roundFeatureValue(deferOverlappingFromDistance);
+  const startDistance = roundFeatureValue(telegraphDistance + telegraphLead);
+  const endDistance = roundFeatureValue(startDistance + activeSpan);
+
+  return {
+    telegraphDistance,
+    startDistance,
+    endDistance
+  };
 }
 
 export function getSectorHazardCollisionRect(

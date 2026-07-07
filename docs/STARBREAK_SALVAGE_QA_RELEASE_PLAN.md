@@ -136,6 +136,7 @@ Phase 7 enriches enemy behavior and longer-sector pacing. Add tests closest to t
 - formation wave tests for frame-catchup spawn order, simultaneous kills, secondary item kills, despawns, body collisions, objective progress, and sector-complete handoff; work order 066 covers frame-catchup spawn order and duplicate prevention, while work order 067 covers route/faction formation bias, formation instance grouping, one-time clear rewards, simultaneous-kill clears, secondary item clears, despawn clears, body-collision clears, and distance-sector handoff regressions;
 - longer-sector generation snapshots for route-conditioned length bands, pressure/relief windows, formation clusters, hazard/landmark pacing, and boss approach timing; work order 068 adds `SectorPacing` unit coverage for route-conditioned arcs, explicit wave ratios, formation-cluster waves, feature beats, boss handoffs, run-summary timelines, and encounter-pacing validation;
 - browser smoke for at least one enemy-rich formation or upgraded-variant path under debug, high contrast, reduced motion, performance mode, and narrow viewport where practical; work order 069 adds a Playwright path that reaches Lunar Surface, triggers the `E` enemy-rich debug pocket, and verifies role, variant, formation, pacing, projectile, and telegraph budget readouts;
+- boss arena release regressions where a distance-tied hazard telegraph was hidden during the locked fight; work order 070 adds unit coverage proving such hazards restart their warning lead after boss defeat before they can damage the player;
 - regression coverage that keeps `HOOK-STORM-SMOKE`, dense combat, forced exit, forced destruction, and quiet long-scroll paths green while enemy behavior grows.
 
 ## Known seed tests
@@ -194,6 +195,7 @@ Phase 7 should add these seed/save fixtures:
 - `LONG-SECTOR-CARAVAN` - extended sector with pressure/relief windows, formation clusters, and debug scroll metrics; first covered by work order 068 route-conditioned pacing and wave-plan unit tests.
 - `ENEMY-RICH-SMOKE` - debug-only enemy-rich pocket for active roles, upgraded variants, formation labels, projectile/telegraph budgets, and long-sector pacing telemetry; first covered by work order 069 through the `E` shortcut on the `LUNAR-SURFACE-LANE` browser path.
 - `SUPPORT-DRONE-NEST` - support/disruptor role fixture for shield, escort, deploy, or hazard-mark behavior.
+- `BOSS-HAZARD-RELEASE` - boss-gated hazard handoff fixture for verifying hidden arena-lock hazards get a fresh post-defeat telegraph before damage; first covered by work order 070 unit regression.
 
 ## Content validation checklist
 
@@ -235,7 +237,7 @@ Phase 2 performance checks should include wave/objective count, projectile count
 
 Phase 3 performance checks should also include background primitive count, parallax layer count, distance traveled, scroll speed, active distance markers, active landmarks, active hazards, and long-scroll scenarios that run longer than a normal sector.
 
-Current first-pass instrumentation exposes granular combat counts, active enemy role/variant/formation counts, background primitive/layer counts, active landmark/hazard counts, distance, speed, active input mode, HUD mode, viewport size/class/presentation scale, DPR, canvas pixel size, safe-frame origin/size, fixed combat world size, banked scrap, upgrade readiness, run resources, current sector id/name/background/pacing, exit progress, destruction progress, item count, active hook count, proc cap state, build identity, a dense-combat debug pocket, an item-storm hook stress pocket, forced exit/destruction shortcuts, and a quiet late-sector long-scroll traversal behind `?debug=1`. Production preview smoke passed for work orders 050 and 060; manual non-Chromium and real-device browser validation still need to close the checklist.
+Current first-pass instrumentation exposes granular combat counts, active enemy role/variant/formation counts, background primitive/layer counts, active landmark/hazard counts, distance, speed, active input mode, HUD mode, viewport size/class/presentation scale, DPR, canvas pixel size, safe-frame origin/size, fixed combat world size, banked scrap, upgrade readiness, run resources, current sector id/name/background/pacing, exit progress, destruction progress, item count, active hook count, proc cap state, build identity, a dense-combat debug pocket, an item-storm hook stress pocket, forced exit/destruction shortcuts, and a quiet late-sector long-scroll traversal behind `?debug=1`. Production preview smoke passed for work orders 050, 060, and 070; manual non-Chromium and real-device browser validation still need to close the checklist.
 
 Phase 4 performance checks should include viewport/presentation scale, safe-frame size, fixed-world hazard/enemy spacing parity, HUD rendering density, preview rendering cost, mouse input update behavior, ship cue rendering cost, non-combat theme DOM cost, and whether themed HUD/ship cues add measurable overhead in dense and long-scroll debug scenarios.
 
@@ -244,6 +246,8 @@ Phase 5 performance checks should include Upgrade Bay DOM/icon rendering cost, u
 Phase 6 performance checks should include item hook dispatch cost, proc budget limits, reward/shop/vault pool sampling cost, large item card DOM rendering, archive filtering, and dense synergy combat readability.
 
 Phase 7 performance checks should include active role counts, upgraded variant counts, formation membership counts, long-sector wave spacing, projectile/telegraph budgets under role-specific attacks, and whether longer sectors create sustained CPU/render pressure beyond existing dense and item-storm pockets.
+
+Work order 070 closes Phase 7 with release-hardening evidence and a boss-release hazard regression. Locked boss arenas still suppress hazards for readability, but overlapping hidden hazard windows now restart their telegraph lead when the arena releases so damage cannot occur on the boss-death handoff.
 
 - [x] FPS overlay available behind debug flag.
 - [x] Projectile count visible in debug mode.

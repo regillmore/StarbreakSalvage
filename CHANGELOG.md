@@ -52,6 +52,7 @@
 - Added formation-wave integration so squad selection can respond to route, encounter, and faction identity; formation clears can award small one-time salvage bonuses, and offscreen formation despawns now advance objectives without drops or charge.
 - Added deterministic longer-sector pacing arcs with route-conditioned length bands, pressure/relief windows, explicit wave-distance ratios, formation-cluster marks, sparse landmark/hazard beats, boss-approach scaling, transition copy, debug plan labels, and run-summary timelines.
 - Added an enemy-rich debug stress pocket on `E` with active role, upgraded-variant, formation-label, long-sector pacing, projectile-budget, and telegraph-budget overlay telemetry for readability smoke.
+- Fixed boss-arena release hazards so a zone whose warning was hidden during the locked boss fight restarts its telegraph lead after boss defeat before it can damage the player.
 
 ### Testing
 
@@ -70,6 +71,7 @@
 - Added formation objective-safety tests for route/faction weighting, formation instance grouping, simultaneous member kills, item side-effect clears, despawns, body collisions, one-time clear rewards, and distance-sector completion.
 - Added sector-pacing tests for route-conditioned long arcs, relief windows, explicit wave spacing, formation-cluster waves, feature beats, boss handoffs, run-summary timelines, and encounter-pacing validation.
 - Added enemy-rich stress tests for the `E` debug shortcut, role-pressure budgets, active pacing-beat labels, and a narrow high-contrast Playwright smoke path through Lunar Surface.
+- Added a boss-release hazard regression proving hidden arena-lock hazards defer collision damage until their post-release warning lead has elapsed.
 - Added wave director and objective completion tests, including known-seed objective snapshots and boss-gate coverage.
 - Added combat tests for special charge/use, bomb mitigation, graze detection, remapped special/bomb controls, and reduced-motion effect rendering.
 - Added validation and gameplay tests for ship stat contracts, weapon references, weapon patterns, heat/reload behavior, and starting economy.
@@ -127,7 +129,8 @@
 - Added deterministic first-pass enemy formations for wedge, column, screen, escort, pincer, convoy, ring, and staggered-lane squads, including validation, seeded wave expansion, compact canvas cues, debug formation counts, and frame-catchup spawn-order coverage.
 - Completed the Phase 7 formation integration pass for P7.4 objective safety, route/faction weighting, and one-time clear rewards, leaving richer break/retreat behavior and longer-sector pacing for later work orders.
 - Completed the Phase 7 longer-sector pacing pass for P7.5 deterministic arcs, relief windows, formation clusters, feature beats, boss approach timing, and summary/debug surfaces, leaving enemy-rich browser stress smoke for work order 069.
-- Completed the Phase 7 enemy-rich smoke pass for work order 069, leaving final release hardening, production preview evidence, and known-risk closeout for work order 070.
+- Completed the Phase 7 enemy-rich smoke pass for work order 069, setting up final release hardening, production preview evidence, and known-risk closeout for work order 070.
+- Completed Phase 7 as an enemy-behavior playtest candidate with release docs, local check/browser/preview evidence, known enemy balance risks, and the boss-release hazard fairness fix.
 - Started Phase 6 with a documented audit of the current 30-item catalog, repeated-reward risks, underrepresented archetypes, target item families, and bridge-effect follow-ups.
 - Formalized the Phase 6 item metadata contract and validation baseline before adding larger item batches.
 - Completed the first Phase 6 hook-surface expansion so work order 054 can add live catalog items against typed event payloads.

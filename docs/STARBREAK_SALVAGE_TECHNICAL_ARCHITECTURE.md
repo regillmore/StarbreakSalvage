@@ -300,7 +300,7 @@ src/game/BackgroundPlan.ts
 - Wave and hazard schedules should support distance markers as well as time gates.
 - Spawn logic must process all crossed distance markers in order when frame time catches up.
 - Tests should prove no marker is skipped or duplicated under large fixed-step batches.
-- Boss arena transitions should be explicit states: travel, approach, arena lock/slow, defeated/exit.
+- Boss arena transitions should be explicit states: travel, approach, arena lock/slow, defeated/exit. Hazards hidden during a locked arena must not become damaging on the release frame; if a distance-tied hazard window overlaps the lock, restart its telegraph lead from the release distance before collision damage can apply.
 
 ### Route-conditioned sector state
 
@@ -400,6 +400,7 @@ src/game/EnemyRolePressure.ts
 - Longer-sector pacing should extend generated sector conditions with pressure bands, relief windows, formation clusters, landmark beats, and boss approach changes.
 - The first implementation lives in `src/game/SectorPacing.ts`: gameplay derives route-conditioned scroll/features/arena first, then applies the pacing layer for final scroll length, encounter-pacing ratios, sparse feature beats, and boss approach scaling. Keep this layer deterministic and avoid mutating the base run skeleton.
 - Avoid per-frame random decisions. Generate the schedule once, then let fixed-step simulation consume it.
+- Gameplay may evaluate generated sector hazards through a transient boss-release deferral when an arena lock hid their warning. That deferral belongs to runtime hazard activation state, not run generation, so seeded feature plans and summaries remain stable.
 - Summaries and debug overlays should expose length, pressure band, role/variant/formation counts, and route-conditioned reasons where useful.
 - Performance mode and reduced motion may simplify presentation, but should not change combat generation or objective requirements.
 

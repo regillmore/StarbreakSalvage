@@ -58,6 +58,7 @@ import { resolveSectorHazardCollisions } from '../game/SectorHazards';
 import {
   getActiveSectorHazards,
   getVisibleSectorLandmarks,
+  type ActiveSectorHazard,
   type SectorFeaturePlan
 } from '../game/SectorFeatures';
 import {
@@ -156,6 +157,7 @@ export class GameplayScene implements Scene {
   private exitSequenceResult: CombatRunResult | null = null;
   private destructionSequence: PlayerDestructionSequenceState | null = null;
   private destructionSequenceResult: CombatRunResult | null = null;
+  private bossHazardReleaseDistance: number | null = null;
   private sectorCompleted = false;
   private queuedSpecial = false;
   private queuedBomb = false;
@@ -367,7 +369,8 @@ export class GameplayScene implements Scene {
         state,
         this.getCurrentFeatures(),
         scrollState.distance,
-        this.getCombatBounds()
+        this.getCombatBounds(),
+        { deferOverlappingFromDistance: this.bossHazardReleaseDistance }
       );
 
       if (collisions.hitHazardIds.length > 0) {
@@ -416,10 +419,7 @@ export class GameplayScene implements Scene {
     );
 
     if (this.bossArenaUpdate.phase !== 'locked') {
-      renderer.paintSectorHazards(
-        getActiveSectorHazards(this.getCurrentFeatures(), scroll.distance),
-        bounds
-      );
+      renderer.paintSectorHazards(this.getActiveHazards(scroll.distance), bounds);
     }
 
     if (this.exitSequence) {
@@ -601,10 +601,7 @@ export class GameplayScene implements Scene {
     const bounds = this.getCombatBounds();
     const features = this.getCurrentFeatures();
     const activeLandmarks = getVisibleSectorLandmarks(features, scroll.distance, bounds.height);
-    const activeHazards =
-      this.bossArenaUpdate.phase === 'locked'
-        ? []
-        : getActiveSectorHazards(features, scroll.distance);
+    const activeHazards = this.getActiveHazards(scroll.distance);
     const background = this.getCurrentSector().background;
     const currentSector = this.getCurrentSector();
     const combatState = this.getCombatState();
@@ -962,6 +959,7 @@ export class GameplayScene implements Scene {
       ...state,
       scrollDistance: distance
     });
+    const previousPhase = this.bossArenaUpdate.phase;
 
     this.bossArenaUpdate = updateBossArenaState(this.getBossArenaState(), {
       distance,
@@ -970,6 +968,10 @@ export class GameplayScene implements Scene {
       bossAlreadySpawned: state.bossSpawned,
       bossDefeated: state.stats.bossesDefeated > 0
     });
+
+    if (previousPhase !== 'released' && this.bossArenaUpdate.phase === 'released') {
+      this.bossHazardReleaseDistance ??= distance;
+    }
 
     return this.bossArenaUpdate;
   }
@@ -1020,8 +1022,7 @@ export class GameplayScene implements Scene {
       : `Boss ${this.getCurrentBossName()}`;
     this.warningReadout.textContent =
       state.telegraphs[0]?.label ??
-      getActiveSectorHazards(this.getCurrentFeatures(), this.getScrollState().distance)[0]?.hazard
-        .label ??
+      this.getActiveHazards()[0]?.hazard.label ??
       formatBossArenaReadout(this.bossArenaUpdate.phase) ??
       'Warning clear';
     this.itemReadout.textContent = this.getBuildReadout(state);
@@ -1124,10 +1125,7 @@ export class GameplayScene implements Scene {
       return 'Hint Arena released; push to the sector exit.';
     }
 
-    const activeHazard = getActiveSectorHazards(
-      this.getCurrentFeatures(),
-      this.getScrollState().distance
-    )[0];
+    const activeHazard = this.getActiveHazards()[0];
 
     if (activeHazard) {
       return activeHazard.phase === 'telegraph'
@@ -1237,6 +1235,16 @@ export class GameplayScene implements Scene {
     }
 
     return this.viewportLayout;
+  }
+
+  private getActiveHazards(distance = this.getScrollState().distance): readonly ActiveSectorHazard[] {
+    if (this.bossArenaUpdate.phase === 'locked') {
+      return [];
+    }
+
+    return getActiveSectorHazards(this.getCurrentFeatures(), distance, {
+      deferOverlappingFromDistance: this.bossHazardReleaseDistance
+    });
   }
 }
 

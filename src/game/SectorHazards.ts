@@ -8,6 +8,7 @@ import {
 import {
   getActiveSectorHazards,
   getSectorHazardCollisionRect,
+  type SectorHazardActivationOptions,
   type SectorFeaturePlan,
   type SectorHazardPlan
 } from './SectorFeatures';
@@ -22,9 +23,10 @@ export function resolveSectorHazardCollisions(
   state: CombatState,
   plan: SectorFeaturePlan,
   distance: number,
-  bounds: CombatBounds
+  bounds: CombatBounds,
+  options: SectorHazardActivationOptions = {}
 ): SectorHazardCollisionResult {
-  const activeHazards = getActiveSectorHazards(plan, distance);
+  const activeHazards = getActiveSectorHazards(plan, distance, options);
   const activeHazardIds = activeHazards.map((activeHazard) => activeHazard.hazard.id);
   const damagingHazardIds: string[] = [];
   const hitHazardIds: string[] = [];

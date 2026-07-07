@@ -148,6 +148,53 @@ describe('SectorFeatures', () => {
     expect(state.player.hull).toBe(state.player.maxHull - 1);
   });
 
+  it('defers boss-release hazards that were hidden by the arena lock', () => {
+    const state = createCombatState(bounds, 'HAZARD-BOSS-RELEASE', {
+      skipEnemyWaves: true
+    });
+    const releaseDistance = 120;
+    const hazard = {
+      ...getRequiredHazard(),
+      telegraphDistance: 80,
+      startDistance: 100,
+      endDistance: 180,
+      xRatio: state.player.x / bounds.width,
+      widthRatio: 0.18
+    };
+    const plan = createSingleHazardPlan(hazard);
+
+    expect(getActiveSectorHazards(plan, releaseDistance)[0]?.phase).toBe('active');
+
+    const deferredAtRelease = getActiveSectorHazards(plan, releaseDistance, {
+      deferOverlappingFromDistance: releaseDistance
+    })[0];
+
+    expect(deferredAtRelease?.phase).toBe('telegraph');
+    expect(deferredAtRelease?.phaseProgress).toBe(0);
+
+    const releaseCollision = resolveSectorHazardCollisions(
+      state,
+      plan,
+      releaseDistance,
+      bounds,
+      { deferOverlappingFromDistance: releaseDistance }
+    );
+
+    expect(releaseCollision.hitHazardIds).toEqual([]);
+    expect(state.stats.damageTaken).toBe(0);
+
+    const activeAfterDeferredLead = resolveSectorHazardCollisions(
+      state,
+      plan,
+      releaseDistance + (hazard.startDistance - hazard.telegraphDistance) + 0.01,
+      bounds,
+      { deferOverlappingFromDistance: releaseDistance }
+    );
+
+    expect(activeAfterDeferredLead.hitHazardIds).toEqual([hazard.id]);
+    expect(state.stats.damageTaken).toBe(1);
+  });
+
   it('does not damage the player outside the active hazard lane', () => {
     const state = createCombatState(bounds, 'HAZARD-MISS', {
       skipEnemyWaves: true

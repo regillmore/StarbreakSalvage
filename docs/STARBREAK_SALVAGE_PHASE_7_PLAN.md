@@ -124,7 +124,7 @@ Exit criteria:
 - Release docs cover role coverage, variant rules, formation smoke, longer-sector tuning, and manual browser gaps.
 - Severe soft-lock, objective-desync, readability, or performance blockers are fixed or explicitly deferred.
 
-Status: in progress through work order 069. Enemy-rich debug smoke now covers active roles, upgraded variants, formation labels, long-sector pacing state, projectile budgets, telegraph budgets, high-contrast/reduced-motion/performance settings, and narrow viewport behavior. Final Phase 7 release hardening, production preview evidence, and known-risk closeout remain for work order 070.
+Status: complete through work order 070. Enemy-rich debug smoke covers active roles, upgraded variants, formation labels, long-sector pacing state, projectile budgets, telegraph budgets, high-contrast/reduced-motion/performance settings, and narrow viewport behavior. Release hardening refreshed the README, changelog, performance notes, backlog, architecture, QA, and release checklist; fixed the boss-release hazard fairness blocker by restarting any hidden overlapping hazard telegraph after arena release; and records full check, escalated Playwright Chromium smoke, and production preview evidence for the Phase 7 enemy-behavior playtest candidate.
 
 ## Recommended Phase 7 Sequence
 
@@ -141,4 +141,4 @@ Status: in progress through work order 069. Enemy-rich debug smoke now covers ac
 
 ## Phase 7 Definition Of Done
 
-Phase 7 is done when enemy classes have recognizable roles, upgraded variants and formations create tactical changes without hidden unfairness, longer sectors feel paced rather than stretched, seeded wave/variant/formation outputs remain reproducible, objective progress cannot desync from simultaneous, secondary, collision, or despawn clears, and automated plus browser smoke coverage can protect enemy behavior as sectors grow longer.
+Phase 7 is done: enemy classes have recognizable first-pass roles, upgraded variants and formations create tactical changes without hidden damage spikes, longer sectors use paced arcs rather than continuous density, seeded wave/variant/formation outputs remain reproducible, objective progress is protected against simultaneous, secondary, collision, and despawn clears, boss-release hazards no longer wake up damaging without a visible warning, and automated plus Chromium browser smoke coverage protects enemy behavior as sectors grow longer.

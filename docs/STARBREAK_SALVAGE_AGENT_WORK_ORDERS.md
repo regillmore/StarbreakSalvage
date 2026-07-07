@@ -1167,6 +1167,8 @@ Acceptance criteria:
 - Release docs document role coverage, variant rules, formation smoke, longer-sector tuning, and manual browser gaps.
 - Phase 7 can be declared complete or explicitly deferred with documented blockers.
 
+Status: implemented; Phase 7 is closed as an enemy-behavior playtest candidate. The closeout audited and refreshed README, changelog, performance notes, Phase 7 plan, backlog, release checklist, QA docs, and architecture notes for role coverage, variant rules, formation smoke, longer-sector tuning, browser gaps, and follow-up balance risks. A boss-arena/hazard fairness blocker was fixed by deferring any sector hazard window that overlapped the hidden arena lock: when the boss dies and scrolling releases, that hazard restarts its warning lead before becoming damaging. Unit coverage pins the deferred boss-release hazard behavior alongside the existing sector feature collision tests; full check, escalated Playwright Chromium smoke, and production preview smoke provide the local release evidence.
+
 ## Review subagent prompt
 
 Use after a feature PR:
