@@ -118,6 +118,7 @@
 - Completed the Phase 7 role-specific movement pass while leaving attack cadence, variants, formations, and objective policy unchanged for follow-up work orders.
 - Completed the Phase 7 role-specific normal attack pass, finishing P7.2 behavior expansion while leaving variants, formations, longer-sector pacing, and objective-policy expansion for later work orders.
 - Completed the Phase 7 upgraded-variant pass for P7.3, leaving formation definitions, longer-sector pacing, enemy-rich smoke, and broader variant reward/unlock hooks for later work orders.
+- Added deterministic first-pass enemy formations for wedge, column, screen, escort, pincer, convoy, ring, and staggered-lane squads, including validation, seeded wave expansion, compact canvas cues, debug formation counts, and frame-catchup spawn-order coverage.
 - Started Phase 6 with a documented audit of the current 30-item catalog, repeated-reward risks, underrepresented archetypes, target item families, and bridge-effect follow-ups.
 - Formalized the Phase 6 item metadata contract and validation baseline before adding larger item batches.
 - Completed the first Phase 6 hook-surface expansion so work order 054 can add live catalog items against typed event payloads.

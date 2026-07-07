@@ -3,6 +3,15 @@ import { ACHIEVEMENTS, type AchievementDefinition } from './achievements';
 import { BACKGROUNDS, BACKGROUND_LAYER_KINDS, type BackgroundDefinition } from './backgrounds';
 import { FACTIONS, type FactionDefinition } from './factions';
 import {
+  ENEMY_FORMATIONS,
+  ENEMY_FORMATION_BREAK_CONDITIONS,
+  ENEMY_FORMATION_CLEANUP_POLICIES,
+  ENEMY_FORMATION_ENTRY_STYLES,
+  ENEMY_FORMATION_IDS,
+  ENEMY_FORMATION_SHAPES,
+  type EnemyFormationDefinition
+} from './enemyFormations';
+import {
   ENEMY_VARIANTS,
   ENEMY_VARIANT_ENCOUNTER_TYPES,
   ENEMY_VARIANT_IDS,
@@ -72,6 +81,7 @@ export interface ContentValidationInput {
   readonly achievements?: readonly AchievementDefinition[];
   readonly backgrounds?: readonly BackgroundDefinition[];
   readonly bosses?: readonly BossDefinition[];
+  readonly enemyFormations?: readonly EnemyFormationDefinition[];
   readonly enemyVariants?: readonly EnemyVariantDefinition[];
   readonly factions?: readonly FactionDefinition[];
   readonly items?: readonly ItemDefinition[];
@@ -91,6 +101,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const achievements = input.achievements ?? ACHIEVEMENTS;
   const backgrounds = input.backgrounds ?? BACKGROUNDS;
   const bosses = input.bosses ?? BOSSES;
+  const enemyFormations = input.enemyFormations ?? ENEMY_FORMATIONS;
   const enemyVariants = input.enemyVariants ?? ENEMY_VARIANTS;
   const factions = input.factions ?? FACTIONS;
   const items = input.items ?? ITEMS;
@@ -138,6 +149,11 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const enemyReadabilityTiers = new Set<string>(ENEMY_READABILITY_TIERS);
   const enemyFactionFits = new Set<string>(ENEMY_FACTION_FITS);
   const enemyObjectivePolicies = new Set<string>(ENEMY_OBJECTIVE_POLICIES);
+  const enemyFormationIds = new Set<string>(ENEMY_FORMATION_IDS);
+  const enemyFormationShapes = new Set<string>(ENEMY_FORMATION_SHAPES);
+  const enemyFormationEntryStyles = new Set<string>(ENEMY_FORMATION_ENTRY_STYLES);
+  const enemyFormationBreakConditions = new Set<string>(ENEMY_FORMATION_BREAK_CONDITIONS);
+  const enemyFormationCleanupPolicies = new Set<string>(ENEMY_FORMATION_CLEANUP_POLICIES);
   const enemyVariantIds = new Set<string>(ENEMY_VARIANT_IDS);
   const enemyVariantEncounterTypes = new Set<string>(ENEMY_VARIANT_ENCOUNTER_TYPES);
   const backgroundLayerKinds = new Set<string>(BACKGROUND_LAYER_KINDS);
@@ -338,6 +354,15 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     variantEligibilities: enemyVariantEligibilities,
     roles: enemyRoles,
     factions: factionIds,
+    encounterTypes: enemyVariantEncounterTypes
+  });
+  validateEnemyFormationDefinitions(errors, enemyFormations, factions, {
+    formationIds: enemyFormationIds,
+    formationShapes: enemyFormationShapes,
+    roles: enemyRoles,
+    entryStyles: enemyFormationEntryStyles,
+    breakConditions: enemyFormationBreakConditions,
+    cleanupPolicies: enemyFormationCleanupPolicies,
     encounterTypes: enemyVariantEncounterTypes
   });
 
@@ -839,6 +864,16 @@ interface EnemyVariantDefinitionRegistries {
   readonly encounterTypes: ReadonlySet<string>;
 }
 
+interface EnemyFormationDefinitionRegistries {
+  readonly formationIds: ReadonlySet<string>;
+  readonly formationShapes: ReadonlySet<string>;
+  readonly roles: ReadonlySet<string>;
+  readonly entryStyles: ReadonlySet<string>;
+  readonly breakConditions: ReadonlySet<string>;
+  readonly cleanupPolicies: ReadonlySet<string>;
+  readonly encounterTypes: ReadonlySet<string>;
+}
+
 function validateEnemyRoleMetadata(
   errors: string[],
   faction: FactionDefinition,
@@ -917,6 +952,162 @@ function validateEnemyRoleMetadata(
 
   if (!metadata.debugLabel.trim()) {
     errors.push(`${owner} must have a debug label`);
+  }
+}
+
+function validateEnemyFormationDefinitions(
+  errors: string[],
+  formations: readonly EnemyFormationDefinition[],
+  factions: readonly FactionDefinition[],
+  registries: EnemyFormationDefinitionRegistries
+): void {
+  const seenFormationIds = new Set<string>();
+
+  for (const formation of formations) {
+    const owner = `Enemy formation ${String(formation.id)}`;
+
+    if (seenFormationIds.has(formation.id)) {
+      errors.push(`Duplicate enemy formation id: ${formation.id}`);
+    }
+
+    seenFormationIds.add(formation.id);
+
+    if (!registries.formationIds.has(formation.id)) {
+      errors.push(`${owner} has invalid id`);
+    }
+
+    if (!registries.formationShapes.has(formation.shape)) {
+      errors.push(`${owner} has invalid shape: ${String(formation.shape)}`);
+    }
+
+    if (!formation.name.trim()) {
+      errors.push(`${owner} must have a name`);
+    }
+
+    if (!formation.debugLabel.trim()) {
+      errors.push(`${owner} must have a debug label`);
+    }
+
+    if (!formation.summary.trim()) {
+      errors.push(`${owner} must have a summary`);
+    }
+
+    validateNonNegativeInteger(errors, owner, 'minSectorIndex', formation.minSectorIndex);
+    validatePositiveInteger(errors, owner, 'minMembers', formation.minMembers);
+    validatePositiveInteger(errors, owner, 'maxMembers', formation.maxMembers);
+    validatePositiveNumber(errors, owner, 'weight', formation.weight);
+    validatePositiveNumber(errors, owner, 'spacing', formation.spacing);
+
+    if (formation.minMembers > formation.maxMembers) {
+      errors.push(`${owner} must order minMembers before maxMembers`);
+    }
+
+    if (formation.maxMembers > formation.members.length) {
+      errors.push(`${owner} must define enough member slots for maxMembers`);
+    }
+
+    if (formation.spacing < 36) {
+      errors.push(`${owner} must keep spacing readable`);
+    }
+
+    if (!registries.entryStyles.has(formation.entryStyle)) {
+      errors.push(`${owner} has invalid entry style: ${String(formation.entryStyle)}`);
+    }
+
+    if (!registries.breakConditions.has(formation.breakCondition)) {
+      errors.push(`${owner} has invalid break condition: ${String(formation.breakCondition)}`);
+    }
+
+    if (!registries.cleanupPolicies.has(formation.cleanupPolicy)) {
+      errors.push(`${owner} has invalid cleanup policy: ${String(formation.cleanupPolicy)}`);
+    }
+
+    if (formation.cleanupPolicy !== 'requiredTargets') {
+      errors.push(`${owner} cleanup policy must keep first-pass members as required targets`);
+    }
+
+    if (formation.encounterTypes) {
+      validateStringList(
+        errors,
+        owner,
+        'encounter type',
+        formation.encounterTypes,
+        registries.encounterTypes
+      );
+    }
+
+    if (formation.preferredRoles) {
+      validateStringList(
+        errors,
+        owner,
+        'preferred role',
+        formation.preferredRoles,
+        registries.roles
+      );
+    }
+
+    for (const [index, member] of formation.members.entries()) {
+      const memberOwner = `${owner} member ${index + 1}`;
+
+      if (!registries.roles.has(member.role)) {
+        errors.push(`${memberOwner} has invalid role: ${String(member.role)}`);
+      }
+
+      if (!Number.isFinite(member.xOffset) || Math.abs(member.xOffset) > 180) {
+        errors.push(`${memberOwner} must keep xOffset within fixed-arena bounds`);
+      }
+
+      if (
+        !Number.isFinite(member.targetYOffset) ||
+        member.targetYOffset < -90 ||
+        member.targetYOffset > 100
+      ) {
+        errors.push(`${memberOwner} must keep targetYOffset within readable bounds`);
+      }
+
+      if (
+        !Number.isFinite(member.delaySeconds) ||
+        member.delaySeconds < 0 ||
+        member.delaySeconds > 0.75
+      ) {
+        errors.push(`${memberOwner} must keep delaySeconds between 0 and 0.75`);
+      }
+
+      if (
+        !Number.isFinite(member.distanceOffset) ||
+        member.distanceOffset < 0 ||
+        member.distanceOffset > 72
+      ) {
+        errors.push(`${memberOwner} must keep distanceOffset between 0 and 72`);
+      }
+    }
+
+    if (!formation.cue.label.trim()) {
+      errors.push(`${owner} must have a cue label`);
+    }
+
+    if (formation.cue.label.length > 4) {
+      errors.push(`${owner} cue label must be 4 characters or fewer`);
+    }
+
+    validateHexColor(errors, `${owner} cue`, 'stroke', formation.cue.stroke);
+
+    const matchingFactions = factions.filter((faction) =>
+      faction.enemyRole.formationEligibility.includes(formation.shape)
+    );
+
+    if (matchingFactions.length === 0) {
+      errors.push(`${owner} must match at least one current faction formation eligibility`);
+    }
+
+    const memberRoles = new Set(formation.members.map((member) => member.role));
+    const coveredRoles = new Set(matchingFactions.map((faction) => faction.enemyRole.role));
+
+    for (const role of memberRoles) {
+      if (!coveredRoles.has(role)) {
+        errors.push(`${owner} member role ${role} must match a current faction for this shape`);
+      }
+    }
   }
 }
 

@@ -1,5 +1,6 @@
 import { getBossById, type BossId } from '../content/bosses';
 import { getFactionById, type FactionId } from '../content/factions';
+import { getEnemyFormationById, type EnemyFormationId } from '../content/enemyFormations';
 import { getEnemyVariantById, type EnemyVariantId } from '../content/enemyVariants';
 import type { ShipAppearance, ShipSilhouette, ShipWeaponMountHint } from '../content/ships';
 import type { BulletContrast } from '../core/settingsData';
@@ -74,6 +75,10 @@ export interface PlayerRenderState {
 export interface EnemyRenderState {
   readonly factionId: FactionId;
   readonly variantId?: EnemyVariantId | null;
+  readonly formationId?: EnemyFormationId | null;
+  readonly formationLabel?: string | null;
+  readonly formationMemberIndex?: number | null;
+  readonly formationMemberCount?: number | null;
   readonly x: number;
   readonly y: number;
   readonly radius: number;
@@ -927,10 +932,15 @@ export class CanvasRenderer {
     const context = this.context;
     const healthRatio = clamp(enemy.hull / enemy.maxHull, 0, 1);
     const faction = getFactionById(enemy.factionId);
+    const formation = enemy.formationId ? getEnemyFormationById(enemy.formationId) : null;
     const variant = enemy.variantId ? getEnemyVariantById(enemy.variantId) : null;
 
     context.save();
     context.translate(enemy.x, enemy.y);
+
+    if (formation) {
+      this.paintEnemyFormationCue(enemy, formation.cue);
+    }
 
     if (variant) {
       this.paintEnemyVariantCue(enemy, variant.cue);
@@ -1004,6 +1014,35 @@ export class CanvasRenderer {
     context.fillStyle = faction.palette.trim;
     context.fillRect(-enemy.radius, enemy.radius + 6, enemy.radius * 2 * healthRatio, 4);
 
+    context.restore();
+  }
+
+  private paintEnemyFormationCue(
+    enemy: EnemyRenderState,
+    cue: { readonly label: string; readonly stroke: string }
+  ): void {
+    const context = this.context;
+    const stroke = this.settings.bulletContrast === 'high' ? '#ffffff' : cue.stroke;
+    const memberIndex = Math.max(0, enemy.formationMemberIndex ?? 0);
+    const memberCount = Math.max(1, enemy.formationMemberCount ?? 1);
+    const ringRadius = enemy.radius * 1.62;
+    const startAngle = -Math.PI / 2 + (Math.PI * 2 * memberIndex) / memberCount;
+    const endAngle = startAngle + Math.PI * 0.52;
+
+    context.save();
+    context.globalAlpha = this.settings.reducedMotion ? 0.54 : 0.68;
+    context.strokeStyle = stroke;
+    context.lineWidth = 1.4;
+    context.beginPath();
+    context.arc(0, 0, ringRadius, startAngle, endAngle);
+    context.stroke();
+
+    context.globalAlpha = 0.9;
+    context.fillStyle = stroke;
+    context.font = '7px system-ui, sans-serif';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText(cue.label, 0, enemy.radius + 18);
     context.restore();
   }
 

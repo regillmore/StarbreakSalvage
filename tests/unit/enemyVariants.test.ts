@@ -148,6 +148,7 @@ function createVariantPressurePlan() {
     sectorIndex: 4,
     routePressure: true,
     challenge: true,
-    eliteEncounter: true
+    eliteEncounter: true,
+    enableFormations: false
   });
 }

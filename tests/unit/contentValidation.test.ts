@@ -4,6 +4,7 @@ import { ACHIEVEMENTS, type AchievementDefinition } from '../../src/content/achi
 import { BACKGROUNDS, type BackgroundDefinition } from '../../src/content/backgrounds';
 import { BOSSES, type BossDefinition } from '../../src/content/bosses';
 import { validateContent } from '../../src/content/contentValidation';
+import { ENEMY_FORMATIONS, type EnemyFormationDefinition } from '../../src/content/enemyFormations';
 import { ENEMY_VARIANTS, type EnemyVariantDefinition } from '../../src/content/enemyVariants';
 import { FACTIONS, type FactionDefinition } from '../../src/content/factions';
 import {
@@ -27,6 +28,7 @@ const baseItem = ITEMS[0] as ItemDefinition;
 const baseBackground = BACKGROUNDS[0] as BackgroundDefinition;
 const baseFaction = FACTIONS[0] as FactionDefinition;
 const baseBoss = BOSSES[0] as BossDefinition;
+const baseEnemyFormation = ENEMY_FORMATIONS[0] as EnemyFormationDefinition;
 const baseEnemyVariant = ENEMY_VARIANTS[0] as EnemyVariantDefinition;
 const baseSector = SECTORS[0] as SectorDefinition;
 const baseShip = SHIPS[0] as ShipDefinition;
@@ -230,6 +232,103 @@ describe('validateContent', () => {
     expect(errors).toContain('Enemy variant variant_missing cue must have fill as a #RRGGBB color');
     expect(errors).toContain(
       'Enemy variant variant_missing must match at least one current faction role'
+    );
+  });
+
+  it('rejects invalid enemy formation definitions', () => {
+    const errors = validateContent({
+      enemyFormations: [
+        baseEnemyFormation,
+        {
+          ...baseEnemyFormation,
+          name: 'Duplicate Wedge'
+        },
+        {
+          ...baseEnemyFormation,
+          id: 'formation_missing',
+          shape: 'orbit',
+          name: '',
+          debugLabel: '',
+          summary: '',
+          minSectorIndex: -1,
+          minMembers: 0,
+          maxMembers: 5,
+          weight: 0,
+          spacing: 12,
+          entryStyle: 'teleport',
+          breakCondition: 'panic',
+          cleanupPolicy: 'optional',
+          encounterTypes: ['surprise'],
+          preferredRoles: ['raider'],
+          members: [
+            {
+              role: 'raider',
+              xOffset: 500,
+              targetYOffset: 200,
+              delaySeconds: 2,
+              distanceOffset: 99
+            }
+          ],
+          cue: {
+            label: 'LONGER',
+            stroke: 'cyan'
+          }
+        } as unknown as EnemyFormationDefinition
+      ]
+    });
+
+    expect(errors).toContain(`Duplicate enemy formation id: ${baseEnemyFormation.id}`);
+    expect(errors).toContain('Enemy formation formation_missing has invalid id');
+    expect(errors).toContain('Enemy formation formation_missing has invalid shape: orbit');
+    expect(errors).toContain('Enemy formation formation_missing must have a name');
+    expect(errors).toContain('Enemy formation formation_missing must have a debug label');
+    expect(errors).toContain('Enemy formation formation_missing must have a summary');
+    expect(errors).toContain(
+      'Enemy formation formation_missing must have non-negative minSectorIndex'
+    );
+    expect(errors).toContain('Enemy formation formation_missing must have positive minMembers');
+    expect(errors).toContain('Enemy formation formation_missing must have positive weight');
+    expect(errors).toContain(
+      'Enemy formation formation_missing must define enough member slots for maxMembers'
+    );
+    expect(errors).toContain('Enemy formation formation_missing must keep spacing readable');
+    expect(errors).toContain('Enemy formation formation_missing has invalid entry style: teleport');
+    expect(errors).toContain(
+      'Enemy formation formation_missing has invalid break condition: panic'
+    );
+    expect(errors).toContain(
+      'Enemy formation formation_missing has invalid cleanup policy: optional'
+    );
+    expect(errors).toContain(
+      'Enemy formation formation_missing cleanup policy must keep first-pass members as required targets'
+    );
+    expect(errors).toContain(
+      'Enemy formation formation_missing has invalid encounter type: surprise'
+    );
+    expect(errors).toContain(
+      'Enemy formation formation_missing has invalid preferred role: raider'
+    );
+    expect(errors).toContain('Enemy formation formation_missing member 1 has invalid role: raider');
+    expect(errors).toContain(
+      'Enemy formation formation_missing member 1 must keep xOffset within fixed-arena bounds'
+    );
+    expect(errors).toContain(
+      'Enemy formation formation_missing member 1 must keep targetYOffset within readable bounds'
+    );
+    expect(errors).toContain(
+      'Enemy formation formation_missing member 1 must keep delaySeconds between 0 and 0.75'
+    );
+    expect(errors).toContain(
+      'Enemy formation formation_missing member 1 must keep distanceOffset between 0 and 72'
+    );
+    expect(errors).toContain(
+      'Enemy formation formation_missing cue label must be 4 characters or fewer'
+    );
+    expect(errors).toContain(
+      'Enemy formation formation_missing cue must have stroke as a #RRGGBB color'
+    );
+    expect(errors).toContain(
+      'Enemy formation formation_missing must match at least one current faction formation eligibility'
     );
   });
 

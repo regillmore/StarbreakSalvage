@@ -71,7 +71,8 @@ export const ENEMY_FORMATION_ELIGIBILITIES = [
   'escort',
   'pincer',
   'convoy',
-  'ring'
+  'ring',
+  'staggeredLane'
 ] as const;
 export type EnemyFormationEligibility = (typeof ENEMY_FORMATION_ELIGIBILITIES)[number];
 

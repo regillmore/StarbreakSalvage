@@ -733,12 +733,17 @@ function createEnemyRoleDebugLines(enemyRoles: SceneDebugState['enemyRoles']): r
   const variantSummary = enemyRoles.variantCounts
     .map((variantCount) => `${variantCount.label}:${variantCount.count}`)
     .join(' ');
+  const formationSummary = enemyRoles.formationCounts
+    .map((formationCount) => `${formationCount.label}:${formationCount.count}`)
+    .join(' ');
 
   return [
     `Roles ${roleSummary}`,
     `Enemy meta V${enemyRoles.variantCount}${variantSummary ? ` ${variantSummary}` : ''} F${
       enemyRoles.formationCount
-    }${objectiveSummary ? ` ${objectiveSummary}` : ''}`
+    }${formationSummary ? ` ${formationSummary}` : ''}${
+      objectiveSummary ? ` ${objectiveSummary}` : ''
+    }`
   ];
 }
 

@@ -1265,7 +1265,7 @@ Acceptance:
 
 Status:
 
-- Implemented in work orders 062 and 065. `EnemyRolePressure` summarizes active role counts, objective-policy counts, and active upgraded variant counts from current enemies, with formation placeholders held at zero until formations exist; the debug overlay reports role and variant pressure during gameplay.
+- Implemented across work orders 062, 065, and 066. `EnemyRolePressure` summarizes active role counts, objective-policy counts, upgraded variant counts, and active formation counts from current enemies; the debug overlay reports role, variant, and formation pressure during gameplay without adding a second entity scan.
 
 ## Epic AR - Enemy behavior differentiation
 
@@ -1349,6 +1349,10 @@ Acceptance:
 - Definitions validate against enemy roles and fixed-world bounds.
 - No external formation assets are introduced.
 
+Status:
+
+- Implemented in work order 066. `src/content/enemyFormations.ts` defines eight original formation shapes: wedge, column, screen, escort, pincer, convoy, ring, and staggered lane. Each definition carries member role intent, fixed-world offsets, timing, entry style, spacing, break condition, cleanup policy, and compact cue metadata, and content validation rejects bad roles, shapes, timings, spacing, bounds, IDs, and cue colors.
+
 ### AT2 - Formation spawning
 
 Acceptance:
@@ -1356,6 +1360,10 @@ Acceptance:
 - Formation members spawn in deterministic order through the wave director.
 - Frame catchup cannot skip or duplicate members.
 - Formations stay readable and avoid incoherent overlap.
+
+Status:
+
+- Implemented in work order 066. The wave director selects optional formations from seeded per-wave RNG forks, expands existing multi-member waves into ordered spawn entries, assigns member factions from role/shape eligibility, keeps fresh opening and single-target waves formation-free, and preserves the existing `nextSpawnIndex` catchup contract. Combat/render/debug carry formation IDs, member indexes, compact canvas arcs/labels, and active formation counts.
 
 ### AT3 - Objective and reward safety
 

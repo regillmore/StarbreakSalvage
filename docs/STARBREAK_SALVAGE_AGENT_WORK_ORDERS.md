@@ -1099,6 +1099,8 @@ Acceptance criteria:
 - Frame catchup cannot skip or duplicate formation members.
 - Formation spawning does not break current objective progress.
 
+Status: implemented; `src/content/enemyFormations.ts` now defines validated wedge, column, screen, escort, pincer, convoy, ring, and staggered-lane formations with member roles, fixed-world offsets, timing, entry style, spacing, break condition, cleanup policy, and compact canvas cue metadata. The wave director chooses optional formations from seeded per-wave RNG forks, expands multi-member waves into ordered `EnemySpawn` entries without changing the existing spawn-index catchup contract, assigns member factions from role/shape eligibility, and keeps fresh opening/single-target waves formation-free. Combat preserves formation annotations on live enemies, rendering adds lightweight formation arcs/labels, the debug overlay reports active formation counts, and unit coverage pins validation, known-seed formation schedules, bounds, deterministic order, and frame-catchup duplicate prevention.
+
 ## Work order 067 - Formation-wave integration and objective safety
 
 Goal: make formations work with sector objectives, rewards, and routes.

@@ -92,6 +92,8 @@ Exit criteria:
 - Formations remain inside the fixed 640x720 combat world.
 - Defeating or breaking formations cannot desync objective progress.
 
+Status: first pass implemented through work order 066. `src/content/enemyFormations.ts` defines eight validated squad shapes with member role intent, offsets, stagger timing, entry style, spacing, break condition, cleanup policy, and cue metadata. Wave planning selects optional formations from seeded per-wave RNG forks and expands existing multi-member waves into ordered spawn entries, so scroll-distance catchup still advances through one spawn index per due member without skipping or duplicating. Combat/render/debug now carry formation IDs, member indexes, compact canvas cues, and active formation counts. Deeper route weighting, optional rewards, break behavior, simultaneous-kill regression coverage, and sector-complete objective safety are intentionally left to work order 067.
+
 ### P7.5 - Longer Sector Pacing
 
 Scope:

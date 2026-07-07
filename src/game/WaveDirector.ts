@@ -1,8 +1,14 @@
 import type { SectorEncounterPacingDefinition } from '../content/sectors';
 import { FACTIONS, type FactionId } from '../content/factions';
+import {
+  chooseEnemyFormation,
+  chooseFormationMemberFaction,
+  getEnemyFormationById
+} from '../content/enemyFormations';
 import { chooseEnemyVariant, type EnemyVariantEncounterType } from '../content/enemyVariants';
 import { clamp } from '../core/math';
 import { createRng, type Rng } from '../core/rng';
+import { COMBAT_ARENA_WIDTH } from './CombatGeometry';
 import type { CombatState, EnemySpawn } from './CombatState';
 import type { SectorScrollPlan } from './ScrollState';
 import type { SectorObjectivePlan } from './SectorObjectives';
@@ -61,6 +67,7 @@ export interface WaveDirectorOptions {
   readonly routePressure?: boolean;
   readonly challenge?: boolean;
   readonly eliteEncounter?: boolean;
+  readonly enableFormations?: boolean;
 }
 
 const DISTANCE_WAVE_WINDOW_START_RATIO = 0.12;
@@ -110,7 +117,8 @@ export function createWaveDirectorPlan(options: WaveDirectorOptions): WaveDirect
         challenge: options.challenge ?? false,
         eliteEncounter: options.eliteEncounter ?? false,
         bossRequired: options.objective.bossRequired
-      }
+      },
+      enableFormations: options.enableFormations ?? true
     })
   );
 
@@ -222,29 +230,85 @@ function createWaveSpawns(options: {
   readonly availableFactionIds: readonly FactionId[];
   readonly pacing: SectorEncounterPacingDefinition;
   readonly variantContext: WaveVariantContext;
+  readonly enableFormations: boolean;
 }): EnemySpawn[] {
   const spawns: EnemySpawn[] = [];
+  const encounterType = getWaveEncounterType(options.wave.label, options.variantContext);
+  const formationContext = {
+    preferredFactionId: options.preferredFactionId,
+    availableFactionIds: options.availableFactionIds,
+    sectorIndex: options.variantContext.sectorIndex,
+    waveIndex: options.wave.index,
+    spawnCount: options.wave.spawnCount,
+    waveLabel: options.wave.label,
+    routePressure: options.variantContext.routePressure,
+    challenge: options.variantContext.challenge,
+    elite: options.variantContext.eliteEncounter || encounterType === 'elite',
+    encounterType
+  };
+  const formationId = options.enableFormations
+    ? chooseEnemyFormation(
+        formationContext,
+        options.rng.fork(`formation-${options.wave.index + 1}-${options.wave.label}`)
+      )
+    : null;
+  const formation = formationId ? getEnemyFormationById(formationId) : null;
+  let anchorXRatio = options.pacing.firstSpawnXRatio;
+  let anchorTargetY = Math.round((options.pacing.targetYMin + options.pacing.targetYMax) / 2);
 
   for (let spawnIndex = 0; spawnIndex < options.wave.spawnCount; spawnIndex += 1) {
-    const xRatio =
+    const generatedXRatio =
       spawnIndex === 0
         ? options.pacing.firstSpawnXRatio
         : options.rng.int(
             Math.round(options.pacing.flankXMinRatio * 100),
             Math.round(options.pacing.flankXMaxRatio * 100)
           ) / 100;
-    const targetY = options.rng.int(
+    const generatedTargetY = options.rng.int(
       Math.round(options.pacing.targetYMin),
       Math.round(options.pacing.targetYMax)
     );
+
+    if (spawnIndex === 0) {
+      anchorXRatio = generatedXRatio;
+      anchorTargetY = generatedTargetY;
+    }
+
     const hull = options.wave.index >= 2 || spawnIndex > 1 ? 3 : 2;
     const fireDelay = options.rng.int(80, 145) / 100;
-    const factionId = chooseFaction(
+    const baseFactionId = chooseFaction(
       options.rng,
       options.preferredFactionId,
       options.availableFactionIds
     );
-    const encounterType = getWaveEncounterType(options.wave.label, options.variantContext);
+    const member = formation?.members[spawnIndex] ?? null;
+    const factionId =
+      formation && member
+        ? chooseFormationMemberFaction(
+            formationContext,
+            formation,
+            member,
+            baseFactionId,
+            options.rng.fork(`formation-member-${spawnIndex + 1}-${formation.id}`)
+          )
+        : baseFactionId;
+    const xRatio =
+      formation && member ? getFormationXRatio(anchorXRatio, member.xOffset) : generatedXRatio;
+    const targetY =
+      formation && member
+        ? getFormationTargetY(anchorTargetY, member.targetYOffset)
+        : generatedTargetY;
+    const atSeconds = roundSeconds(
+      options.wave.startsAtSeconds + spawnIndex * 0.32 + (member?.delaySeconds ?? 0)
+    );
+    const atDistance =
+      options.wave.startsAtDistance === null
+        ? null
+        : roundDistance(
+            options.wave.startsAtDistance +
+              spawnIndex * options.pacing.spawnSpacing +
+              (member?.distanceOffset ?? 0)
+          );
     const variantId = chooseEnemyVariant(
       {
         factionId,
@@ -261,11 +325,8 @@ function createWaveSpawns(options: {
     );
 
     spawns.push({
-      atSeconds: roundSeconds(options.wave.startsAtSeconds + spawnIndex * 0.32),
-      atDistance:
-        options.wave.startsAtDistance === null
-          ? null
-          : roundDistance(options.wave.startsAtDistance + spawnIndex * options.pacing.spawnSpacing),
+      atSeconds,
+      atDistance,
       waveIndex: options.wave.index,
       waveLabel: options.wave.label,
       xRatio,
@@ -273,11 +334,27 @@ function createWaveSpawns(options: {
       hull,
       fireDelay,
       factionId,
-      ...(variantId ? { variantId } : {})
+      ...(variantId ? { variantId } : {}),
+      ...(formation
+        ? {
+            formationId: formation.id,
+            formationLabel: formation.debugLabel,
+            formationMemberIndex: spawnIndex,
+            formationMemberCount: options.wave.spawnCount
+          }
+        : {})
     });
   }
 
   return spawns;
+}
+
+function getFormationXRatio(anchorXRatio: number, xOffset: number): number {
+  return clamp((anchorXRatio * COMBAT_ARENA_WIDTH + xOffset) / COMBAT_ARENA_WIDTH, 0.1, 0.9);
+}
+
+function getFormationTargetY(anchorTargetY: number, targetYOffset: number): number {
+  return Math.round(clamp(anchorTargetY + targetYOffset, 64, 240));
 }
 
 interface WaveVariantContext {

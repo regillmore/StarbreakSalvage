@@ -5,6 +5,7 @@ import {
   type BossPatternId
 } from '../content/bosses';
 import { FACTIONS, getFactionById, type FactionId } from '../content/factions';
+import type { EnemyFormationId } from '../content/enemyFormations';
 import { getEnemyVariantById, type EnemyVariantId } from '../content/enemyVariants';
 import type { ItemTag } from '../content/items';
 import type { ShipStats, WeaponId } from '../content/ships';
@@ -101,6 +102,10 @@ export interface EnemyState {
   readonly id: number;
   readonly factionId: FactionId;
   readonly variantId?: EnemyVariantId | null;
+  readonly formationId?: EnemyFormationId | null;
+  readonly formationLabel?: string | null;
+  readonly formationMemberIndex?: number | null;
+  readonly formationMemberCount?: number | null;
   x: number;
   y: number;
   readonly radius: number;
@@ -234,6 +239,10 @@ export interface EnemySpawn {
   readonly fireDelay: number;
   readonly factionId: FactionId;
   readonly variantId?: EnemyVariantId | null;
+  readonly formationId?: EnemyFormationId | null;
+  readonly formationLabel?: string | null;
+  readonly formationMemberIndex?: number | null;
+  readonly formationMemberCount?: number | null;
 }
 
 export interface CombatRunResult {
@@ -1175,6 +1184,10 @@ function spawnDueEnemies(state: CombatState, bounds: CombatBounds): void {
       id: getNextEntityId(state),
       factionId: spawn.factionId,
       variantId: spawn.variantId ?? null,
+      formationId: spawn.formationId ?? null,
+      formationLabel: spawn.formationLabel ?? null,
+      formationMemberIndex: spawn.formationMemberIndex ?? null,
+      formationMemberCount: spawn.formationMemberCount ?? null,
       x,
       y: -24,
       radius: 17 * (variant?.radiusScale ?? 1),
