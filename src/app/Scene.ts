@@ -16,6 +16,12 @@ export interface SceneDebugState {
     readonly playerProjectiles: number;
     readonly enemyProjectiles: number;
     readonly pickups: number;
+    readonly looseCurrencyPickups: number;
+    readonly looseCurrencyValue: number;
+    readonly looseCurrencyCredits: number;
+    readonly looseCurrencySalvage: number;
+    readonly looseCurrencyPickupCap: number;
+    readonly looseCurrencyValueCap: number;
     readonly effects: number;
     readonly pickupsAndEffects: number;
     readonly telegraphs: number;

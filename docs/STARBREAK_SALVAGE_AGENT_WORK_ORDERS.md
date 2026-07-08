@@ -1303,7 +1303,7 @@ Acceptance criteria:
 - Active loose currency count/value is capped and visible in debug.
 - Run summaries and upgrade progress remain accurate after loose currency collection.
 
-Status: planned.
+Status: implemented; `src/game/LooseCurrency.ts` now owns deterministic scatter specs, value tiers, drift, TTL, collection radius, conservative sector/route/hazard/feature lane planning, and active count/value cap summaries. Combat now routes enemy, boss, destructible, and sector-plan currency through shared cap enforcement, fixed-world pickup attraction, expiration, collection counters, and run-result economy accounting. Gameplay creates one loose-currency plan per sector from current features, obstacle placements, and route pressure, adds HUD hint copy for active salvage lanes, and the debug overlay reports loose pickup count/value plus credit/salvage split against caps. Unit coverage pins scatter determinism, pickup magnet behavior, cap enforcement, run-summary/save/upgrade accounting for fresh and progressed saves, and existing obstacle/destructible reward regressions. `npm run check` and escalated Playwright Chromium smoke passed.
 
 ## Work order 079 - Environmental debug smoke, accessibility, and performance hardening
 

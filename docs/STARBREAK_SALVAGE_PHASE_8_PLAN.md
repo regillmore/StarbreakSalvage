@@ -77,7 +77,7 @@ Exit criteria:
 - Obstacles use fixed combat-world coordinates and validate lane safety.
 - Dense obstacle/destructible scenarios stay within performance and readability budgets.
 
-Status: advanced by work orders 075-077. The first destructible/obstacle schema now defines validated content for debris, cargo pods, shield gates, lunar rock fields, surface pylons, wreck plates, salvage caches, and volatile canisters, plus deterministic fixed-world placement helpers with safe-lane checks. Runtime damage/rewards, bounded chain reactions, deterministic pickup drops, item-hook dispatch, cleanup, readable canvas/audio feedback, active destructible/obstacle debug counters, lane-safe obstacle placement, and player contact pushout are implemented. Loose currency remains planned for work order 078.
+Status: advanced by work orders 075-078. The first destructible/obstacle schema now defines validated content for debris, cargo pods, shield gates, lunar rock fields, surface pylons, wreck plates, salvage caches, and volatile canisters, plus deterministic fixed-world placement helpers with safe-lane checks. Runtime damage/rewards, bounded chain reactions, deterministic pickup drops, item-hook dispatch, cleanup, readable canvas/audio feedback, active destructible/obstacle debug counters, lane-safe obstacle placement, player contact pushout, and shared loose-currency reward/cap handling are implemented.
 
 ### P8.4 - Loose Currency And Salvage Lanes
 
@@ -93,7 +93,7 @@ Exit criteria:
 - Pickup magnet behavior is tested and settings-aware.
 - Economy tuning remains conservative and does not inflate banked scrap beyond upgrade pacing.
 
-Status: planned for work order 078.
+Status: implemented by work order 078. Loose currency now has deterministic scatter specs and sector plans for enemy/boss drops, destructible rewards, route-event lanes, hazard-risk skims, sector landmarks, and obstacle trails. Runtime pickups carry fixed-world drift, TTL, collection radius, source/tier/debug metadata, shared active count/value caps, missed/collected/suppressed counters, and conservative value budgets. Gameplay debug exposes loose count/value, cap, and credit/salvage split, while HUD hints call out active salvage lanes. Unit coverage protects scatter determinism, magnet/collection behavior, cap enforcement, and summary/save/upgrade accounting for fresh and progressed saves.
 
 ### P8.5 - Environmental Stress And Release Candidate
 

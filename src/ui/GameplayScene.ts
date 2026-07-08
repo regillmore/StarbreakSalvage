@@ -38,6 +38,7 @@ import {
   createEnvironmentObjectPlacementPlan,
   type EnvironmentObjectPlacementPlan
 } from '../game/EnvironmentObjectPlacement';
+import { createLooseCurrencyPlan, type LooseCurrencyPlan } from '../game/LooseCurrency';
 import type { ItemInstance } from '../game/Rewards';
 import { getSectorCompletionReason } from '../game/RunOutcome';
 import type { RouteCombatModifier } from '../game/RouteEvents';
@@ -140,6 +141,7 @@ export class GameplayScene implements Scene {
   private sectorPacingPlan: SectorPacingPlan | null = null;
   private hazardZoneDirectorPlan: HazardZoneDirectorPlan | null = null;
   private environmentObjectPlan: EnvironmentObjectPlacementPlan | null = null;
+  private looseCurrencyPlan: LooseCurrencyPlan | null = null;
   private conditionedScroll: SectorScrollPlan | null = null;
   private conditionedFeatures: SectorFeaturePlan | null = null;
   private conditionedArena: BossArenaPlan | null | undefined;
@@ -860,7 +862,8 @@ export class GameplayScene implements Scene {
       sectorLength: this.getCurrentScrollPlan().length,
       sectorIndex: this.sectorIndex,
       sectorId: this.getCurrentSector().sectorId,
-      environmentObjectPlan: this.getEnvironmentObjectPlan()
+      environmentObjectPlan: this.getEnvironmentObjectPlan(),
+      looseCurrencyPlan: this.getLooseCurrencyPlan()
     });
     return this.combatState;
   }
@@ -891,6 +894,57 @@ export class GameplayScene implements Scene {
     });
 
     return this.environmentObjectPlan;
+  }
+
+  private getLooseCurrencyPlan(): LooseCurrencyPlan {
+    if (this.looseCurrencyPlan) {
+      return this.looseCurrencyPlan;
+    }
+
+    const sector = this.getCurrentSector();
+    const features = this.getCurrentFeatures();
+    const environmentObjects = this.getEnvironmentObjectPlan();
+
+    this.looseCurrencyPlan = createLooseCurrencyPlan({
+      seed: this.getCombatSeed(),
+      sectorId: sector.sectorId,
+      sectorIndex: this.sectorIndex,
+      scrollLength: this.getCurrentScrollPlan().length,
+      hazards: features.hazards,
+      landmarks: features.landmarks,
+      environmentObjects: environmentObjects.objects,
+      routeEventBias: this.getLooseCurrencyRouteBias()
+    });
+
+    return this.looseCurrencyPlan;
+  }
+
+  private getLooseCurrencyRouteBias(): 'none' | 'hazard' | 'elite' | 'market' | 'salvage' {
+    if (this.sectorConditions.modifiers.some((modifier) => modifier.source === 'shop')) {
+      return 'market';
+    }
+
+    if (
+      this.sectorConditions.modifiers.some(
+        (modifier) => modifier.source === 'vault' || modifier.source === 'repair'
+      )
+    ) {
+      return 'salvage';
+    }
+
+    if (this.hasEnemyVariantElitePressure()) {
+      return 'elite';
+    }
+
+    if (
+      this.sectorConditions.modifiers.some(
+        (modifier) => modifier.hazardDensityDelta > 0 || modifier.source === 'glitch'
+      )
+    ) {
+      return 'hazard';
+    }
+
+    return 'none';
   }
 
   private getWavePlan(): WaveDirectorPlan {
@@ -1241,7 +1295,14 @@ export class GameplayScene implements Scene {
     }
 
     if (state.pickups.length > 0) {
-      return 'Hint Pull pickups into the ship to fund shops and permanent salvage.';
+      const looseCredits = state.pickups
+        .filter((pickup) => pickup.kind === 'credit')
+        .reduce((total, pickup) => total + pickup.value, 0);
+      const looseSalvage = state.pickups
+        .filter((pickup) => pickup.kind === 'salvage')
+        .reduce((total, pickup) => total + pickup.value, 0);
+
+      return `Hint Salvage lane active: pull ${looseCredits} credits / ${looseSalvage} salvage before it drifts clear.`;
     }
 
     return `Hint ${getObjectiveProgress(this.getWavePlan(), state).readout}`;

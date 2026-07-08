@@ -1530,7 +1530,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 078.
+- Implemented in work order 078. `LooseCurrency` creates deterministic scatter specs from explicit enemy/boss/destructible payloads and one cached sector plan for route-event lanes, hazard-risk skims, sector landmarks, and obstacle trails. Specs include source, tier, drift, TTL, collection radius, debug label, and conservative value splitting, while combat consumes them through indexed scroll markers rather than per-frame random checks.
 
 ### AY2 - Pickup economy and feedback
 
@@ -1542,7 +1542,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 078.
+- Implemented in work order 078. Combat enforces active loose pickup/value caps, tracks spawned/collected/expired/suppressed value, reports loose pickup count/value plus credit/salvage split in debug, and keeps collection in fixed 640x720 combat-world units. Run results, save updates, run-summary progress, and Upgrade Bay affordability continue to read collected credits/salvage through the normal economy path, with fresh and progressed save tests covering the accounting.
 
 ## Epic AZ - Phase 8 release and QA
 

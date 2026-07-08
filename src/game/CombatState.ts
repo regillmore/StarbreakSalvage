@@ -37,6 +37,16 @@ import {
   type ProjectileBlueprint
 } from './ItemHooks';
 import type { EnvironmentObjectPlacementPlan } from './EnvironmentObjectPlacement';
+import {
+  LOOSE_CURRENCY_ACTIVE_PICKUP_CAP,
+  LOOSE_CURRENCY_ACTIVE_VALUE_CAP,
+  createLooseCurrencyScatter,
+  summarizeLooseCurrencyPickups,
+  type LooseCurrencyPlan,
+  type LooseCurrencyPickupSpec,
+  type LooseCurrencySource,
+  type LooseCurrencyTier
+} from './LooseCurrency';
 import { getItemNames, type ItemInstance } from './Rewards';
 
 export type ProjectileOwner = 'player' | 'enemy';
@@ -184,6 +194,11 @@ export interface PickupState {
   vy: number;
   readonly radius: number;
   readonly value: number;
+  ttl?: number;
+  readonly collectionRadius?: number;
+  readonly source?: LooseCurrencySource;
+  readonly tier?: LooseCurrencyTier;
+  readonly debugLabel?: string;
 }
 
 export interface EnvironmentObjectState {
@@ -229,6 +244,10 @@ export interface CombatStats {
   readonly bossesDefeated: number;
   readonly shotsFired: number;
   readonly pickupsCollected: number;
+  readonly looseCurrencySpawned: number;
+  readonly looseCurrencyCollected: number;
+  readonly looseCurrencyExpired: number;
+  readonly looseCurrencySuppressedValue: number;
   readonly damageTaken: number;
   readonly itemTriggers: number;
   readonly specialsUsed: number;
@@ -264,6 +283,8 @@ export interface CombatState {
   grazedProjectileIds: Set<number>;
   formationRewardsClaimed: Set<string>;
   spawnSchedule: readonly EnemySpawn[];
+  readonly looseCurrencyPlan: LooseCurrencyPlan | null;
+  nextLooseCurrencyIndex: number;
   readonly weapon: WeaponDefinition;
   items: readonly ItemInstance[];
   volleyIndex: number;
@@ -314,6 +335,12 @@ export interface CombatEntityCounts {
   readonly playerProjectiles: number;
   readonly enemyProjectiles: number;
   readonly pickups: number;
+  readonly looseCurrencyPickups: number;
+  readonly looseCurrencyValue: number;
+  readonly looseCurrencyCredits: number;
+  readonly looseCurrencySalvage: number;
+  readonly looseCurrencyPickupCap: number;
+  readonly looseCurrencyValueCap: number;
   readonly effects: number;
   readonly pickupsAndEffects: number;
   readonly telegraphs: number;
@@ -371,6 +398,7 @@ export interface CombatStateOptions {
   readonly sectorIndex?: number;
   readonly sectorId?: string;
   readonly environmentObjectPlan?: EnvironmentObjectPlacementPlan | null;
+  readonly looseCurrencyPlan?: LooseCurrencyPlan | null;
 }
 
 export function createCombatState(
@@ -433,6 +461,8 @@ export function createCombatState(
     spawnSchedule:
       options.spawnSchedule ??
       (options.skipEnemyWaves ? [] : createEnemySpawnSchedule(seed, bossDefinition.factionId)),
+    looseCurrencyPlan: options.looseCurrencyPlan ?? null,
+    nextLooseCurrencyIndex: 0,
     weapon,
     items: options.items ?? [],
     volleyIndex: 0,
@@ -441,6 +471,10 @@ export function createCombatState(
       bossesDefeated: 0,
       shotsFired: 0,
       pickupsCollected: 0,
+      looseCurrencySpawned: 0,
+      looseCurrencyCollected: 0,
+      looseCurrencyExpired: 0,
+      looseCurrencySuppressedValue: 0,
       damageTaken: 0,
       itemTriggers: 0,
       specialsUsed: 0,
@@ -493,6 +527,7 @@ export function updateCombatState(
   updateTelegraphs(state, safeDt);
   updateCombatEffects(state, safeDt);
   updateEnvironmentObjects(state, safeDt);
+  spawnDueLooseCurrency(state, bounds);
   updatePickups(state, safeDt, bounds);
   resolveGraze(state);
   resolveCombatCollisions(state);
@@ -1107,6 +1142,7 @@ export function prepareDebugLongScrollScenario(state: CombatState, scrollDistanc
   state.boss = null;
   state.bossSpawned = false;
   state.nextSpawnIndex = state.spawnSchedule.length;
+  state.nextLooseCurrencyIndex = state.looseCurrencyPlan?.events.length ?? 0;
 
   if (typeof scrollDistance === 'number' && Number.isFinite(scrollDistance)) {
     state.scrollDistance =
@@ -1127,6 +1163,7 @@ export function getCombatEntityCounts(state: CombatState): CombatEntityCounts {
   }
 
   const environmentObjects = getActiveEnvironmentObjects(state);
+  const looseCurrency = summarizeLooseCurrencyPickups(state.pickups);
 
   for (const object of environmentObjects) {
     if (object.kind === 'destructible') {
@@ -1156,6 +1193,12 @@ export function getCombatEntityCounts(state: CombatState): CombatEntityCounts {
     playerProjectiles,
     enemyProjectiles,
     pickups: state.pickups.length,
+    looseCurrencyPickups: looseCurrency.activePickups,
+    looseCurrencyValue: looseCurrency.activeValue,
+    looseCurrencyCredits: looseCurrency.creditValue,
+    looseCurrencySalvage: looseCurrency.salvageValue,
+    looseCurrencyPickupCap: LOOSE_CURRENCY_ACTIVE_PICKUP_CAP,
+    looseCurrencyValueCap: LOOSE_CURRENCY_ACTIVE_VALUE_CAP,
     effects: state.effects.length,
     pickupsAndEffects,
     telegraphs: state.telegraphs.length,
@@ -1399,40 +1442,20 @@ function spawnEnvironmentObjectRewardPickups(
   object: EnvironmentObjectState,
   reward: { readonly credits: number; readonly salvage: number }
 ): number {
-  const pickups: Array<Omit<PickupState, 'id'>> = [];
-
-  if (reward.credits > 0) {
-    pickups.push({
-      kind: 'credit',
-      x: object.x - 9,
+  return spawnLooseCurrencySpecs(
+    state,
+    createLooseCurrencyScatter({
+      seed: state.seed,
+      sourceId: object.placementId,
+      source: 'destructible',
+      x: object.x,
       y: object.y,
-      vx: -28,
-      vy: 38,
-      radius: 7,
-      value: reward.credits
-    });
-  }
-
-  if (reward.salvage > 0) {
-    pickups.push({
-      kind: 'salvage',
-      x: object.x + 9,
-      y: object.y,
-      vx: 28,
-      vy: 42,
-      radius: 7,
-      value: reward.salvage
-    });
-  }
-
-  for (const pickup of pickups.slice(0, MAX_ENVIRONMENT_REWARD_PICKUPS)) {
-    state.pickups.push({
-      id: getNextEntityId(state),
-      ...pickup
-    });
-  }
-
-  return Math.min(pickups.length, MAX_ENVIRONMENT_REWARD_PICKUPS);
+      credits: reward.credits,
+      salvage: reward.salvage,
+      maxPickups: MAX_ENVIRONMENT_REWARD_PICKUPS,
+      debugLabel: object.debugLabel
+    })
+  );
 }
 
 function triggerEnvironmentChainReaction(
@@ -2362,6 +2385,10 @@ function updateCombatEffects(state: CombatState, dt: number): void {
 
 function updatePickups(state: CombatState, dt: number, bounds: CombatBounds): void {
   for (const pickup of state.pickups) {
+    if (pickup.ttl !== undefined) {
+      pickup.ttl -= dt;
+    }
+
     const dx = state.player.x - pickup.x;
     const dy = state.player.y - pickup.y;
     const distance = Math.hypot(dx, dy);
@@ -2516,7 +2543,14 @@ function resolveCombatCollisions(state: CombatState): void {
   }
 
   for (const pickup of state.pickups) {
-    if (!circlesOverlap(pickup, state.player)) {
+    if (pickup.ttl !== undefined && pickup.ttl <= 0) {
+      continue;
+    }
+
+    const collectionRadius = pickup.collectionRadius ?? pickup.radius;
+    const collectionDistance = collectionRadius + state.player.radius;
+
+    if (getDistanceSquared(pickup, state.player) > collectionDistance * collectionDistance) {
       continue;
     }
 
@@ -2540,6 +2574,7 @@ function resolveCombatCollisions(state: CombatState): void {
     state.stats = {
       ...state.stats,
       pickupsCollected: state.stats.pickupsCollected + 1,
+      looseCurrencyCollected: state.stats.looseCurrencyCollected + pickup.value,
       itemTriggers: state.stats.itemTriggers + Number(pickupPayload.fireRateMultiplier < 1)
     };
   }
@@ -2650,6 +2685,7 @@ function cleanupEntities(state: CombatState, bounds: CombatBounds): void {
   state.environmentObjects = state.environmentObjects.filter(
     (object) => !isEnvironmentObjectExpired(state, object)
   );
+  expireLooseCurrencyPickups(state);
   state.telegraphs = state.telegraphs.filter((telegraph) => telegraph.ttl > 0);
   state.effects = state.effects.filter((effect) => effect.ttl > 0);
 
@@ -2659,6 +2695,109 @@ function cleanupEntities(state: CombatState, bounds: CombatBounds): void {
     if (!activeProjectileIds.has(projectileId)) {
       state.grazedProjectileIds.delete(projectileId);
     }
+  }
+}
+
+function spawnDueLooseCurrency(state: CombatState, bounds: CombatBounds): void {
+  const plan = state.looseCurrencyPlan;
+
+  if (!plan) {
+    return;
+  }
+
+  while (state.nextLooseCurrencyIndex < plan.events.length) {
+    const event = plan.events[state.nextLooseCurrencyIndex];
+
+    if (!event || event.distance > state.scrollDistance) {
+      break;
+    }
+
+    state.nextLooseCurrencyIndex += 1;
+    spawnLooseCurrencySpecs(
+      state,
+      createLooseCurrencyScatter({
+        seed: plan.seed,
+        sourceId: event.id,
+        source: event.source,
+        x: clamp(event.xRatio, 0, 1) * bounds.width,
+        y: bounds.padding + 72,
+        credits: event.credits,
+        salvage: event.salvage,
+        maxPickups: 3,
+        spread: event.spread,
+        baseVy: event.baseVy,
+        debugLabel: event.label
+      })
+    );
+  }
+}
+
+function spawnLooseCurrencySpecs(
+  state: CombatState,
+  specs: readonly LooseCurrencyPickupSpec[]
+): number {
+  const activeSummary = summarizeLooseCurrencyPickups(state.pickups);
+  let activePickups = activeSummary.activePickups;
+  let activeValue = activeSummary.activeValue;
+  let spawnedCount = 0;
+  let spawnedValue = 0;
+  let suppressedValue = 0;
+
+  for (const spec of specs) {
+    const value = Math.max(0, Math.floor(spec.value));
+
+    if (value <= 0) {
+      continue;
+    }
+
+    if (
+      activePickups >= LOOSE_CURRENCY_ACTIVE_PICKUP_CAP ||
+      activeValue + value > LOOSE_CURRENCY_ACTIVE_VALUE_CAP
+    ) {
+      suppressedValue += value;
+      continue;
+    }
+
+    state.pickups.push({
+      id: getNextEntityId(state),
+      ...spec,
+      value
+    });
+    activePickups += 1;
+    activeValue += value;
+    spawnedCount += 1;
+    spawnedValue += value;
+  }
+
+  if (spawnedValue > 0 || suppressedValue > 0) {
+    state.stats = {
+      ...state.stats,
+      looseCurrencySpawned: state.stats.looseCurrencySpawned + spawnedValue,
+      looseCurrencySuppressedValue:
+        state.stats.looseCurrencySuppressedValue + suppressedValue
+    };
+  }
+
+  return spawnedCount;
+}
+
+function expireLooseCurrencyPickups(state: CombatState): void {
+  let expiredValue = 0;
+
+  state.pickups = state.pickups.filter((pickup) => {
+    if (pickup.ttl === undefined || pickup.ttl > 0) {
+      return true;
+    }
+
+    expiredValue += Math.max(0, Math.floor(pickup.value));
+    return false;
+  });
+
+  if (expiredValue > 0) {
+    state.stats = {
+      ...state.stats,
+      looseCurrencyExpired: state.stats.looseCurrencyExpired + expiredValue
+    };
   }
 }
 
@@ -2844,65 +2983,37 @@ function spawnEnemyDefeatPickups(
   enemy: EnemyState,
   bonusSalvage: number
 ): void {
-  state.pickups.push({
-    id: getNextEntityId(state),
-    kind: 'credit',
-    x: enemy.x - 8,
-    y: enemy.y,
-    vx: -34,
-    vy: 36,
-    radius: 7,
-    value: 2
-  });
-  state.pickups.push({
-    id: getNextEntityId(state),
-    kind: 'salvage',
-    x: enemy.x + 8,
-    y: enemy.y,
-    vx: 34,
-    vy: 36,
-    radius: 6,
-    value: 1
-  });
-
-  if (bonusSalvage > 0) {
-    state.pickups.push({
-      id: getNextEntityId(state),
-      kind: 'salvage',
+  spawnLooseCurrencySpecs(
+    state,
+    createLooseCurrencyScatter({
+      seed: state.seed,
+      sourceId: `enemy-${enemy.factionId}-${enemy.variantId ?? 'base'}-${enemy.id}`,
+      source: 'enemy',
       x: enemy.x,
-      y: enemy.y + 12,
-      vx: 0,
-      vy: 54,
-      radius: 7,
-      value: bonusSalvage
-    });
-  }
+      y: enemy.y,
+      credits: 2,
+      salvage: 1 + Math.max(0, Math.floor(bonusSalvage)),
+      maxPickups: bonusSalvage > 0 ? 3 : 2,
+      debugLabel: enemy.formationLabel ?? enemy.variantId ?? enemy.factionId
+    })
+  );
 }
 
 function spawnBossDefeatPickups(state: CombatState, boss: BossState, bonusSalvage: number): void {
-  for (const offset of [-28, 0, 28]) {
-    state.pickups.push({
-      id: getNextEntityId(state),
-      kind: 'credit',
-      x: boss.x + offset,
-      y: boss.y + boss.radius * 0.4,
-      vx: offset,
-      vy: 58,
-      radius: 8,
-      value: 4
-    });
-  }
-
-  state.pickups.push({
-    id: getNextEntityId(state),
-    kind: 'salvage',
-    x: boss.x,
-    y: boss.y + boss.radius * 0.7,
-    vx: 0,
-    vy: 72,
-    radius: 9,
-    value: 4 + bonusSalvage
-  });
+  spawnLooseCurrencySpecs(
+    state,
+    createLooseCurrencyScatter({
+      seed: state.seed,
+      sourceId: `boss-${boss.id}`,
+      source: 'boss',
+      x: boss.x,
+      y: boss.y + boss.radius * 0.5,
+      credits: 12,
+      salvage: 4 + Math.max(0, Math.floor(bonusSalvage)),
+      maxPickups: 5,
+      debugLabel: boss.name
+    })
+  );
 }
 
 function applyKillSideEffects(

@@ -644,6 +644,7 @@ export class GameApp {
             }`,
             `Projectiles ${debugState.entityCounts.projectiles} (P${debugState.entityCounts.playerProjectiles}/E${debugState.entityCounts.enemyProjectiles})`,
             `Pickups/FX ${debugState.entityCounts.pickups}/${debugState.entityCounts.effects}`,
+            `Loose ${debugState.entityCounts.looseCurrencyPickups}/${debugState.entityCounts.looseCurrencyPickupCap} V${debugState.entityCounts.looseCurrencyValue}/${debugState.entityCounts.looseCurrencyValueCap} C${debugState.entityCounts.looseCurrencyCredits}/S${debugState.entityCounts.looseCurrencySalvage}`,
             `Telegraphs ${debugState.entityCounts.telegraphs}`,
             `Environment ${debugState.entityCounts.environmentObjects} (D${debugState.entityCounts.destructibles}/O${debugState.entityCounts.obstacles})`
           ];

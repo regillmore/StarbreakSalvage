@@ -57,6 +57,7 @@
 - Added deterministic hazard-zone director scheduling so sector pacing, route pressure, relief windows, formation clusters, lunar context, and boss locks shape paced hazard windows with debug and run-summary context.
 - Added a Phase 8 destructible/obstacle content schema with original debris, cargo, shield, rock, pylon, wreck, cache, and volatile object families plus fixed-world placement helpers.
 - Added lane-safe obstacle placement and runtime contact pushout so environmental objects respect spawn/exit corridors, boss locks, hazards, enemy lanes, and fixed-world movement parity.
+- Added deterministic loose currency scatter lanes for enemy, boss, destructible, route, hazard, landmark, and obstacle sources, with fixed-world pickup attraction, TTL cleanup, active count/value caps, HUD hint copy, and debug cap/value counters.
 
 ### Testing
 
@@ -80,6 +81,7 @@
 - Added Phase 8 hazard behavior tests for family breadth, warning-before-damage, pulse windows, cooldown behavior, cleanup, fixed-world damage rectangles, and settings-aware render state.
 - Added Phase 8 hazard director tests for known-seed schedule reproducibility, relief-window spacing, route pressure, frame-catchup event ordering, and boss-lock deferral.
 - Added destructible/obstacle schema and placement tests for validation failures, deterministic fixed-world placement, sector-fit filtering, and safe-lane guarantees.
+- Added loose currency tests for scatter determinism, pickup magnet/collection behavior, active value cap enforcement, debug summaries, and fresh/progressed save plus upgrade-progress accounting.
 - Added wave director and objective completion tests, including known-seed objective snapshots and boss-gate coverage.
 - Added combat tests for special charge/use, bomb mitigation, graze detection, remapped special/bomb controls, and reduced-motion effect rendering.
 - Added validation and gameplay tests for ship stat contracts, weapon references, weapon patterns, heat/reload behavior, and starting economy.

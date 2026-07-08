@@ -419,9 +419,9 @@ Recommended module direction:
 
 ```text
 src/content/hazardZones.ts
-src/content/destructibles.ts
-src/game/EnvironmentDirector.ts
-src/game/Destructibles.ts
+src/content/environmentObjects.ts
+src/game/HazardZoneDirector.ts
+src/game/EnvironmentObjectPlacement.ts
 src/game/LooseCurrency.ts
 ```
 
@@ -445,6 +445,7 @@ src/game/LooseCurrency.ts
 ### Loose currency
 
 - Loose scrap/credit scatter should originate from deterministic plans or explicit event payloads, not ad hoc frame checks.
+- Work order 078 adds `src/game/LooseCurrency.ts` for deterministic scatter specs, sector/route/hazard/feature/obstacle lane plans, value tiers, TTLs, collection radii, source labels, and active cap summaries. `CombatState` consumes those specs for enemy/boss drops, destructible rewards, and indexed distance events.
 - Pickup attraction should use the same combat-world coordinate model as existing pickups so viewport scaling does not change collection difficulty.
 - Active loose currency count/value should be capped and visible in debug. Summary and Upgrade Bay progress should remain accurate after collection.
 - Economy tuning should stay conservative until playtest data proves that loose scrap does not inflate permanent upgrade pacing or shop purchasing power.
