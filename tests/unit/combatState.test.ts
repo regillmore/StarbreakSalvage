@@ -447,7 +447,10 @@ describe('CombatState', () => {
       pickups: 0,
       effects: 1,
       pickupsAndEffects: 1,
-      telegraphs: 3
+      telegraphs: 3,
+      environmentObjects: 0,
+      destructibles: 0,
+      obstacles: 0
     });
     expect(getCombatEntityCount(first)).toBeLessThanOrEqual(80);
   });
@@ -479,7 +482,10 @@ describe('CombatState', () => {
       pickups: 0,
       effects: 0,
       pickupsAndEffects: 0,
-      telegraphs: 0
+      telegraphs: 0,
+      environmentObjects: 0,
+      destructibles: 0,
+      obstacles: 0
     });
   });
 
@@ -536,7 +542,10 @@ describe('CombatState', () => {
       pickups: 0,
       effects: 2,
       pickupsAndEffects: 2,
-      telegraphs: 4
+      telegraphs: 4,
+      environmentObjects: 0,
+      destructibles: 0,
+      obstacles: 0
     });
     expect(getCombatEntityCount(first)).toBeLessThanOrEqual(80);
   });

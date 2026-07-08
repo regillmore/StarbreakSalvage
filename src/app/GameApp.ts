@@ -644,7 +644,8 @@ export class GameApp {
             }`,
             `Projectiles ${debugState.entityCounts.projectiles} (P${debugState.entityCounts.playerProjectiles}/E${debugState.entityCounts.enemyProjectiles})`,
             `Pickups/FX ${debugState.entityCounts.pickups}/${debugState.entityCounts.effects}`,
-            `Telegraphs ${debugState.entityCounts.telegraphs}`
+            `Telegraphs ${debugState.entityCounts.telegraphs}`,
+            `Environment ${debugState.entityCounts.environmentObjects} (D${debugState.entityCounts.destructibles}/O${debugState.entityCounts.obstacles})`
           ];
     const arenaDebug =
       debugState.arenaPhase && debugState.arenaPhase !== 'none'

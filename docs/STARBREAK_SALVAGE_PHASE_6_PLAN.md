@@ -112,7 +112,7 @@ Exit criteria:
 - Release docs cover item count, hook coverage, pool/gating behavior, discovery UI, and known balance risks.
 - Manual smoke matrix includes at least one item-heavy reward/shop/vault path and one dense synergy combat path.
 
-Status: complete through work order 060. Item-stress instrumentation covers a forced 22-item combat loadout, all 13 hook surfaces, proc cap state, build identity, and fresh/unlocked combat-shop-vault pool previews. The closeout docs record item count, hook coverage, source-weighted pools, unlock/discovery state, release evidence, browser gaps, and remaining item balance risks for the next playtest cycle.
+Status: complete through work order 060 and extended by work order 076. Item-stress instrumentation covers a forced 23-item combat loadout, all 14 hook surfaces, proc cap state, build identity, and fresh/unlocked combat-shop-vault pool previews. The closeout docs record item count, hook coverage, source-weighted pools, unlock/discovery state, release evidence, browser gaps, and remaining item balance risks for the next playtest cycle.
 
 ## Recommended Phase 6 Sequence
 
@@ -131,7 +131,7 @@ Status: complete through work order 060. Item-stress instrumentation covers a fo
 
 Phase 6 is done when item rewards feel significantly less repetitive, the catalog is larger and more varied, item effects are either implemented or clearly tracked, seeded reward/shop/vault outputs remain reproducible, unlocks widen item variety, item UI can explain a larger catalog, and automated plus browser smoke coverage can protect the item ecosystem as it grows.
 
-Status: met for the first item-catalog playtest candidate. The 60-item catalog, 13-hook surface, source-weighted reward/shop/vault pools, unlock-gated item families, discovery records, synergy identity, shared item cards, item-heavy smoke, and release docs are in place. Remaining work is tuning-oriented: live reward repetition, late-run proc balance, non-Chromium manual browser passes, and future catalog breadth.
+Status: met for the first item-catalog playtest candidate and extended by work order 076. The 60-item catalog, 14-hook surface, source-weighted reward/shop/vault pools, unlock-gated item families, discovery records, synergy identity, shared item cards, item-heavy smoke, and release docs are in place. Remaining work is tuning-oriented: live reward repetition, late-run proc balance, non-Chromium manual browser passes, and future catalog breadth.
 
 ## Phase 7 Handoff
 

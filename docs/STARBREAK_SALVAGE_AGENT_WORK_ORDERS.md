@@ -976,7 +976,7 @@ Acceptance criteria:
 - Proc budgets and item effect risks are documented.
 - Existing Phase 5 smoke remains green.
 
-Status: implemented; `src/game/ItemStress.ts` now exposes a deterministic 22-item hook-heavy debug loadout, item-loadout pressure summaries, and fresh/unlocked reward-shop-vault pool previews. Debug key `6` behind `?debug=1` forces the item-storm combat pocket and adds overlay item count, active hook count, proc cap state, and build identity. Unit tests cover the stress model and pool previews, while Playwright smoke covers the `HOOK-STORM-SMOKE` item-storm path.
+Status: implemented; `src/game/ItemStress.ts` now exposes a deterministic 23-item hook-heavy debug loadout, item-loadout pressure summaries, and fresh/unlocked reward-shop-vault pool previews. Debug key `6` behind `?debug=1` forces the item-storm combat pocket and adds overlay item count, active hook count, proc cap state, and build identity. Unit tests cover the stress model and pool previews, while Playwright smoke covers the `HOOK-STORM-SMOKE` item-storm path.
 
 ## Work order 060 - Phase 6 playtest release hardening
 
@@ -993,7 +993,7 @@ Acceptance criteria:
 - Release docs document item count, hook coverage, reward pools, unlock/discovery state, and manual browser gaps.
 - Phase 6 can be declared complete or explicitly deferred with documented blockers.
 
-Status: implemented; Phase 6 is documented as complete as an item-catalog playtest candidate. Release, QA, performance, README, changelog, backlog, technical architecture, Phase 6, and Phase 7 planning docs now record the 60-item catalog, 13-hook item surface, source-weighted pools, unlock/discovery state, item-heavy smoke coverage, remaining item balance/browser risks, and the next enemy-behavior roadmap. Full check, escalated Playwright Chromium smoke, and production preview asset-path smoke passed locally for the closeout.
+Status: implemented; Phase 6 is documented as complete as an item-catalog playtest candidate. Release, QA, performance, README, changelog, backlog, technical architecture, Phase 6, and Phase 7 planning docs now record the 60-item catalog, 14-hook item surface after work order 076 added environmental destruction hooks, source-weighted pools, unlock/discovery state, item-heavy smoke coverage, remaining item balance/browser risks, and the next enemy-behavior roadmap. Full check, escalated Playwright Chromium smoke, and production preview asset-path smoke passed locally for the closeout.
 
 ## Phase 7 work orders
 
@@ -1252,7 +1252,7 @@ Acceptance criteria:
 - Placement helpers use the fixed 640x720 combat world and are independent from viewport size.
 - Fresh sectors retain enough open lanes for fair movement.
 
-Status: implemented; `src/content/environmentObjects.ts` now defines the first typed destructible/obstacle catalog for debris shard clusters, cargo pods, shield gates, lunar rock fields, surface pylons, wreck plates, salvage caches, and volatile canisters. Definitions include kind, family, sector/faction fit, collision footprint, durability, damage-source rules, objective policy, reward policy, chain behavior, fixed-world placement constraints, rendering/audio/VFX cues, accessibility variants, and debug labels. `src/game/EnvironmentObjectPlacement.ts` adds deterministic fixed-640x720 placement helpers with safe-lane validation, and content validation rejects invalid IDs, shapes, impossible sizes, bad objective/reward/chain policies, unsafe lane constraints, and missing cue metadata. Runtime destruction, rewards, and obstacle navigation pressure remain planned for work orders 076-077.
+Status: implemented; `src/content/environmentObjects.ts` now defines the first typed destructible/obstacle catalog for debris shard clusters, cargo pods, shield gates, lunar rock fields, surface pylons, wreck plates, salvage caches, and volatile canisters. Definitions include kind, family, sector/faction fit, collision footprint, durability, damage-source rules, objective policy, reward policy, chain behavior, fixed-world placement constraints, rendering/audio/VFX cues, accessibility variants, and debug labels. `src/game/EnvironmentObjectPlacement.ts` adds deterministic fixed-640x720 placement helpers with safe-lane validation, and content validation rejects invalid IDs, shapes, impossible sizes, bad objective/reward/chain policies, unsafe lane constraints, and missing cue metadata. Runtime destruction, rewards, chain reactions, and active debug counters are implemented in work order 076; obstacle navigation pressure remains planned for work order 077.
 
 ## Work order 076 - Destructible interactions, rewards, and chain reactions
 
@@ -1269,7 +1269,7 @@ Acceptance criteria:
 - Chain reactions are bounded and cannot create runaway entity/proc pressure.
 - Destructible cues remain readable in high contrast, reduced motion, and performance mode.
 
-Status: planned.
+Status: implemented; deterministic environment object placement plans now instantiate runtime destructible/obstacle entities in `CombatState` with fixed-distance activation, hit flashes, hazard cooldowns, and normal fixed-step cleanup. Player weapon, special, bomb, hazard, and bounded chain-reaction damage use the schema's allowed-source rules; rewards roll deterministically per seed/object and spawn capped credit/salvage pickups through the existing economy path. `onEnvironmentObjectDestroyed` adds an explicit item hook payload, with Salvage Dividend Chip now paying a small bonus from salvage-rich wreckage and the item-storm debug loadout expanded to 23 items across 14 hooks. Canvas rendering adds compact original object cues plus break/chain effects, feedback/audio add an `environmentDestroyed` cue, debug state reports active environment/destructible/obstacle counts, and tests cover destruction, deterministic rewards, chain bounds, hazard damage, hook dispatch, cleanup, and objective safety. `npm run check` and escalated Playwright Chromium smoke passed.
 
 ## Work order 077 - Obstacle layouts, lane safety, and navigation pressure
 

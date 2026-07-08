@@ -4,6 +4,14 @@ import {
   type BossId,
   type BossPatternId
 } from '../content/bosses';
+import {
+  getEnvironmentObjectById,
+  type EnvironmentObjectCollisionShape,
+  type EnvironmentObjectDamageSource,
+  type EnvironmentObjectDefinition,
+  type EnvironmentObjectId,
+  type EnvironmentObjectKind
+} from '../content/environmentObjects';
 import { FACTIONS, getFactionById, type FactionId } from '../content/factions';
 import { getEnemyFormationById, type EnemyFormationId } from '../content/enemyFormations';
 import { getEnemyVariantById, type EnemyVariantId } from '../content/enemyVariants';
@@ -23,10 +31,12 @@ import { updateEnemyMovement } from '../systems/EnemyMovement';
 import type { EnemyAttackFamily } from '../content/enemyRoles';
 import {
   applyItemHooks,
+  applyItemHooksWithReport,
   hasItem,
   type EnemyKilledPayload,
   type ProjectileBlueprint
 } from './ItemHooks';
+import type { EnvironmentObjectPlacementPlan } from './EnvironmentObjectPlacement';
 import { getItemNames, type ItemInstance } from './Rewards';
 
 export type ProjectileOwner = 'player' | 'enemy';
@@ -95,6 +105,7 @@ export interface ProjectileState {
   ttl: number;
   readonly tags: readonly ItemTag[];
   readonly procDepth: number;
+  readonly environmentDamageSource?: EnvironmentObjectDamageSource;
   readonly factionId?: FactionId;
 }
 
@@ -175,7 +186,33 @@ export interface PickupState {
   readonly value: number;
 }
 
-export type CombatEffectKind = 'special' | 'bomb' | 'graze';
+export interface EnvironmentObjectState {
+  readonly id: number;
+  readonly placementId: string;
+  readonly definitionId: EnvironmentObjectId;
+  readonly kind: EnvironmentObjectKind;
+  readonly collisionShape: EnvironmentObjectCollisionShape;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly radius: number;
+  readonly distance: number;
+  readonly debugLabel: string;
+  hull: number;
+  readonly maxHull: number;
+  hitFlashSeconds: number;
+  hazardCooldownSeconds: number;
+  destroyed: boolean;
+}
+
+export type CombatEffectKind =
+  | 'special'
+  | 'bomb'
+  | 'graze'
+  | 'environmentHit'
+  | 'environmentBreak'
+  | 'chainReaction';
 
 export interface CombatEffectState {
   readonly id: number;
@@ -198,6 +235,9 @@ export interface CombatStats {
   readonly bombsUsed: number;
   readonly grazes: number;
   readonly enemyProjectilesCancelled: number;
+  readonly environmentObjectsDestroyed: number;
+  readonly environmentRewardsDropped: number;
+  readonly environmentChainReactions: number;
 }
 
 export interface CombatState {
@@ -219,6 +259,7 @@ export interface CombatState {
   boss: BossState | null;
   telegraphs: TelegraphState[];
   pickups: PickupState[];
+  environmentObjects: EnvironmentObjectState[];
   effects: CombatEffectState[];
   grazedProjectileIds: Set<number>;
   formationRewardsClaimed: Set<string>;
@@ -276,6 +317,9 @@ export interface CombatEntityCounts {
   readonly effects: number;
   readonly pickupsAndEffects: number;
   readonly telegraphs: number;
+  readonly environmentObjects: number;
+  readonly destructibles: number;
+  readonly obstacles: number;
 }
 
 const PLAYER_DAMAGE_INVULNERABILITY_SECONDS = 0.55;
@@ -293,6 +337,12 @@ const BOMB_INVULNERABILITY_SECONDS = 0.35;
 const BOMB_DAMAGE = 2.25;
 const BOMB_BOSS_DAMAGE_RATIO = 0.08;
 const GRAZE_MARGIN = 24;
+const ENVIRONMENT_OBJECT_LEAD_DISTANCE = 180;
+const ENVIRONMENT_OBJECT_TRAIL_DISTANCE = 180;
+const ENVIRONMENT_OBJECT_HAZARD_COOLDOWN_SECONDS = 0.35;
+const MAX_ENVIRONMENT_REWARD_PICKUPS = 3;
+const MAX_ENVIRONMENT_CHAIN_REACTIONS_PER_EVENT = 6;
+const MAX_ENVIRONMENT_FEEDBACK_EFFECTS = 80;
 const DEFAULT_SHIP_STATS: ShipStats = {
   maxHull: 3,
   speed: 360,
@@ -319,6 +369,7 @@ export interface CombatStateOptions {
   readonly sectorLength?: number | null;
   readonly sectorIndex?: number;
   readonly sectorId?: string;
+  readonly environmentObjectPlan?: EnvironmentObjectPlacementPlan | null;
 }
 
 export function createCombatState(
@@ -374,6 +425,7 @@ export function createCombatState(
     boss: null,
     telegraphs: [],
     pickups: [],
+    environmentObjects: [],
     effects: [],
     grazedProjectileIds: new Set<number>(),
     formationRewardsClaimed: new Set<string>(),
@@ -393,10 +445,15 @@ export function createCombatState(
       specialsUsed: 0,
       bombsUsed: 0,
       grazes: 0,
-      enemyProjectilesCancelled: 0
+      enemyProjectilesCancelled: 0,
+      environmentObjectsDestroyed: 0,
+      environmentRewardsDropped: 0,
+      environmentChainReactions: 0
     },
     ended: false
   };
+
+  state.environmentObjects = createEnvironmentObjectStates(state, options.environmentObjectPlan);
 
   applySectorStartHooks(state, {
     sectorIndex: options.sectorIndex ?? 0,
@@ -434,6 +491,7 @@ export function updateCombatState(
   updateProjectiles(state, safeDt, bounds);
   updateTelegraphs(state, safeDt);
   updateCombatEffects(state, safeDt);
+  updateEnvironmentObjects(state, safeDt);
   updatePickups(state, safeDt, bounds);
   resolveGraze(state);
   resolveCombatCollisions(state);
@@ -456,6 +514,60 @@ export function forceCombatEnd(
   return createCombatRunResult(state, reason);
 }
 
+export function getActiveEnvironmentObjects(state: CombatState): EnvironmentObjectState[] {
+  return state.environmentObjects.filter((object) => isEnvironmentObjectActive(state, object));
+}
+
+export function damageEnvironmentObjectsInRadius(
+  state: CombatState,
+  x: number,
+  y: number,
+  radius: number,
+  source: EnvironmentObjectDamageSource,
+  damage: number
+): number {
+  let damaged = 0;
+
+  for (const object of getActiveEnvironmentObjects(state)) {
+    if (!environmentObjectOverlapsCircle(object, x, y, radius)) {
+      continue;
+    }
+
+    damaged += Number(
+      damageEnvironmentObject(state, object, source, damage, {
+        visitedObjectIds: new Set<number>(),
+        chainBudget: createEnvironmentChainBudget()
+      })
+    );
+  }
+
+  return damaged;
+}
+
+export function damageEnvironmentObjectsInRect(
+  state: CombatState,
+  rect: { readonly left: number; readonly top: number; readonly right: number; readonly bottom: number },
+  source: EnvironmentObjectDamageSource,
+  damage: number
+): number {
+  let damaged = 0;
+
+  for (const object of getActiveEnvironmentObjects(state)) {
+    if (!environmentObjectOverlapsRect(object, rect)) {
+      continue;
+    }
+
+    damaged += Number(
+      damageEnvironmentObject(state, object, source, damage, {
+        visitedObjectIds: new Set<number>(),
+        chainBudget: createEnvironmentChainBudget()
+      })
+    );
+  }
+
+  return damaged;
+}
+
 export function spawnBoss(
   state: CombatState,
   bossId: BossId,
@@ -468,6 +580,7 @@ export function spawnBoss(
     state.enemies = [];
     state.projectiles = [];
     state.telegraphs = [];
+    state.environmentObjects = [];
     state.nextSpawnIndex = state.spawnSchedule.length;
   }
 
@@ -514,6 +627,7 @@ export function spawnDebugDenseCombatScenario(state: CombatState, bounds: Combat
   state.telegraphs = [];
   state.effects = [];
   state.pickups = [];
+  state.environmentObjects = [];
   state.boss = null;
   state.bossSpawned = true;
   state.nextSpawnIndex = state.spawnSchedule.length;
@@ -600,6 +714,7 @@ export function prepareDebugEnemyRichScenario(state: CombatState, bounds: Combat
   state.telegraphs = [];
   state.effects = [];
   state.pickups = [];
+  state.environmentObjects = [];
   state.boss = null;
   state.bossSpawned = true;
   state.nextSpawnIndex = state.spawnSchedule.length;
@@ -860,6 +975,7 @@ export function prepareDebugItemStormScenario(
   state.telegraphs = [];
   state.effects = [];
   state.pickups = [];
+  state.environmentObjects = [];
   state.boss = null;
   state.bossSpawned = true;
   state.nextSpawnIndex = state.spawnSchedule.length;
@@ -986,6 +1102,7 @@ export function prepareDebugLongScrollScenario(state: CombatState, scrollDistanc
   state.telegraphs = [];
   state.effects = [];
   state.pickups = [];
+  state.environmentObjects = [];
   state.boss = null;
   state.bossSpawned = false;
   state.nextSpawnIndex = state.spawnSchedule.length;
@@ -1000,6 +1117,7 @@ export function prepareDebugLongScrollScenario(state: CombatState, scrollDistanc
 
 export function getCombatEntityCounts(state: CombatState): CombatEntityCounts {
   let playerProjectiles = 0;
+  let destructibles = 0;
 
   for (const projectile of state.projectiles) {
     if (projectile.owner === 'player') {
@@ -1007,6 +1125,15 @@ export function getCombatEntityCounts(state: CombatState): CombatEntityCounts {
     }
   }
 
+  const environmentObjects = getActiveEnvironmentObjects(state);
+
+  for (const object of environmentObjects) {
+    if (object.kind === 'destructible') {
+      destructibles += 1;
+    }
+  }
+
+  const obstacles = environmentObjects.length - destructibles;
   const enemyProjectiles = state.projectiles.length - playerProjectiles;
   const pickupsAndEffects = state.pickups.length + state.effects.length;
   const boss = Number(state.boss !== null);
@@ -1019,7 +1146,8 @@ export function getCombatEntityCounts(state: CombatState): CombatEntityCounts {
       state.projectiles.length +
       state.pickups.length +
       state.telegraphs.length +
-      state.effects.length,
+      state.effects.length +
+      environmentObjects.length,
     player: 1,
     enemies: state.enemies.length,
     boss,
@@ -1029,7 +1157,10 @@ export function getCombatEntityCounts(state: CombatState): CombatEntityCounts {
     pickups: state.pickups.length,
     effects: state.effects.length,
     pickupsAndEffects,
-    telegraphs: state.telegraphs.length
+    telegraphs: state.telegraphs.length,
+    environmentObjects: environmentObjects.length,
+    destructibles,
+    obstacles
   };
 }
 
@@ -1074,6 +1205,360 @@ export function getCombatSafeFrame(bounds: CombatBounds): CombatSafeFrame {
       height: Math.max(1, bounds.height - bounds.padding * 2)
     }
   );
+}
+
+interface EnvironmentChainBudget {
+  remaining: number;
+}
+
+interface EnvironmentDamageOptions {
+  readonly visitedObjectIds: Set<number>;
+  readonly chainBudget: EnvironmentChainBudget;
+}
+
+function createEnvironmentObjectStates(
+  state: CombatState,
+  plan: EnvironmentObjectPlacementPlan | null | undefined
+): EnvironmentObjectState[] {
+  if (!plan) {
+    return [];
+  }
+
+  return plan.objects.map((placement) => {
+    const definition = getEnvironmentObjectById(placement.definitionId);
+
+    return {
+      id: getNextEntityId(state),
+      placementId: placement.id,
+      definitionId: placement.definitionId,
+      kind: definition.kind,
+      collisionShape: placement.collisionShape,
+      x: placement.x,
+      y: placement.y,
+      width: placement.width,
+      height: placement.height,
+      radius: placement.radius,
+      distance: placement.distance,
+      debugLabel: placement.debugLabel,
+      hull: definition.durability.hull,
+      maxHull: definition.durability.hull,
+      hitFlashSeconds: 0,
+      hazardCooldownSeconds: 0,
+      destroyed: false
+    };
+  });
+}
+
+function updateEnvironmentObjects(state: CombatState, dt: number): void {
+  for (const object of state.environmentObjects) {
+    object.hitFlashSeconds = Math.max(0, object.hitFlashSeconds - dt);
+    object.hazardCooldownSeconds = Math.max(0, object.hazardCooldownSeconds - dt);
+  }
+}
+
+function isEnvironmentObjectActive(state: CombatState, object: EnvironmentObjectState): boolean {
+  return (
+    !object.destroyed &&
+    object.hull > 0 &&
+    state.scrollDistance >= object.distance - ENVIRONMENT_OBJECT_LEAD_DISTANCE &&
+    state.scrollDistance <= object.distance + ENVIRONMENT_OBJECT_TRAIL_DISTANCE
+  );
+}
+
+function isEnvironmentObjectExpired(state: CombatState, object: EnvironmentObjectState): boolean {
+  return (
+    object.destroyed ||
+    object.hull <= 0 ||
+    state.scrollDistance > object.distance + ENVIRONMENT_OBJECT_TRAIL_DISTANCE
+  );
+}
+
+function damageEnvironmentObject(
+  state: CombatState,
+  object: EnvironmentObjectState,
+  source: EnvironmentObjectDamageSource,
+  rawDamage: number,
+  options: EnvironmentDamageOptions
+): boolean {
+  if (object.destroyed || object.hull <= 0 || rawDamage <= 0) {
+    return false;
+  }
+
+  const definition = getEnvironmentObjectById(object.definitionId);
+
+  if (
+    !definition.damageInteraction.destructible ||
+    !definition.damageInteraction.allowedSources.includes(source)
+  ) {
+    return false;
+  }
+
+  if (source === 'hazard' && object.hazardCooldownSeconds > 0) {
+    return false;
+  }
+
+  if (source === 'hazard') {
+    object.hazardCooldownSeconds = ENVIRONMENT_OBJECT_HAZARD_COOLDOWN_SECONDS;
+  }
+
+  const armorReduction = source === 'bomb' || source === 'special' ? 0.2 : 0.35;
+  const effectiveDamage = Math.max(0.1, rawDamage - definition.durability.armor * armorReduction);
+  object.hull = applyDamage(object.hull, effectiveDamage).hull;
+  object.hitFlashSeconds = 0.16;
+
+  if (object.hull > 0) {
+    addEnvironmentEffect(state, 'environmentHit', object, getEnvironmentObjectEffectRadius(object));
+    return true;
+  }
+
+  destroyEnvironmentObject(state, object, definition, source, options);
+  return true;
+}
+
+function destroyEnvironmentObject(
+  state: CombatState,
+  object: EnvironmentObjectState,
+  definition: EnvironmentObjectDefinition,
+  source: EnvironmentObjectDamageSource,
+  options: EnvironmentDamageOptions
+): void {
+  if (object.destroyed) {
+    return;
+  }
+
+  object.destroyed = true;
+  object.hull = 0;
+  options.visitedObjectIds.add(object.id);
+
+  const baseReward = rollEnvironmentObjectReward(state, object, definition);
+  const hookReport = applyItemHooksWithReport('onEnvironmentObjectDestroyed', state.items, {
+    definitionId: definition.id,
+    family: definition.family,
+    kind: definition.kind,
+    source,
+    rewardCredits: baseReward.credits,
+    rewardSalvage: baseReward.salvage,
+    bonusSalvage: 0,
+    chainDamage: definition.chain.damage,
+    effectRadius: definition.chain.radius
+  });
+  const reward = {
+    credits: hookReport.payload.rewardCredits,
+    salvage: hookReport.payload.rewardSalvage + Math.max(0, Math.floor(hookReport.payload.bonusSalvage))
+  };
+  const droppedPickups = spawnEnvironmentObjectRewardPickups(state, object, reward);
+
+  addEnvironmentEffect(state, 'environmentBreak', object, getEnvironmentObjectEffectRadius(object) * 1.45);
+  state.stats = {
+    ...state.stats,
+    environmentObjectsDestroyed: state.stats.environmentObjectsDestroyed + 1,
+    environmentRewardsDropped: state.stats.environmentRewardsDropped + droppedPickups,
+    itemTriggers: state.stats.itemTriggers + hookReport.appliedItemIds.length
+  };
+
+  triggerEnvironmentChainReaction(state, object, definition, options);
+}
+
+function rollEnvironmentObjectReward(
+  state: CombatState,
+  object: EnvironmentObjectState,
+  definition: EnvironmentObjectDefinition
+): { readonly credits: number; readonly salvage: number } {
+  const reward = definition.reward;
+
+  if (reward.policy === 'none' || reward.maxValue <= 0 || reward.dropChance <= 0) {
+    return { credits: 0, salvage: 0 };
+  }
+
+  const rng = createRng(`${state.seed}:environment-reward:${object.placementId}`);
+
+  if (rng.nextFloat() > reward.dropChance) {
+    return { credits: 0, salvage: 0 };
+  }
+
+  const value = rng.int(Math.floor(reward.minValue), Math.floor(reward.maxValue));
+
+  if (reward.policy === 'credits') {
+    return { credits: value, salvage: 0 };
+  }
+
+  if (reward.policy === 'salvage') {
+    return { credits: 0, salvage: value };
+  }
+
+  if (reward.policy === 'mixed') {
+    return { credits: Math.max(1, value), salvage: Math.max(1, Math.ceil(value / 2)) };
+  }
+
+  return { credits: Math.max(1, value), salvage: Math.max(1, Math.floor(value / 2)) };
+}
+
+function spawnEnvironmentObjectRewardPickups(
+  state: CombatState,
+  object: EnvironmentObjectState,
+  reward: { readonly credits: number; readonly salvage: number }
+): number {
+  const pickups: Array<Omit<PickupState, 'id'>> = [];
+
+  if (reward.credits > 0) {
+    pickups.push({
+      kind: 'credit',
+      x: object.x - 9,
+      y: object.y,
+      vx: -28,
+      vy: 38,
+      radius: 7,
+      value: reward.credits
+    });
+  }
+
+  if (reward.salvage > 0) {
+    pickups.push({
+      kind: 'salvage',
+      x: object.x + 9,
+      y: object.y,
+      vx: 28,
+      vy: 42,
+      radius: 7,
+      value: reward.salvage
+    });
+  }
+
+  for (const pickup of pickups.slice(0, MAX_ENVIRONMENT_REWARD_PICKUPS)) {
+    state.pickups.push({
+      id: getNextEntityId(state),
+      ...pickup
+    });
+  }
+
+  return Math.min(pickups.length, MAX_ENVIRONMENT_REWARD_PICKUPS);
+}
+
+function triggerEnvironmentChainReaction(
+  state: CombatState,
+  object: EnvironmentObjectState,
+  definition: EnvironmentObjectDefinition,
+  options: EnvironmentDamageOptions
+): void {
+  if (definition.chain.behavior === 'none' || definition.chain.radius <= 0) {
+    return;
+  }
+
+  if (options.chainBudget.remaining <= 0) {
+    return;
+  }
+
+  options.chainBudget.remaining -= 1;
+  addEnvironmentEffect(state, 'chainReaction', object, definition.chain.radius);
+  state.stats = {
+    ...state.stats,
+    environmentChainReactions: state.stats.environmentChainReactions + 1
+  };
+
+  const maxTargets = Math.max(0, Math.floor(definition.chain.maxTargets));
+  const targets = getActiveEnvironmentObjects(state)
+    .filter((candidate) => candidate.id !== object.id && !options.visitedObjectIds.has(candidate.id))
+    .filter(
+      (candidate) =>
+        getDistanceSquared(object, candidate) <= definition.chain.radius * definition.chain.radius
+    )
+    .sort((left, right) => getDistanceSquared(object, left) - getDistanceSquared(object, right))
+    .slice(0, maxTargets);
+
+  for (const target of targets) {
+    if (options.chainBudget.remaining <= 0) {
+      break;
+    }
+
+    damageEnvironmentObject(state, target, 'chainReaction', definition.chain.damage, options);
+  }
+}
+
+function createEnvironmentChainBudget(): EnvironmentChainBudget {
+  return { remaining: MAX_ENVIRONMENT_CHAIN_REACTIONS_PER_EVENT };
+}
+
+function addEnvironmentEffect(
+  state: CombatState,
+  kind: Extract<CombatEffectKind, 'environmentHit' | 'environmentBreak' | 'chainReaction'>,
+  object: EnvironmentObjectState,
+  radius: number
+): void {
+  if (state.effects.length >= MAX_ENVIRONMENT_FEEDBACK_EFFECTS) {
+    return;
+  }
+
+  state.effects.push({
+    id: getNextEntityId(state),
+    kind,
+    x: object.x,
+    y: object.y,
+    radius: Math.max(6, radius),
+    ttl: kind === 'environmentHit' ? 0.14 : kind === 'chainReaction' ? 0.28 : 0.24,
+    maxTtl: kind === 'environmentHit' ? 0.14 : kind === 'chainReaction' ? 0.28 : 0.24
+  });
+}
+
+function getEnvironmentObjectEffectRadius(object: EnvironmentObjectState): number {
+  return object.collisionShape === 'circle'
+    ? Math.max(8, object.radius)
+    : Math.max(12, Math.min(object.width, object.height) * 0.55);
+}
+
+function environmentObjectOverlapsCircle(
+  object: EnvironmentObjectState,
+  x: number,
+  y: number,
+  radius: number
+): boolean {
+  if (object.collisionShape === 'circle') {
+    return circlesOverlap(object, { x, y, radius });
+  }
+
+  const rect = getEnvironmentObjectRect(object);
+  const nearestX = clamp(x, rect.left, rect.right);
+  const nearestY = clamp(y, rect.top, rect.bottom);
+  const dx = x - nearestX;
+  const dy = y - nearestY;
+
+  return dx * dx + dy * dy <= radius * radius;
+}
+
+function environmentObjectOverlapsRect(
+  object: EnvironmentObjectState,
+  rect: { readonly left: number; readonly top: number; readonly right: number; readonly bottom: number }
+): boolean {
+  const objectRect = getEnvironmentObjectRect(object);
+
+  return (
+    objectRect.left <= rect.right &&
+    objectRect.right >= rect.left &&
+    objectRect.top <= rect.bottom &&
+    objectRect.bottom >= rect.top
+  );
+}
+
+function getEnvironmentObjectRect(object: EnvironmentObjectState): {
+  readonly left: number;
+  readonly top: number;
+  readonly right: number;
+  readonly bottom: number;
+} {
+  if (object.collisionShape === 'circle') {
+    return {
+      left: object.x - object.radius,
+      top: object.y - object.radius,
+      right: object.x + object.radius,
+      bottom: object.y + object.radius
+    };
+  }
+
+  return {
+    left: object.x - object.width / 2,
+    top: object.y - object.height / 2,
+    right: object.x + object.width / 2,
+    bottom: object.y + object.height / 2
+  };
 }
 
 function sanitizeSectorLength(value: number | null | undefined): number | null {
@@ -1185,7 +1670,8 @@ function createWeaponProjectiles(state: CombatState): ProjectileBlueprint[] {
     damage: weapon.damage,
     ttl: weapon.pattern === 'beam' ? 0.85 : weapon.pattern === 'spread' ? 1.05 : 1.6,
     tags: weapon.tags,
-    procDepth: 0
+    procDepth: 0,
+    environmentDamageSource: 'weapon'
   };
 
   if (weapon.pattern === 'dual') {
@@ -1283,7 +1769,8 @@ function activateSpecial(state: CombatState): void {
       damage: 1.25,
       ttl: 1.35,
       tags: ['phase', 'laser'],
-      procDepth: 1
+      procDepth: 1,
+      environmentDamageSource: 'special'
     })),
     activeSeconds: SPECIAL_ACTIVE_SECONDS,
     cooldownSeconds: SPECIAL_COOLDOWN_SECONDS,
@@ -1372,7 +1859,8 @@ function activateBomb(state: CombatState, bounds: CombatBounds): void {
         damage: Math.max(0, bombPayload.damage),
         ttl: 0,
         tags: ['bomb', 'plasma'],
-        procDepth: 1
+        procDepth: 1,
+        environmentDamageSource: 'bomb'
       },
       enemyIdsToRemove
     );
@@ -1391,6 +1879,15 @@ function activateBomb(state: CombatState, bounds: CombatBounds): void {
     boss.pendingAttack = null;
     boss.telegraphSeconds = 0;
   }
+
+  damageEnvironmentObjectsInRadius(
+    state,
+    player.x,
+    player.y,
+    Math.max(1, bombPayload.effectRadius),
+    'bomb',
+    Math.max(0, bombPayload.damage)
+  );
 
   state.enemies = state.enemies.filter((enemy) => !enemyIdsToRemove.has(enemy.id));
   state.stats = {
@@ -1811,6 +2308,32 @@ function resolveCombatCollisions(state: CombatState): void {
         damageBossWithProjectile(state, boss, projectile);
         projectileIdsToRemove.add(projectile.id);
       }
+
+      if (!projectileIdsToRemove.has(projectile.id)) {
+        for (const object of getActiveEnvironmentObjects(state)) {
+          if (
+            !environmentObjectOverlapsCircle(object, projectile.x, projectile.y, projectile.radius)
+          ) {
+            continue;
+          }
+
+          const damaged = damageEnvironmentObject(
+            state,
+            object,
+            projectile.environmentDamageSource ?? 'weapon',
+            projectile.damage,
+            {
+              visitedObjectIds: new Set<number>(),
+              chainBudget: createEnvironmentChainBudget()
+            }
+          );
+
+          if (damaged) {
+            projectileIdsToRemove.add(projectile.id);
+            break;
+          }
+        }
+      }
     }
 
     if (projectile.owner === 'enemy' && circlesOverlap(projectile, state.player)) {
@@ -1968,6 +2491,9 @@ function cleanupEntities(state: CombatState, bounds: CombatBounds): void {
     state.enemies = state.enemies.filter((enemy) => !despawnedEnemyIds.has(enemy.id));
   }
 
+  state.environmentObjects = state.environmentObjects.filter(
+    (object) => !isEnvironmentObjectExpired(state, object)
+  );
   state.telegraphs = state.telegraphs.filter((telegraph) => telegraph.ttl > 0);
   state.effects = state.effects.filter((effect) => effect.ttl > 0);
 

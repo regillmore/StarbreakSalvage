@@ -33,7 +33,8 @@ export const ITEM_HOOKS = [
   'onRouteChosen',
   'onShopEntered',
   'onRewardGenerated',
-  'onBossPhaseChanged'
+  'onBossPhaseChanged',
+  'onEnvironmentObjectDestroyed'
 ] as const;
 
 export const ITEM_FAMILIES = [
@@ -777,8 +778,8 @@ export const ITEMS: readonly ItemDefinition[] = [
     name: 'Salvage Dividend Chip',
     rarity: 'common',
     tags: ['scrap', 'credit'],
-    hooks: ['onEnemyKilled'],
-    effect: 'combat kills pay a small salvage dividend',
+    hooks: ['onEnemyKilled', 'onEnvironmentObjectDestroyed'],
+    effect: 'combat kills and salvage-rich wreckage pay a small salvage dividend',
     weight: 11,
     metadata: {
       family: 'route-economy',

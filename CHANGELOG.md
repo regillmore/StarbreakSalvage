@@ -36,7 +36,7 @@
 - Added expanded item hook surfaces for graze, special use, bomb use, sector start, route choice, shop entry, reward generation, and boss phase changes.
 - Expanded the Phase 6 item catalog to 60 original items, adding live effects across lunar/surface, route/economy, boss-pressure, graze, special, bomb, shop, reward, and sector-start hooks while keeping starter rewards free of prototype and cursed entries.
 - Added source-weighted item pool profiles for starter, combat, shop, vault, elite, boss, faction, lunar, and route contexts, with compact source hints on reward and shop cards.
-- Added item-storm debug instrumentation with a forced 22-item loadout across all 13 hook surfaces, hook/proc/build overlay telemetry, and fresh/unlocked reward-shop-vault pool previews for item-heavy smoke.
+- Added item-storm debug instrumentation with a forced 23-item loadout across all 14 hook surfaces, hook/proc/build overlay telemetry, and fresh/unlocked reward-shop-vault pool previews for item-heavy smoke.
 - Added deterministic sector scroll plans, fixed-step distance tracking, HUD distance/speed readouts, debug distance counters, and subtle reduced-motion-aware starfield drift.
 - Added deterministic procedural parallax background plans for all five sectors, with original canvas-drawn stars, rails, debris, bloom strands, grid lines, and core fractures.
 - Moved normal directed wave spawning onto deterministic scroll-distance marks while retaining time-based fallback schedules and boss-gate timing.

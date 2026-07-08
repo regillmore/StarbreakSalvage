@@ -29,6 +29,7 @@ export const ITEM_STORM_ITEM_IDS: readonly ItemId[] = [
   'item_phase_wake_suture',
   'item_prototype_vent_script',
   'item_excess_warhead_clause',
+  'item_salvage_dividend_chip',
   'item_shield_revenge_contract',
   'item_regolith_scoop_array',
   'item_crater_shadow_lens',

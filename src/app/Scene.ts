@@ -19,6 +19,9 @@ export interface SceneDebugState {
     readonly effects: number;
     readonly pickupsAndEffects: number;
     readonly telegraphs: number;
+    readonly environmentObjects: number;
+    readonly destructibles: number;
+    readonly obstacles: number;
   };
   readonly distance?: number;
   readonly sectorLength?: number;

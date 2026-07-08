@@ -149,7 +149,7 @@ Enable debug tools with `?debug=1` on a local, preview, or Pages URL.
 - `3` spawns The Bloom Engine.
 - `4` spawns Warranty Void Seraph.
 - `5` spawns The Core Wreck.
-- `6` replaces the current field with the item-storm hook stress pocket: 22 forced items across all 13 hook surfaces, 10 enemies, 30 enemy bullets, 2 lane telegraphs, 2 pickups, and 1 starter effect, plus overlay item/hook/proc/build telemetry.
+- `6` replaces the current field with the item-storm hook stress pocket: 23 forced items across all 14 hook surfaces, 10 enemies, 30 enemy bullets, 2 lane telegraphs, 2 pickups, and 1 starter effect, plus overlay item/hook/proc/build telemetry.
 - `E` replaces the current field with the enemy-rich formation/variant stress pocket: 10 enemies, all first-pass variant labels, multiple formation labels, 36 enemy bullets, 4 telegraphs, and 2 effects, plus overlay role/variant/formation/budget telemetry.
 - `0` replaces the current field with the dense-combat performance pocket: 12 enemies, 42 enemy bullets, 3 lane telegraphs, and 1 feedback effect, for 59 total active entities including the player.
 - `7` forces the player destruction sequence, including deterministic contract-colored debris and the destroyed summary handoff.
@@ -159,7 +159,7 @@ Enable debug tools with `?debug=1` on a local, preview, or Pages URL.
 
 The item-storm pocket is deterministic and intentionally stays below the Phase 2 alpha active-field budget while exercising every registered hook surface through a large forced loadout. The dense pocket is deterministic and intentionally stays below the Phase 2 alpha active-field budget of 80 entities. The enemy-rich pocket is deterministic and stays below that same budget while making role, variant, formation, projectile, telegraph, and long-sector pacing telemetry visible in one browser path. The long-scroll traversal is deterministic and intentionally quiet so background/feature rendering can be inspected without combat pressure. The forced-destruction path is deterministic and bounded so death-to-summary timing can be tested without relying on combat damage. Work order 049 also exposes progression, upgrade readiness, run resource, and sector-plan telemetry in the debug overlay, while work order 059 exposes item count, hook pressure, proc budget state, and build identity, so browser smoke can verify banked scrap, `LUNAR-SURFACE-LANE`, exit, destruction, hook-heavy item paths, and enemy-rich stress without reading private app state. Use these to confirm the debug overlay remains responsive, bullets remain readable in standard and high-contrast modes, screen shake respects reduced motion, distance/speed/destruction counters behave correctly, viewport/HUD/input metrics remain stable, hook applications stay under the 48-item per-event budget, enemy projectile/telegraph budgets stay under the Phase 7 stress caps, and the round can still be abandoned or summarized.
 
-Phase 8 should add or extend a debug path for environmental stress, with active hazard-zone families, destructible/obstacle count, loose currency count/value, pickup cap state, and environmental stress-budget telemetry visible through `?debug=1`. Work order 074 exposes hazard-zone totals, paced additions, pressure, relief windows, and boss deferrals in the existing overlay; later work should add obstacle/currency-specific counters. Keep any new shortcut deterministic and bounded, and verify it alongside the existing item-storm, enemy-rich, dense-combat, forced-exit, destruction, and long-scroll paths.
+Phase 8 should add or extend a debug path for environmental stress, with active hazard-zone families, destructible/obstacle count, loose currency count/value, pickup cap state, and environmental stress-budget telemetry visible through `?debug=1`. Work orders 074 and 076 expose hazard-zone totals plus active environment/destructible/obstacle counts in the existing overlay; later work should add loose-currency-specific counters. Keep any new shortcut deterministic and bounded, and verify it alongside the existing item-storm, enemy-rich, dense-combat, forced-exit, destruction, and long-scroll paths.
 
 ## Current Boss Phase Volleys
 
@@ -208,7 +208,7 @@ The debug overlay total entity count includes player, enemies, boss, bullets, pi
 - Reward pool weighting can become opaque. Source hints and summaries should explain why rare, cursed, lunar, faction, or boss items appeared.
 - Unlock-gated item families can starve fresh saves if baseline pools shrink too far. Keep fresh-save pool sufficiency covered by deterministic tests.
 - Item card and archive UI can become too dense on narrow screens. Favor concise tags, clear rarity/source labels, and accessible text over decorative clutter.
-- Item-storm smoke confirms the current 22-item forced loadout stays below proc caps, but real late-run inventories can still overemphasize unconditional projectile multiplication. Keep future proc-heavy items conditional, budgeted, and visible in the debug overlay.
+- Item-storm smoke confirms the current 23-item forced loadout stays below proc caps, but real late-run inventories can still overemphasize unconditional projectile multiplication. Keep future proc-heavy items conditional, budgeted, and visible in the debug overlay.
 
 ## Phase 7 Playtest Risks
 

@@ -903,6 +903,10 @@ function createItemHookImplementationRegistry(
     onRewardGenerated: new Set(
       overrides?.onRewardGenerated ?? ITEM_HOOK_IMPLEMENTATIONS.onRewardGenerated
     ),
+    onEnvironmentObjectDestroyed: new Set(
+      overrides?.onEnvironmentObjectDestroyed ??
+        ITEM_HOOK_IMPLEMENTATIONS.onEnvironmentObjectDestroyed
+    ),
     onBossPhaseChanged: new Set(
       overrides?.onBossPhaseChanged ?? ITEM_HOOK_IMPLEMENTATIONS.onBossPhaseChanged
     )

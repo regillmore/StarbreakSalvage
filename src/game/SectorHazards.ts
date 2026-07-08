@@ -2,6 +2,7 @@ import { clamp } from '../core/math';
 import { getHazardZoneDefinition } from '../content/hazardZones';
 import {
   applyPlayerDamage,
+  damageEnvironmentObjectsInRect,
   type CombatBounds,
   type CombatState,
   type PlayerState
@@ -43,6 +44,10 @@ export function resolveSectorHazardCollisions(
     }
 
     damagingHazardIds.push(activeHazard.hazard.id);
+
+    for (const rect of damageRects) {
+      damageEnvironmentObjectsInRect(state, rect, 'hazard', activeHazard.hazard.damage);
+    }
 
     if (!playerOverlapsActiveHazard(state.player, activeHazard, bounds)) {
       continue;

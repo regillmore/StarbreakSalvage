@@ -56,6 +56,13 @@ const CUE_DEFINITIONS: Readonly<Record<CombatFeedbackCue, AudioCueDefinition>> =
     durationSeconds: 0.12,
     gain: 0.08
   },
+  environmentDestroyed: {
+    waveform: 'triangle',
+    frequency: 230,
+    endFrequency: 92,
+    durationSeconds: 0.095,
+    gain: 0.055
+  },
   bossDefeated: {
     waveform: 'sawtooth',
     frequency: 120,

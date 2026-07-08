@@ -12,6 +12,7 @@ const emptySnapshot: CombatFeedbackSnapshot = {
   bombsUsed: 0,
   grazes: 0,
   enemiesDestroyed: 0,
+  environmentObjectsDestroyed: 0,
   bossesDefeated: 0,
   pickupsCollected: 0,
   damageTaken: 0,
@@ -28,6 +29,7 @@ describe('CombatFeedback', () => {
         bombsUsed: 1,
         grazes: 1,
         enemiesDestroyed: 1,
+        environmentObjectsDestroyed: 1,
         bossesDefeated: 0,
         pickupsCollected: 1,
         damageTaken: 1,
@@ -41,6 +43,7 @@ describe('CombatFeedback', () => {
       'graze',
       'playerHit',
       'enemyDestroyed',
+      'environmentDestroyed',
       'pickupCollected',
       'bossSpawned',
       'bossWarning'

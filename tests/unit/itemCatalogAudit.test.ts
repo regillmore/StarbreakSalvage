@@ -33,7 +33,8 @@ describe('item catalog audit', () => {
       onRouteChosen: 4,
       onShopEntered: 2,
       onRewardGenerated: 3,
-      onBossPhaseChanged: 5
+      onBossPhaseChanged: 5,
+      onEnvironmentObjectDestroyed: 1
     });
     expect(audit.tagCounts).toMatchObject({
       credit: 16,

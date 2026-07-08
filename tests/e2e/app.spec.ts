@@ -417,13 +417,13 @@ test('exposes item-heavy hook storm debug instrumentation', async ({ page }) => 
   await page.keyboard.press('6');
   await expect(page.getByTestId('boss-warning')).toContainText('ITEM HOOK STORM');
   await expect(page.locator('.debug-overlay')).toContainText('Scenario item-storm');
-  await expect(page.locator('.debug-overlay')).toContainText('Items 22 (22 unique)');
-  await expect(page.locator('.debug-overlay')).toContainText(/Hooks 13\/13 \d+ apps/);
+  await expect(page.locator('.debug-overlay')).toContainText('Items 23 (23 unique)');
+  await expect(page.locator('.debug-overlay')).toContainText(/Hooks 14\/14 \d+ apps/);
   await expect(page.locator('.debug-overlay')).toContainText(/Proc on[A-Za-z]+ \d+\/48 skip 0/);
-  await expect(page.locator('.debug-overlay')).toContainText(/Build .+ \| 22 items/);
+  await expect(page.locator('.debug-overlay')).toContainText(/Build .+ \| 23 items/);
   await expect(page.locator('.debug-overlay')).toContainText('Projectiles 30 (P0/E30)');
   await expect(page.locator('.debug-overlay')).toContainText('Telegraphs 2');
-  await expect(page.getByTestId('item-readout')).toContainText(/Build .+ \| 22 items/);
+  await expect(page.getByTestId('item-readout')).toContainText(/Build .+ \| 23 items/);
 
   await page.keyboard.down(' ');
   await expect(page.getByTestId('combat-status')).toContainText(/Shots [1-9]/);

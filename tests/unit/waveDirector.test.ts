@@ -627,7 +627,10 @@ function makeProgressState(
       specialsUsed: 0,
       bombsUsed: 0,
       grazes: 0,
-      enemyProjectilesCancelled: 0
+      enemyProjectilesCancelled: 0,
+      environmentObjectsDestroyed: 0,
+      environmentRewardsDropped: 0,
+      environmentChainReactions: 0
     }
   };
 }

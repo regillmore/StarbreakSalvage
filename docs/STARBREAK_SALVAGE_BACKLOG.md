@@ -1211,7 +1211,7 @@ Acceptance:
 
 Status:
 
-- Implemented in work order 059. The `HOOK-STORM-SMOKE` browser path uses debug key `6` to force a 22-item loadout across all 13 hook surfaces, a bounded enemy/projectile field, and overlay item/hook/proc/build telemetry. Pure tests preview fresh and fully unlocked combat/shop/vault pools to catch unlock-gated item availability and rich inventory drift before the Phase 6 release hardening pass.
+- Implemented in work order 059 and extended in work order 076. The `HOOK-STORM-SMOKE` browser path uses debug key `6` to force a 23-item loadout across all 14 hook surfaces, a bounded enemy/projectile field, and overlay item/hook/proc/build telemetry. Pure tests preview fresh and fully unlocked combat/shop/vault pools to catch unlock-gated item availability and rich inventory drift before release hardening passes.
 
 ### AP3 - Phase 6 release checklist
 
@@ -1223,7 +1223,7 @@ Acceptance:
 
 Status:
 
-- Implemented in work order 060. Phase 6 is closed as an item-catalog playtest candidate with documented 60-item catalog scale, 13-hook coverage, source-weighted reward/shop/vault pools, unlock/discovery behavior, shared item cards, item-heavy stress smoke, known item balance risks, manual browser gaps, and Phase 7 enemy-behavior planning.
+- Implemented in work order 060 and extended in work order 076. Phase 6 is closed as an item-catalog playtest candidate with documented 60-item catalog scale, 14-hook coverage, source-weighted reward/shop/vault pools, unlock/discovery behavior, shared item cards, item-heavy stress smoke, known item balance risks, manual browser gaps, and Phase 7 enemy-behavior planning.
 
 ## Phase 7 backlog additions
 

@@ -6,6 +6,12 @@ import {
 } from '../content/items';
 import { getItemNames, type ItemInstance } from './Rewards';
 import type { BossId } from '../content/bosses';
+import type {
+  EnvironmentObjectDamageSource,
+  EnvironmentObjectFamily,
+  EnvironmentObjectId,
+  EnvironmentObjectKind
+} from '../content/environmentObjects';
 import type { RouteKind } from './Generation';
 
 export interface ProjectileBlueprint {
@@ -18,6 +24,7 @@ export interface ProjectileBlueprint {
   readonly ttl: number;
   readonly tags: readonly ItemTag[];
   readonly procDepth: number;
+  readonly environmentDamageSource?: EnvironmentObjectDamageSource;
 }
 
 export interface FirePayload {
@@ -69,6 +76,18 @@ export interface BombUsedPayload {
   readonly cooldownSeconds: number;
   readonly effectRadius: number;
   readonly cancelledProjectiles: number;
+}
+
+export interface EnvironmentObjectDestroyedPayload {
+  readonly definitionId: EnvironmentObjectId;
+  readonly family: EnvironmentObjectFamily;
+  readonly kind: EnvironmentObjectKind;
+  readonly source: EnvironmentObjectDamageSource;
+  readonly rewardCredits: number;
+  readonly rewardSalvage: number;
+  readonly bonusSalvage: number;
+  readonly chainDamage: number;
+  readonly effectRadius: number;
 }
 
 export interface SectorStartPayload {
@@ -138,6 +157,7 @@ export type ItemHookPayloadByName = {
   readonly onShopEntered: ShopEnteredPayload;
   readonly onRewardGenerated: RewardGeneratedPayload;
   readonly onBossPhaseChanged: BossPhaseChangedPayload;
+  readonly onEnvironmentObjectDestroyed: EnvironmentObjectDestroyedPayload;
 };
 
 export type ItemHookName = keyof ItemHookPayloadByName;
@@ -233,7 +253,8 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_warning_siren_lattice',
     'item_capital_wound_ledger',
     'item_telegraph_rewrite_quill'
-  ]
+  ],
+  onEnvironmentObjectDestroyed: ['item_salvage_dividend_chip']
 };
 
 export function applyItemHooks<THook extends ItemHookName>(
@@ -367,6 +388,11 @@ function applySingleItemHook<THook extends ItemHookName>(
       return applyOnBossPhaseChanged(
         itemId,
         payload as BossPhaseChangedPayload
+      ) as ItemHookPayloadByName[THook];
+    case 'onEnvironmentObjectDestroyed':
+      return applyOnEnvironmentObjectDestroyed(
+        itemId,
+        payload as EnvironmentObjectDestroyedPayload
       ) as ItemHookPayloadByName[THook];
   }
 }
@@ -860,6 +886,30 @@ function applyOnEnemyKilled(
   if (
     itemId === 'item_boss_bounty_stamp' &&
     hasAnyTag(payload.projectileTags, ['phase', 'overkill', 'missile'])
+  ) {
+    return {
+      ...payload,
+      bonusSalvage: payload.bonusSalvage + 1
+    };
+  }
+
+  return payload;
+}
+
+function applyOnEnvironmentObjectDestroyed(
+  itemId: ItemId,
+  payload: EnvironmentObjectDestroyedPayload
+): EnvironmentObjectDestroyedPayload {
+  const salvageRichFamily =
+    payload.family === 'debris' ||
+    payload.family === 'rock' ||
+    payload.family === 'wreck' ||
+    payload.family === 'cache';
+
+  if (
+    itemId === 'item_salvage_dividend_chip' &&
+    payload.kind === 'destructible' &&
+    (salvageRichFamily || payload.rewardSalvage > 0)
   ) {
     return {
       ...payload,

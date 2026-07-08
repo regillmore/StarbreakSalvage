@@ -122,7 +122,7 @@ Phase 6 expands the item catalog and hook surface. Add tests closest to the risk
 - item-heavy stress helpers for forced hook-heavy combat, fresh/unlocked reward-shop-vault pool previews, active hook pressure, proc cap reporting, and build identity; work order 059 adds pure coverage plus a `HOOK-STORM-SMOKE` Playwright debug path;
 - browser smoke for at least one item-heavy reward/shop/vault path and one dense synergy combat/debug path.
 
-Work order 060 closes Phase 6 as an item-catalog playtest candidate. Release evidence should keep covering the 60-item catalog, 13 registered hook surfaces, source-weighted reward/shop/vault pools, unlock/discovery behavior, item-card presentation, item-storm smoke, and known balance/readability/manual-browser gaps.
+Work order 060 closes Phase 6 as an item-catalog playtest candidate, and work order 076 extends the hook surface for environment object destruction. Release evidence should keep covering the 60-item catalog, 14 registered hook surfaces, source-weighted reward/shop/vault pools, unlock/discovery behavior, item-card presentation, item-storm smoke, and known balance/readability/manual-browser gaps.
 
 ## Phase 7 QA focus
 

@@ -15,6 +15,7 @@ import {
   createCombatState,
   forceCombatEnd,
   getCombatEntityCounts,
+  getActiveEnvironmentObjects,
   prepareDebugItemStormScenario,
   prepareDebugEnemyRichScenario,
   prepareDebugLongScrollScenario,
@@ -26,11 +27,17 @@ import {
   type CombatState
 } from '../game/CombatState';
 import type { BossId } from '../content/bosses';
+import type { SectorId } from '../content/sectors';
 import type { ShipStats } from '../content/ships';
+import { createRng } from '../core/rng';
 import { createBuildSynergyModel, formatBuildSynergyHud } from '../game/BuildSynergy';
 import { createEnemyRolePressureSummary } from '../game/EnemyRolePressure';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import { createItemLoadoutStressModel, createItemStormLoadout } from '../game/ItemStress';
+import {
+  createEnvironmentObjectPlacementPlan,
+  type EnvironmentObjectPlacementPlan
+} from '../game/EnvironmentObjectPlacement';
 import type { ItemInstance } from '../game/Rewards';
 import { getSectorCompletionReason } from '../game/RunOutcome';
 import type { RouteCombatModifier } from '../game/RouteEvents';
@@ -132,6 +139,7 @@ export class GameplayScene implements Scene {
   private routeConditionedScroll: SectorScrollPlan | null = null;
   private sectorPacingPlan: SectorPacingPlan | null = null;
   private hazardZoneDirectorPlan: HazardZoneDirectorPlan | null = null;
+  private environmentObjectPlan: EnvironmentObjectPlacementPlan | null = null;
   private conditionedScroll: SectorScrollPlan | null = null;
   private conditionedFeatures: SectorFeaturePlan | null = null;
   private conditionedArena: BossArenaPlan | null | undefined;
@@ -432,6 +440,10 @@ export class GameplayScene implements Scene {
 
     if (this.exitSequence) {
       renderer.paintSectorExitSequence(getSectorExitPresentation(this.exitSequence), bounds);
+    }
+
+    for (const object of getActiveEnvironmentObjects(state)) {
+      renderer.paintEnvironmentObject(object);
     }
 
     for (const pickup of state.pickups) {
@@ -847,9 +859,26 @@ export class GameplayScene implements Scene {
       bossHullBonus: this.getBossHullBonus(),
       sectorLength: this.getCurrentScrollPlan().length,
       sectorIndex: this.sectorIndex,
-      sectorId: this.getCurrentSector().sectorId
+      sectorId: this.getCurrentSector().sectorId,
+      environmentObjectPlan: this.getEnvironmentObjectPlan()
     });
     return this.combatState;
+  }
+
+  private getEnvironmentObjectPlan(): EnvironmentObjectPlacementPlan {
+    if (this.environmentObjectPlan) {
+      return this.environmentObjectPlan;
+    }
+
+    const sector = this.getCurrentSector();
+    this.environmentObjectPlan = createEnvironmentObjectPlacementPlan({
+      sectorId: sector.sectorId as SectorId,
+      sectorIndex: this.sectorIndex,
+      scrollLength: this.getCurrentScrollPlan().length,
+      rng: createRng(`${this.getCombatSeed()}:environment-objects`)
+    });
+
+    return this.environmentObjectPlan;
   }
 
   private getWavePlan(): WaveDirectorPlan {

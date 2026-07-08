@@ -1,4 +1,10 @@
 import { getBossById, type BossId } from '../content/bosses';
+import {
+  getEnvironmentObjectById,
+  type EnvironmentObjectCollisionShape,
+  type EnvironmentObjectId,
+  type EnvironmentObjectKind
+} from '../content/environmentObjects';
 import { getFactionById, type FactionId } from '../content/factions';
 import { getEnemyFormationById, type EnemyFormationId } from '../content/enemyFormations';
 import { getEnemyVariantById, type EnemyVariantId } from '../content/enemyVariants';
@@ -126,8 +132,29 @@ export interface PickupRenderState {
   readonly kind: 'credit' | 'salvage';
 }
 
+export interface EnvironmentObjectRenderState {
+  readonly definitionId: EnvironmentObjectId;
+  readonly kind: EnvironmentObjectKind;
+  readonly collisionShape: EnvironmentObjectCollisionShape;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly radius: number;
+  readonly hull: number;
+  readonly maxHull: number;
+  readonly hitFlashSeconds: number;
+  readonly debugLabel: string;
+}
+
 export interface CombatEffectRenderState {
-  readonly kind: 'special' | 'bomb' | 'graze';
+  readonly kind:
+    | 'special'
+    | 'bomb'
+    | 'graze'
+    | 'environmentHit'
+    | 'environmentBreak'
+    | 'chainReaction';
   readonly x: number;
   readonly y: number;
   readonly radius: number;
@@ -1245,6 +1272,88 @@ export class CanvasRenderer {
     context.restore();
   }
 
+  public paintEnvironmentObject(object: EnvironmentObjectRenderState): void {
+    const context = this.context;
+    const definition = getEnvironmentObjectById(object.definitionId);
+    const healthRatio = clamp(object.hull / Math.max(1, object.maxHull), 0, 1);
+    const highContrast = this.settings.bulletContrast === 'high';
+    const color = highContrast
+      ? definition.rendering.highContrastColor
+      : definition.rendering.normalColor;
+    const strokeColor = object.hitFlashSeconds > 0 ? '#f8fbff' : color;
+    const halfWidth = object.collisionShape === 'circle' ? object.radius : object.width / 2;
+    const halfHeight = object.collisionShape === 'circle' ? object.radius : object.height / 2;
+
+    context.save();
+    context.translate(object.x, object.y);
+    context.globalAlpha = highContrast ? 0.42 : definition.rendering.fillAlpha;
+    context.fillStyle = color;
+    context.strokeStyle = strokeColor;
+    context.lineWidth = object.hitFlashSeconds > 0 ? 3 : highContrast ? 2.5 : 1.8;
+    context.shadowColor = strokeColor;
+    context.shadowBlur =
+      this.settings.reducedMotion || this.settings.performanceMode
+        ? 0
+        : object.hitFlashSeconds > 0
+          ? 12
+          : 5;
+
+    if (object.collisionShape === 'circle') {
+      context.beginPath();
+      context.arc(0, 0, object.radius, 0, Math.PI * 2);
+      context.fill();
+      context.globalAlpha = highContrast ? 1 : definition.rendering.strokeAlpha;
+      context.stroke();
+
+      if (!this.settings.performanceMode) {
+        context.globalAlpha = highContrast ? 0.86 : 0.48;
+        context.beginPath();
+        context.moveTo(-object.radius * 0.52, -object.radius * 0.22);
+        context.lineTo(object.radius * 0.18, object.radius * 0.44);
+        context.moveTo(object.radius * 0.36, -object.radius * 0.42);
+        context.lineTo(object.radius * 0.62, object.radius * 0.16);
+        context.stroke();
+      }
+    } else {
+      context.fillRect(-halfWidth, -halfHeight, object.width, object.height);
+      context.globalAlpha = highContrast ? 1 : definition.rendering.strokeAlpha;
+      context.strokeRect(-halfWidth, -halfHeight, object.width, object.height);
+
+      if (object.collisionShape === 'gate') {
+        context.globalAlpha = highContrast ? 0.92 : 0.58;
+        context.beginPath();
+        context.moveTo(-halfWidth * 0.62, -halfHeight);
+        context.lineTo(-halfWidth * 0.62, halfHeight);
+        context.moveTo(halfWidth * 0.62, -halfHeight);
+        context.lineTo(halfWidth * 0.62, halfHeight);
+        context.moveTo(-halfWidth, 0);
+        context.lineTo(halfWidth, 0);
+        context.stroke();
+      } else if (!this.settings.performanceMode) {
+        context.globalAlpha = highContrast ? 0.86 : 0.42;
+        context.beginPath();
+        context.moveTo(-halfWidth * 0.72, -halfHeight * 0.2);
+        context.lineTo(halfWidth * 0.7, halfHeight * 0.18);
+        context.moveTo(-halfWidth * 0.22, halfHeight * 0.62);
+        context.lineTo(halfWidth * 0.22, -halfHeight * 0.58);
+        context.stroke();
+      }
+    }
+
+    if (healthRatio < 0.98) {
+      context.shadowBlur = 0;
+      context.globalAlpha = highContrast ? 1 : 0.82;
+      context.strokeStyle = highContrast ? '#ffef5f' : '#ffd166';
+      context.lineWidth = 2.2;
+      context.beginPath();
+      context.moveTo(-halfWidth, halfHeight + 5);
+      context.lineTo(-halfWidth + halfWidth * 2 * healthRatio, halfHeight + 5);
+      context.stroke();
+    }
+
+    context.restore();
+  }
+
   public paintPickup(pickup: PickupRenderState): void {
     const context = this.context;
     const velocityCues = getVelocityCueState(this.settings);
@@ -1279,7 +1388,17 @@ export class CanvasRenderer {
     const alpha = clamp(effect.ttl / effect.maxTtl, 0, 1);
     const radius = getCombatEffectRenderRadius(effect, this.settings.reducedMotion);
     const color =
-      effect.kind === 'bomb' ? '#ffd166' : effect.kind === 'special' ? '#7cf7ff' : '#ff6bd6';
+      effect.kind === 'bomb'
+        ? '#ffd166'
+        : effect.kind === 'special'
+          ? '#7cf7ff'
+          : effect.kind === 'environmentBreak'
+            ? '#ff8a4c'
+            : effect.kind === 'chainReaction'
+              ? '#ffef5f'
+              : effect.kind === 'environmentHit'
+                ? '#8aa4b8'
+                : '#ff6bd6';
     const velocityCues = getVelocityCueState(this.settings);
 
     context.save();
@@ -1288,7 +1407,8 @@ export class CanvasRenderer {
     if (velocityCues.impactStreakAlpha > 0) {
       context.globalAlpha = alpha * velocityCues.impactStreakAlpha;
       context.strokeStyle = color;
-      context.lineWidth = effect.kind === 'bomb' ? 3 : 2;
+      context.lineWidth =
+        effect.kind === 'bomb' || effect.kind === 'environmentBreak' ? 3 : 2;
       for (const offset of [-0.48, 0, 0.48]) {
         context.beginPath();
         context.moveTo(offset * radius * 0.58, -radius * 0.8);
@@ -1300,7 +1420,8 @@ export class CanvasRenderer {
     context.globalAlpha = effect.kind === 'graze' ? alpha * 0.78 : alpha * 0.62;
     context.strokeStyle = color;
     context.fillStyle = color;
-    context.lineWidth = effect.kind === 'bomb' ? 4 : 2;
+    context.lineWidth =
+      effect.kind === 'bomb' || effect.kind === 'environmentBreak' ? 4 : 2;
     context.shadowColor = color;
     context.shadowBlur = this.settings.reducedMotion ? 0 : 14;
     context.beginPath();
@@ -1312,10 +1433,15 @@ export class CanvasRenderer {
       context.beginPath();
       context.arc(0, 0, 3.5, 0, Math.PI * 2);
       context.fill();
-    } else if (effect.kind === 'special') {
+    } else if (effect.kind === 'special' || effect.kind === 'environmentBreak') {
       context.globalAlpha = alpha * 0.28;
       context.beginPath();
       context.arc(0, 0, Math.max(8, radius * 0.42), 0, Math.PI * 2);
+      context.fill();
+    } else if (effect.kind === 'chainReaction') {
+      context.globalAlpha = alpha * 0.18;
+      context.beginPath();
+      context.arc(0, 0, Math.max(10, radius * 0.64), 0, Math.PI * 2);
       context.fill();
     }
 

@@ -212,7 +212,11 @@ export const ENVIRONMENT_OBJECT_DEFINITIONS: readonly EnvironmentObjectDefinitio
     factionFit: 'any',
     collision: createCollision('circle', 48, 48, 24, true),
     durability: { hull: 3, armor: 0 },
-    damageInteraction: createDamageInteraction(true, ['weapon', 'special', 'bomb', 'hazard'], 0),
+    damageInteraction: createDamageInteraction(
+      true,
+      ['weapon', 'special', 'bomb', 'hazard', 'chainReaction'],
+      0
+    ),
     objectivePolicy: 'ignore',
     reward: createReward('salvage', 1, 2, 0.55),
     chain: createChain('shatter', 54, 1, 2),
@@ -233,7 +237,11 @@ export const ENVIRONMENT_OBJECT_DEFINITIONS: readonly EnvironmentObjectDefinitio
     factionFit: 'any',
     collision: createCollision('rect', 72, 44, 0, true),
     durability: { hull: 5, armor: 1 },
-    damageInteraction: createDamageInteraction(true, ['weapon', 'special', 'bomb'], 0),
+    damageInteraction: createDamageInteraction(
+      true,
+      ['weapon', 'special', 'bomb', 'chainReaction'],
+      0
+    ),
     objectivePolicy: 'optionalBonus',
     reward: createReward('credits', 3, 7, 0.75),
     chain: createChain('none', 0, 0, 0),
@@ -254,7 +262,11 @@ export const ENVIRONMENT_OBJECT_DEFINITIONS: readonly EnvironmentObjectDefinitio
     factionFit: 'any',
     collision: createCollision('gate', 118, 58, 0, true),
     durability: { hull: 8, armor: 2 },
-    damageInteraction: createDamageInteraction(true, ['special', 'bomb', 'hazard'], 1),
+    damageInteraction: createDamageInteraction(
+      true,
+      ['special', 'bomb', 'hazard', 'chainReaction'],
+      1
+    ),
     objectivePolicy: 'blocksRoute',
     reward: createReward('none', 0, 0, 0),
     chain: createChain('arcDisable', 86, 1, 2),
@@ -275,7 +287,11 @@ export const ENVIRONMENT_OBJECT_DEFINITIONS: readonly EnvironmentObjectDefinitio
     factionFit: 'any',
     collision: createCollision('rect', 96, 52, 0, true),
     durability: { hull: 9, armor: 1 },
-    damageInteraction: createDamageInteraction(true, ['weapon', 'bomb', 'hazard'], 1),
+    damageInteraction: createDamageInteraction(
+      true,
+      ['weapon', 'bomb', 'hazard', 'chainReaction'],
+      1
+    ),
     objectivePolicy: 'ignore',
     reward: createReward('salvage', 1, 3, 0.45),
     chain: createChain('shatter', 68, 1, 2),
@@ -296,7 +312,11 @@ export const ENVIRONMENT_OBJECT_DEFINITIONS: readonly EnvironmentObjectDefinitio
     factionFit: 'any',
     collision: createCollision('rect', 52, 112, 0, true),
     durability: { hull: 7, armor: 2 },
-    damageInteraction: createDamageInteraction(true, ['weapon', 'special', 'bomb'], 1),
+    damageInteraction: createDamageInteraction(
+      true,
+      ['weapon', 'special', 'bomb', 'chainReaction'],
+      1
+    ),
     objectivePolicy: 'ignore',
     reward: createReward('none', 0, 0, 0),
     chain: createChain('arcDisable', 72, 1, 2),
@@ -317,7 +337,7 @@ export const ENVIRONMENT_OBJECT_DEFINITIONS: readonly EnvironmentObjectDefinitio
     factionFit: 'any',
     collision: createCollision('rect', 136, 42, 0, true),
     durability: { hull: 10, armor: 2 },
-    damageInteraction: createDamageInteraction(true, ['bomb', 'hazard'], 1),
+    damageInteraction: createDamageInteraction(true, ['bomb', 'hazard', 'chainReaction'], 1),
     objectivePolicy: 'ignore',
     reward: createReward('salvage', 2, 4, 0.5),
     chain: createChain('shatter', 84, 1, 3),
@@ -338,7 +358,11 @@ export const ENVIRONMENT_OBJECT_DEFINITIONS: readonly EnvironmentObjectDefinitio
     factionFit: 'any',
     collision: createCollision('circle', 56, 56, 28, true),
     durability: { hull: 4, armor: 0 },
-    damageInteraction: createDamageInteraction(true, ['weapon', 'special', 'bomb'], 0),
+    damageInteraction: createDamageInteraction(
+      true,
+      ['weapon', 'special', 'bomb', 'chainReaction'],
+      0
+    ),
     objectivePolicy: 'optionalBonus',
     reward: createReward('cache', 2, 6, 1),
     chain: createChain('none', 0, 0, 0),
@@ -359,7 +383,11 @@ export const ENVIRONMENT_OBJECT_DEFINITIONS: readonly EnvironmentObjectDefinitio
     factionFit: 'any',
     collision: createCollision('circle', 46, 46, 23, true),
     durability: { hull: 3, armor: 0 },
-    damageInteraction: createDamageInteraction(true, ['weapon', 'special', 'bomb', 'hazard'], 1),
+    damageInteraction: createDamageInteraction(
+      true,
+      ['weapon', 'special', 'bomb', 'hazard', 'chainReaction'],
+      1
+    ),
     objectivePolicy: 'ignore',
     reward: createReward('none', 0, 0, 0),
     chain: createChain('blast', 112, 2, 4),

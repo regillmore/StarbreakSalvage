@@ -6,6 +6,7 @@ export type CombatFeedbackCue =
   | 'bombUsed'
   | 'graze'
   | 'enemyDestroyed'
+  | 'environmentDestroyed'
   | 'bossDefeated'
   | 'pickupCollected'
   | 'playerHit'
@@ -21,6 +22,7 @@ export interface CombatFeedbackSnapshot {
   readonly bombsUsed: number;
   readonly grazes: number;
   readonly enemiesDestroyed: number;
+  readonly environmentObjectsDestroyed: number;
   readonly bossesDefeated: number;
   readonly pickupsCollected: number;
   readonly damageTaken: number;
@@ -34,6 +36,7 @@ const SHAKE_INTENSITY_BY_CUE: Readonly<Record<CombatFeedbackCue, number>> = {
   bombUsed: 0.7,
   graze: 0.04,
   enemyDestroyed: 0.2,
+  environmentDestroyed: 0.13,
   bossDefeated: 0.72,
   pickupCollected: 0,
   playerHit: 0.64,
@@ -51,6 +54,7 @@ export function createCombatFeedbackSnapshot(state: CombatState): CombatFeedback
     bombsUsed: state.stats.bombsUsed,
     grazes: state.stats.grazes,
     enemiesDestroyed: state.stats.enemiesDestroyed,
+    environmentObjectsDestroyed: state.stats.environmentObjectsDestroyed,
     bossesDefeated: state.stats.bossesDefeated,
     pickupsCollected: state.stats.pickupsCollected,
     damageTaken: state.stats.damageTaken,
@@ -89,6 +93,10 @@ export function diffCombatFeedback(
     cues.push('bossDefeated');
   } else if (after.enemiesDestroyed > before.enemiesDestroyed) {
     cues.push('enemyDestroyed');
+  }
+
+  if (after.environmentObjectsDestroyed > before.environmentObjectsDestroyed) {
+    cues.push('environmentDestroyed');
   }
 
   if (after.pickupsCollected > before.pickupsCollected) {
