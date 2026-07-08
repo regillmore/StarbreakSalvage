@@ -1492,7 +1492,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 075.
+- Implemented in work order 075. The first `EnvironmentObjectDefinition` catalog covers debris, cargo, shield, rock, pylon, wreck, cache, and volatile object families with collision, durability, damage-source, objective, reward, chain, placement, render, audio/VFX, accessibility, and debug metadata. Content validation catches malformed definitions, and pure fixed-world placement helpers generate deterministic safe-lane plans for later runtime work.
 
 ### AX2 - Destructible interactions
 

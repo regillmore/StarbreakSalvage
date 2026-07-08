@@ -6,6 +6,10 @@ import { BOSSES, type BossDefinition } from '../../src/content/bosses';
 import { validateContent } from '../../src/content/contentValidation';
 import { ENEMY_FORMATIONS, type EnemyFormationDefinition } from '../../src/content/enemyFormations';
 import { ENEMY_VARIANTS, type EnemyVariantDefinition } from '../../src/content/enemyVariants';
+import {
+  ENVIRONMENT_OBJECT_DEFINITIONS,
+  type EnvironmentObjectDefinition
+} from '../../src/content/environmentObjects';
 import { FACTIONS, type FactionDefinition } from '../../src/content/factions';
 import { HAZARD_ZONE_DEFINITIONS, type HazardZoneDefinition } from '../../src/content/hazardZones';
 import {
@@ -31,6 +35,7 @@ const baseFaction = FACTIONS[0] as FactionDefinition;
 const baseBoss = BOSSES[0] as BossDefinition;
 const baseEnemyFormation = ENEMY_FORMATIONS[0] as EnemyFormationDefinition;
 const baseEnemyVariant = ENEMY_VARIANTS[0] as EnemyVariantDefinition;
+const baseEnvironmentObject = ENVIRONMENT_OBJECT_DEFINITIONS[0] as EnvironmentObjectDefinition;
 const baseHazardZone = HAZARD_ZONE_DEFINITIONS[0] as HazardZoneDefinition;
 const baseSector = SECTORS[0] as SectorDefinition;
 const baseShip = SHIPS[0] as ShipDefinition;
@@ -56,6 +61,7 @@ describe('validateContent', () => {
     expect(ITEMS).toHaveLength(60);
     expect(FACTIONS).toHaveLength(4);
     expect(BACKGROUNDS).toHaveLength(6);
+    expect(ENVIRONMENT_OBJECT_DEFINITIONS.length).toBeGreaterThanOrEqual(8);
     expect(UPGRADES.length).toBeGreaterThanOrEqual(6);
     expect(representedArchetypes).toHaveLength(ITEM_ARCHETYPES.length);
     expect(representedArchetypes.length).toBeGreaterThanOrEqual(6);
@@ -336,6 +342,172 @@ describe('validateContent', () => {
     expect(errors).toContain(
       'Enemy formation formation_missing must match at least one current faction formation eligibility'
     );
+  });
+
+  it('rejects invalid destructible and obstacle definitions', () => {
+    const errors = validateContent({
+      environmentObjects: [
+        baseEnvironmentObject,
+        {
+          ...baseEnvironmentObject,
+          name: 'Duplicate Debris'
+        },
+        {
+          ...baseEnvironmentObject,
+          id: 'object_missing',
+          kind: 'terrain',
+          family: 'fog',
+          name: '',
+          debugLabel: '',
+          summary: '',
+          sectorFit: [],
+          factionFit: ['faction_missing'],
+          collision: {
+            ...baseEnvironmentObject.collision,
+            shape: 'triangle',
+            width: 220,
+            height: 150,
+            radius: 12
+          },
+          durability: {
+            hull: 13,
+            armor: -1
+          },
+          damageInteraction: {
+            destructible: true,
+            allowedSources: ['gravity'],
+            contactDamage: 2
+          },
+          objectivePolicy: 'required',
+          reward: {
+            policy: 'gems',
+            minValue: 5,
+            maxValue: 2,
+            dropChance: 0
+          },
+          chain: {
+            behavior: 'storm',
+            radius: 0,
+            damage: 0,
+            maxTargets: 7
+          },
+          placement: {
+            ...baseEnvironmentObject.placement,
+            minDistanceRatio: 0.9,
+            maxDistanceRatio: 0.2,
+            safeLaneWidth: 500,
+            xBands: [{ minXRatio: 0.8, maxXRatio: 0.3 }]
+          },
+          rendering: {
+            cue: 'fogBlob',
+            layer: 'overPlayer',
+            normalColor: 'blue',
+            highContrastColor: '#ffffff',
+            fillAlpha: 0.5,
+            strokeAlpha: 1
+          },
+          audioCues: {
+            spawn: '',
+            hit: '',
+            destroy: ''
+          },
+          vfxCues: {
+            spawn: '',
+            hit: '',
+            destroy: ''
+          },
+          accessibility: {
+            reducedMotionVariant: 'blur',
+            highContrastVariant: 'glow',
+            label: ''
+          }
+        } as unknown as EnvironmentObjectDefinition
+      ]
+    });
+
+    expect(errors).toContain(`Duplicate environment object id: ${baseEnvironmentObject.id}`);
+    expect(errors).toContain('Environment object object_missing has invalid id');
+    expect(errors).toContain('Environment object object_missing has invalid kind: terrain');
+    expect(errors).toContain('Environment object object_missing has invalid family: fog');
+    expect(errors).toContain('Environment object object_missing must have a name');
+    expect(errors).toContain('Environment object object_missing must have a debug label');
+    expect(errors).toContain('Environment object object_missing must have a summary');
+    expect(errors).toContain('Environment object object_missing must list at least one sector fit');
+    expect(errors).toContain(
+      'Environment object object_missing has invalid faction fit: faction_missing'
+    );
+    expect(errors).toContain(
+      'Environment object object_missing has invalid collision shape: triangle'
+    );
+    expect(errors).toContain(
+      'Environment object object_missing collision non-circle must use radius 0'
+    );
+    expect(errors).toContain(
+      'Environment object object_missing collision footprint is too large for readable lanes'
+    );
+    expect(errors).toContain(
+      'Environment object object_missing durability must keep hull at or below 12'
+    );
+    expect(errors).toContain(
+      'Environment object object_missing durability must have non-negative armor'
+    );
+    expect(errors).toContain(
+      'Environment object object_missing damage interaction must keep contactDamage at or below 1'
+    );
+    expect(errors).toContain(
+      'Environment object object_missing has invalid damage source: gravity'
+    );
+    expect(errors).toContain(
+      'Environment object object_missing has invalid objective policy: required'
+    );
+    expect(errors).toContain('Environment object object_missing has invalid reward policy: gems');
+    expect(errors).toContain(
+      'Environment object object_missing reward must order positive value range'
+    );
+    expect(errors).toContain(
+      'Environment object object_missing reward must have positive dropChance'
+    );
+    expect(errors).toContain('Environment object object_missing has invalid chain behavior: storm');
+    expect(errors).toContain(
+      'Environment object object_missing chain behavior must keep maxTargets at or below 6'
+    );
+    expect(errors).toContain(
+      'Environment object object_missing placement must order distance ratios'
+    );
+    expect(errors).toContain(
+      'Environment object object_missing placement safe lane is impossible with collision footprint'
+    );
+    expect(errors).toContain(
+      'Environment object object_missing placement x band 1 must order x ratios'
+    );
+    expect(errors).toContain(
+      'Environment object object_missing rendering has invalid cue: fogBlob'
+    );
+    expect(errors).toContain(
+      'Environment object object_missing rendering has invalid layer: overPlayer'
+    );
+    expect(errors).toContain(
+      'Environment object object_missing rendering must have normalColor as a #RRGGBB color'
+    );
+    expect(errors).toContain(
+      'Environment object object_missing rendering must keep fillAlpha at or below 0.38'
+    );
+    expect(errors).toContain(
+      'Environment object object_missing rendering must keep strokeAlpha at or below 0.95'
+    );
+    expect(errors).toContain('Environment object object_missing audio cues must define spawn cue');
+    expect(errors).toContain('Environment object object_missing audio cues must define hit cue');
+    expect(errors).toContain(
+      'Environment object object_missing audio cues must define destroy cue'
+    );
+    expect(errors).toContain('Environment object object_missing vfx cues must define spawn cue');
+    expect(errors).toContain(
+      'Environment object object_missing accessibility has invalid reduced motion variant: blur'
+    );
+    expect(errors).toContain(
+      'Environment object object_missing accessibility has invalid high contrast variant: glow'
+    );
+    expect(errors).toContain('Environment object object_missing accessibility must have a label');
   });
 
   it('rejects invalid hazard zone definitions', () => {

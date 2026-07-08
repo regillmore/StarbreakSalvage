@@ -437,6 +437,7 @@ src/game/LooseCurrency.ts
 ### Destructibles and obstacles
 
 - Destructibles and obstacles should share content validation for collision shape, hull, damage interaction, objective policy, reward policy, chain behavior, placement constraints, cue metadata, and debug label.
+- Work order 075 adds `src/content/environmentObjects.ts` for the first shared destructible/obstacle schema and `src/game/EnvironmentObjectPlacement.ts` for deterministic fixed-world placement helpers. Placement plans use the 640x720 combat arena, keep open-lane guarantees, and stay independent from viewport dimensions.
 - Destructible damage should flow through explicit systems for weapon, special, bomb, hazard, or chain-reaction hits. Reward drops and item hook events should use existing deterministic pickup/economy and hook dispatch paths.
 - Chain reactions must be bounded by per-tick or per-event caps so they cannot create runaway entity, pickup, or proc pressure.
 - Obstacles should have placement safety checks for player spawn lanes, exit corridors, boss approach/release, hazard overlap, enemy spawn lanes, and fixed-world bounds.

@@ -18,6 +18,21 @@ import {
   type EnemyVariantDefinition
 } from './enemyVariants';
 import {
+  ENVIRONMENT_OBJECT_ACCESSIBILITY_VARIANTS,
+  ENVIRONMENT_OBJECT_CHAIN_BEHAVIORS,
+  ENVIRONMENT_OBJECT_COLLISION_SHAPES,
+  ENVIRONMENT_OBJECT_DAMAGE_SOURCES,
+  ENVIRONMENT_OBJECT_DEFINITIONS,
+  ENVIRONMENT_OBJECT_FAMILIES,
+  ENVIRONMENT_OBJECT_IDS,
+  ENVIRONMENT_OBJECT_KINDS,
+  ENVIRONMENT_OBJECT_OBJECTIVE_POLICIES,
+  ENVIRONMENT_OBJECT_RENDER_CUES,
+  ENVIRONMENT_OBJECT_RENDER_LAYERS,
+  ENVIRONMENT_OBJECT_REWARD_POLICIES,
+  type EnvironmentObjectDefinition
+} from './environmentObjects';
+import {
   ITEM_FAMILIES,
   ITEM_ARCHETYPES,
   ITEM_HOOKS,
@@ -56,6 +71,7 @@ import {
 } from './upgrades';
 import { WEAPONS, type WeaponDefinition } from './weapons';
 import { ITEM_HOOK_IMPLEMENTATIONS } from '../game/ItemHooks';
+import { COMBAT_ARENA_PADDING, COMBAT_ARENA_WIDTH } from '../game/CombatGeometry';
 import {
   ITEM_FAMILY_GATES,
   ITEM_UNLOCKS,
@@ -98,6 +114,7 @@ export interface ContentValidationInput {
   readonly bosses?: readonly BossDefinition[];
   readonly enemyFormations?: readonly EnemyFormationDefinition[];
   readonly enemyVariants?: readonly EnemyVariantDefinition[];
+  readonly environmentObjects?: readonly EnvironmentObjectDefinition[];
   readonly factions?: readonly FactionDefinition[];
   readonly hazardZones?: readonly HazardZoneDefinition[];
   readonly items?: readonly ItemDefinition[];
@@ -119,6 +136,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const bosses = input.bosses ?? BOSSES;
   const enemyFormations = input.enemyFormations ?? ENEMY_FORMATIONS;
   const enemyVariants = input.enemyVariants ?? ENEMY_VARIANTS;
+  const environmentObjects = input.environmentObjects ?? ENVIRONMENT_OBJECT_DEFINITIONS;
   const factions = input.factions ?? FACTIONS;
   const hazardZones = input.hazardZones ?? HAZARD_ZONE_DEFINITIONS;
   const items = input.items ?? ITEMS;
@@ -173,6 +191,19 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const enemyFormationCleanupPolicies = new Set<string>(ENEMY_FORMATION_CLEANUP_POLICIES);
   const enemyVariantIds = new Set<string>(ENEMY_VARIANT_IDS);
   const enemyVariantEncounterTypes = new Set<string>(ENEMY_VARIANT_ENCOUNTER_TYPES);
+  const environmentObjectIds = new Set<string>(ENVIRONMENT_OBJECT_IDS);
+  const environmentObjectKinds = new Set<string>(ENVIRONMENT_OBJECT_KINDS);
+  const environmentObjectFamilies = new Set<string>(ENVIRONMENT_OBJECT_FAMILIES);
+  const environmentObjectCollisionShapes = new Set<string>(ENVIRONMENT_OBJECT_COLLISION_SHAPES);
+  const environmentObjectDamageSources = new Set<string>(ENVIRONMENT_OBJECT_DAMAGE_SOURCES);
+  const environmentObjectObjectivePolicies = new Set<string>(ENVIRONMENT_OBJECT_OBJECTIVE_POLICIES);
+  const environmentObjectRewardPolicies = new Set<string>(ENVIRONMENT_OBJECT_REWARD_POLICIES);
+  const environmentObjectChainBehaviors = new Set<string>(ENVIRONMENT_OBJECT_CHAIN_BEHAVIORS);
+  const environmentObjectRenderCues = new Set<string>(ENVIRONMENT_OBJECT_RENDER_CUES);
+  const environmentObjectRenderLayers = new Set<string>(ENVIRONMENT_OBJECT_RENDER_LAYERS);
+  const environmentObjectAccessibilityVariants = new Set<string>(
+    ENVIRONMENT_OBJECT_ACCESSIBILITY_VARIANTS
+  );
   const hazardZoneIds = new Set<string>(HAZARD_ZONE_IDS);
   const hazardZoneFamilies = new Set<string>(HAZARD_ZONE_FAMILIES);
   const hazardZoneTelegraphShapes = new Set<string>(HAZARD_ZONE_TELEGRAPH_SHAPES);
@@ -393,6 +424,21 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     breakConditions: enemyFormationBreakConditions,
     cleanupPolicies: enemyFormationCleanupPolicies,
     encounterTypes: enemyVariantEncounterTypes
+  });
+  validateEnvironmentObjectDefinitions(errors, environmentObjects, {
+    ids: environmentObjectIds,
+    kinds: environmentObjectKinds,
+    families: environmentObjectFamilies,
+    sectors: canonicalSectorIds,
+    factions: factionIds,
+    collisionShapes: environmentObjectCollisionShapes,
+    damageSources: environmentObjectDamageSources,
+    objectivePolicies: environmentObjectObjectivePolicies,
+    rewardPolicies: environmentObjectRewardPolicies,
+    chainBehaviors: environmentObjectChainBehaviors,
+    renderCues: environmentObjectRenderCues,
+    renderLayers: environmentObjectRenderLayers,
+    accessibilityVariants: environmentObjectAccessibilityVariants
   });
   validateHazardZoneDefinitions(errors, hazardZones, {
     ids: hazardZoneIds,
@@ -918,6 +964,22 @@ interface EnemyFormationDefinitionRegistries {
   readonly encounterTypes: ReadonlySet<string>;
 }
 
+interface EnvironmentObjectDefinitionRegistries {
+  readonly ids: ReadonlySet<string>;
+  readonly kinds: ReadonlySet<string>;
+  readonly families: ReadonlySet<string>;
+  readonly sectors: ReadonlySet<string>;
+  readonly factions: ReadonlySet<string>;
+  readonly collisionShapes: ReadonlySet<string>;
+  readonly damageSources: ReadonlySet<string>;
+  readonly objectivePolicies: ReadonlySet<string>;
+  readonly rewardPolicies: ReadonlySet<string>;
+  readonly chainBehaviors: ReadonlySet<string>;
+  readonly renderCues: ReadonlySet<string>;
+  readonly renderLayers: ReadonlySet<string>;
+  readonly accessibilityVariants: ReadonlySet<string>;
+}
+
 interface HazardZoneDefinitionRegistries {
   readonly ids: ReadonlySet<string>;
   readonly families: ReadonlySet<string>;
@@ -932,6 +994,295 @@ interface HazardZoneDefinitionRegistries {
   readonly bossArenaPolicies: ReadonlySet<string>;
   readonly scheduleSources: ReadonlySet<string>;
   readonly behaviorKinds: ReadonlySet<string>;
+}
+
+function validateEnvironmentObjectDefinitions(
+  errors: string[],
+  environmentObjects: readonly EnvironmentObjectDefinition[],
+  registries: EnvironmentObjectDefinitionRegistries
+): void {
+  const seenObjectIds = new Set<string>();
+  const innerArenaWidth = COMBAT_ARENA_WIDTH - COMBAT_ARENA_PADDING * 2;
+
+  for (const object of environmentObjects) {
+    const owner = `Environment object ${String(object.id)}`;
+
+    if (seenObjectIds.has(object.id)) {
+      errors.push(`Duplicate environment object id: ${String(object.id)}`);
+    }
+
+    seenObjectIds.add(object.id);
+
+    if (!registries.ids.has(object.id)) {
+      errors.push(`${owner} has invalid id`);
+    }
+
+    if (!registries.kinds.has(object.kind)) {
+      errors.push(`${owner} has invalid kind: ${String(object.kind)}`);
+    }
+
+    if (!registries.families.has(object.family)) {
+      errors.push(`${owner} has invalid family: ${String(object.family)}`);
+    }
+
+    if (!object.name.trim()) {
+      errors.push(`${owner} must have a name`);
+    }
+
+    if (!object.debugLabel.trim()) {
+      errors.push(`${owner} must have a debug label`);
+    }
+
+    if (!object.summary.trim()) {
+      errors.push(`${owner} must have a summary`);
+    }
+
+    validateStringList(errors, owner, 'sector fit', object.sectorFit, registries.sectors);
+
+    if (object.factionFit !== 'any') {
+      validateStringList(errors, owner, 'faction fit', object.factionFit, registries.factions);
+    }
+
+    if (!registries.collisionShapes.has(object.collision.shape)) {
+      errors.push(`${owner} has invalid collision shape: ${String(object.collision.shape)}`);
+    }
+
+    validatePositiveNumber(errors, `${owner} collision`, 'width', object.collision.width);
+    validatePositiveNumber(errors, `${owner} collision`, 'height', object.collision.height);
+    validateNonNegativeNumber(errors, `${owner} collision`, 'radius', object.collision.radius);
+
+    const footprintWidth =
+      object.collision.shape === 'circle' ? object.collision.radius * 2 : object.collision.width;
+    const footprintHeight =
+      object.collision.shape === 'circle' ? object.collision.radius * 2 : object.collision.height;
+
+    if (object.collision.shape === 'circle' && object.collision.radius <= 0) {
+      errors.push(`${owner} collision circle must have positive radius`);
+    }
+
+    if (object.collision.shape !== 'circle' && object.collision.radius !== 0) {
+      errors.push(`${owner} collision non-circle must use radius 0`);
+    }
+
+    if (footprintWidth > 180 || footprintHeight > 140) {
+      errors.push(`${owner} collision footprint is too large for readable lanes`);
+    }
+
+    validatePositiveNumber(errors, `${owner} durability`, 'hull', object.durability.hull);
+    validateNonNegativeNumber(errors, `${owner} durability`, 'armor', object.durability.armor);
+
+    if (object.durability.hull > 12) {
+      errors.push(`${owner} durability must keep hull at or below 12`);
+    }
+
+    validateNonNegativeNumber(
+      errors,
+      `${owner} damage interaction`,
+      'contactDamage',
+      object.damageInteraction.contactDamage
+    );
+
+    if (object.damageInteraction.contactDamage > 1) {
+      errors.push(`${owner} damage interaction must keep contactDamage at or below 1`);
+    }
+
+    if (object.damageInteraction.destructible) {
+      validateStringList(
+        errors,
+        owner,
+        'damage source',
+        object.damageInteraction.allowedSources,
+        registries.damageSources
+      );
+    } else if (object.damageInteraction.allowedSources.length > 0) {
+      errors.push(`${owner} non-destructible objects cannot list damage sources`);
+    }
+
+    if (!registries.objectivePolicies.has(object.objectivePolicy)) {
+      errors.push(`${owner} has invalid objective policy: ${String(object.objectivePolicy)}`);
+    }
+
+    if (!registries.rewardPolicies.has(object.reward.policy)) {
+      errors.push(`${owner} has invalid reward policy: ${String(object.reward.policy)}`);
+    }
+
+    validateNonNegativeInteger(errors, `${owner} reward`, 'minValue', object.reward.minValue);
+    validateNonNegativeInteger(errors, `${owner} reward`, 'maxValue', object.reward.maxValue);
+    validateUnitNumber(errors, `${owner} reward`, 'dropChance', object.reward.dropChance);
+
+    if (object.reward.policy === 'none') {
+      if (
+        object.reward.minValue !== 0 ||
+        object.reward.maxValue !== 0 ||
+        object.reward.dropChance !== 0
+      ) {
+        errors.push(`${owner} reward none must not define value or chance`);
+      }
+    } else {
+      if (object.reward.maxValue < object.reward.minValue || object.reward.maxValue <= 0) {
+        errors.push(`${owner} reward must order positive value range`);
+      }
+
+      if (object.reward.dropChance <= 0) {
+        errors.push(`${owner} reward must have positive dropChance`);
+      }
+    }
+
+    if (!registries.chainBehaviors.has(object.chain.behavior)) {
+      errors.push(`${owner} has invalid chain behavior: ${String(object.chain.behavior)}`);
+    }
+
+    validateNonNegativeNumber(errors, `${owner} chain`, 'radius', object.chain.radius);
+    validateNonNegativeNumber(errors, `${owner} chain`, 'damage', object.chain.damage);
+    validateNonNegativeInteger(errors, `${owner} chain`, 'maxTargets', object.chain.maxTargets);
+
+    if (object.chain.behavior === 'none') {
+      if (object.chain.radius !== 0 || object.chain.damage !== 0 || object.chain.maxTargets !== 0) {
+        errors.push(`${owner} chain none must not define radius, damage, or targets`);
+      }
+    } else {
+      if (object.chain.radius <= 0 || object.chain.damage <= 0 || object.chain.maxTargets <= 0) {
+        errors.push(`${owner} chain behavior must define positive radius, damage, and targets`);
+      }
+
+      if (object.chain.maxTargets > 6) {
+        errors.push(`${owner} chain behavior must keep maxTargets at or below 6`);
+      }
+    }
+
+    validatePositiveNumber(errors, `${owner} placement`, 'weight', object.placement.weight);
+    validatePositiveInteger(
+      errors,
+      `${owner} placement`,
+      'maxPerSector',
+      object.placement.maxPerSector
+    );
+    validateUnitNumber(
+      errors,
+      `${owner} placement`,
+      'minDistanceRatio',
+      object.placement.minDistanceRatio
+    );
+    validateUnitNumber(
+      errors,
+      `${owner} placement`,
+      'maxDistanceRatio',
+      object.placement.maxDistanceRatio
+    );
+    validatePositiveNumber(errors, `${owner} placement`, 'minSpacing', object.placement.minSpacing);
+    validatePositiveNumber(
+      errors,
+      `${owner} placement`,
+      'safeLaneWidth',
+      object.placement.safeLaneWidth
+    );
+    validatePositiveNumber(
+      errors,
+      `${owner} placement`,
+      'avoidPlayerSpawnDistance',
+      object.placement.avoidPlayerSpawnDistance
+    );
+    validatePositiveNumber(
+      errors,
+      `${owner} placement`,
+      'avoidBossLockDistance',
+      object.placement.avoidBossLockDistance
+    );
+
+    if (object.placement.minDistanceRatio >= object.placement.maxDistanceRatio) {
+      errors.push(`${owner} placement must order distance ratios`);
+    }
+
+    if (object.placement.safeLaneWidth < 180) {
+      errors.push(`${owner} placement must keep safeLaneWidth at or above 180`);
+    }
+
+    if (object.placement.safeLaneWidth + footprintWidth > innerArenaWidth) {
+      errors.push(`${owner} placement safe lane is impossible with collision footprint`);
+    }
+
+    if (object.placement.xBands.length === 0) {
+      errors.push(`${owner} placement must list at least one x band`);
+    }
+
+    for (const [index, band] of object.placement.xBands.entries()) {
+      const bandOwner = `${owner} placement x band ${index + 1}`;
+
+      validateUnitNumber(errors, bandOwner, 'minXRatio', band.minXRatio);
+      validateUnitNumber(errors, bandOwner, 'maxXRatio', band.maxXRatio);
+
+      if (band.minXRatio >= band.maxXRatio) {
+        errors.push(`${bandOwner} must order x ratios`);
+      }
+    }
+
+    if (!registries.renderCues.has(object.rendering.cue)) {
+      errors.push(`${owner} rendering has invalid cue: ${String(object.rendering.cue)}`);
+    }
+
+    if (!registries.renderLayers.has(object.rendering.layer)) {
+      errors.push(`${owner} rendering has invalid layer: ${String(object.rendering.layer)}`);
+    }
+
+    validateHexColor(errors, `${owner} rendering`, 'normalColor', object.rendering.normalColor);
+    validateHexColor(
+      errors,
+      `${owner} rendering`,
+      'highContrastColor',
+      object.rendering.highContrastColor
+    );
+    validateUnitNumber(errors, `${owner} rendering`, 'fillAlpha', object.rendering.fillAlpha);
+    validateUnitNumber(errors, `${owner} rendering`, 'strokeAlpha', object.rendering.strokeAlpha);
+
+    if (object.rendering.fillAlpha > 0.38) {
+      errors.push(`${owner} rendering must keep fillAlpha at or below 0.38`);
+    }
+
+    if (object.rendering.strokeAlpha > 0.95) {
+      errors.push(`${owner} rendering must keep strokeAlpha at or below 0.95`);
+    }
+
+    validateEnvironmentObjectCues(errors, `${owner} audio cues`, object.audioCues);
+    validateEnvironmentObjectCues(errors, `${owner} vfx cues`, object.vfxCues);
+
+    if (!registries.accessibilityVariants.has(object.accessibility.reducedMotionVariant)) {
+      errors.push(
+        `${owner} accessibility has invalid reduced motion variant: ${String(
+          object.accessibility.reducedMotionVariant
+        )}`
+      );
+    }
+
+    if (!registries.accessibilityVariants.has(object.accessibility.highContrastVariant)) {
+      errors.push(
+        `${owner} accessibility has invalid high contrast variant: ${String(
+          object.accessibility.highContrastVariant
+        )}`
+      );
+    }
+
+    if (!object.accessibility.label.trim()) {
+      errors.push(`${owner} accessibility must have a label`);
+    }
+  }
+}
+
+function validateEnvironmentObjectCues(
+  errors: string[],
+  owner: string,
+  cues: { readonly spawn: string; readonly hit: string; readonly destroy: string }
+): void {
+  if (!cues.spawn.trim()) {
+    errors.push(`${owner} must define spawn cue`);
+  }
+
+  if (!cues.hit.trim()) {
+    errors.push(`${owner} must define hit cue`);
+  }
+
+  if (!cues.destroy.trim()) {
+    errors.push(`${owner} must define destroy cue`);
+  }
 }
 
 function validateHazardZoneDefinitions(

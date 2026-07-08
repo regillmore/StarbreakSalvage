@@ -55,6 +55,7 @@
 - Fixed boss-arena release hazards so a zone whose warning was hidden during the locked boss fight restarts its telegraph lead after boss defeat before it can damage the player.
 - Added a richer hazard-zone behavior layer for existing hazards, with sweep, pulse, drift, collapse, shadow, curtain, dust-front, and static-gate presentation/collision patterns that stay inside fixed combat-world windows.
 - Added deterministic hazard-zone director scheduling so sector pacing, route pressure, relief windows, formation clusters, lunar context, and boss locks shape paced hazard windows with debug and run-summary context.
+- Added a Phase 8 destructible/obstacle content schema with original debris, cargo, shield, rock, pylon, wreck, cache, and volatile object families plus fixed-world placement helpers.
 
 ### Testing
 
@@ -77,6 +78,7 @@
 - Added the Phase 8 hazard-zone schema and validation baseline for current hazards, including timing metrics, safe-lane expectations, readability metadata, and boss-arena suppression policy.
 - Added Phase 8 hazard behavior tests for family breadth, warning-before-damage, pulse windows, cooldown behavior, cleanup, fixed-world damage rectangles, and settings-aware render state.
 - Added Phase 8 hazard director tests for known-seed schedule reproducibility, relief-window spacing, route pressure, frame-catchup event ordering, and boss-lock deferral.
+- Added destructible/obstacle schema and placement tests for validation failures, deterministic fixed-world placement, sector-fit filtering, and safe-lane guarantees.
 - Added wave director and objective completion tests, including known-seed objective snapshots and boss-gate coverage.
 - Added combat tests for special charge/use, bomb mitigation, graze detection, remapped special/bomb controls, and reduced-motion effect rendering.
 - Added validation and gameplay tests for ship stat contracts, weapon references, weapon patterns, heat/reload behavior, and starting economy.

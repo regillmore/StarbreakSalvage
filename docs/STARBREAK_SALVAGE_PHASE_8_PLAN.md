@@ -77,7 +77,7 @@ Exit criteria:
 - Obstacles use fixed combat-world coordinates and validate lane safety.
 - Dense obstacle/destructible scenarios stay within performance and readability budgets.
 
-Status: planned for work orders 075, 076, and 077.
+Status: started by work order 075. The first destructible/obstacle schema now defines validated content for debris, cargo pods, shield gates, lunar rock fields, surface pylons, wreck plates, salvage caches, and volatile canisters, plus deterministic fixed-world placement helpers with safe-lane checks. Runtime damage/rewards, chain reactions, navigation pressure, and obstacle debug counters remain planned for work orders 076 and 077.
 
 ### P8.4 - Loose Currency And Salvage Lanes
 

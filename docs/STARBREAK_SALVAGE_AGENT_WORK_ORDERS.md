@@ -1252,7 +1252,7 @@ Acceptance criteria:
 - Placement helpers use the fixed 640x720 combat world and are independent from viewport size.
 - Fresh sectors retain enough open lanes for fair movement.
 
-Status: planned.
+Status: implemented; `src/content/environmentObjects.ts` now defines the first typed destructible/obstacle catalog for debris shard clusters, cargo pods, shield gates, lunar rock fields, surface pylons, wreck plates, salvage caches, and volatile canisters. Definitions include kind, family, sector/faction fit, collision footprint, durability, damage-source rules, objective policy, reward policy, chain behavior, fixed-world placement constraints, rendering/audio/VFX cues, accessibility variants, and debug labels. `src/game/EnvironmentObjectPlacement.ts` adds deterministic fixed-640x720 placement helpers with safe-lane validation, and content validation rejects invalid IDs, shapes, impossible sizes, bad objective/reward/chain policies, unsafe lane constraints, and missing cue metadata. Runtime destruction, rewards, and obstacle navigation pressure remain planned for work orders 076-077.
 
 ## Work order 076 - Destructible interactions, rewards, and chain reactions
 

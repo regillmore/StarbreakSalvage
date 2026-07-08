@@ -128,6 +128,7 @@ Phase 8 expands the environmental layer. Keep the first richer pass visible, det
 - Hazards should render below bullets, enemies, pickups, and the player. Do not increase hazard opacity or animation density without high-contrast and reduced-motion smoke.
 - Hazard collision should use simple rect/circle/arc or lane checks from generated shapes. Avoid per-pixel collision and avoid scanning inactive schedule entries every tick.
 - The hazard director should use pressure and relief windows from sector pacing rather than stacking hazards continuously across a long sector.
+- Work order 075 adds destructible/obstacle definitions and fixed-world placement helpers only; it does not add runtime collision scans yet. Generated placement plans start with a conservative 3-5 object target and safe-lane checks before later interaction systems raise density.
 - Destructibles and obstacles should start with a conservative active-field budget of roughly 12-16 physical objects before profiling supports more.
 - Destructible chain reactions should have explicit per-event caps for destroyed objects, spawned rewards, effects, and item-hook dispatch.
 - Obstacle placement must stay in fixed 640x720 combat-world units so viewport changes do not alter lane width, collision difficulty, or pickup access.
