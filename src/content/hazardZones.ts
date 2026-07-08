@@ -62,6 +62,18 @@ export type HazardZoneBossArenaPolicy = (typeof HAZARD_ZONE_BOSS_ARENA_POLICIES)
 export const HAZARD_ZONE_SCHEDULE_SOURCES = ['sector', 'condition', 'pacing'] as const;
 export type HazardZoneScheduleSource = (typeof HAZARD_ZONE_SCHEDULE_SOURCES)[number];
 
+export const HAZARD_ZONE_BEHAVIOR_KINDS = [
+  'sweepBeam',
+  'pulseField',
+  'driftingMineBand',
+  'collapsingColumns',
+  'orbitalShadow',
+  'plasmaCurtain',
+  'dustFront',
+  'staticWarningGate'
+] as const;
+export type HazardZoneBehaviorKind = (typeof HAZARD_ZONE_BEHAVIOR_KINDS)[number];
+
 export interface HazardZoneTimingMetrics {
   readonly widthRatio: number;
   readonly activeSpan: number;
@@ -90,6 +102,17 @@ export interface HazardZoneReadabilityMetadata {
   readonly performanceVariant: HazardZoneSettingsVariant;
 }
 
+export interface HazardZoneBehaviorMetadata {
+  readonly kind: HazardZoneBehaviorKind;
+  readonly warningCue: string;
+  readonly activeCue: string;
+  readonly motionScale: number;
+  readonly activeDamageDutyCycle: number;
+  readonly activePulseCount: number;
+  readonly collisionBands: number;
+  readonly patternDensity: number;
+}
+
 export interface HazardZoneDefinition {
   readonly id: HazardZoneId;
   readonly family: HazardZoneFamily;
@@ -107,6 +130,7 @@ export interface HazardZoneDefinition {
   readonly safeLane: HazardZoneSafeLaneMetadata;
   readonly bossArenaPolicy: HazardZoneBossArenaPolicy;
   readonly readability: HazardZoneReadabilityMetadata;
+  readonly behavior: HazardZoneBehaviorMetadata;
 }
 
 const ALL_SECTOR_IDS: readonly SectorId[] = [
@@ -162,7 +186,17 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     damageCooldownSeconds: 0.35,
     safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.5 },
     bossArenaPolicy: 'hideAndDefer',
-    readability: createReadability(120, '#8aa4b8', '#f8fbff', 'staticPulse', 'simplifiedPattern')
+    readability: createReadability(120, '#8aa4b8', '#f8fbff', 'staticPulse', 'simplifiedPattern'),
+    behavior: createBehavior(
+      'orbitalShadow',
+      'shadow track',
+      'debris shadow',
+      0.32,
+      1,
+      1,
+      1,
+      0.42
+    )
   },
   {
     id: 'warning_beam',
@@ -184,7 +218,17 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     damageCooldownSeconds: 0.35,
     safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.68 },
     bossArenaPolicy: 'hideAndDefer',
-    readability: createReadability(145, '#ffd166', '#ffef5f', 'staticPulse', 'simplifiedPattern')
+    readability: createReadability(145, '#ffd166', '#ffef5f', 'staticPulse', 'simplifiedPattern'),
+    behavior: createBehavior(
+      'staticWarningGate',
+      'centerline lock',
+      'tax-beacon burn',
+      0.18,
+      1,
+      1,
+      1,
+      0.34
+    )
   },
   {
     id: 'mine_belt',
@@ -206,7 +250,17 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     damageCooldownSeconds: 0.35,
     safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.44 },
     bossArenaPolicy: 'hideAndDefer',
-    readability: createReadability(120, '#ff6bd6', '#f8fbff', 'staticPulse', 'simplifiedPattern')
+    readability: createReadability(120, '#ff6bd6', '#f8fbff', 'staticPulse', 'simplifiedPattern'),
+    behavior: createBehavior(
+      'driftingMineBand',
+      'mine pips',
+      'armed drift',
+      0.58,
+      1,
+      1,
+      3,
+      0.62
+    )
   },
   {
     id: 'salvage_storm',
@@ -228,7 +282,17 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     damageCooldownSeconds: 0.35,
     safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.38 },
     bossArenaPolicy: 'hideAndDefer',
-    readability: createReadability(120, '#7cf7ff', '#f8fbff', 'staticPulse', 'simplifiedPattern')
+    readability: createReadability(120, '#7cf7ff', '#f8fbff', 'staticPulse', 'simplifiedPattern'),
+    behavior: createBehavior(
+      'plasmaCurtain',
+      'static curtain',
+      'charged curtain',
+      0.44,
+      0.86,
+      2,
+      2,
+      0.72
+    )
   },
   {
     id: 'crush_gate',
@@ -250,7 +314,17 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     damageCooldownSeconds: 0.35,
     safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.46 },
     bossArenaPolicy: 'hideAndDefer',
-    readability: createReadability(150, '#ffd166', '#ffef5f', 'staticPulse', 'simplifiedPattern')
+    readability: createReadability(150, '#ffd166', '#ffef5f', 'staticPulse', 'simplifiedPattern'),
+    behavior: createBehavior(
+      'collapsingColumns',
+      'closing rails',
+      'crush stroke',
+      0.26,
+      1,
+      1,
+      2,
+      0.5
+    )
   },
   {
     id: 'dust_plume',
@@ -272,7 +346,17 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     damageCooldownSeconds: 0.35,
     safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.42 },
     bossArenaPolicy: 'hideAndDefer',
-    readability: createReadability(140, '#c8d4e3', '#f8fbff', 'staticPulse', 'simplifiedPattern')
+    readability: createReadability(140, '#c8d4e3', '#f8fbff', 'staticPulse', 'simplifiedPattern'),
+    behavior: createBehavior(
+      'dustFront',
+      'dust wake',
+      'sand shear',
+      0.62,
+      0.92,
+      1,
+      1,
+      0.56
+    )
   },
   {
     id: 'mining_laser',
@@ -294,7 +378,17 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     damageCooldownSeconds: 0.35,
     safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.7 },
     bossArenaPolicy: 'hideAndDefer',
-    readability: createReadability(150, '#ffd166', '#ffef5f', 'staticPulse', 'simplifiedPattern')
+    readability: createReadability(150, '#ffd166', '#ffef5f', 'staticPulse', 'simplifiedPattern'),
+    behavior: createBehavior(
+      'sweepBeam',
+      'sweep trace',
+      'mining sweep',
+      0.74,
+      1,
+      1,
+      1,
+      0.38
+    )
   },
   {
     id: 'surface_defense_arc',
@@ -316,7 +410,17 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     damageCooldownSeconds: 0.35,
     safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.5 },
     bossArenaPolicy: 'hideAndDefer',
-    readability: createReadability(145, '#7cf7ff', '#f8fbff', 'staticPulse', 'simplifiedPattern')
+    readability: createReadability(145, '#7cf7ff', '#f8fbff', 'staticPulse', 'simplifiedPattern'),
+    behavior: createBehavior(
+      'pulseField',
+      'arc charge',
+      'defense pulse',
+      0.42,
+      0.58,
+      3,
+      2,
+      0.58
+    )
   }
 ];
 
@@ -367,5 +471,27 @@ function createReadability(
     highContrastColor,
     reducedMotionVariant,
     performanceVariant
+  };
+}
+
+function createBehavior(
+  kind: HazardZoneBehaviorKind,
+  warningCue: string,
+  activeCue: string,
+  motionScale: number,
+  activeDamageDutyCycle: number,
+  activePulseCount: number,
+  collisionBands: number,
+  patternDensity: number
+): HazardZoneBehaviorMetadata {
+  return {
+    kind,
+    warningCue,
+    activeCue,
+    motionScale,
+    activeDamageDutyCycle,
+    activePulseCount,
+    collisionBands,
+    patternDensity
   };
 }

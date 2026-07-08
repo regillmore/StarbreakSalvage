@@ -16,6 +16,7 @@ import {
   getSectorHazardVisualState,
   type ActiveSectorHazard,
   type SectorHazardCollisionRect,
+  type SectorHazardVisualState,
   type VisibleSectorLandmark
 } from '../game/SectorFeatures';
 import type { SectorExitPresentation } from '../game/SectorExitSequence';
@@ -345,7 +346,12 @@ export class CanvasRenderer {
 
     for (const activeHazard of activeHazards) {
       const rect = getSectorHazardCollisionRect(activeHazard.hazard, bounds);
-      const style = getSectorHazardVisualState(activeHazard, this.settings.reducedMotion);
+      const style = getSectorHazardVisualState(
+        activeHazard,
+        this.settings.reducedMotion,
+        this.settings.performanceMode,
+        this.settings.bulletContrast === 'high'
+      );
       const color = this.getSectorHazardColor(activeHazard.hazard.kind);
 
       context.save();
@@ -1474,7 +1480,7 @@ export class CanvasRenderer {
     activeHazard: ActiveSectorHazard,
     rect: SectorHazardCollisionRect,
     color: string,
-    style: { readonly strokeAlpha: number }
+    style: SectorHazardVisualState
   ): void {
     const context = this.context;
 
@@ -1486,31 +1492,35 @@ export class CanvasRenderer {
       context.setLineDash([9, 10]);
     }
 
-    if (activeHazard.hazard.kind === 'warning_beam') {
+    if (style.behaviorKind === 'sweepBeam') {
+      context.setLineDash([]);
+      const sweepWidth = Math.max(12, rect.width * 0.42);
+      const centerX = rect.left + rect.width * style.motionRatio;
+      context.lineWidth = activeHazard.phase === 'active' ? 3.4 : 2.2;
       context.beginPath();
-      context.moveTo(rect.centerX, rect.top);
-      context.lineTo(rect.centerX, rect.bottom);
+      context.moveTo(centerX, rect.top);
+      context.lineTo(centerX, rect.bottom);
       context.stroke();
       context.setLineDash([]);
       context.globalAlpha *= 0.58;
       context.beginPath();
-      context.moveTo(rect.centerX - rect.width * 0.24, rect.top);
-      context.lineTo(rect.centerX - rect.width * 0.24, rect.bottom);
-      context.moveTo(rect.centerX + rect.width * 0.24, rect.top);
-      context.lineTo(rect.centerX + rect.width * 0.24, rect.bottom);
+      context.moveTo(centerX - sweepWidth * 0.5, rect.top);
+      context.lineTo(centerX - sweepWidth * 0.5, rect.bottom);
+      context.moveTo(centerX + sweepWidth * 0.5, rect.top);
+      context.lineTo(centerX + sweepWidth * 0.5, rect.bottom);
       context.stroke();
       return;
     }
 
-    if (activeHazard.hazard.kind === 'mining_laser') {
+    if (style.behaviorKind === 'staticWarningGate') {
       context.setLineDash([]);
-      context.lineWidth = activeHazard.phase === 'active' ? 3.2 : 2.2;
+      context.lineWidth = activeHazard.phase === 'active' ? 3.1 : 2.1;
       context.beginPath();
       context.moveTo(rect.centerX, rect.top);
       context.lineTo(rect.centerX, rect.bottom);
       context.stroke();
       context.globalAlpha *= 0.58;
-      for (let y = rect.top + 32; y < rect.bottom; y += 72) {
+      for (let y = rect.top + 32; y < rect.bottom; y += style.patternStride + 28) {
         context.beginPath();
         context.moveTo(rect.centerX - rect.width * 0.38, y - 16);
         context.lineTo(rect.centerX + rect.width * 0.38, y + 16);
@@ -1521,10 +1531,16 @@ export class CanvasRenderer {
       return;
     }
 
-    if (activeHazard.hazard.kind === 'mine_belt') {
+    if (style.behaviorKind === 'driftingMineBand') {
       context.setLineDash([]);
-      for (let y = rect.top + 42, index = 0; y < rect.bottom; y += 88, index += 1) {
-        const x = rect.centerX + (index % 2 === 0 ? -rect.width * 0.22 : rect.width * 0.22);
+      const drift = (style.motionRatio - 0.5) * rect.width * 0.44;
+      for (
+        let y = rect.top + 42, index = 0;
+        y < rect.bottom;
+        y += style.patternStride + 34, index += 1
+      ) {
+        const x =
+          rect.centerX + (index % 2 === 0 ? -rect.width * 0.22 : rect.width * 0.22) + drift;
         context.beginPath();
         context.arc(x, y, 7, 0, Math.PI * 2);
         context.stroke();
@@ -1538,9 +1554,16 @@ export class CanvasRenderer {
       return;
     }
 
-    if (activeHazard.hazard.kind === 'dust_plume') {
+    if (style.behaviorKind === 'dustFront') {
       context.setLineDash([]);
-      for (let y = rect.top + 34, index = 0; y < rect.bottom; y += 58, index += 1) {
+      const frontY = rect.top + rect.height * style.motionRatio;
+      context.globalAlpha *= activeHazard.phase === 'active' ? 0.92 : 0.72;
+      context.beginPath();
+      context.moveTo(rect.left, frontY);
+      context.quadraticCurveTo(rect.centerX, frontY - 34, rect.right, frontY + 8);
+      context.stroke();
+      context.globalAlpha *= 0.82;
+      for (let y = rect.top + 34, index = 0; y < rect.bottom; y += style.patternStride, index += 1) {
         const x = rect.left + ((index * 41) % Math.max(1, rect.width));
         context.beginPath();
         context.moveTo(x - rect.width * 0.22, y + 10);
@@ -1554,21 +1577,28 @@ export class CanvasRenderer {
       return;
     }
 
-    if (activeHazard.hazard.kind === 'salvage_storm') {
+    if (style.behaviorKind === 'plasmaCurtain') {
       context.setLineDash([]);
-      for (let y = rect.top + 30, index = 0; y < rect.bottom; y += 46, index += 1) {
+      for (let y = rect.top + 30, index = 0; y < rect.bottom; y += style.patternStride, index += 1) {
         const x = rect.left + ((index * 37) % Math.max(1, rect.width));
         context.beginPath();
         context.moveTo(x - 14, y - 6);
         context.lineTo(x + 18, y + 8);
         context.stroke();
+        if (index % 2 === 0) {
+          context.beginPath();
+          context.moveTo(rect.left + rect.width * 0.24, y + 14);
+          context.lineTo(rect.right - rect.width * 0.2, y - 10);
+          context.stroke();
+        }
       }
       return;
     }
 
-    if (activeHazard.hazard.kind === 'surface_defense_arc') {
+    if (style.behaviorKind === 'pulseField') {
       context.setLineDash([]);
-      for (let y = rect.top + 36; y < rect.bottom; y += 74) {
+      context.globalAlpha *= style.damageWindowOpen ? 1 : 0.52;
+      for (let y = rect.top + 36; y < rect.bottom; y += style.patternStride + 20) {
         context.beginPath();
         context.arc(rect.centerX, y, rect.width * 0.44, Math.PI * 0.12, Math.PI * 0.88);
         context.stroke();
@@ -1580,23 +1610,24 @@ export class CanvasRenderer {
       return;
     }
 
-    if (activeHazard.hazard.kind === 'crush_gate') {
+    if (style.behaviorKind === 'collapsingColumns') {
       context.setLineDash([]);
       const toothWidth = Math.min(28, rect.width * 0.28);
-      for (let y = rect.top + 18; y < rect.bottom; y += 58) {
+      const squeeze = 0.26 + activeHazard.phaseProgress * 0.34;
+      for (let y = rect.top + 18; y < rect.bottom; y += style.patternStride) {
         context.beginPath();
         context.moveTo(rect.left, y);
-        context.lineTo(rect.left + toothWidth, y + 18);
+        context.lineTo(rect.left + toothWidth + rect.width * squeeze, y + 18);
         context.lineTo(rect.left, y + 36);
         context.moveTo(rect.right, y);
-        context.lineTo(rect.right - toothWidth, y + 18);
+        context.lineTo(rect.right - toothWidth - rect.width * squeeze, y + 18);
         context.lineTo(rect.right, y + 36);
         context.stroke();
       }
       return;
     }
 
-    for (let y = rect.top - rect.width; y < rect.bottom; y += 52) {
+    for (let y = rect.top - rect.width; y < rect.bottom; y += style.patternStride) {
       context.beginPath();
       context.moveTo(rect.left, y);
       context.lineTo(rect.right, y + rect.width * 0.52);

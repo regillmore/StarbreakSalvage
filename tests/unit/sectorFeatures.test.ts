@@ -7,6 +7,7 @@ import { resolveSectorHazardCollisions } from '../../src/game/SectorHazards';
 import {
   getActiveSectorHazards,
   getSectorHazardCollisionRect,
+  getSectorHazardDamageRects,
   getSectorHazardReadability,
   getSectorHazardVisualState,
   summarizeSectorFeaturePlan,
@@ -276,19 +277,54 @@ describe('SectorFeatures', () => {
   });
 
   it('keeps reduced-motion hazard warnings static but visible', () => {
-    const reduced = getSectorHazardVisualState(
-      { phase: 'telegraph', progress: 0.31, phaseProgress: 0.5 },
-      true
-    );
-    const animated = getSectorHazardVisualState(
-      { phase: 'telegraph', progress: 0.31, phaseProgress: 0.5 },
-      false
-    );
+    const hazard = getRequiredHazard();
+    const activeHazard = getActiveSectorHazards(
+      createSingleHazardPlan(hazard),
+      hazard.telegraphDistance + (hazard.startDistance - hazard.telegraphDistance) * 0.5
+    )[0];
+
+    if (!activeHazard) {
+      throw new Error('Expected active hazard warning.');
+    }
+
+    const reduced = getSectorHazardVisualState(activeHazard, true);
+    const animated = getSectorHazardVisualState(activeHazard, false);
 
     expect(reduced.pulseScale).toBe(1);
     expect(animated.pulseScale).not.toBe(1);
     expect(reduced.fillAlpha).toBeLessThanOrEqual(0.11);
     expect(reduced.strokeAlpha).toBeGreaterThan(0.7);
+  });
+
+  it('keeps active hazard damage rectangles inside the warned combat-world lane', () => {
+    const hazard = {
+      ...getRequiredHazard(),
+      kind: 'mining_laser' as const,
+      telegraphDistance: 80,
+      startDistance: 230,
+      endDistance: 360,
+      xRatio: 0.5,
+      widthRatio: 0.18
+    };
+    const plan = createSingleHazardPlan(hazard);
+    const telegraph = getActiveSectorHazards(plan, 160)[0];
+    const active = getActiveSectorHazards(plan, 280)[0];
+
+    if (!telegraph || !active) {
+      throw new Error('Expected telegraph and active sweep hazard.');
+    }
+
+    const baseRect = getSectorHazardCollisionRect(hazard, bounds);
+    const telegraphRects = getSectorHazardDamageRects(telegraph, bounds);
+    const activeRects = getSectorHazardDamageRects(active, bounds);
+
+    expect(telegraph.phase).toBe('telegraph');
+    expect(telegraphRects).toEqual([]);
+    expect(active.phase).toBe('active');
+    expect(activeRects.length).toBe(1);
+    expect(activeRects[0]?.left).toBeGreaterThanOrEqual(baseRect.left);
+    expect(activeRects[0]?.right).toBeLessThanOrEqual(baseRect.right);
+    expect(activeRects[0]?.width).toBeLessThan(baseRect.width);
   });
 
   it('rejects invalid generated feature fixtures', () => {

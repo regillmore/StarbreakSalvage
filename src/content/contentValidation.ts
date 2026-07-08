@@ -76,6 +76,7 @@ import {
 } from './enemyRoles';
 import {
   HAZARD_ZONE_BOSS_ARENA_POLICIES,
+  HAZARD_ZONE_BEHAVIOR_KINDS,
   HAZARD_ZONE_COLLISION_SHAPES,
   HAZARD_ZONE_DAMAGE_SHAPES,
   HAZARD_ZONE_DEFINITIONS,
@@ -182,6 +183,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const hazardZoneSettingsVariants = new Set<string>(HAZARD_ZONE_SETTINGS_VARIANTS);
   const hazardZoneBossArenaPolicies = new Set<string>(HAZARD_ZONE_BOSS_ARENA_POLICIES);
   const hazardZoneScheduleSources = new Set<string>(HAZARD_ZONE_SCHEDULE_SOURCES);
+  const hazardZoneBehaviorKinds = new Set<string>(HAZARD_ZONE_BEHAVIOR_KINDS);
   const backgroundLayerKinds = new Set<string>(BACKGROUND_LAYER_KINDS);
   const unlockKinds = new Set(['ship', 'item', 'faction', 'bossPractice', 'music', 'challenge']);
   const upgradeCategories = new Set<string>(UPGRADE_CATEGORIES);
@@ -404,7 +406,8 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     collisionShapes: hazardZoneCollisionShapes,
     settingsVariants: hazardZoneSettingsVariants,
     bossArenaPolicies: hazardZoneBossArenaPolicies,
-    scheduleSources: hazardZoneScheduleSources
+    scheduleSources: hazardZoneScheduleSources,
+    behaviorKinds: hazardZoneBehaviorKinds
   });
 
   for (const boss of bosses) {
@@ -928,6 +931,7 @@ interface HazardZoneDefinitionRegistries {
   readonly settingsVariants: ReadonlySet<string>;
   readonly bossArenaPolicies: ReadonlySet<string>;
   readonly scheduleSources: ReadonlySet<string>;
+  readonly behaviorKinds: ReadonlySet<string>;
 }
 
 function validateHazardZoneDefinitions(
@@ -1125,6 +1129,61 @@ function validateHazardZoneDefinitions(
           hazard.readability.performanceVariant
         )}`
       );
+    }
+
+    if (!hazard.behavior) {
+      errors.push(`${owner} must define behavior metadata`);
+      continue;
+    }
+
+    if (!registries.behaviorKinds.has(hazard.behavior.kind)) {
+      errors.push(`${owner} behavior has invalid kind: ${String(hazard.behavior.kind)}`);
+    }
+
+    if (!hazard.behavior.warningCue.trim()) {
+      errors.push(`${owner} behavior must have a warning cue`);
+    }
+
+    if (!hazard.behavior.activeCue.trim()) {
+      errors.push(`${owner} behavior must have an active cue`);
+    }
+
+    validateUnitNumber(errors, `${owner} behavior`, 'motionScale', hazard.behavior.motionScale);
+    validateUnitNumber(
+      errors,
+      `${owner} behavior`,
+      'activeDamageDutyCycle',
+      hazard.behavior.activeDamageDutyCycle
+    );
+    validatePositiveInteger(
+      errors,
+      `${owner} behavior`,
+      'activePulseCount',
+      hazard.behavior.activePulseCount
+    );
+    validatePositiveInteger(
+      errors,
+      `${owner} behavior`,
+      'collisionBands',
+      hazard.behavior.collisionBands
+    );
+    validateUnitNumber(
+      errors,
+      `${owner} behavior`,
+      'patternDensity',
+      hazard.behavior.patternDensity
+    );
+
+    if (hazard.behavior.activeDamageDutyCycle < 0.45) {
+      errors.push(`${owner} behavior must keep activeDamageDutyCycle at or above 0.45`);
+    }
+
+    if (hazard.behavior.activePulseCount > 8) {
+      errors.push(`${owner} behavior must keep activePulseCount at or below 8`);
+    }
+
+    if (hazard.behavior.collisionBands > 4) {
+      errors.push(`${owner} behavior must keep collisionBands at or below 4`);
     }
   }
 }

@@ -61,7 +61,7 @@ Exit criteria:
 - Hazard scheduling is deterministic and frame-catchup safe.
 - Boss arena release cannot convert a hidden warning into instant damage.
 
-Status: planned for work orders 073 and 074.
+Status: started by work order 073. The first richer behavior library now covers existing hazards with behavior metadata for sweep beams, pulse fields, drifting mine bands, collapsing columns, orbital shadows, plasma curtains, dust fronts, and static warning gates. Runtime helpers derive settings-aware presentation, active damage windows, cooldown-aware collision, cleanup, and fixed-world damage rectangles from the registry. Hazard director scheduling, pressure/relief integration, and richer boss-release schedule handling remain planned for work order 074.
 
 ### P8.3 - Destructibles And Obstacles
 

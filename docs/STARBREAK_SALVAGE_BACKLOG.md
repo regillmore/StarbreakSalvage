@@ -1466,7 +1466,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 073.
+- Implemented in work order 073. Existing hazard definitions now carry validated behavior metadata for sweep, pulse, drift, collapse, shadow, curtain, dust-front, and static-gate patterns. Runtime helpers derive active damage windows, fixed-world damage rectangles, cooldown-aware collision, and settings-aware presentation from the content registry, while renderer cues simplify under reduced motion and performance mode without changing generated timing.
 
 ### AW3 - Hazard director and pacing
 

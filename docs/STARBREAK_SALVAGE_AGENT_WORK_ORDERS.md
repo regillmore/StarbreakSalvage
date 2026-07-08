@@ -1218,7 +1218,7 @@ Acceptance criteria:
 - Hazard rendering remains readable below bullets in normal and high-contrast modes.
 - Reduced motion and performance mode simplify presentation without changing generated hazard timing.
 
-Status: planned.
+Status: implemented; hazard definitions now include validated behavior metadata for sweep beams, pulse fields, drifting mine bands, collapsing columns, orbital shadows, plasma curtains, dust fronts, and static warning gates. `src/game/HazardZoneBehavior.ts` derives settings-aware presentation state, damage-window gating, and fixed-world damage rectangles from the registry while `SectorHazards` applies collision only during active damage windows and honors hazard damage cooldown metadata. Canvas rendering now consumes behavior families for sweep/drift/pulse/gate/curtain/dust cues below bullets, with reduced-motion and performance mode simplification. Unit coverage pins family breadth, warning-before-damage, pulse open/closed windows, cooldown behavior, cleanup after end distance, fixed-world damage rect bounds, and settings-aware render state.
 
 ## Work order 074 - Hazard director, pacing integration, and boss-release safety
 

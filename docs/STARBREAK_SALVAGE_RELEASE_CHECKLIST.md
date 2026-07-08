@@ -101,7 +101,7 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 
 | Area                       | Status  | Notes                                                                                                                                                                                     |
 | -------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Rich hazard zones          | Started | Work order 072 adds the first hazard-zone schema/registry, validation, and current-behavior migration. Richer hazard families and director pacing remain planned for work orders 073-074. |
+| Rich hazard zones          | Started | Work orders 072-073 add the first hazard-zone schema/registry, validation, current-behavior migration, and behavior library for sweep/pulse/drift/collapse/shadow/curtain/dust/static-gate patterns. Director pacing remains planned for work order 074. |
 | Destructibles/obstacles    | Planned | Work orders 075-077 will define destructible/obstacle content, runtime interactions, rewards, chain reactions, safe-lane placement, and fixed-world viewport parity.                      |
 | Loose currency             | Planned | Work order 078 will add deterministic loose scrap/credit scatter, pickup attraction, cap rules, economy feedback, and summary/upgrade accounting coverage.                                |
 | Environmental stress smoke | Planned | Work order 079 will add debug/smoke paths and counters for hazard zones, destructibles/obstacles, loose currency, pickup caps, and environmental stress budgets where practical.          |
@@ -127,5 +127,5 @@ Phase 1 status: concluded after M10 deployment plus first-pass procedural audio/
 - Lunar Surface manual smoke should still check bullet readability over dust plumes, mining lasers, and surface-defense arcs.
 - Phase 6 item-catalog work is complete as a first playtest candidate, but item balance, reward repetition, hook-heavy readability, and effect variety remain tuning follow-ups.
 - Phase 7 is complete as a first-pass enemy-behavior playtest candidate with role differentiation, upgraded variants, deterministic formation definitions/spawning, formation objective/reward integration, longer-sector pacing, Chromium enemy-rich readability/performance smoke, and the boss-release hazard fairness fix. Balance and non-Chromium/manual device smoke remain follow-up risks.
-- Phase 8 is planned but not implemented yet. Richer hazard zones, destructibles/obstacles, loose currency, environmental stress smoke, and related economy/readability tuning are next-phase scope.
+- Phase 8 implementation has started with richer hazard-zone schema and behavior-library work. Hazard director pacing, destructibles/obstacles, loose currency, environmental stress smoke, and related economy/readability tuning remain next-phase scope.
 - Manual cross-browser smoke outside Chromium remains pending.

@@ -376,6 +376,16 @@ describe('validateContent', () => {
             highContrastColor: '#ffffff',
             reducedMotionVariant: 'swirl',
             performanceVariant: 'dense'
+          },
+          behavior: {
+            kind: 'vortex',
+            warningCue: '',
+            activeCue: '',
+            motionScale: 1.4,
+            activeDamageDutyCycle: 0.2,
+            activePulseCount: 0,
+            collisionBands: 5,
+            patternDensity: 1.4
           }
         } as unknown as HazardZoneDefinition
       ]
@@ -433,6 +443,24 @@ describe('validateContent', () => {
     );
     expect(errors).toContain(
       'Hazard zone hazard_missing readability has invalid performance variant: dense'
+    );
+    expect(errors).toContain('Hazard zone hazard_missing behavior has invalid kind: vortex');
+    expect(errors).toContain('Hazard zone hazard_missing behavior must have a warning cue');
+    expect(errors).toContain('Hazard zone hazard_missing behavior must have an active cue');
+    expect(errors).toContain(
+      'Hazard zone hazard_missing behavior must have motionScale between 0 and 1'
+    );
+    expect(errors).toContain(
+      'Hazard zone hazard_missing behavior must keep activeDamageDutyCycle at or above 0.45'
+    );
+    expect(errors).toContain(
+      'Hazard zone hazard_missing behavior must have positive activePulseCount'
+    );
+    expect(errors).toContain(
+      'Hazard zone hazard_missing behavior must keep collisionBands at or below 4'
+    );
+    expect(errors).toContain(
+      'Hazard zone hazard_missing behavior must have patternDensity between 0 and 1'
     );
   });
 

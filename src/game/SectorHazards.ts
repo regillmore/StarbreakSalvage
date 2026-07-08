@@ -1,4 +1,5 @@
 import { clamp } from '../core/math';
+import { getHazardZoneDefinition } from '../content/hazardZones';
 import {
   applyPlayerDamage,
   type CombatBounds,
@@ -8,7 +9,10 @@ import {
 import {
   getActiveSectorHazards,
   getSectorHazardCollisionRect,
+  getSectorHazardDamageRects,
+  type ActiveSectorHazard,
   type SectorHazardActivationOptions,
+  type SectorHazardCollisionRect,
   type SectorFeaturePlan,
   type SectorHazardPlan
 } from './SectorFeatures';
@@ -32,13 +36,15 @@ export function resolveSectorHazardCollisions(
   const hitHazardIds: string[] = [];
 
   for (const activeHazard of activeHazards) {
-    if (activeHazard.phase !== 'active') {
+    const damageRects = getSectorHazardDamageRects(activeHazard, bounds);
+
+    if (damageRects.length === 0) {
       continue;
     }
 
     damagingHazardIds.push(activeHazard.hazard.id);
 
-    if (!playerOverlapsHazard(state.player, activeHazard.hazard, bounds)) {
+    if (!playerOverlapsActiveHazard(state.player, activeHazard, bounds)) {
       continue;
     }
 
@@ -46,6 +52,10 @@ export function resolveSectorHazardCollisions(
     applyPlayerDamage(state, activeHazard.hazard.damage);
 
     if (state.stats.damageTaken > previousDamageTaken) {
+      state.player.invulnerableSeconds = Math.max(
+        state.player.invulnerableSeconds,
+        getHazardZoneDefinition(activeHazard.hazard.kind).damageCooldownSeconds
+      );
       hitHazardIds.push(activeHazard.hazard.id);
     }
   }
@@ -63,6 +73,28 @@ export function playerOverlapsHazard(
   bounds: CombatBounds
 ): boolean {
   const rect = getSectorHazardCollisionRect(hazard, bounds);
+  const nearestX = clamp(player.x, rect.left, rect.right);
+  const nearestY = clamp(player.y, rect.top, rect.bottom);
+  const dx = player.x - nearestX;
+  const dy = player.y - nearestY;
+
+  return dx * dx + dy * dy <= player.radius * player.radius;
+}
+
+export function playerOverlapsActiveHazard(
+  player: Pick<PlayerState, 'x' | 'y' | 'radius'>,
+  activeHazard: ActiveSectorHazard,
+  bounds: CombatBounds
+): boolean {
+  return getSectorHazardDamageRects(activeHazard, bounds).some((rect) =>
+    playerOverlapsHazardRect(player, rect)
+  );
+}
+
+function playerOverlapsHazardRect(
+  player: Pick<PlayerState, 'x' | 'y' | 'radius'>,
+  rect: SectorHazardCollisionRect
+): boolean {
   const nearestX = clamp(player.x, rect.left, rect.right);
   const nearestY = clamp(player.y, rect.top, rect.bottom);
   const dx = player.x - nearestX;

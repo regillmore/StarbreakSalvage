@@ -13,6 +13,11 @@ import {
 import { clamp } from '../core/math';
 import type { Rng } from '../core/rng';
 import type { CombatBounds } from './CombatState';
+import {
+  getHazardZoneDamageRects,
+  getHazardZonePresentationState,
+  type HazardZonePresentationState
+} from './HazardZoneBehavior';
 import type { SectorScrollPlan } from './ScrollState';
 
 export const SECTOR_LANDMARK_KINDS = [
@@ -103,12 +108,7 @@ export interface SectorHazardCollisionRect {
   readonly centerX: number;
 }
 
-export interface SectorHazardVisualState {
-  readonly fillAlpha: number;
-  readonly strokeAlpha: number;
-  readonly lineWidth: number;
-  readonly pulseScale: number;
-}
+export type SectorHazardVisualState = HazardZonePresentationState;
 
 export type SectorHazardReadabilityMetadata = HazardZoneReadabilityMetadata;
 
@@ -267,20 +267,23 @@ export function getSectorHazardCollisionRect(
 }
 
 export function getSectorHazardVisualState(
-  activeHazard: Pick<ActiveSectorHazard, 'phase' | 'progress' | 'phaseProgress'>,
-  reducedMotion: boolean
+  activeHazard: ActiveSectorHazard,
+  reducedMotion: boolean,
+  performanceMode = false,
+  highContrast = false
 ): SectorHazardVisualState {
-  const active = activeHazard.phase === 'active';
-  const pulseScale = reducedMotion
-    ? 1
-    : roundFeatureValue(1 + Math.sin(activeHazard.progress * Math.PI * 8) * 0.035);
+  return getHazardZonePresentationState(activeHazard, {
+    reducedMotion,
+    performanceMode,
+    highContrast
+  });
+}
 
-  return {
-    fillAlpha: active ? 0.11 : 0.055,
-    strokeAlpha: active ? 0.88 : 0.7 + activeHazard.phaseProgress * 0.18,
-    lineWidth: active ? 2.4 : 2,
-    pulseScale
-  };
+export function getSectorHazardDamageRects(
+  activeHazard: ActiveSectorHazard,
+  bounds: CombatBounds
+): readonly SectorHazardCollisionRect[] {
+  return getHazardZoneDamageRects(activeHazard, getSectorHazardCollisionRect(activeHazard.hazard, bounds));
 }
 
 export function getSectorHazardReadability(

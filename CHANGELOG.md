@@ -53,6 +53,7 @@
 - Added deterministic longer-sector pacing arcs with route-conditioned length bands, pressure/relief windows, explicit wave-distance ratios, formation-cluster marks, sparse landmark/hazard beats, boss-approach scaling, transition copy, debug plan labels, and run-summary timelines.
 - Added an enemy-rich debug stress pocket on `E` with active role, upgraded-variant, formation-label, long-sector pacing, projectile-budget, and telegraph-budget overlay telemetry for readability smoke.
 - Fixed boss-arena release hazards so a zone whose warning was hidden during the locked boss fight restarts its telegraph lead after boss defeat before it can damage the player.
+- Added a richer hazard-zone behavior layer for existing hazards, with sweep, pulse, drift, collapse, shadow, curtain, dust-front, and static-gate presentation/collision patterns that stay inside fixed combat-world windows.
 
 ### Testing
 
@@ -73,6 +74,7 @@
 - Added enemy-rich stress tests for the `E` debug shortcut, role-pressure budgets, active pacing-beat labels, and a narrow high-contrast Playwright smoke path through Lunar Surface.
 - Added a boss-release hazard regression proving hidden arena-lock hazards defer collision damage until their post-release warning lead has elapsed.
 - Added the Phase 8 hazard-zone schema and validation baseline for current hazards, including timing metrics, safe-lane expectations, readability metadata, and boss-arena suppression policy.
+- Added Phase 8 hazard behavior tests for family breadth, warning-before-damage, pulse windows, cooldown behavior, cleanup, fixed-world damage rectangles, and settings-aware render state.
 - Added wave director and objective completion tests, including known-seed objective snapshots and boss-gate coverage.
 - Added combat tests for special charge/use, bomb mitigation, graze detection, remapped special/bomb controls, and reduced-motion effect rendering.
 - Added validation and gameplay tests for ship stat contracts, weapon references, weapon patterns, heat/reload behavior, and starting economy.
@@ -134,6 +136,7 @@
 - Completed Phase 7 as an enemy-behavior playtest candidate with release docs, local check/browser/preview evidence, known enemy balance risks, and the boss-release hazard fairness fix.
 - Concluded Phase 7 in planning docs and added the Phase 8 roadmap/work orders for richer hazard zones, destructibles/obstacles, loose currency, environmental stress smoke, and release hardening.
 - Started Phase 8 implementation with the hazard-zone schema/audit pass, leaving richer hazard behavior and director pacing for work orders 073-074.
+- Completed the Phase 8 richer hazard-zone behavior library for work order 073, leaving director pacing, destructibles/obstacles, loose currency, and environmental stress smoke for later work orders.
 - Started Phase 6 with a documented audit of the current 30-item catalog, repeated-reward risks, underrepresented archetypes, target item families, and bridge-effect follow-ups.
 - Formalized the Phase 6 item metadata contract and validation baseline before adding larger item batches.
 - Completed the first Phase 6 hook-surface expansion so work order 054 can add live catalog items against typed event payloads.
