@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { ACHIEVEMENTS, type AchievementDefinition } from '../../src/content/achievements';
+import {
+  ACT_ROUTE_CONTRACTS,
+  type ActRouteContractDefinition
+} from '../../src/content/actRouteContracts';
 import { ACT_DEFINITIONS, type ActDefinition } from '../../src/content/acts';
 import { BACKGROUNDS, type BackgroundDefinition } from '../../src/content/backgrounds';
 import { BOSSES, type BossDefinition } from '../../src/content/bosses';
@@ -45,6 +49,7 @@ const baseUpgrade = UPGRADES[0] as UpgradeDefinition;
 const baseWeapon = WEAPONS[0] as WeaponDefinition;
 const baseAchievement = ACHIEVEMENTS[0] as AchievementDefinition;
 const baseAct = ACT_DEFINITIONS[0] as ActDefinition;
+const baseActRouteContract = ACT_ROUTE_CONTRACTS[0] as ActRouteContractDefinition;
 
 describe('validateContent', () => {
   it('accepts the shipped item and reward content', () => {
@@ -62,6 +67,7 @@ describe('validateContent', () => {
 
     expect(ITEMS).toHaveLength(60);
     expect(ACT_DEFINITIONS).toHaveLength(2);
+    expect(ACT_ROUTE_CONTRACTS.length).toBeGreaterThanOrEqual(7);
     expect(FACTIONS).toHaveLength(4);
     expect(BACKGROUNDS).toHaveLength(6);
     expect(ENVIRONMENT_OBJECT_DEFINITIONS.length).toBeGreaterThanOrEqual(8);
@@ -134,6 +140,79 @@ describe('validateContent', () => {
     expect(errors).toContain('Act act_missing boss gate must have a label');
     expect(errors).toContain('Act act_missing transition must have a label');
     expect(errors).toContain('Act act_missing transition cannot target itself');
+  });
+
+  it('rejects invalid act route contracts', () => {
+    const errors = validateContent({
+      actRouteContracts: [
+        baseActRouteContract,
+        {
+          ...baseActRouteContract,
+          label: 'Duplicate Contract'
+        },
+        {
+          ...baseActRouteContract,
+          id: 'act2_missing',
+          actId: 'act_missing',
+          kind: 'warp',
+          label: '',
+          routeCardCopy: '',
+          environmentalPressureHint: '',
+          rewardTierHint: '',
+          pressureHint: '',
+          tags: ['missing_tag'],
+          sectorFit: {
+            allowedSectorIds: ['sector_missing'],
+            preferredSectorIds: ['sector_core_wreck']
+          },
+          factionFit: ['faction_missing'],
+          backgroundHooks: ['background_missing'],
+          objectiveFamilies: ['escort'],
+          requiredUnlockIds: ['unlock_missing', 'unlock_missing'],
+          weight: 0,
+          riskOffset: 5
+        } as unknown as ActRouteContractDefinition
+      ]
+    });
+
+    expect(errors).toContain(`Duplicate act route contract id: ${baseActRouteContract.id}`);
+    expect(errors).toContain('Act route contract act2_missing references missing act: act_missing');
+    expect(errors).toContain('Act route contract act2_missing has invalid route kind: warp');
+    expect(errors).toContain('Act route contract act2_missing must have a label');
+    expect(errors).toContain('Act route contract act2_missing must have route card copy');
+    expect(errors).toContain(
+      'Act route contract act2_missing must have an environmental pressure hint'
+    );
+    expect(errors).toContain('Act route contract act2_missing must have a reward tier hint');
+    expect(errors).toContain('Act route contract act2_missing must have a pressure hint');
+    expect(errors).toContain(
+      'Act route contract act2_missing has invalid route tag: missing_tag'
+    );
+    expect(errors).toContain(
+      'Act route contract act2_missing sector fit has invalid allowed sector: sector_missing'
+    );
+    expect(errors).toContain(
+      'Act route contract act2_missing preferred sector must also be allowed: sector_core_wreck'
+    );
+    expect(errors).toContain(
+      'Act route contract act2_missing has invalid faction fit: faction_missing'
+    );
+    expect(errors).toContain(
+      'Act route contract act2_missing has invalid background hook: background_missing'
+    );
+    expect(errors).toContain(
+      'Act route contract act2_missing has invalid objective family: escort'
+    );
+    expect(errors).toContain(
+      'Act route contract act2_missing references missing unlock: unlock_missing'
+    );
+    expect(errors).toContain(
+      'Act route contract act2_missing has duplicate required unlock: unlock_missing'
+    );
+    expect(errors).toContain('Act route contract act2_missing must have positive weight');
+    expect(errors).toContain(
+      'Act route contract act2_missing riskOffset must stay between -2 and 3'
+    );
   });
 
   it('rejects duplicate faction ids and missing boss faction references', () => {

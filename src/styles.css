@@ -475,6 +475,11 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   color: #ffd166;
 }
 
+.route-contract-hint {
+  color: #c6f7ff;
+  font-size: 0.82rem;
+}
+
 .contract-select-button {
   width: 100%;
   min-width: 0;

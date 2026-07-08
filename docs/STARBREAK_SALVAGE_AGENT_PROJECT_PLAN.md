@@ -725,7 +725,7 @@ Exit criteria:
 - Same seed plus save state reproduces Act I/Act II structure and junction choices.
 - Older one-act save and summary records remain readable.
 
-Status: act model, ten-sector target route, and inter-act junction behavior implemented by work orders 082-083; distinct Act II route/content expansion remains planned for work orders 084-085.
+Status: act model, ten-sector target route, inter-act junction behavior, and first-pass Act II route contracts implemented by work orders 082-084; Act II pacing/objective expansion remains planned for work order 085.
 
 ### P9.3 - Act II Route, Pacing, And Objectives
 

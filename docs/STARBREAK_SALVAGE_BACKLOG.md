@@ -1606,7 +1606,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 084.
+- Implemented in work order 084. Act II route options now use data-driven contracts with route tags, sector fit, faction fit, background hooks, objective families, pressure/reward/terrain preview copy, deterministic weights, risk offsets, and optional unlock gates. Fresh and progressed save eligibility, route-card copy, known-seed snapshots, content validation, and Act I route stability are covered by tests.
 
 ## Epic BB - Phase 9 Act II pacing, pressure, economy, and finale
 

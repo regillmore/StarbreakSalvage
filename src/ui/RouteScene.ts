@@ -76,11 +76,33 @@ export class RouteScene implements Scene {
       hint.className = 'choice-body';
       hint.textContent = route.rewardHint;
 
+      const pressure = document.createElement('span');
+      pressure.className = 'choice-body route-contract-hint';
+      pressure.textContent = route.pressureHint ? `Pressure: ${route.pressureHint}` : '';
+
+      const reward = document.createElement('span');
+      reward.className = 'choice-body route-contract-hint';
+      reward.textContent = route.rewardTierHint ? `Reward: ${route.rewardTierHint}` : '';
+
+      const environment = document.createElement('span');
+      environment.className = 'choice-body route-contract-hint';
+      environment.textContent = route.environmentalHint
+        ? `Terrain: ${route.environmentalHint}`
+        : '';
+
       const intel = document.createElement('span');
       intel.className = 'choice-body route-intel-hint';
       intel.textContent = intelHint;
 
-      routeButton.append(name, risk, hint, ...(intelHint ? [intel] : []));
+      routeButton.append(
+        name,
+        risk,
+        hint,
+        ...(route.pressureHint ? [pressure] : []),
+        ...(route.rewardTierHint ? [reward] : []),
+        ...(route.environmentalHint ? [environment] : []),
+        ...(intelHint ? [intel] : [])
+      );
       routeGrid.append(routeButton);
       this.routeButtons.push(routeButton);
     }

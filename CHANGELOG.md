@@ -62,6 +62,7 @@
 - Fixed Phase 8 environmental presentation so destructibles/obstacles derive live screen position from sector scroll, planned loose-currency lanes scroll in with the background, and dropped enemy/boss/destructible loot continues moving with the sector.
 - Added the first Phase 9 act model: validated Act I/Act II definitions, deterministic act plans on generated runs, act context on sectors/routes/transitions/summaries/debug, and backward-compatible act fields on last-run save records.
 - Expanded the run target to ten sectors with a 5/5 Act I/Act II split and added a deterministic inter-act refit junction after Act I completion, including repair, route intel, shop discount, reward, salvage, and risk choices that feed Act II route, shop, reward, transition, summary, and debug surfaces.
+- Added first-pass Act II route contracts with route tags, sector fit, faction fit, background hooks, objective families, pressure/reward/terrain route-card previews, deterministic weights, risk offsets, optional unlock gates, content validation, and Act II-only generation.
 
 ### Testing
 
@@ -154,7 +155,7 @@
 - Completed the Phase 8 environmental stress smoke pass for work order 079, leaving final environmental release hardening for work order 080.
 - Completed Phase 8 as an environmental systems playtest candidate with release docs, local check/browser/preview evidence, scroll-world object/loot hardening, and known environmental balance/readability/economy risks.
 - Concluded Phase 8 in planning docs and added the Phase 9 roadmap/work orders for a deterministic second act, inter-act junction, Act II route and sector pool, Act II pacing/objective variants, combat/environment escalation, economy tuning, second-act boss/finale, debug smoke, and release hardening.
-- Started Phase 9 implementation with the act model/run progression schema while leaving the inter-act junction and new Act II route/content vocabulary for work orders 083-084.
+- Continued Phase 9 implementation through the act model, midpoint refit junction, and first Act II route-contract vocabulary while leaving Act II pacing, economy, boss/finale, debug smoke, and release hardening for work orders 085-090.
 - Started Phase 6 with a documented audit of the current 30-item catalog, repeated-reward risks, underrepresented archetypes, target item families, and bridge-effect follow-ups.
 - Formalized the Phase 6 item metadata contract and validation baseline before adding larger item batches.
 - Completed the first Phase 6 hook-surface expansion so work order 054 can add live catalog items against typed event payloads.

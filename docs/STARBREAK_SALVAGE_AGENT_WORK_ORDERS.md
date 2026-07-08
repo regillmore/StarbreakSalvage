@@ -1405,7 +1405,7 @@ Acceptance criteria:
 - Content remains original, data-driven, and validation-covered.
 - Act I route generation remains unchanged except for explicit act context.
 
-Status: planned.
+Status: implemented; Act II route options now generate from data-driven contracts in `src/content/actRouteContracts.ts` through `src/game/ActRouteContracts.ts`, while Act I keeps the prior generic route weighting. Each Act II contract defines route kind, tags, sector fit, faction fit, background hooks, objective families, environmental pressure hint, reward-tier hint, route-card copy, deterministic weight, risk offset, and optional unlock gates. Route cards now show Act II pressure/reward/terrain previews, generated run summaries expose selected act-route contracts, and content validation rejects invalid act, route, sector, faction, background, objective, tag, unlock, weight, and risk references. Focused tests cover fresh/progressed save eligibility, known-seed Act II route snapshots, route-card copy, content validation, and Act I route stability.
 
 ## Work order 085 - Act II pacing arcs and objective variants
 

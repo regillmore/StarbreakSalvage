@@ -492,6 +492,7 @@ src/game/ActPressure.ts
 ### Act II route and content contracts
 
 - Act II sector and route content should extend existing sector, background, feature, wave, hazard, reward, shop, vault, elite, faction, and boss registries instead of introducing a parallel generator.
+- Work order 084 adds `src/content/actRouteContracts.ts` plus `src/game/ActRouteContracts.ts` for the first route-contract layer. Act II generation consumes these contracts for labels, tags, sector/faction/background/objective fit, pressure/reward/terrain preview copy, deterministic weights, risk offsets, and optional unlock gates while Act I remains on the generic route path.
 - Route-card copy should explain pressure/reward tradeoffs while the deterministic content data carries the actual rule references.
 - Content validation should reject invalid act-route references, unsupported objective families, missing reward profiles, missing boss/finale gates, and Act II routes that have no valid sector pool.
 

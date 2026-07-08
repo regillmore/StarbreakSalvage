@@ -1,5 +1,10 @@
 import { getBossById, type BossId, type BossPatternId } from '../content/bosses';
 import { getBackgroundById } from '../content/backgrounds';
+import type {
+  ActRouteContractDefinition,
+  ActRouteContractId,
+  ActRouteTag
+} from '../content/actRouteContracts';
 import type { FactionId } from '../content/factions';
 import {
   SECTORS,
@@ -24,6 +29,11 @@ import {
   type ActSectorContext,
   type RunActPlan
 } from './ActPlan';
+import {
+  getActRouteContractWeight,
+  getEligibleActRouteContracts,
+  type ActRouteEligibilityContext
+} from './ActRouteContracts';
 import { createBackgroundPlan, type BackgroundPlan } from './BackgroundPlan';
 import { createBossArenaPlan, summarizeBossArenaPlan, type BossArenaPlan } from './BossArena';
 import { createSectorScrollPlan, type SectorScrollPlan } from './ScrollState';
@@ -70,6 +80,11 @@ export interface RouteOption {
   readonly risk: number;
   readonly rewardHint: string;
   readonly intelHint?: string;
+  readonly actRouteId?: ActRouteContractId;
+  readonly routeTags?: readonly ActRouteTag[];
+  readonly pressureHint?: string;
+  readonly rewardTierHint?: string;
+  readonly environmentalHint?: string;
 }
 
 export interface SectorRoute {
@@ -301,7 +316,15 @@ function generateSectorRoute(
 ): SectorRoute {
   const bossCandidates = filterUnlockedBossCandidates(sector.bossCandidates, unlockAccess);
   const boss = getBossById(rng.choice(bossCandidates));
-  const routeOptions = generateRouteOptions(rng.fork('routes'), index, upgradeEffects, act);
+  const routeOptions = generateRouteOptions(
+    rng.fork('routes'),
+    index,
+    sector,
+    boss.factionId,
+    unlockAccess,
+    upgradeEffects,
+    act
+  );
   const waveRng = rng.fork('major-waves');
   const majorWaves = waveRng.shuffle(sector.majorWavePool).slice(0, 3);
   const objective = createSectorObjectivePlan(sector, majorWaves);
@@ -351,6 +374,30 @@ function generateSectorRoute(
 function generateRouteOptions(
   rng: Rng,
   sectorIndex: number,
+  sector: SectorDefinition,
+  bossFactionId: FactionId,
+  unlockAccess: UnlockAccess,
+  upgradeEffects: RunUpgradeEffects,
+  act: ActSectorContext
+): RouteOption[] {
+  if (act.actId === 'act_core_descent') {
+    return generateActRouteContractOptions(
+      rng,
+      sectorIndex,
+      sector,
+      bossFactionId,
+      unlockAccess,
+      upgradeEffects,
+      act
+    );
+  }
+
+  return generateBaselineRouteOptions(rng, sectorIndex, upgradeEffects, act);
+}
+
+function generateBaselineRouteOptions(
+  rng: Rng,
+  sectorIndex: number,
   upgradeEffects: RunUpgradeEffects,
   act: ActSectorContext
 ): RouteOption[] {
@@ -388,6 +435,106 @@ function generateRouteOptions(
       ...(upgradeEffects.routeIntel ? { intelHint: createRouteIntelHint(kind, risk) } : {})
     };
   });
+}
+
+function generateActRouteContractOptions(
+  rng: Rng,
+  sectorIndex: number,
+  sector: SectorDefinition,
+  bossFactionId: FactionId,
+  unlockAccess: UnlockAccess,
+  upgradeEffects: RunUpgradeEffects,
+  act: ActSectorContext
+): RouteOption[] {
+  const allowedRouteKinds = new Set<RouteKind>(act.routeGrammar.allowedKinds);
+  const context: ActRouteEligibilityContext = {
+    actId: act.actId,
+    sectorId: sector.id,
+    backgroundId: sector.backgroundId,
+    bossFactionId,
+    objectiveKind: sector.objective.kind,
+    unlockedIds: unlockAccess.unlockedIds ?? []
+  };
+  const eligibleContracts = getEligibleActRouteContracts(context).filter((contract) =>
+    allowedRouteKinds.has(contract.kind)
+  );
+  const selectedContracts = selectUniqueRouteContracts(
+    rng,
+    eligibleContracts.map((contract) => ({
+      item: contract,
+      weight: getActRouteContractWeight(contract, context)
+    })),
+    3
+  );
+  const selectedKinds = new Set(selectedContracts.map((contract) => contract.kind));
+  const fallbackKinds =
+    selectedContracts.length >= 3
+      ? []
+      : selectUniqueWeighted(
+          rng,
+          [...allowedRouteKinds]
+            .filter((kind) => !selectedKinds.has(kind))
+            .map((kind) => ({ item: kind, weight: 1 })),
+          3 - selectedContracts.length
+        );
+
+  return [
+    ...selectedContracts.map((contract) =>
+      createActRouteOption(contract, sectorIndex, upgradeEffects)
+    ),
+    ...fallbackKinds.map((kind) => {
+      const risk = calculateRouteRisk(kind, sectorIndex);
+
+      return {
+        ...ROUTE_OPTIONS[kind],
+        risk,
+        ...(upgradeEffects.routeIntel ? { intelHint: createRouteIntelHint(kind, risk) } : {})
+      };
+    })
+  ];
+}
+
+function createActRouteOption(
+  contract: ActRouteContractDefinition,
+  sectorIndex: number,
+  upgradeEffects: RunUpgradeEffects
+): RouteOption {
+  const risk = Math.max(1, calculateRouteRisk(contract.kind, sectorIndex) + contract.riskOffset);
+
+  return {
+    kind: contract.kind,
+    label: contract.label,
+    risk,
+    rewardHint: contract.routeCardCopy,
+    actRouteId: contract.id,
+    routeTags: contract.tags,
+    pressureHint: contract.pressureHint,
+    rewardTierHint: contract.rewardTierHint,
+    environmentalHint: contract.environmentalPressureHint,
+    ...(upgradeEffects.routeIntel ? { intelHint: createRouteIntelHint(contract.kind, risk) } : {})
+  };
+}
+
+function selectUniqueRouteContracts(
+  rng: Rng,
+  choices: readonly WeightedChoice<ActRouteContractDefinition>[],
+  count: number
+): ActRouteContractDefinition[] {
+  const available = choices.map((choice) => ({ ...choice }));
+  const selected: ActRouteContractDefinition[] = [];
+
+  while (selected.length < count && available.length > 0) {
+    const contract = rng.weightedChoice(available);
+    selected.push(contract);
+
+    for (let index = available.length - 1; index >= 0; index -= 1) {
+      if (available[index]?.item.kind === contract.kind) {
+        available.splice(index, 1);
+      }
+    }
+  }
+
+  return selected;
 }
 
 function selectUniqueWeighted<T>(
@@ -584,6 +731,18 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
       },
       ...(sector.routeOptions.some((route) => route.intelHint)
         ? { routeIntel: sector.routeOptions.map((route) => route.intelHint ?? '') }
+        : {}),
+      ...(sector.routeOptions.some((route) => route.actRouteId)
+        ? {
+            actRouteContracts: sector.routeOptions.map((route) => ({
+              id: route.actRouteId ?? null,
+              label: route.label,
+              tags: route.routeTags ?? [],
+              pressureHint: route.pressureHint ?? null,
+              rewardTierHint: route.rewardTierHint ?? null,
+              environmentalHint: route.environmentalHint ?? null
+            }))
+          }
         : {}),
       background: {
         id: sector.background.id,

@@ -62,7 +62,7 @@ Exit criteria:
 - Existing one-act smoke paths remain valid during migration.
 - Debug and summaries expose act context without requiring private app state.
 
-Status: implemented by work orders 082-083. The generated run now carries a validated two-act schema and per-sector act context with a ten-sector target route: Act I covers sectors 1-5 and Act II covers sectors 6-10 while existing sector content is reused until the Act II route pool is expanded.
+Status: implemented by work orders 082-084. The generated run now carries a validated two-act schema and per-sector act context with a ten-sector target route: Act I covers sectors 1-5 and Act II covers sectors 6-10, and Act II route options now draw from a distinct route-contract table.
 
 ### P9.3 - Inter-Act Junction
 
@@ -94,7 +94,7 @@ Exit criteria:
 - Route previews clearly communicate Act II pressure/reward tradeoffs.
 - Content validation catches broken act/sector/route references.
 
-Status: planned for work order 084.
+Status: implemented by work order 084. Act II route generation now uses data-driven contracts with route tags, sector fit, faction fit, background hooks, objective families, pressure/reward/terrain previews, deterministic weights, risk offsets, and optional unlock gates. Content validation and known-seed tests cover the first route pool while Act I route generation remains on the original generic path.
 
 ### P9.5 - Act II Pacing And Objectives
 

@@ -1,5 +1,10 @@
 import { ACHIEVEMENTS, type AchievementDefinition } from './achievements';
 import {
+  ACT_ROUTE_CONTRACTS,
+  ACT_ROUTE_TAGS,
+  type ActRouteContractDefinition
+} from './actRouteContracts';
+import {
   ACT_BOSS_GATE_KINDS,
   ACT_DEFINITIONS,
   ACT_PRESSURE_TIERS,
@@ -119,6 +124,7 @@ export type ItemHookImplementationRegistry = Readonly<Partial<Record<ItemHook, r
 
 export interface ContentValidationInput {
   readonly acts?: readonly ActDefinition[];
+  readonly actRouteContracts?: readonly ActRouteContractDefinition[];
   readonly achievements?: readonly AchievementDefinition[];
   readonly backgrounds?: readonly BackgroundDefinition[];
   readonly bosses?: readonly BossDefinition[];
@@ -142,6 +148,7 @@ export interface ContentValidationInput {
 
 export function validateContent(input: ContentValidationInput = {}): string[] {
   const acts = input.acts ?? ACT_DEFINITIONS;
+  const actRouteContracts = input.actRouteContracts ?? ACT_ROUTE_CONTRACTS;
   const achievements = input.achievements ?? ACHIEVEMENTS;
   const backgrounds = input.backgrounds ?? BACKGROUNDS;
   const bosses = input.bosses ?? BOSSES;
@@ -232,6 +239,8 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const actPressureTiers = new Set<string>(ACT_PRESSURE_TIERS);
   const actBossGateKinds = new Set<string>(ACT_BOSS_GATE_KINDS);
   const actTransitionKinds = new Set<string>(ACT_TRANSITION_KINDS);
+  const actRouteTags = new Set<string>(ACT_ROUTE_TAGS);
+  const sectorObjectiveKinds = new Set(['clearWaves', 'defeatBoss']);
   const unlockKinds = new Set(['ship', 'item', 'faction', 'bossPractice', 'music', 'challenge']);
   const upgradeCategories = new Set<string>(UPGRADE_CATEGORIES);
   const upgradeEffectKinds = new Set<string>(UPGRADE_EFFECT_KINDS);
@@ -241,7 +250,11 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const shipSilhouettes = new Set<string>(SHIP_SILHOUETTES);
   const shipMountHints = new Set<string>(SHIP_WEAPON_MOUNT_HINTS);
   const shipHudThemeKeys = new Set<string>(SHIP_HUD_THEME_KEYS);
-  const canonicalSectorIds = new Set<string>(SECTORS.map((sector) => sector.id));
+  const canonicalActIds = new Set<string>(acts.map((act) => act.id));
+  const canonicalBackgroundIds = new Set<string>(backgrounds.map((background) => background.id));
+  const canonicalFactionIds = new Set<string>(factions.map((faction) => faction.id));
+  const canonicalSectorIds = new Set<string>(sectors.map((sector) => sector.id));
+  const canonicalUnlockIds = new Set<string>(unlocks.map((unlock) => unlock.id));
 
   validateActDefinitions(errors, acts, {
     routeKinds: actRouteKinds,
@@ -250,6 +263,16 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     bossGateKinds: actBossGateKinds,
     transitionKinds: actTransitionKinds,
     sectors: canonicalSectorIds
+  });
+  validateActRouteContracts(errors, actRouteContracts, {
+    acts: canonicalActIds,
+    routeKinds: actRouteKinds,
+    sectors: canonicalSectorIds,
+    factions: canonicalFactionIds,
+    backgrounds: canonicalBackgroundIds,
+    objectiveKinds: sectorObjectiveKinds,
+    routeTags: actRouteTags,
+    unlocks: canonicalUnlockIds
   });
 
   if (items.length < 30) {
@@ -1054,6 +1077,133 @@ function validateActDefinitions(
           `${owner} transition references missing next act: ${act.transition.nextActId}`
         );
       }
+    }
+  }
+}
+
+function validateActRouteContracts(
+  errors: string[],
+  contracts: readonly ActRouteContractDefinition[],
+  registries: {
+    readonly acts: ReadonlySet<string>;
+    readonly routeKinds: ReadonlySet<string>;
+    readonly sectors: ReadonlySet<string>;
+    readonly factions: ReadonlySet<string>;
+    readonly backgrounds: ReadonlySet<string>;
+    readonly objectiveKinds: ReadonlySet<string>;
+    readonly routeTags: ReadonlySet<string>;
+    readonly unlocks: ReadonlySet<string>;
+  }
+): void {
+  const contractIds = new Set<string>();
+  const coreRouteKinds = new Set<string>();
+
+  if (contracts.length < ACT_ROUTE_KINDS.length) {
+    errors.push('Content must define at least one act route contract per route kind');
+  }
+
+  for (const contract of contracts) {
+    const owner = `Act route contract ${contract.id}`;
+
+    if (contractIds.has(contract.id)) {
+      errors.push(`Duplicate act route contract id: ${contract.id}`);
+    }
+
+    contractIds.add(contract.id);
+
+    if (!registries.acts.has(contract.actId)) {
+      errors.push(`${owner} references missing act: ${contract.actId}`);
+    }
+
+    if (!registries.routeKinds.has(contract.kind)) {
+      errors.push(`${owner} has invalid route kind: ${contract.kind}`);
+    }
+
+    if (contract.actId === 'act_core_descent') {
+      coreRouteKinds.add(contract.kind);
+    }
+
+    if (!contract.label.trim()) {
+      errors.push(`${owner} must have a label`);
+    }
+
+    if (!contract.routeCardCopy.trim()) {
+      errors.push(`${owner} must have route card copy`);
+    }
+
+    if (!contract.environmentalPressureHint.trim()) {
+      errors.push(`${owner} must have an environmental pressure hint`);
+    }
+
+    if (!contract.rewardTierHint.trim()) {
+      errors.push(`${owner} must have a reward tier hint`);
+    }
+
+    if (!contract.pressureHint.trim()) {
+      errors.push(`${owner} must have a pressure hint`);
+    }
+
+    validateStringList(errors, owner, 'route tag', contract.tags, registries.routeTags);
+    validateStringList(
+      errors,
+      `${owner} sector fit`,
+      'allowed sector',
+      contract.sectorFit.allowedSectorIds,
+      registries.sectors
+    );
+    validateStringList(
+      errors,
+      `${owner} sector fit`,
+      'preferred sector',
+      contract.sectorFit.preferredSectorIds,
+      registries.sectors
+    );
+    validateStringList(errors, owner, 'faction fit', contract.factionFit, registries.factions);
+    validateStringList(
+      errors,
+      owner,
+      'background hook',
+      contract.backgroundHooks,
+      registries.backgrounds
+    );
+    validateStringList(
+      errors,
+      owner,
+      'objective family',
+      contract.objectiveFamilies,
+      registries.objectiveKinds
+    );
+
+    for (const preferredSectorId of contract.sectorFit.preferredSectorIds) {
+      if (!contract.sectorFit.allowedSectorIds.includes(preferredSectorId)) {
+        errors.push(`${owner} preferred sector must also be allowed: ${preferredSectorId}`);
+      }
+    }
+
+    for (const unlockId of contract.requiredUnlockIds) {
+      if (!registries.unlocks.has(unlockId)) {
+        errors.push(`${owner} references missing unlock: ${unlockId}`);
+      }
+    }
+
+    for (const duplicateUnlockId of getDuplicateStrings(contract.requiredUnlockIds)) {
+      errors.push(`${owner} has duplicate required unlock: ${duplicateUnlockId}`);
+    }
+
+    validatePositiveInteger(errors, owner, 'weight', contract.weight);
+
+    if (!Number.isFinite(contract.riskOffset)) {
+      errors.push(`${owner} must have a finite riskOffset`);
+    }
+
+    if (contract.riskOffset < -2 || contract.riskOffset > 3) {
+      errors.push(`${owner} riskOffset must stay between -2 and 3`);
+    }
+  }
+
+  for (const routeKind of ACT_ROUTE_KINDS) {
+    if (!coreRouteKinds.has(routeKind)) {
+      errors.push(`Act II route contracts must include route kind: ${routeKind}`);
     }
   }
 }

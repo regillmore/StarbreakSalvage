@@ -681,6 +681,44 @@ describe('WaveDirector', () => {
               "sectorCount": 5,
               "sectorIndex": 1,
             },
+            "actRouteContracts": [
+              {
+                "environmentalHint": "vault doors sit close to unstable lanes and late telegraphs",
+                "id": "act2_relic_undertow",
+                "label": "Relic Undertow",
+                "pressureHint": "medium combat pressure, high build variance",
+                "rewardTierHint": "vault-tier relic pool with Act II rarity pressure",
+                "tags": [
+                  "relic",
+                  "hazard",
+                  "core",
+                ],
+              },
+              {
+                "environmentalHint": "escort lanes favor faction-colored crossfire windows",
+                "id": "act2_faction_heist",
+                "label": "Faction Heist",
+                "pressureHint": "high combat pressure with faction-specific reward bias",
+                "rewardTierHint": "focused faction cache with escalated salvage",
+                "tags": [
+                  "faction",
+                  "pressure",
+                  "economy",
+                ],
+              },
+              {
+                "environmentalHint": "stable dock lane with fewer surprise hazards before launch",
+                "id": "act2_core_broker_permit",
+                "label": "Core Broker Permit",
+                "pressureHint": "low combat pressure, high economy commitment",
+                "rewardTierHint": "escalated shop stock and price pressure",
+                "tags": [
+                  "deepMarket",
+                  "economy",
+                  "core",
+                ],
+              },
+            ],
             "background": {
               "id": "background_bio_machine_bloom",
               "layerCount": 4,
@@ -732,7 +770,7 @@ describe('WaveDirector', () => {
               "spawnsPerWave": 2,
             },
             "routes": [
-              "elite",
+              "vault",
               "factionAmbush",
               "shop",
             ],
@@ -752,6 +790,43 @@ describe('WaveDirector', () => {
               "sectorCount": 5,
               "sectorIndex": 2,
             },
+            "actRouteContracts": [
+              {
+                "environmentalHint": "repair lanes favor readable corridors over dense clutter",
+                "id": "act2_field_suture",
+                "label": "Field Suture",
+                "pressureHint": "low combat pressure, low immediate reward ceiling",
+                "rewardTierHint": "safer reward bias with Act II credit tension",
+                "tags": [
+                  "repair",
+                  "economy",
+                ],
+              },
+              {
+                "environmentalHint": "vault doors sit close to unstable lanes and late telegraphs",
+                "id": "act2_relic_undertow",
+                "label": "Relic Undertow",
+                "pressureHint": "medium combat pressure, high build variance",
+                "rewardTierHint": "vault-tier relic pool with Act II rarity pressure",
+                "tags": [
+                  "relic",
+                  "hazard",
+                  "core",
+                ],
+              },
+              {
+                "environmentalHint": "hazard timing may feel less regular after the shear",
+                "id": "act2_seed_shear",
+                "label": "Seed Shear",
+                "pressureHint": "high variance pressure with possible curse exposure",
+                "rewardTierHint": "extra reward choice with phase and heat bias",
+                "tags": [
+                  "seedShear",
+                  "hazard",
+                  "pressure",
+                ],
+              },
+            ],
             "background": {
               "id": "background_lunar_surface",
               "layerCount": 5,
@@ -813,8 +888,8 @@ describe('WaveDirector', () => {
               "spawnsPerWave": 2,
             },
             "routes": [
+              "repair",
               "vault",
-              "elite",
               "glitch",
             ],
             "scroll": {
@@ -833,6 +908,44 @@ describe('WaveDirector', () => {
               "sectorCount": 5,
               "sectorIndex": 3,
             },
+            "actRouteContracts": [
+              {
+                "environmentalHint": "escort lanes favor faction-colored crossfire windows",
+                "id": "act2_faction_heist",
+                "label": "Faction Heist",
+                "pressureHint": "high combat pressure with faction-specific reward bias",
+                "rewardTierHint": "focused faction cache with escalated salvage",
+                "tags": [
+                  "faction",
+                  "pressure",
+                  "economy",
+                ],
+              },
+              {
+                "environmentalHint": "formation lanes are more likely to stack near hazards",
+                "id": "act2_overseer_bounty",
+                "label": "Overseer Bounty",
+                "pressureHint": "high combat pressure with boss-approach implications",
+                "rewardTierHint": "escalated salvage plus an extra reward look",
+                "tags": [
+                  "bossApproach",
+                  "pressure",
+                  "core",
+                ],
+              },
+              {
+                "environmentalHint": "hazard timing may feel less regular after the shear",
+                "id": "act2_seed_shear",
+                "label": "Seed Shear",
+                "pressureHint": "high variance pressure with possible curse exposure",
+                "rewardTierHint": "extra reward choice with phase and heat bias",
+                "tags": [
+                  "seedShear",
+                  "hazard",
+                  "pressure",
+                ],
+              },
+            ],
             "background": {
               "id": "background_trade_war_corridor",
               "layerCount": 4,
@@ -884,9 +997,9 @@ describe('WaveDirector', () => {
               "spawnsPerWave": 2,
             },
             "routes": [
-              "repair",
-              "elite",
               "factionAmbush",
+              "elite",
+              "glitch",
             ],
             "scroll": {
               "baseSpeed": 115,
@@ -904,6 +1017,44 @@ describe('WaveDirector', () => {
               "sectorCount": 5,
               "sectorIndex": 4,
             },
+            "actRouteContracts": [
+              {
+                "environmentalHint": "stable dock lane with fewer surprise hazards before launch",
+                "id": "act2_core_broker_permit",
+                "label": "Core Broker Permit",
+                "pressureHint": "low combat pressure, high economy commitment",
+                "rewardTierHint": "escalated shop stock and price pressure",
+                "tags": [
+                  "deepMarket",
+                  "economy",
+                  "core",
+                ],
+              },
+              {
+                "environmentalHint": "formation lanes are more likely to stack near hazards",
+                "id": "act2_overseer_bounty",
+                "label": "Overseer Bounty",
+                "pressureHint": "high combat pressure with boss-approach implications",
+                "rewardTierHint": "escalated salvage plus an extra reward look",
+                "tags": [
+                  "bossApproach",
+                  "pressure",
+                  "core",
+                ],
+              },
+              {
+                "environmentalHint": "hazard timing may feel less regular after the shear",
+                "id": "act2_seed_shear",
+                "label": "Seed Shear",
+                "pressureHint": "high variance pressure with possible curse exposure",
+                "rewardTierHint": "extra reward choice with phase and heat bias",
+                "tags": [
+                  "seedShear",
+                  "hazard",
+                  "pressure",
+                ],
+              },
+            ],
             "arena": {
               "approachSpeed": 68.44,
               "approachStartDistance": 2725,
@@ -963,7 +1114,7 @@ describe('WaveDirector', () => {
             "routes": [
               "shop",
               "elite",
-              "repair",
+              "glitch",
             ],
             "scroll": {
               "baseSpeed": 118,
@@ -981,6 +1132,44 @@ describe('WaveDirector', () => {
               "sectorCount": 5,
               "sectorIndex": 5,
             },
+            "actRouteContracts": [
+              {
+                "environmentalHint": "vault doors sit close to unstable lanes and late telegraphs",
+                "id": "act2_relic_undertow",
+                "label": "Relic Undertow",
+                "pressureHint": "medium combat pressure, high build variance",
+                "rewardTierHint": "vault-tier relic pool with Act II rarity pressure",
+                "tags": [
+                  "relic",
+                  "hazard",
+                  "core",
+                ],
+              },
+              {
+                "environmentalHint": "hazard timing may feel less regular after the shear",
+                "id": "act2_seed_shear",
+                "label": "Seed Shear",
+                "pressureHint": "high variance pressure with possible curse exposure",
+                "rewardTierHint": "extra reward choice with phase and heat bias",
+                "tags": [
+                  "seedShear",
+                  "hazard",
+                  "pressure",
+                ],
+              },
+              {
+                "environmentalHint": "stable dock lane with fewer surprise hazards before launch",
+                "id": "act2_core_broker_permit",
+                "label": "Core Broker Permit",
+                "pressureHint": "low combat pressure, high economy commitment",
+                "rewardTierHint": "escalated shop stock and price pressure",
+                "tags": [
+                  "deepMarket",
+                  "economy",
+                  "core",
+                ],
+              },
+            ],
             "arena": {
               "approachSpeed": 71.92,
               "approachStartDistance": 2984,
@@ -1038,7 +1227,7 @@ describe('WaveDirector', () => {
               "spawnsPerWave": 3,
             },
             "routes": [
-              "elite",
+              "vault",
               "glitch",
               "shop",
             ],
