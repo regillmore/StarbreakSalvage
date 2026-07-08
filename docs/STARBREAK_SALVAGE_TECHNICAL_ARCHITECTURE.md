@@ -460,6 +460,54 @@ src/game/EnvironmentStress.ts
 - Environmental stress paths should coexist with item-storm, enemy-rich, dense-combat, forced-exit, forced-destruction, and long-scroll smoke without hiding bullets or exceeding the current alpha field budget.
 - Performance mode and reduced motion may simplify draw density, effects, and animation, but should not alter generated plans, collision timing, objective requirements, or pickup economy.
 
+## Phase 9 architecture priorities
+
+Phase 9 expands the run into a deterministic two-act structure. Keep the act model explicit, data-driven, and separate from transient scene state.
+
+### Act model and progression
+
+- Add typed act definitions for act id, display name, sector budget, route grammar, boss/finale gate, reward tier, shop/economy profile, pressure profile, and summary labels.
+- Generate an act plan once from seed plus save state. Gameplay, route screens, rewards, shops, summaries, debug overlays, and save records should consume that plan rather than inferring act state from sector indexes.
+- Carry act index/name and current act sector progress through public read models so tests and browser smoke can inspect act state without private app access.
+- Preserve backward compatibility for older one-act run summaries and saves. Missing act fields should read as the original single-act path.
+
+Recommended module direction:
+
+```text
+src/content/acts.ts
+src/game/ActPlan.ts
+src/game/RunProgression.ts
+src/game/InterActJunction.ts
+src/game/ActPressure.ts
+```
+
+### Inter-act junction
+
+- Treat the midpoint junction as an explicit run scene or transition state after Act I completion and before Act II generation is consumed.
+- Junction choices should be deterministic from seed plus save state and should apply typed modifiers to Act II route, economy, repair, risk, or reward plans.
+- The junction should use pure view models for choice cards, resource deltas, risk labels, and keyboard focus order.
+- Pause, abandon, settings, import/export safety, and summary handoff should not lose the selected act plan or duplicate rewards.
+
+### Act II route and content contracts
+
+- Act II sector and route content should extend existing sector, background, feature, wave, hazard, reward, shop, vault, elite, faction, and boss registries instead of introducing a parallel generator.
+- Route-card copy should explain pressure/reward tradeoffs while the deterministic content data carries the actual rule references.
+- Content validation should reject invalid act-route references, unsupported objective families, missing reward profiles, missing boss/finale gates, and Act II routes that have no valid sector pool.
+
+### Act-aware pressure and economy
+
+- Act-aware pressure should be a generation/read-model layer that coordinates enemy roles, upgraded variants, formations, hazards, destructibles, obstacles, loose currency, and item-proc stress budgets.
+- Do not let Act II systems raise projectile, telegraph, object, or pickup caps independently. Combined pressure should have one debug-readable budget summary.
+- Economy changes should resolve through existing reward/shop/vault/repair/loose-currency/save systems with act-aware profiles, not through scene-local bonuses.
+- Summaries should separate Act I income, inter-act changes, Act II income, boss/finale rewards, and banked salvage so balance can be audited from a run record.
+
+### Finale and debug smoke
+
+- Second-act bosses and finales should reuse the existing boss arena, phase, hazard-release, victory, defeat, and run-summary contracts where possible.
+- Boss-release hazard fairness remains mandatory: hazards hidden during a finale arena lock need a fresh visible warning lead before damage.
+- Debug shortcuts should be able to jump to the inter-act junction, Act II pressure, and finale while still using generated plans and public overlay state.
+- Playwright smoke should prefer public DOM/debug text assertions over private app object reads.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

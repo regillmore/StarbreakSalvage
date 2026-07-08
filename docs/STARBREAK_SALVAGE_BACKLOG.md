@@ -1569,3 +1569,117 @@ Acceptance:
 Status:
 
 - Implemented in work order 080. Phase 8 release docs now cover hazard-zone coverage, destructible/obstacle rules, loose-currency tuning, environmental debug smoke, scroll-world object/loot behavior, known balance/readability/economy risks, Chromium smoke evidence, production preview evidence, and remaining manual browser gaps.
+
+## Epic BA - Phase 9 second-act run structure
+
+### BA1 - Act model and run progression
+
+Acceptance:
+
+- Run generation has typed Act I and Act II definitions with deterministic sector budgets, boss gates, route grammar, and summary/debug context.
+- Same seed plus save state reproduces the same two-act structure.
+- Older one-act save and summary records remain readable during migration.
+
+Status:
+
+- Planned for work order 082.
+
+### BA2 - Inter-act junction
+
+Acceptance:
+
+- Completing Act I opens a midpoint junction before Act II begins.
+- Junction choices such as repair, route intel, shop discount, extra reward, banked salvage, or risk modifiers are deterministic from seed plus save state.
+- Keyboard, pause, reduced-motion, high-contrast, narrow viewport, and abandon/recover flows remain reliable.
+
+Status:
+
+- Planned for work order 083.
+
+### BA3 - Act II route pool
+
+Acceptance:
+
+- Act II has data-driven sector and route contracts with pressure/reward tradeoffs, faction fit, background hooks, objective families, and route-card copy.
+- Content validation catches invalid act, sector, route, objective, reward, and boss references.
+- Route previews communicate Act II stakes without hiding deterministic seed behavior.
+
+Status:
+
+- Planned for work order 084.
+
+## Epic BB - Phase 9 Act II pacing, pressure, economy, and finale
+
+### BB1 - Act II pacing and objective variants
+
+Acceptance:
+
+- Act II sectors use pressure bands, relief windows, objective variants, boss approach tuning, and summary/debug timelines.
+- Longer run length adds readable escalation rather than constant maximum density.
+- Existing long-scroll, enemy-rich, environmental, item-storm, forced-exit, and destruction smoke paths remain useful.
+
+Status:
+
+- Planned for work order 085.
+
+### BB2 - Act II combat and environmental pressure
+
+Acceptance:
+
+- Enemy roles, variants, formations, hazards, destructibles, obstacles, loose currency, and item-proc pressure use act-aware budgets.
+- Debug summaries expose act pressure without relying on private app state.
+- Fixed 640x720 combat-world parity and scroll-world environmental behavior remain intact.
+
+Status:
+
+- Planned for work order 086.
+
+### BB3 - Act II rewards, shops, and economy
+
+Acceptance:
+
+- Reward, shop, vault, elite, boss, loose currency, repair, reroll, and banked scrap expectations account for the longer two-act run.
+- Act II rewards feel sharper without flooding the item catalog or permanent progression economy.
+- Fresh and progressed saves have deterministic economy snapshots.
+
+Status:
+
+- Planned for work order 087.
+
+### BB4 - Second-act bosses and finale
+
+Acceptance:
+
+- Act II can resolve through a deterministic second-act boss or finale path.
+- Victory, defeat, abandonment, unlock, and summary copy distinguish Act I from Act II outcomes.
+- Boss-release hazard fairness remains protected when finale arenas suppress hazards.
+
+Status:
+
+- Planned for work order 088.
+
+## Epic BC - Phase 9 release and QA
+
+### BC1 - Act II debug smoke and accessibility
+
+Acceptance:
+
+- Debug shortcuts can reach the inter-act junction, Act II sector pressure, second-act boss/finale, and two-act summary.
+- Overlay readouts expose act id/name/index, junction choice, route tags, pressure budgets, and finale state.
+- High contrast, reduced motion, performance mode, narrow viewport, and keyboard-only flow remain readable.
+
+Status:
+
+- Planned for work order 089.
+
+### BC2 - Phase 9 release checklist
+
+Acceptance:
+
+- Release docs cover two-act determinism, inter-act flow, Act II route/sector content, pacing, economy, boss/finale, debug smoke, accessibility, performance, browser load, and manual gaps.
+- `npm run check`, Playwright smoke where available, and production preview smoke pass before Phase 9 closeout.
+- Known run-length, balance, browser, economy, and readability risks are documented.
+
+Status:
+
+- Planned for work order 090.

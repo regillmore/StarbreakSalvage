@@ -142,6 +142,21 @@ Phase 8 expands the environmental layer. Keep the first richer pass visible, det
 - High-contrast mode should outline bullets and keep hazard/destructible/currency cues distinct from projectile warnings.
 - The boss-release hazard fairness rule from work order 070 remains a performance/readability requirement: hazards hidden during arena lock must restart a post-release warning before damage.
 
+## Phase 9 Second-Act Budget Targets
+
+Phase 9 expands run length with a second act. Keep the expansion measurable and mostly generation-time before increasing moment-to-moment density.
+
+- Act plans should be generated once from seed plus save state, then consumed by route, sector, reward, shop, boss, summary, and debug systems. Do not use per-frame randomization to decide act structure.
+- Act II should feel more dangerous through route choices, objectives, pressure windows, encounter mix, environmental modifiers, and reward stakes before raising raw projectile or entity caps.
+- The inter-act junction should be a bounded DOM scene with stable focus and static view models. Avoid rebuilding heavy card trees during animation or every frame.
+- Act II route cards should stay concise enough for narrow viewports, keyboard-only flow, and high-contrast mode; preview density should not become a layout stress test.
+- Longer two-act runs should not imply higher sustained active-entity budgets. Use relief windows, debug shortcuts, and finale gates to keep playtest time bounded.
+- Act-aware pressure summaries should expose enemy role, variant, formation, hazard, object, loose-currency, item-hook, projectile, and telegraph budgets together before density increases.
+- Economy expansion should be measured through deterministic summaries: Act I income, junction changes, Act II income, loose currency, shops, repairs, rerolls, and banked scrap.
+- Second-act bosses/finales should reuse existing boss arena, phase, hazard-release, and summary contracts unless profiling justifies a new path.
+- Debug smoke should be able to reach the inter-act junction, Act II pressure, and finale without a full manual run.
+- Production preview smoke should continue checking the static `/StarbreakSalvage/` base path after act routing changes.
+
 ## Debug and Playtest Scenarios
 
 Enable debug tools with `?debug=1` on a local, preview, or Pages URL.
@@ -230,3 +245,12 @@ The debug overlay total entity count includes player, enemies, boss, bullets, pi
 - Pickup magnet behavior can feel different across window sizes if it uses presentation coordinates instead of fixed combat-world coordinates.
 - Chain reactions can create runaway pickups, effects, or item hook dispatch if caps are not enforced in the same event path.
 - Environmental density can combine badly with enemy-rich and item-storm paths. Test hazard/destructible/currency stress independently first, then combine intentionally.
+
+## Phase 9 Playtest Risks
+
+- Two-act runs can become tiring if Act II only adds distance. Use midpoint choice, relief windows, route identity, and finale pressure to make the extra length meaningful.
+- Act generation can break seed reproducibility if act state is split between run generation, save data, and scene-local flags. Keep act plans explicit and serializable.
+- The inter-act junction can confuse resource accounting if repair, shop, reward, and risk choices apply outside the same deterministic transition path.
+- Act II rewards and loose currency can inflate banked scrap or shop power. Track Act I and Act II income separately before increasing drop rates.
+- Act II pressure can hide bullets if enemy formations, hazards, obstacles, and item effects peak together. Add combined budget telemetry before raising caps.
+- Second-act boss arenas must preserve the boss-release hazard fairness rule so hidden warnings cannot become instant damage after a finale transition.

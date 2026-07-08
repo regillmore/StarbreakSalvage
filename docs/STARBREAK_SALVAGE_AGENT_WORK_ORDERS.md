@@ -1339,6 +1339,176 @@ Acceptance criteria:
 
 Status: implemented; Phase 8 is closed as an environmental systems playtest candidate. Release hardening fixed a key environment/loot presentation blocker by treating environment object placements and loose currency drops as scroll-world entities: destructibles and obstacles now derive live screen position from sector distance, planned loose-currency lanes spawn before their anchor distance and scroll in with the background, and enemy/boss/destructible drops continue drifting with the sector after they appear instead of hovering in viewport space. Unit regressions cover scrolled object collision/presentation, planned currency scroll-in, and dropped enemy loot scrolling, while the existing environmental stress, item-storm, enemy-rich, forced-exit, destruction, long-scroll, and narrow HUD smoke remain green. README, changelog, performance notes, Phase 8 plan, backlog, release checklist, QA docs, and architecture notes now document the candidate, remaining balance/readability/economy risks, and manual browser gaps. `npm run check`, escalated Playwright Chromium smoke, and production preview asset smoke passed locally.
 
+## Work order 081 - Phase 9 second-act planning refresh
+
+Goal: start Phase 9 with a coherent roadmap for a two-act run loop.
+
+Prompt:
+
+> Refresh planning documentation for Phase 9 around expanding the game loop with a second act. Read AGENTS.md and relevant docs first. Add or update a Phase 9 plan, work orders 081-090, backlog epics, QA/release guidance, architecture notes, performance notes, README links, changelog planning notes, project plan status, and release checklist status. Keep the scope docs-only unless a blocking documentation inconsistency requires a small fix. Preserve deterministic generation, fixed 640x720 combat-world parity, scroll-world environmental behavior, boss-release hazard fairness, accessibility, and GitHub Pages constraints. Run checks appropriate for docs-only changes and summarize changed files.
+
+Acceptance criteria:
+
+- Phase 9 has 10 new work orders with clear sequencing and acceptance criteria.
+- Planning docs describe the two-act run model, inter-act junction, Act II sector route pool, Act II pacing/objectives, rewards/economy, bosses/finale, debug smoke, and release hardening.
+- Docs preserve seeded determinism, backward-compatible saves/summaries, fixed-world viewport parity, accessibility settings, and Phase 8 environmental constraints.
+- Checks pass or any docs-only check limitation is documented.
+
+Status: implemented; Phase 9 planning is refreshed with `docs/STARBREAK_SALVAGE_PHASE_9_PLAN.md`, work orders 081-090, new backlog epics, QA seed/performance guidance, architecture priorities, README/project-plan links, changelog planning notes, and release checklist status. The plan frames a deterministic two-act run structure with an inter-act junction, Act II route/sector pool, Act II pacing/objectives, combat/environment escalation, economy/reward tuning, second-act boss/finale work, debug smoke, and release hardening while preserving existing determinism, fixed-world parity, scroll-world environmental behavior, boss-release hazard fairness, accessibility, and static GitHub Pages deployment.
+
+## Work order 082 - Act model and run progression schema
+
+Goal: give the run generator and runtime an explicit two-act structure.
+
+Prompt:
+
+> Audit run generation, route flow, sector transition, objective completion, boss gates, summaries, debug state, save records, seed links, and tests for one-act assumptions. Add typed act definitions and deterministic act plans for Act I and Act II, including act id/name, sector budget, route grammar, boss/finale gate, reward tier, and transition rules. Carry act context through gameplay, route/sector transition screens, run summaries, debug overlays, and backward-compatible save/summary records. Add deterministic tests for same-seed act plans, legacy summary normalization, route handoff, and existing one-act smoke compatibility. Run checks.
+
+Acceptance criteria:
+
+- Same seed plus save state reproduces the same Act I/Act II structure.
+- Act context is visible in transitions, summaries, and debug without private app-state access.
+- Existing seed links, saves, summary records, and debug shortcuts remain backward compatible.
+- The implementation does not change viewport parity, environmental scroll-world behavior, or boss-release hazard fairness.
+
+Status: planned.
+
+## Work order 083 - Inter-act junction and midpoint refit choices
+
+Goal: make the midpoint between acts a clear tactical breath.
+
+Prompt:
+
+> Add an inter-act junction after Act I completion and before Act II launch. Present deterministic refit choices such as repair, route intel, shop discount, extra reward, salvage bank option, or higher-risk Act II modifier. Apply the selected choice to Act II generation and summaries. Support keyboard-only flow, pause/abandon safety, reduced motion, high contrast, performance mode, and narrow viewports. Add tests for deterministic choice sets, choice effects, route handoff, resource accounting, and accessibility-friendly copy. Run checks.
+
+Acceptance criteria:
+
+- The player clearly sees Act I complete, junction options, and Act II launch state.
+- Junction choices are deterministic from seed plus save state and affect Act II through explicit data.
+- Existing route/reward/shop/summary flows remain stable.
+- Keyboard and accessibility settings keep the junction usable.
+
+Status: planned.
+
+## Work order 084 - Act II sector route pool and content contracts
+
+Goal: create the first distinct Act II route and sector vocabulary.
+
+Prompt:
+
+> Add data contracts and first-pass content for Act II sector routes. Define Act II route tags, sector fit, faction fit, background identity hooks, objective families, environmental pressure hints, reward tier hints, and route-card copy. Generate deterministic Act II route options from act context without disrupting Act I. Add content validation and tests for missing references, known-seed Act II route snapshots, route-card copy, and fresh/progressed save eligibility. Run checks.
+
+Acceptance criteria:
+
+- Act II route options are distinct from Act I and deterministic from seed plus act context.
+- Route previews communicate pressure/reward tradeoffs before launch.
+- Content remains original, data-driven, and validation-covered.
+- Act I route generation remains unchanged except for explicit act context.
+
+Status: planned.
+
+## Work order 085 - Act II pacing arcs and objective variants
+
+Goal: make second-act sectors feel deeper without becoming exhausting.
+
+Prompt:
+
+> Extend sector pacing and objective systems for Act II. Add act-aware length bands, relief windows, pressure bands, objective variants, boss-approach tuning, route-conditioned pacing modifiers, and summary/debug readouts. Avoid flat density increases. Add deterministic tests for Act II length bands, relief spacing, objective gates, boss approach handoff, frame-catchup safety, and known-seed pacing timelines. Run checks.
+
+Acceptance criteria:
+
+- Act II sectors have recognizable pacing arcs with pressure and relief.
+- Objectives and travel gates remain deterministic and readable.
+- Long-run pacing exposes useful debug/summary context.
+- Existing long-scroll, enemy-rich, item-storm, and environmental stress paths remain green.
+
+Status: planned.
+
+## Work order 086 - Act II combat and environmental escalation
+
+Goal: integrate existing enemy and environmental systems into act-aware pressure.
+
+Prompt:
+
+> Add act-aware pressure rules that can influence enemy roles, variants, formations, hazard director output, environment object placement, loose currency, and item-proc stress without creating ad hoc second-act code paths. Expose act pressure budgets in debug overlays. Keep caps conservative and preserve fixed-world collision, scroll-world environment behavior, and boss-release hazard fairness. Add tests for act-aware pressure selection, budget summaries, viewport parity, and combined enemy/environment stress. Run checks.
+
+Acceptance criteria:
+
+- Act II pressure uses existing data-driven systems and explicit act context.
+- Debug exposes act-aware enemy, hazard, environment, projectile, pickup, and item pressure.
+- Combined pressure stays below documented stress budgets.
+- No viewport-dependent lane or pickup behavior is introduced.
+
+Status: planned.
+
+## Work order 087 - Act II rewards, shops, and economy tuning
+
+Goal: make longer runs rewarding without flooding the economy.
+
+Prompt:
+
+> Extend reward, shop, vault, elite, boss, loose-currency, and upgrade-progress models for Act II. Add act-aware pool weighting, shop stock/price/reroll tuning, repair scarcity, salvage/credit income expectations, and summary copy that separates Act I and Act II economy. Keep permanent progression focused on variety/information sidegrades. Add deterministic fresh/progressed save snapshots for rewards, shops, vaults, junction effects, and run-summary economy. Run checks.
+
+Acceptance criteria:
+
+- Act II rewards feel stronger but do not invalidate existing item/shop/banked-scrap pacing.
+- Reward/shop/vault generation remains deterministic from seed plus save and act context.
+- Summaries explain Act I versus Act II economy and item sources.
+- Upgrade progress and save accounting remain backward compatible.
+
+Status: planned.
+
+## Work order 088 - Second-act bosses and finale
+
+Goal: give the two-act run a satisfying final escalation.
+
+Prompt:
+
+> Add second-act boss/finale structure using the existing boss arena, boss phase, hazard, route, reward, summary, and debug contracts. Define Act II boss variant selection, final approach pacing, victory/defeat copy, unlock hooks, and debug shortcuts. Preserve boss-release hazard fairness and avoid hidden instant damage on finale handoff. Add tests for deterministic boss/finale selection, arena handoff, victory summaries, unlock/save records, and debug reachability. Run checks.
+
+Acceptance criteria:
+
+- Act II can end in clear victory, defeat, or abandonment summaries.
+- Boss/finale selection is deterministic and debug-visible.
+- Boss arena release rules remain fair under Act II hazards.
+- Final boss/finale smoke can be reached without a full manual run.
+
+Status: planned.
+
+## Work order 089 - Act II debug smoke, accessibility, and performance hardening
+
+Goal: make the second act inspectable before release closeout.
+
+Prompt:
+
+> Add debug/test paths for Act II entry, inter-act junction, Act II sector pressure, second-act boss/finale, and two-act summary. Extend overlays or pure helpers with act id/name, act sector index, junction choice, Act II route tags, act pressure budgets, and final objective state. Check high contrast, reduced motion, performance mode, narrow viewport, item-storm interactions, enemy-rich pressure, environmental pressure, long-run travel, and forced summary/destruction. Add Playwright smoke where practical and update QA/performance docs. Run checks.
+
+Acceptance criteria:
+
+- Debug/test tooling can inspect Act II without private app-state access.
+- Browser smoke covers at least one second-act path where practical.
+- Existing item-storm, enemy-rich, environmental stress, dense-combat, forced-exit, destruction, and long-scroll smoke remain green.
+- Accessibility settings keep Act II UI, HUD text, bullets, hazards, pickups, and route cards readable.
+
+Status: planned.
+
+## Work order 090 - Phase 9 second-act playtest release hardening
+
+Goal: ship a second-act playtest candidate.
+
+Prompt:
+
+> Audit the Phase 9 build for two-act determinism, inter-act junction flow, Act II sector/route content, Act II pacing/objectives, combat/environment escalation, rewards/economy, bosses/finale, debug smoke, accessibility, performance, browser load, release docs, and manual smoke coverage. Fix blockers only. Update README, changelog, performance notes, Phase 9 plan, backlog, release checklist, QA docs, project plan, and architecture notes. Run `npm run check`, Playwright smoke with escalation if available, and production preview smoke. Summarize known run-length, balance, economy, browser, and readability risks.
+
+Acceptance criteria:
+
+- Full checks and production preview smoke pass.
+- E2E smoke passes or local browser/AppData blockers are clearly documented.
+- Release docs document the two-act run, inter-act junction, Act II content, debug smoke, and manual browser gaps.
+- Phase 9 can be declared complete or explicitly deferred with documented blockers.
+
+Status: planned.
+
 ## Review subagent prompt
 
 Use after a feature PR:

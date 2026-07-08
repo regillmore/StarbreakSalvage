@@ -154,6 +154,20 @@ Phase 8 enriches environmental pressure and loose salvage flow. Add tests closes
 - regression coverage that keeps item-storm, enemy-rich, dense-combat, forced-exit, forced-destruction, boss-release hazard, and quiet long-scroll paths green while environmental density grows.
 - release-hardening regressions for scroll-world environmental presentation; work order 080 adds unit coverage proving environment object collision/presentation derives from scroll distance, planned loose currency scrolls in before its anchor, and dropped enemy loot continues moving with the sector.
 
+## Phase 9 QA focus
+
+Phase 9 expands the game loop into a deterministic second act. Add tests closest to the risk:
+
+- act model and run generation snapshots for Act I/Act II structure, sector budgets, boss/finale gates, route grammar, and summary/debug act context;
+- inter-act junction snapshots for deterministic choice sets, choice effects, resource carryover, pause/abandon/recover behavior, and older save compatibility;
+- Act II route and sector content validation for route tags, sector fit, objective families, background identity hooks, pressure hints, reward hints, and route-card copy;
+- Act II pacing and objective tests for pressure bands, relief windows, longer-sector frame catchup, objective variants, boss approach timing, and two-act summary timelines;
+- Act II combat/environment pressure tests for combined enemy role, variant, formation, hazard, obstacle, loose currency, and item-proc budgets;
+- reward, shop, vault, elite, boss, repair, reroll, loose-currency, and banked-scrap economy snapshots under fresh and progressed saves;
+- second-act boss/finale tests for deterministic selection, arena release fairness, victory/defeat/abandon summaries, save records, and unlock hooks;
+- browser smoke for reaching the inter-act junction, entering Act II, inspecting Act II pressure, forcing the finale, and returning from the two-act summary where practical;
+- regression coverage that keeps item-storm, enemy-rich, environmental-stress, dense-combat, forced-exit, forced-destruction, boss-release hazard, and quiet long-scroll paths green while the run length grows.
+
 ## Known seed tests
 
 - `STARBREAK-SMOKE` — stable forgiving smoke path.
@@ -221,9 +235,17 @@ Phase 8 should add these seed/save fixtures:
 - `LOOSE-SCRAP-RAIN` - loose currency scatter and pickup-magnet fixture for economy accounting.
 - `ENVIRONMENT-STRESS-SMOKE` - debug-only environmental pressure pocket for active hazard, destructible/obstacle, loose currency, and stress-budget telemetry; first covered by work order 079 through the `H` shortcut in narrow high-contrast smoke.
 
+Phase 9 should add these seed/save fixtures:
+
+- `ACT2-GATE-SMOKE` - stable two-act path that reaches the inter-act junction and Act II entry without depending on a long manual clear.
+- `INTERACT-REFIT-SNAPSHOT` - deterministic midpoint junction choices and Act II modifier application under fresh and progressed saves.
+- `ACT2-ROUTE-LADDER` - Act II route pool fixture covering route tags, pressure/reward tradeoffs, and route-card copy.
+- `ACT2-PRESSURE-GAUNTLET` - Act II combined enemy/environment/item-pressure budget fixture.
+- `ACT2-FINALE-SMOKE` - deterministic second-act boss/finale, victory, summary, save, and boss-release hazard fairness fixture.
+
 ## Content validation checklist
 
-Phase 2 should extend this checklist as systems become real. In addition to the existing entries, content validation should cover ship stat ranges, objective references, wave references, implemented hook coverage, and unlock-gated pools for fresh and progressed saves. Phase 3 should extend it again for sector length ranges, scroll-speed modifiers, background-plan references, landmark references, hazard references, and distance marker ordering. Phase 4 should extend it again for ship appearance references, HUD theme keys, preview assets/primitives, and input/display settings defaults. Phase 5 should extend it again for upgrade definitions, upgrade prerequisites, upgrade effect references, icon categories, lunar sector references, lunar feature references, and destruction cue metadata. Phase 6 should extend it again for item family/source metadata, implementation status, unlock/discovery gates, source-weighted pools, synergy cluster references, and item card presentation data. Phase 7 should extend it again for enemy role metadata, movement/attack family references, variant eligibility, formation definitions, and longer-sector pacing references. Phase 8 should extend it again for richer hazard-zone definitions, destructible/obstacle definitions, loose currency scatter rules, safe-lane placement constraints, environmental stress budgets, and pickup economy caps.
+Phase 2 should extend this checklist as systems become real. In addition to the existing entries, content validation should cover ship stat ranges, objective references, wave references, implemented hook coverage, and unlock-gated pools for fresh and progressed saves. Phase 3 should extend it again for sector length ranges, scroll-speed modifiers, background-plan references, landmark references, hazard references, and distance marker ordering. Phase 4 should extend it again for ship appearance references, HUD theme keys, preview assets/primitives, and input/display settings defaults. Phase 5 should extend it again for upgrade definitions, upgrade prerequisites, upgrade effect references, icon categories, lunar sector references, lunar feature references, and destruction cue metadata. Phase 6 should extend it again for item family/source metadata, implementation status, unlock/discovery gates, source-weighted pools, synergy cluster references, and item card presentation data. Phase 7 should extend it again for enemy role metadata, movement/attack family references, variant eligibility, formation definitions, and longer-sector pacing references. Phase 8 should extend it again for richer hazard-zone definitions, destructible/obstacle definitions, loose currency scatter rules, safe-lane placement constraints, environmental stress budgets, and pickup economy caps. Phase 9 should extend it again for act definitions, inter-act junction choices, act route pools, Act II objective families, boss/finale references, and act-aware reward/economy pools.
 
 - [ ] No duplicate IDs.
 - [ ] Every item tag is registered.
@@ -251,6 +273,7 @@ Phase 2 should extend this checklist as systems become real. In addition to the 
 - [x] Hazard-zone director schedules validate known-seed determinism, route pressure, relief spacing, frame-catchup ordering, and boss-lock deferral after work order 074.
 - [x] Destructible/obstacle definitions validate collision shape, hull, damage interactions, objective policy, reward policy, chain behavior, placement constraints, cue metadata, debug labels, and fixed-world placement safety after work order 075.
 - [x] Loose currency scatter rules validate value tiers, drift/lifetime, pickup attraction, cap rules, route/sector bias, and economy accounting after work order 078.
+- [ ] Act definitions, inter-act junction choices, Act II route pools, Act II objectives, second-act boss/finale references, and act-aware economy pools validate once Phase 9 implementation lands.
 
 ## Manual browser smoke matrix
 
@@ -280,6 +303,8 @@ Work order 070 closes Phase 7 with release-hardening evidence and a boss-release
 
 Phase 8 performance checks should include active hazard-zone count, hazard family label count, destructible/obstacle count, loose currency count/value, pickup attraction cost, chain-reaction caps, environmental stress budgets, and whether richer environmental pressure hides bullets or extends per-frame collision scans beyond current dense/enemy-rich pockets.
 
+Phase 9 performance checks should include total two-act run length, act-transition DOM cost, Act II route-card density, Act II pressure budgets, combined enemy/environment/item debug smoke, second-act boss/finale load, summary size, save record size, and whether longer runs create fatigue or sustained frame-time pressure beyond current long-scroll smoke.
+
 - [x] FPS overlay available behind debug flag.
 - [x] Projectile count visible in debug mode.
 - [ ] Particle count visible in debug mode.
@@ -300,6 +325,7 @@ Phase 8 performance checks should include active hazard-zone count, hazard famil
 - [x] Long-sector pressure visible in debug/summaries after work order 068 and in browser stress smoke after work order 069.
 - [x] Active hazard-zone, destructible/obstacle, loose currency, and environmental stress-budget counters visible in debug once Phase 8 lands.
 - [x] Environmental stress smoke covers at least one hazard/destructible/obstacle/currency path where practical.
+- [ ] Act II debug smoke and act-pressure counters visible once Phase 9 implementation lands.
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [x] Heavy combat debug scene documented.
 - [x] Long-scroll debug scene documented.
@@ -314,6 +340,8 @@ Phase 3 accessibility checks should also cover moving-background readability, hi
 Phase 4 accessibility checks should also cover narrow viewport HUD readability, mouse controls as passive optional input, keyboard-only parity after previews/HUD changes, high-contrast bullets over contract ship/HUD themes, reduced-motion simplification for ship wake/damage cues, and focus safety across pointer interactions.
 
 Phase 5 accessibility checks should also cover Upgrade Bay focus and purchase confirmation, upgrade icon text alternatives, non-color-only affordability state, sector exit/toast timing, lunar terrain bullet readability, and ship destruction fallback under reduced motion/performance/high-contrast settings.
+
+Phase 9 accessibility checks should also cover inter-act junction focus and copy, Act II route-card density, act progress HUD text, second-act boss/finale warnings, summary length, high-contrast bullets over Act II palettes, and reduced-motion treatment for longer transitions.
 
 - [x] Keyboard-only menu navigation.
 - [ ] Remappable controls.

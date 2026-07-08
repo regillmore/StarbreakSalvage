@@ -35,9 +35,13 @@ Phase 5 is complete as of validated work order 050. It added progression and sec
 
 Phase 6 is complete as of validated work order 060. It added item-catalog depth: item taxonomy, expanded metadata and validation, broader hook surfaces, a 60-item catalog, reward/shop/vault pool weighting, unlock-gated item families, discovery records, synergy identity, item-card presentation, item-heavy smoke coverage, and release documentation.
 
-Phase 7 begins from that item-catalog playtest candidate. Its goal is enemy behavior depth: stronger enemy class/role differentiation, upgraded enemy variants, enemy formations, longer sectors, richer pacing arcs, and smoke coverage for enemy-heavy pressure.
+Phase 7 is complete as of validated work order 070. It added enemy behavior depth: stronger enemy class/role differentiation, upgraded enemy variants, enemy formations, longer sectors, richer pacing arcs, enemy-rich debug smoke, release docs, and a boss-release hazard fairness fix.
 
-See `docs/STARBREAK_SALVAGE_PHASE_7_PLAN.md` for the active Phase 7 roadmap. `docs/STARBREAK_SALVAGE_PHASE_6_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_5_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_4_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`, and `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md` remain historical records for concluded phases.
+Phase 8 is complete as of validated work order 080. It added environmental pressure depth: richer hazard-zone schema/behavior/director work, destructible and obstacle content/runtime interactions, fixed-world obstacle lane safety, deterministic loose-currency lanes, environmental stress smoke, scroll-world object/loot presentation, and release-hardening docs.
+
+Phase 9 begins from that environmental systems playtest candidate. Its goal is to expand the loop into a deterministic second act: an explicit act model, inter-act junction, Act II route/sector pool, Act II pacing/objective variants, act-aware combat/environment pressure, economy tuning, second-act bosses/finale, debug smoke, and release hardening.
+
+See `docs/STARBREAK_SALVAGE_PHASE_9_PLAN.md` for the active Phase 9 roadmap. `docs/STARBREAK_SALVAGE_PHASE_8_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_7_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_6_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_5_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_4_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`, and `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md` remain historical records for concluded phases.
 
 ## Milestones
 
@@ -634,6 +638,134 @@ Exit criteria:
 - Release docs cover role coverage, variant rules, formation smoke, longer-sector tuning, and known risks.
 - No severe enemy-system blockers remain for the next playtest.
 
+Status: complete through work order 070. Phase 7 release docs, checks, browser smoke, production preview evidence, and the boss-release hazard fairness fix are in place.
+
+## Phase 8 milestones
+
+Status: Phase 8 milestones were completed across work orders 071-080 and are now historical context. Phase 9 work starts from their deployed environmental systems playtest result.
+
+### P8.1 - Hazard Zone Foundation
+
+Scope:
+
+- Add richer hazard-zone schema, validation, and behavior metadata for existing hazard families.
+- Keep telegraphs readable, damage windows fair, and boss-release suppression explicit.
+
+Exit criteria:
+
+- Hazard zones are data-driven and validated.
+- Richer behavior remains deterministic and settings-aware.
+
+Status: complete through work orders 072-074.
+
+### P8.2 - Destructibles And Obstacles
+
+Scope:
+
+- Add content definitions, placement helpers, runtime damage/reward behavior, chain caps, and lane safety for destructibles and obstacles.
+- Keep collision and placement in fixed 640x720 combat-world units.
+
+Exit criteria:
+
+- Objects add navigation and reward pressure without unavoidable lanes or objective desyncs.
+- Debug summaries expose active environment/destructible/obstacle counts.
+
+Status: complete through work orders 075-077.
+
+### P8.3 - Loose Currency And Environmental Smoke
+
+Scope:
+
+- Add deterministic loose scrap/credit lanes and pickup behavior.
+- Add environmental stress smoke for hazards, objects, and loose currency.
+
+Exit criteria:
+
+- Loose currency is capped, scroll-aware, and reflected in summaries/progression.
+- Browser smoke can inspect environmental stress without private app state.
+
+Status: complete through work orders 078-079.
+
+### P8.4 - Phase 8 Environmental Playtest Candidate
+
+Scope:
+
+- Harden scroll-world object/loot behavior, docs, checks, browser smoke, and preview evidence.
+
+Exit criteria:
+
+- Phase 8 can ship as an environmental systems playtest candidate with documented risks.
+
+Status: complete through work order 080.
+
+## Phase 9 milestones
+
+### P9.1 - Second-Act Planning And Contracts
+
+Scope:
+
+- Refresh Phase 9 planning docs, backlog epics, QA seeds, architecture notes, performance risks, release checklist, README links, changelog notes, and work orders 081-090.
+
+Exit criteria:
+
+- The two-act roadmap is clear before code changes begin.
+- Determinism, fixed-world viewport parity, scroll-world environmental behavior, boss-release hazard fairness, accessibility, and GitHub Pages constraints remain explicit.
+
+Status: implemented by work order 081.
+
+### P9.2 - Act Model And Inter-Act Junction
+
+Scope:
+
+- Add typed act definitions and run progression state.
+- Add a deterministic midpoint junction after Act I completion.
+
+Exit criteria:
+
+- Same seed plus save state reproduces Act I/Act II structure and junction choices.
+- Older one-act save and summary records remain readable.
+
+Status: planned for work orders 082-083.
+
+### P9.3 - Act II Route, Pacing, And Objectives
+
+Scope:
+
+- Add Act II route/sector contracts, route-card copy, pressure/reward hints, objective variants, relief windows, and boss approach tuning.
+
+Exit criteria:
+
+- Act II feels distinct through route identity and pacing rather than raw density alone.
+- Validation catches broken Act II content references.
+
+Status: planned for work orders 084-085.
+
+### P9.4 - Act II Pressure, Economy, And Finale
+
+Scope:
+
+- Add act-aware enemy/environment/item pressure budgets, reward/shop/economy profiles, and second-act boss/finale structure.
+
+Exit criteria:
+
+- Act II pressure and rewards are deterministic, debug-visible, and bounded.
+- Victory, defeat, abandonment, unlock, and summary flows distinguish Act I from Act II.
+
+Status: planned for work orders 086-088.
+
+### P9.5 - Phase 9 Second-Act Playtest Candidate
+
+Scope:
+
+- Add Act II debug smoke, accessibility/performance hardening, production preview evidence, and release docs.
+
+Exit criteria:
+
+- `npm run check`, Playwright smoke where available, and production preview smoke pass.
+- Known run-length, balance, economy, browser, and readability risks are documented.
+
+Status: planned for work orders 089-090.
+
 ## Dependency map
 
 ```text
@@ -674,6 +806,15 @@ M0 scaffold
                                                                     -> P7.3 variants and formations
                                                                       -> P7.4 longer enemy-rich sector arcs
                                                                         -> P7.5 enemy playtest candidate
+                                                                          -> P8.1 hazard zone foundation
+                                                                            -> P8.2 destructibles and obstacles
+                                                                              -> P8.3 loose currency and environmental smoke
+                                                                                -> P8.4 environmental playtest candidate
+                                                                                  -> P9.1 second-act planning and contracts
+                                                                                    -> P9.2 act model and inter-act junction
+                                                                                      -> P9.3 Act II route, pacing, and objectives
+                                                                                        -> P9.4 Act II pressure, economy, and finale
+                                                                                          -> P9.5 second-act playtest candidate
 ```
 
 Parallelizable:
@@ -697,6 +838,7 @@ High-conflict areas:
 - Sector content tables shared by backgrounds, features, waves, and validation.
 - Death/destruction flow shared by combat, audio/VFX, and run summary.
 - Item definitions, hook handlers, reward pools, shop/vault generation, unlock gates, and summary/archive item presentation.
+- Act definitions, inter-act junction state, Act II route/economy profiles, second-act boss/finale gates, and two-act summary/save records.
 
 ## First five PRs
 
