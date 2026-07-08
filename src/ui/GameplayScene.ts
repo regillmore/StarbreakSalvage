@@ -54,6 +54,13 @@ import {
   formatSectorPacingReadout,
   type SectorPacingPlan
 } from '../game/SectorPacing';
+import {
+  applyHazardZoneDirectorToFeatures,
+  createHazardZoneDirectorPlan,
+  formatHazardZoneDirectorDebug,
+  formatHazardZoneDirectorReadout,
+  type HazardZoneDirectorPlan
+} from '../game/HazardZoneDirector';
 import { resolveSectorHazardCollisions } from '../game/SectorHazards';
 import {
   getActiveSectorHazards,
@@ -124,6 +131,7 @@ export class GameplayScene implements Scene {
   private scrollState: ScrollState | null = null;
   private routeConditionedScroll: SectorScrollPlan | null = null;
   private sectorPacingPlan: SectorPacingPlan | null = null;
+  private hazardZoneDirectorPlan: HazardZoneDirectorPlan | null = null;
   private conditionedScroll: SectorScrollPlan | null = null;
   private conditionedFeatures: SectorFeaturePlan | null = null;
   private conditionedArena: BossArenaPlan | null | undefined;
@@ -607,6 +615,7 @@ export class GameplayScene implements Scene {
     const combatState = this.getCombatState();
     const entityCounts = getCombatEntityCounts(combatState);
     const sectorPacing = this.getSectorPacingPlan();
+    const hazardZoneDirector = this.getHazardZoneDirectorPlan();
     const hudTheme = createHudThemeModel(
       this.contract.shipAppearance,
       getHudThemeOptions(this.uiRoot.ownerDocument)
@@ -668,7 +677,8 @@ export class GameplayScene implements Scene {
         encounterPacing: currentSector.encounterPacing ? 'paced' : undefined,
         pacing: sectorPacing.arcKind === 'standard' ? undefined : sectorPacing.debugLabel,
         pacingBeat:
-          formatSectorPacingBeatDebug(sectorPacing, scroll.distance, scroll.length) ?? undefined
+          formatSectorPacingBeatDebug(sectorPacing, scroll.distance, scroll.length) ?? undefined,
+        hazardZones: formatHazardZoneDirectorDebug(hazardZoneDirector)
       }
     };
   }
@@ -904,14 +914,42 @@ export class GameplayScene implements Scene {
         this.sectorConditions
       );
 
-      this.conditionedFeatures = applySectorPacingToFeatures(
+      const pacedFeatures = applySectorPacingToFeatures(
         routeConditionedFeatures,
         this.getCurrentScrollPlan(),
         this.getSectorPacingPlan()
       );
+      const hazardZoneDirector = createHazardZoneDirectorPlan({
+        runSeed: this.run.seed,
+        saveStateKey: this.run.unlockedIds.join('|'),
+        features: pacedFeatures,
+        scroll: this.getCurrentScrollPlan(),
+        conditions: this.sectorConditions,
+        pacing: this.getSectorPacingPlan(),
+        bossArena: this.getCurrentArenaPlan(),
+        backgroundId: this.getCurrentSector().background.id
+      });
+
+      this.hazardZoneDirectorPlan = hazardZoneDirector;
+      this.conditionedFeatures = applyHazardZoneDirectorToFeatures(
+        pacedFeatures,
+        hazardZoneDirector
+      );
     }
 
     return this.conditionedFeatures;
+  }
+
+  private getHazardZoneDirectorPlan(): HazardZoneDirectorPlan {
+    if (!this.hazardZoneDirectorPlan) {
+      this.getCurrentFeatures();
+    }
+
+    if (!this.hazardZoneDirectorPlan) {
+      throw new Error('Hazard-zone director plan was not initialized.');
+    }
+
+    return this.hazardZoneDirectorPlan;
   }
 
   private getCurrentArenaPlan(): BossArenaPlan | null {
@@ -1135,11 +1173,15 @@ export class GameplayScene implements Scene {
 
     if (state.stats.shotsFired === 0) {
       const pacing = this.getSectorPacingPlan();
+      const hazardZoneDirector = this.getHazardZoneDirectorPlan();
       const sectorReadouts = [
         this.sectorConditions.modifiers.length > 0
           ? formatSectorConditionReadout(this.sectorConditions)
           : null,
-        pacing.arcKind !== 'standard' ? formatSectorPacingReadout(pacing) : null
+        pacing.arcKind !== 'standard' ? formatSectorPacingReadout(pacing) : null,
+        hazardZoneDirector.scheduledHazardCount > 0 || hazardZoneDirector.pressureLevel > 0
+          ? formatHazardZoneDirectorReadout(hazardZoneDirector)
+          : null
       ].filter((readout): readout is string => readout !== null);
 
       if (sectorReadouts.length > 0) {
@@ -1237,7 +1279,9 @@ export class GameplayScene implements Scene {
     return this.viewportLayout;
   }
 
-  private getActiveHazards(distance = this.getScrollState().distance): readonly ActiveSectorHazard[] {
+  private getActiveHazards(
+    distance = this.getScrollState().distance
+  ): readonly ActiveSectorHazard[] {
     if (this.bossArenaUpdate.phase === 'locked') {
       return [];
     }

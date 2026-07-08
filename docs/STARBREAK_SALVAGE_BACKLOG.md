@@ -1478,7 +1478,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 074.
+- Implemented in work order 074. `HazardZoneDirector` now consumes sector pacing, route pressure, relief windows, formation clusters, lunar/background context, and boss arena locks to generate deterministic hazard-zone schedules. Ordered telegraph/active/clear events support frame-catchup consumption, summaries/debug show hazard pressure and deferrals, and boss-lock overlaps restart a fresh post-lock telegraph or are dropped if no fair window remains.
 
 ## Epic AX - Destructibles and obstacles
 

@@ -620,6 +620,9 @@ export class GameApp {
     const sectorPacingDebug = debugState.sector?.pacingBeat
       ? [`Pacing ${debugState.sector.pacingBeat}`]
       : [];
+    const hazardZoneDebug = debugState.sector?.hazardZones
+      ? [`Hazards ${debugState.sector.hazardZones}`]
+      : [];
     const viewportDebug =
       debugState.viewport === undefined
         ? []
@@ -685,6 +688,7 @@ export class GameApp {
       ...progressionDebug,
       ...sectorDebug,
       ...sectorPacingDebug,
+      ...hazardZoneDebug,
       ...backgroundDebug,
       ...featureDebug,
       ...viewportDebug

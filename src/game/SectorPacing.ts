@@ -1,10 +1,4 @@
 import type { SectorEncounterPacingDefinition } from '../content/sectors';
-import {
-  DEFAULT_HAZARD_ZONE_PACING_CHOICES,
-  HAZARD_ZONE_PACING_CHOICES,
-  getHazardZoneDefinition,
-  getHazardZoneMetrics
-} from '../content/hazardZones';
 import { clamp } from '../core/math';
 import type { BossArenaPlan } from './BossArena';
 import {
@@ -13,13 +7,7 @@ import {
   type SectorConditionPlan
 } from './SectorConditions';
 import type { RunSkeleton, SectorRoute } from './Generation';
-import type {
-  SectorFeaturePlan,
-  SectorHazardKind,
-  SectorHazardPlan,
-  SectorLandmarkKind,
-  SectorLandmarkPlan
-} from './SectorFeatures';
+import type { SectorFeaturePlan, SectorLandmarkKind, SectorLandmarkPlan } from './SectorFeatures';
 import type { SectorScrollPlan } from './ScrollState';
 import type { AppliedRouteOutcome } from './RouteEvents';
 
@@ -124,17 +112,6 @@ const LANDMARK_LABELS: Readonly<Record<SectorLandmarkKind, string>> = {
   crater_shadow_band: 'pacing crater shadow',
   comm_array_flyby: 'pacing comm-array flyby',
   surface_relay: 'pacing surface relay'
-};
-
-const HAZARD_LABELS: Readonly<Record<SectorHazardKind, string>> = {
-  debris_lane: 'PACING DEBRIS',
-  warning_beam: 'PACING BEAM',
-  mine_belt: 'PACING MINES',
-  salvage_storm: 'PACING STORM',
-  crush_gate: 'PACING GATE',
-  dust_plume: 'PACING DUST',
-  mining_laser: 'PACING LASER',
-  surface_defense_arc: 'PACING ARC'
 };
 
 export function createSectorPacingPlan(options: SectorPacingPlanOptions): SectorPacingPlan {
@@ -260,18 +237,10 @@ export function applySectorPacingToFeatures(
       createPacingLandmark(features.sectorId, scroll, pacing, ratio, index)
     )
   ].sort((left, right) => left.distance - right.distance);
-  const remainingHazardBudget = Math.max(0, 4 - features.hazards.length);
-  const hazards = [
-    ...features.hazards,
-    ...pacing.hazardBeatRatios
-      .slice(0, remainingHazardBudget)
-      .map((ratio, index) => createPacingHazard(features.sectorId, scroll, pacing, ratio, index))
-  ].sort((left, right) => left.startDistance - right.startDistance);
 
   return {
     ...features,
-    landmarks,
-    hazards
+    landmarks
   };
 }
 
@@ -638,35 +607,6 @@ function createPacingLandmark(
   };
 }
 
-function createPacingHazard(
-  sectorId: string,
-  scroll: SectorScrollPlan,
-  pacing: SectorPacingPlan,
-  ratio: number,
-  index: number
-): SectorHazardPlan {
-  const kind = chooseHazardKind(sectorId, pacing, index);
-  const id = `${sectorId}_pacing_hazard_${pacing.arcKind}_${index + 1}`;
-  const metrics = getHazardZoneMetrics(kind, 'pacing');
-  const definition = getHazardZoneDefinition(kind);
-  const startDistance = roundPacingValue(clamp(scroll.length * ratio, 180, scroll.length - 180));
-  const endDistance = roundPacingValue(
-    clamp(startDistance + metrics.activeSpan, startDistance + 70, scroll.length - 35)
-  );
-
-  return {
-    id,
-    kind,
-    telegraphDistance: roundPacingValue(Math.max(0, startDistance - metrics.telegraphLead)),
-    startDistance,
-    endDistance,
-    xRatio: ratioFromKey(`${id}:x`, 0.18, 0.82),
-    widthRatio: metrics.widthRatio,
-    damage: definition.damage,
-    label: HAZARD_LABELS[kind]
-  };
-}
-
 function chooseLandmarkKind(
   sectorId: string,
   pacing: SectorPacingPlan,
@@ -682,25 +622,6 @@ function chooseLandmarkKind(
 
   const choices = SECTOR_LANDMARK_CHOICES[sectorId] ?? DEFAULT_LANDMARK_CHOICES;
   return choices[index % choices.length] ?? 'beacon_line';
-}
-
-function chooseHazardKind(
-  sectorId: string,
-  pacing: SectorPacingPlan,
-  index: number
-): SectorHazardKind {
-  if (pacing.arcKind === 'glitchShear') {
-    return 'salvage_storm';
-  }
-
-  if (pacing.arcKind === 'bossApproach') {
-    return sectorId === 'sector_core_wreck' ? 'crush_gate' : 'warning_beam';
-  }
-
-  const choices =
-    HAZARD_ZONE_PACING_CHOICES[sectorId as keyof typeof HAZARD_ZONE_PACING_CHOICES] ??
-    DEFAULT_HAZARD_ZONE_PACING_CHOICES;
-  return choices[index % choices.length] ?? 'debris_lane';
 }
 
 function createPacingSummary(

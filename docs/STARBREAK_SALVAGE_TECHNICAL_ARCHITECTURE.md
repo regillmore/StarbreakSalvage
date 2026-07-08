@@ -430,7 +430,7 @@ src/game/LooseCurrency.ts
 - Hazard definitions should describe phase timing, telegraph shape, active damage shape, damage cooldown, safe-lane expectation, visual layer, reduced-motion/high-contrast/performance variants, and boss-arena suppression behavior.
 - Work order 072 adds `src/content/hazardZones.ts` as the first schema registry for existing hazards. It keeps separate sector, route-condition, and pacing metrics so behavior does not retune while the definition contract becomes content-driven.
 - Work order 073 adds `src/game/HazardZoneBehavior.ts` as the pure runtime behavior layer. It derives presentation state, pulse damage-window gating, fixed-world damage rectangles, and settings simplification from the content registry before `SectorHazards` and `CanvasRenderer` consume it.
-- Hazard director logic should integrate with `SectorPacing` pressure and relief windows rather than simply raising density.
+- Work order 074 adds `src/game/HazardZoneDirector.ts` as the deterministic schedule layer between `SectorPacing` and `SectorFeatures`. Pacing keeps pressure/relief/formation/boss beats, while the director materializes fair hazard windows from seed plus save/sector context and exposes ordered telegraph/active/clear events for catchup-safe processing.
 - Collision damage must only occur after a visible warning lead. If a boss arena hides a hazard warning during lock, preserve the work order 070 release contract by restarting a post-release telegraph before damage can occur.
 - Rendering should keep hazards below bullets, enemies, pickups, and the player. Richer hazard art should use low-alpha fills, clear outlines, and compact labels before adding animated effects.
 

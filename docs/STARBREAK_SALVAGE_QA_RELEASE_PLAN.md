@@ -247,6 +247,7 @@ Phase 2 should extend this checklist as systems become real. In addition to the 
 - [x] Current enemy role audit helper covers faction-pattern classes, target roles, wave-label semantics, spawn model, and objective-risk notes before Phase 7 schema work.
 - [x] Rich hazard-zone definitions validate family, phase timing, telegraph/damage shapes, safe-lane expectations, accessibility metadata, and boss-arena suppression behavior after work order 072 schema work.
 - [x] Rich hazard-zone behavior validates behavior families, active damage windows, cooldowns, cleanup, fixed-world damage rectangles, and settings-aware render state after work order 073.
+- [x] Hazard-zone director schedules validate known-seed determinism, route pressure, relief spacing, frame-catchup ordering, and boss-lock deferral after work order 074.
 - [ ] Destructible/obstacle definitions validate collision shape, hull, damage interactions, objective policy, reward policy, chain behavior, placement constraints, cue metadata, and debug labels.
 - [ ] Loose currency scatter rules validate value tiers, drift/lifetime, pickup attraction, cap rules, route/sector bias, and economy accounting.
 

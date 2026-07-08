@@ -11,6 +11,7 @@ import type { RouteHistoryEntry } from '../game/RunSession';
 import type { AppliedRouteOutcome } from '../game/RouteEvents';
 import type { ItemInstance } from '../game/Rewards';
 import { formatSectorConditionTimeline } from '../game/SectorConditions';
+import { formatHazardZoneDirectorTimeline } from '../game/HazardZoneDirector';
 import { formatSectorPacingTimeline } from '../game/SectorPacing';
 import { formatRunUpgradeEffects, getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import type { InputAction } from '../systems/InputSystem';
@@ -84,6 +85,7 @@ export class RunSummaryScene implements Scene {
       ['Routes', formatRouteHistory(this.routeHistory)],
       ['Sector Conditions', formatSectorConditionTimeline(this.run, this.routeOutcomes)],
       ['Sector Pacing', formatSectorPacingTimeline(this.run, this.routeOutcomes)],
+      ['Hazard Zones', formatHazardZoneDirectorTimeline(this.run, this.routeOutcomes)],
       ['Upgrade Effects', formatRunUpgradeEffects(this.run.upgradeEffects)],
       ['Scrap Flow', progress.scrapBreakdownText],
       ['Upgrade Outlook', progress.upgradeProgressText],

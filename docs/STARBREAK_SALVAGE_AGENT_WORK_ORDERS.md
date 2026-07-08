@@ -1235,7 +1235,7 @@ Acceptance criteria:
 - Frame catchup cannot skip, duplicate, or instantly activate distance-tied hazard phases.
 - Boss defeat cannot release an already-damaging hidden hazard without a fresh telegraph.
 
-Status: planned.
+Status: implemented; `src/game/HazardZoneDirector.ts` now materializes sector, route, and paced hazard-zone schedules from seed plus save/sector context. `SectorPacing` keeps pressure, relief, formation, landmark, and boss-approach beats while the director turns hazard beats, route pressure, lunar context, formation clusters, and boss approach into validated windows. Schedules expose ordered telegraph/active/clear events for frame-catchup consumption, debug and run-summary surfaces report hazard-zone pressure, relief, and boss deferrals, and boss-lock overlaps either restart a fresh post-lock telegraph or drop if they cannot fit safely. Unit coverage pins deterministic known-seed schedules, relief spacing, route pressure, catchup ordering, and boss-release deferral.
 
 ## Work order 075 - Destructible and obstacle content schema
 
