@@ -31,6 +31,7 @@ describe('input helpers', () => {
     expect(primaryActionForKey('6')).toBe('debugItemStorm');
     expect(primaryActionForKey('0')).toBe('debugDenseCombat');
     expect(primaryActionForKey('E')).toBe('debugEnemyRich');
+    expect(primaryActionForKey('H')).toBe('debugEnvironmentStress');
     expect(primaryActionForKey('7')).toBe('debugDestroyPlayer');
     expect(primaryActionForKey('8')).toBe('debugSectorComplete');
     expect(primaryActionForKey('9')).toBe('debugLongScroll');

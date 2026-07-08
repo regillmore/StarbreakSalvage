@@ -1320,7 +1320,7 @@ Acceptance criteria:
 - Accessibility settings keep bullets, hazards, obstacles, pickups, and HUD text readable.
 - Existing item-storm, enemy-rich, dense-combat, forced-exit, destruction, and long-scroll smoke remain green.
 
-Status: planned.
+Status: implemented; the debug toolset now includes an `H` environmental stress pocket that seeks to an active hazard overlap, clears combat pressure, and creates a deterministic field with six schema-backed environment objects, four destructibles, two obstacles, ten capped loose-currency pickups, and environment hit/chain feedback. `src/game/EnvironmentStress.ts` exposes pure stress-budget summaries for active hazard count, hazard family labels, environment object/destructible/obstacle totals, loose pickup/value caps, and budget state; the debug overlay reports the same `Env stress` line without private app-state access. Unit coverage pins deterministic stress-pocket contents and budget summaries, while Playwright smoke drives a narrow high-contrast/reduced-motion/performance run through `ENVIRONMENT-STRESS-SMOKE`, presses `H`, and verifies hazard/object/currency/readability telemetry. `npm run check`, escalated Playwright Chromium smoke, and production preview asset smoke passed locally.
 
 ## Work order 080 - Phase 8 environmental playtest release hardening
 

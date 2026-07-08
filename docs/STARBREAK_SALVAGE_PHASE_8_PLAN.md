@@ -109,7 +109,7 @@ Exit criteria:
 - Environmental counters expose active hazard zones, destructibles/obstacles, loose currency count/value, and stress caps.
 - Known balance, readability, economy, and manual browser risks are documented.
 
-Status: planned for work orders 079 and 080.
+Status: advanced by work order 079. The `H` debug shortcut now creates a deterministic environmental stress pocket with overlapping hazard telemetry, six environment objects, four destructibles, two obstacles, ten capped loose-currency pickups, and an `Env stress` overlay line for hazard family labels, object counts, loose pickup/value caps, and budget state. Unit and Playwright smoke coverage exercise the path under narrow high-contrast, reduced-motion, and performance settings; work order 080 remains planned for final release hardening and risk closeout.
 
 ## Recommended Phase 8 Sequence
 

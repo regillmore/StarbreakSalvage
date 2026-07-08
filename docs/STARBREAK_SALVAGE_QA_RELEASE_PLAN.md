@@ -150,7 +150,7 @@ Phase 8 enriches environmental pressure and loose salvage flow. Add tests closes
 - destructible runtime tests for weapon/special/bomb/hazard damage, deterministic rewards, bounded chain reactions, item-hook dispatch, cleanup, and objective safety;
 - obstacle placement tests for safe lanes, player spawn and exit corridors, boss approach locks, hazard overlays, enemy spawn lanes, frame-catchup cleanup, fixed-world placement, and viewport parity;
 - loose currency tests for scatter determinism, pickup magnet behavior, collection radius, lifetime, cap enforcement, value accounting, upgrade progress, and fresh/progressed save paths;
-- browser smoke for at least one environmental stress path under debug, high contrast, reduced motion, performance mode, and narrow viewport where practical;
+- browser smoke for at least one environmental stress path under debug, high contrast, reduced motion, performance mode, and narrow viewport where practical; work order 079 adds a Playwright path that launches `ENVIRONMENT-STRESS-SMOKE`, triggers the `H` environmental stress pocket, and verifies hazard, environment object, loose currency, and budget readouts;
 - regression coverage that keeps item-storm, enemy-rich, dense-combat, forced-exit, forced-destruction, boss-release hazard, and quiet long-scroll paths green while environmental density grows.
 
 ## Known seed tests
@@ -218,7 +218,7 @@ Phase 8 should add these seed/save fixtures:
 - `DESTRUCTIBLE-SALVAGE-FIELD` - destructible-rich fixture for damage, reward, chain reaction, and cleanup coverage.
 - `OBSTACLE-LANE-CHECK` - obstacle placement fixture for safe-lane, exit-corridor, and viewport-parity checks.
 - `LOOSE-SCRAP-RAIN` - loose currency scatter and pickup-magnet fixture for economy accounting.
-- `ENVIRONMENT-STRESS-SMOKE` - debug-only environmental pressure pocket for active hazard, destructible/obstacle, loose currency, and stress-budget telemetry.
+- `ENVIRONMENT-STRESS-SMOKE` - debug-only environmental pressure pocket for active hazard, destructible/obstacle, loose currency, and stress-budget telemetry; first covered by work order 079 through the `H` shortcut in narrow high-contrast smoke.
 
 ## Content validation checklist
 
@@ -249,7 +249,7 @@ Phase 2 should extend this checklist as systems become real. In addition to the 
 - [x] Rich hazard-zone behavior validates behavior families, active damage windows, cooldowns, cleanup, fixed-world damage rectangles, and settings-aware render state after work order 073.
 - [x] Hazard-zone director schedules validate known-seed determinism, route pressure, relief spacing, frame-catchup ordering, and boss-lock deferral after work order 074.
 - [x] Destructible/obstacle definitions validate collision shape, hull, damage interactions, objective policy, reward policy, chain behavior, placement constraints, cue metadata, debug labels, and fixed-world placement safety after work order 075.
-- [ ] Loose currency scatter rules validate value tiers, drift/lifetime, pickup attraction, cap rules, route/sector bias, and economy accounting.
+- [x] Loose currency scatter rules validate value tiers, drift/lifetime, pickup attraction, cap rules, route/sector bias, and economy accounting after work order 078.
 
 ## Manual browser smoke matrix
 
@@ -265,7 +265,7 @@ Phase 2 performance checks should include wave/objective count, projectile count
 
 Phase 3 performance checks should also include background primitive count, parallax layer count, distance traveled, scroll speed, active distance markers, active landmarks, active hazards, and long-scroll scenarios that run longer than a normal sector.
 
-Current first-pass instrumentation exposes granular combat counts, active enemy role/variant/formation counts, background primitive/layer counts, active landmark/hazard counts, distance, speed, active input mode, HUD mode, viewport size/class/presentation scale, DPR, canvas pixel size, safe-frame origin/size, fixed combat world size, banked scrap, upgrade readiness, run resources, current sector id/name/background/pacing, exit progress, destruction progress, item count, active hook count, proc cap state, build identity, a dense-combat debug pocket, an item-storm hook stress pocket, forced exit/destruction shortcuts, and a quiet late-sector long-scroll traversal behind `?debug=1`. Production preview smoke passed for work orders 050, 060, and 070; manual non-Chromium and real-device browser validation still need to close the checklist.
+Current first-pass instrumentation exposes granular combat counts, active enemy role/variant/formation counts, background primitive/layer counts, active landmark/hazard counts, active environment/destructible/obstacle counts, loose currency count/value/caps, environmental stress budgets, distance, speed, active input mode, HUD mode, viewport size/class/presentation scale, DPR, canvas pixel size, safe-frame origin/size, fixed combat world size, banked scrap, upgrade readiness, run resources, current sector id/name/background/pacing, exit progress, destruction progress, item count, active hook count, proc cap state, build identity, a dense-combat debug pocket, an item-storm hook stress pocket, an enemy-rich stress pocket, an environmental stress pocket, forced exit/destruction shortcuts, and a quiet late-sector long-scroll traversal behind `?debug=1`. Production preview smoke passed for work orders 050, 060, 070, and 079; manual non-Chromium and real-device browser validation still need to close the checklist.
 
 Phase 4 performance checks should include viewport/presentation scale, safe-frame size, fixed-world hazard/enemy spacing parity, HUD rendering density, preview rendering cost, mouse input update behavior, ship cue rendering cost, non-combat theme DOM cost, and whether themed HUD/ship cues add measurable overhead in dense and long-scroll debug scenarios.
 
@@ -297,8 +297,8 @@ Phase 8 performance checks should include active hazard-zone count, hazard famil
 - [x] Role-specific attack profiles have deterministic cadence, telegraph, and projectile-budget tests for current and registered Phase 7 attack families.
 - [x] Active formation counts visible in debug once work order 066 lands.
 - [x] Long-sector pressure visible in debug/summaries after work order 068 and in browser stress smoke after work order 069.
-- [ ] Active hazard-zone, destructible/obstacle, loose currency, and environmental stress-budget counters visible in debug once Phase 8 lands.
-- [ ] Environmental stress smoke covers at least one hazard/destructible/obstacle/currency path where practical.
+- [x] Active hazard-zone, destructible/obstacle, loose currency, and environmental stress-budget counters visible in debug once Phase 8 lands.
+- [x] Environmental stress smoke covers at least one hazard/destructible/obstacle/currency path where practical.
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [x] Heavy combat debug scene documented.
 - [x] Long-scroll debug scene documented.

@@ -16,6 +16,7 @@ import {
   forceCombatEnd,
   getCombatEntityCounts,
   getActiveEnvironmentObjects,
+  prepareDebugEnvironmentStressScenario,
   prepareDebugItemStormScenario,
   prepareDebugEnemyRichScenario,
   prepareDebugLongScrollScenario,
@@ -38,6 +39,7 @@ import {
   createEnvironmentObjectPlacementPlan,
   type EnvironmentObjectPlacementPlan
 } from '../game/EnvironmentObjectPlacement';
+import { createEnvironmentStressDebugState } from '../game/EnvironmentStress';
 import { createLooseCurrencyPlan, type LooseCurrencyPlan } from '../game/LooseCurrency';
 import type { ItemInstance } from '../game/Rewards';
 import { getSectorCompletionReason } from '../game/RunOutcome';
@@ -597,6 +599,25 @@ export class GameplayScene implements Scene {
       this.syncReadouts();
     }
 
+    if (action === 'debugEnvironmentStress' && this.debugEnabled) {
+      const state = this.getCombatState();
+      const feedbackBefore = createCombatFeedbackSnapshot(state);
+      const scroll = this.getScrollState();
+      const targetDistance = getDebugEnvironmentStressDistance(
+        this.getCurrentFeatures(),
+        scroll.plan.length
+      );
+
+      setScrollDistance(scroll, Math.max(scroll.distance, targetDistance), scroll.plan.baseSpeed);
+      state.scrollDistance = scroll.distance;
+      prepareDebugEnvironmentStressScenario(state, this.getCombatBounds());
+      this.updateBossArena(scroll.distance, state);
+      this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
+      this.sectorCompleted = false;
+      this.debugScenario = 'environment-stress';
+      this.syncReadouts();
+    }
+
     if (action === 'debugLongScroll' && this.debugEnabled) {
       const state = this.getCombatState();
       const feedbackBefore = createCombatFeedbackSnapshot(state);
@@ -678,6 +699,7 @@ export class GameplayScene implements Scene {
       contractTheme: createContractThemeDebugState(this.contract),
       items: createItemLoadoutStressModel(combatState.items),
       enemyRoles: createEnemyRolePressureSummary(combatState),
+      environmentStress: createEnvironmentStressDebugState(activeHazards, entityCounts),
       upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects),
       progression: {
         runCredits: this.startingCredits + combatState.player.credits,
@@ -1400,6 +1422,35 @@ function getDebugLongScrollDistance(sectorLength: number): number {
   const exitLeadDistance = Math.max(0, length - DEBUG_LONG_SCROLL_EXIT_LEAD);
 
   return Math.min(lateDistance, exitLeadDistance);
+}
+
+function getDebugEnvironmentStressDistance(
+  features: SectorFeaturePlan,
+  sectorLength: number
+): number {
+  const candidates = features.hazards
+    .flatMap((hazard) => [hazard.telegraphDistance + 18, hazard.startDistance + 18])
+    .map((distance) => Math.max(0, Math.min(distance, Math.max(0, sectorLength - 220))));
+  const bestCandidate = candidates
+    .map((distance) => ({
+      distance,
+      activeCount: features.hazards.filter(
+        (hazard) => distance >= hazard.telegraphDistance && distance <= hazard.endDistance
+      ).length
+    }))
+    .sort(
+      (left, right) =>
+        right.activeCount - left.activeCount || left.distance - right.distance
+    )[0];
+
+  if (!bestCandidate) {
+    return Math.max(
+      0,
+      Math.min(sectorLength * 0.38, sectorLength - DEBUG_LONG_SCROLL_EXIT_LEAD)
+    );
+  }
+
+  return bestCandidate.distance;
 }
 
 function clearExitPressure(state: CombatState): void {

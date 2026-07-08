@@ -423,6 +423,7 @@ src/content/environmentObjects.ts
 src/game/HazardZoneDirector.ts
 src/game/EnvironmentObjectPlacement.ts
 src/game/LooseCurrency.ts
+src/game/EnvironmentStress.ts
 ```
 
 ### Hazard zones
@@ -453,6 +454,7 @@ src/game/LooseCurrency.ts
 ### Environmental debug and performance
 
 - Debug overlays should expose active hazard-zone counts/families, destructible/obstacle counts, loose currency count/value, pickup cap state, and environmental stress budgets.
+- Work order 079 adds `src/game/EnvironmentStress.ts` as the pure budget summary layer for environmental debug smoke. It keeps hazard-family labels, object/destructible/obstacle totals, loose pickup/value caps, and stress-budget state inspectable without exposing private runtime structures to browser smoke.
 - Environmental stress paths should coexist with item-storm, enemy-rich, dense-combat, forced-exit, forced-destruction, and long-scroll smoke without hiding bullets or exceeding the current alpha field budget.
 - Performance mode and reduced motion may simplify draw density, effects, and animation, but should not alter generated plans, collision timing, objective requirements, or pickup economy.
 

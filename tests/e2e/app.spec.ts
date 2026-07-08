@@ -491,6 +491,47 @@ test('exposes enemy-rich formation pressure under high-contrast narrow smoke', a
   expect(browserErrors).toEqual([]);
 });
 
+test('exposes environmental stress budgets under high-contrast narrow smoke', async ({ page }) => {
+  test.setTimeout(90_000);
+
+  const browserErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') {
+      browserErrors.push(message.text());
+    }
+  });
+  page.on('pageerror', (error) => browserErrors.push(error.message));
+  await page.setViewportSize({ width: 390, height: 700 });
+  await page.addInitScript((settings) => {
+    window.localStorage.setItem('starbreak.settings.v1', JSON.stringify(settings));
+  }, HIGH_CONTRAST_SETTINGS);
+
+  await page.goto('./?debug=1&seed=ENVIRONMENT-STRESS-SMOKE');
+
+  await expect(page.locator('html')).toHaveAttribute('data-reduced-motion', 'true');
+  await expect(page.locator('html')).toHaveAttribute('data-bullet-contrast', 'high');
+  await expect(page.locator('html')).toHaveAttribute('data-performance-mode', 'true');
+
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
+
+  await page.keyboard.press('Enter');
+  await expectGameplaySector(page, 'Outer Debris Field');
+  await expect(page.locator('.debug-overlay')).toContainText('Viewport 390x700 narrow');
+
+  await page.keyboard.press('H');
+  await expect(page.locator('.debug-overlay')).toContainText('Scenario environment-stress');
+  await expect(page.locator('.debug-overlay')).toContainText('Environment 6 (D4/O2)');
+  await expect(page.locator('.debug-overlay')).toContainText('Loose 10/48 V32/120 C24/S8');
+  await expect(page.locator('.debug-overlay')).toContainText(
+    /Env stress H[1-4]\/4 [a-z/]+ Obj6\/16 D4\/O2 Loose 10\/48 V32\/120 ok/
+  );
+  await expect(page.getByTestId('pickup-readout')).toContainText(/Credits .* Salvage/);
+  await expect(page.getByTestId('boss-warning')).not.toContainText('Warning clear');
+
+  expect(browserErrors).toEqual([]);
+});
+
 test('launches gameplay with reduced motion and high contrast settings by keyboard', async ({
   page
 }) => {

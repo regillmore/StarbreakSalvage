@@ -1000,6 +1000,101 @@ export function prepareDebugEnemyRichScenario(state: CombatState, bounds: Combat
   });
 }
 
+export function prepareDebugEnvironmentStressScenario(
+  state: CombatState,
+  bounds: CombatBounds
+): void {
+  state.enemies = [];
+  state.projectiles = [];
+  state.telegraphs = [];
+  state.effects = [];
+  state.pickups = [];
+  state.environmentObjects = [];
+  state.boss = null;
+  state.bossSpawned = true;
+  state.nextSpawnIndex = state.spawnSchedule.length;
+  state.nextLooseCurrencyIndex = state.looseCurrencyPlan?.events.length ?? 0;
+  state.grazedProjectileIds.clear();
+  state.formationRewardsClaimed.clear();
+
+  const centerX = bounds.width / 2;
+  const distance = state.scrollDistance;
+  state.player.x = centerX;
+  state.player.y = bounds.height * 0.78;
+  state.player.invulnerableSeconds = 1.2;
+  state.player.fireCooldown = 0;
+  state.player.weaponHeat = 0;
+  state.player.weaponOverheatSeconds = 0;
+
+  const objectPlacements: ReadonlyArray<{
+    readonly definitionId: EnvironmentObjectId;
+    readonly x: number;
+    readonly y: number;
+    readonly distanceOffset: number;
+  }> = [
+    { definitionId: 'salvage_cache', x: centerX - 184, y: 192, distanceOffset: -18 },
+    { definitionId: 'volatile_canister', x: centerX - 114, y: 250, distanceOffset: -10 },
+    { definitionId: 'cargo_pod', x: centerX + 128, y: 212, distanceOffset: -4 },
+    { definitionId: 'debris_shard_cluster', x: centerX + 214, y: 306, distanceOffset: 8 },
+    { definitionId: 'shield_gate', x: centerX - 220, y: 372, distanceOffset: 16 },
+    { definitionId: 'wreck_plate', x: centerX + 76, y: 424, distanceOffset: 22 }
+  ];
+
+  state.environmentObjects = objectPlacements.map((placement) =>
+    createDebugEnvironmentObjectState(
+      state,
+      placement.definitionId,
+      placement.x,
+      placement.y,
+      distance + placement.distanceOffset
+    )
+  );
+
+  const looseScatter = [
+    { sourceId: 'debug-left-lane', x: centerX - 190, y: 140, credits: 9, salvage: 3 },
+    { sourceId: 'debug-center-cache', x: centerX, y: 178, credits: 7, salvage: 2 },
+    { sourceId: 'debug-right-lane', x: centerX + 190, y: 152, credits: 8, salvage: 3 }
+  ] as const;
+
+  for (const scatter of looseScatter) {
+    spawnLooseCurrencySpecs(
+      state,
+      createLooseCurrencyScatter({
+        seed: state.seed,
+        sourceId: scatter.sourceId,
+        source: 'debug',
+        x: scatter.x,
+        y: scatter.y,
+        credits: scatter.credits,
+        salvage: scatter.salvage,
+        maxPickups: 5,
+        spread: 46,
+        baseVy: 18,
+        debugLabel: 'environment stress'
+      })
+    );
+  }
+
+  state.effects.push({
+    id: getNextEntityId(state),
+    kind: 'environmentHit',
+    x: centerX - 114,
+    y: 250,
+    radius: 42,
+    ttl: 0.5,
+    maxTtl: 0.5
+  });
+  state.effects.push({
+    id: getNextEntityId(state),
+    kind: 'chainReaction',
+    x: centerX - 184,
+    y: 192,
+    radius: 78,
+    ttl: 0.52,
+    maxTtl: 0.52
+  });
+}
+
 export function prepareDebugItemStormScenario(
   state: CombatState,
   bounds: CombatBounds,
@@ -1291,6 +1386,37 @@ function createEnvironmentObjectStates(
       destroyed: false
     };
   });
+}
+
+function createDebugEnvironmentObjectState(
+  state: CombatState,
+  definitionId: EnvironmentObjectId,
+  x: number,
+  y: number,
+  distance: number
+): EnvironmentObjectState {
+  const definition = getEnvironmentObjectById(definitionId);
+  const id = getNextEntityId(state);
+
+  return {
+    id,
+    placementId: `debug-environment-${definition.id}-${id}`,
+    definitionId: definition.id,
+    kind: definition.kind,
+    collisionShape: definition.collision.shape,
+    x,
+    y,
+    width: definition.collision.width,
+    height: definition.collision.height,
+    radius: definition.collision.radius,
+    distance,
+    debugLabel: definition.debugLabel,
+    hull: definition.durability.hull,
+    maxHull: definition.durability.hull,
+    hitFlashSeconds: 0,
+    hazardCooldownSeconds: 0,
+    destroyed: false
+  };
 }
 
 function updateEnvironmentObjects(state: CombatState, dt: number): void {

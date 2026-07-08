@@ -1556,7 +1556,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 079.
+- Implemented in work order 079. Debug key `H` forces a deterministic environmental stress pocket with active hazard-family telemetry, six schema-backed environment objects, four destructibles, two obstacles, ten loose currency pickups under the active count/value caps, and explicit `Env stress` budget state. Unit and Playwright smoke coverage verify the path without reading private app state while preserving the existing debug smoke suite.
 
 ### AZ2 - Environmental systems release checklist
 

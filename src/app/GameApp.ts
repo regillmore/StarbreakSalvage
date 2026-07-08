@@ -659,6 +659,9 @@ export class GameApp {
     const scenarioDebug = debugState.debugScenario ? [`Scenario ${debugState.debugScenario}`] : [];
     const itemDebug = createItemDebugLines(debugState.items);
     const enemyRoleDebug = createEnemyRoleDebugLines(debugState.enemyRoles);
+    const environmentStressDebug = createEnvironmentStressDebugLines(
+      debugState.environmentStress
+    );
     const inputDebug = debugState.inputMode ? [`Input ${debugState.inputMode}`] : [];
     const hudDebug = debugState.hudMode ? [`HUD ${debugState.hudMode}`] : [];
     const themeDebug = debugState.contractTheme
@@ -683,6 +686,7 @@ export class GameApp {
       ...scenarioDebug,
       ...itemDebug,
       ...enemyRoleDebug,
+      ...environmentStressDebug,
       ...inputDebug,
       ...hudDebug,
       ...themeDebug,
@@ -711,6 +715,25 @@ export class GameApp {
       unlockedIds: this.saveData.unlockedIds
     });
   }
+}
+
+function createEnvironmentStressDebugLines(
+  environmentStress: SceneDebugState['environmentStress']
+): readonly string[] {
+  if (!environmentStress) {
+    return [];
+  }
+
+  const hazards =
+    environmentStress.hazardLabels.length > 0
+      ? environmentStress.hazardLabels.join('/')
+      : 'none';
+
+  return [
+    `Env stress H${environmentStress.activeHazards}/${environmentStress.hazardBudget} ${hazards} Obj${environmentStress.environmentObjects}/${environmentStress.environmentObjectBudget} D${environmentStress.destructibles}/O${environmentStress.obstacles} Loose ${environmentStress.loosePickups}/${environmentStress.loosePickupCap} V${environmentStress.looseValue}/${environmentStress.looseValueCap} ${
+      environmentStress.withinBudget ? 'ok' : 'watch'
+    }`
+  ];
 }
 
 function createItemDebugLines(items: SceneDebugState['items']): readonly string[] {

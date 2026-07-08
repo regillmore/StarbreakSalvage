@@ -5,6 +5,7 @@ import {
   forceCombatEnd,
   getCombatEntityCounts,
   getCombatEntityCount,
+  prepareDebugEnvironmentStressScenario,
   prepareDebugEnemyRichScenario,
   prepareDebugLongScrollScenario,
   spawnDebugDenseCombatScenario,
@@ -566,6 +567,66 @@ describe('CombatState', () => {
       obstacles: 0
     });
     expect(getCombatEntityCount(first)).toBeLessThanOrEqual(80);
+  });
+
+  it('creates a deterministic environmental stress debug scenario with capped currency', () => {
+    const first = createCombatState(bounds, 'ENV-STRESS-DEBUG-TEST', {
+      skipEnemyWaves: true
+    });
+    const second = createCombatState(bounds, 'ENV-STRESS-DEBUG-TEST', {
+      skipEnemyWaves: true
+    });
+    first.scrollDistance = 460;
+    second.scrollDistance = 460;
+
+    prepareDebugEnvironmentStressScenario(first, bounds);
+    prepareDebugEnvironmentStressScenario(second, bounds);
+
+    expect(
+      first.environmentObjects.map((object) => [
+        object.definitionId,
+        object.kind,
+        object.x,
+        object.y,
+        object.distance
+      ])
+    ).toEqual(
+      second.environmentObjects.map((object) => [
+        object.definitionId,
+        object.kind,
+        object.x,
+        object.y,
+        object.distance
+      ])
+    );
+    expect(first.pickups.map((pickup) => [pickup.kind, pickup.value, pickup.source])).toEqual(
+      second.pickups.map((pickup) => [pickup.kind, pickup.value, pickup.source])
+    );
+    expect(getCombatEntityCounts(first)).toEqual({
+      total: 19,
+      player: 1,
+      enemies: 0,
+      boss: 0,
+      projectiles: 0,
+      playerProjectiles: 0,
+      enemyProjectiles: 0,
+      pickups: 10,
+      looseCurrencyPickups: 10,
+      looseCurrencyValue: 32,
+      looseCurrencyCredits: 24,
+      looseCurrencySalvage: 8,
+      looseCurrencyPickupCap: 48,
+      looseCurrencyValueCap: 120,
+      effects: 2,
+      pickupsAndEffects: 12,
+      telegraphs: 0,
+      environmentObjects: 6,
+      destructibles: 4,
+      obstacles: 2
+    });
+    expect(first.player.invulnerableSeconds).toBeGreaterThan(0);
+    expect(first.stats.looseCurrencySpawned).toBe(32);
+    expect(first.stats.looseCurrencySuppressedValue).toBe(0);
   });
 
   it('activates special with charge, burst shots, active time, and cooldown', () => {
