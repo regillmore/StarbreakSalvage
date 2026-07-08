@@ -209,6 +209,95 @@ describe('loose currency runtime', () => {
     expect(state.stats.looseCurrencySuppressedValue).toBeGreaterThan(0);
   });
 
+  it('spawns planned loose currency before its anchor and scrolls it with the sector', () => {
+    const state = createCombatState(bounds, 'LOOSE-SCROLL-PLAN', {
+      skipEnemyWaves: true,
+      bossSpawnAtSeconds: null,
+      looseCurrencyPlan: createManualPlan({ credits: 3, salvage: 0, distance: 120 })
+    });
+
+    updateCombatState(
+      state,
+      { movement: { x: 0, y: 0 }, fire: false, scrollDistance: 0 },
+      0,
+      bounds
+    );
+
+    expect(state.pickups.length).toBeGreaterThan(0);
+    const firstY = state.pickups[0]?.y;
+    expect(firstY).toBeDefined();
+    expect(firstY ?? 0).toBeLessThan(bounds.padding + 72);
+    expect(state.pickups[0]?.worldDistance).toBe(120);
+
+    updateCombatState(
+      state,
+      { movement: { x: 0, y: 0 }, fire: false, scrollDistance: 40 },
+      0,
+      bounds
+    );
+
+    expect(state.pickups[0]?.y).toBeCloseTo((firstY ?? 0) + 40);
+  });
+
+  it('scrolls dropped enemy loot with the sector after it appears', () => {
+    const state = createCombatState(bounds, 'LOOSE-SCROLL-DROP', {
+      skipEnemyWaves: true,
+      bossSpawnAtSeconds: null
+    });
+    state.enemies.push({
+      id: 900,
+      factionId: 'faction_scrap_court',
+      variantId: null,
+      formationId: null,
+      formationInstanceId: null,
+      formationLabel: null,
+      formationMemberIndex: null,
+      formationMemberCount: null,
+      x: 320,
+      y: 180,
+      radius: 16,
+      hull: 1,
+      maxHull: 1,
+      drift: 0,
+      targetY: 180,
+      fireCooldown: 99
+    });
+    state.projectiles.push({
+      id: 901,
+      owner: 'player',
+      x: 320,
+      y: 180,
+      vx: 0,
+      vy: 0,
+      radius: 8,
+      damage: 3,
+      ttl: 1,
+      tags: [],
+      procDepth: 0,
+      environmentDamageSource: 'weapon'
+    });
+
+    updateCombatState(
+      state,
+      { movement: { x: 0, y: 0 }, fire: false, scrollDistance: 40 },
+      0,
+      bounds
+    );
+
+    expect(state.pickups.length).toBeGreaterThan(0);
+    const firstY = state.pickups[0]?.y;
+    expect(state.pickups[0]?.worldDistance).toBe(40);
+
+    updateCombatState(
+      state,
+      { movement: { x: 0, y: 0 }, fire: false, scrollDistance: 80 },
+      0,
+      bounds
+    );
+
+    expect(state.pickups[0]?.y).toBeCloseTo((firstY ?? 0) + 40);
+  });
+
   it('keeps run result, fresh save, and progressed upgrade accounting accurate after collection', () => {
     const state = createCombatState(bounds, 'LOOSE-SAVE', {
       skipEnemyWaves: true,
@@ -280,6 +369,7 @@ describe('loose currency runtime', () => {
 function createManualPlan(values: {
   readonly credits: number;
   readonly salvage: number;
+  readonly distance?: number;
 }): LooseCurrencyPlan {
   return {
     seed: 'LOOSE-MANUAL',
@@ -290,7 +380,7 @@ function createManualPlan(values: {
       {
         id: 'manual-lane',
         source: 'routeEvent',
-        distance: 0,
+        distance: values.distance ?? 0,
         xRatio: 0.5,
         credits: values.credits,
         salvage: values.salvage,

@@ -1337,7 +1337,7 @@ Acceptance criteria:
 - Release docs document hazard-zone coverage, destructible/obstacle rules, loose currency tuning, debug smoke, and manual browser gaps.
 - Phase 8 can be declared complete or explicitly deferred with documented blockers.
 
-Status: planned.
+Status: implemented; Phase 8 is closed as an environmental systems playtest candidate. Release hardening fixed a key environment/loot presentation blocker by treating environment object placements and loose currency drops as scroll-world entities: destructibles and obstacles now derive live screen position from sector distance, planned loose-currency lanes spawn before their anchor distance and scroll in with the background, and enemy/boss/destructible drops continue drifting with the sector after they appear instead of hovering in viewport space. Unit regressions cover scrolled object collision/presentation, planned currency scroll-in, and dropped enemy loot scrolling, while the existing environmental stress, item-storm, enemy-rich, forced-exit, destruction, long-scroll, and narrow HUD smoke remain green. README, changelog, performance notes, Phase 8 plan, backlog, release checklist, QA docs, and architecture notes now document the candidate, remaining balance/readability/economy risks, and manual browser gaps. `npm run check`, escalated Playwright Chromium smoke, and production preview asset smoke passed locally.
 
 ## Review subagent prompt
 

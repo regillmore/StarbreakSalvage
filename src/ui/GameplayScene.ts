@@ -16,6 +16,7 @@ import {
   forceCombatEnd,
   getCombatEntityCounts,
   getActiveEnvironmentObjects,
+  getEnvironmentObjectScreenState,
   prepareDebugEnvironmentStressScenario,
   prepareDebugItemStormScenario,
   prepareDebugEnemyRichScenario,
@@ -447,7 +448,7 @@ export class GameplayScene implements Scene {
     }
 
     for (const object of getActiveEnvironmentObjects(state)) {
-      renderer.paintEnvironmentObject(object);
+      renderer.paintEnvironmentObject(getEnvironmentObjectScreenState(state, object));
     }
 
     for (const pickup of state.pickups) {

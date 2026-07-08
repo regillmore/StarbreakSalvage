@@ -4,7 +4,7 @@
 
 Phase 7 concluded with a stronger enemy baseline: role metadata, role-specific movement and attacks, seeded upgraded variants, deterministic formations, longer-sector pacing arcs, enemy-rich debug smoke, and a fix for hidden boss-arena hazards becoming damaging without a fresh post-boss warning.
 
-The game now scrolls, fights, rewards, and scales more consistently, but the environmental layer is still thin. Hazards exist as sparse distance windows, landmarks mostly provide visual rhythm, destructible clutter is not yet a first-class system, and loose currency is mostly tied to defeat/reward flow rather than moment-to-moment navigation. Phase 8 should make sectors feel more physical and profitable without hiding bullets, blocking fair movement, or breaking deterministic content generation.
+Phase 8 concluded with the environmental layer promoted into a first-pass playtest system. Hazards now use a richer schema, behavior library, and deterministic director; destructibles and obstacles are schema-backed, lane-safe, damageable, and rendered in scroll-world space; loose currency can come from sector plans and drops while respecting active caps; and debug/browser smoke can inspect environmental pressure before density increases further.
 
 ## Phase 8 Product Goal
 
@@ -109,7 +109,7 @@ Exit criteria:
 - Environmental counters expose active hazard zones, destructibles/obstacles, loose currency count/value, and stress caps.
 - Known balance, readability, economy, and manual browser risks are documented.
 
-Status: advanced by work order 079. The `H` debug shortcut now creates a deterministic environmental stress pocket with overlapping hazard telemetry, six environment objects, four destructibles, two obstacles, ten capped loose-currency pickups, and an `Env stress` overlay line for hazard family labels, object counts, loose pickup/value caps, and budget state. Unit and Playwright smoke coverage exercise the path under narrow high-contrast, reduced-motion, and performance settings; work order 080 remains planned for final release hardening and risk closeout.
+Status: complete after work orders 079-080. The `H` debug shortcut creates a deterministic environmental stress pocket with overlapping hazard telemetry, six environment objects, four destructibles, two obstacles, ten capped loose-currency pickups, and an `Env stress` overlay line for hazard family labels, object counts, loose pickup/value caps, and budget state. Work order 080 fixed the release blocker where destructibles/obstacles and loose currency felt like viewport pop-ins: environment objects now derive live screen position from their sector distance, planned loose-currency lanes spawn ahead of their anchor and scroll in with the background, and dropped enemy/boss/destructible loot scrolls with the sector after appearing. Unit, Playwright, full-check, and production-preview evidence support the Phase 8 playtest candidate.
 
 ## Recommended Phase 8 Sequence
 

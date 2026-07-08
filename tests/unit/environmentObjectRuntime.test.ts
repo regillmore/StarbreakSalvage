@@ -6,6 +6,8 @@ import {
   damageEnvironmentObjectsInRadius,
   damageEnvironmentObjectsInRect,
   getActiveEnvironmentObjects,
+  getEnvironmentObjectScreenState,
+  getEnvironmentObjectScreenY,
   updateCombatState,
   type CombatBounds,
   type CombatState,
@@ -80,6 +82,21 @@ describe('environment object runtime', () => {
     expect(state.stats.environmentObjectsDestroyed).toBeGreaterThan(1);
     expect(state.stats.environmentChainReactions).toBeLessThanOrEqual(6);
     expect(state.stats.enemiesDestroyed).toBe(0);
+  });
+
+  it('uses scroll-world positions for active object collision and presentation', () => {
+    const plan = createPlan([{ definitionId: 'salvage_cache', x: 320, y: 260, distance: 240 }]);
+    const state = createState('ENV-SCROLL-WORLD-SEED', plan);
+    const object = state.environmentObjects[0];
+
+    if (!object) {
+      throw new Error('Expected an environment object fixture.');
+    }
+
+    expect(getEnvironmentObjectScreenY(state, object)).toBe(20);
+    expect(getEnvironmentObjectScreenState(state, object).y).toBe(20);
+    expect(damageEnvironmentObjectsInRadius(state, 320, 260, 18, 'weapon', 12)).toBe(0);
+    expect(damageEnvironmentObjectsInRadius(state, 320, 20, 18, 'weapon', 12)).toBe(1);
   });
 
   it('allows active hazard damage to clean up eligible obstacles safely', () => {
@@ -187,6 +204,7 @@ function createPlan(
     readonly definitionId: EnvironmentObjectId;
     readonly x: number;
     readonly y: number;
+    readonly distance?: number;
   }>
 ): EnvironmentObjectPlacementPlan {
   return {
@@ -203,7 +221,7 @@ function createPlan(
         id: `test-env-${object.definitionId}-${index}`,
         definitionId: object.definitionId,
         collisionShape: definition.collision.shape,
-        distance: 40,
+        distance: object.distance ?? 40,
         x: object.x,
         y: object.y,
         width: definition.collision.width,
@@ -233,18 +251,20 @@ function playerOverlapsObject(state: CombatState, object: CombatState['environme
     return false;
   }
 
+  const screenObject = getEnvironmentObjectScreenState(state, object);
+
   if (object.collisionShape === 'circle') {
-    const dx = state.player.x - object.x;
-    const dy = state.player.y - object.y;
+    const dx = state.player.x - screenObject.x;
+    const dy = state.player.y - screenObject.y;
     const radiusSum = state.player.radius + object.radius;
 
     return dx * dx + dy * dy <= radiusSum * radiusSum;
   }
 
-  const left = object.x - object.width / 2;
-  const right = object.x + object.width / 2;
-  const top = object.y - object.height / 2;
-  const bottom = object.y + object.height / 2;
+  const left = screenObject.x - object.width / 2;
+  const right = screenObject.x + object.width / 2;
+  const top = screenObject.y - object.height / 2;
+  const bottom = screenObject.y + object.height / 2;
   const nearestX = Math.min(Math.max(state.player.x, left), right);
   const nearestY = Math.min(Math.max(state.player.y, top), bottom);
   const dx = state.player.x - nearestX;

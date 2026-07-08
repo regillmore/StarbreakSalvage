@@ -1568,4 +1568,4 @@ Acceptance:
 
 Status:
 
-- Planned for work order 080.
+- Implemented in work order 080. Phase 8 release docs now cover hazard-zone coverage, destructible/obstacle rules, loose-currency tuning, environmental debug smoke, scroll-world object/loot behavior, known balance/readability/economy risks, Chromium smoke evidence, production preview evidence, and remaining manual browser gaps.

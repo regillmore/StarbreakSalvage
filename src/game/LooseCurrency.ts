@@ -21,6 +21,7 @@ export interface LooseCurrencyPickupSpec {
   readonly kind: LooseCurrencyKind;
   readonly x: number;
   readonly y: number;
+  readonly worldDistance?: number;
   readonly vx: number;
   readonly vy: number;
   readonly radius: number;
@@ -38,6 +39,7 @@ export interface LooseCurrencyScatterOptions {
   readonly source: LooseCurrencySource;
   readonly x: number;
   readonly y: number;
+  readonly worldDistance?: number;
   readonly credits?: number;
   readonly salvage?: number;
   readonly maxPickups?: number;
@@ -151,6 +153,7 @@ export function createLooseCurrencyScatter(
         kind: entry.kind,
         x: roundCurrencyValue(options.x + offsetIndex * 9 + xJitter),
         y: roundCurrencyValue(options.y + yJitter),
+        worldDistance: options.worldDistance,
         vx: roundCurrencyValue(offsetIndex * 19 + (rng.nextFloat() - 0.5) * spread * 1.45),
         vy: roundCurrencyValue(baseVy + rng.nextFloat() * 28),
         radius,

@@ -37,6 +37,7 @@ import {
   type ProjectileBlueprint
 } from './ItemHooks';
 import type { EnvironmentObjectPlacementPlan } from './EnvironmentObjectPlacement';
+import { COMBAT_ARENA_HEIGHT } from './CombatGeometry';
 import {
   LOOSE_CURRENCY_ACTIVE_PICKUP_CAP,
   LOOSE_CURRENCY_ACTIVE_VALUE_CAP,
@@ -190,6 +191,8 @@ export interface PickupState {
   readonly kind: PickupKind;
   x: number;
   y: number;
+  readonly worldDistance?: number;
+  scrollDistanceLastFrame?: number;
   vx: number;
   vy: number;
   readonly radius: number;
@@ -371,6 +374,7 @@ const MAX_ENVIRONMENT_REWARD_PICKUPS = 3;
 const MAX_ENVIRONMENT_CHAIN_REACTIONS_PER_EVENT = 6;
 const MAX_ENVIRONMENT_FEEDBACK_EFFECTS = 80;
 const ENVIRONMENT_CONTACT_PUSH_EPSILON = 0.75;
+const LOOSE_CURRENCY_SCROLL_SPAWN_LEAD_DISTANCE = 150;
 const DEFAULT_SHIP_STATS: ShipStats = {
   maxHull: 3,
   speed: 360,
@@ -554,6 +558,23 @@ export function getActiveEnvironmentObjects(state: CombatState): EnvironmentObje
   return state.environmentObjects.filter((object) => isEnvironmentObjectActive(state, object));
 }
 
+export function getEnvironmentObjectScreenY(
+  state: Pick<CombatState, 'scrollDistance'>,
+  object: EnvironmentObjectState
+): number {
+  return object.y + state.scrollDistance - object.distance;
+}
+
+export function getEnvironmentObjectScreenState(
+  state: Pick<CombatState, 'scrollDistance'>,
+  object: EnvironmentObjectState
+): EnvironmentObjectState {
+  return {
+    ...object,
+    y: getEnvironmentObjectScreenY(state, object)
+  };
+}
+
 export function damageEnvironmentObjectsInRadius(
   state: CombatState,
   x: number,
@@ -565,7 +586,7 @@ export function damageEnvironmentObjectsInRadius(
   let damaged = 0;
 
   for (const object of getActiveEnvironmentObjects(state)) {
-    if (!environmentObjectOverlapsCircle(object, x, y, radius)) {
+    if (!environmentObjectOverlapsCircle(state, object, x, y, radius)) {
       continue;
     }
 
@@ -589,7 +610,7 @@ export function damageEnvironmentObjectsInRect(
   let damaged = 0;
 
   for (const object of getActiveEnvironmentObjects(state)) {
-    if (!environmentObjectOverlapsRect(object, rect)) {
+    if (!environmentObjectOverlapsRect(state, object, rect)) {
       continue;
     }
 
@@ -1065,6 +1086,7 @@ export function prepareDebugEnvironmentStressScenario(
         source: 'debug',
         x: scatter.x,
         y: scatter.y,
+        worldDistance: state.scrollDistance,
         credits: scatter.credits,
         salvage: scatter.salvage,
         maxPickups: 5,
@@ -1427,19 +1449,25 @@ function updateEnvironmentObjects(state: CombatState, dt: number): void {
 }
 
 function isEnvironmentObjectActive(state: CombatState, object: EnvironmentObjectState): boolean {
+  const y = getEnvironmentObjectScreenY(state, object);
+  const extent = getEnvironmentObjectVerticalExtent(object);
+
   return (
     !object.destroyed &&
     object.hull > 0 &&
-    state.scrollDistance >= object.distance - ENVIRONMENT_OBJECT_LEAD_DISTANCE &&
-    state.scrollDistance <= object.distance + ENVIRONMENT_OBJECT_TRAIL_DISTANCE
+    y >= -extent - ENVIRONMENT_OBJECT_LEAD_DISTANCE &&
+    y <= COMBAT_ARENA_HEIGHT + extent + ENVIRONMENT_OBJECT_TRAIL_DISTANCE
   );
 }
 
 function isEnvironmentObjectExpired(state: CombatState, object: EnvironmentObjectState): boolean {
+  const y = getEnvironmentObjectScreenY(state, object);
+  const extent = getEnvironmentObjectVerticalExtent(object);
+
   return (
     object.destroyed ||
     object.hull <= 0 ||
-    state.scrollDistance > object.distance + ENVIRONMENT_OBJECT_TRAIL_DISTANCE
+    y > COMBAT_ARENA_HEIGHT + extent + ENVIRONMENT_OBJECT_TRAIL_DISTANCE
   );
 }
 
@@ -1575,7 +1603,8 @@ function spawnEnvironmentObjectRewardPickups(
       sourceId: object.placementId,
       source: 'destructible',
       x: object.x,
-      y: object.y,
+      y: getEnvironmentObjectScreenY(state, object),
+      worldDistance: state.scrollDistance,
       credits: reward.credits,
       salvage: reward.salvage,
       maxPickups: MAX_ENVIRONMENT_REWARD_PICKUPS,
@@ -1610,9 +1639,14 @@ function triggerEnvironmentChainReaction(
     .filter((candidate) => candidate.id !== object.id && !options.visitedObjectIds.has(candidate.id))
     .filter(
       (candidate) =>
-        getDistanceSquared(object, candidate) <= definition.chain.radius * definition.chain.radius
+        getEnvironmentObjectDistanceSquared(state, object, candidate) <=
+        definition.chain.radius * definition.chain.radius
     )
-    .sort((left, right) => getDistanceSquared(object, left) - getDistanceSquared(object, right))
+    .sort(
+      (left, right) =>
+        getEnvironmentObjectDistanceSquared(state, object, left) -
+        getEnvironmentObjectDistanceSquared(state, object, right)
+    )
     .slice(0, maxTargets);
 
   for (const target of targets) {
@@ -1642,7 +1676,7 @@ function addEnvironmentEffect(
     id: getNextEntityId(state),
     kind,
     x: object.x,
-    y: object.y,
+    y: getEnvironmentObjectScreenY(state, object),
     radius: Math.max(6, radius),
     ttl: kind === 'environmentHit' ? 0.14 : kind === 'chainReaction' ? 0.28 : 0.24,
     maxTtl: kind === 'environmentHit' ? 0.14 : kind === 'chainReaction' ? 0.28 : 0.24
@@ -1656,16 +1690,19 @@ function getEnvironmentObjectEffectRadius(object: EnvironmentObjectState): numbe
 }
 
 function environmentObjectOverlapsCircle(
+  state: Pick<CombatState, 'scrollDistance'>,
   object: EnvironmentObjectState,
   x: number,
   y: number,
   radius: number
 ): boolean {
+  const objectY = getEnvironmentObjectScreenY(state, object);
+
   if (object.collisionShape === 'circle') {
-    return circlesOverlap(object, { x, y, radius });
+    return circlesOverlap({ x: object.x, y: objectY, radius: object.radius }, { x, y, radius });
   }
 
-  const rect = getEnvironmentObjectRect(object);
+  const rect = getEnvironmentObjectRect(state, object);
   const nearestX = clamp(x, rect.left, rect.right);
   const nearestY = clamp(y, rect.top, rect.bottom);
   const dx = x - nearestX;
@@ -1675,10 +1712,11 @@ function environmentObjectOverlapsCircle(
 }
 
 function environmentObjectOverlapsRect(
+  state: Pick<CombatState, 'scrollDistance'>,
   object: EnvironmentObjectState,
   rect: { readonly left: number; readonly top: number; readonly right: number; readonly bottom: number }
 ): boolean {
-  const objectRect = getEnvironmentObjectRect(object);
+  const objectRect = getEnvironmentObjectRect(state, object);
 
   return (
     objectRect.left <= rect.right &&
@@ -1688,27 +1726,47 @@ function environmentObjectOverlapsRect(
   );
 }
 
-function getEnvironmentObjectRect(object: EnvironmentObjectState): {
+function getEnvironmentObjectRect(
+  state: Pick<CombatState, 'scrollDistance'>,
+  object: EnvironmentObjectState
+): {
   readonly left: number;
   readonly top: number;
   readonly right: number;
   readonly bottom: number;
 } {
+  const y = getEnvironmentObjectScreenY(state, object);
+
   if (object.collisionShape === 'circle') {
     return {
       left: object.x - object.radius,
-      top: object.y - object.radius,
+      top: y - object.radius,
       right: object.x + object.radius,
-      bottom: object.y + object.radius
+      bottom: y + object.radius
     };
   }
 
   return {
     left: object.x - object.width / 2,
-    top: object.y - object.height / 2,
+    top: y - object.height / 2,
     right: object.x + object.width / 2,
-    bottom: object.y + object.height / 2
+    bottom: y + object.height / 2
   };
+}
+
+function getEnvironmentObjectVerticalExtent(object: EnvironmentObjectState): number {
+  return object.collisionShape === 'circle' ? object.radius : object.height / 2;
+}
+
+function getEnvironmentObjectDistanceSquared(
+  state: Pick<CombatState, 'scrollDistance'>,
+  left: EnvironmentObjectState,
+  right: EnvironmentObjectState
+): number {
+  const dx = left.x - right.x;
+  const dy = getEnvironmentObjectScreenY(state, left) - getEnvironmentObjectScreenY(state, right);
+
+  return dx * dx + dy * dy;
 }
 
 function resolveEnvironmentObjectPlayerCollision(
@@ -1724,8 +1782,8 @@ function resolveEnvironmentObjectPlayerCollision(
 
     const collided =
       object.collisionShape === 'circle'
-        ? pushPlayerOutOfCircleObject(state.player, object, safeFrame)
-        : pushPlayerOutOfRectObject(state.player, object, safeFrame);
+        ? pushPlayerOutOfCircleObject(state, object, safeFrame)
+        : pushPlayerOutOfRectObject(state, object, safeFrame);
 
     if (collided && definition.damageInteraction.contactDamage > 0) {
       damagePlayer(state, definition.damageInteraction.contactDamage);
@@ -1734,13 +1792,14 @@ function resolveEnvironmentObjectPlayerCollision(
 }
 
 function pushPlayerOutOfCircleObject(
-  player: PlayerState,
+  state: CombatState,
   object: EnvironmentObjectState,
   safeFrame: CombatSafeFrame
 ): boolean {
+  const { player } = state;
   const radiusSum = player.radius + object.radius;
   const dx = player.x - object.x;
-  const dy = player.y - object.y;
+  const dy = player.y - getEnvironmentObjectScreenY(state, object);
   const distanceSquared = dx * dx + dy * dy;
 
   if (distanceSquared > radiusSum * radiusSum) {
@@ -1770,11 +1829,12 @@ function pushPlayerOutOfCircleObject(
 }
 
 function pushPlayerOutOfRectObject(
-  player: PlayerState,
+  state: CombatState,
   object: EnvironmentObjectState,
   safeFrame: CombatSafeFrame
 ): boolean {
-  const rect = getEnvironmentObjectRect(object);
+  const { player } = state;
+  const rect = getEnvironmentObjectRect(state, object);
   const nearestX = clamp(player.x, rect.left, rect.right);
   const nearestY = clamp(player.y, rect.top, rect.bottom);
   const dx = player.x - nearestX;
@@ -2511,6 +2571,13 @@ function updateCombatEffects(state: CombatState, dt: number): void {
 
 function updatePickups(state: CombatState, dt: number, bounds: CombatBounds): void {
   for (const pickup of state.pickups) {
+    if (pickup.worldDistance !== undefined) {
+      const scrollDelta =
+        state.scrollDistance - (pickup.scrollDistanceLastFrame ?? state.scrollDistance);
+      pickup.y += scrollDelta;
+      pickup.scrollDistanceLastFrame = state.scrollDistance;
+    }
+
     if (pickup.ttl !== undefined) {
       pickup.ttl -= dt;
     }
@@ -2529,7 +2596,11 @@ function updatePickups(state: CombatState, dt: number, bounds: CombatBounds): vo
     }
 
     pickup.x = clamp(pickup.x + pickup.vx * dt, bounds.padding, bounds.width - bounds.padding);
-    pickup.y = clamp(pickup.y + pickup.vy * dt, bounds.padding, bounds.height - bounds.padding);
+    const nextY = pickup.y + pickup.vy * dt;
+    pickup.y =
+      pickup.worldDistance === undefined
+        ? clamp(nextY, bounds.padding, bounds.height - bounds.padding)
+        : nextY;
     pickup.vx *= 0.97;
     pickup.vy *= 0.97;
   }
@@ -2621,7 +2692,13 @@ function resolveCombatCollisions(state: CombatState): void {
       if (!projectileIdsToRemove.has(projectile.id)) {
         for (const object of getActiveEnvironmentObjects(state)) {
           if (
-            !environmentObjectOverlapsCircle(object, projectile.x, projectile.y, projectile.radius)
+            !environmentObjectOverlapsCircle(
+              state,
+              object,
+              projectile.x,
+              projectile.y,
+              projectile.radius
+            )
           ) {
             continue;
           }
@@ -2811,7 +2888,7 @@ function cleanupEntities(state: CombatState, bounds: CombatBounds): void {
   state.environmentObjects = state.environmentObjects.filter(
     (object) => !isEnvironmentObjectExpired(state, object)
   );
-  expireLooseCurrencyPickups(state);
+  expireLooseCurrencyPickups(state, bounds);
   state.telegraphs = state.telegraphs.filter((telegraph) => telegraph.ttl > 0);
   state.effects = state.effects.filter((effect) => effect.ttl > 0);
 
@@ -2834,7 +2911,10 @@ function spawnDueLooseCurrency(state: CombatState, bounds: CombatBounds): void {
   while (state.nextLooseCurrencyIndex < plan.events.length) {
     const event = plan.events[state.nextLooseCurrencyIndex];
 
-    if (!event || event.distance > state.scrollDistance) {
+    if (
+      !event ||
+      event.distance - LOOSE_CURRENCY_SCROLL_SPAWN_LEAD_DISTANCE > state.scrollDistance
+    ) {
       break;
     }
 
@@ -2847,6 +2927,7 @@ function spawnDueLooseCurrency(state: CombatState, bounds: CombatBounds): void {
         source: event.source,
         x: clamp(event.xRatio, 0, 1) * bounds.width,
         y: bounds.padding + 72,
+        worldDistance: event.distance,
         credits: event.credits,
         salvage: event.salvage,
         maxPickups: 3,
@@ -2887,6 +2968,12 @@ function spawnLooseCurrencySpecs(
     state.pickups.push({
       id: getNextEntityId(state),
       ...spec,
+      y:
+        spec.worldDistance === undefined
+          ? spec.y
+          : spec.y + state.scrollDistance - spec.worldDistance,
+      scrollDistanceLastFrame:
+        spec.worldDistance === undefined ? undefined : state.scrollDistance,
       value
     });
     activePickups += 1;
@@ -2907,11 +2994,15 @@ function spawnLooseCurrencySpecs(
   return spawnedCount;
 }
 
-function expireLooseCurrencyPickups(state: CombatState): void {
+function expireLooseCurrencyPickups(state: CombatState, bounds: CombatBounds): void {
   let expiredValue = 0;
 
   state.pickups = state.pickups.filter((pickup) => {
-    if (pickup.ttl === undefined || pickup.ttl > 0) {
+    const hasLifetimeRemaining = pickup.ttl === undefined || pickup.ttl > 0;
+    const hasScrolledPastField =
+      pickup.worldDistance !== undefined && pickup.y > bounds.height + pickup.radius + 96;
+
+    if (hasLifetimeRemaining && !hasScrolledPastField) {
       return true;
     }
 
@@ -3117,6 +3208,7 @@ function spawnEnemyDefeatPickups(
       source: 'enemy',
       x: enemy.x,
       y: enemy.y,
+      worldDistance: state.scrollDistance,
       credits: 2,
       salvage: 1 + Math.max(0, Math.floor(bonusSalvage)),
       maxPickups: bonusSalvage > 0 ? 3 : 2,
@@ -3134,6 +3226,7 @@ function spawnBossDefeatPickups(state: CombatState, boss: BossState, bonusSalvag
       source: 'boss',
       x: boss.x,
       y: boss.y + boss.radius * 0.5,
+      worldDistance: state.scrollDistance,
       credits: 12,
       salvage: 4 + Math.max(0, Math.floor(bonusSalvage)),
       maxPickups: 5,

@@ -439,6 +439,7 @@ src/game/EnvironmentStress.ts
 
 - Destructibles and obstacles should share content validation for collision shape, hull, damage interaction, objective policy, reward policy, chain behavior, placement constraints, cue metadata, and debug label.
 - Work order 075 adds `src/content/environmentObjects.ts` for the first shared destructible/obstacle schema and `src/game/EnvironmentObjectPlacement.ts` for deterministic fixed-world placement helpers. Placement plans use the 640x720 combat arena, keep open-lane guarantees, and stay independent from viewport dimensions.
+- Work order 080 keeps environment object placement anchors immutable and derives live screen-space object state from `scrollDistance` for rendering, collision, rewards, effects, and player pushout. Do not reintroduce viewport-space object placement or object pop-in when adding new environmental systems.
 - Destructible damage should flow through explicit systems for weapon, special, bomb, hazard, or chain-reaction hits. Reward drops and item hook events should use existing deterministic pickup/economy and hook dispatch paths.
 - Chain reactions must be bounded by per-tick or per-event caps so they cannot create runaway entity, pickup, or proc pressure.
 - Obstacles should have placement safety checks for player spawn lanes, exit corridors, boss approach/release, hazard overlap, enemy spawn lanes, and fixed-world bounds.
@@ -447,6 +448,7 @@ src/game/EnvironmentStress.ts
 
 - Loose scrap/credit scatter should originate from deterministic plans or explicit event payloads, not ad hoc frame checks.
 - Work order 078 adds `src/game/LooseCurrency.ts` for deterministic scatter specs, sector/route/hazard/feature/obstacle lane plans, value tiers, TTLs, collection radii, source labels, and active cap summaries. `CombatState` consumes those specs for enemy/boss drops, destructible rewards, and indexed distance events.
+- Work order 080 adds optional `worldDistance` to loose-currency specs so planned lanes spawn ahead of their anchor and dropped enemy/boss/destructible loot scrolls with the sector after appearing. Pickup attraction still runs in fixed combat-world units, and missed world-scrolling pickups expire after leaving the field.
 - Pickup attraction should use the same combat-world coordinate model as existing pickups so viewport scaling does not change collection difficulty.
 - Active loose currency count/value should be capped and visible in debug. Summary and Upgrade Bay progress should remain accurate after collection.
 - Economy tuning should stay conservative until playtest data proves that loose scrap does not inflate permanent upgrade pacing or shop purchasing power.
