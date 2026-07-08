@@ -167,6 +167,13 @@ describe('saveData', () => {
       contractId: 'contract_1',
       contractName: 'Debt Runner',
       reason: 'victory',
+      actId: 'act_core_descent',
+      actName: 'Core Descent',
+      actShortLabel: 'Act II',
+      actIndex: 2,
+      actSectorIndex: 2,
+      actSectorCount: 2,
+      actsCompleted: 2,
       survivedSeconds: 184,
       distanceTraveled: 2536,
       sectorLength: 2536,
@@ -179,6 +186,13 @@ describe('saveData', () => {
     }).data;
 
     expect(save.lastRun?.reason).toBe('victory');
+    expect(save.lastRun?.actId).toBe('act_core_descent');
+    expect(save.lastRun?.actName).toBe('Core Descent');
+    expect(save.lastRun?.actShortLabel).toBe('Act II');
+    expect(save.lastRun?.actIndex).toBe(2);
+    expect(save.lastRun?.actSectorIndex).toBe(2);
+    expect(save.lastRun?.actSectorCount).toBe(2);
+    expect(save.lastRun?.actsCompleted).toBe(2);
     expect(save.lastRun?.sectorsCleared).toBe(5);
     expect(save.lastRun?.distanceTraveled).toBe(2536);
     expect(save.lastRun?.sectorLength).toBe(2536);
@@ -232,6 +246,13 @@ describe('saveData', () => {
     );
 
     expect(normalized.stats.distanceTraveled).toBe(0);
+    expect(normalized.lastRun?.actId).toBeNull();
+    expect(normalized.lastRun?.actName).toBeNull();
+    expect(normalized.lastRun?.actShortLabel).toBeNull();
+    expect(normalized.lastRun?.actIndex).toBe(0);
+    expect(normalized.lastRun?.actSectorIndex).toBe(0);
+    expect(normalized.lastRun?.actSectorCount).toBeNull();
+    expect(normalized.lastRun?.actsCompleted).toBe(0);
     expect(normalized.lastRun?.distanceTraveled).toBe(0);
     expect(normalized.lastRun?.sectorLength).toBeNull();
   });

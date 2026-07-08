@@ -1,5 +1,6 @@
 import { ACHIEVEMENTS, type AchievementId } from '../content/achievements';
 import { getItemById, ITEM_FAMILIES, ITEMS, type ItemFamily, type ItemId } from '../content/items';
+import { ACT_DEFINITIONS, type ActId } from '../content/acts';
 import { getUnlockById, UNLOCKS, type UnlockId } from '../content/unlocks';
 import {
   getUpgradeById,
@@ -40,6 +41,13 @@ export interface LastRunSummary {
   readonly contractId: string;
   readonly contractName: string;
   readonly reason: CombatEndReason;
+  readonly actId: ActId | null;
+  readonly actName: string | null;
+  readonly actShortLabel: string | null;
+  readonly actIndex: number;
+  readonly actSectorIndex: number;
+  readonly actSectorCount: number | null;
+  readonly actsCompleted: number;
   readonly sectorsCleared: number;
   readonly survivedSeconds: number;
   readonly distanceTraveled: number;
@@ -70,6 +78,13 @@ export interface RunSaveRecord {
   readonly contractId: string;
   readonly contractName: string;
   readonly reason: CombatEndReason;
+  readonly actId?: ActId | null;
+  readonly actName?: string | null;
+  readonly actShortLabel?: string | null;
+  readonly actIndex?: number;
+  readonly actSectorIndex?: number;
+  readonly actSectorCount?: number | null;
+  readonly actsCompleted?: number;
   readonly survivedSeconds: number;
   readonly distanceTraveled: number;
   readonly sectorLength: number | null;
@@ -322,6 +337,13 @@ export function applyRunRecordToSave(current: SaveData, record: RunSaveRecord): 
         contractId: record.contractId,
         contractName: record.contractName,
         reason: record.reason,
+        actId: sanitizeActId(record.actId),
+        actName: sanitizeNullableText(record.actName),
+        actShortLabel: sanitizeNullableText(record.actShortLabel),
+        actIndex: sanitizeCount(record.actIndex),
+        actSectorIndex: sanitizeCount(record.actSectorIndex),
+        actSectorCount: sanitizeNullableCount(record.actSectorCount),
+        actsCompleted: sanitizeCount(record.actsCompleted),
         sectorsCleared: record.sectorsCleared,
         survivedSeconds: record.survivedSeconds,
         distanceTraveled: Math.max(0, Math.floor(record.distanceTraveled)),
@@ -511,6 +533,13 @@ function normalizeLastRun(value: unknown): LastRunSummary | null {
     contractId: typeof value.contractId === 'string' ? value.contractId : 'unknown',
     contractName: typeof value.contractName === 'string' ? value.contractName : 'Unknown Contract',
     reason,
+    actId: sanitizeActId(value.actId),
+    actName: sanitizeNullableText(value.actName),
+    actShortLabel: sanitizeNullableText(value.actShortLabel),
+    actIndex: sanitizeCount(value.actIndex),
+    actSectorIndex: sanitizeCount(value.actSectorIndex),
+    actSectorCount: sanitizeNullableCount(value.actSectorCount),
+    actsCompleted: sanitizeCount(value.actsCompleted),
     sectorsCleared: sanitizeCount(value.sectorsCleared),
     survivedSeconds: sanitizeCount(value.survivedSeconds),
     distanceTraveled: sanitizeCount(value.distanceTraveled),
@@ -564,6 +593,19 @@ function sanitizeItemFamilyIds(value: unknown): ItemFamily[] {
 
   const validIds = new Set<string>(ITEM_FAMILIES);
   return uniqueStrings(value).filter((id): id is ItemFamily => validIds.has(id));
+}
+
+function sanitizeActId(value: unknown): ActId | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const validIds = new Set(ACT_DEFINITIONS.map((act) => act.id));
+  return validIds.has(value as ActId) ? (value as ActId) : null;
+}
+
+function sanitizeNullableText(value: unknown): string | null {
+  return typeof value === 'string' && value.trim().length > 0 ? value : null;
 }
 
 function mergeUniqueItemIds(

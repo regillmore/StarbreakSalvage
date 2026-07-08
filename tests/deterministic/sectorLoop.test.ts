@@ -135,7 +135,14 @@ describe('sector route, reward, and shop loop generation', () => {
     addItemToSession(session, shopItem.item.id);
 
     expect(session.routeHistory).toEqual([
-      expect.objectContaining({ sectorIndex: sector.index, routeKind: 'shop' })
+      expect.objectContaining({
+        sectorIndex: sector.index,
+        actId: 'act_outer_rim',
+        actShortLabel: 'Act I',
+        actSectorIndex: 1,
+        actSectorCount: 3,
+        routeKind: 'shop'
+      })
     ]);
     expect(session.credits).toBeGreaterThanOrEqual(0);
     expect(session.salvage).toBe(2);

@@ -4,6 +4,11 @@ import { ACHIEVEMENTS } from '../content/achievements';
 import { getItemById } from '../content/items';
 import { getUnlockById } from '../content/unlocks';
 import type { SaveData, SaveUpdateResult } from '../core/saveData';
+import {
+  createActDebugState,
+  createRunActSaveContext,
+  formatRunActTimeline
+} from '../game/ActPlan';
 import { createBuildSynergyModel, formatBuildSynergySummary } from '../game/BuildSynergy';
 import type { CombatRunResult } from '../game/CombatState';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
@@ -71,6 +76,7 @@ export class RunSummaryScene implements Scene {
       ['Contract', this.contract.shipName],
       ['Ship Theme', formatContractThemeSummary(this.contract)],
       ['Reached', getReachedSectorName(this.run, this.routeHistory, this.result)],
+      ['Act Progress', formatActProgressSummary(this.run, this.routeHistory, this.result)],
       ['Outcome', getOutcomeLabel(this.result)],
       ['Win/Loss', getOutcomeDetail(this.result)],
       ['Survived', `${Math.floor(this.result?.survivedSeconds ?? 0)}s`],
@@ -83,6 +89,8 @@ export class RunSummaryScene implements Scene {
       ['Damage Taken', `${this.result?.damageTaken ?? 0}`],
       ['Item Hooks', `${this.result?.itemTriggers ?? 0}`],
       ['Routes', formatRouteHistory(this.routeHistory)],
+      ['Act Route', formatActRouteHistory(this.routeHistory)],
+      ['Act Timeline', formatRunActTimeline(this.run.acts)],
       ['Sector Conditions', formatSectorConditionTimeline(this.run, this.routeOutcomes)],
       ['Sector Pacing', formatSectorPacingTimeline(this.run, this.routeOutcomes)],
       ['Hazard Zones', formatHazardZoneDirectorTimeline(this.run, this.routeOutcomes)],
@@ -159,9 +167,36 @@ export class RunSummaryScene implements Scene {
   }
 
   public getDebugState(): SceneDebugState {
+    const actContext = createRunActSaveContext(
+      this.run.acts,
+      getSectorsCleared(this.run, this.routeHistory, this.result)
+    );
+    const act = this.run.acts.find((candidate) => candidate.id === actContext.actId);
+
     return {
       seed: this.run.seed,
       entityCount: 0,
+      act:
+        act && actContext.actId && actContext.actName && actContext.actShortLabel
+          ? createActDebugState({
+              actId: actContext.actId,
+              actName: actContext.actName,
+              actShortLabel: actContext.actShortLabel,
+              actSummary: act.summary,
+              actIndex: actContext.actIndex,
+              actSectorIndex: actContext.actSectorIndex,
+              actSectorCount: actContext.actSectorCount ?? act.sectorCount,
+              runSectorIndex: Math.min(
+                this.run.sectors.length,
+                getSectorsCleared(this.run, this.routeHistory, this.result) + 1
+              ),
+              routeGrammar: act.routeGrammar,
+              rewardTier: act.rewardTier,
+              pressureTier: act.pressureTier,
+              bossGate: act.bossGate,
+              transition: act.transition
+            })
+          : undefined,
       contractTheme: createContractThemeDebugState(this.contract),
       upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects)
     };
@@ -373,6 +408,25 @@ export function formatRouteHistory(routeHistory: readonly RouteHistoryEntry[]): 
     .join(' | ');
 }
 
+export function formatActRouteHistory(routeHistory: readonly RouteHistoryEntry[]): string {
+  if (routeHistory.length === 0) {
+    return 'none';
+  }
+
+  return routeHistory
+    .map((entry) => {
+      const actLabel =
+        entry.actShortLabel && entry.actSectorIndex && entry.actSectorCount
+          ? `${entry.actShortLabel} ${entry.actSectorIndex}/${entry.actSectorCount}`
+          : 'Act ?';
+
+      return `${actLabel} S${entry.sectorIndex} ${entry.routeLabel}: ${
+        entry.outcomeTitle ?? 'routed'
+      }`;
+    })
+    .join(' | ');
+}
+
 export function formatDistanceSummary(result: CombatRunResult | null): string {
   if (!result) {
     return '0u';
@@ -411,6 +465,25 @@ function getReachedSectorName(
 ): string {
   const index = Math.min(getSectorsCleared(run, routeHistory, result), run.sectors.length - 1);
   return run.sectors[index]?.sectorName ?? 'Outer Debris Field';
+}
+
+function formatActProgressSummary(
+  run: RunSkeleton,
+  routeHistory: readonly RouteHistoryEntry[],
+  result: CombatRunResult | null
+): string {
+  const actContext = createRunActSaveContext(
+    run.acts,
+    getSectorsCleared(run, routeHistory, result)
+  );
+
+  if (!actContext.actId || !actContext.actName || !actContext.actShortLabel) {
+    return 'Act progress unavailable';
+  }
+
+  return `${actContext.actShortLabel} ${actContext.actName} ${actContext.actSectorIndex}/${
+    actContext.actSectorCount ?? '?'
+  } | ${actContext.actsCompleted}/${run.acts.length} acts secured`;
 }
 
 function getSectorsCleared(

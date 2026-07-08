@@ -1,6 +1,7 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene, SceneDebugState } from '../app/Scene';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
+import { createActDebugState, formatActSectorLabel } from '../game/ActPlan';
 import { getCurrentSector, type RunSessionState } from '../game/RunSession';
 import {
   applySectorConditionsToScroll,
@@ -60,7 +61,7 @@ export class SectorTransitionScene implements Scene {
 
     const eyebrow = document.createElement('p');
     eyebrow.className = 'eyebrow';
-    eyebrow.textContent = `Sector ${sector.index} | ${sector.bossName}`;
+    eyebrow.textContent = `${formatActSectorLabel(sector.act)} | Sector ${sector.index} | ${sector.bossName}`;
 
     const title = document.createElement('h1');
     title.id = 'transition-title';
@@ -143,6 +144,7 @@ export class SectorTransitionScene implements Scene {
     return {
       seed: this.run.seed,
       entityCount: 0,
+      act: createActDebugState(sector.act),
       contractTheme: createContractThemeDebugState(this.contract),
       upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects),
       progression: {

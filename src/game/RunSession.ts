@@ -1,6 +1,7 @@
 import type { ItemId } from '../content/items';
 import type { ShipStats } from '../content/ships';
 import type { UnlockId } from '../content/unlocks';
+import type { ActId } from '../content/acts';
 import type { CombatRunResult } from './CombatState';
 import { applyItemHooks } from './ItemHooks';
 import type {
@@ -20,6 +21,12 @@ import type {
 
 export interface RouteHistoryEntry {
   readonly sectorIndex: number;
+  readonly actId?: ActId;
+  readonly actName?: string;
+  readonly actShortLabel?: string;
+  readonly actIndex?: number;
+  readonly actSectorIndex?: number;
+  readonly actSectorCount?: number;
   readonly routeKind: RouteKind;
   readonly routeLabel: string;
   readonly outcomeTitle?: string;
@@ -93,6 +100,12 @@ export function recordRouteChoice(
 ): void {
   session.routeHistory.push({
     sectorIndex: sector.index,
+    actId: sector.act.actId,
+    actName: sector.act.actName,
+    actShortLabel: sector.act.actShortLabel,
+    actIndex: sector.act.actIndex,
+    actSectorIndex: sector.act.actSectorIndex,
+    actSectorCount: sector.act.actSectorCount,
     routeKind: route.kind,
     routeLabel: route.label,
     outcomeTitle: outcome?.title,

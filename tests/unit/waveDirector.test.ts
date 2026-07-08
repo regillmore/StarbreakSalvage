@@ -218,6 +218,61 @@ describe('WaveDirector', () => {
   it('matches the known-seed objective snapshot', () => {
     expect(summarizeRunSkeleton(generateRunSkeleton('STARBREAK-SMOKE'))).toMatchInlineSnapshot(`
       {
+        "acts": [
+          {
+            "bossGate": "checkpoint",
+            "id": "act_outer_rim",
+            "index": 1,
+            "label": "Outer Rim Contract",
+            "pressureTier": "baseline",
+            "rewardTier": "standard",
+            "routeGrammar": [
+              "shop",
+              "elite",
+              "vault",
+              "repair",
+              "glitch",
+              "factionAmbush",
+            ],
+            "sectorIds": [
+              "sector_outer_debris_field",
+              "sector_trade_war_corridor",
+              "sector_bio_machine_bloom",
+            ],
+            "sectorRange": [
+              1,
+              3,
+            ],
+            "shortLabel": "Act I",
+            "transition": "interActJunction",
+          },
+          {
+            "bossGate": "finale",
+            "id": "act_core_descent",
+            "index": 2,
+            "label": "Core Descent",
+            "pressureTier": "elevated",
+            "rewardTier": "escalated",
+            "routeGrammar": [
+              "shop",
+              "elite",
+              "vault",
+              "repair",
+              "glitch",
+              "factionAmbush",
+            ],
+            "sectorIds": [
+              "sector_corporate_kill_grid",
+              "sector_core_wreck",
+            ],
+            "sectorRange": [
+              4,
+              5,
+            ],
+            "shortLabel": "Act II",
+            "transition": "victory",
+          },
+        ],
         "contracts": [
           {
             "rewardMultiplier": 1.01,
@@ -264,6 +319,14 @@ describe('WaveDirector', () => {
         ],
         "sectors": [
           {
+            "act": {
+              "id": "act_outer_rim",
+              "index": 1,
+              "pressureTier": "baseline",
+              "rewardTier": "standard",
+              "sectorCount": 3,
+              "sectorIndex": 1,
+            },
             "background": {
               "id": "background_outer_debris_field",
               "layerCount": 4,
@@ -321,6 +384,14 @@ describe('WaveDirector', () => {
             "sectorId": "sector_outer_debris_field",
           },
           {
+            "act": {
+              "id": "act_outer_rim",
+              "index": 1,
+              "pressureTier": "baseline",
+              "rewardTier": "standard",
+              "sectorCount": 3,
+              "sectorIndex": 2,
+            },
             "background": {
               "id": "background_trade_war_corridor",
               "layerCount": 4,
@@ -378,6 +449,14 @@ describe('WaveDirector', () => {
             "sectorId": "sector_trade_war_corridor",
           },
           {
+            "act": {
+              "id": "act_outer_rim",
+              "index": 1,
+              "pressureTier": "baseline",
+              "rewardTier": "standard",
+              "sectorCount": 3,
+              "sectorIndex": 3,
+            },
             "background": {
               "id": "background_bio_machine_bloom",
               "layerCount": 4,
@@ -441,6 +520,14 @@ describe('WaveDirector', () => {
             "sectorId": "sector_bio_machine_bloom",
           },
           {
+            "act": {
+              "id": "act_core_descent",
+              "index": 2,
+              "pressureTier": "elevated",
+              "rewardTier": "escalated",
+              "sectorCount": 2,
+              "sectorIndex": 1,
+            },
             "arena": {
               "approachSpeed": 58,
               "approachStartDistance": 2001.07,
@@ -510,6 +597,14 @@ describe('WaveDirector', () => {
             "sectorId": "sector_corporate_kill_grid",
           },
           {
+            "act": {
+              "id": "act_core_descent",
+              "index": 2,
+              "pressureTier": "elevated",
+              "rewardTier": "escalated",
+              "sectorCount": 2,
+              "sectorIndex": 2,
+            },
             "arena": {
               "approachSpeed": 58,
               "approachStartDistance": 2003.44,

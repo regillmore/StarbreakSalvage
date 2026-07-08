@@ -30,6 +30,7 @@ import {
   type RunSkeleton,
   type StartingContract
 } from '../game/Generation';
+import { createRunActSaveContext } from '../game/ActPlan';
 import { resolveSeedEntry } from '../game/SeedEntry';
 import {
   addCredits,
@@ -502,21 +503,30 @@ export class GameApp {
     const previousTriggers =
       previousCombat && previousCombat !== result ? previousCombat.itemTriggers : 0;
     const currentDistance = previousCombat === result ? 0 : result.distanceTraveled;
+    const sectorsCleared = getSaveRecordSectorCount(
+      this.currentRun,
+      this.runSession.currentSectorIndex,
+      this.runSession.routeHistory.length,
+      result.reason
+    );
+    const actSaveContext = createRunActSaveContext(this.currentRun.acts, sectorsCleared);
 
     return {
       seed: this.currentRun.seed,
       contractId: this.selectedContract.id,
       contractName: this.selectedContract.shipName,
       reason: result.reason,
+      actId: actSaveContext.actId,
+      actName: actSaveContext.actName,
+      actShortLabel: actSaveContext.actShortLabel,
+      actIndex: actSaveContext.actIndex,
+      actSectorIndex: actSaveContext.actSectorIndex,
+      actSectorCount: actSaveContext.actSectorCount,
+      actsCompleted: actSaveContext.actsCompleted,
       survivedSeconds: result.survivedSeconds,
       distanceTraveled: this.runSession.distanceTraveled + currentDistance,
       sectorLength: result.sectorLength,
-      sectorsCleared: getSaveRecordSectorCount(
-        this.currentRun,
-        this.runSession.currentSectorIndex,
-        this.runSession.routeHistory.length,
-        result.reason
-      ),
+      sectorsCleared,
       bossesDefeated: result.bossesDefeated + previousBosses,
       enemiesDestroyed: result.enemiesDestroyed + previousEnemies,
       creditsRecovered: Math.max(result.credits, this.runSession.credits),
@@ -672,6 +682,11 @@ export class GameApp {
         ? [`Upgrades ${debugState.upgradeEffects.join(', ')}`]
         : [];
     const progressionDebug = createProgressionDebugLines(debugState.progression);
+    const actDebug = debugState.act
+      ? [
+          `Act ${debugState.act.shortLabel} ${debugState.act.name} ${debugState.act.sectorIndex}/${debugState.act.sectorCount} ${debugState.act.rewardTier}/${debugState.act.pressureTier}`
+        ]
+      : [];
 
     this.debugOverlay.textContent = [
       `FPS ${Math.round(this.frameStats.fps)}`,
@@ -692,6 +707,7 @@ export class GameApp {
       ...themeDebug,
       ...upgradeDebug,
       ...progressionDebug,
+      ...actDebug,
       ...sectorDebug,
       ...sectorPacingDebug,
       ...hazardZoneDebug,

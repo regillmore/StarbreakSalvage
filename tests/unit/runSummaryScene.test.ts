@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { createDefaultSaveData, type SaveUpdateResult } from '../../src/core/saveData';
 import {
   buildSeedShareUrl,
+  formatActRouteHistory,
   formatDistanceSummary,
   formatRouteHistory,
   formatUnlockReasons,
@@ -113,6 +114,22 @@ describe('run summary details', () => {
         }
       ])
     ).toBe('S1 Shop: Coupon Ambush');
+    expect(
+      formatActRouteHistory([
+        {
+          sectorIndex: 1,
+          actId: 'act_outer_rim',
+          actName: 'Outer Rim Contract',
+          actShortLabel: 'Act I',
+          actIndex: 1,
+          actSectorIndex: 1,
+          actSectorCount: 3,
+          routeKind: 'shop',
+          routeLabel: 'Shop',
+          outcomeTitle: 'Coupon Ambush'
+        }
+      ])
+    ).toBe('Act I 1/3 S1 Shop: Coupon Ambush');
   });
 
   it('records physical route effects for run summaries', () => {

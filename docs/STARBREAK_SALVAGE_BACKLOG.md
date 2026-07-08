@@ -1582,7 +1582,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 082.
+- Implemented in work order 082. Act definitions now validate through content checks, generated runs expose deterministic Act I/Act II plans, each sector carries act context, route history preserves act handoff metadata, and save/summary/debug surfaces normalize or display act progress without changing the existing sector order.
 
 ### BA2 - Inter-act junction
 

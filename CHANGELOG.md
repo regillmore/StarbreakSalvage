@@ -60,6 +60,7 @@
 - Added deterministic loose currency scatter lanes for enemy, boss, destructible, route, hazard, landmark, and obstacle sources, with fixed-world pickup attraction, TTL cleanup, active count/value caps, HUD hint copy, and debug cap/value counters.
 - Added an environmental stress debug shortcut on `H` with active hazard-family labels, environment object/destructible/obstacle counts, loose currency cap state, and stress-budget telemetry.
 - Fixed Phase 8 environmental presentation so destructibles/obstacles derive live screen position from sector scroll, planned loose-currency lanes scroll in with the background, and dropped enemy/boss/destructible loot continues moving with the sector.
+- Added the first Phase 9 act model: validated Act I/Act II definitions, deterministic act plans on generated runs, act context on sectors/routes/transitions/summaries/debug, and backward-compatible act fields on last-run save records without changing the current five-sector play flow.
 
 ### Testing
 
@@ -86,6 +87,7 @@
 - Added loose currency tests for scatter determinism, pickup magnet/collection behavior, active value cap enforcement, debug summaries, and fresh/progressed save plus upgrade-progress accounting.
 - Added environmental stress tests for deterministic debug-pocket contents, budget summaries, and a narrow high-contrast Playwright smoke path using `ENVIRONMENT-STRESS-SMOKE`.
 - Added release-hardening regressions for scroll-world environment object collision/presentation, planned loose-currency scroll-in, and dropped enemy loot scrolling.
+- Added act-plan, content-validation, same-seed generation, route-handoff, save-normalization, and summary-formatting coverage for the Phase 9 act model.
 - Added wave director and objective completion tests, including known-seed objective snapshots and boss-gate coverage.
 - Added combat tests for special charge/use, bomb mitigation, graze detection, remapped special/bomb controls, and reduced-motion effect rendering.
 - Added validation and gameplay tests for ship stat contracts, weapon references, weapon patterns, heat/reload behavior, and starting economy.
@@ -151,6 +153,7 @@
 - Completed the Phase 8 environmental stress smoke pass for work order 079, leaving final environmental release hardening for work order 080.
 - Completed Phase 8 as an environmental systems playtest candidate with release docs, local check/browser/preview evidence, scroll-world object/loot hardening, and known environmental balance/readability/economy risks.
 - Concluded Phase 8 in planning docs and added the Phase 9 roadmap/work orders for a deterministic second act, inter-act junction, Act II route and sector pool, Act II pacing/objective variants, combat/environment escalation, economy tuning, second-act boss/finale, debug smoke, and release hardening.
+- Started Phase 9 implementation with the act model/run progression schema while leaving the inter-act junction and new Act II route/content vocabulary for work orders 083-084.
 - Started Phase 6 with a documented audit of the current 30-item catalog, repeated-reward risks, underrepresented archetypes, target item families, and bridge-effect follow-ups.
 - Formalized the Phase 6 item metadata contract and validation baseline before adding larger item batches.
 - Completed the first Phase 6 hook-surface expansion so work order 054 can add live catalog items against typed event payloads.

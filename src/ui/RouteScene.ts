@@ -1,6 +1,7 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene, SceneDebugState } from '../app/Scene';
 import type { RouteOption, RunSkeleton, StartingContract } from '../game/Generation';
+import { createActDebugState, formatActSectorLabel } from '../game/ActPlan';
 import { getCurrentSector, type RunSessionState } from '../game/RunSession';
 import { getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import type { InputAction } from '../systems/InputSystem';
@@ -37,7 +38,7 @@ export class RouteScene implements Scene {
 
     const eyebrow = document.createElement('p');
     eyebrow.className = 'eyebrow';
-    eyebrow.textContent = `Sector ${sector.index} Cleared | Credits ${this.session.credits} | Salvage ${this.session.salvage}`;
+    eyebrow.textContent = `${formatActSectorLabel(sector.act)} | Sector ${sector.index} Cleared | Credits ${this.session.credits} | Salvage ${this.session.salvage}`;
 
     const title = document.createElement('h1');
     title.id = 'route-title';
@@ -101,9 +102,12 @@ export class RouteScene implements Scene {
   }
 
   public getDebugState(): SceneDebugState {
+    const sector = getCurrentSector(this.run, this.session);
+
     return {
       seed: this.run.seed,
       entityCount: 0,
+      act: createActDebugState(sector.act),
       contractTheme: createContractThemeDebugState(this.contract),
       upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects)
     };

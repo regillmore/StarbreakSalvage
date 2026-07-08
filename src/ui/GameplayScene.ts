@@ -32,6 +32,7 @@ import type { BossId } from '../content/bosses';
 import type { SectorId } from '../content/sectors';
 import type { ShipStats } from '../content/ships';
 import { createRng } from '../core/rng';
+import { createActDebugState, formatActSectorLabel } from '../game/ActPlan';
 import { createBuildSynergyModel, formatBuildSynergyHud } from '../game/BuildSynergy';
 import { createEnemyRolePressureSummary } from '../game/EnemyRolePressure';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
@@ -308,7 +309,9 @@ export class GameplayScene implements Scene {
 
     const sector = document.createElement('p');
     sector.className = 'hud-pill';
-    sector.textContent = `Sector ${this.sectorIndex + 1} | ${this.getCurrentSectorName()}`;
+    sector.textContent = `${formatActSectorLabel(
+      this.getCurrentSector().act
+    )} | Sector ${this.sectorIndex + 1} | ${this.getCurrentSectorName()}`;
 
     const contract = document.createElement('p');
     contract.className = 'hud-pill';
@@ -702,6 +705,7 @@ export class GameplayScene implements Scene {
       enemyRoles: createEnemyRolePressureSummary(combatState),
       environmentStress: createEnvironmentStressDebugState(activeHazards, entityCounts),
       upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects),
+      act: createActDebugState(currentSector.act),
       progression: {
         runCredits: this.startingCredits + combatState.player.credits,
         runSalvage: this.startingSalvage + combatState.player.salvage

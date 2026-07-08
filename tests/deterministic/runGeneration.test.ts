@@ -31,6 +31,18 @@ describe('generateRunSkeleton', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
 
     expect(run.seed).toBe('STARBREAK-SMOKE');
+    expect(run.acts.map((act) => [act.id, act.shortLabel, act.sectorIds])).toEqual([
+      [
+        'act_outer_rim',
+        'Act I',
+        [
+          'sector_outer_debris_field',
+          'sector_trade_war_corridor',
+          'sector_bio_machine_bloom'
+        ]
+      ],
+      ['act_core_descent', 'Act II', ['sector_corporate_kill_grid', 'sector_core_wreck']]
+    ]);
     expect(run.contracts).toHaveLength(3);
     expect(new Set(run.contracts.map((contract) => contract.shipId)).size).toBe(3);
     expect(run.sectors.map((sector) => sector.sectorId)).toEqual([
@@ -55,8 +67,39 @@ describe('generateRunSkeleton', () => {
     }
 
     expect(run.sectors[0]?.objective.requiredEnemyKills).toBeGreaterThan(1);
+    expect(run.sectors[0]?.act.actShortLabel).toBe('Act I');
+    expect(run.sectors[2]?.act.actSectorIndex).toBe(3);
+    expect(run.sectors[3]?.act.actShortLabel).toBe('Act II');
+    expect(run.sectors[4]?.act.rewardTier).toBe('escalated');
     expect(run.sectors[3]?.objective.bossRequired).toBe(true);
     expect(run.sectors[4]?.objective.bossSpawnAtSeconds).toBe(5.55);
+  });
+
+  it('summarizes a deterministic two-act plan without changing existing sector order', () => {
+    const first = summarizeRunSkeleton(generateRunSkeleton('ACT2-GATE-SMOKE'));
+    const second = summarizeRunSkeleton(generateRunSkeleton('ACT2-GATE-SMOKE'));
+
+    expect(first).toEqual(second);
+    expect(first).toEqual(
+      expect.objectContaining({
+        acts: [
+          expect.objectContaining({
+            id: 'act_outer_rim',
+            sectorRange: [1, 3],
+            rewardTier: 'standard',
+            pressureTier: 'baseline',
+            transition: 'interActJunction'
+          }),
+          expect.objectContaining({
+            id: 'act_core_descent',
+            sectorRange: [4, 5],
+            rewardTier: 'escalated',
+            pressureTier: 'elevated',
+            transition: 'victory'
+          })
+        ]
+      })
+    );
   });
 
   it('can route a deterministic lunar surface sector into the middle lane', () => {

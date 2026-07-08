@@ -725,7 +725,7 @@ Exit criteria:
 - Same seed plus save state reproduces Act I/Act II structure and junction choices.
 - Older one-act save and summary records remain readable.
 
-Status: planned for work orders 082-083.
+Status: act model and run progression schema implemented by work order 082; inter-act junction behavior remains planned for work order 083.
 
 ### P9.3 - Act II Route, Pacing, And Objectives
 

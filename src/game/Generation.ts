@@ -18,6 +18,12 @@ import type { UnlockId } from '../content/unlocks';
 import type { UpgradeId } from '../content/upgrades';
 import { getWeaponById, type WeaponPatternId } from '../content/weapons';
 import { createRng, parseSeedLabel, type Rng, type WeightedChoice } from '../core/rng';
+import {
+  createActSectorContexts,
+  createRunActPlan,
+  type ActSectorContext,
+  type RunActPlan
+} from './ActPlan';
 import { createBackgroundPlan, type BackgroundPlan } from './BackgroundPlan';
 import { createBossArenaPlan, summarizeBossArenaPlan, type BossArenaPlan } from './BossArena';
 import { createSectorScrollPlan, type SectorScrollPlan } from './ScrollState';
@@ -70,6 +76,7 @@ export interface SectorRoute {
   readonly index: number;
   readonly sectorId: string;
   readonly sectorName: string;
+  readonly act: ActSectorContext;
   readonly bossId: BossId;
   readonly bossName: string;
   readonly bossFactionId: FactionId;
@@ -92,6 +99,7 @@ export interface RunSkeleton {
   readonly availableFactionIds: readonly FactionId[];
   readonly upgradeEffects: RunUpgradeEffects;
   readonly seedSurvey: string | null;
+  readonly acts: readonly RunActPlan[];
   readonly contracts: readonly StartingContract[];
   readonly sectors: readonly SectorRoute[];
 }
@@ -173,13 +181,16 @@ export function generateRunSkeleton(
     upgradeEffects
   );
   const sectorSequence = selectSectorSequence(seed);
+  const acts = createRunActPlan(sectorSequence);
+  const actContexts = createActSectorContexts(acts);
   const sectors = sectorSequence.map((sector, index) =>
     generateSectorRoute(
       sector,
       index + 1,
       rootRng.fork(`sector-${index + 1}`),
       unlockAccess,
-      upgradeEffects
+      upgradeEffects,
+      getGeneratedActContext(actContexts, index)
     )
   );
 
@@ -189,6 +200,7 @@ export function generateRunSkeleton(
     availableFactionIds: getAvailableFactionIds(unlockAccess),
     upgradeEffects,
     seedSurvey: createSeedSurveyText(upgradeEffects, sectors),
+    acts,
     contracts,
     sectors
   };
@@ -274,11 +286,12 @@ function generateSectorRoute(
   index: number,
   rng: Rng,
   unlockAccess: UnlockAccess,
-  upgradeEffects: RunUpgradeEffects
+  upgradeEffects: RunUpgradeEffects,
+  act: ActSectorContext
 ): SectorRoute {
   const bossCandidates = filterUnlockedBossCandidates(sector.bossCandidates, unlockAccess);
   const boss = getBossById(rng.choice(bossCandidates));
-  const routeOptions = generateRouteOptions(rng.fork('routes'), index, upgradeEffects);
+  const routeOptions = generateRouteOptions(rng.fork('routes'), index, upgradeEffects, act);
   const waveRng = rng.fork('major-waves');
   const majorWaves = waveRng.shuffle(sector.majorWavePool).slice(0, 3);
   const objective = createSectorObjectivePlan(sector, majorWaves);
@@ -307,6 +320,7 @@ function generateSectorRoute(
     index,
     sectorId: sector.id,
     sectorName: sector.name,
+    act,
     bossId: boss.id,
     bossName: boss.name,
     bossFactionId: boss.factionId,
@@ -327,9 +341,11 @@ function generateSectorRoute(
 function generateRouteOptions(
   rng: Rng,
   sectorIndex: number,
-  upgradeEffects: RunUpgradeEffects
+  upgradeEffects: RunUpgradeEffects,
+  act: ActSectorContext
 ): RouteOption[] {
-  const weightedRoutes: readonly WeightedChoice<RouteKind>[] = [
+  const allowedRouteKinds = new Set<RouteKind>(act.routeGrammar.allowedKinds);
+  const allWeightedRoutes: readonly WeightedChoice<RouteKind>[] = [
     { item: 'shop', weight: sectorIndex === 1 ? 2 : 4 },
     { item: 'elite', weight: 3 + sectorIndex },
     { item: 'vault', weight: sectorIndex >= 2 ? 3 : 1 },
@@ -337,8 +353,12 @@ function generateRouteOptions(
     { item: 'glitch', weight: sectorIndex >= 3 ? 2 : 1 },
     { item: 'factionAmbush', weight: sectorIndex >= 2 ? 3 : 1 }
   ];
+  const weightedRoutes = allWeightedRoutes.filter((route) => allowedRouteKinds.has(route.item));
+  const guaranteedRoutes = act.routeGrammar.guaranteedKinds.filter((kind): kind is RouteKind =>
+    allowedRouteKinds.has(kind)
+  );
   const routeKinds =
-    sectorIndex === 1
+    sectorIndex === 1 && guaranteedRoutes.includes('shop')
       ? [
           'shop' as const,
           ...selectUniqueWeighted(
@@ -474,7 +494,7 @@ function createSeedSurveyText(
     return null;
   }
 
-  return `Seed Map: ${openingSector.sectorName} | ${Math.floor(
+  return `Seed Map: ${openingSector.act.actShortLabel} ${openingSector.sectorName} | ${Math.floor(
     openingSector.scroll.length
   )}u | ${openingSector.routeOptions.map((route) => route.label).join('/')}`;
 }
@@ -495,6 +515,19 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
           }
         }
       : {}),
+    acts: run.acts.map((act) => ({
+      id: act.id,
+      index: act.index,
+      label: act.label,
+      shortLabel: act.shortLabel,
+      sectorRange: [act.startSectorIndex + 1, act.endSectorIndex + 1],
+      sectorIds: act.sectorIds,
+      routeGrammar: act.routeGrammar.allowedKinds,
+      rewardTier: act.rewardTier,
+      pressureTier: act.pressureTier,
+      bossGate: act.bossGate.kind,
+      transition: act.transition.kind
+    })),
     contracts: run.contracts.map((contract) => ({
       shipId: contract.shipId,
       sponsor: contract.sponsor,
@@ -512,6 +545,14 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
     })),
     sectors: run.sectors.map((sector) => ({
       sectorId: sector.sectorId,
+      act: {
+        id: sector.act.actId,
+        index: sector.act.actIndex,
+        sectorIndex: sector.act.actSectorIndex,
+        sectorCount: sector.act.actSectorCount,
+        rewardTier: sector.act.rewardTier,
+        pressureTier: sector.act.pressureTier
+      },
       bossId: sector.bossId,
       bossFactionId: sector.bossFactionId,
       bossPatternId: sector.bossPatternId,
@@ -543,4 +584,17 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
       ...(sector.arena ? { arena: summarizeBossArenaPlan(sector.arena) } : {})
     }))
   };
+}
+
+function getGeneratedActContext(
+  contexts: readonly ActSectorContext[],
+  sectorIndex: number
+): ActSectorContext {
+  const context = contexts[sectorIndex];
+
+  if (!context) {
+    throw new Error(`No act context exists for generated sector ${sectorIndex + 1}.`);
+  }
+
+  return context;
 }

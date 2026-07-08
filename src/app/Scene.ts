@@ -44,6 +44,18 @@ export interface SceneDebugState {
   readonly enemyRoles?: EnemyRolePressureSummary;
   readonly environmentStress?: EnvironmentStressDebugState;
   readonly upgradeEffects?: readonly string[];
+  readonly act?: {
+    readonly id: string;
+    readonly name: string;
+    readonly shortLabel: string;
+    readonly index: number;
+    readonly sectorIndex: number;
+    readonly sectorCount: number;
+    readonly rewardTier: string;
+    readonly pressureTier: string;
+    readonly bossGate: string;
+    readonly transition: string;
+  };
   readonly progression?: {
     readonly salvageBank?: number;
     readonly purchasedUpgrades?: number;

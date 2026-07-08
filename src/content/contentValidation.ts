@@ -1,6 +1,15 @@
-import { BOSSES, type BossDefinition } from './bosses';
 import { ACHIEVEMENTS, type AchievementDefinition } from './achievements';
+import {
+  ACT_BOSS_GATE_KINDS,
+  ACT_DEFINITIONS,
+  ACT_PRESSURE_TIERS,
+  ACT_REWARD_TIERS,
+  ACT_ROUTE_KINDS,
+  ACT_TRANSITION_KINDS,
+  type ActDefinition
+} from './acts';
 import { BACKGROUNDS, BACKGROUND_LAYER_KINDS, type BackgroundDefinition } from './backgrounds';
+import { BOSSES, type BossDefinition } from './bosses';
 import { FACTIONS, type FactionDefinition } from './factions';
 import {
   ENEMY_FORMATIONS,
@@ -109,6 +118,7 @@ import {
 export type ItemHookImplementationRegistry = Readonly<Partial<Record<ItemHook, readonly ItemId[]>>>;
 
 export interface ContentValidationInput {
+  readonly acts?: readonly ActDefinition[];
   readonly achievements?: readonly AchievementDefinition[];
   readonly backgrounds?: readonly BackgroundDefinition[];
   readonly bosses?: readonly BossDefinition[];
@@ -131,6 +141,7 @@ export interface ContentValidationInput {
 }
 
 export function validateContent(input: ContentValidationInput = {}): string[] {
+  const acts = input.acts ?? ACT_DEFINITIONS;
   const achievements = input.achievements ?? ACHIEVEMENTS;
   const backgrounds = input.backgrounds ?? BACKGROUNDS;
   const bosses = input.bosses ?? BOSSES;
@@ -216,6 +227,11 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const hazardZoneScheduleSources = new Set<string>(HAZARD_ZONE_SCHEDULE_SOURCES);
   const hazardZoneBehaviorKinds = new Set<string>(HAZARD_ZONE_BEHAVIOR_KINDS);
   const backgroundLayerKinds = new Set<string>(BACKGROUND_LAYER_KINDS);
+  const actRouteKinds = new Set<string>(ACT_ROUTE_KINDS);
+  const actRewardTiers = new Set<string>(ACT_REWARD_TIERS);
+  const actPressureTiers = new Set<string>(ACT_PRESSURE_TIERS);
+  const actBossGateKinds = new Set<string>(ACT_BOSS_GATE_KINDS);
+  const actTransitionKinds = new Set<string>(ACT_TRANSITION_KINDS);
   const unlockKinds = new Set(['ship', 'item', 'faction', 'bossPractice', 'music', 'challenge']);
   const upgradeCategories = new Set<string>(UPGRADE_CATEGORIES);
   const upgradeEffectKinds = new Set<string>(UPGRADE_EFFECT_KINDS);
@@ -226,6 +242,15 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const shipMountHints = new Set<string>(SHIP_WEAPON_MOUNT_HINTS);
   const shipHudThemeKeys = new Set<string>(SHIP_HUD_THEME_KEYS);
   const canonicalSectorIds = new Set<string>(SECTORS.map((sector) => sector.id));
+
+  validateActDefinitions(errors, acts, {
+    routeKinds: actRouteKinds,
+    rewardTiers: actRewardTiers,
+    pressureTiers: actPressureTiers,
+    bossGateKinds: actBossGateKinds,
+    transitionKinds: actTransitionKinds,
+    sectors: canonicalSectorIds
+  });
 
   if (items.length < 30) {
     errors.push('Content must define at least 30 items');
@@ -878,6 +903,158 @@ export function assertValidContent(input: ContentValidationInput = {}): void {
 
   if (errors.length > 0) {
     throw new Error(errors.join('\n'));
+  }
+}
+
+function validateActDefinitions(
+  errors: string[],
+  acts: readonly ActDefinition[],
+  registries: {
+    readonly routeKinds: ReadonlySet<string>;
+    readonly rewardTiers: ReadonlySet<string>;
+    readonly pressureTiers: ReadonlySet<string>;
+    readonly bossGateKinds: ReadonlySet<string>;
+    readonly transitionKinds: ReadonlySet<string>;
+    readonly sectors: ReadonlySet<string>;
+  }
+): void {
+  const actIds = new Set<string>();
+  const actOrders = new Set<number>();
+  const hasVictoryTransition = acts.some((act) => act.transition.kind === 'victory');
+
+  if (acts.length < 2) {
+    errors.push('Content must define at least two acts');
+  }
+
+  if (!hasVictoryTransition) {
+    errors.push('At least one act must transition to victory');
+  }
+
+  for (const act of acts) {
+    const owner = `Act ${act.id}`;
+
+    if (actIds.has(act.id)) {
+      errors.push(`Duplicate act id: ${act.id}`);
+    }
+
+    actIds.add(act.id);
+
+    if (actOrders.has(act.order)) {
+      errors.push(`Duplicate act order: ${act.order}`);
+    }
+
+    actOrders.add(act.order);
+    validatePositiveInteger(errors, owner, 'order', act.order);
+
+    if (!act.label.trim()) {
+      errors.push(`${owner} must have a label`);
+    }
+
+    if (!act.shortLabel.trim()) {
+      errors.push(`${owner} must have a short label`);
+    }
+
+    if (!act.summary.trim()) {
+      errors.push(`${owner} must have a summary`);
+    }
+
+    validatePositiveInteger(errors, `${owner} sector budget`, 'plannedSectors', act.sectorBudget.plannedSectors);
+    validatePositiveInteger(errors, `${owner} sector budget`, 'minSectors', act.sectorBudget.minSectors);
+    validatePositiveInteger(errors, `${owner} sector budget`, 'maxSectors', act.sectorBudget.maxSectors);
+
+    if (act.sectorBudget.minSectors > act.sectorBudget.maxSectors) {
+      errors.push(`${owner} sector budget must order min/max sectors`);
+    }
+
+    if (
+      act.sectorBudget.plannedSectors < act.sectorBudget.minSectors ||
+      act.sectorBudget.plannedSectors > act.sectorBudget.maxSectors
+    ) {
+      errors.push(`${owner} sector budget plannedSectors must sit between min and max`);
+    }
+
+    validateStringList(
+      errors,
+      owner,
+      'preferred sector',
+      act.preferredSectorIds,
+      registries.sectors
+    );
+
+    validateStringList(
+      errors,
+      `${owner} route grammar`,
+      'allowed route',
+      act.routeGrammar.allowedKinds,
+      registries.routeKinds
+    );
+
+    for (const guaranteedKind of act.routeGrammar.guaranteedKinds) {
+      if (!registries.routeKinds.has(guaranteedKind)) {
+        errors.push(`${owner} route grammar has invalid guaranteed route: ${guaranteedKind}`);
+      }
+    }
+
+    for (const duplicateGuaranteedKind of getDuplicateStrings(act.routeGrammar.guaranteedKinds)) {
+      errors.push(
+        `${owner} route grammar has duplicate guaranteed route: ${duplicateGuaranteedKind}`
+      );
+    }
+
+    if (act.routeGrammar.allowedKinds.length === 0) {
+      errors.push(`${owner} route grammar must allow at least one route`);
+    }
+
+    for (const guaranteedRoute of act.routeGrammar.guaranteedKinds) {
+      if (!act.routeGrammar.allowedKinds.includes(guaranteedRoute)) {
+        errors.push(
+          `${owner} route grammar guaranteed route must also be allowed: ${guaranteedRoute}`
+        );
+      }
+    }
+
+    if (!act.routeGrammar.summary.trim()) {
+      errors.push(`${owner} route grammar must have a summary`);
+    }
+
+    if (!registries.rewardTiers.has(act.rewardTier)) {
+      errors.push(`${owner} has invalid reward tier: ${act.rewardTier}`);
+    }
+
+    if (!registries.pressureTiers.has(act.pressureTier)) {
+      errors.push(`${owner} has invalid pressure tier: ${act.pressureTier}`);
+    }
+
+    if (!registries.bossGateKinds.has(act.bossGate.kind)) {
+      errors.push(`${owner} has invalid boss gate kind: ${act.bossGate.kind}`);
+    }
+
+    if (!act.bossGate.label.trim()) {
+      errors.push(`${owner} boss gate must have a label`);
+    }
+
+    if (!registries.transitionKinds.has(act.transition.kind)) {
+      errors.push(`${owner} has invalid transition kind: ${act.transition.kind}`);
+    }
+
+    if (!act.transition.label.trim()) {
+      errors.push(`${owner} transition must have a label`);
+    }
+
+    if (act.transition.kind === 'interActJunction') {
+      if (!act.transition.nextActId) {
+        errors.push(`${owner} inter-act transition must name nextActId`);
+      } else if (act.transition.nextActId === act.id) {
+        errors.push(`${owner} transition cannot target itself`);
+      } else if (
+        !actIds.has(act.transition.nextActId) &&
+        !acts.some((candidate) => candidate.id === act.transition.nextActId)
+      ) {
+        errors.push(
+          `${owner} transition references missing next act: ${act.transition.nextActId}`
+        );
+      }
+    }
   }
 }
 

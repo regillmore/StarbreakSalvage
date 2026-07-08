@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { ACHIEVEMENTS, type AchievementDefinition } from '../../src/content/achievements';
+import { ACT_DEFINITIONS, type ActDefinition } from '../../src/content/acts';
 import { BACKGROUNDS, type BackgroundDefinition } from '../../src/content/backgrounds';
 import { BOSSES, type BossDefinition } from '../../src/content/bosses';
 import { validateContent } from '../../src/content/contentValidation';
@@ -43,6 +44,7 @@ const baseUnlock = UNLOCKS[0] as UnlockDefinition;
 const baseUpgrade = UPGRADES[0] as UpgradeDefinition;
 const baseWeapon = WEAPONS[0] as WeaponDefinition;
 const baseAchievement = ACHIEVEMENTS[0] as AchievementDefinition;
+const baseAct = ACT_DEFINITIONS[0] as ActDefinition;
 
 describe('validateContent', () => {
   it('accepts the shipped item and reward content', () => {
@@ -59,12 +61,79 @@ describe('validateContent', () => {
     );
 
     expect(ITEMS).toHaveLength(60);
+    expect(ACT_DEFINITIONS).toHaveLength(2);
     expect(FACTIONS).toHaveLength(4);
     expect(BACKGROUNDS).toHaveLength(6);
     expect(ENVIRONMENT_OBJECT_DEFINITIONS.length).toBeGreaterThanOrEqual(8);
     expect(UPGRADES.length).toBeGreaterThanOrEqual(6);
     expect(representedArchetypes).toHaveLength(ITEM_ARCHETYPES.length);
     expect(representedArchetypes.length).toBeGreaterThanOrEqual(6);
+  });
+
+  it('rejects invalid act definitions', () => {
+    const errors = validateContent({
+      acts: [
+        baseAct,
+        {
+          ...baseAct,
+          label: 'Duplicate Act'
+        },
+        {
+          ...baseAct,
+          id: 'act_missing',
+          order: 0,
+          label: '',
+          shortLabel: '',
+          summary: '',
+          sectorBudget: {
+            plannedSectors: 5,
+            minSectors: 4,
+            maxSectors: 2
+          },
+          preferredSectorIds: ['sector_missing'],
+          routeGrammar: {
+            allowedKinds: [],
+            guaranteedKinds: ['shop', 'warp'],
+            summary: ''
+          },
+          rewardTier: 'mythic',
+          pressureTier: 'cruel',
+          bossGate: {
+            kind: 'raid',
+            label: '',
+            required: true
+          },
+          transition: {
+            kind: 'interActJunction',
+            label: '',
+            nextActId: 'act_missing'
+          }
+        } as unknown as ActDefinition
+      ]
+    });
+
+    expect(errors).toContain(`Duplicate act id: ${baseAct.id}`);
+    expect(errors).toContain('Act act_missing must have positive order');
+    expect(errors).toContain('Act act_missing must have a label');
+    expect(errors).toContain('Act act_missing must have a short label');
+    expect(errors).toContain('Act act_missing must have a summary');
+    expect(errors).toContain('Act act_missing sector budget must order min/max sectors');
+    expect(errors).toContain(
+      'Act act_missing sector budget plannedSectors must sit between min and max'
+    );
+    expect(errors).toContain('Act act_missing has invalid preferred sector: sector_missing');
+    expect(errors).toContain('Act act_missing route grammar must allow at least one route');
+    expect(errors).toContain('Act act_missing route grammar has invalid guaranteed route: warp');
+    expect(errors).toContain(
+      'Act act_missing route grammar guaranteed route must also be allowed: shop'
+    );
+    expect(errors).toContain('Act act_missing route grammar must have a summary');
+    expect(errors).toContain('Act act_missing has invalid reward tier: mythic');
+    expect(errors).toContain('Act act_missing has invalid pressure tier: cruel');
+    expect(errors).toContain('Act act_missing has invalid boss gate kind: raid');
+    expect(errors).toContain('Act act_missing boss gate must have a label');
+    expect(errors).toContain('Act act_missing transition must have a label');
+    expect(errors).toContain('Act act_missing transition cannot target itself');
   });
 
   it('rejects duplicate faction ids and missing boss faction references', () => {

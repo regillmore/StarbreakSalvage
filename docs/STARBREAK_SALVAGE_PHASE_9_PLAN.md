@@ -62,7 +62,7 @@ Exit criteria:
 - Existing one-act smoke paths remain valid during migration.
 - Debug and summaries expose act context without requiring private app state.
 
-Status: planned for work order 082.
+Status: implemented by work order 082. The generated run now carries a validated two-act schema and per-sector act context while preserving the existing five-sector play flow; inter-act junction behavior remains planned for work order 083.
 
 ### P9.3 - Inter-Act Junction
 

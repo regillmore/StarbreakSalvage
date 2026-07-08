@@ -273,7 +273,8 @@ Phase 2 should extend this checklist as systems become real. In addition to the 
 - [x] Hazard-zone director schedules validate known-seed determinism, route pressure, relief spacing, frame-catchup ordering, and boss-lock deferral after work order 074.
 - [x] Destructible/obstacle definitions validate collision shape, hull, damage interactions, objective policy, reward policy, chain behavior, placement constraints, cue metadata, debug labels, and fixed-world placement safety after work order 075.
 - [x] Loose currency scatter rules validate value tiers, drift/lifetime, pickup attraction, cap rules, route/sector bias, and economy accounting after work order 078.
-- [ ] Act definitions, inter-act junction choices, Act II route pools, Act II objectives, second-act boss/finale references, and act-aware economy pools validate once Phase 9 implementation lands.
+- [x] Act definitions validate after work order 082.
+- [ ] Inter-act junction choices, Act II route pools, Act II objectives, second-act boss/finale references, and act-aware economy pools validate as later Phase 9 implementation lands.
 
 ## Manual browser smoke matrix
 

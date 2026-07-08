@@ -1371,7 +1371,7 @@ Acceptance criteria:
 - Existing seed links, saves, summary records, and debug shortcuts remain backward compatible.
 - The implementation does not change viewport parity, environmental scroll-world behavior, or boss-release hazard fairness.
 
-Status: planned.
+Status: implemented; the run skeleton now has validated act definitions in `src/content/acts.ts`, deterministic act-plan helpers in `src/game/ActPlan.ts`, and public `acts` plus per-sector act context on generated runs. The current five-sector route is split without changing sector order or completion behavior: Act I covers sectors 1-3 and Act II covers sectors 4-5. Gameplay, route, sector-transition, run-summary, debug overlay, route-history, and save records now carry act id/name/index, act sector progress, reward tier, pressure tier, boss gate, and transition metadata. Legacy last-run summaries normalize missing act fields to unknown/zero values. Focused tests cover act planning, content validation, same-seed act plans, route handoff context, summary formatting, and save normalization.
 
 ## Work order 083 - Inter-act junction and midpoint refit choices
 
