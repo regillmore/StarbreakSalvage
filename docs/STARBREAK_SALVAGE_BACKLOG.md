@@ -1504,7 +1504,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 076.
+- Implemented in work order 076.
 
 ### AX3 - Obstacle lane safety
 
@@ -1516,7 +1516,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 077.
+- Implemented in work order 077. Placement now respects fixed-world safe lanes, player spawn and sector exit corridors, boss lock space, active hazard lanes, and enemy spawn reservations; runtime obstacle contact pushes the player back into valid space while applying schema contact damage through the existing player-hit path.
 
 ## Epic AY - Loose currency and salvage flow
 

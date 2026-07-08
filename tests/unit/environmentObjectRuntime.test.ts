@@ -98,6 +98,45 @@ describe('environment object runtime', () => {
     expect(state.stats.environmentObjectsDestroyed).toBe(1);
     expect(state.stats.enemiesDestroyed).toBe(0);
   });
+
+  it('pushes the player out of blocking obstacles and applies contact damage once', () => {
+    const plan = createPlan([{ definitionId: 'wreck_plate', x: 320, y: 562 }]);
+    const state = createState('ENV-CONTACT-SEED', plan);
+
+    updateCombatState(
+      state,
+      { movement: { x: 0, y: 0 }, fire: false, scrollDistance: 40 },
+      0,
+      bounds
+    );
+
+    expect(state.stats.damageTaken).toBe(1);
+    expect(playerOverlapsObject(state, state.environmentObjects[0])).toBe(false);
+    expect(state.stats.enemiesDestroyed).toBe(0);
+  });
+
+  it('keeps side-wall obstacle contact escapable inside the safe frame', () => {
+    const plan = createPlan([{ definitionId: 'lunar_rock_field', x: 92, y: 562 }]);
+    const state = createState('ENV-SIDE-CONTACT-SEED', plan);
+    state.player.x = 92;
+
+    updateCombatState(
+      state,
+      { movement: { x: 0, y: 0 }, fire: false, scrollDistance: 40 },
+      0,
+      bounds
+    );
+
+    expect(state.player.x).toBeGreaterThanOrEqual(bounds.padding + state.player.radius);
+    expect(state.player.x).toBeLessThanOrEqual(
+      bounds.width - bounds.padding - state.player.radius
+    );
+    expect(state.player.y).toBeGreaterThanOrEqual(bounds.padding + state.player.radius);
+    expect(state.player.y).toBeLessThanOrEqual(
+      bounds.height - bounds.padding - state.player.radius
+    );
+    expect(playerOverlapsObject(state, state.environmentObjects[0])).toBe(false);
+  });
 });
 
 function createState(
@@ -187,4 +226,29 @@ function sumPickupValue(pickups: readonly PickupState[], kind: PickupState['kind
   return pickups
     .filter((pickup) => pickup.kind === kind)
     .reduce((total, pickup) => total + pickup.value, 0);
+}
+
+function playerOverlapsObject(state: CombatState, object: CombatState['environmentObjects'][number] | undefined): boolean {
+  if (!object) {
+    return false;
+  }
+
+  if (object.collisionShape === 'circle') {
+    const dx = state.player.x - object.x;
+    const dy = state.player.y - object.y;
+    const radiusSum = state.player.radius + object.radius;
+
+    return dx * dx + dy * dy <= radiusSum * radiusSum;
+  }
+
+  const left = object.x - object.width / 2;
+  const right = object.x + object.width / 2;
+  const top = object.y - object.height / 2;
+  const bottom = object.y + object.height / 2;
+  const nearestX = Math.min(Math.max(state.player.x, left), right);
+  const nearestY = Math.min(Math.max(state.player.y, top), bottom);
+  const dx = state.player.x - nearestX;
+  const dy = state.player.y - nearestY;
+
+  return dx * dx + dy * dy <= state.player.radius * state.player.radius;
 }

@@ -6,7 +6,10 @@ import {
 } from '../../src/content/environmentObjects';
 import { COMBAT_ARENA_HEIGHT, COMBAT_ARENA_WIDTH } from '../../src/game/CombatGeometry';
 import {
+  ENVIRONMENT_OBJECT_ACTIVE_LEAD_DISTANCE,
+  ENVIRONMENT_OBJECT_EXIT_CLEAR_DISTANCE,
   createEnvironmentObjectPlacementPlan,
+  getEnvironmentObjectActiveDistanceWindow,
   getEnvironmentObjectOpenLaneWidth,
   validateEnvironmentObjectPlacementPlan
 } from '../../src/game/EnvironmentObjectPlacement';
@@ -61,7 +64,86 @@ describe('EnvironmentObjectPlacement', () => {
       expect(getEnvironmentObjectOpenLaneWidth(object)).toBeGreaterThanOrEqual(
         definition.placement.safeLaneWidth
       );
+      expect(object.distance - ENVIRONMENT_OBJECT_ACTIVE_LEAD_DISTANCE).toBeGreaterThanOrEqual(
+        definition.placement.avoidPlayerSpawnDistance
+      );
+      expect(object.distance).toBeLessThanOrEqual(
+        plan.scrollLength - ENVIRONMENT_OBJECT_EXIT_CLEAR_DISTANCE
+      );
     }
+  });
+
+  it('avoids hazards, enemy spawn lanes, boss locks, and sector exits', () => {
+    const plan = createEnvironmentObjectPlacementPlan({
+      sectorId: 'sector_trade_war_corridor',
+      sectorIndex: 3,
+      scrollLength: 2600,
+      rng: createRng('OBJECT-LAYOUT-SAFETY').fork('trade'),
+      targetCount: 5,
+      hazards: [
+        {
+          telegraphDistance: 760,
+          startDistance: 840,
+          endDistance: 980,
+          xRatio: 0.2,
+          widthRatio: 0.32
+        },
+        {
+          telegraphDistance: 1110,
+          startDistance: 1180,
+          endDistance: 1320,
+          xRatio: 0.8,
+          widthRatio: 0.28
+        }
+      ],
+      enemySpawnLanes: [
+        { distance: 1040, xRatio: 0.22, width: 130, label: 'left spawn' },
+        { distance: 1460, xRatio: 0.78, width: 130, label: 'right spawn' }
+      ],
+      bossArena: {
+        approachStartDistance: 1900,
+        lockDistance: 2130,
+        releaseDistance: 2600
+      }
+    });
+
+    expect(validateEnvironmentObjectPlacementPlan(plan)).toEqual([]);
+    expect(plan.objects.length).toBeGreaterThan(0);
+
+    for (const object of plan.objects) {
+      const activeWindow = getEnvironmentObjectActiveDistanceWindow(object);
+
+      expect(activeWindow.endDistance).toBeLessThan(1900);
+      expect(object.distance).toBeLessThanOrEqual(
+        plan.scrollLength - ENVIRONMENT_OBJECT_EXIT_CLEAR_DISTANCE
+      );
+      expect(overlapsReservedLane(object, 1040, 0.22, 130)).toBe(false);
+      expect(overlapsReservedLane(object, 1460, 0.78, 130)).toBe(false);
+      expect(object.layoutRole).toMatch(/lanePressure|cover|gate|reward/);
+    }
+  });
+
+  it('paces obstacle pressure across long sectors without using viewport dimensions', () => {
+    const plan = createEnvironmentObjectPlacementPlan({
+      sectorId: 'sector_lunar_surface',
+      sectorIndex: 5,
+      scrollLength: 3200,
+      rng: createRng('LONG-OBJECT-PACING').fork('surface'),
+      targetCount: 5
+    });
+
+    expect(validateEnvironmentObjectPlacementPlan(plan)).toEqual([]);
+    expect(plan.arenaWidth).toBe(COMBAT_ARENA_WIDTH);
+    expect(plan.arenaHeight).toBe(COMBAT_ARENA_HEIGHT);
+    expect(plan.objects.length).toBeGreaterThan(1);
+    expect(plan.objects[0]?.distance).toBeLessThan(
+      plan.objects[plan.objects.length - 1]?.distance ?? 0
+    );
+    expect(
+      plan.objects.every(
+        (object) => object.distance <= 3200 - ENVIRONMENT_OBJECT_EXIT_CLEAR_DISTANCE
+      )
+    ).toBe(true);
   });
 
   it('filters placement candidates by sector fit', () => {
@@ -118,3 +200,21 @@ describe('EnvironmentObjectPlacement', () => {
     ]);
   });
 });
+
+function overlapsReservedLane(
+  object: { readonly distance: number; readonly x: number; readonly width: number; readonly radius: number; readonly collisionShape: string },
+  laneDistance: number,
+  laneXRatio: number,
+  laneWidth: number
+): boolean {
+  if (Math.abs(object.distance - laneDistance) > 78) {
+    return false;
+  }
+
+  const footprint = object.collisionShape === 'circle' ? object.radius * 2 : object.width;
+  const objectLeft = object.x - footprint / 2;
+  const objectRight = object.x + footprint / 2;
+  const laneCenter = COMBAT_ARENA_WIDTH * laneXRatio;
+
+  return objectLeft <= laneCenter + laneWidth / 2 && objectRight >= laneCenter - laneWidth / 2;
+}

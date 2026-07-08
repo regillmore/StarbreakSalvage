@@ -343,6 +343,7 @@ const ENVIRONMENT_OBJECT_HAZARD_COOLDOWN_SECONDS = 0.35;
 const MAX_ENVIRONMENT_REWARD_PICKUPS = 3;
 const MAX_ENVIRONMENT_CHAIN_REACTIONS_PER_EVENT = 6;
 const MAX_ENVIRONMENT_FEEDBACK_EFFECTS = 80;
+const ENVIRONMENT_CONTACT_PUSH_EPSILON = 0.75;
 const DEFAULT_SHIP_STATS: ShipStats = {
   maxHull: 3,
   speed: 360,
@@ -1561,6 +1562,160 @@ function getEnvironmentObjectRect(object: EnvironmentObjectState): {
   };
 }
 
+function resolveEnvironmentObjectPlayerCollision(
+  state: CombatState,
+  safeFrame: CombatSafeFrame
+): void {
+  for (const object of getActiveEnvironmentObjects(state)) {
+    const definition = getEnvironmentObjectById(object.definitionId);
+
+    if (!definition.collision.blocksMovement) {
+      continue;
+    }
+
+    const collided =
+      object.collisionShape === 'circle'
+        ? pushPlayerOutOfCircleObject(state.player, object, safeFrame)
+        : pushPlayerOutOfRectObject(state.player, object, safeFrame);
+
+    if (collided && definition.damageInteraction.contactDamage > 0) {
+      damagePlayer(state, definition.damageInteraction.contactDamage);
+    }
+  }
+}
+
+function pushPlayerOutOfCircleObject(
+  player: PlayerState,
+  object: EnvironmentObjectState,
+  safeFrame: CombatSafeFrame
+): boolean {
+  const radiusSum = player.radius + object.radius;
+  const dx = player.x - object.x;
+  const dy = player.y - object.y;
+  const distanceSquared = dx * dx + dy * dy;
+
+  if (distanceSquared > radiusSum * radiusSum) {
+    return false;
+  }
+
+  const distance = Math.sqrt(distanceSquared);
+  const direction =
+    distance > 0.001
+      ? { x: dx / distance, y: dy / distance }
+      : { x: player.x < safeFrame.x + safeFrame.width / 2 ? -1 : 1, y: 0 };
+  const pushDistance =
+    (distance > 0.001 ? radiusSum - distance : radiusSum) + ENVIRONMENT_CONTACT_PUSH_EPSILON;
+
+  player.x = clamp(
+    player.x + direction.x * pushDistance,
+    safeFrame.x + player.radius,
+    safeFrame.x + safeFrame.width - player.radius
+  );
+  player.y = clamp(
+    player.y + direction.y * pushDistance,
+    safeFrame.y + player.radius,
+    safeFrame.y + safeFrame.height - player.radius
+  );
+
+  return true;
+}
+
+function pushPlayerOutOfRectObject(
+  player: PlayerState,
+  object: EnvironmentObjectState,
+  safeFrame: CombatSafeFrame
+): boolean {
+  const rect = getEnvironmentObjectRect(object);
+  const nearestX = clamp(player.x, rect.left, rect.right);
+  const nearestY = clamp(player.y, rect.top, rect.bottom);
+  const dx = player.x - nearestX;
+  const dy = player.y - nearestY;
+  const distanceSquared = dx * dx + dy * dy;
+
+  if (distanceSquared > player.radius * player.radius) {
+    return false;
+  }
+
+  if (distanceSquared > 0.001) {
+    const distance = Math.sqrt(distanceSquared);
+    const pushDistance = player.radius - distance + ENVIRONMENT_CONTACT_PUSH_EPSILON;
+
+    player.x = clamp(
+      player.x + (dx / distance) * pushDistance,
+      safeFrame.x + player.radius,
+      safeFrame.x + safeFrame.width - player.radius
+    );
+    player.y = clamp(
+      player.y + (dy / distance) * pushDistance,
+      safeFrame.y + player.radius,
+      safeFrame.y + safeFrame.height - player.radius
+    );
+
+    return true;
+  }
+
+  const pushes = [
+    { axis: 'x' as const, value: rect.left - player.radius - ENVIRONMENT_CONTACT_PUSH_EPSILON },
+    { axis: 'x' as const, value: rect.right + player.radius + ENVIRONMENT_CONTACT_PUSH_EPSILON },
+    { axis: 'y' as const, value: rect.top - player.radius - ENVIRONMENT_CONTACT_PUSH_EPSILON },
+    { axis: 'y' as const, value: rect.bottom + player.radius + ENVIRONMENT_CONTACT_PUSH_EPSILON }
+  ].sort(
+    (left, right) =>
+      getSafePushDistance(player, left, safeFrame) - getSafePushDistance(player, right, safeFrame)
+  );
+  const push = pushes.find((candidate) => canApplySafePush(player, candidate, safeFrame));
+
+  if (!push) {
+    return false;
+  }
+
+  if (push.axis === 'x') {
+    player.x = clamp(
+      push.value,
+      safeFrame.x + player.radius,
+      safeFrame.x + safeFrame.width - player.radius
+    );
+  } else {
+    player.y = clamp(
+      push.value,
+      safeFrame.y + player.radius,
+      safeFrame.y + safeFrame.height - player.radius
+    );
+  }
+
+  return true;
+}
+
+function canApplySafePush(
+  player: PlayerState,
+  push: { readonly axis: 'x' | 'y'; readonly value: number },
+  safeFrame: CombatSafeFrame
+): boolean {
+  if (push.axis === 'x') {
+    return (
+      push.value >= safeFrame.x + player.radius &&
+      push.value <= safeFrame.x + safeFrame.width - player.radius
+    );
+  }
+
+  return (
+    push.value >= safeFrame.y + player.radius &&
+    push.value <= safeFrame.y + safeFrame.height - player.radius
+  );
+}
+
+function getSafePushDistance(
+  player: PlayerState,
+  push: { readonly axis: 'x' | 'y'; readonly value: number },
+  safeFrame: CombatSafeFrame
+): number {
+  if (!canApplySafePush(player, push, safeFrame)) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  return Math.abs((push.axis === 'x' ? player.x : player.y) - push.value);
+}
+
 function sanitizeSectorLength(value: number | null | undefined): number | null {
   return Number.isFinite(value) && typeof value === 'number' && value > 0 ? value : null;
 }
@@ -1584,6 +1739,7 @@ function updatePlayer(
     safeFrame.y + player.radius,
     safeFrame.y + safeFrame.height - player.radius
   );
+  resolveEnvironmentObjectPlayerCollision(state, safeFrame);
   player.fireCooldown = Math.max(0, player.fireCooldown - dt);
   player.weaponOverheatSeconds = Math.max(0, player.weaponOverheatSeconds - dt);
   ventWeaponHeat(state, dt);

@@ -871,11 +871,23 @@ export class GameplayScene implements Scene {
     }
 
     const sector = this.getCurrentSector();
+    const features = this.getCurrentFeatures();
+    const wavePlan = this.getWavePlan();
     this.environmentObjectPlan = createEnvironmentObjectPlacementPlan({
       sectorId: sector.sectorId as SectorId,
       sectorIndex: this.sectorIndex,
       scrollLength: this.getCurrentScrollPlan().length,
-      rng: createRng(`${this.getCombatSeed()}:environment-objects`)
+      rng: createRng(`${this.getCombatSeed()}:environment-objects`),
+      hazards: features.hazards,
+      enemySpawnLanes: wavePlan.spawnSchedule
+        .filter((spawn) => spawn.atDistance !== null && spawn.atDistance !== undefined)
+        .map((spawn) => ({
+          distance: spawn.atDistance ?? 0,
+          xRatio: spawn.xRatio,
+          width: spawn.formationMemberCount ? 118 : 96,
+          label: spawn.waveLabel
+        })),
+      bossArena: this.getCurrentArenaPlan()
     });
 
     return this.environmentObjectPlan;

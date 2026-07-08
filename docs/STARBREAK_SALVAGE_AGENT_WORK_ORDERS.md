@@ -1252,7 +1252,7 @@ Acceptance criteria:
 - Placement helpers use the fixed 640x720 combat world and are independent from viewport size.
 - Fresh sectors retain enough open lanes for fair movement.
 
-Status: implemented; `src/content/environmentObjects.ts` now defines the first typed destructible/obstacle catalog for debris shard clusters, cargo pods, shield gates, lunar rock fields, surface pylons, wreck plates, salvage caches, and volatile canisters. Definitions include kind, family, sector/faction fit, collision footprint, durability, damage-source rules, objective policy, reward policy, chain behavior, fixed-world placement constraints, rendering/audio/VFX cues, accessibility variants, and debug labels. `src/game/EnvironmentObjectPlacement.ts` adds deterministic fixed-640x720 placement helpers with safe-lane validation, and content validation rejects invalid IDs, shapes, impossible sizes, bad objective/reward/chain policies, unsafe lane constraints, and missing cue metadata. Runtime destruction, rewards, chain reactions, and active debug counters are implemented in work order 076; obstacle navigation pressure remains planned for work order 077.
+Status: implemented; `src/content/environmentObjects.ts` now defines the first typed destructible/obstacle catalog for debris shard clusters, cargo pods, shield gates, lunar rock fields, surface pylons, wreck plates, salvage caches, and volatile canisters. Definitions include kind, family, sector/faction fit, collision footprint, durability, damage-source rules, objective policy, reward policy, chain behavior, fixed-world placement constraints, rendering/audio/VFX cues, accessibility variants, and debug labels. `src/game/EnvironmentObjectPlacement.ts` adds deterministic fixed-640x720 placement helpers with safe-lane validation, and content validation rejects invalid IDs, shapes, impossible sizes, bad objective/reward/chain policies, unsafe lane constraints, and missing cue metadata. Runtime destruction, rewards, chain reactions, active debug counters, lane-safe obstacle placement, and player contact navigation pressure are implemented through work orders 076-077.
 
 ## Work order 076 - Destructible interactions, rewards, and chain reactions
 
@@ -1286,7 +1286,7 @@ Acceptance criteria:
 - Obstacles cannot trap the player at sector exit, boss release, or route transition.
 - Debug summaries expose active obstacle/destructible counts for smoke.
 
-Status: planned.
+Status: implemented; environment object placement now consumes current hazard windows, enemy spawn lane reservations, and boss arena lock distances while keeping the fixed 640x720 combat world. Generated objects account for active lead/trail windows, player spawn corridors, sector exit corridors, boss approach/lock/release space, hazard lane overlays, enemy spawn lanes, per-definition safe-lane widths, and long-sector spacing. Runtime blocking objects now push the player out of their footprint and apply schema contact damage through the existing player-hit path, so obstacles shape lanes without becoming objective targets or viewport-scaled walls. Unit coverage pins deterministic placement, fixed-world parity, corridor/lock/lane avoidance, long-sector pacing, obstacle contact pushout, safe-frame bounds, and objective safety. `npm run check` passed locally.
 
 ## Work order 078 - Loose currency scatter, pickup attraction, and economy feedback
 

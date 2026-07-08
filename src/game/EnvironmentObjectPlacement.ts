@@ -14,6 +14,7 @@ export interface EnvironmentObjectPlacement {
   readonly id: string;
   readonly definitionId: EnvironmentObjectId;
   readonly collisionShape: EnvironmentObjectCollisionShape;
+  readonly layoutRole?: EnvironmentObjectLayoutRole;
   readonly distance: number;
   readonly x: number;
   readonly y: number;
@@ -23,6 +24,8 @@ export interface EnvironmentObjectPlacement {
   readonly safeLaneWidth: number;
   readonly debugLabel: string;
 }
+
+export type EnvironmentObjectLayoutRole = 'lanePressure' | 'cover' | 'gate' | 'reward';
 
 export interface EnvironmentObjectPlacementPlan {
   readonly sectorId: SectorId;
@@ -34,6 +37,27 @@ export interface EnvironmentObjectPlacementPlan {
   readonly objects: readonly EnvironmentObjectPlacement[];
 }
 
+export interface EnvironmentObjectHazardAvoidance {
+  readonly telegraphDistance: number;
+  readonly startDistance: number;
+  readonly endDistance: number;
+  readonly xRatio: number;
+  readonly widthRatio: number;
+}
+
+export interface EnvironmentObjectEnemyLaneReservation {
+  readonly distance: number;
+  readonly xRatio: number;
+  readonly width?: number;
+  readonly label?: string;
+}
+
+export interface EnvironmentObjectBossLockAvoidance {
+  readonly approachStartDistance: number;
+  readonly lockDistance: number;
+  readonly releaseDistance: number;
+}
+
 export interface EnvironmentObjectPlacementOptions {
   readonly sectorId: SectorId;
   readonly sectorIndex: number;
@@ -41,12 +65,24 @@ export interface EnvironmentObjectPlacementOptions {
   readonly rng: Rng;
   readonly definitions?: readonly EnvironmentObjectDefinition[];
   readonly targetCount?: number;
+  readonly hazards?: readonly EnvironmentObjectHazardAvoidance[];
+  readonly enemySpawnLanes?: readonly EnvironmentObjectEnemyLaneReservation[];
+  readonly bossArena?: EnvironmentObjectBossLockAvoidance | null;
 }
 
+export const ENVIRONMENT_OBJECT_ACTIVE_LEAD_DISTANCE = 180;
+export const ENVIRONMENT_OBJECT_ACTIVE_TRAIL_DISTANCE = 180;
+export const ENVIRONMENT_OBJECT_EXIT_CLEAR_DISTANCE = 280;
+
 const DEFAULT_TARGET_COUNT = 3;
-const MAX_PLACEMENT_ATTEMPTS = 40;
+const MAX_PLACEMENT_ATTEMPTS = 72;
 const OBJECT_Y_MIN = 96;
 const OBJECT_Y_MAX = 580;
+const HAZARD_OVERLAY_BUFFER_DISTANCE = 42;
+const HAZARD_OVERLAY_BUFFER_WIDTH = 18;
+const ENEMY_SPAWN_DISTANCE_BUFFER = 78;
+const ENEMY_SPAWN_LANE_WIDTH = 96;
+const BOSS_LOCK_BUFFER_DISTANCE = 120;
 
 export function createEnvironmentObjectPlacementPlan(
   options: EnvironmentObjectPlacementOptions
@@ -81,7 +117,7 @@ export function createEnvironmentObjectPlacementPlan(
 
     const placement = createPlacement(options, definition, objects.length, attempt);
 
-    if (!placement || !isPlacementSafe(placement, definition, objects)) {
+    if (!placement || !isPlacementSafe(options, placement, definition, objects)) {
       continue;
     }
 
@@ -111,6 +147,17 @@ export function getEnvironmentObjectOpenLaneWidth(
   const rightOpen = COMBAT_ARENA_WIDTH - COMBAT_ARENA_PADDING - (placement.x + footprint / 2);
 
   return roundPlacementValue(Math.max(leftOpen, rightOpen));
+}
+
+export function getEnvironmentObjectActiveDistanceWindow(
+  placement: Pick<EnvironmentObjectPlacement, 'distance'>
+): { readonly startDistance: number; readonly endDistance: number } {
+  return {
+    startDistance: roundPlacementValue(
+      Math.max(0, placement.distance - ENVIRONMENT_OBJECT_ACTIVE_LEAD_DISTANCE)
+    ),
+    endDistance: roundPlacementValue(placement.distance + ENVIRONMENT_OBJECT_ACTIVE_TRAIL_DISTANCE)
+  };
 }
 
 export function validateEnvironmentObjectPlacementPlan(
@@ -147,6 +194,14 @@ export function validateEnvironmentObjectPlacementPlan(
 
     if (getEnvironmentObjectOpenLaneWidth(object) < definition.placement.safeLaneWidth) {
       errors.push(`Environment object placement ${object.id} leaves an unsafe lane`);
+    }
+
+    if (object.distance < definition.placement.avoidPlayerSpawnDistance) {
+      errors.push(`Environment object placement ${object.id} blocks the player spawn corridor`);
+    }
+
+    if (object.distance > plan.scrollLength - ENVIRONMENT_OBJECT_EXIT_CLEAR_DISTANCE) {
+      errors.push(`Environment object placement ${object.id} blocks the sector exit corridor`);
     }
   }
 
@@ -195,8 +250,9 @@ function createPlacement(
     COMBAT_ARENA_WIDTH - COMBAT_ARENA_PADDING - halfWidth,
     COMBAT_ARENA_WIDTH * band.maxXRatio
   );
+  const distanceBounds = getPlacementDistanceBounds(options, definition);
 
-  if (maxX < minX) {
+  if (maxX < minX || distanceBounds.maxDistance < distanceBounds.minDistance) {
     return null;
   }
 
@@ -207,8 +263,8 @@ function createPlacement(
   const distance = roundPlacementValue(
     clamp(
       options.scrollLength * distanceRatio,
-      definition.placement.avoidPlayerSpawnDistance,
-      Math.max(definition.placement.avoidPlayerSpawnDistance, options.scrollLength - 120)
+      distanceBounds.minDistance,
+      distanceBounds.maxDistance
     )
   );
   const x = roundPlacementValue(options.rng.int(Math.round(minX), Math.round(maxX)));
@@ -223,6 +279,7 @@ function createPlacement(
     id: `${options.sectorId}_env_${definition.id}_${placementIndex + 1}_${attempt + 1}`,
     definitionId: definition.id,
     collisionShape: definition.collision.shape,
+    layoutRole: getLayoutRole(definition),
     distance,
     x,
     y,
@@ -240,6 +297,7 @@ function createPlacement(
 }
 
 function isPlacementSafe(
+  options: EnvironmentObjectPlacementOptions,
   placement: EnvironmentObjectPlacement,
   definition: EnvironmentObjectDefinition,
   existing: readonly EnvironmentObjectPlacement[]
@@ -248,9 +306,156 @@ function isPlacementSafe(
     return false;
   }
 
-  return existing.every(
-    (object) => Math.abs(object.distance - placement.distance) >= definition.placement.minSpacing
+  if (
+    !existing.every(
+      (object) => Math.abs(object.distance - placement.distance) >= definition.placement.minSpacing
+    )
+  ) {
+    return false;
+  }
+
+  if (overlapsBossLock(placement, definition, options.bossArena)) {
+    return false;
+  }
+
+  if (overlapsHazardLane(placement, options.hazards ?? [])) {
+    return false;
+  }
+
+  return !overlapsEnemySpawnLane(placement, options.enemySpawnLanes ?? []);
+}
+
+function getPlacementDistanceBounds(
+  options: EnvironmentObjectPlacementOptions,
+  definition: EnvironmentObjectDefinition
+): { readonly minDistance: number; readonly maxDistance: number } {
+  const minDistance = roundPlacementValue(
+    Math.max(
+      definition.placement.avoidPlayerSpawnDistance + ENVIRONMENT_OBJECT_ACTIVE_LEAD_DISTANCE,
+      options.scrollLength * definition.placement.minDistanceRatio
+    )
   );
+  const exitClearDistance = Math.max(
+    ENVIRONMENT_OBJECT_EXIT_CLEAR_DISTANCE,
+    ENVIRONMENT_OBJECT_ACTIVE_TRAIL_DISTANCE
+  );
+  const definitionMaxDistance = options.scrollLength * definition.placement.maxDistanceRatio;
+  const exitMaxDistance = Math.max(0, options.scrollLength - exitClearDistance);
+  const bossArena = options.bossArena;
+  const bossMaxDistance =
+    bossArena === null || bossArena === undefined
+      ? Number.POSITIVE_INFINITY
+      : bossArena.approachStartDistance -
+        Math.max(definition.placement.avoidBossLockDistance, BOSS_LOCK_BUFFER_DISTANCE);
+
+  return {
+    minDistance,
+    maxDistance: roundPlacementValue(
+      Math.min(definitionMaxDistance, exitMaxDistance, bossMaxDistance)
+    )
+  };
+}
+
+function getLayoutRole(definition: EnvironmentObjectDefinition): EnvironmentObjectLayoutRole {
+  if (definition.collision.shape === 'gate') {
+    return 'gate';
+  }
+
+  if (definition.reward.policy !== 'none') {
+    return definition.kind === 'obstacle' ? 'cover' : 'reward';
+  }
+
+  return definition.kind === 'obstacle' ? 'lanePressure' : 'cover';
+}
+
+function overlapsBossLock(
+  placement: EnvironmentObjectPlacement,
+  definition: EnvironmentObjectDefinition,
+  bossArena: EnvironmentObjectBossLockAvoidance | null | undefined
+): boolean {
+  if (!bossArena) {
+    return false;
+  }
+
+  const activeWindow = getEnvironmentObjectActiveDistanceWindow(placement);
+  const avoidStart = Math.max(
+    0,
+    bossArena.approachStartDistance -
+      Math.max(definition.placement.avoidBossLockDistance, BOSS_LOCK_BUFFER_DISTANCE)
+  );
+  const avoidEnd = bossArena.releaseDistance + ENVIRONMENT_OBJECT_EXIT_CLEAR_DISTANCE;
+
+  return rangesOverlap(activeWindow.startDistance, activeWindow.endDistance, avoidStart, avoidEnd);
+}
+
+function overlapsHazardLane(
+  placement: EnvironmentObjectPlacement,
+  hazards: readonly EnvironmentObjectHazardAvoidance[]
+): boolean {
+  const activeWindow = getEnvironmentObjectActiveDistanceWindow(placement);
+  const placementRect = getPlacementHorizontalRect(placement, HAZARD_OVERLAY_BUFFER_WIDTH);
+
+  return hazards.some((hazard) => {
+    const hazardStart = Math.max(0, hazard.telegraphDistance - HAZARD_OVERLAY_BUFFER_DISTANCE);
+    const hazardEnd = hazard.endDistance + HAZARD_OVERLAY_BUFFER_DISTANCE;
+
+    if (!rangesOverlap(activeWindow.startDistance, activeWindow.endDistance, hazardStart, hazardEnd)) {
+      return false;
+    }
+
+    const hazardWidth = COMBAT_ARENA_WIDTH * clamp(hazard.widthRatio, 0, 1);
+    const hazardCenter = COMBAT_ARENA_WIDTH * clamp(hazard.xRatio, 0, 1);
+    const hazardRect = {
+      left: hazardCenter - hazardWidth / 2 - HAZARD_OVERLAY_BUFFER_WIDTH,
+      right: hazardCenter + hazardWidth / 2 + HAZARD_OVERLAY_BUFFER_WIDTH
+    };
+
+    return placementRect.left <= hazardRect.right && placementRect.right >= hazardRect.left;
+  });
+}
+
+function overlapsEnemySpawnLane(
+  placement: EnvironmentObjectPlacement,
+  enemySpawnLanes: readonly EnvironmentObjectEnemyLaneReservation[]
+): boolean {
+  const placementRect = getPlacementHorizontalRect(placement, ENEMY_SPAWN_LANE_WIDTH * 0.18);
+
+  return enemySpawnLanes.some((lane) => {
+    if (Math.abs(placement.distance - lane.distance) > ENEMY_SPAWN_DISTANCE_BUFFER) {
+      return false;
+    }
+
+    const laneWidth = lane.width ?? ENEMY_SPAWN_LANE_WIDTH;
+    const laneCenter = COMBAT_ARENA_WIDTH * clamp(lane.xRatio, 0, 1);
+    const laneRect = {
+      left: laneCenter - laneWidth / 2,
+      right: laneCenter + laneWidth / 2
+    };
+
+    return placementRect.left <= laneRect.right && placementRect.right >= laneRect.left;
+  });
+}
+
+function getPlacementHorizontalRect(
+  placement: EnvironmentObjectPlacement,
+  margin = 0
+): { readonly left: number; readonly right: number } {
+  const footprint =
+    placement.collisionShape === 'circle' ? placement.radius * 2 : placement.width;
+
+  return {
+    left: placement.x - footprint / 2 - margin,
+    right: placement.x + footprint / 2 + margin
+  };
+}
+
+function rangesOverlap(
+  leftStart: number,
+  leftEnd: number,
+  rightStart: number,
+  rightEnd: number
+): boolean {
+  return leftStart <= rightEnd && leftEnd >= rightStart;
 }
 
 function roundPlacementValue(value: number): number {

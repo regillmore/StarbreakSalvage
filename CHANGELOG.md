@@ -56,6 +56,7 @@
 - Added a richer hazard-zone behavior layer for existing hazards, with sweep, pulse, drift, collapse, shadow, curtain, dust-front, and static-gate presentation/collision patterns that stay inside fixed combat-world windows.
 - Added deterministic hazard-zone director scheduling so sector pacing, route pressure, relief windows, formation clusters, lunar context, and boss locks shape paced hazard windows with debug and run-summary context.
 - Added a Phase 8 destructible/obstacle content schema with original debris, cargo, shield, rock, pylon, wreck, cache, and volatile object families plus fixed-world placement helpers.
+- Added lane-safe obstacle placement and runtime contact pushout so environmental objects respect spawn/exit corridors, boss locks, hazards, enemy lanes, and fixed-world movement parity.
 
 ### Testing
 
