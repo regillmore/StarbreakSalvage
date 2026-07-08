@@ -62,7 +62,7 @@ Exit criteria:
 - Existing one-act smoke paths remain valid during migration.
 - Debug and summaries expose act context without requiring private app state.
 
-Status: implemented by work order 082. The generated run now carries a validated two-act schema and per-sector act context while preserving the existing five-sector play flow; inter-act junction behavior remains planned for work order 083.
+Status: implemented by work orders 082-083. The generated run now carries a validated two-act schema and per-sector act context with a ten-sector target route: Act I covers sectors 1-5 and Act II covers sectors 6-10 while existing sector content is reused until the Act II route pool is expanded.
 
 ### P9.3 - Inter-Act Junction
 
@@ -78,7 +78,7 @@ Exit criteria:
 - The player can continue, pause, abandon, and recover gracefully from the junction.
 - Act II cannot start with hidden hazards, unfair spawn overlap, or broken resource accounting.
 
-Status: planned for work order 083.
+Status: implemented by work order 083. Completing Act I now opens a deterministic midpoint refit scene before Act II launch. Choices are seeded from run seed, save fingerprint, and carried resources; the selected refit records resource deltas and Act II effects for route intel, shop discount, reward choice/bias, salvage, hull patch, or risk. Transition screens, route cards, shops, rewards, summaries, and debug overlays expose the applied junction state, and keyboard/back/pause flows remain safe.
 
 ### P9.4 - Act II Sector Route Pool
 

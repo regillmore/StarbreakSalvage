@@ -30,18 +30,25 @@ import {
   type RunSkeleton,
   type StartingContract
 } from '../game/Generation';
-import { createRunActSaveContext } from '../game/ActPlan';
+import {
+  createRunActSaveContext,
+  getInterActTransitionHandoff,
+  type RunActPlan
+} from '../game/ActPlan';
+import { createInterActJunctionChoices } from '../game/InterActJunction';
 import { resolveSeedEntry } from '../game/SeedEntry';
 import {
   addCredits,
   addItemToSession,
   advanceSector,
+  applyInterActChoice,
   applyRouteOutcome,
   createRunSession,
   getCombatModifiersForSector,
   getCurrentSector,
   getEffectiveShipStats,
   getRouteCreditReward,
+  hasInterActChoiceForSourceAct,
   incrementShopRerollCount,
   recordSectorCombatResult,
   spendCredits,
@@ -56,6 +63,7 @@ import { getFeedbackShakeIntensity, type CombatFeedbackCue } from '../systems/Co
 import { InputSystem } from '../systems/InputSystem';
 import { ContractSelectScene } from '../ui/ContractSelectScene';
 import { GameplayScene } from '../ui/GameplayScene';
+import { InterActJunctionScene } from '../ui/InterActJunctionScene';
 import { MainMenuScene } from '../ui/MainMenuScene';
 import { PauseScene } from '../ui/PauseScene';
 import { RewardScene } from '../ui/RewardScene';
@@ -420,12 +428,60 @@ export class GameApp {
   }
 
   private advanceAfterReward(): void {
+    const previousSectorIndex = this.runSession.currentSectorIndex;
+
     if (!advanceSector(this.currentRun, this.runSession)) {
       this.showRunSummary(this.lastRunResult ?? undefined);
       return;
     }
 
+    const handoff = getInterActTransitionHandoff(
+      this.currentRun.acts,
+      previousSectorIndex,
+      this.runSession.currentSectorIndex
+    );
+
+    if (handoff && !hasInterActChoiceForSourceAct(this.runSession, handoff.sourceAct.id)) {
+      this.showInterActJunction(handoff.sourceAct, handoff.targetAct);
+      return;
+    }
+
     this.showSectorTransition();
+  }
+
+  private showInterActJunction(
+    sourceAct: RunActPlan,
+    targetAct: RunActPlan
+  ): void {
+    const choices = createInterActJunctionChoices({
+      runSeed: this.currentRun.seed,
+      sourceAct,
+      targetAct,
+      credits: this.runSession.credits,
+      salvage: this.runSession.salvage,
+      hullPatch: this.runSession.hullPatch,
+      curse: this.runSession.curse,
+      saveFingerprint: createSaveFingerprint(this.saveData)
+    });
+
+    this.sceneManager.switchTo(
+      new InterActJunctionScene(
+        this.uiRoot,
+        this.currentRun,
+        this.runSession,
+        this.selectedContract,
+        sourceAct,
+        targetAct,
+        choices,
+        (choice) => {
+          applyInterActChoice(this.runSession, choice);
+          this.showSectorTransition();
+        },
+        () => {
+          this.abandonAtInterActJunction();
+        }
+      )
+    );
   }
 
   private showSectorTransition(): void {
@@ -460,6 +516,24 @@ export class GameApp {
     );
   }
 
+  private abandonAtInterActJunction(): void {
+    this.showRunSummary({
+      reason: 'abandoned',
+      survivedSeconds: this.lastRunResult?.survivedSeconds ?? 0,
+      distanceTraveled: 0,
+      sectorLength: null,
+      credits: this.runSession.credits,
+      salvage: this.runSession.salvage,
+      enemiesDestroyed: 0,
+      bossesDefeated: 0,
+      shotsFired: 0,
+      pickupsCollected: 0,
+      damageTaken: 0,
+      itemTriggers: 0,
+      itemNames: []
+    });
+  }
+
   private showRunSummary(result?: CombatRunResult): void {
     this.lastRunResult = result ?? this.lastRunResult;
     this.lastSaveUpdate = this.saveRunSummary(this.lastRunResult);
@@ -471,6 +545,7 @@ export class GameApp {
         this.lastRunResult,
         this.runSession.routeHistory,
         this.runSession.routeOutcomes,
+        this.runSession.interActChoices,
         this.runSession.itemInstances,
         this.saveData,
         this.lastSaveUpdate,
@@ -687,6 +762,13 @@ export class GameApp {
           `Act ${debugState.act.shortLabel} ${debugState.act.name} ${debugState.act.sectorIndex}/${debugState.act.sectorCount} ${debugState.act.rewardTier}/${debugState.act.pressureTier}`
         ]
       : [];
+    const interActDebug = debugState.interAct
+      ? [
+          `Junction ${debugState.interAct.targetAct} choices ${debugState.interAct.choices.join('/')}${
+            debugState.interAct.applied ? ` | ${debugState.interAct.applied}` : ''
+          }`
+        ]
+      : [];
 
     this.debugOverlay.textContent = [
       `FPS ${Math.round(this.frameStats.fps)}`,
@@ -708,6 +790,7 @@ export class GameApp {
       ...upgradeDebug,
       ...progressionDebug,
       ...actDebug,
+      ...interActDebug,
       ...sectorDebug,
       ...sectorPacingDebug,
       ...hazardZoneDebug,
@@ -825,6 +908,14 @@ function createProgressionDebugLines(
     ...(saveParts.length > 0 ? [`Progress ${saveParts.join(' ')}`] : []),
     ...(runParts.length > 0 ? [`Run ${runParts.join(' ')}`] : [])
   ];
+}
+
+function createSaveFingerprint(saveData: SaveData): string {
+  return [
+    saveData.unlockedIds.join(','),
+    saveData.purchasedUpgradeIds.join(','),
+    saveData.achievementIds.join(',')
+  ].join('|');
 }
 
 function getInitialSeed(ownerWindow: Window): string | null {

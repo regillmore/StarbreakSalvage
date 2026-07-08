@@ -115,7 +115,7 @@ describe('HazardZoneDirector', () => {
   });
 
   it('defers director hazards hidden by boss locks until a fresh post-lock telegraph', () => {
-    const directed = getDirectedFinalBossSector('BOSS-HAZARD-DIRECTOR');
+    const directed = getDirectedBossSectorWithDeferredHazard('BOSS-HAZARD-DIRECTOR');
     const deferred = directed.director.entries.find(
       (entry) => entry.source === 'director' && entry.deferredForBossLock
     );
@@ -145,7 +145,7 @@ function getDirectedSectorAfterRoute(seed: string, sourceSectorIndex: number, ki
   return createDirectedCurrentSector(run, session);
 }
 
-function getDirectedFinalBossSector(seed: string) {
+function getDirectedBossSectorWithDeferredHazard(seed: string) {
   const run = generateRunSkeleton(seed);
   const contract = run.contracts[0];
 
@@ -154,9 +154,24 @@ function getDirectedFinalBossSector(seed: string) {
   }
 
   const session = createRunSession(run, contract);
-  session.currentSectorIndex = run.sectors.length - 1;
 
-  return createDirectedCurrentSector(run, session);
+  for (let index = 0; index < run.sectors.length; index += 1) {
+    if (!run.sectors[index]?.arena) {
+      continue;
+    }
+
+    session.currentSectorIndex = index;
+    const directed = createDirectedCurrentSector(run, session);
+    const deferred = directed.director.entries.some(
+      (entry) => entry.source === 'director' && entry.deferredForBossLock
+    );
+
+    if (deferred) {
+      return directed;
+    }
+  }
+
+  throw new Error('Expected at least one boss sector with a deferred director hazard.');
 }
 
 function createDirectedCurrentSector(

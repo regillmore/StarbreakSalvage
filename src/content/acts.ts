@@ -79,9 +79,9 @@ export const ACT_DEFINITIONS: readonly ActDefinition[] = [
     shortLabel: 'Act I',
     summary: 'Opening salvage lanes where a build takes shape before the deeper descent.',
     sectorBudget: {
-      plannedSectors: 3,
-      minSectors: 2,
-      maxSectors: 4
+      plannedSectors: 5,
+      minSectors: 5,
+      maxSectors: 5
     },
     preferredSectorIds: [
       'sector_outer_debris_field',
@@ -114,9 +114,9 @@ export const ACT_DEFINITIONS: readonly ActDefinition[] = [
     shortLabel: 'Act II',
     summary: 'Deeper-sector pressure where routes, rewards, hazards, and bosses tighten.',
     sectorBudget: {
-      plannedSectors: 2,
-      minSectors: 1,
-      maxSectors: 4
+      plannedSectors: 5,
+      minSectors: 5,
+      maxSectors: 5
     },
     preferredSectorIds: ['sector_corporate_kill_grid', 'sector_core_wreck'],
     routeGrammar: {

@@ -17,7 +17,7 @@ describe('RunOutcome', () => {
   it('counts all sectors for victory save records', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
 
-    expect(getSaveRecordSectorCount(run, 4, 4, 'victory')).toBe(5);
-    expect(getSaveRecordSectorCount(run, 4, 4, 'sectorComplete')).toBe(4);
+    expect(getSaveRecordSectorCount(run, 9, 9, 'victory')).toBe(10);
+    expect(getSaveRecordSectorCount(run, 9, 9, 'sectorComplete')).toBe(9);
   });
 });

@@ -140,7 +140,7 @@ describe('sector route, reward, and shop loop generation', () => {
         actId: 'act_outer_rim',
         actShortLabel: 'Act I',
         actSectorIndex: 1,
-        actSectorCount: 3,
+        actSectorCount: 5,
         routeKind: 'shop'
       })
     ]);

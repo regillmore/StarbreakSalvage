@@ -56,6 +56,11 @@ export interface SceneDebugState {
     readonly bossGate: string;
     readonly transition: string;
   };
+  readonly interAct?: {
+    readonly targetAct: string;
+    readonly choices: readonly string[];
+    readonly applied: string | null;
+  };
   readonly progression?: {
     readonly salvageBank?: number;
     readonly purchasedUpgrades?: number;

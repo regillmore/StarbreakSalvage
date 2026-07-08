@@ -109,7 +109,7 @@ describe('run upgrade effects', () => {
     expect(freshRun.contracts).toHaveLength(3);
     expect(freshRun.upgradeEffects.activeUpgradeIds).toEqual([]);
     expect(freshRun.seedSurvey).toBeNull();
-    expect(freshRun.sectors).toHaveLength(5);
+    expect(freshRun.sectors).toHaveLength(10);
     expect(freshRun.sectors[0]?.routeOptions.every((route) => !route.intelHint)).toBe(true);
     expect(createRunSession(freshRun, contract).itemInstances.length).toBeGreaterThan(0);
   });

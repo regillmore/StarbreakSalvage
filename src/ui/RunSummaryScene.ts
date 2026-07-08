@@ -12,6 +12,7 @@ import {
 import { createBuildSynergyModel, formatBuildSynergySummary } from '../game/BuildSynergy';
 import type { CombatRunResult } from '../game/CombatState';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
+import { formatInterActHistory, type InterActChoiceRecord } from '../game/InterActJunction';
 import type { RouteHistoryEntry } from '../game/RunSession';
 import type { AppliedRouteOutcome } from '../game/RouteEvents';
 import type { ItemInstance } from '../game/Rewards';
@@ -42,6 +43,7 @@ export class RunSummaryScene implements Scene {
     private readonly result: CombatRunResult | null,
     private readonly routeHistory: readonly RouteHistoryEntry[],
     private readonly routeOutcomes: readonly AppliedRouteOutcome[],
+    private readonly interActChoices: readonly InterActChoiceRecord[],
     private readonly itemInstances: readonly ItemInstance[],
     private readonly saveData: SaveData,
     private readonly saveUpdate: SaveUpdateResult | null,
@@ -91,6 +93,7 @@ export class RunSummaryScene implements Scene {
       ['Routes', formatRouteHistory(this.routeHistory)],
       ['Act Route', formatActRouteHistory(this.routeHistory)],
       ['Act Timeline', formatRunActTimeline(this.run.acts)],
+      ['Inter-Act Refit', formatInterActHistory(this.interActChoices)],
       ['Sector Conditions', formatSectorConditionTimeline(this.run, this.routeOutcomes)],
       ['Sector Pacing', formatSectorPacingTimeline(this.run, this.routeOutcomes)],
       ['Hazard Zones', formatHazardZoneDirectorTimeline(this.run, this.routeOutcomes)],

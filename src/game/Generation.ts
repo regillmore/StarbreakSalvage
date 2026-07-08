@@ -157,11 +157,21 @@ const CORE_SECTOR_ID: SectorId = 'sector_core_wreck';
 const STANDARD_MIDDLE_SECTOR_IDS: readonly SectorId[] = [
   'sector_trade_war_corridor',
   'sector_bio_machine_bloom',
+  'sector_corporate_kill_grid',
+  'sector_trade_war_corridor',
+  'sector_bio_machine_bloom',
+  'sector_lunar_surface',
+  'sector_trade_war_corridor',
   'sector_corporate_kill_grid'
 ];
 const LUNAR_MIDDLE_SECTOR_IDS: readonly SectorId[] = [
   'sector_trade_war_corridor',
   'sector_lunar_surface',
+  'sector_bio_machine_bloom',
+  'sector_corporate_kill_grid',
+  'sector_trade_war_corridor',
+  'sector_lunar_surface',
+  'sector_bio_machine_bloom',
   'sector_corporate_kill_grid'
 ];
 

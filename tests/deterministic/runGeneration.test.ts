@@ -27,21 +27,33 @@ describe('generateRunSkeleton', () => {
     expect(new Set(signatures).size).toBeGreaterThan(1);
   });
 
-  it('creates three starting contracts and a five-sector baseline route skeleton', () => {
+  it('creates three starting contracts and a ten-sector baseline route skeleton', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
 
     expect(run.seed).toBe('STARBREAK-SMOKE');
     expect(run.acts.map((act) => [act.id, act.shortLabel, act.sectorIds])).toEqual([
       [
-        'act_outer_rim',
-        'Act I',
-        [
-          'sector_outer_debris_field',
-          'sector_trade_war_corridor',
-          'sector_bio_machine_bloom'
-        ]
+          'act_outer_rim',
+          'Act I',
+          [
+            'sector_outer_debris_field',
+            'sector_trade_war_corridor',
+            'sector_bio_machine_bloom',
+            'sector_corporate_kill_grid',
+            'sector_trade_war_corridor'
+          ]
       ],
-      ['act_core_descent', 'Act II', ['sector_corporate_kill_grid', 'sector_core_wreck']]
+      [
+        'act_core_descent',
+        'Act II',
+        [
+          'sector_bio_machine_bloom',
+          'sector_lunar_surface',
+          'sector_trade_war_corridor',
+          'sector_corporate_kill_grid',
+          'sector_core_wreck'
+        ]
+      ]
     ]);
     expect(run.contracts).toHaveLength(3);
     expect(new Set(run.contracts.map((contract) => contract.shipId)).size).toBe(3);
@@ -49,6 +61,11 @@ describe('generateRunSkeleton', () => {
       'sector_outer_debris_field',
       'sector_trade_war_corridor',
       'sector_bio_machine_bloom',
+      'sector_corporate_kill_grid',
+      'sector_trade_war_corridor',
+      'sector_bio_machine_bloom',
+      'sector_lunar_surface',
+      'sector_trade_war_corridor',
       'sector_corporate_kill_grid',
       'sector_core_wreck'
     ]);
@@ -68,14 +85,14 @@ describe('generateRunSkeleton', () => {
 
     expect(run.sectors[0]?.objective.requiredEnemyKills).toBeGreaterThan(1);
     expect(run.sectors[0]?.act.actShortLabel).toBe('Act I');
-    expect(run.sectors[2]?.act.actSectorIndex).toBe(3);
-    expect(run.sectors[3]?.act.actShortLabel).toBe('Act II');
-    expect(run.sectors[4]?.act.rewardTier).toBe('escalated');
+    expect(run.sectors[4]?.act.actSectorIndex).toBe(5);
+    expect(run.sectors[5]?.act.actShortLabel).toBe('Act II');
+    expect(run.sectors[9]?.act.rewardTier).toBe('escalated');
     expect(run.sectors[3]?.objective.bossRequired).toBe(true);
-    expect(run.sectors[4]?.objective.bossSpawnAtSeconds).toBe(5.55);
+    expect(run.sectors[9]?.objective.bossSpawnAtSeconds).toBe(5.55);
   });
 
-  it('summarizes a deterministic two-act plan without changing existing sector order', () => {
+  it('summarizes a deterministic two-act plan with five sectors per act', () => {
     const first = summarizeRunSkeleton(generateRunSkeleton('ACT2-GATE-SMOKE'));
     const second = summarizeRunSkeleton(generateRunSkeleton('ACT2-GATE-SMOKE'));
 
@@ -85,14 +102,14 @@ describe('generateRunSkeleton', () => {
         acts: [
           expect.objectContaining({
             id: 'act_outer_rim',
-            sectorRange: [1, 3],
+            sectorRange: [1, 5],
             rewardTier: 'standard',
             pressureTier: 'baseline',
             transition: 'interActJunction'
           }),
           expect.objectContaining({
             id: 'act_core_descent',
-            sectorRange: [4, 5],
+            sectorRange: [6, 10],
             rewardTier: 'escalated',
             pressureTier: 'elevated',
             transition: 'victory'
@@ -109,6 +126,11 @@ describe('generateRunSkeleton', () => {
       'sector_outer_debris_field',
       'sector_trade_war_corridor',
       'sector_lunar_surface',
+      'sector_bio_machine_bloom',
+      'sector_corporate_kill_grid',
+      'sector_trade_war_corridor',
+      'sector_lunar_surface',
+      'sector_bio_machine_bloom',
       'sector_corporate_kill_grid',
       'sector_core_wreck'
     ]);

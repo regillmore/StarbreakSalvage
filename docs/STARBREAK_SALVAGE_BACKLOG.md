@@ -1582,7 +1582,7 @@ Acceptance:
 
 Status:
 
-- Implemented in work order 082. Act definitions now validate through content checks, generated runs expose deterministic Act I/Act II plans, each sector carries act context, route history preserves act handoff metadata, and save/summary/debug surfaces normalize or display act progress without changing the existing sector order.
+- Implemented in work orders 082-083. Act definitions now validate through content checks, generated runs expose deterministic Act I/Act II plans over a ten-sector target route, each sector carries act context, route history preserves act handoff metadata, and save/summary/debug surfaces normalize or display act progress while the current sector vocabulary is reused pending Act II content expansion.
 
 ### BA2 - Inter-act junction
 
@@ -1594,7 +1594,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 083.
+- Implemented in work order 083. Act I completion opens a deterministic midpoint refit scene before Act II. Choices apply explicit run-resource and Act II modifiers for repair, route intel, shop discount, reward choice/bias, salvage, or risk, with keyboard confirm, pause/back abandon safety, summary/debug reporting, and existing accessibility layout settings preserved.
 
 ### BA3 - Act II route pool
 

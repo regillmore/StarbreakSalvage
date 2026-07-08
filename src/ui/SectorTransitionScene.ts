@@ -2,7 +2,12 @@ import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene, SceneDebugState } from '../app/Scene';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import { createActDebugState, formatActSectorLabel } from '../game/ActPlan';
-import { getCurrentSector, type RunSessionState } from '../game/RunSession';
+import { formatInterActEffectsReadout } from '../game/InterActJunction';
+import {
+  getCurrentSector,
+  getInterActEffectsForSector,
+  type RunSessionState
+} from '../game/RunSession';
 import {
   applySectorConditionsToScroll,
   createSectorConditionPlan,
@@ -36,6 +41,7 @@ export class SectorTransitionScene implements Scene {
 
   public enter(): void {
     const sector = getCurrentSector(this.run, this.session);
+    const interActEffects = getInterActEffectsForSector(this.session, sector);
     const conditions = createSectorConditionPlan({
       run: this.run,
       sectorIndex: this.session.currentSectorIndex,
@@ -83,6 +89,7 @@ export class SectorTransitionScene implements Scene {
     conditionLine.className = 'transition-copy';
     conditionLine.textContent = [
       formatSectorConditionReadout(conditions),
+      formatInterActEffectsReadout(interActEffects),
       pacing.arcKind === 'standard' ? null : formatSectorPacingReadout(pacing),
       `Cruise ${Math.round(scroll.baseSpeed)}u/s`
     ]

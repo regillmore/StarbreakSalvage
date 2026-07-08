@@ -47,9 +47,39 @@ describe('ScrollState', () => {
         },
         {
           "baseSpeed": 96,
-          "length": 2536,
-          "sectorId": "sector_core_wreck",
+          "length": 2061,
+          "sectorId": "sector_trade_war_corridor",
           "startOffset": 40804,
+        },
+        {
+          "baseSpeed": 101,
+          "length": 2446,
+          "sectorId": "sector_bio_machine_bloom",
+          "startOffset": 50895,
+        },
+        {
+          "baseSpeed": 103,
+          "length": 2623,
+          "sectorId": "sector_lunar_surface",
+          "startOffset": 60370,
+        },
+        {
+          "baseSpeed": 115,
+          "length": 2580,
+          "sectorId": "sector_trade_war_corridor",
+          "startOffset": 70594,
+        },
+        {
+          "baseSpeed": 118,
+          "length": 3315,
+          "sectorId": "sector_corporate_kill_grid",
+          "startOffset": 80856,
+        },
+        {
+          "baseSpeed": 124,
+          "length": 3574,
+          "sectorId": "sector_core_wreck",
+          "startOffset": 90870,
         },
       ]
     `);

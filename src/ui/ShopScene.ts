@@ -5,6 +5,7 @@ import { formatProspectiveBuildSynergy } from '../game/BuildSynergy';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import {
   getCurrentSector,
+  getInterActEffectsForSector,
   getOwnedItemIds,
   getShopModifiersForSector,
   getShopRerollCount,
@@ -40,15 +41,18 @@ export class ShopScene implements Scene {
     const sector = getCurrentSector(this.run, this.session);
     const rerollCount = getShopRerollCount(this.session, sector.index);
     const shopModifiers = getShopModifiersForSector(this.session, sector.index);
+    const interActEffects = getInterActEffectsForSector(this.session, sector);
     const upgradeReadout = getMarketDecoderReadout(this.run.upgradeEffects);
     const priceDiscount =
       shopModifiers.reduce((total, modifier) => total + modifier.discount, 0) +
+      interActEffects.shopDiscount +
       this.run.upgradeEffects.shopDiscount;
     const stockBonus =
       shopModifiers.reduce((total, modifier) => total + modifier.stockBonus, 0) +
       this.run.upgradeEffects.shopStockBonus;
     const shopBiasTags = [
       ...shopModifiers.flatMap((modifier) => modifier.biasTags),
+      ...interActEffects.rewardBiasTags,
       ...this.run.upgradeEffects.shopBiasTags
     ];
     const inventory = generateShopInventory({

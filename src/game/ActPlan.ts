@@ -66,6 +66,11 @@ export interface ActDebugState {
   readonly transition: string;
 }
 
+export interface InterActTransitionHandoff {
+  readonly sourceAct: RunActPlan;
+  readonly targetAct: RunActPlan;
+}
+
 export function createRunActPlan(
   sectors: readonly SectorDefinition[],
   definitions: readonly ActDefinition[] = ACT_DEFINITIONS
@@ -199,6 +204,43 @@ export function getActContextForSector(
     pressureTier: act.pressureTier,
     bossGate: act.bossGate,
     transition: act.transition
+  };
+}
+
+export function getActPlanById(
+  acts: readonly RunActPlan[],
+  actId: ActId
+): RunActPlan | null {
+  return acts.find((act) => act.id === actId) ?? null;
+}
+
+export function getInterActTransitionHandoff(
+  acts: readonly RunActPlan[],
+  previousSectorIndex: number,
+  nextSectorIndex: number
+): InterActTransitionHandoff | null {
+  const previousAct = acts.find(
+    (act) =>
+      previousSectorIndex >= act.startSectorIndex && previousSectorIndex <= act.endSectorIndex
+  );
+  const nextAct = acts.find(
+    (act) => nextSectorIndex >= act.startSectorIndex && nextSectorIndex <= act.endSectorIndex
+  );
+
+  if (!previousAct || !nextAct || previousAct.id === nextAct.id) {
+    return null;
+  }
+
+  if (
+    previousAct.transition.kind !== 'interActJunction' ||
+    previousAct.transition.nextActId !== nextAct.id
+  ) {
+    return null;
+  }
+
+  return {
+    sourceAct: previousAct,
+    targetAct: nextAct
   };
 }
 

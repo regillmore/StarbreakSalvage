@@ -60,7 +60,8 @@
 - Added deterministic loose currency scatter lanes for enemy, boss, destructible, route, hazard, landmark, and obstacle sources, with fixed-world pickup attraction, TTL cleanup, active count/value caps, HUD hint copy, and debug cap/value counters.
 - Added an environmental stress debug shortcut on `H` with active hazard-family labels, environment object/destructible/obstacle counts, loose currency cap state, and stress-budget telemetry.
 - Fixed Phase 8 environmental presentation so destructibles/obstacles derive live screen position from sector scroll, planned loose-currency lanes scroll in with the background, and dropped enemy/boss/destructible loot continues moving with the sector.
-- Added the first Phase 9 act model: validated Act I/Act II definitions, deterministic act plans on generated runs, act context on sectors/routes/transitions/summaries/debug, and backward-compatible act fields on last-run save records without changing the current five-sector play flow.
+- Added the first Phase 9 act model: validated Act I/Act II definitions, deterministic act plans on generated runs, act context on sectors/routes/transitions/summaries/debug, and backward-compatible act fields on last-run save records.
+- Expanded the run target to ten sectors with a 5/5 Act I/Act II split and added a deterministic inter-act refit junction after Act I completion, including repair, route intel, shop discount, reward, salvage, and risk choices that feed Act II route, shop, reward, transition, summary, and debug surfaces.
 
 ### Testing
 

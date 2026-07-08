@@ -2,6 +2,7 @@ import type { ItemPoolProfileId } from '../content/items';
 import type { RouteKind, RunSkeleton, SectorRoute, StartingContract } from './Generation';
 import {
   getCurrentSector,
+  getInterActEffectsForSector,
   getOwnedItemIds,
   getRewardModifiersForSector,
   type RunSessionState
@@ -19,6 +20,7 @@ export function generateSectorRewardChoices(options: {
 }): RewardChoice[] {
   const sector = getCurrentSector(options.run, options.session);
   const modifiers = getRewardModifiersForSector(options.session, sector.index);
+  const interActEffects = getInterActEffectsForSector(options.session, sector);
   const poolOverride = [...modifiers]
     .reverse()
     .find((modifier) => modifier.poolIdOverride)?.poolIdOverride;
@@ -34,12 +36,14 @@ export function generateSectorRewardChoices(options: {
     routeKind: options.routeKind,
     sectorIndex: sector.index,
     poolId,
-    choiceCount: options.count ?? 3 + choiceBonus + upgradeChoiceBonus,
+    choiceCount:
+      options.count ?? 3 + choiceBonus + upgradeChoiceBonus + interActEffects.rewardChoiceBonus,
     biasTags: [
       ...options.contract.itemBias,
       ...getRouteBiasTags(options.routeKind),
       ...modifierBiasTags,
-      ...upgradeBiasTags
+      ...upgradeBiasTags,
+      ...interActEffects.rewardBiasTags
     ]
   });
   const poolProfileId = getSectorRewardPoolProfileId(

@@ -1371,7 +1371,7 @@ Acceptance criteria:
 - Existing seed links, saves, summary records, and debug shortcuts remain backward compatible.
 - The implementation does not change viewport parity, environmental scroll-world behavior, or boss-release hazard fairness.
 
-Status: implemented; the run skeleton now has validated act definitions in `src/content/acts.ts`, deterministic act-plan helpers in `src/game/ActPlan.ts`, and public `acts` plus per-sector act context on generated runs. The current five-sector route is split without changing sector order or completion behavior: Act I covers sectors 1-3 and Act II covers sectors 4-5. Gameplay, route, sector-transition, run-summary, debug overlay, route-history, and save records now carry act id/name/index, act sector progress, reward tier, pressure tier, boss gate, and transition metadata. Legacy last-run summaries normalize missing act fields to unknown/zero values. Focused tests cover act planning, content validation, same-seed act plans, route handoff context, summary formatting, and save normalization.
+Status: implemented; the run skeleton now has validated act definitions in `src/content/acts.ts`, deterministic act-plan helpers in `src/game/ActPlan.ts`, and public `acts` plus per-sector act context on generated runs. The current target route is ten sectors: Act I covers sectors 1-5 and Act II covers sectors 6-10 while reusing the existing sector vocabulary until the Act II route/content work lands. Gameplay, route, sector-transition, run-summary, debug overlay, route-history, and save records now carry act id/name/index, act sector progress, reward tier, pressure tier, boss gate, and transition metadata. Legacy last-run summaries normalize missing act fields to unknown/zero values. Focused tests cover act planning, content validation, same-seed act plans, route handoff context, summary formatting, and save normalization.
 
 ## Work order 083 - Inter-act junction and midpoint refit choices
 
@@ -1388,7 +1388,7 @@ Acceptance criteria:
 - Existing route/reward/shop/summary flows remain stable.
 - Keyboard and accessibility settings keep the junction usable.
 
-Status: planned.
+Status: implemented; completing Act I sector 5 now opens a contract-themed `InterActJunctionScene` before Act II sector 6. The junction generates three deterministic choices from seed, save fingerprint, and run resources, always including repair plus seeded options for route intel, broker discount, extra reward choice/bias, salvage advance, or overburn risk. The selected choice is recorded in `RunSession`, applies explicit resource deltas and Act II effects, and feeds Act II route intel, shop discounts, reward choice/bias modifiers, sector-transition copy, run-summary rows, and debug overlay readouts. Keyboard confirm selects the focused first choice, pause/back can abandon safely into a summary, and the layout uses existing reduced-motion, high-contrast, performance, and narrow-viewport scene conventions. Focused tests cover deterministic choice sets, Act I-to-Act II handoff, effect/resource accounting, summary formatting, route length, and updated deterministic snapshots.
 
 ## Work order 084 - Act II sector route pool and content contracts
 

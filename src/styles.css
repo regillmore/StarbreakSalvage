@@ -532,6 +532,7 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
 
 .route-grid,
 .reward-grid,
+.junction-grid,
 .shop-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -685,6 +686,15 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
 
 .transition-panel {
   width: min(90vw, 620px);
+}
+
+.junction-panel {
+  max-height: min(92vh, 820px);
+  overflow: auto;
+}
+
+.junction-card {
+  min-height: 13rem;
 }
 
 .transition-copy {
@@ -1372,6 +1382,7 @@ html[data-bullet-contrast='high'] .hud-meter-track {
   .contract-list,
   .route-grid,
   .reward-grid,
+  .junction-grid,
   .shop-grid,
   .upgrade-grid,
   .archive-grid,

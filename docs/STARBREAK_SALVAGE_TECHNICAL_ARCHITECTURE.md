@@ -467,7 +467,7 @@ Phase 9 expands the run into a deterministic two-act structure. Keep the act mod
 ### Act model and progression
 
 - Add typed act definitions for act id, display name, sector budget, route grammar, boss/finale gate, reward tier, shop/economy profile, pressure profile, and summary labels.
-- Work order 082 adds `src/content/acts.ts` and `src/game/ActPlan.ts` as the first implementation of this contract. Current runs keep the existing five-sector order but expose Act I for sectors 1-3 and Act II for sectors 4-5 through generated run data, sector context, route history, debug state, summaries, and last-run save records.
+- Work orders 082-083 add `src/content/acts.ts`, `src/game/ActPlan.ts`, and `src/game/InterActJunction.ts` as the first implementation of this contract. Current runs target ten sectors, expose Act I for sectors 1-5 and Act II for sectors 6-10, and carry generated act/junction context through sector data, route history, debug state, summaries, and last-run save records.
 - Generate an act plan once from seed plus save state. Gameplay, route screens, rewards, shops, summaries, debug overlays, and save records should consume that plan rather than inferring act state from sector indexes.
 - Carry act index/name and current act sector progress through public read models so tests and browser smoke can inspect act state without private app access.
 - Preserve backward compatibility for older one-act run summaries and saves. Missing act fields should read as the original single-act path.
@@ -484,8 +484,8 @@ src/game/ActPressure.ts
 
 ### Inter-act junction
 
-- Treat the midpoint junction as an explicit run scene or transition state after Act I completion and before Act II generation is consumed.
-- Junction choices should be deterministic from seed plus save state and should apply typed modifiers to Act II route, economy, repair, risk, or reward plans.
+- Treat the midpoint junction as an explicit run scene after Act I completion and before Act II launch.
+- Junction choices should stay deterministic from seed plus save state and should apply typed modifiers to Act II route, economy, repair, risk, or reward plans through `RunSession` helpers rather than scene-local state.
 - The junction should use pure view models for choice cards, resource deltas, risk labels, and keyboard focus order.
 - Pause, abandon, settings, import/export safety, and summary handoff should not lose the selected act plan or duplicate rewards.
 

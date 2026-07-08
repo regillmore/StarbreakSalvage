@@ -11,6 +11,13 @@ import type {
   SectorRoute,
   StartingContract
 } from './Generation';
+import {
+  combineInterActEffects,
+  createInterActChoiceRecord,
+  type InterActChoice,
+  type InterActChoiceRecord,
+  type InterActEffectSummary
+} from './InterActJunction';
 import { generateStartingItemLoadout, type ItemInstance } from './Rewards';
 import type {
   AppliedRouteOutcome,
@@ -44,6 +51,7 @@ export interface RunSessionState {
   itemInstances: ItemInstance[];
   routeHistory: RouteHistoryEntry[];
   routeOutcomes: AppliedRouteOutcome[];
+  interActChoices: InterActChoiceRecord[];
   shopRerollsBySector: Record<number, number>;
   lastCombatResult: CombatRunResult | null;
 }
@@ -66,6 +74,7 @@ export function createRunSession(
     }),
     routeHistory: [],
     routeOutcomes: [],
+    interActChoices: [],
     shopRerollsBySector: {},
     lastCombatResult: null
   };
@@ -225,6 +234,38 @@ export function getShopModifiersForSector(
     const modifier = outcome.effects.shop;
     return modifier && outcome.sectorIndex === sectorIndex ? [modifier] : [];
   });
+}
+
+export function applyInterActChoice(
+  session: RunSessionState,
+  choice: InterActChoice
+): InterActChoiceRecord {
+  const record = createInterActChoiceRecord(choice);
+
+  session.credits = Math.max(0, session.credits + choice.effects.creditsDelta);
+  session.salvage = Math.max(0, session.salvage + choice.effects.salvageDelta);
+  session.hullPatch = Math.max(0, session.hullPatch + choice.effects.hullPatchDelta);
+  session.curse = Math.max(0, session.curse + choice.effects.curseDelta);
+  session.interActChoices = [...session.interActChoices, record];
+  return record;
+}
+
+export function hasInterActChoiceForSourceAct(
+  session: RunSessionState,
+  sourceActId: ActId
+): boolean {
+  return session.interActChoices.some((choice) => choice.sourceActId === sourceActId);
+}
+
+export function getInterActEffectsForSector(
+  session: RunSessionState,
+  sector: SectorRoute
+): InterActEffectSummary {
+  return combineInterActEffects(
+    sector.act.actId,
+    sector.act.actName,
+    session.interActChoices
+  );
 }
 
 export function getRouteCreditReward(session: RunSessionState, sectorIndex: number): number {

@@ -2,7 +2,12 @@ import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene, SceneDebugState } from '../app/Scene';
 import type { RouteOption, RunSkeleton, StartingContract } from '../game/Generation';
 import { createActDebugState, formatActSectorLabel } from '../game/ActPlan';
-import { getCurrentSector, type RunSessionState } from '../game/RunSession';
+import { createInterActRouteIntelHint } from '../game/InterActJunction';
+import {
+  getCurrentSector,
+  getInterActEffectsForSector,
+  type RunSessionState
+} from '../game/RunSession';
 import { getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import type { InputAction } from '../systems/InputSystem';
 import {
@@ -46,10 +51,13 @@ export class RouteScene implements Scene {
 
     const routeGrid = document.createElement('div');
     routeGrid.className = 'route-grid';
+    const interActEffects = getInterActEffectsForSector(this.session, sector);
 
     this.routeButtons.length = 0;
 
     for (const route of sector.routeOptions) {
+      const intelHint =
+        route.intelHint ?? (interActEffects.routeIntel ? createInterActRouteIntelHint(route) : '');
       const routeButton = document.createElement('button');
       routeButton.className = 'choice-card route-card';
       routeButton.type = 'button';
@@ -70,9 +78,9 @@ export class RouteScene implements Scene {
 
       const intel = document.createElement('span');
       intel.className = 'choice-body route-intel-hint';
-      intel.textContent = route.intelHint ?? '';
+      intel.textContent = intelHint;
 
-      routeButton.append(name, risk, hint, ...(route.intelHint ? [intel] : []));
+      routeButton.append(name, risk, hint, ...(intelHint ? [intel] : []));
       routeGrid.append(routeButton);
       this.routeButtons.push(routeButton);
     }
