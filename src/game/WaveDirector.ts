@@ -13,6 +13,7 @@ import type { CombatState, EnemySpawn } from './CombatState';
 import type { SectorScrollPlan } from './ScrollState';
 import type { SectorObjectivePlan } from './SectorObjectives';
 import { getWaveStartSeconds } from './SectorObjectives';
+import type { ActPressureModel } from './ActPressure';
 
 export interface DirectedWave {
   readonly index: number;
@@ -69,6 +70,7 @@ export interface WaveDirectorOptions {
   readonly eliteEncounter?: boolean;
   readonly enableFormations?: boolean;
   readonly formationClusterWaves?: readonly number[];
+  readonly actPressure?: ActPressureModel;
 }
 
 const DISTANCE_WAVE_WINDOW_START_RATIO = 0.12;
@@ -115,7 +117,8 @@ export function createWaveDirectorPlan(options: WaveDirectorOptions): WaveDirect
       pacing,
       variantContext: {
         sectorIndex: Math.max(0, Math.floor(options.sectorIndex ?? 0)),
-        routePressure: options.routePressure ?? false,
+        routePressure:
+          (options.routePressure ?? false) || (options.actPressure?.routePressure ?? false),
         challenge: options.challenge ?? false,
         eliteEncounter: options.eliteEncounter ?? false,
         bossRequired: options.objective.bossRequired

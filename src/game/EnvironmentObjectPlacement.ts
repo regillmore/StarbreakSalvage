@@ -8,6 +8,7 @@ import {
 import type { SectorId } from '../content/sectors';
 import { clamp } from '../core/math';
 import type { Rng, WeightedChoice } from '../core/rng';
+import { getActPressureEnvironmentObjectTargetCount, type ActPressureModel } from './ActPressure';
 import { COMBAT_ARENA_HEIGHT, COMBAT_ARENA_PADDING, COMBAT_ARENA_WIDTH } from './CombatGeometry';
 
 export interface EnvironmentObjectPlacement {
@@ -68,6 +69,7 @@ export interface EnvironmentObjectPlacementOptions {
   readonly hazards?: readonly EnvironmentObjectHazardAvoidance[];
   readonly enemySpawnLanes?: readonly EnvironmentObjectEnemyLaneReservation[];
   readonly bossArena?: EnvironmentObjectBossLockAvoidance | null;
+  readonly actPressure?: ActPressureModel;
 }
 
 export const ENVIRONMENT_OBJECT_ACTIVE_LEAD_DISTANCE = 180;
@@ -91,11 +93,11 @@ export function createEnvironmentObjectPlacementPlan(
     options.sectorId,
     options.definitions ?? ENVIRONMENT_OBJECT_DEFINITIONS
   );
-  const targetCount = clamp(
-    options.targetCount ?? DEFAULT_TARGET_COUNT + (options.sectorIndex >= 3 ? 1 : 0),
-    1,
-    5
-  );
+  const baseTargetCount =
+    options.targetCount ?? DEFAULT_TARGET_COUNT + (options.sectorIndex >= 3 ? 1 : 0);
+  const targetCount = options.actPressure
+    ? getActPressureEnvironmentObjectTargetCount(baseTargetCount, options.actPressure)
+    : clamp(baseTargetCount, 1, 5);
   const objects: EnvironmentObjectPlacement[] = [];
   const perDefinitionCounts = new Map<EnvironmentObjectId, number>();
 
@@ -399,7 +401,9 @@ function overlapsHazardLane(
     const hazardStart = Math.max(0, hazard.telegraphDistance - HAZARD_OVERLAY_BUFFER_DISTANCE);
     const hazardEnd = hazard.endDistance + HAZARD_OVERLAY_BUFFER_DISTANCE;
 
-    if (!rangesOverlap(activeWindow.startDistance, activeWindow.endDistance, hazardStart, hazardEnd)) {
+    if (
+      !rangesOverlap(activeWindow.startDistance, activeWindow.endDistance, hazardStart, hazardEnd)
+    ) {
       return false;
     }
 
@@ -440,8 +444,7 @@ function getPlacementHorizontalRect(
   placement: EnvironmentObjectPlacement,
   margin = 0
 ): { readonly left: number; readonly right: number } {
-  const footprint =
-    placement.collisionShape === 'circle' ? placement.radius * 2 : placement.width;
+  const footprint = placement.collisionShape === 'circle' ? placement.radius * 2 : placement.width;
 
   return {
     left: placement.x - footprint / 2 - margin,

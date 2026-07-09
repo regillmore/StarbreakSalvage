@@ -2,6 +2,7 @@ import type { EnvironmentObjectPlacement } from './EnvironmentObjectPlacement';
 import type { SectorHazardPlan, SectorLandmarkPlan } from './SectorFeatures';
 import { clamp } from '../core/math';
 import { createRng } from '../core/rng';
+import { getActPressureLooseCurrencyValueBonus, type ActPressureModel } from './ActPressure';
 
 export type LooseCurrencyKind = 'credit' | 'salvage';
 
@@ -75,7 +76,14 @@ export interface LooseCurrencyPlanOptions {
   readonly scrollLength: number;
   readonly hazards?: readonly Pick<
     SectorHazardPlan,
-    'id' | 'kind' | 'telegraphDistance' | 'startDistance' | 'endDistance' | 'xRatio' | 'widthRatio' | 'label'
+    | 'id'
+    | 'kind'
+    | 'telegraphDistance'
+    | 'startDistance'
+    | 'endDistance'
+    | 'xRatio'
+    | 'widthRatio'
+    | 'label'
   >[];
   readonly landmarks?: readonly Pick<
     SectorLandmarkPlan,
@@ -86,6 +94,7 @@ export interface LooseCurrencyPlanOptions {
     'id' | 'layoutRole' | 'distance' | 'x' | 'debugLabel'
   >[];
   readonly routeEventBias?: 'none' | 'hazard' | 'elite' | 'market' | 'salvage';
+  readonly actPressure?: ActPressureModel;
 }
 
 export interface LooseCurrencyPickupLike {
@@ -121,9 +130,7 @@ const OBJECT_EVENT_LIMIT = 2;
 export function createLooseCurrencyScatter(
   options: LooseCurrencyScatterOptions
 ): readonly LooseCurrencyPickupSpec[] {
-  const rng = createRng(
-    `${options.seed}:loose-currency:${options.source}:${options.sourceId}`
-  );
+  const rng = createRng(`${options.seed}:loose-currency:${options.source}:${options.sourceId}`);
   const entries = createCurrencyEntries(options);
   const pickupLimit = Math.max(0, Math.floor(options.maxPickups ?? 6));
   const spread = Math.max(0, options.spread ?? getDefaultSpread(options.source));
@@ -173,7 +180,11 @@ export function createLooseCurrencyScatter(
 export function createLooseCurrencyPlan(options: LooseCurrencyPlanOptions): LooseCurrencyPlan {
   const rng = createRng(`${options.seed}:loose-currency-plan:${options.sectorId}`);
   const events: LooseCurrencyPlanEvent[] = [];
-  const maxEconomyValue = PLANNED_ECONOMY_VALUE_CAP + Math.min(6, options.sectorIndex * 2);
+  const actPressureValueBonus = options.actPressure
+    ? getActPressureLooseCurrencyValueBonus(options.actPressure)
+    : 0;
+  const maxEconomyValue =
+    PLANNED_ECONOMY_VALUE_CAP + Math.min(6, options.sectorIndex * 2) + actPressureValueBonus;
   let economyValue = 0;
 
   const pushEvent = (event: LooseCurrencyPlanEvent): void => {
@@ -189,7 +200,8 @@ export function createLooseCurrencyPlan(options: LooseCurrencyPlanOptions): Loos
 
   const routeBias = options.routeEventBias ?? 'none';
   const routeCredits =
-    routeBias === 'market' ? 3 : routeBias === 'elite' || routeBias === 'hazard' ? 2 : 1;
+    (routeBias === 'market' ? 3 : routeBias === 'elite' || routeBias === 'hazard' ? 2 : 1) +
+    Math.min(1, actPressureValueBonus);
   const routeSalvage = routeBias === 'salvage' || options.sectorIndex >= 3 ? 1 : 0;
 
   pushEvent({
@@ -204,7 +216,9 @@ export function createLooseCurrencyPlan(options: LooseCurrencyPlanOptions): Loos
     label: `${routeBias === 'none' ? 'route' : routeBias} salvage lane`
   });
 
-  for (const [index, landmark] of (options.landmarks ?? []).slice(0, LANDMARK_EVENT_LIMIT).entries()) {
+  for (const [index, landmark] of (options.landmarks ?? [])
+    .slice(0, LANDMARK_EVENT_LIMIT)
+    .entries()) {
     const salvage = landmark.kind === 'vault_door' || landmark.kind === 'surface_relay' ? 1 : 0;
 
     pushEvent({
@@ -259,7 +273,9 @@ export function createLooseCurrencyPlan(options: LooseCurrencyPlanOptions): Loos
     sectorId: options.sectorId,
     sectorIndex: options.sectorIndex,
     scrollLength: options.scrollLength,
-    events: events.sort((left, right) => left.distance - right.distance || left.id.localeCompare(right.id))
+    events: events.sort(
+      (left, right) => left.distance - right.distance || left.id.localeCompare(right.id)
+    )
   };
 }
 
@@ -300,9 +316,7 @@ export function summarizeLooseCurrencyPickups(
   };
 }
 
-function createCurrencyEntries(
-  options: LooseCurrencyScatterOptions
-): readonly {
+function createCurrencyEntries(options: LooseCurrencyScatterOptions): readonly {
   readonly kind: LooseCurrencyKind;
   readonly values: readonly number[];
 }[] {
@@ -320,7 +334,10 @@ function createCurrencyEntries(
   }
 
   if (salvage > 0) {
-    const remaining = Math.max(1, maxPickups - entries.reduce((total, entry) => total + entry.values.length, 0));
+    const remaining = Math.max(
+      1,
+      maxPickups - entries.reduce((total, entry) => total + entry.values.length, 0)
+    );
     const salvagePieces = choosePieceCount('salvage', salvage, options.source, remaining);
     entries.push({ kind: 'salvage', values: splitCurrencyValue(salvage, salvagePieces) });
   }

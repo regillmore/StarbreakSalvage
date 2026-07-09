@@ -63,6 +63,7 @@
 - Added the first Phase 9 act model: validated Act I/Act II definitions, deterministic act plans on generated runs, act context on sectors/routes/transitions/summaries/debug, and backward-compatible act fields on last-run save records.
 - Expanded the run target to ten sectors with a 5/5 Act I/Act II split and added a deterministic inter-act refit junction after Act I completion, including repair, route intel, shop discount, reward, salvage, and risk choices that feed Act II route, shop, reward, transition, summary, and debug surfaces.
 - Added first-pass Act II route contracts with route tags, sector fit, faction fit, background hooks, objective families, pressure/reward/terrain route-card previews, deterministic weights, risk offsets, optional unlock gates, content validation, and Act II-only generation.
+- Added a shared act-pressure model that uses explicit act context plus sector pacing to bias existing wave, hazard, environment-object, and loose-currency generators while exposing combined enemy, hazard, object, pickup, projectile, and item budget telemetry in the debug overlay.
 
 ### Testing
 

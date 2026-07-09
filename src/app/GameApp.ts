@@ -743,6 +743,7 @@ export class GameApp {
     const itemDebug = createItemDebugLines(debugState.items);
     const enemyRoleDebug = createEnemyRoleDebugLines(debugState.enemyRoles);
     const environmentStressDebug = createEnvironmentStressDebugLines(debugState.environmentStress);
+    const actPressureDebug = createActPressureDebugLines(debugState.actPressure);
     const inputDebug = debugState.inputMode ? [`Input ${debugState.inputMode}`] : [];
     const hudDebug = debugState.hudMode ? [`HUD ${debugState.hudMode}`] : [];
     const themeDebug = debugState.contractTheme
@@ -780,6 +781,7 @@ export class GameApp {
       ...itemDebug,
       ...enemyRoleDebug,
       ...environmentStressDebug,
+      ...actPressureDebug,
       ...inputDebug,
       ...hudDebug,
       ...themeDebug,
@@ -826,6 +828,32 @@ function createEnvironmentStressDebugLines(
     `Env stress H${environmentStress.activeHazards}/${environmentStress.hazardBudget} ${hazards} Obj${environmentStress.environmentObjects}/${environmentStress.environmentObjectBudget} D${environmentStress.destructibles}/O${environmentStress.obstacles} Loose ${environmentStress.loosePickups}/${environmentStress.loosePickupCap} V${environmentStress.looseValue}/${environmentStress.looseValueCap} ${
       environmentStress.withinBudget ? 'ok' : 'watch'
     }`
+  ];
+}
+
+function createActPressureDebugLines(
+  actPressure: SceneDebugState['actPressure']
+): readonly string[] {
+  if (!actPressure) {
+    return [];
+  }
+
+  return [
+    `Act pressure ${actPressure.label} ${actPressure.combined.used}/${actPressure.combined.budget} ${
+      actPressure.combined.withinBudget ? 'ok' : 'watch'
+    } R${actPressure.routePressure ? 1 : 0} Hz+${actPressure.hazardPressure} Obj+${
+      actPressure.environmentObjectTargetBonus
+    } Loose+${actPressure.looseCurrencyValueBonus} E${actPressure.enemy.projectiles}/${
+      actPressure.enemy.projectileBudget
+    } T${actPressure.enemy.telegraphs}/${actPressure.enemy.telegraphBudget} H${
+      actPressure.hazard.active
+    }/${actPressure.hazard.budget} Z${actPressure.hazard.scheduled}/${
+      actPressure.hazard.total
+    } Obj${actPressure.environment.objects}/${actPressure.environment.objectBudget} Loose${
+      actPressure.pickup.active
+    }/${actPressure.pickup.pickupBudget} V${actPressure.pickup.value}/${
+      actPressure.pickup.valueBudget
+    } Hooks${actPressure.item.hookApplications}/${actPressure.item.hookBudget}`
   ];
 }
 

@@ -501,6 +501,7 @@ src/game/ActPressure.ts
 
 - Act-aware pressure should be a generation/read-model layer that coordinates enemy roles, upgraded variants, formations, hazards, destructibles, obstacles, loose currency, and item-proc stress budgets.
 - Do not let Act II systems raise projectile, telegraph, object, or pickup caps independently. Combined pressure should have one debug-readable budget summary.
+- The first-pass `ActPressure` model derives pressure from explicit act context plus sector pacing, then feeds bounded hints into existing wave, hazard, environment-object, and loose-currency generators while exposing a normalized combined debug budget.
 - Economy changes should resolve through existing reward/shop/vault/repair/loose-currency/save systems with act-aware profiles, not through scene-local bonuses.
 - Summaries should separate Act I income, inter-act changes, Act II income, boss/finale rewards, and banked salvage so balance can be audited from a run record.
 

@@ -1439,7 +1439,13 @@ Acceptance criteria:
 - Combined pressure stays below documented stress budgets.
 - No viewport-dependent lane or pickup behavior is introduced.
 
-Status: planned.
+Status: completed in 086.
+
+Notes:
+
+- Added a shared act-pressure model that derives baseline, sustained, volatile, and finale pressure from explicit sector act context plus pacing.
+- Threaded act pressure into existing wave, hazard, environment object, loose currency, item-stress, and debug summary systems while preserving conservative caps.
+- Added act-pressure tests for selection, budget summaries, fixed-world placement parity, and combined enemy/environment stress.
 
 ## Work order 087 - Act II rewards, shops, and economy tuning
 

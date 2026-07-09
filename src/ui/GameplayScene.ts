@@ -32,6 +32,12 @@ import type { BossId } from '../content/bosses';
 import type { SectorId } from '../content/sectors';
 import type { ShipStats } from '../content/ships';
 import { createRng } from '../core/rng';
+import {
+  createActPressureDebugState,
+  createActPressureModel,
+  getActPressureRoutePressure,
+  type ActPressureModel
+} from '../game/ActPressure';
 import { createActDebugState, formatActSectorLabel } from '../game/ActPlan';
 import { createBuildSynergyModel, formatBuildSynergyHud } from '../game/BuildSynergy';
 import { createEnemyRolePressureSummary } from '../game/EnemyRolePressure';
@@ -147,6 +153,7 @@ export class GameplayScene implements Scene {
   private scrollState: ScrollState | null = null;
   private routeConditionedScroll: SectorScrollPlan | null = null;
   private sectorPacingPlan: SectorPacingPlan | null = null;
+  private actPressureModel: ActPressureModel | null = null;
   private hazardZoneDirectorPlan: HazardZoneDirectorPlan | null = null;
   private environmentObjectPlan: EnvironmentObjectPlacementPlan | null = null;
   private looseCurrencyPlan: LooseCurrencyPlan | null = null;
@@ -659,6 +666,9 @@ export class GameplayScene implements Scene {
     const entityCounts = getCombatEntityCounts(combatState);
     const sectorPacing = this.getSectorPacingPlan();
     const hazardZoneDirector = this.getHazardZoneDirectorPlan();
+    const itemStress = createItemLoadoutStressModel(combatState.items);
+    const enemyRoles = createEnemyRolePressureSummary(combatState);
+    const environmentStress = createEnvironmentStressDebugState(activeHazards, entityCounts);
     const hudTheme = createHudThemeModel(
       this.contract.shipAppearance,
       getHudThemeOptions(this.uiRoot.ownerDocument)
@@ -705,9 +715,16 @@ export class GameplayScene implements Scene {
       inputMode: this.input.getActiveInputMode(),
       hudMode: hudTheme.mode,
       contractTheme: createContractThemeDebugState(this.contract),
-      items: createItemLoadoutStressModel(combatState.items),
-      enemyRoles: createEnemyRolePressureSummary(combatState),
-      environmentStress: createEnvironmentStressDebugState(activeHazards, entityCounts),
+      items: itemStress,
+      enemyRoles,
+      environmentStress,
+      actPressure: createActPressureDebugState({
+        model: this.getActPressureModel(),
+        enemyRoles,
+        environmentStress,
+        itemStress,
+        hazardZoneDirector
+      }),
       upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects),
       act: createActDebugState(currentSector.act),
       progression: {
@@ -922,7 +939,8 @@ export class GameplayScene implements Scene {
           width: spawn.formationMemberCount ? 118 : 96,
           label: spawn.waveLabel
         })),
-      bossArena: this.getCurrentArenaPlan()
+      bossArena: this.getCurrentArenaPlan(),
+      actPressure: this.getActPressureModel()
     });
 
     return this.environmentObjectPlan;
@@ -945,7 +963,8 @@ export class GameplayScene implements Scene {
       hazards: features.hazards,
       landmarks: features.landmarks,
       environmentObjects: environmentObjects.objects,
-      routeEventBias: this.getLooseCurrencyRouteBias()
+      routeEventBias: this.getLooseCurrencyRouteBias(),
+      actPressure: this.getActPressureModel()
     });
 
     return this.looseCurrencyPlan;
@@ -1005,10 +1024,14 @@ export class GameplayScene implements Scene {
       scroll: this.getCurrentScrollPlan(),
       pacing: encounterPacing,
       sectorIndex: this.sectorIndex,
-      routePressure: this.hasEnemyVariantRoutePressure() || sectorPacing.arcKind !== 'standard',
+      routePressure:
+        this.hasEnemyVariantRoutePressure() ||
+        sectorPacing.arcKind !== 'standard' ||
+        getActPressureRoutePressure(this.getActPressureModel()),
       challenge: this.hasEnemyVariantChallengePressure(),
       eliteEncounter: this.hasEnemyVariantElitePressure(),
-      formationClusterWaves: sectorPacing.formationClusterWaveIndexes
+      formationClusterWaves: sectorPacing.formationClusterWaveIndexes,
+      actPressure: this.getActPressureModel()
     });
 
     return this.wavePlan;
@@ -1054,7 +1077,8 @@ export class GameplayScene implements Scene {
         conditions: this.sectorConditions,
         pacing: this.getSectorPacingPlan(),
         bossArena: this.getCurrentArenaPlan(),
-        backgroundId: this.getCurrentSector().background.id
+        backgroundId: this.getCurrentSector().background.id,
+        actPressure: this.getActPressureModel()
       });
 
       this.hazardZoneDirectorPlan = hazardZoneDirector;
@@ -1117,6 +1141,14 @@ export class GameplayScene implements Scene {
       scroll: this.getRouteConditionedScrollPlan()
     });
     return this.sectorPacingPlan;
+  }
+
+  private getActPressureModel(): ActPressureModel {
+    this.actPressureModel ??= createActPressureModel({
+      sector: this.getCurrentSector(),
+      pacing: this.getSectorPacingPlan()
+    });
+    return this.actPressureModel;
   }
 
   private updateBossArena(distance: number, state: CombatState): BossArenaUpdate {

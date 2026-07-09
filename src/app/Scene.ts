@@ -1,4 +1,5 @@
 import type { CanvasRenderer } from './CanvasRenderer';
+import type { ActPressureDebugState } from '../game/ActPressure';
 import type { EnemyRolePressureSummary } from '../game/EnemyRolePressure';
 import type { EnvironmentStressDebugState } from '../game/EnvironmentStress';
 import type { ItemLoadoutStressModel } from '../game/ItemStress';
@@ -43,6 +44,7 @@ export interface SceneDebugState {
   readonly items?: ItemLoadoutStressModel;
   readonly enemyRoles?: EnemyRolePressureSummary;
   readonly environmentStress?: EnvironmentStressDebugState;
+  readonly actPressure?: ActPressureDebugState;
   readonly upgradeEffects?: readonly string[];
   readonly act?: {
     readonly id: string;

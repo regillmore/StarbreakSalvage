@@ -126,7 +126,7 @@ Exit criteria:
 - Debug exposes act-aware enemy, hazard, environment, projectile, and currency budgets.
 - Item-storm, enemy-rich, environmental stress, and long-scroll tests remain useful and green.
 
-Status: planned for work order 086.
+Status: completed in work order 086 with a shared act-pressure model, debug budget readout, conservative generator hints, and unit coverage for pressure selection, parity, and combined stress.
 
 ### P9.7 - Act II Rewards, Shops, And Economy
 

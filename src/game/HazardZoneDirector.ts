@@ -26,11 +26,17 @@ import {
 import type { SectorFeaturePlan, SectorHazardKind, SectorHazardPlan } from './SectorFeatures';
 import type { AppliedRouteOutcome } from './RouteEvents';
 import type { SectorScrollPlan } from './ScrollState';
+import {
+  getActPressureHazardRatio,
+  shouldScheduleActPressureHazard,
+  type ActPressureModel
+} from './ActPressure';
 
 export type HazardZoneDirectorPressureKind =
   | 'sector'
   | 'pacingBeat'
   | 'routePressure'
+  | 'actPressure'
   | 'formationCluster'
   | 'lunarContext'
   | 'bossApproach'
@@ -85,6 +91,7 @@ export interface HazardZoneDirectorOptions {
   readonly pacing: SectorPacingPlan;
   readonly bossArena: BossArenaPlan | null;
   readonly backgroundId?: string | null;
+  readonly actPressure?: ActPressureModel;
 }
 
 interface HazardZoneDirectorCandidate {
@@ -377,6 +384,14 @@ function createCandidates(
     }
   }
 
+  if (options.actPressure && shouldScheduleActPressureHazard(options.actPressure)) {
+    candidates.push({
+      ratio: getActPressureHazardRatio(options.actPressure),
+      pressureKind: 'actPressure',
+      priority: 15
+    });
+  }
+
   for (const ratio of options.pacing.hazardBeatRatios) {
     candidates.push({
       ratio,
@@ -643,10 +658,11 @@ function calculatePressureLevel(options: HazardZoneDirectorOptions): number {
   const formationPressure = options.pacing.formationClusterWaveIndexes.length > 0 ? 1 : 0;
   const bossPressure = options.bossArena ? 1 : 0;
   const lunarPressure = isLunarContext(options) ? 1 : 0;
+  const actPressure = options.actPressure?.hazardPressure ?? 0;
 
   return Math.min(
     4,
-    routePressure + pacingPressure + formationPressure + bossPressure + lunarPressure
+    routePressure + pacingPressure + formationPressure + bossPressure + lunarPressure + actPressure
   );
 }
 

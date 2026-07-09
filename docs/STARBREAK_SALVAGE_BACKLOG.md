@@ -1632,7 +1632,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 086.
+- Completed in work order 086 with shared act-pressure selection, existing-system generator hints, and debug budget summaries.
 
 ### BB3 - Act II rewards, shops, and economy
 
