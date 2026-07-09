@@ -35,6 +35,7 @@ import {
   getInterActTransitionHandoff,
   type RunActPlan
 } from '../game/ActPlan';
+import { createActEconomyProfile } from '../game/ActEconomy';
 import { createInterActJunctionChoices } from '../game/InterActJunction';
 import { resolveSeedEntry } from '../game/SeedEntry';
 import {
@@ -57,10 +58,11 @@ import {
 import { getSaveRecordSectorCount } from '../game/RunOutcome';
 import { generateRouteOutcome, type AppliedRouteOutcome } from '../game/RouteEvents';
 import { createSectorConditionPlan } from '../game/SectorConditions';
-import { SHOP_REROLL_COST } from '../game/Shops';
+import { getSecondActFinaleSectorIndex } from '../game/SecondActFinale';
+import { getShopRerollCost } from '../game/Shops';
 import { AudioSystem } from '../systems/AudioSystem';
 import { getFeedbackShakeIntensity, type CombatFeedbackCue } from '../systems/CombatFeedback';
-import { InputSystem } from '../systems/InputSystem';
+import { InputSystem, type InputAction } from '../systems/InputSystem';
 import { ContractSelectScene } from '../ui/ContractSelectScene';
 import { GameplayScene } from '../ui/GameplayScene';
 import { InterActJunctionScene } from '../ui/InterActJunctionScene';
@@ -166,6 +168,10 @@ export class GameApp {
     this.renderer.updateEffects(dt);
 
     for (const action of this.input.drainPressedActions()) {
+      if (this.handleGlobalDebugAction(action)) {
+        continue;
+      }
+
       this.sceneManager.handleAction(action);
     }
 
@@ -311,9 +317,72 @@ export class GameApp {
     this.sceneManager.switchTo(gameplayScene);
   }
 
+  private handleGlobalDebugAction(action: InputAction): boolean {
+    if (!this.debugEnabled || action !== 'debugFinaleSmoke') {
+      return false;
+    }
+
+    this.showDebugFinaleSmoke();
+    return true;
+  }
+
+  private showDebugFinaleSmoke(): void {
+    this.refreshRunForCurrentSave();
+    const finaleSectorIndex = getSecondActFinaleSectorIndex(this.currentRun);
+
+    if (finaleSectorIndex < 0) {
+      return;
+    }
+
+    this.runSession.currentSectorIndex = finaleSectorIndex;
+    this.runSession.distanceTraveled = this.currentRun.sectors
+      .slice(0, finaleSectorIndex)
+      .reduce((total, sector) => total + sector.scroll.length, 0);
+    this.runSession.credits = Math.max(this.runSession.credits, 36);
+    this.runSession.salvage = Math.max(this.runSession.salvage, 6);
+    this.lastRunResult = null;
+    this.lastSaveUpdate = null;
+    this.summarySaved = false;
+
+    const gameplayScene = new GameplayScene(
+      this.uiRoot,
+      this.input,
+      this.currentRun,
+      this.selectedContract,
+      getEffectiveShipStats(this.selectedContract, this.runSession),
+      getCombatModifiersForSector(this.runSession, this.runSession.currentSectorIndex),
+      createSectorConditionPlan({
+        run: this.currentRun,
+        sectorIndex: this.runSession.currentSectorIndex,
+        routeOutcomes: this.runSession.routeOutcomes
+      }),
+      this.runSession.currentSectorIndex,
+      this.runSession.itemInstances,
+      this.runSession.credits,
+      this.runSession.salvage,
+      this.debugEnabled,
+      (cues) => {
+        this.handleCombatFeedback(cues);
+      },
+      (pausedScene) => {
+        this.showPause(pausedScene);
+      },
+      (result) => {
+        this.showRunSummary(result);
+      },
+      (result) => {
+        this.handleSectorComplete(result);
+      }
+    );
+
+    gameplayScene.prepareDebugFinaleSmoke();
+    this.sceneManager.switchTo(gameplayScene);
+  }
+
   private handleSectorComplete(result: CombatRunResult): void {
     this.lastRunResult = result;
-    recordSectorCombatResult(this.runSession, result);
+    const sector = getCurrentSector(this.currentRun, this.runSession);
+    recordSectorCombatResult(this.runSession, result, createActEconomyProfile(sector));
     this.showRouteChoice();
   }
 
@@ -388,7 +457,10 @@ export class GameApp {
         },
         () => {
           const sector = getCurrentSector(this.currentRun, this.runSession);
-          addCredits(this.runSession, getRouteCreditReward(this.runSession, sector.index));
+          addCredits(
+            this.runSession,
+            getRouteCreditReward(this.runSession, sector.index, createActEconomyProfile(sector))
+          );
           this.advanceAfterReward();
         }
       )
@@ -405,11 +477,16 @@ export class GameApp {
   }
 
   private rerollShop(): boolean {
-    if (!spendCredits(this.runSession, SHOP_REROLL_COST)) {
+    const sector = getCurrentSector(this.currentRun, this.runSession);
+    const rerollCost = getShopRerollCost(
+      createActEconomyProfile(sector),
+      this.runSession.shopRerollsBySector[sector.index] ?? 0
+    );
+
+    if (!spendCredits(this.runSession, rerollCost)) {
       return false;
     }
 
-    const sector = getCurrentSector(this.currentRun, this.runSession);
     incrementShopRerollCount(this.runSession, sector.index);
     return true;
   }
@@ -582,6 +659,8 @@ export class GameApp {
       result.reason
     );
     const actSaveContext = createRunActSaveContext(this.currentRun.acts, sectorsCleared);
+    const sector = this.currentRun.sectors[this.runSession.currentSectorIndex];
+    const finale = sector?.finale ?? null;
 
     return {
       seed: this.currentRun.seed,
@@ -595,6 +674,9 @@ export class GameApp {
       actSectorIndex: actSaveContext.actSectorIndex,
       actSectorCount: actSaveContext.actSectorCount,
       actsCompleted: actSaveContext.actsCompleted,
+      finaleVariantId: finale?.variantId ?? null,
+      finaleVariantName: finale?.variantName ?? null,
+      finaleCleared: result.reason === 'victory' && finale !== null,
       survivedSeconds: result.survivedSeconds,
       distanceTraveled: this.runSession.distanceTraveled + currentDistance,
       sectorLength: result.sectorLength,
@@ -759,6 +841,13 @@ export class GameApp {
           `Act ${debugState.act.shortLabel} ${debugState.act.name} ${debugState.act.sectorIndex}/${debugState.act.sectorCount} ${debugState.act.rewardTier}/${debugState.act.pressureTier}`
         ]
       : [];
+    const finaleDebug = debugState.finale
+      ? [
+          `Finale ${debugState.finale.label} ${debugState.finale.variantId} +${debugState.finale.bossHullBonus}H A${debugState.finale.approachDistanceMultiplier.toFixed(
+            2
+          )}/${debugState.finale.approachSpeedMultiplier.toFixed(2)} ${debugState.finale.victoryUnlockId}`
+        ]
+      : [];
     const interActDebug = debugState.interAct
       ? [
           `Junction ${debugState.interAct.targetAct} choices ${debugState.interAct.choices.join('/')}${
@@ -788,6 +877,7 @@ export class GameApp {
       ...upgradeDebug,
       ...progressionDebug,
       ...actDebug,
+      ...finaleDebug,
       ...interActDebug,
       ...sectorDebug,
       ...sectorPacingDebug,

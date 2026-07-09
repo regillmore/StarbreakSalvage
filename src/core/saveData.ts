@@ -24,6 +24,7 @@ export interface SaveStats {
   readonly runsEnded: number;
   readonly deaths: number;
   readonly forcedTests: number;
+  readonly victories: number;
   readonly sectorsCleared: number;
   readonly bossesDefeated: number;
   readonly enemiesDestroyed: number;
@@ -48,6 +49,9 @@ export interface LastRunSummary {
   readonly actSectorIndex: number;
   readonly actSectorCount: number | null;
   readonly actsCompleted: number;
+  readonly finaleVariantId: string | null;
+  readonly finaleVariantName: string | null;
+  readonly finaleCleared: boolean;
   readonly sectorsCleared: number;
   readonly survivedSeconds: number;
   readonly distanceTraveled: number;
@@ -85,6 +89,9 @@ export interface RunSaveRecord {
   readonly actSectorIndex?: number;
   readonly actSectorCount?: number | null;
   readonly actsCompleted?: number;
+  readonly finaleVariantId?: string | null;
+  readonly finaleVariantName?: string | null;
+  readonly finaleCleared?: boolean;
   readonly survivedSeconds: number;
   readonly distanceTraveled: number;
   readonly sectorLength: number | null;
@@ -170,6 +177,7 @@ export function createDefaultSaveData(): SaveData {
       runsEnded: 0,
       deaths: 0,
       forcedTests: 0,
+      victories: 0,
       sectorsCleared: 0,
       bossesDefeated: 0,
       enemiesDestroyed: 0,
@@ -273,6 +281,7 @@ export function applyRunRecordToSave(current: SaveData, record: RunSaveRecord): 
     runsEnded: current.stats.runsEnded + 1,
     deaths: current.stats.deaths + Number(record.reason === 'destroyed'),
     forcedTests: current.stats.forcedTests + Number(record.reason === 'debug'),
+    victories: current.stats.victories + Number(record.reason === 'victory'),
     sectorsCleared: current.stats.sectorsCleared + Math.max(0, record.sectorsCleared),
     bossesDefeated: current.stats.bossesDefeated + Math.max(0, record.bossesDefeated),
     enemiesDestroyed: current.stats.enemiesDestroyed + Math.max(0, record.enemiesDestroyed),
@@ -344,6 +353,9 @@ export function applyRunRecordToSave(current: SaveData, record: RunSaveRecord): 
         actSectorIndex: sanitizeCount(record.actSectorIndex),
         actSectorCount: sanitizeNullableCount(record.actSectorCount),
         actsCompleted: sanitizeCount(record.actsCompleted),
+        finaleVariantId: sanitizeNullableText(record.finaleVariantId),
+        finaleVariantName: sanitizeNullableText(record.finaleVariantName),
+        finaleCleared: record.finaleCleared === true && record.reason === 'victory',
         sectorsCleared: record.sectorsCleared,
         survivedSeconds: record.survivedSeconds,
         distanceTraveled: Math.max(0, Math.floor(record.distanceTraveled)),
@@ -495,6 +507,7 @@ function normalizeSaveData(input: Record<string, unknown>): SaveData {
       runsEnded: sanitizeCount(stats.runsEnded),
       deaths: sanitizeCount(stats.deaths),
       forcedTests: sanitizeCount(stats.forcedTests),
+      victories: sanitizeCount(stats.victories),
       sectorsCleared: sanitizeCount(stats.sectorsCleared),
       bossesDefeated: sanitizeCount(stats.bossesDefeated),
       enemiesDestroyed: sanitizeCount(stats.enemiesDestroyed),
@@ -540,6 +553,9 @@ function normalizeLastRun(value: unknown): LastRunSummary | null {
     actSectorIndex: sanitizeCount(value.actSectorIndex),
     actSectorCount: sanitizeNullableCount(value.actSectorCount),
     actsCompleted: sanitizeCount(value.actsCompleted),
+    finaleVariantId: sanitizeNullableText(value.finaleVariantId),
+    finaleVariantName: sanitizeNullableText(value.finaleVariantName),
+    finaleCleared: value.finaleCleared === true && reason === 'victory',
     sectorsCleared: sanitizeCount(value.sectorsCleared),
     survivedSeconds: sanitizeCount(value.survivedSeconds),
     distanceTraveled: sanitizeCount(value.distanceTraveled),

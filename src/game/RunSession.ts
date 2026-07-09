@@ -3,6 +3,11 @@ import type { ShipStats } from '../content/ships';
 import type { UnlockId } from '../content/unlocks';
 import type { ActId } from '../content/acts';
 import type { CombatRunResult } from './CombatState';
+import {
+  getActEconomyCombatCreditBonus,
+  getActEconomyCombatSalvageBonus,
+  type ActEconomyProfile
+} from './ActEconomy';
 import { applyItemHooks } from './ItemHooks';
 import type {
   RouteKind,
@@ -94,11 +99,21 @@ export function isRunComplete(run: RunSkeleton, session: RunSessionState): boole
   return session.currentSectorIndex >= run.sectors.length;
 }
 
-export function recordSectorCombatResult(session: RunSessionState, result: CombatRunResult): void {
+export function recordSectorCombatResult(
+  session: RunSessionState,
+  result: CombatRunResult,
+  actEconomy?: ActEconomyProfile
+): void {
   session.lastCombatResult = result;
   session.distanceTraveled += result.distanceTraveled;
-  session.credits += result.credits + Math.max(3, result.enemiesDestroyed * 3);
-  session.salvage += result.salvage + Math.max(1, result.enemiesDestroyed);
+  session.credits +=
+    result.credits +
+    Math.max(3, result.enemiesDestroyed * 3) +
+    getActEconomyCombatCreditBonus(actEconomy, result);
+  session.salvage +=
+    result.salvage +
+    Math.max(1, result.enemiesDestroyed) +
+    getActEconomyCombatSalvageBonus(actEconomy, result);
 }
 
 export function recordRouteChoice(
@@ -261,20 +276,20 @@ export function getInterActEffectsForSector(
   session: RunSessionState,
   sector: SectorRoute
 ): InterActEffectSummary {
-  return combineInterActEffects(
-    sector.act.actId,
-    sector.act.actName,
-    session.interActChoices
-  );
+  return combineInterActEffects(sector.act.actId, sector.act.actName, session.interActChoices);
 }
 
-export function getRouteCreditReward(session: RunSessionState, sectorIndex: number): number {
+export function getRouteCreditReward(
+  session: RunSessionState,
+  sectorIndex: number,
+  actEconomy?: ActEconomyProfile
+): number {
   const bonus = getRewardModifiersForSector(session, sectorIndex).reduce(
     (total, modifier) => total + modifier.creditBonus,
     0
   );
 
-  return 6 + bonus;
+  return 6 + bonus + (actEconomy?.rewardCreditBonus ?? 0);
 }
 
 export function addItemToSession(session: RunSessionState, itemId: ItemId): ItemInstance {

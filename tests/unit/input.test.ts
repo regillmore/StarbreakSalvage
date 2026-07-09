@@ -35,10 +35,11 @@ describe('input helpers', () => {
     expect(primaryActionForKey('7')).toBe('debugDestroyPlayer');
     expect(primaryActionForKey('8')).toBe('debugSectorComplete');
     expect(primaryActionForKey('9')).toBe('debugLongScroll');
+    expect(primaryActionForKey('F')).toBe('debugFinaleSmoke');
   });
 
   it('uses provided binding maps for action lookup', () => {
-    expect(actionsForKey('F', { ...DEFAULT_KEY_BINDINGS, fire: ['F'] })).toEqual(['fire']);
+    expect(actionsForKey('G', { ...DEFAULT_KEY_BINDINGS, fire: ['G'] })).toEqual(['fire']);
   });
 
   it('normalizes diagonal movement speed', () => {

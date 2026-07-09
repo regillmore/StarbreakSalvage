@@ -10,7 +10,8 @@ export type UnlockId =
   | 'unlock_challenge_debt_ceiling'
   | 'unlock_boss_auditor_drill'
   | 'unlock_faction_bloom_hive'
-  | 'unlock_music_outer_debris';
+  | 'unlock_music_outer_debris'
+  | 'unlock_music_core_descent';
 
 export interface UnlockDefinition {
   readonly id: UnlockId;
@@ -101,6 +102,14 @@ export const UNLOCKS: readonly UnlockDefinition[] = [
     summary: 'a future procedural music layer for the first sector',
     effect: 'Marks the Outer Debris procedural music layer as available.',
     grants: ['Music Flag: Outer Debris Mix']
+  },
+  {
+    id: 'unlock_music_core_descent',
+    kind: 'music',
+    name: 'Core Descent Mix',
+    summary: 'a future procedural music layer for final-sector pressure',
+    effect: 'Marks the Core Descent finale music layer as available.',
+    grants: ['Music Flag: Core Descent Mix']
   }
 ];
 

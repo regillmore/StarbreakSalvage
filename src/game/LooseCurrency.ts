@@ -2,6 +2,7 @@ import type { EnvironmentObjectPlacement } from './EnvironmentObjectPlacement';
 import type { SectorHazardPlan, SectorLandmarkPlan } from './SectorFeatures';
 import { clamp } from '../core/math';
 import { createRng } from '../core/rng';
+import { getActEconomyLooseCurrencyValueBonus, type ActEconomyProfile } from './ActEconomy';
 import { getActPressureLooseCurrencyValueBonus, type ActPressureModel } from './ActPressure';
 
 export type LooseCurrencyKind = 'credit' | 'salvage';
@@ -95,6 +96,7 @@ export interface LooseCurrencyPlanOptions {
   >[];
   readonly routeEventBias?: 'none' | 'hazard' | 'elite' | 'market' | 'salvage';
   readonly actPressure?: ActPressureModel;
+  readonly actEconomy?: ActEconomyProfile;
 }
 
 export interface LooseCurrencyPickupLike {
@@ -183,8 +185,12 @@ export function createLooseCurrencyPlan(options: LooseCurrencyPlanOptions): Loos
   const actPressureValueBonus = options.actPressure
     ? getActPressureLooseCurrencyValueBonus(options.actPressure)
     : 0;
+  const actEconomyValueBonus = getActEconomyLooseCurrencyValueBonus(options.actEconomy);
   const maxEconomyValue =
-    PLANNED_ECONOMY_VALUE_CAP + Math.min(6, options.sectorIndex * 2) + actPressureValueBonus;
+    PLANNED_ECONOMY_VALUE_CAP +
+    Math.min(6, options.sectorIndex * 2) +
+    actPressureValueBonus +
+    actEconomyValueBonus;
   let economyValue = 0;
 
   const pushEvent = (event: LooseCurrencyPlanEvent): void => {
@@ -201,8 +207,13 @@ export function createLooseCurrencyPlan(options: LooseCurrencyPlanOptions): Loos
   const routeBias = options.routeEventBias ?? 'none';
   const routeCredits =
     (routeBias === 'market' ? 3 : routeBias === 'elite' || routeBias === 'hazard' ? 2 : 1) +
-    Math.min(1, actPressureValueBonus);
-  const routeSalvage = routeBias === 'salvage' || options.sectorIndex >= 3 ? 1 : 0;
+    Math.min(1, actPressureValueBonus + actEconomyValueBonus);
+  const routeSalvage =
+    routeBias === 'salvage' ||
+    options.sectorIndex >= 3 ||
+    (options.actEconomy?.finale && actEconomyValueBonus > 0)
+      ? 1
+      : 0;
 
   pushEvent({
     id: `route-${options.sectorId}-${options.sectorIndex}`,

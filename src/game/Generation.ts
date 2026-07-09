@@ -43,6 +43,10 @@ import {
   type SectorFeaturePlan
 } from './SectorFeatures';
 import { createSectorObjectivePlan, type SectorObjectivePlan } from './SectorObjectives';
+import {
+  createSecondActFinalePlan,
+  type SecondActFinalePlan
+} from './SecondActFinale';
 import { resolveRunUpgradeEffects, type RunUpgradeEffects } from './UpgradeEffects';
 import {
   filterUnlockedBossCandidates,
@@ -104,6 +108,7 @@ export interface SectorRoute {
   readonly background: BackgroundPlan;
   readonly features: SectorFeaturePlan;
   readonly arena: BossArenaPlan | null;
+  readonly finale: SecondActFinalePlan | null;
   readonly rewardPoolSeed: string;
   readonly shopSeed: string;
 }
@@ -348,6 +353,15 @@ function generateSectorRoute(
     objective,
     scroll
   });
+  const finale = createSecondActFinalePlan({
+    sectorId: sector.id,
+    act,
+    objective,
+    bossId: boss.id,
+    bossName: boss.name,
+    bossFactionId: boss.factionId,
+    rng: rng.fork('finale')
+  });
 
   return {
     index,
@@ -366,6 +380,7 @@ function generateSectorRoute(
     background,
     features,
     arena,
+    finale,
     rewardPoolSeed: rng.fork('reward-pool').seedLabel,
     shopSeed: rng.fork('shop').seedLabel
   };

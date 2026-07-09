@@ -1,0 +1,281 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Act II economy tuning > generates deterministic Act II reward, vault, and shop surfaces from fresh save context > fresh act II economy 1`] = `
+{
+  "act": {
+    "id": "act_core_descent",
+    "label": "Act II",
+    "priceAdjustment": 1,
+    "rewardTier": "escalated",
+    "stockBonus": 1,
+  },
+  "eliteRewards": [
+    [
+      "item_scrap_saints_relay",
+      "Elite pool",
+    ],
+    [
+      "item_regolith_scoop_array",
+      "lunar source",
+    ],
+    [
+      "item_market_echo_locator",
+      "Elite pool",
+    ],
+    [
+      "item_phase_breaker_subpoena",
+      "boss source",
+    ],
+  ],
+  "rerollCosts": [
+    3,
+    4,
+  ],
+  "shop": {
+    "count": 5,
+    "items": [
+      [
+        "item_credit_reroute_fuse",
+        12,
+        "Shop pool",
+      ],
+      [
+        "item_coupon_cascade_fuse",
+        12,
+        "shop source",
+      ],
+      [
+        "item_convoy_receipt_printer",
+        14,
+        "shop source",
+      ],
+      [
+        "item_market_echo_locator",
+        15,
+        "shop source",
+      ],
+      [
+        "item_laser_tax_stamp",
+        13,
+        "Shop pool",
+      ],
+    ],
+  },
+  "vaultRewards": [
+    [
+      "item_phase_wake_suture",
+      "vault source",
+    ],
+    [
+      "item_overkill_ledger",
+      "vault source",
+    ],
+    [
+      "item_phase_grazer",
+      "vault source",
+    ],
+    [
+      "item_arc_window_invoice",
+      "vault source",
+    ],
+  ],
+}
+`;
+
+exports[`Act II economy tuning > generates deterministic progressed-save Act II economy without changing upgrade accounting > progressed act II economy 1`] = `
+{
+  "act": {
+    "id": "act_core_descent",
+    "label": "Act II",
+    "priceAdjustment": 1,
+    "rewardTier": "escalated",
+    "stockBonus": 1,
+  },
+  "eliteRewards": [
+    [
+      "item_scrap_saints_relay",
+      "Elite pool",
+    ],
+    [
+      "item_regolith_scoop_array",
+      "lunar source",
+    ],
+    [
+      "item_market_echo_locator",
+      "Elite pool",
+    ],
+    [
+      "item_phase_breaker_subpoena",
+      "boss source",
+    ],
+  ],
+  "rerollCosts": [
+    3,
+    4,
+  ],
+  "shop": {
+    "count": 6,
+    "items": [
+      [
+        "item_credit_reroute_fuse",
+        11,
+        "Shop pool",
+      ],
+      [
+        "item_coupon_cascade_fuse",
+        11,
+        "shop source",
+      ],
+      [
+        "item_convoy_receipt_printer",
+        13,
+        "shop source",
+      ],
+      [
+        "item_market_echo_locator",
+        14,
+        "shop source",
+      ],
+      [
+        "item_laser_tax_stamp",
+        12,
+        "Shop pool",
+      ],
+      [
+        "item_magnetized_tithe_box",
+        13,
+        "Shop pool",
+      ],
+    ],
+  },
+  "vaultRewards": [
+    [
+      "item_phase_wake_suture",
+      "vault source",
+    ],
+    [
+      "item_overkill_ledger",
+      "vault source",
+    ],
+    [
+      "item_phase_grazer",
+      "vault source",
+    ],
+    [
+      "item_arc_window_invoice",
+      "vault source",
+    ],
+    [
+      "item_plasma_bloom_filter",
+      "vault source",
+    ],
+  ],
+}
+`;
+
+exports[`Act II economy tuning > keeps inter-act junction effects deterministic for fresh and progressed saves > fresh junction economy effects 1`] = `
+[
+  {
+    "effects": {
+      "creditsDelta": -4,
+      "curseDelta": 0,
+      "hullPatchDelta": 1,
+      "rewardBiasTags": [],
+      "rewardChoiceBonus": 0,
+      "riskLabel": null,
+      "routeIntel": false,
+      "salvageDelta": 0,
+      "shopDiscount": 0,
+    },
+    "id": "act_outer_rim-act_core_descent-1-repair",
+    "kind": "repair",
+  },
+  {
+    "effects": {
+      "creditsDelta": 0,
+      "curseDelta": 0,
+      "hullPatchDelta": 0,
+      "rewardBiasTags": [
+        "heat",
+      ],
+      "rewardChoiceBonus": 1,
+      "riskLabel": null,
+      "routeIntel": false,
+      "salvageDelta": 0,
+      "shopDiscount": 0,
+    },
+    "id": "act_outer_rim-act_core_descent-2-reward",
+    "kind": "reward",
+  },
+  {
+    "effects": {
+      "creditsDelta": 0,
+      "curseDelta": 0,
+      "hullPatchDelta": 0,
+      "rewardBiasTags": [],
+      "rewardChoiceBonus": 0,
+      "riskLabel": null,
+      "routeIntel": false,
+      "salvageDelta": 3,
+      "shopDiscount": 0,
+    },
+    "id": "act_outer_rim-act_core_descent-3-salvage",
+    "kind": "salvage",
+  },
+]
+`;
+
+exports[`Act II economy tuning > keeps inter-act junction effects deterministic for fresh and progressed saves > progressed junction economy effects 1`] = `
+[
+  {
+    "effects": {
+      "creditsDelta": -3,
+      "curseDelta": 0,
+      "hullPatchDelta": 1,
+      "rewardBiasTags": [],
+      "rewardChoiceBonus": 0,
+      "riskLabel": null,
+      "routeIntel": false,
+      "salvageDelta": 0,
+      "shopDiscount": 0,
+    },
+    "id": "act_outer_rim-act_core_descent-1-repair",
+    "kind": "repair",
+  },
+  {
+    "effects": {
+      "creditsDelta": 0,
+      "curseDelta": 0,
+      "hullPatchDelta": 0,
+      "rewardBiasTags": [
+        "heat",
+      ],
+      "rewardChoiceBonus": 1,
+      "riskLabel": null,
+      "routeIntel": false,
+      "salvageDelta": 0,
+      "shopDiscount": 0,
+    },
+    "id": "act_outer_rim-act_core_descent-2-reward",
+    "kind": "reward",
+  },
+  {
+    "effects": {
+      "creditsDelta": 0,
+      "curseDelta": 1,
+      "hullPatchDelta": 0,
+      "rewardBiasTags": [
+        "curse",
+        "overkill",
+      ],
+      "rewardChoiceBonus": 1,
+      "riskLabel": "Overburn risk +1 curse",
+      "routeIntel": false,
+      "salvageDelta": 5,
+      "shopDiscount": 0,
+    },
+    "id": "act_outer_rim-act_core_descent-3-risk",
+    "kind": "risk",
+  },
+]
+`;

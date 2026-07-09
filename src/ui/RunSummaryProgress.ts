@@ -24,6 +24,7 @@ export interface RunSummaryProgressModel {
   readonly availableUpgrades: readonly UpgradeProgressEntry[];
   readonly nextUpgrade: UpgradeProgressEntry | null;
   readonly scrapBreakdownText: string;
+  readonly economyScopeText: string;
   readonly upgradeProgressText: string;
   readonly calloutText: string;
   readonly calloutKind: 'new' | 'available' | 'next' | 'complete' | 'locked';
@@ -81,6 +82,8 @@ export function createRunSummaryProgressModel(
     availableUpgrades,
     nextUpgrade,
     scrapBreakdownText: `Earned +${salvageEarned} kg | Bank ${previousSalvageBank} -> ${currentSalvageBank} kg`,
+    economyScopeText:
+      'Run salvage banks at summary; Act II economy tuning does not change upgrade costs or unlock prerequisites.',
     upgradeProgressText,
     calloutText: callout.text,
     calloutKind: callout.kind

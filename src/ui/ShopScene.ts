@@ -1,6 +1,7 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene, SceneDebugState } from '../app/Scene';
 import type { ItemId } from '../content/items';
+import { createActEconomyProfile, getActEconomyShopReadout } from '../game/ActEconomy';
 import { formatProspectiveBuildSynergy } from '../game/BuildSynergy';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import {
@@ -11,7 +12,7 @@ import {
   getShopRerollCount,
   type RunSessionState
 } from '../game/RunSession';
-import { generateShopInventory, SHOP_REROLL_COST } from '../game/Shops';
+import { generateShopInventory, getShopRerollCost } from '../game/Shops';
 import { getMarketDecoderReadout, getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import type { InputAction } from '../systems/InputSystem';
 import {
@@ -39,6 +40,7 @@ export class ShopScene implements Scene {
 
   public enter(): void {
     const sector = getCurrentSector(this.run, this.session);
+    const actEconomy = createActEconomyProfile(sector);
     const rerollCount = getShopRerollCount(this.session, sector.index);
     const shopModifiers = getShopModifiersForSector(this.session, sector.index);
     const interActEffects = getInterActEffectsForSector(this.session, sector);
@@ -68,8 +70,11 @@ export class ShopScene implements Scene {
       sectorId: sector.sectorId,
       sectorRole: sector.sectorName,
       bossFactionId: sector.bossFactionId,
-      bossGate: sector.objective.bossRequired
+      bossGate: sector.objective.bossRequired,
+      actEconomy
     });
+    const rerollCost = getShopRerollCost(actEconomy, rerollCount);
+    const actEconomyReadout = getActEconomyShopReadout(actEconomy);
     const shell = document.createElement('main');
     shell.className = 'scene-panel scene-panel-wide shop-panel';
     shell.setAttribute('aria-labelledby', 'shop-title');
@@ -81,7 +86,14 @@ export class ShopScene implements Scene {
 
     const eyebrow = document.createElement('p');
     eyebrow.className = 'eyebrow';
-    eyebrow.textContent = `${sector.sectorName} Market | Credits ${this.session.credits}${priceDiscount > 0 ? ` | Permit -${priceDiscount} prices` : ''}`;
+    eyebrow.textContent = [
+      `${sector.sectorName} Market`,
+      `Credits ${this.session.credits}`,
+      priceDiscount > 0 ? `Permit -${priceDiscount} prices` : null,
+      actEconomyReadout
+    ]
+      .filter(Boolean)
+      .join(' | ');
 
     const title = document.createElement('h1');
     title.id = 'shop-title';
@@ -123,8 +135,8 @@ export class ShopScene implements Scene {
     const rerollButton = document.createElement('button');
     rerollButton.className = 'secondary-button';
     rerollButton.type = 'button';
-    rerollButton.disabled = this.session.credits < SHOP_REROLL_COST;
-    rerollButton.textContent = `Reroll -${SHOP_REROLL_COST}`;
+    rerollButton.disabled = this.session.credits < rerollCost;
+    rerollButton.textContent = `Reroll -${rerollCost}`;
     rerollButton.addEventListener('click', () => {
       if (this.onReroll()) {
         this.enter();

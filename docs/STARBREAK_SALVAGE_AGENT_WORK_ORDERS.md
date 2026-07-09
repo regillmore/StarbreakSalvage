@@ -1462,7 +1462,14 @@ Acceptance criteria:
 - Summaries explain Act I versus Act II economy and item sources.
 - Upgrade progress and save accounting remain backward compatible.
 
-Status: planned.
+Status: implemented.
+
+Notes:
+
+- Added `src/game/ActEconomy.ts` as the shared Act II economy profile for reward weighting, shop stock/price/reroll tuning, route payout bonuses, repair/vault surcharges, loose-currency budgets, and upgrade-progress framing.
+- Threaded the profile through rewards, shops, route events, combat-result session accounting, loose-currency planning, reward/shop UI, and run-summary economy copy while keeping Act I neutral.
+- Run summaries now separate Act I route economy, junction changes, Act II route economy, recovered currency/salvage, item sources, and upgrade-economy scope.
+- Added deterministic fresh/progressed Act II economy snapshots covering rewards, shops, vaults, junction effects, run-summary economy helpers, and save/update accounting.
 
 ## Work order 088 - Second-act bosses and finale
 
@@ -1479,7 +1486,7 @@ Acceptance criteria:
 - Boss arena release rules remain fair under Act II hazards.
 - Final boss/finale smoke can be reached without a full manual run.
 
-Status: planned.
+Status: implemented; work order 088 adds `src/game/SecondActFinale.ts` as the deterministic finale-plan layer for Act II. Final sectors now carry one seeded finale variant with debug-visible boss identity, hull and approach tuning, victory/defeat/abandon copy, and a victory unlock hook. Gameplay applies finale boss-hull and arena-approach modifiers through the existing boss arena/phase path, keeps hidden hazards deferred through the normal boss-release fairness rule, and adds the `F` debug shortcut to jump directly to a final-sector boss smoke. Run summaries now include explicit finale outcome copy, last-run save records preserve finale variant metadata, and the archive can unlock the Core Descent music flag after a confirmed victory. Coverage includes deterministic finale selection, arena handoff and hazard deferral, summary copy, save/unlock records, and debug key reachability.
 
 ## Work order 089 - Act II debug smoke, accessibility, and performance hardening
 

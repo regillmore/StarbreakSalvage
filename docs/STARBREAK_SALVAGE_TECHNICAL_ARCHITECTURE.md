@@ -503,6 +503,7 @@ src/game/ActPressure.ts
 - Do not let Act II systems raise projectile, telegraph, object, or pickup caps independently. Combined pressure should have one debug-readable budget summary.
 - The first-pass `ActPressure` model derives pressure from explicit act context plus sector pacing, then feeds bounded hints into existing wave, hazard, environment-object, and loose-currency generators while exposing a normalized combined debug budget.
 - Economy changes should resolve through existing reward/shop/vault/repair/loose-currency/save systems with act-aware profiles, not through scene-local bonuses.
+- Work order 087 adds `src/game/ActEconomy.ts` for those profiles. Rewards consume it through reward context weighting, shops consume it for stock/price/reroll tuning, route events consume it for payout and repair/vault scarcity, loose currency consumes it as a value-budget hint, and summaries consume the resulting route/junction/result records.
 - Summaries should separate Act I income, inter-act changes, Act II income, boss/finale rewards, and banked salvage so balance can be audited from a run record.
 
 ### Finale and debug smoke
@@ -510,6 +511,7 @@ src/game/ActPressure.ts
 - Second-act bosses and finales should reuse the existing boss arena, phase, hazard-release, victory, defeat, and run-summary contracts where possible.
 - Boss-release hazard fairness remains mandatory: hazards hidden during a finale arena lock need a fresh visible warning lead before damage.
 - Debug shortcuts should be able to jump to the inter-act junction, Act II pressure, and finale while still using generated plans and public overlay state.
+- Work order 088 adds `src/game/SecondActFinale.ts` as the finale read-model boundary. Generation attaches a deterministic finale plan to the final Act II sector; gameplay consumes it for boss hull and arena-approach tuning after route/pacing modifiers; summaries, debug state, and save records consume the same plan for outcome copy, unlock hooks, and final-boss smoke without adding a separate combat path.
 - Playwright smoke should prefer public DOM/debug text assertions over private app object reads.
 
 ## GitHub Pages notes

@@ -6,7 +6,8 @@ export type AchievementId =
   | 'achievement_route_surveyor'
   | 'achievement_credit_float'
   | 'achievement_boss_claim'
-  | 'achievement_build_crafter';
+  | 'achievement_build_crafter'
+  | 'achievement_core_finale';
 
 export type AchievementStat =
   | 'runsEnded'
@@ -14,7 +15,8 @@ export type AchievementStat =
   | 'sectorsCleared'
   | 'creditsRecovered'
   | 'bossesDefeated'
-  | 'itemTriggers';
+  | 'itemTriggers'
+  | 'victories';
 
 export interface AchievementCondition {
   readonly stat: AchievementStat;
@@ -71,5 +73,12 @@ export const ACHIEVEMENTS: readonly AchievementDefinition[] = [
     summary: 'trigger item hooks during combat',
     condition: { stat: 'itemTriggers', atLeast: 1 },
     unlockIds: ['unlock_music_outer_debris']
+  },
+  {
+    id: 'achievement_core_finale',
+    name: 'Core Finale Filed',
+    summary: 'resolve the Act II finale with a confirmed victory',
+    condition: { stat: 'victories', atLeast: 1 },
+    unlockIds: ['unlock_music_core_descent']
   }
 ];

@@ -142,7 +142,7 @@ Exit criteria:
 - Fresh and progressed saves have deterministic reward/shop snapshots.
 - Summaries explain Act I versus Act II economy and item sources.
 
-Status: planned for work order 087.
+Status: completed in work order 087. Act II now uses a shared economy profile for reward weighting, reward choice bonuses, route payout bonuses, shop stock/price/reroll tuning, repair/vault scarcity, loose-currency value budgets, and upgrade-progress framing. Summary copy separates Act I, junction, Act II, recovered economy, and item sources, with deterministic fresh/progressed snapshots covering reward, shop, vault, junction, and save-accounting paths.
 
 ### P9.8 - Second-Act Bosses And Finale
 
@@ -158,7 +158,7 @@ Exit criteria:
 - Boss/finale selection is deterministic and debug-visible.
 - Final boss smoke can be reached without a full manual run.
 
-Status: planned for work order 088.
+Status: completed in work order 088. The final Act II sector now receives a deterministic finale variant with boss identity, hull pressure, approach pacing, outcome copy, debug state, and a victory unlock hook. The implementation reuses the existing boss arena and boss phase contracts, applies finale arena tuning after route and pacing modifiers, preserves boss-release hazard telegraph deferral, exposes the variant in HUD/debug/readout paths, and adds an `F` debug smoke shortcut that jumps to the final-sector boss without a full manual run.
 
 ### P9.9 - Act II Debug Smoke And Accessibility
 

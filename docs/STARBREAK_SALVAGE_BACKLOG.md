@@ -1644,7 +1644,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 087.
+- Completed in work order 087 with a shared Act II economy profile for reward weighting, route payouts, shop stock/prices/rerolls, repair/vault scarcity, loose-currency budgets, summary copy, and deterministic fresh/progressed economy snapshots.
 
 ### BB4 - Second-act bosses and finale
 
@@ -1656,7 +1656,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 088.
+- Completed in work order 088 with deterministic Act II finale variants, existing-arena boss hull and approach tuning, explicit victory/defeat/abandon copy, finale rows in run summaries, finale metadata in last-run save records, a Core Descent victory unlock hook, `Finale` debug overlay state, and an `F` debug shortcut that reaches the final-sector boss smoke while preserving boss-release hazard deferral.
 
 ## Epic BC - Phase 9 release and QA
 

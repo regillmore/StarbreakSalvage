@@ -725,7 +725,7 @@ Exit criteria:
 - Same seed plus save state reproduces Act I/Act II structure and junction choices.
 - Older one-act save and summary records remain readable.
 
-Status: act model, ten-sector target route, inter-act junction behavior, and first-pass Act II route contracts implemented by work orders 082-084; Act II pacing/objective expansion remains planned for work order 085.
+Status: act model, ten-sector target route, inter-act junction behavior, and first-pass Act II route contracts implemented by work orders 082-084; Act II pacing/objective expansion completed in work order 085.
 
 ### P9.3 - Act II Route, Pacing, And Objectives
 
@@ -738,7 +738,7 @@ Exit criteria:
 - Act II feels distinct through route identity and pacing rather than raw density alone.
 - Validation catches broken Act II content references.
 
-Status: planned for work orders 084-085.
+Status: implemented by work orders 084-085.
 
 ### P9.4 - Act II Pressure, Economy, And Finale
 
@@ -751,7 +751,7 @@ Exit criteria:
 - Act II pressure and rewards are deterministic, debug-visible, and bounded.
 - Victory, defeat, abandonment, unlock, and summary flows distinguish Act I from Act II.
 
-Status: planned for work orders 086-088.
+Status: implemented by work orders 086-088. Act pressure, Act II economy, and second-act finale variants are deterministic, debug-visible, summary/save-aware, and bounded through existing combat/arena contracts.
 
 ### P9.5 - Phase 9 Second-Act Playtest Candidate
 

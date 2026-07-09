@@ -74,6 +74,7 @@ describe('saveData', () => {
     expect(migrated.salvageBank).toBe(12);
     expect(migrated.stats.runsEnded).toBe(3);
     expect(migrated.stats.bossesDefeated).toBe(1);
+    expect(migrated.stats.victories).toBe(0);
     expect(migrated.unlockedIds).toContain('unlock_ship_scrap_monk');
     expect(migrated.purchasedUpgradeIds).toEqual([]);
   });
@@ -174,6 +175,9 @@ describe('saveData', () => {
       actSectorIndex: 2,
       actSectorCount: 2,
       actsCompleted: 2,
+      finaleVariantId: 'reactorBreach',
+      finaleVariantName: 'Reactor Breach',
+      finaleCleared: true,
       survivedSeconds: 184,
       distanceTraveled: 2536,
       sectorLength: 2536,
@@ -193,11 +197,17 @@ describe('saveData', () => {
     expect(save.lastRun?.actSectorIndex).toBe(2);
     expect(save.lastRun?.actSectorCount).toBe(2);
     expect(save.lastRun?.actsCompleted).toBe(2);
+    expect(save.lastRun?.finaleVariantId).toBe('reactorBreach');
+    expect(save.lastRun?.finaleVariantName).toBe('Reactor Breach');
+    expect(save.lastRun?.finaleCleared).toBe(true);
     expect(save.lastRun?.sectorsCleared).toBe(5);
     expect(save.lastRun?.distanceTraveled).toBe(2536);
     expect(save.lastRun?.sectorLength).toBe(2536);
+    expect(save.stats.victories).toBe(1);
     expect(save.stats.bestSectorsCleared).toBe(5);
     expect(save.stats.bestDistanceTraveled).toBe(2536);
+    expect(save.achievementIds).toContain('achievement_core_finale');
+    expect(save.unlockedIds).toContain('unlock_music_core_descent');
     expect(importSaveData(exportSaveData(save)).lastRun?.reason).toBe('victory');
   });
 
@@ -253,6 +263,9 @@ describe('saveData', () => {
     expect(normalized.lastRun?.actSectorIndex).toBe(0);
     expect(normalized.lastRun?.actSectorCount).toBeNull();
     expect(normalized.lastRun?.actsCompleted).toBe(0);
+    expect(normalized.lastRun?.finaleVariantId).toBeNull();
+    expect(normalized.lastRun?.finaleVariantName).toBeNull();
+    expect(normalized.lastRun?.finaleCleared).toBe(false);
     expect(normalized.lastRun?.distanceTraveled).toBe(0);
     expect(normalized.lastRun?.sectorLength).toBeNull();
   });

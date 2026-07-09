@@ -10,6 +10,7 @@ import {
 import { applyItemHooks } from './ItemHooks';
 import { generateRewardChoices, type RewardChoice } from './Rewards';
 import { getRewardUpgradeBiasTags, getRewardUpgradeChoiceBonus } from './UpgradeEffects';
+import { createActEconomyProfile, getActEconomyRewardChoiceBonus } from './ActEconomy';
 
 export function generateSectorRewardChoices(options: {
   readonly run: RunSkeleton;
@@ -19,6 +20,7 @@ export function generateSectorRewardChoices(options: {
   readonly count?: number;
 }): RewardChoice[] {
   const sector = getCurrentSector(options.run, options.session);
+  const actEconomy = createActEconomyProfile(sector);
   const modifiers = getRewardModifiersForSector(options.session, sector.index);
   const interActEffects = getInterActEffectsForSector(options.session, sector);
   const poolOverride = [...modifiers]
@@ -32,18 +34,30 @@ export function generateSectorRewardChoices(options: {
     options.routeKind
   );
   const upgradeBiasTags = getRewardUpgradeBiasTags(options.run.upgradeEffects, options.routeKind);
+  const actRewardChoiceBonus = getActEconomyRewardChoiceBonus(
+    actEconomy,
+    options.routeKind,
+    poolId,
+    sector.objective.bossRequired
+  );
   const rewardPayload = applyItemHooks('onRewardGenerated', options.session.itemInstances, {
     routeKind: options.routeKind,
     sectorIndex: sector.index,
     poolId,
     choiceCount:
-      options.count ?? 3 + choiceBonus + upgradeChoiceBonus + interActEffects.rewardChoiceBonus,
+      options.count ??
+      3 +
+        choiceBonus +
+        upgradeChoiceBonus +
+        interActEffects.rewardChoiceBonus +
+        actRewardChoiceBonus,
     biasTags: [
       ...options.contract.itemBias,
       ...getRouteBiasTags(options.routeKind),
       ...modifierBiasTags,
       ...upgradeBiasTags,
-      ...interActEffects.rewardBiasTags
+      ...interActEffects.rewardBiasTags,
+      ...actEconomy.rewardBiasTags
     ]
   });
   const poolProfileId = getSectorRewardPoolProfileId(
@@ -65,7 +79,8 @@ export function generateSectorRewardChoices(options: {
       sectorId: sector.sectorId,
       sectorRole: sector.sectorName,
       bossFactionId: sector.bossFactionId,
-      bossGate: sector.objective.bossRequired
+      bossGate: sector.objective.bossRequired,
+      actEconomy
     }
   });
 }

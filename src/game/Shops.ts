@@ -2,6 +2,7 @@ import { type ItemDefinition, type ItemId, type ItemRarity } from '../content/it
 import type { FactionId } from '../content/factions';
 import type { UnlockId } from '../content/unlocks';
 import { createRng } from '../core/rng';
+import type { ActEconomyProfile } from './ActEconomy';
 import { applyItemHooks } from './ItemHooks';
 import { generateRewardChoices, type ItemInstance } from './Rewards';
 
@@ -37,13 +38,16 @@ export function generateShopInventory(options: {
   readonly sectorRole?: string;
   readonly bossFactionId?: FactionId;
   readonly bossGate?: boolean;
+  readonly actEconomy?: ActEconomyProfile;
 }): ShopInventoryItem[] {
   const shopSeed = `${options.seed}:sector-${options.sectorIndex}:reroll-${options.rerollCount}`;
   const priceRng = createRng(shopSeed).fork('prices');
+  const actStockBonus = options.actEconomy?.shopStockBonus ?? 0;
+  const actPriceAdjustment = options.actEconomy?.shopPriceAdjustment ?? 0;
   const shopPayload = applyItemHooks('onShopEntered', options.itemInstances ?? [], {
     sectorIndex: options.sectorIndex,
     rerollCount: options.rerollCount,
-    itemCount: options.count ?? SHOP_ITEM_COUNT,
+    itemCount: (options.count ?? SHOP_ITEM_COUNT) + actStockBonus,
     priceDiscount: options.priceDiscount ?? 0,
     biasTags: options.biasTags ?? []
   });
@@ -60,7 +64,8 @@ export function generateShopInventory(options: {
       sectorId: options.sectorId,
       sectorRole: options.sectorRole,
       bossFactionId: options.bossFactionId,
-      bossGate: options.bossGate
+      bossGate: options.bossGate,
+      actEconomy: options.actEconomy
     }
   });
 
@@ -70,10 +75,21 @@ export function generateShopInventory(options: {
     sourceHint: choice.sourceHint,
     price: Math.max(
       2,
-      getShopPrice(choice.item, options.sectorIndex, priceRng.int(-1, 2)) -
+      getShopPrice(choice.item, options.sectorIndex, priceRng.int(-1, 2)) +
+        actPriceAdjustment -
         shopPayload.priceDiscount
     )
   }));
+}
+
+export function getShopRerollCost(
+  actEconomy: ActEconomyProfile | undefined,
+  rerollCount: number
+): number {
+  const repeatSurcharge = actEconomy?.escalated
+    ? Math.min(actEconomy.repeatRerollSurcharge, Math.max(0, rerollCount))
+    : 0;
+  return SHOP_REROLL_COST + (actEconomy?.rerollCostBonus ?? 0) + repeatSurcharge;
 }
 
 function getShopPrice(item: ItemDefinition, sectorIndex: number, variance: number): number {

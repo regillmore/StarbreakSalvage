@@ -1,7 +1,7 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene, SceneDebugState } from '../app/Scene';
 import { ACHIEVEMENTS } from '../content/achievements';
-import { getItemById } from '../content/items';
+import { getItemById, type ItemSource } from '../content/items';
 import { getUnlockById } from '../content/unlocks';
 import type { SaveData, SaveUpdateResult } from '../core/saveData';
 import {
@@ -19,6 +19,10 @@ import type { ItemInstance } from '../game/Rewards';
 import { formatSectorConditionTimeline } from '../game/SectorConditions';
 import { formatHazardZoneDirectorTimeline } from '../game/HazardZoneDirector';
 import { formatSectorPacingTimeline } from '../game/SectorPacing';
+import {
+  formatSecondActFinaleOutcome,
+  getSecondActFinalePlan
+} from '../game/SecondActFinale';
 import { formatRunUpgradeEffects, getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import type { InputAction } from '../systems/InputSystem';
 import {
@@ -81,6 +85,7 @@ export class RunSummaryScene implements Scene {
       ['Act Progress', formatActProgressSummary(this.run, this.routeHistory, this.result)],
       ['Outcome', getOutcomeLabel(this.result)],
       ['Win/Loss', getOutcomeDetail(this.result)],
+      ['Finale', formatFinaleOutcomeSummary(this.run, this.result)],
       ['Survived', `${Math.floor(this.result?.survivedSeconds ?? 0)}s`],
       ['Distance', formatDistanceSummary(this.result)],
       ['Sectors Cleared', `${getSectorsCleared(this.run, this.routeHistory, this.result)}`],
@@ -94,14 +99,20 @@ export class RunSummaryScene implements Scene {
       ['Act Route', formatActRouteHistory(this.routeHistory)],
       ['Act Timeline', formatRunActTimeline(this.run.acts)],
       ['Inter-Act Refit', formatInterActHistory(this.interActChoices)],
+      [
+        'Economy By Act',
+        formatRunEconomyBreakdown(this.run, this.routeOutcomes, this.interActChoices, this.result)
+      ],
       ['Sector Conditions', formatSectorConditionTimeline(this.run, this.routeOutcomes)],
       ['Sector Pacing', formatSectorPacingTimeline(this.run, this.routeOutcomes)],
       ['Hazard Zones', formatHazardZoneDirectorTimeline(this.run, this.routeOutcomes)],
       ['Upgrade Effects', formatRunUpgradeEffects(this.run.upgradeEffects)],
       ['Scrap Flow', progress.scrapBreakdownText],
+      ['Upgrade Economy', progress.economyScopeText],
       ['Upgrade Outlook', progress.upgradeProgressText],
       ['Banked Salvage', `${this.saveData.salvageBank} kg`],
       ['Build Identity', formatBuildSynergySummary(createBuildSynergyModel(this.itemInstances))],
+      ['Item Sources', formatItemSourceSummary(this.itemInstances)],
       ['Items', this.result?.itemNames.join(', ') ?? 'none'],
       ['Unlock Reasons', formatUnlockReasons(this.saveUpdate)]
     ];
@@ -430,6 +441,89 @@ export function formatActRouteHistory(routeHistory: readonly RouteHistoryEntry[]
     .join(' | ');
 }
 
+export function formatRunEconomyBreakdown(
+  run: RunSkeleton,
+  routeOutcomes: readonly AppliedRouteOutcome[],
+  interActChoices: readonly InterActChoiceRecord[],
+  result: CombatRunResult | null
+): string {
+  const actParts = run.acts.map((act) => {
+    const outcomes = routeOutcomes.filter(
+      (outcome) =>
+        outcome.sectorIndex >= act.startSectorIndex && outcome.sectorIndex <= act.endSectorIndex
+    );
+    const credits = outcomes.reduce((total, outcome) => total + outcome.effects.creditsDelta, 0);
+    const salvage = outcomes.reduce((total, outcome) => total + outcome.effects.salvageDelta, 0);
+    const cashOut = outcomes.reduce(
+      (total, outcome) => total + outcome.effects.reward.creditBonus,
+      0
+    );
+    const choices = outcomes.reduce(
+      (total, outcome) => total + outcome.effects.reward.choiceBonus,
+      0
+    );
+
+    return `${act.shortLabel}: ${outcomes.length} routes, ${formatSignedCredits(
+      credits
+    )}/${formatSignedSalvage(salvage)}, +${cashOut} cash-out, +${choices} choices`;
+  });
+  const junctionCredits = interActChoices.reduce(
+    (total, choice) => total + choice.effects.creditsDelta,
+    0
+  );
+  const junctionSalvage = interActChoices.reduce(
+    (total, choice) => total + choice.effects.salvageDelta,
+    0
+  );
+  const junctionShopDiscount = interActChoices.reduce(
+    (total, choice) => total + choice.effects.shopDiscount,
+    0
+  );
+  const junctionRewardChoices = interActChoices.reduce(
+    (total, choice) => total + choice.effects.rewardChoiceBonus,
+    0
+  );
+  const junctionPart =
+    interActChoices.length > 0
+      ? `Junction: ${formatSignedCredits(junctionCredits)}/${formatSignedSalvage(
+          junctionSalvage
+        )}, ${junctionShopDiscount > 0 ? `-${junctionShopDiscount}` : '+0'} shop, +${
+          junctionRewardChoices
+        } choices`
+      : 'Junction: none';
+  const recovered = result
+    ? `Recovered: ${result.credits} credits/${result.salvage} kg`
+    : 'Recovered: pending';
+
+  return [...actParts, junctionPart, recovered].join(' | ');
+}
+
+export function formatFinaleOutcomeSummary(
+  run: RunSkeleton,
+  result: CombatRunResult | null
+): string {
+  return formatSecondActFinaleOutcome(getSecondActFinalePlan(run), result?.reason);
+}
+
+export function formatItemSourceSummary(itemInstances: readonly ItemInstance[]): string {
+  if (itemInstances.length === 0) {
+    return 'none';
+  }
+
+  const counts = new Map<ItemSource, number>();
+
+  for (const instance of itemInstances) {
+    const item = getItemById(instance.itemId);
+    const source = getPrimaryItemSource(item.metadata.sources);
+    counts.set(source, (counts.get(source) ?? 0) + 1);
+  }
+
+  return [...counts.entries()]
+    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
+    .map(([source, count]) => `${formatItemSourceLabel(source)} ${count}`)
+    .join(', ');
+}
+
 export function formatDistanceSummary(result: CombatRunResult | null): string {
   if (!result) {
     return '0u';
@@ -444,6 +538,45 @@ export function formatDistanceSummary(result: CombatRunResult | null): string {
   }
 
   return `${distance}/${sectorLength}u`;
+}
+
+function formatSignedCredits(value: number): string {
+  return `${value >= 0 ? '+' : ''}${value}c`;
+}
+
+function formatSignedSalvage(value: number): string {
+  return `${value >= 0 ? '+' : ''}${value}kg`;
+}
+
+function getPrimaryItemSource(sources: readonly ItemSource[]): ItemSource {
+  return (
+    sources.find((source) => source !== 'combat' && source !== 'starter') ?? sources[0] ?? 'combat'
+  );
+}
+
+function formatItemSourceLabel(source: ItemSource): string {
+  switch (source) {
+    case 'starter':
+      return 'starter';
+    case 'combat':
+      return 'combat';
+    case 'shop':
+      return 'shop';
+    case 'vault':
+      return 'vault';
+    case 'elite':
+      return 'elite';
+    case 'boss':
+      return 'boss';
+    case 'faction':
+      return 'faction';
+    case 'lunar':
+      return 'lunar';
+    case 'route':
+      return 'route';
+    case 'unlock':
+      return 'unlock';
+  }
 }
 
 export function formatUnlockReasons(saveUpdate: SaveUpdateResult | null): string {

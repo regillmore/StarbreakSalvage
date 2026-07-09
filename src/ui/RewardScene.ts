@@ -1,6 +1,7 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene, SceneDebugState } from '../app/Scene';
 import type { ItemId } from '../content/items';
+import { createActEconomyProfile } from '../game/ActEconomy';
 import { formatProspectiveBuildSynergy } from '../game/BuildSynergy';
 import type { RouteOption, RunSkeleton, StartingContract } from '../game/Generation';
 import { generateSectorRewardChoices } from '../game/SectorRewards';
@@ -32,7 +33,8 @@ export class RewardScene implements Scene {
 
   public enter(): void {
     const sector = getCurrentSector(this.run, this.session);
-    const creditReward = getRouteCreditReward(this.session, sector.index);
+    const actEconomy = createActEconomyProfile(sector);
+    const creditReward = getRouteCreditReward(this.session, sector.index, actEconomy);
     const rewardChoices = generateSectorRewardChoices({
       run: this.run,
       session: this.session,

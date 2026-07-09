@@ -14,6 +14,7 @@ import {
 import type { RouteKind, StartingContract } from './Generation';
 import { createRng, type Rng } from '../core/rng';
 import { filterUnlockedItemIds, type UnlockAccess } from './UnlockGates';
+import { getActEconomyRarityMultiplier, type ActEconomyProfile } from './ActEconomy';
 
 export interface ItemInstance {
   readonly itemId: ItemId;
@@ -33,6 +34,7 @@ export interface RewardPoolContext {
   readonly sectorRole?: string;
   readonly bossFactionId?: FactionId;
   readonly bossGate?: boolean;
+  readonly actEconomy?: ActEconomyProfile;
 }
 
 const DEFAULT_FIELD_KIT: readonly ItemId[] = ['item_split_prism', 'item_chain_arc_capacitor'];
@@ -161,7 +163,9 @@ export function getRewardWeight(
   profile: ItemPoolWeightProfileDefinition,
   context: RewardPoolContext = {}
 ): number {
-  const rarityMultiplier = profile.rarityWeights[item.rarity] ?? 0;
+  const rarityMultiplier =
+    (profile.rarityWeights[item.rarity] ?? 0) *
+    getActEconomyRarityMultiplier(context.actEconomy, item.rarity);
 
   if (rarityMultiplier <= 0) {
     return 0;
@@ -169,11 +173,13 @@ export function getRewardWeight(
 
   const sourceMultiplier = getBestMetadataMultiplier(item.metadata.sources, {
     ...profile.sourceWeights,
+    ...(context.actEconomy?.sourceWeights ?? {}),
     ...getContextSourceWeights(context)
   });
   const familyMultiplier = profile.familyWeights?.[item.metadata.family] ?? 1;
   const profileTagMultiplier = getBestMetadataMultiplier(item.tags, {
     ...(profile.tagWeights ?? {}),
+    ...(context.actEconomy?.tagWeights ?? {}),
     ...getContextTagWeights(context)
   });
   const biasMultiplier =
@@ -212,6 +218,7 @@ function getRewardSourceHint(
 ): string {
   const sourceWeights = {
     ...profile.sourceWeights,
+    ...(context.actEconomy?.sourceWeights ?? {}),
     ...getContextSourceWeights(context)
   };
   const bestSource = item.metadata.sources

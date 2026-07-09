@@ -1,6 +1,11 @@
 import type { ItemTag, RewardPoolDefinition } from '../content/items';
 import type { FactionId } from '../content/factions';
 import { createRng } from '../core/rng';
+import {
+  createActEconomyProfile,
+  getActEconomyRouteCreditBonus,
+  getActEconomyRouteSalvageBonus
+} from './ActEconomy';
 import type { RouteKind, RouteOption, RunSkeleton, SectorRoute } from './Generation';
 
 export interface RouteCombatModifier {
@@ -64,6 +69,12 @@ export function generateRouteOutcome(options: {
   );
   const targetSectorIndex =
     options.sector.index < options.run.sectors.length ? options.sector.index : null;
+  const actEconomy = createActEconomyProfile(options.sector);
+  const routeCreditBonus = getActEconomyRouteCreditBonus(actEconomy, options.route.kind);
+  const routeSalvageBonus = getActEconomyRouteSalvageBonus(actEconomy, options.route.kind);
+  const actDetails = actEconomy.escalated
+    ? [`${actEconomy.actShortLabel} economy: ${actEconomy.debugLabel}.`]
+    : [];
 
   switch (options.route.kind) {
     case 'shop': {
@@ -75,7 +86,8 @@ export function generateRouteOutcome(options: {
         summary: 'A licensed salvage broker unlocks controlled inventory for this stop.',
         details: [
           `Shop prices reduced by ${discount}.`,
-          `Shop inventory gains 1 extra slot biased toward ${focusTag}.`
+          `Shop inventory gains 1 extra slot biased toward ${focusTag}.`,
+          ...actDetails
         ],
         effects: {
           ...createEmptyEffects(),
@@ -89,24 +101,26 @@ export function generateRouteOutcome(options: {
     }
 
     case 'elite': {
-      const salvageDelta = options.route.risk + rng.int(1, 2);
+      const salvageDelta = options.route.risk + rng.int(1, 2) + routeSalvageBonus;
+      const rewardCreditBonus = 4 + routeCreditBonus;
 
       return createOutcome(options, {
         title: 'Elite Bounty Posted',
         summary: 'An ace wing marks your transponder, but the bounty purse is already leaking.',
         details: [
           `Gain ${salvageDelta} salvage.`,
-          'Reward screen gains 1 extra choice and +4 credit cash-out.',
+          `Reward screen gains 1 extra choice and +${rewardCreditBonus} credit cash-out.`,
           targetSectorIndex === null
             ? 'No future sector remains for the bounty wing.'
-            : 'Next sector enemies gain +1 hull and open fire 10% sooner.'
+            : 'Next sector enemies gain +1 hull and open fire 10% sooner.',
+          ...actDetails
         ],
         effects: {
           ...createEmptyEffects(),
           salvageDelta,
           reward: {
             choiceBonus: 1,
-            creditBonus: 4,
+            creditBonus: rewardCreditBonus,
             biasTags: ['overkill', 'drone'],
             poolIdOverride: null
           },
@@ -125,8 +139,11 @@ export function generateRouteOutcome(options: {
     }
 
     case 'vault': {
-      const salvageDelta = 2 + rng.int(0, 2);
-      const creditCost = Math.min(options.availableCredits, rng.int(1, 3));
+      const salvageDelta = 2 + rng.int(0, 2) + routeSalvageBonus;
+      const creditCost = Math.min(
+        options.availableCredits,
+        rng.int(1, 3) + actEconomy.vaultCreditSurcharge
+      );
 
       return createOutcome(options, {
         title: 'Sealed Vault Breach',
@@ -134,7 +151,8 @@ export function generateRouteOutcome(options: {
         details: [
           creditCost > 0 ? `Spend ${creditCost} credits on cutting charges.` : 'No credits spent.',
           `Gain ${salvageDelta} salvage, 1 relic marker, and 1 curse.`,
-          'Reward pool switches to vault items with 1 extra choice.'
+          'Reward pool switches to vault items with 1 extra choice.',
+          ...actDetails
         ],
         effects: {
           ...createEmptyEffects(),
@@ -153,7 +171,11 @@ export function generateRouteOutcome(options: {
     }
 
     case 'repair': {
-      const creditCost = Math.min(options.availableCredits, 4 + options.sector.index);
+      const creditCost = Math.min(
+        options.availableCredits,
+        4 + options.sector.index + actEconomy.repairCreditSurcharge
+      );
+      const rewardCreditBonus = 2 + routeCreditBonus;
 
       return createOutcome(options, {
         title: 'Patch Bay Invoice',
@@ -161,7 +183,8 @@ export function generateRouteOutcome(options: {
         details: [
           creditCost > 0 ? `Spend ${creditCost} credits.` : 'Emergency credit waiver accepted.',
           'Future sectors gain +1 max hull.',
-          'Reward bias leans toward shield, armor, and credit items.'
+          `Reward bias leans toward shield, armor, and credit items with +${rewardCreditBonus} credit cash-out.`,
+          ...actDetails
         ],
         effects: {
           ...createEmptyEffects(),
@@ -169,7 +192,7 @@ export function generateRouteOutcome(options: {
           hullPatchDelta: 1,
           reward: {
             choiceBonus: 0,
-            creditBonus: 2,
+            creditBonus: rewardCreditBonus,
             biasTags: ['shield', 'armor', 'credit'],
             poolIdOverride: null
           }
@@ -180,7 +203,9 @@ export function generateRouteOutcome(options: {
     case 'glitch': {
       const variance = rng.choice([-3, 0, 5]);
       const creditsDelta =
-        variance < 0 ? -Math.min(options.availableCredits, Math.abs(variance)) : variance;
+        variance < 0
+          ? -Math.min(options.availableCredits, Math.abs(variance))
+          : variance + routeCreditBonus;
       const biasTag = rng.choice<ItemTag>(['phase', 'heat', 'curse', 'ricochet']);
 
       return createOutcome(options, {
@@ -196,7 +221,8 @@ export function generateRouteOutcome(options: {
           'Reward screen gains 1 extra choice biased toward phase tech.',
           targetSectorIndex === null
             ? 'The distortion has no future sector to infect.'
-            : 'Next sector enemies open fire 16% sooner; the boss gains +1 hull.'
+            : 'Next sector enemies open fire 16% sooner; the boss gains +1 hull.',
+          ...actDetails
         ],
         effects: {
           ...createEmptyEffects(),
@@ -223,8 +249,9 @@ export function generateRouteOutcome(options: {
     }
 
     case 'factionAmbush': {
-      const salvageDelta = Math.max(2, options.route.risk);
+      const salvageDelta = Math.max(2, options.route.risk) + routeSalvageBonus;
       const biasTags = getFactionBiasTags(options.sector.bossFactionId);
+      const rewardCreditBonus = 3 + routeCreditBonus;
 
       return createOutcome(options, {
         title: 'Faction Ambush Signal',
@@ -234,14 +261,15 @@ export function generateRouteOutcome(options: {
           `Rewards bias toward ${biasTags.join(' and ')} parts.`,
           targetSectorIndex === null
             ? 'No future sector remains for the escort.'
-            : 'Next sector enemies gain +1 hull, fire 12% sooner, and the boss gains +1 hull.'
+            : 'Next sector enemies gain +1 hull, fire 12% sooner, and the boss gains +1 hull.',
+          ...actDetails
         ],
         effects: {
           ...createEmptyEffects(),
           salvageDelta,
           reward: {
             choiceBonus: 0,
-            creditBonus: 3,
+            creditBonus: rewardCreditBonus,
             biasTags,
             poolIdOverride: null
           },

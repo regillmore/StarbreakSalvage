@@ -241,7 +241,8 @@ Phase 9 should add these seed/save fixtures:
 - `INTERACT-REFIT-SNAPSHOT` - deterministic midpoint junction choices and Act II modifier application under fresh and progressed saves.
 - `ACT2-ROUTE-LADDER` - Act II route pool fixture covering route tags, pressure/reward tradeoffs, and route-card copy.
 - `ACT2-PRESSURE-GAUNTLET` - Act II combined enemy/environment/item-pressure budget fixture.
-- `ACT2-FINALE-SMOKE` - deterministic second-act boss/finale, victory, summary, save, and boss-release hazard fairness fixture.
+- `ACT2-ECONOMY-SNAPSHOT` - Act II reward, shop, vault, junction, summary, and save-accounting fixture under fresh and progressed saves; first covered by work order 087 through `tests/unit/actEconomy.test.ts`.
+- `ACT2-FINALE-SMOKE` - deterministic second-act boss/finale, victory, summary, save, and boss-release hazard fairness fixture; first covered in work order 088 by `tests/unit/secondActFinale.test.ts`.
 
 ## Content validation checklist
 
@@ -274,7 +275,8 @@ Phase 2 should extend this checklist as systems become real. In addition to the 
 - [x] Destructible/obstacle definitions validate collision shape, hull, damage interactions, objective policy, reward policy, chain behavior, placement constraints, cue metadata, debug labels, and fixed-world placement safety after work order 075.
 - [x] Loose currency scatter rules validate value tiers, drift/lifetime, pickup attraction, cap rules, route/sector bias, and economy accounting after work order 078.
 - [x] Act definitions validate after work order 082.
-- [ ] Inter-act junction choices and Act II route pools validate; Act II objectives, second-act boss/finale references, and act-aware economy pools remain to validate as later Phase 9 implementation lands.
+- [x] Inter-act junction choices, Act II route pools, Act II objectives, and act-aware economy pools validate after work orders 083-087.
+- [x] Second-act boss/finale selection, arena handoff, summary copy, save records, unlock hooks, and debug key reachability validate after work order 088.
 
 ## Manual browser smoke matrix
 
@@ -326,7 +328,7 @@ Phase 9 performance checks should include total two-act run length, act-transiti
 - [x] Long-sector pressure visible in debug/summaries after work order 068 and in browser stress smoke after work order 069.
 - [x] Active hazard-zone, destructible/obstacle, loose currency, and environmental stress-budget counters visible in debug once Phase 8 lands.
 - [x] Environmental stress smoke covers at least one hazard/destructible/obstacle/currency path where practical.
-- [ ] Act II debug smoke and act-pressure counters visible once Phase 9 implementation lands.
+- [x] Act II pressure counters and finale debug state are visible through public debug readouts after work orders 086-088; broader browser smoke remains for work order 089.
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [x] Heavy combat debug scene documented.
 - [x] Long-scroll debug scene documented.

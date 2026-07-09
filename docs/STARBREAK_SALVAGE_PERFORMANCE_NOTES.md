@@ -153,8 +153,10 @@ Phase 9 expands run length with a second act. Keep the expansion measurable and 
 - Longer two-act runs should not imply higher sustained active-entity budgets. Use relief windows, debug shortcuts, and finale gates to keep playtest time bounded.
 - Act-aware pressure summaries should expose enemy role, variant, formation, hazard, object, loose-currency, item-hook, projectile, and telegraph budgets together before density increases.
 - Economy expansion should be measured through deterministic summaries: Act I income, junction changes, Act II income, loose currency, shops, repairs, rerolls, and banked scrap.
+- Work order 087 keeps that measurement in pure economy helpers and unit snapshots instead of per-frame scene state: rewards, shops, routes, loose-currency plans, summary copy, and save accounting all consume explicit act/save context.
 - Second-act bosses/finales should reuse existing boss arena, phase, hazard-release, and summary contracts unless profiling justifies a new path.
 - Debug smoke should be able to reach the inter-act junction, Act II pressure, and finale without a full manual run.
+- Work order 088 keeps finale variants as deterministic boss-hull and arena-approach modifiers on the existing combat path, with an `F` debug shortcut for final-boss smoke; do not raise projectile, telegraph, object, or pickup caps for finale variants without a fresh stress pass.
 - Production preview smoke should continue checking the static `/StarbreakSalvage/` base path after act routing changes.
 
 ## Debug and Playtest Scenarios
@@ -251,6 +253,7 @@ The debug overlay total entity count includes player, enemies, boss, bullets, pi
 - Two-act runs can become tiring if Act II only adds distance. Use midpoint choice, relief windows, route identity, and finale pressure to make the extra length meaningful.
 - Act generation can break seed reproducibility if act state is split between run generation, save data, and scene-local flags. Keep act plans explicit and serializable.
 - The inter-act junction can confuse resource accounting if repair, shop, reward, and risk choices apply outside the same deterministic transition path.
-- Act II rewards and loose currency can inflate banked scrap or shop power. Track Act I and Act II income separately before increasing drop rates.
+- Act II rewards and loose currency can inflate banked scrap or shop power. Work order 087 now tracks Act I and Act II income separately in summaries and snapshots; keep using those before increasing drop rates.
 - Act II pressure can hide bullets if enemy formations, hazards, obstacles, and item effects peak together. Add combined budget telemetry before raising caps.
 - Second-act boss arenas must preserve the boss-release hazard fairness rule so hidden warnings cannot become instant damage after a finale transition.
+- The first finale pass adds hull/approach pressure and summary/unlock hooks, not new projectile families; remaining work should profile the `F` finale smoke alongside enemy-rich and environmental stress before adding denser final-phase attacks.

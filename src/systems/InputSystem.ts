@@ -26,7 +26,8 @@ export const INPUT_ACTIONS = [
   'debugEnvironmentStress',
   'debugSectorComplete',
   'debugDestroyPlayer',
-  'debugLongScroll'
+  'debugLongScroll',
+  'debugFinaleSmoke'
 ] as const;
 
 export type InputAction = (typeof INPUT_ACTIONS)[number];
@@ -71,7 +72,8 @@ export const DEFAULT_KEY_BINDINGS: KeyBindingMap = {
   debugEnvironmentStress: ['H'],
   debugSectorComplete: ['8'],
   debugDestroyPlayer: ['7'],
-  debugLongScroll: ['9']
+  debugLongScroll: ['9'],
+  debugFinaleSmoke: ['F']
 };
 
 export function normalizeKey(key: string): string {

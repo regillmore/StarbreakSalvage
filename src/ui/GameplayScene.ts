@@ -38,6 +38,7 @@ import {
   getActPressureRoutePressure,
   type ActPressureModel
 } from '../game/ActPressure';
+import { createActEconomyProfile } from '../game/ActEconomy';
 import { createActDebugState, formatActSectorLabel } from '../game/ActPlan';
 import { createBuildSynergyModel, formatBuildSynergyHud } from '../game/BuildSynergy';
 import { createEnemyRolePressureSummary } from '../game/EnemyRolePressure';
@@ -72,6 +73,12 @@ import {
   formatSectorPacingReadout,
   type SectorPacingPlan
 } from '../game/SectorPacing';
+import {
+  applySecondActFinaleToBossArena,
+  createSecondActFinaleDebugState,
+  formatSecondActFinaleBossName,
+  formatSecondActFinaleOutcome
+} from '../game/SecondActFinale';
 import {
   applyHazardZoneDirectorToFeatures,
   createHazardZoneDirectorPlan,
@@ -653,6 +660,47 @@ export class GameplayScene implements Scene {
     return forceCombatEnd(this.getCombatState(), reason);
   }
 
+  public prepareDebugFinaleSmoke(): boolean {
+    const sector = this.getCurrentSector();
+    const finale = sector.finale;
+    const arena = this.getCurrentArenaPlan();
+
+    if (!finale || !arena) {
+      return false;
+    }
+
+    const state = this.getCombatState();
+    const scroll = this.getScrollState();
+    const feedbackBefore = createCombatFeedbackSnapshot(state);
+
+    setScrollDistance(scroll, arena.lockDistance, scroll.plan.baseSpeed);
+    state.scrollDistance = scroll.distance;
+    clearExitPressure(state);
+    state.bossSpawned = false;
+    this.bossArenaState = createBossArenaState(arena);
+    this.bossArenaUpdate = updateBossArenaState(this.getBossArenaState(), {
+      distance: scroll.distance,
+      supportComplete: true,
+      bossActive: false,
+      bossAlreadySpawned: false,
+      bossDefeated: false
+    });
+    spawnBoss(state, finale.bossId, this.getCombatBounds(), { clearField: true });
+    this.bossArenaUpdate = updateBossArenaState(this.getBossArenaState(), {
+      distance: scroll.distance,
+      supportComplete: true,
+      bossActive: true,
+      bossAlreadySpawned: true,
+      bossDefeated: false
+    });
+    this.bossHazardReleaseDistance = null;
+    this.sectorCompleted = false;
+    this.debugScenario = `finale-smoke:${finale.variantId}`;
+    this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
+    this.syncReadouts();
+    return true;
+  }
+
   public getDebugState(): SceneDebugState {
     const scroll = getScrollProgress(this.getScrollState());
     const viewportLayout = this.getViewportLayout();
@@ -725,6 +773,9 @@ export class GameplayScene implements Scene {
         itemStress,
         hazardZoneDirector
       }),
+      finale: currentSector.finale
+        ? createSecondActFinaleDebugState(currentSector.finale)
+        : undefined,
       upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects),
       act: createActDebugState(currentSector.act),
       progression: {
@@ -964,7 +1015,8 @@ export class GameplayScene implements Scene {
       landmarks: features.landmarks,
       environmentObjects: environmentObjects.objects,
       routeEventBias: this.getLooseCurrencyRouteBias(),
-      actPressure: this.getActPressureModel()
+      actPressure: this.getActPressureModel(),
+      actEconomy: createActEconomyProfile(sector)
     });
 
     return this.looseCurrencyPlan;
@@ -1113,11 +1165,15 @@ export class GameplayScene implements Scene {
         this.sectorConditions
       );
 
-      this.conditionedArena = applySectorPacingToBossArena(
+      const pacedArena = applySectorPacingToBossArena(
         routeConditionedArena,
         routeConditionedScroll,
         this.getCurrentScrollPlan(),
         this.getSectorPacingPlan()
+      );
+      this.conditionedArena = applySecondActFinaleToBossArena(
+        pacedArena,
+        this.getCurrentSector().finale
       );
     }
 
@@ -1213,9 +1269,10 @@ export class GameplayScene implements Scene {
     this.syncMeters(state);
     this.combatReadout.textContent = `Destroyed ${state.stats.enemiesDestroyed} | Shots ${state.stats.shotsFired} | Hooks ${state.stats.itemTriggers}`;
     this.bossReadout.textContent = state.boss
-      ? `${state.boss.name} ${Math.max(0, state.boss.hull)}/${state.boss.maxHull} | ${
-          state.boss.phaseLabel
-        }`
+      ? `${formatSecondActFinaleBossName(
+          this.getCurrentSector().finale,
+          state.boss.name
+        )} ${Math.max(0, state.boss.hull)}/${state.boss.maxHull} | ${state.boss.phaseLabel}`
       : `Boss ${this.getCurrentBossName()}`;
     this.warningReadout.textContent =
       state.telegraphs[0]?.label ??
@@ -1230,7 +1287,10 @@ export class GameplayScene implements Scene {
         exitPresentation.progress * 100
       )}%`;
       this.warningReadout.textContent = exitPresentation.toast;
-      this.hintReadout.textContent = exitPresentation.hint;
+      this.hintReadout.textContent =
+        this.exitSequence?.reason === 'victory'
+          ? formatSecondActFinaleOutcome(this.getCurrentSector().finale, 'victory')
+          : exitPresentation.hint;
     }
 
     if (destructionPresentation) {
@@ -1238,7 +1298,10 @@ export class GameplayScene implements Scene {
         destructionPresentation.progress * 100
       )}%`;
       this.warningReadout.textContent = destructionPresentation.transponderText;
-      this.hintReadout.textContent = 'Hint Controls offline; rescue transponder broadcasting.';
+      this.hintReadout.textContent =
+        this.getCurrentSector().finale !== null
+          ? formatSecondActFinaleOutcome(this.getCurrentSector().finale, 'destroyed')
+          : 'Hint Controls offline; rescue transponder broadcasting.';
     }
   }
 
@@ -1248,7 +1311,8 @@ export class GameplayScene implements Scene {
   }
 
   private getCurrentBossName(): string {
-    return this.run.sectors[this.sectorIndex]?.bossName ?? 'unassigned';
+    const sector = this.run.sectors[this.sectorIndex];
+    return sector ? formatSecondActFinaleBossName(sector.finale, sector.bossName) : 'unassigned';
   }
 
   private getVerbReadout(state: CombatState): string {
@@ -1307,6 +1371,11 @@ export class GameplayScene implements Scene {
 
   private getOnboardingHint(state: CombatState): string {
     if (state.boss) {
+      const finale = this.getCurrentSector().finale;
+      if (finale) {
+        return `Hint ${finale.label}; ${finale.summary}`;
+      }
+
       return `Hint Boss phase ${state.boss.phaseLabel}; watch warnings before crossing lanes.`;
     }
 
@@ -1385,7 +1454,10 @@ export class GameplayScene implements Scene {
   }
 
   private getBossHullBonus(): number {
-    return this.combatModifiers.reduce((total, modifier) => total + modifier.bossHullBonus, 0);
+    return (
+      this.combatModifiers.reduce((total, modifier) => total + modifier.bossHullBonus, 0) +
+      (this.getCurrentSector().finale?.bossHullBonus ?? 0)
+    );
   }
 
   private hasEnemyVariantRoutePressure(): boolean {
