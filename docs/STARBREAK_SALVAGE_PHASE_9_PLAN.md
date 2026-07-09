@@ -110,7 +110,7 @@ Exit criteria:
 - Long-run pacing has relief and midpoint punctuation.
 - Existing long-scroll and enemy/environment stress smoke remain green.
 
-Status: planned for work order 085.
+Status: completed in work order 085. Act II sector pacing now carries objective variants, length bands, pressure bands, route-conditioned modifiers, relief windows, boss approach scaling, and summary/debug readouts.
 
 ### P9.6 - Act II Combat And Environment Escalation
 

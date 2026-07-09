@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { createDefaultCombatBounds } from '../../src/game/CombatGeometry';
+import { createCombatState, updateCombatState } from '../../src/game/CombatState';
 import { generateRunSkeleton, type RouteKind, type RouteOption } from '../../src/game/Generation';
 import {
   advanceSector,
@@ -25,6 +27,7 @@ import {
   formatSectorPacingTimeline,
   summarizeSectorPacingPlan
 } from '../../src/game/SectorPacing';
+import { formatSectorObjectiveVariantReadout } from '../../src/game/SectorObjectives';
 import { validateSectorFeaturePlan } from '../../src/game/SectorFeatures';
 import { createWaveDirectorPlan } from '../../src/game/WaveDirector';
 
@@ -134,7 +137,170 @@ describe('SectorPacing', () => {
     expect(timeline).toContain('formation W2');
     expect(timeline).toContain('relief');
   });
+
+  it('adds Act II length bands, pressure bands, objective variants, and relief windows', () => {
+    const paced = getUnroutedPacedSector('STARBREAK-SMOKE', 5);
+
+    expect(paced.baseSector.act.actShortLabel).toBe('Act II');
+    expect(paced.baseSector.objective.variantId).toBe('act2DeepSweep');
+    expect(formatSectorObjectiveVariantReadout(paced.baseSector.objective)).toContain(
+      'Deep-sector sweep'
+    );
+    expect(paced.pacing.arcKind).toBe('act2Traverse');
+    expect(paced.pacing.lengthBand).toBe('extended');
+    expect(paced.pacing.pressureBand).toBe('sustained');
+    expect(paced.pacing.objectiveVariantLabel).toBe('Deep-sector sweep');
+    expect(paced.pacing.waveDistanceRatios).toEqual([0.16, 0.46, 0.8]);
+    expect(paced.pacing.reliefWindows.length).toBeGreaterThanOrEqual(2);
+    expect(paced.scroll.length).toBeGreaterThan(paced.routeScroll.length);
+
+    for (let index = 1; index < paced.pacing.reliefWindows.length; index += 1) {
+      expect(paced.pacing.reliefWindows[index]?.startRatio ?? 0).toBeGreaterThan(
+        paced.pacing.reliefWindows[index - 1]?.endRatio ?? 0
+      );
+    }
+  });
+
+  it('applies route-conditioned pacing modifiers without flat Act II density spikes', () => {
+    const pressured = getPacedSectorAfterRoute('ACT2-ROUTE-PACING', 6, 'glitch');
+    const quiet = getPacedSectorAfterRoute('ACT2-ROUTE-PACING', 6, 'repair');
+
+    expect(pressured.baseSector.act.actShortLabel).toBe('Act II');
+    expect(pressured.baseSector.sectorId).toBe(quiet.baseSector.sectorId);
+    expect(pressured.pacing.arcKind).toBe('glitchShear');
+    expect(pressured.pacing.pressureBand).toBe('volatile');
+    expect(quiet.pacing.pressureBand).toBe('sustained');
+    expect(pressured.pacing.lengthMultiplier).toBeGreaterThan(quiet.pacing.lengthMultiplier);
+    expect(pressured.pacing.spawnSpacingMultiplier).toBeGreaterThanOrEqual(
+      quiet.pacing.spawnSpacingMultiplier
+    );
+    expect(pressured.pacing.hazardBeatRatios.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('tunes Act II boss approach handoff while preserving arena lock and release ordering', () => {
+    const paced = getUnroutedPacedSector('STARBREAK-SMOKE', 9);
+    const routeArena = applySectorConditionsToBossArena(
+      paced.baseSector.arena,
+      paced.baseSector.scroll,
+      paced.routeScroll,
+      paced.conditions
+    );
+    const pacedArena = applySectorPacingToBossArena(
+      routeArena,
+      paced.routeScroll,
+      paced.scroll,
+      paced.pacing
+    );
+    const routeApproachDistance =
+      (routeArena?.lockDistance ?? 0) - (routeArena?.approachStartDistance ?? 0);
+    const pacedApproachDistance =
+      (pacedArena?.lockDistance ?? 0) - (pacedArena?.approachStartDistance ?? 0);
+
+    expect(paced.pacing.arcKind).toBe('act2Finale');
+    expect(paced.pacing.pressureBand).toBe('finale');
+    expect(paced.pacing.bossApproachMultiplier).toBeGreaterThan(1);
+    expect(pacedArena?.releaseDistance).toBe(paced.scroll.length);
+    expect(pacedArena?.lockDistance ?? 0).toBeLessThan(pacedArena?.releaseDistance ?? 0);
+    expect(pacedApproachDistance).toBeGreaterThan(routeApproachDistance);
+  });
+
+  it('keeps Act II distance-wave spawning catchup-safe under late-frame jumps', () => {
+    const paced = getUnroutedPacedSector('STARBREAK-SMOKE', 5);
+    const encounterPacing = applySectorPacingToEncounterPacing(
+      paced.baseSector.encounterPacing,
+      paced.pacing
+    );
+    const plan = createWaveDirectorPlan({
+      seed: `${paced.run.seed}:combat:${paced.baseSector.sectorId}`,
+      objective: paced.baseSector.objective,
+      majorWaves: paced.baseSector.majorWaves,
+      preferredFactionId: paced.baseSector.bossFactionId,
+      availableFactionIds: paced.run.availableFactionIds,
+      scroll: paced.scroll,
+      pacing: encounterPacing,
+      sectorIndex: paced.session.currentSectorIndex,
+      routePressure: true,
+      formationClusterWaves: paced.pacing.formationClusterWaveIndexes
+    });
+    const finalDistance = Math.max(...plan.spawnSchedule.map((spawn) => spawn.atDistance ?? 0));
+    const bounds = createDefaultCombatBounds();
+    const state = createCombatState(bounds, 'ACT2-CATCHUP-SAFETY', {
+      spawnSchedule: plan.spawnSchedule,
+      bossSpawnAtSeconds: null,
+      sectorLength: paced.scroll.length
+    });
+
+    updateCombatState(
+      state,
+      { movement: { x: 0, y: 0 }, fire: false, scrollDistance: finalDistance + 120 },
+      0.2,
+      bounds
+    );
+
+    expect(state.nextSpawnIndex).toBe(plan.spawnSchedule.length);
+    expect(state.enemies).toHaveLength(plan.spawnSchedule.length);
+
+    const spawnedIds = state.enemies.map((enemy) => enemy.id);
+
+    updateCombatState(
+      state,
+      { movement: { x: 0, y: 0 }, fire: false, scrollDistance: finalDistance + 120 },
+      0.2,
+      bounds
+    );
+
+    expect(state.nextSpawnIndex).toBe(plan.spawnSchedule.length);
+    expect(state.enemies.map((enemy) => enemy.id)).toEqual(spawnedIds);
+  });
+
+  it('summarizes known-seed Act II pacing timelines with objective and pressure context', () => {
+    const run = generateRunSkeleton('STARBREAK-SMOKE');
+    const timeline = formatSectorPacingTimeline(run, []);
+
+    expect(timeline).toContain('S6 Core-depth traverse');
+    expect(timeline).toContain('Deep-sector sweep');
+    expect(timeline).toContain('sustained pressure');
+    expect(timeline).toContain('S10 Finale descent');
+    expect(timeline).toContain('finale pressure');
+  });
 });
+
+function getUnroutedPacedSector(seed: string, sectorIndex: number) {
+  const run = generateRunSkeleton(seed);
+  const contract = run.contracts[0];
+
+  if (!contract) {
+    throw new Error('Expected contract.');
+  }
+
+  const session = createRunSession(run, contract);
+  session.currentSectorIndex = sectorIndex;
+  const baseSector = getCurrentSector(run, session);
+  const conditions = createSectorConditionPlan({
+    run,
+    sectorIndex: session.currentSectorIndex,
+    routeOutcomes: session.routeOutcomes
+  });
+  const routeScroll = applySectorConditionsToScroll(baseSector.scroll, conditions);
+  const pacing = createSectorPacingPlan({
+    runSeed: run.seed,
+    sector: baseSector,
+    sectorIndex: session.currentSectorIndex,
+    conditions,
+    scroll: routeScroll
+  });
+  const scroll = applySectorPacingToScroll(routeScroll, pacing);
+
+  return {
+    run,
+    session,
+    baseSector,
+    conditions,
+    routeScroll,
+    pacing,
+    scroll
+  };
+}
 
 function getPacedSectorAfterRoute(seed: string, sourceSectorIndex: number, kind: RouteKind) {
   const { run, session } = selectRouteIntoSector(seed, sourceSectorIndex, kind);

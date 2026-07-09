@@ -1422,7 +1422,7 @@ Acceptance criteria:
 - Long-run pacing exposes useful debug/summary context.
 - Existing long-scroll, enemy-rich, item-storm, and environmental stress paths remain green.
 
-Status: planned.
+Status: completed in work order 085. Act II now exposes objective variants, length bands, pressure bands, extra second-act relief windows, route-conditioned pacing modifiers, boss-approach tuning, and summary/debug readouts with deterministic tests.
 
 ## Work order 086 - Act II combat and environmental escalation
 

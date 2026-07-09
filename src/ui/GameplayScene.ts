@@ -108,6 +108,10 @@ import {
   type WaveDirectorPlan
 } from '../game/WaveDirector';
 import {
+  formatSectorObjectiveVariantDebug,
+  formatSectorObjectiveVariantReadout
+} from '../game/SectorObjectives';
+import {
   createCombatFeedbackSnapshot,
   diffCombatFeedback,
   type CombatFeedbackCue
@@ -715,6 +719,7 @@ export class GameplayScene implements Scene {
         id: currentSector.sectorId,
         name: currentSector.sectorName,
         backgroundId: currentSector.background.id,
+        objective: formatSectorObjectiveVariantDebug(currentSector.objective) ?? undefined,
         encounterPacing: currentSector.encounterPacing ? 'paced' : undefined,
         pacing: sectorPacing.arcKind === 'standard' ? undefined : sectorPacing.debugLabel,
         pacingBeat:
@@ -1300,6 +1305,7 @@ export class GameplayScene implements Scene {
         this.sectorConditions.modifiers.length > 0
           ? formatSectorConditionReadout(this.sectorConditions)
           : null,
+        formatSectorObjectiveVariantReadout(this.getCurrentSector().objective),
         pacing.arcKind !== 'standard' ? formatSectorPacingReadout(pacing) : null,
         hazardZoneDirector.scheduledHazardCount > 0 || hazardZoneDirector.pressureLevel > 0
           ? formatHazardZoneDirectorReadout(hazardZoneDirector)
@@ -1444,15 +1450,11 @@ function getDebugEnvironmentStressDistance(
       ).length
     }))
     .sort(
-      (left, right) =>
-        right.activeCount - left.activeCount || left.distance - right.distance
+      (left, right) => right.activeCount - left.activeCount || left.distance - right.distance
     )[0];
 
   if (!bestCandidate) {
-    return Math.max(
-      0,
-      Math.min(sectorLength * 0.38, sectorLength - DEBUG_LONG_SCROLL_EXIT_LEAD)
-    );
+    return Math.max(0, Math.min(sectorLength * 0.38, sectorLength - DEBUG_LONG_SCROLL_EXIT_LEAD));
   }
 
   return bestCandidate.distance;

@@ -77,6 +77,7 @@ export interface SceneDebugState {
     readonly encounterPacing?: string;
     readonly pacing?: string;
     readonly pacingBeat?: string;
+    readonly objective?: string;
     readonly hazardZones?: string;
   };
   readonly backgroundPrimitives?: number;

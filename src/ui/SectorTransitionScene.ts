@@ -18,6 +18,10 @@ import {
   createSectorPacingPlan,
   formatSectorPacingReadout
 } from '../game/SectorPacing';
+import {
+  formatSectorObjectiveVariantDebug,
+  formatSectorObjectiveVariantReadout
+} from '../game/SectorObjectives';
 import { getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import type { InputAction } from '../systems/InputSystem';
 import {
@@ -79,11 +83,14 @@ export class SectorTransitionScene implements Scene {
 
     const objectiveLine = document.createElement('p');
     objectiveLine.className = 'transition-copy';
-    objectiveLine.textContent = `${sector.objective.label} | Travel ${Math.floor(
-      scroll.length
-    )}u | ${sector.objective.requiredEnemyKills} targets${
-      sector.objective.bossRequired ? ' + boss gate' : ''
-    }`;
+    objectiveLine.textContent = [
+      `${sector.objective.label} | Travel ${Math.floor(scroll.length)}u | ${
+        sector.objective.requiredEnemyKills
+      } targets${sector.objective.bossRequired ? ' + boss gate' : ''}`,
+      formatSectorObjectiveVariantReadout(sector.objective)
+    ]
+      .filter((part): part is string => part !== null)
+      .join(' | ');
 
     const conditionLine = document.createElement('p');
     conditionLine.className = 'transition-copy';
@@ -163,6 +170,7 @@ export class SectorTransitionScene implements Scene {
         id: sector.sectorId,
         name: sector.sectorName,
         backgroundId: sector.background.id,
+        objective: formatSectorObjectiveVariantDebug(sector.objective) ?? undefined,
         encounterPacing: sector.encounterPacing ? 'paced' : undefined,
         pacing: pacing.arcKind === 'standard' ? undefined : pacing.debugLabel
       }

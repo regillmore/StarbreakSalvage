@@ -449,10 +449,7 @@ export class GameApp {
     this.showSectorTransition();
   }
 
-  private showInterActJunction(
-    sourceAct: RunActPlan,
-    targetAct: RunActPlan
-  ): void {
+  private showInterActJunction(sourceAct: RunActPlan, targetAct: RunActPlan): void {
     const choices = createInterActJunctionChoices({
       runSeed: this.currentRun.seed,
       sourceAct,
@@ -695,6 +692,7 @@ export class GameApp {
           `Plan ${[
             debugState.sector.id,
             debugState.sector.backgroundId,
+            debugState.sector.objective,
             debugState.sector.encounterPacing,
             debugState.sector.pacing
           ]
@@ -744,9 +742,7 @@ export class GameApp {
     const scenarioDebug = debugState.debugScenario ? [`Scenario ${debugState.debugScenario}`] : [];
     const itemDebug = createItemDebugLines(debugState.items);
     const enemyRoleDebug = createEnemyRoleDebugLines(debugState.enemyRoles);
-    const environmentStressDebug = createEnvironmentStressDebugLines(
-      debugState.environmentStress
-    );
+    const environmentStressDebug = createEnvironmentStressDebugLines(debugState.environmentStress);
     const inputDebug = debugState.inputMode ? [`Input ${debugState.inputMode}`] : [];
     const hudDebug = debugState.hudMode ? [`HUD ${debugState.hudMode}`] : [];
     const themeDebug = debugState.contractTheme
@@ -824,9 +820,7 @@ function createEnvironmentStressDebugLines(
   }
 
   const hazards =
-    environmentStress.hazardLabels.length > 0
-      ? environmentStress.hazardLabels.join('/')
-      : 'none';
+    environmentStress.hazardLabels.length > 0 ? environmentStress.hazardLabels.join('/') : 'none';
 
   return [
     `Env stress H${environmentStress.activeHazards}/${environmentStress.hazardBudget} ${hazards} Obj${environmentStress.environmentObjects}/${environmentStress.environmentObjectBudget} D${environmentStress.destructibles}/O${environmentStress.obstacles} Loose ${environmentStress.loosePickups}/${environmentStress.loosePickupCap} V${environmentStress.looseValue}/${environmentStress.looseValueCap} ${

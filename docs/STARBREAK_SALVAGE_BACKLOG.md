@@ -1620,7 +1620,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 085.
+- Completed in work order 085 with Act II objective variants, length/pressure bands, route-conditioned pacing modifiers, second-act relief windows, boss-approach tuning, and deterministic pacing timeline coverage.
 
 ### BB2 - Act II combat and environmental pressure
 

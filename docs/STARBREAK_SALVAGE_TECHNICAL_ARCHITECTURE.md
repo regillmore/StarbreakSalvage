@@ -495,6 +495,7 @@ src/game/ActPressure.ts
 - Work order 084 adds `src/content/actRouteContracts.ts` plus `src/game/ActRouteContracts.ts` for the first route-contract layer. Act II generation consumes these contracts for labels, tags, sector/faction/background/objective fit, pressure/reward/terrain preview copy, deterministic weights, risk offsets, and optional unlock gates while Act I remains on the generic route path.
 - Route-card copy should explain pressure/reward tradeoffs while the deterministic content data carries the actual rule references.
 - Content validation should reject invalid act-route references, unsupported objective families, missing reward profiles, missing boss/finale gates, and Act II routes that have no valid sector pool.
+- Work order 085 extends `src/game/SectorObjectives.ts` and `src/game/SectorPacing.ts` with Act II objective variants, length bands, pressure bands, second-act relief windows, route-conditioned pacing modifiers, and boss-approach scaling. Later pressure/economy/finale work should consume these read models instead of adding scene-local Act II exceptions.
 
 ### Act-aware pressure and economy
 

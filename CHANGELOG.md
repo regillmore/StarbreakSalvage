@@ -155,7 +155,7 @@
 - Completed the Phase 8 environmental stress smoke pass for work order 079, leaving final environmental release hardening for work order 080.
 - Completed Phase 8 as an environmental systems playtest candidate with release docs, local check/browser/preview evidence, scroll-world object/loot hardening, and known environmental balance/readability/economy risks.
 - Concluded Phase 8 in planning docs and added the Phase 9 roadmap/work orders for a deterministic second act, inter-act junction, Act II route and sector pool, Act II pacing/objective variants, combat/environment escalation, economy tuning, second-act boss/finale, debug smoke, and release hardening.
-- Continued Phase 9 implementation through the act model, midpoint refit junction, and first Act II route-contract vocabulary while leaving Act II pacing, economy, boss/finale, debug smoke, and release hardening for work orders 085-090.
+- Continued Phase 9 implementation through the act model, midpoint refit junction, Act II route-contract vocabulary, and Act II pacing/objective variants while leaving economy, boss/finale, debug smoke, and release hardening for work orders 086-090.
 - Started Phase 6 with a documented audit of the current 30-item catalog, repeated-reward risks, underrepresented archetypes, target item families, and bridge-effect follow-ups.
 - Formalized the Phase 6 item metadata contract and validation baseline before adding larger item batches.
 - Completed the first Phase 6 hook-surface expansion so work order 054 can add live catalog items against typed event payloads.

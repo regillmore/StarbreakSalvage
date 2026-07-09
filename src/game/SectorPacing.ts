@@ -1,6 +1,7 @@
 import type { SectorEncounterPacingDefinition } from '../content/sectors';
 import { clamp } from '../core/math';
 import type { BossArenaPlan } from './BossArena';
+import type { SectorObjectiveVariantId } from './SectorObjectives';
 import {
   applySectorConditionsToScroll,
   createSectorConditionPlan,
@@ -18,7 +19,15 @@ export type SectorPacingArcKind =
   | 'vaultTransit'
   | 'glitchShear'
   | 'bossApproach'
-  | 'lunarTraverse';
+  | 'lunarTraverse'
+  | 'act2Traverse'
+  | 'act2Lockdown'
+  | 'act2Finale';
+
+export type SectorPacingLengthBand = 'standard' | 'extended' | 'deep' | 'finale';
+
+export type SectorPacingPressureBand =
+  'baseline' | 'sustained' | 'volatile' | 'bossApproach' | 'finale';
 
 export type SectorPacingBeatKind =
   'pressure' | 'relief' | 'formationCluster' | 'landmark' | 'hazard' | 'bossApproach';
@@ -43,6 +52,10 @@ export interface SectorPacingPlan {
   readonly label: string;
   readonly summary: string;
   readonly debugLabel: string;
+  readonly lengthBand: SectorPacingLengthBand;
+  readonly pressureBand: SectorPacingPressureBand;
+  readonly objectiveVariantId: SectorObjectiveVariantId | null;
+  readonly objectiveVariantLabel: string | null;
   readonly lengthMultiplier: number;
   readonly spawnSpacingMultiplier: number;
   readonly waveDistanceRatios: readonly number[];
@@ -71,6 +84,10 @@ const STANDARD_PACING_PLAN: Omit<
   label: 'Standard drift',
   summary: 'standard pressure arc',
   debugLabel: 'standard',
+  lengthBand: 'standard',
+  pressureBand: 'baseline',
+  objectiveVariantId: null,
+  objectiveVariantLabel: null,
   lengthMultiplier: 1,
   spawnSpacingMultiplier: 1,
   reliefWindows: [],
@@ -88,7 +105,10 @@ const ARC_LABELS: Readonly<Record<SectorPacingArcKind, string>> = {
   vaultTransit: 'Vault transit',
   glitchShear: 'Shear corridor',
   bossApproach: 'Boss approach',
-  lunarTraverse: 'Low-orbit traverse'
+  lunarTraverse: 'Low-orbit traverse',
+  act2Traverse: 'Core-depth traverse',
+  act2Lockdown: 'Core lockdown',
+  act2Finale: 'Finale descent'
 };
 
 const SECTOR_LANDMARK_CHOICES: Readonly<Record<string, readonly SectorLandmarkKind[]>> = {
@@ -116,22 +136,37 @@ const LANDMARK_LABELS: Readonly<Record<SectorLandmarkKind, string>> = {
 
 export function createSectorPacingPlan(options: SectorPacingPlanOptions): SectorPacingPlan {
   const arcKind = chooseArcKind(options);
+  const lengthBand = chooseLengthBand(options);
+  const pressureBand = choosePressureBand(options, arcKind);
+  const objectiveVariantId = options.sector.objective.variantId ?? null;
+  const objectiveVariantLabel = options.sector.objective.variantLabel ?? null;
   const requiredWaves = Math.max(1, options.sector.objective.requiredWaves);
   const waveDistanceRatios =
     arcKind === 'standard'
       ? []
-      : createWaveDistanceRatios(requiredWaves, options.sector.objective.bossRequired, arcKind);
+      : createWaveDistanceRatios({
+          requiredWaves,
+          bossRequired: options.sector.objective.bossRequired,
+          arcKind,
+          pressureBand
+        });
 
   if (arcKind === 'standard') {
     return {
       ...STANDARD_PACING_PLAN,
       sectorIndex: options.sectorIndex,
       sectorId: options.sector.sectorId,
+      objectiveVariantId,
+      objectiveVariantLabel,
       waveDistanceRatios
     };
   }
 
-  const reliefWindows = createReliefWindows(waveDistanceRatios);
+  const reliefWindows = createReliefWindows(waveDistanceRatios, {
+    bossRequired: options.sector.objective.bossRequired,
+    pressureBand,
+    isActTwo: options.sector.act.actId === 'act_core_descent'
+  });
   const formationClusterWaveIndexes = createFormationClusterWaveIndexes(requiredWaves, arcKind);
   const landmarkBeatRatios = uniqueRatios([
     ...reliefWindows.map((window) => midpoint(window.startRatio, window.endRatio)),
@@ -152,8 +187,26 @@ export function createSectorPacingPlan(options: SectorPacingPlanOptions): Sector
     sectorId: options.sector.sectorId,
     arcKind,
     label: ARC_LABELS[arcKind],
-    summary: createPacingSummary(arcKind, reliefWindows, formationClusterWaveIndexes),
-    debugLabel: createDebugLabel(arcKind, reliefWindows, formationClusterWaveIndexes),
+    summary: createPacingSummary({
+      arcKind,
+      lengthBand,
+      pressureBand,
+      objectiveVariantLabel,
+      reliefWindows,
+      formationClusterWaveIndexes
+    }),
+    debugLabel: createDebugLabel({
+      arcKind,
+      lengthBand,
+      pressureBand,
+      objectiveVariantId,
+      reliefWindows,
+      formationClusterWaveIndexes
+    }),
+    lengthBand,
+    pressureBand,
+    objectiveVariantId,
+    objectiveVariantLabel,
     lengthMultiplier,
     spawnSpacingMultiplier,
     waveDistanceRatios,
@@ -169,7 +222,8 @@ export function createSectorPacingPlan(options: SectorPacingPlanOptions): Sector
       formationClusterWaveIndexes,
       landmarkBeatRatios,
       hazardBeatRatios,
-      bossApproachMultiplier
+      bossApproachMultiplier,
+      pressureBand
     })
   };
 }
@@ -185,7 +239,11 @@ export function applySectorPacingToScroll(
   return {
     ...scroll,
     length: roundPacingValue(
-      clamp(scroll.length * pacing.lengthMultiplier, scroll.length, scroll.length * 1.18)
+      clamp(
+        scroll.length * pacing.lengthMultiplier,
+        scroll.length,
+        scroll.length * getScrollCap(pacing)
+      )
     )
   };
 }
@@ -360,6 +418,10 @@ export function summarizeSectorPacingPlan(pacing: SectorPacingPlan): unknown {
     sectorId: pacing.sectorId,
     arcKind: pacing.arcKind,
     label: pacing.label,
+    lengthBand: pacing.lengthBand,
+    pressureBand: pacing.pressureBand,
+    objectiveVariantId: pacing.objectiveVariantId,
+    objectiveVariantLabel: pacing.objectiveVariantLabel,
     lengthMultiplier: pacing.lengthMultiplier,
     spawnSpacingMultiplier: pacing.spawnSpacingMultiplier,
     waveDistanceRatios: pacing.waveDistanceRatios,
@@ -372,6 +434,7 @@ export function summarizeSectorPacingPlan(pacing: SectorPacingPlan): unknown {
 }
 
 function chooseArcKind(options: SectorPacingPlanOptions): SectorPacingArcKind {
+  const isActTwo = options.sector.act.actId === 'act_core_descent';
   const sources = new Set(options.conditions.modifiers.map((modifier) => modifier.source));
   const routePressure =
     options.conditions.lengthMultiplier > 1.01 ||
@@ -389,7 +452,7 @@ function chooseArcKind(options: SectorPacingPlanOptions): SectorPacingArcKind {
     options.sector.sectorId === 'sector_core_wreck' ||
     options.sector.objective.bossRequired;
 
-  if (!routePressure && !naturalLongSector) {
+  if (!routePressure && !naturalLongSector && !isActTwo) {
     return 'standard';
   }
 
@@ -409,11 +472,74 @@ function chooseArcKind(options: SectorPacingPlanOptions): SectorPacingArcKind {
     return 'lunarTraverse';
   }
 
+  if (isActTwo && options.sector.objective.bossRequired) {
+    return options.sector.act.actSectorIndex >= options.sector.act.actSectorCount
+      ? 'act2Finale'
+      : 'act2Lockdown';
+  }
+
   if (options.sector.objective.bossRequired) {
     return 'bossApproach';
   }
 
+  if (isActTwo) {
+    return 'act2Traverse';
+  }
+
   return 'caravan';
+}
+
+function chooseLengthBand(options: SectorPacingPlanOptions): SectorPacingLengthBand {
+  if (options.sector.act.actId !== 'act_core_descent') {
+    return options.sector.index >= 4 || options.sector.objective.bossRequired
+      ? 'extended'
+      : 'standard';
+  }
+
+  if (
+    options.sector.sectorId === 'sector_core_wreck' ||
+    options.sector.act.actSectorIndex >= options.sector.act.actSectorCount
+  ) {
+    return 'finale';
+  }
+
+  return options.sector.act.actSectorIndex >= 3 || options.sector.objective.bossRequired
+    ? 'deep'
+    : 'extended';
+}
+
+function choosePressureBand(
+  options: SectorPacingPlanOptions,
+  arcKind: SectorPacingArcKind
+): SectorPacingPressureBand {
+  if (
+    options.sector.act.actId === 'act_core_descent' &&
+    (options.sector.sectorId === 'sector_core_wreck' ||
+      options.sector.act.actSectorIndex >= options.sector.act.actSectorCount)
+  ) {
+    return 'finale';
+  }
+
+  if (options.sector.objective.bossRequired) {
+    return 'bossApproach';
+  }
+
+  if (arcKind === 'glitchShear' || arcKind === 'intercept') {
+    return 'volatile';
+  }
+
+  if (
+    options.conditions.hazardDensityDelta > 0 ||
+    options.conditions.scrollSpeedMultiplier > 1.05
+  ) {
+    return 'volatile';
+  }
+
+  if (options.sector.act.actId === 'act_core_descent') {
+    return 'sustained';
+  }
+
+  return 'baseline';
 }
 
 function getLengthMultiplier(
@@ -424,6 +550,8 @@ function getLengthMultiplier(
   const hazardBonus = Math.max(0, options.conditions.hazardDensityDelta) * 0.012;
   const sectorBonus = options.sector.index >= 4 ? 0.045 : options.sector.index >= 3 ? 0.03 : 0;
   const bossBonus = options.sector.objective.bossRequired ? 0.04 : 0;
+  const actBonus = getActTwoLengthBonus(options);
+  const quietRouteOffset = getQuietRouteLengthOffset(options);
   const arcBonus =
     arcKind === 'vaultTransit'
       ? 0.045
@@ -433,10 +561,28 @@ function getLengthMultiplier(
           ? 0.04
           : arcKind === 'lunarTraverse'
             ? 0.035
-            : 0.025;
+            : arcKind === 'act2Finale'
+              ? 0.05
+              : arcKind === 'act2Lockdown'
+                ? 0.04
+                : arcKind === 'act2Traverse'
+                  ? 0.035
+                  : 0.025;
+  const cap = options.sector.act.actId === 'act_core_descent' ? 1.2 : 1.16;
 
   return roundPacingValue(
-    clamp(1 + routeBonus + hazardBonus + sectorBonus + bossBonus + arcBonus, 1, 1.16)
+    clamp(
+      1 +
+        routeBonus +
+        hazardBonus +
+        sectorBonus +
+        bossBonus +
+        actBonus +
+        quietRouteOffset +
+        arcBonus,
+      1,
+      cap
+    )
   );
 }
 
@@ -448,6 +594,18 @@ function getBossApproachMultiplier(
     return arcKind === 'intercept' || arcKind === 'glitchShear' ? 0.96 : 1;
   }
 
+  if (options.sector.act.actId === 'act_core_descent') {
+    if (arcKind === 'act2Finale') {
+      return 1.24;
+    }
+
+    if (arcKind === 'glitchShear' || arcKind === 'intercept') {
+      return 1.02;
+    }
+
+    return 1.16;
+  }
+
   if (arcKind === 'glitchShear' || arcKind === 'intercept') {
     return 0.94;
   }
@@ -455,23 +613,46 @@ function getBossApproachMultiplier(
   return 1.12;
 }
 
-function createWaveDistanceRatios(
-  requiredWaves: number,
-  bossRequired: boolean,
-  arcKind: SectorPacingArcKind
-): readonly number[] {
+function createWaveDistanceRatios(options: {
+  readonly requiredWaves: number;
+  readonly bossRequired: boolean;
+  readonly arcKind: SectorPacingArcKind;
+  readonly pressureBand: SectorPacingPressureBand;
+}): readonly number[] {
+  const { requiredWaves, bossRequired, arcKind, pressureBand } = options;
+
   if (requiredWaves === 1) {
     return [bossRequired ? 0.34 : 0.48];
   }
 
   if (requiredWaves === 2) {
+    if (pressureBand === 'sustained' || pressureBand === 'volatile') {
+      return bossRequired ? [0.12, 0.4] : [0.16, 0.66];
+    }
+
     return bossRequired ? [0.14, 0.42] : [0.2, 0.7];
   }
 
   if (bossRequired) {
+    if (pressureBand === 'finale') {
+      return [0.09, 0.28, 0.52].slice(0, requiredWaves);
+    }
+
+    if (pressureBand === 'bossApproach') {
+      return [0.11, 0.31, 0.54].slice(0, requiredWaves);
+    }
+
     return arcKind === 'glitchShear' || arcKind === 'intercept'
       ? [0.1, 0.25, 0.48]
       : [0.12, 0.32, 0.55];
+  }
+
+  if (pressureBand === 'volatile') {
+    return [0.13, 0.4, 0.74].slice(0, requiredWaves);
+  }
+
+  if (pressureBand === 'sustained') {
+    return [0.16, 0.46, 0.8].slice(0, requiredWaves);
   }
 
   if (arcKind === 'vaultTransit') {
@@ -490,9 +671,15 @@ function createWaveDistanceRatios(
 }
 
 function createReliefWindows(
-  waveDistanceRatios: readonly number[]
+  waveDistanceRatios: readonly number[],
+  options: {
+    readonly bossRequired: boolean;
+    readonly pressureBand: SectorPacingPressureBand;
+    readonly isActTwo: boolean;
+  }
 ): readonly SectorPacingReliefWindow[] {
   const windows: SectorPacingReliefWindow[] = [];
+  const minimumSpan = options.pressureBand === 'volatile' ? 0.07 : 0.08;
 
   for (let index = 0; index < waveDistanceRatios.length - 1; index += 1) {
     const left = waveDistanceRatios[index] ?? 0;
@@ -500,7 +687,7 @@ function createReliefWindows(
     const startRatio = roundPacingValue(clamp(left + 0.09, 0.08, 0.88));
     const endRatio = roundPacingValue(clamp(right - 0.08, startRatio, 0.9));
 
-    if (endRatio - startRatio >= 0.08) {
+    if (endRatio - startRatio >= minimumSpan) {
       windows.push({
         label: `relief ${index + 1}`,
         startRatio,
@@ -509,7 +696,21 @@ function createReliefWindows(
     }
   }
 
-  return windows;
+  if (options.isActTwo && options.pressureBand !== 'baseline' && waveDistanceRatios.length > 0) {
+    const finalWaveRatio = waveDistanceRatios[waveDistanceRatios.length - 1] ?? 0.5;
+    const startRatio = roundPacingValue(clamp(finalWaveRatio + 0.07, 0.1, 0.86));
+    const endRatio = roundPacingValue(clamp(options.bossRequired ? 0.66 : 0.9, startRatio, 0.92));
+
+    if (endRatio - startRatio >= 0.07) {
+      windows.push({
+        label: options.bossRequired ? 'approach relief' : 'exit relief',
+        startRatio,
+        endRatio
+      });
+    }
+  }
+
+  return windows.sort((left, right) => left.startRatio - right.startRatio);
 }
 
 function createFormationClusterWaveIndexes(
@@ -535,6 +736,7 @@ function createPacingBeats(options: {
   readonly landmarkBeatRatios: readonly number[];
   readonly hazardBeatRatios: readonly number[];
   readonly bossApproachMultiplier: number;
+  readonly pressureBand: SectorPacingPressureBand;
 }): readonly SectorPacingBeat[] {
   const pressure = options.waveDistanceRatios.map((ratio, index) => ({
     kind: 'pressure' as const,
@@ -575,7 +777,7 @@ function createPacingBeats(options: {
           {
             kind: 'bossApproach' as const,
             label: 'boss approach',
-            startRatio: 0.62,
+            startRatio: options.pressureBand === 'finale' ? 0.56 : 0.62,
             endRatio: 0.84
           }
         ]
@@ -624,31 +826,46 @@ function chooseLandmarkKind(
   return choices[index % choices.length] ?? 'beacon_line';
 }
 
-function createPacingSummary(
-  arcKind: SectorPacingArcKind,
-  reliefWindows: readonly SectorPacingReliefWindow[],
-  formationClusterWaveIndexes: readonly number[]
-): string {
-  const relief = `${reliefWindows.length} relief window${reliefWindows.length === 1 ? '' : 's'}`;
+function createPacingSummary(options: {
+  readonly arcKind: SectorPacingArcKind;
+  readonly lengthBand: SectorPacingLengthBand;
+  readonly pressureBand: SectorPacingPressureBand;
+  readonly objectiveVariantLabel: string | null;
+  readonly reliefWindows: readonly SectorPacingReliefWindow[];
+  readonly formationClusterWaveIndexes: readonly number[];
+}): string {
+  const relief = `${options.reliefWindows.length} relief window${
+    options.reliefWindows.length === 1 ? '' : 's'
+  }`;
   const formations =
-    formationClusterWaveIndexes.length > 0
-      ? `formation W${formationClusterWaveIndexes.map((index) => index + 1).join('/')}`
+    options.formationClusterWaveIndexes.length > 0
+      ? `formation W${options.formationClusterWaveIndexes.map((index) => index + 1).join('/')}`
       : 'solo waves';
+  const objective = options.objectiveVariantLabel
+    ? `, ${options.objectiveVariantLabel.toLowerCase()}`
+    : '';
 
-  return `${ARC_LABELS[arcKind]} with ${relief} and ${formations}`;
+  return `${ARC_LABELS[options.arcKind]} ${options.lengthBand}/${options.pressureBand} with ${relief} and ${formations}${objective}`;
 }
 
-function createDebugLabel(
-  arcKind: SectorPacingArcKind,
-  reliefWindows: readonly SectorPacingReliefWindow[],
-  formationClusterWaveIndexes: readonly number[]
-): string {
+function createDebugLabel(options: {
+  readonly arcKind: SectorPacingArcKind;
+  readonly lengthBand: SectorPacingLengthBand;
+  readonly pressureBand: SectorPacingPressureBand;
+  readonly objectiveVariantId: SectorObjectiveVariantId | null;
+  readonly reliefWindows: readonly SectorPacingReliefWindow[];
+  readonly formationClusterWaveIndexes: readonly number[];
+}): string {
   const formationText =
-    formationClusterWaveIndexes.length > 0
-      ? `F${formationClusterWaveIndexes.map((index) => index + 1).join('/')}`
+    options.formationClusterWaveIndexes.length > 0
+      ? `F${options.formationClusterWaveIndexes.map((index) => index + 1).join('/')}`
       : 'F0';
+  const objectiveText =
+    options.objectiveVariantId && options.objectiveVariantId !== 'standardSweep'
+      ? ` ${options.objectiveVariantId}`
+      : '';
 
-  return `${arcKind} R${reliefWindows.length} ${formationText}`;
+  return `${options.arcKind} ${options.lengthBand}/${options.pressureBand} R${options.reliefWindows.length} ${formationText}${objectiveText}`;
 }
 
 function formatPacingEffects(pacing: SectorPacingPlan): string[] {
@@ -656,6 +873,18 @@ function formatPacingEffects(pacing: SectorPacingPlan): string[] {
 
   if (pacing.lengthMultiplier !== 1) {
     effects.push(`${formatPercentDelta(pacing.lengthMultiplier)} arc distance`);
+  }
+
+  if (pacing.lengthBand !== 'standard') {
+    effects.push(`${pacing.lengthBand} length band`);
+  }
+
+  if (pacing.pressureBand !== 'baseline') {
+    effects.push(`${pacing.pressureBand} pressure`);
+  }
+
+  if (pacing.objectiveVariantLabel && pacing.objectiveVariantId !== 'standardSweep') {
+    effects.push(pacing.objectiveVariantLabel);
   }
 
   if (pacing.spawnSpacingMultiplier !== 1) {
@@ -685,6 +914,41 @@ function formatPacingEffects(pacing: SectorPacingPlan): string[] {
   }
 
   return effects.length > 0 ? effects : ['standard pacing'];
+}
+
+function getScrollCap(pacing: SectorPacingPlan): number {
+  if (pacing.lengthBand === 'finale') {
+    return 1.22;
+  }
+
+  if (pacing.lengthBand === 'deep') {
+    return 1.2;
+  }
+
+  return 1.18;
+}
+
+function getActTwoLengthBonus(options: SectorPacingPlanOptions): number {
+  if (options.sector.act.actId !== 'act_core_descent') {
+    return 0;
+  }
+
+  const actDepthBonus = Math.max(0, options.sector.act.actSectorIndex - 1) * 0.012;
+  const finaleBonus =
+    options.sector.sectorId === 'sector_core_wreck' ||
+    options.sector.act.actSectorIndex >= options.sector.act.actSectorCount
+      ? 0.018
+      : 0;
+
+  return Math.min(0.07, 0.024 + actDepthBonus + finaleBonus);
+}
+
+function getQuietRouteLengthOffset(options: SectorPacingPlanOptions): number {
+  const quietRouteCount = options.conditions.modifiers.filter(
+    (modifier) => modifier.source === 'shop' || modifier.source === 'repair'
+  ).length;
+
+  return quietRouteCount > 0 ? -0.012 : 0;
 }
 
 function midpoint(left: number, right: number): number {
