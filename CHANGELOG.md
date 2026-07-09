@@ -66,6 +66,7 @@
 - Added a shared act-pressure model that uses explicit act context plus sector pacing to bias existing wave, hazard, environment-object, and loose-currency generators while exposing combined enemy, hazard, object, pickup, projectile, and item budget telemetry in the debug overlay.
 - Added a shared Act II economy profile for reward weighting, reward choice bonuses, route payout tuning, shop stock/prices/reroll costs, repair/vault scarcity, loose-currency value budgets, summary economy copy, and save-compatible upgrade-progress framing.
 - Added deterministic Act II finale variants that tune final boss hull and arena approach through the existing boss path, expose finale state in HUD/debug/summary/save records, preserve boss-release hazard fairness, unlock the Core Descent music flag on victory, and add an `F` debug shortcut for final-boss smoke.
+- Added Act II debug smoke shortcuts for the inter-act junction, first Act II sector entry, finale, and two-act summary, with route-tag and live objective-state telemetry in the debug overlay.
 
 ### Testing
 
@@ -95,6 +96,7 @@
 - Added act-plan, content-validation, same-seed generation, route-handoff, save-normalization, and summary-formatting coverage for the Phase 9 act model.
 - Added Act II economy tests and snapshots for fresh/progressed rewards, shops, vaults, junction effects, run-summary economy copy, item-source summaries, and save/update accounting.
 - Added second-act finale tests for deterministic variant selection, arena handoff, boss-release hazard deferral, victory/defeat/abandon summaries, save/unlock records, and debug key reachability.
+- Added Act II debug helper tests plus Playwright smoke coverage for a narrow high-contrast/reduced-motion/performance path through junction, Act II pressure, finale, and two-act summary.
 - Added wave director and objective completion tests, including known-seed objective snapshots and boss-gate coverage.
 - Added combat tests for special charge/use, bomb mitigation, graze detection, remapped special/bomb controls, and reduced-motion effect rendering.
 - Added validation and gameplay tests for ship stat contracts, weapon references, weapon patterns, heat/reload behavior, and starting economy.
@@ -161,7 +163,7 @@
 - Completed Phase 8 as an environmental systems playtest candidate with release docs, local check/browser/preview evidence, scroll-world object/loot hardening, and known environmental balance/readability/economy risks.
 - Concluded Phase 8 in planning docs and added the Phase 9 roadmap/work orders for a deterministic second act, inter-act junction, Act II route and sector pool, Act II pacing/objective variants, combat/environment escalation, economy tuning, second-act boss/finale, debug smoke, and release hardening.
 - Continued Phase 9 implementation through the act model, midpoint refit junction, Act II route-contract vocabulary, and Act II pacing/objective variants while leaving economy, boss/finale, debug smoke, and release hardening for work orders 086-090.
-- Completed the Phase 9 Act II rewards/shop/economy pass for work order 087 and the deterministic second-act finale pass for work order 088, leaving broader Act II debug smoke/accessibility/performance hardening and release closeout for work orders 089-090.
+- Completed the Phase 9 Act II rewards/shop/economy pass for work order 087, the deterministic second-act finale pass for work order 088, and the broader Act II debug smoke/accessibility/performance hardening pass for work order 089, leaving release closeout for work order 090.
 - Started Phase 6 with a documented audit of the current 30-item catalog, repeated-reward risks, underrepresented archetypes, target item families, and bridge-effect follow-ups.
 - Formalized the Phase 6 item metadata contract and validation baseline before adding larger item batches.
 - Completed the first Phase 6 hook-surface expansion so work order 054 can add live catalog items against typed event payloads.

@@ -433,10 +433,12 @@ export function formatActRouteHistory(routeHistory: readonly RouteHistoryEntry[]
         entry.actShortLabel && entry.actSectorIndex && entry.actSectorCount
           ? `${entry.actShortLabel} ${entry.actSectorIndex}/${entry.actSectorCount}`
           : 'Act ?';
+      const routeTags =
+        entry.routeTags && entry.routeTags.length > 0 ? ` [${entry.routeTags.join('/')}]` : '';
 
       return `${actLabel} S${entry.sectorIndex} ${entry.routeLabel}: ${
         entry.outcomeTitle ?? 'routed'
-      }`;
+      }${routeTags}`;
     })
     .join(' | ');
 }

@@ -27,7 +27,10 @@ export const INPUT_ACTIONS = [
   'debugSectorComplete',
   'debugDestroyPlayer',
   'debugLongScroll',
-  'debugFinaleSmoke'
+  'debugActTwoJunction',
+  'debugActTwoEntry',
+  'debugFinaleSmoke',
+  'debugTwoActSummary'
 ] as const;
 
 export type InputAction = (typeof INPUT_ACTIONS)[number];
@@ -73,7 +76,10 @@ export const DEFAULT_KEY_BINDINGS: KeyBindingMap = {
   debugSectorComplete: ['8'],
   debugDestroyPlayer: ['7'],
   debugLongScroll: ['9'],
-  debugFinaleSmoke: ['F']
+  debugActTwoJunction: ['J'],
+  debugActTwoEntry: ['I'],
+  debugFinaleSmoke: ['F'],
+  debugTwoActSummary: ['Y']
 };
 
 export function normalizeKey(key: string): string {

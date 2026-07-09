@@ -1503,7 +1503,7 @@ Acceptance criteria:
 - Existing item-storm, enemy-rich, environmental stress, dense-combat, forced-exit, destruction, and long-scroll smoke remain green.
 - Accessibility settings keep Act II UI, HUD text, bullets, hazards, pickups, and route cards readable.
 
-Status: planned.
+Status: implemented; work order 089 adds public Act II debug paths without private app-state access. `J` jumps to the inter-act junction, `I` launches the first Act II sector with a deterministic junction choice applied, `F` continues to jump to the final-sector boss smoke, and `Y` opens a two-act debug summary with Act I/Act II route history. `src/game/ActTwoDebug.ts` owns the pure Act II smoke scenario helpers, deterministic route-history scaffolding, route-tag summaries, and debug summary result model. Debug overlays now include Act II route tags and live objective state alongside act id/name/progress, junction choice/effects, act-pressure budgets, finale state, viewport/HUD mode, and existing stress counters. Browser smoke covers a narrow high-contrast/reduced-motion/performance path through junction, Act II entry, enemy-rich pressure, finale smoke, and two-act summary, while the existing item-storm, enemy-rich, environmental-stress, dense-combat, forced-exit, destruction, and long-scroll paths remain in the E2E suite.
 
 ## Work order 090 - Phase 9 second-act playtest release hardening
 

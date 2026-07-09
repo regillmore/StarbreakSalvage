@@ -36,6 +36,11 @@ import {
   type RunActPlan
 } from '../game/ActPlan';
 import { createActEconomyProfile } from '../game/ActEconomy';
+import {
+  createActTwoDebugScenario,
+  createDebugRouteHistoryThroughSector,
+  createTwoActDebugSummaryResult
+} from '../game/ActTwoDebug';
 import { createInterActJunctionChoices } from '../game/InterActJunction';
 import { resolveSeedEntry } from '../game/SeedEntry';
 import {
@@ -281,70 +286,13 @@ export class GameApp {
   }
 
   private showGameplay(existingScene?: GameplayScene): void {
-    const gameplayScene =
-      existingScene ??
-      new GameplayScene(
-        this.uiRoot,
-        this.input,
-        this.currentRun,
-        this.selectedContract,
-        getEffectiveShipStats(this.selectedContract, this.runSession),
-        getCombatModifiersForSector(this.runSession, this.runSession.currentSectorIndex),
-        createSectorConditionPlan({
-          run: this.currentRun,
-          sectorIndex: this.runSession.currentSectorIndex,
-          routeOutcomes: this.runSession.routeOutcomes
-        }),
-        this.runSession.currentSectorIndex,
-        this.runSession.itemInstances,
-        this.runSession.credits,
-        this.runSession.salvage,
-        this.debugEnabled,
-        (cues) => {
-          this.handleCombatFeedback(cues);
-        },
-        (pausedScene) => {
-          this.showPause(pausedScene);
-        },
-        (result) => {
-          this.showRunSummary(result);
-        },
-        (result) => {
-          this.handleSectorComplete(result);
-        }
-      );
+    const gameplayScene = existingScene ?? this.createGameplayScene();
 
     this.sceneManager.switchTo(gameplayScene);
   }
 
-  private handleGlobalDebugAction(action: InputAction): boolean {
-    if (!this.debugEnabled || action !== 'debugFinaleSmoke') {
-      return false;
-    }
-
-    this.showDebugFinaleSmoke();
-    return true;
-  }
-
-  private showDebugFinaleSmoke(): void {
-    this.refreshRunForCurrentSave();
-    const finaleSectorIndex = getSecondActFinaleSectorIndex(this.currentRun);
-
-    if (finaleSectorIndex < 0) {
-      return;
-    }
-
-    this.runSession.currentSectorIndex = finaleSectorIndex;
-    this.runSession.distanceTraveled = this.currentRun.sectors
-      .slice(0, finaleSectorIndex)
-      .reduce((total, sector) => total + sector.scroll.length, 0);
-    this.runSession.credits = Math.max(this.runSession.credits, 36);
-    this.runSession.salvage = Math.max(this.runSession.salvage, 6);
-    this.lastRunResult = null;
-    this.lastSaveUpdate = null;
-    this.summarySaved = false;
-
-    const gameplayScene = new GameplayScene(
+  private createGameplayScene(): GameplayScene {
+    return new GameplayScene(
       this.uiRoot,
       this.input,
       this.currentRun,
@@ -374,9 +322,153 @@ export class GameApp {
         this.handleSectorComplete(result);
       }
     );
+  }
 
+  private handleGlobalDebugAction(action: InputAction): boolean {
+    if (!this.debugEnabled) {
+      return false;
+    }
+
+    switch (action) {
+      case 'debugActTwoJunction':
+        this.showDebugActTwoJunction();
+        return true;
+      case 'debugActTwoEntry':
+        this.showDebugActTwoEntry();
+        return true;
+      case 'debugFinaleSmoke':
+        this.showDebugFinaleSmoke();
+        return true;
+      case 'debugTwoActSummary':
+        this.showDebugTwoActSummary();
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  private resetDebugRunState(): void {
+    this.refreshRunForCurrentSave();
+    this.lastRunResult = null;
+    this.lastSaveUpdate = null;
+    this.summarySaved = false;
+  }
+
+  private showDebugActTwoJunction(): void {
+    this.resetDebugRunState();
+    const scenario = createActTwoDebugScenario(this.currentRun);
+
+    if (!scenario) {
+      return;
+    }
+
+    const sourceAct = this.currentRun.acts.find(
+      (act) => act.endSectorIndex === scenario.actOneFinalSectorIndex
+    );
+    const targetAct = this.currentRun.acts.find(
+      (act) => act.startSectorIndex === scenario.actTwoEntrySectorIndex
+    );
+
+    if (!sourceAct || !targetAct) {
+      return;
+    }
+
+    this.runSession.currentSectorIndex = scenario.actTwoEntrySectorIndex;
+    this.runSession.distanceTraveled = scenario.distanceBeforeActTwo;
+    this.runSession.credits = Math.max(this.runSession.credits, 32);
+    this.runSession.salvage = Math.max(this.runSession.salvage, 8);
+    this.showInterActJunction(sourceAct, targetAct);
+  }
+
+  private showDebugActTwoEntry(): void {
+    this.resetDebugRunState();
+    const scenario = createActTwoDebugScenario(this.currentRun);
+
+    if (!scenario) {
+      return;
+    }
+
+    this.runSession.currentSectorIndex = scenario.actTwoEntrySectorIndex;
+    this.runSession.distanceTraveled = scenario.distanceBeforeActTwo;
+    this.runSession.credits = Math.max(this.runSession.credits, 32);
+    this.runSession.salvage = Math.max(this.runSession.salvage, 8);
+    this.applyDefaultDebugInterActChoice();
+    this.showGameplay();
+  }
+
+  private showDebugTwoActSummary(): void {
+    this.resetDebugRunState();
+    const scenario = createActTwoDebugScenario(this.currentRun);
+
+    if (!scenario) {
+      return;
+    }
+
+    this.runSession.currentSectorIndex = scenario.finaleSectorIndex;
+    this.runSession.distanceTraveled = scenario.distanceBeforeFinale;
+    this.runSession.credits = Math.max(this.runSession.credits, 72);
+    this.runSession.salvage = Math.max(this.runSession.salvage, 18);
+    this.runSession.routeHistory = createDebugRouteHistoryThroughSector(
+      this.currentRun,
+      scenario.finaleSectorIndex
+    );
+    this.applyDefaultDebugInterActChoice();
+    this.showRunSummary(createTwoActDebugSummaryResult(this.currentRun));
+  }
+
+  private showDebugFinaleSmoke(): void {
+    this.resetDebugRunState();
+    const finaleSectorIndex = getSecondActFinaleSectorIndex(this.currentRun);
+
+    if (finaleSectorIndex < 0) {
+      return;
+    }
+
+    this.runSession.currentSectorIndex = finaleSectorIndex;
+    this.runSession.distanceTraveled = this.currentRun.sectors
+      .slice(0, finaleSectorIndex)
+      .reduce((total, sector) => total + sector.scroll.length, 0);
+    this.runSession.credits = Math.max(this.runSession.credits, 36);
+    this.runSession.salvage = Math.max(this.runSession.salvage, 6);
+    this.applyDefaultDebugInterActChoice();
+
+    const gameplayScene = this.createGameplayScene();
     gameplayScene.prepareDebugFinaleSmoke();
     this.sceneManager.switchTo(gameplayScene);
+  }
+
+  private applyDefaultDebugInterActChoice(): void {
+    const scenario = createActTwoDebugScenario(this.currentRun);
+
+    if (!scenario) {
+      return;
+    }
+
+    const sourceAct = this.currentRun.acts.find(
+      (act) => act.endSectorIndex === scenario.actOneFinalSectorIndex
+    );
+    const targetAct = this.currentRun.acts.find(
+      (act) => act.startSectorIndex === scenario.actTwoEntrySectorIndex
+    );
+
+    if (!sourceAct || !targetAct || hasInterActChoiceForSourceAct(this.runSession, sourceAct.id)) {
+      return;
+    }
+
+    const choice = createInterActJunctionChoices({
+      runSeed: this.currentRun.seed,
+      sourceAct,
+      targetAct,
+      credits: this.runSession.credits,
+      salvage: this.runSession.salvage,
+      hullPatch: this.runSession.hullPatch,
+      curse: this.runSession.curse,
+      saveFingerprint: createSaveFingerprint(this.saveData)
+    })[0];
+
+    if (choice) {
+      applyInterActChoice(this.runSession, choice);
+    }
   }
 
   private handleSectorComplete(result: CombatRunResult): void {
@@ -776,11 +868,15 @@ export class GameApp {
             debugState.sector.backgroundId,
             debugState.sector.objective,
             debugState.sector.encounterPacing,
-            debugState.sector.pacing
+            debugState.sector.pacing,
+            debugState.sector.routeTags ? `tags:${debugState.sector.routeTags}` : null
           ]
             .filter((part): part is string => Boolean(part))
             .join('/')}`
         ].filter((line) => line.length > 0)
+      : [];
+    const objectiveDebug = debugState.sector?.objectiveState
+      ? [`Objective ${debugState.sector.objectiveState}`]
       : [];
     const sectorPacingDebug = debugState.sector?.pacingBeat
       ? [`Pacing ${debugState.sector.pacingBeat}`]
@@ -880,6 +976,7 @@ export class GameApp {
       ...finaleDebug,
       ...interActDebug,
       ...sectorDebug,
+      ...objectiveDebug,
       ...sectorPacingDebug,
       ...hazardZoneDebug,
       ...backgroundDebug,

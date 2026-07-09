@@ -41,6 +41,7 @@ export interface RouteHistoryEntry {
   readonly actSectorCount?: number;
   readonly routeKind: RouteKind;
   readonly routeLabel: string;
+  readonly routeTags?: readonly string[];
   readonly outcomeTitle?: string;
   readonly outcomeSummary?: string;
 }
@@ -132,6 +133,7 @@ export function recordRouteChoice(
     actSectorCount: sector.act.actSectorCount,
     routeKind: route.kind,
     routeLabel: route.label,
+    routeTags: route.routeTags ?? [],
     outcomeTitle: outcome?.title,
     outcomeSummary: outcome?.summary
   });

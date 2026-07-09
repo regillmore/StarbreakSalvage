@@ -168,6 +168,12 @@ Phase 9 expands the game loop into a deterministic second act. Add tests closest
 - browser smoke for reaching the inter-act junction, entering Act II, inspecting Act II pressure, forcing the finale, and returning from the two-act summary where practical;
 - regression coverage that keeps item-storm, enemy-rich, environmental-stress, dense-combat, forced-exit, forced-destruction, boss-release hazard, and quiet long-scroll paths green while the run length grows.
 
+Current Phase 9 coverage:
+
+- Work orders 082-088 cover act planning, inter-act junction choice effects, Act II route contracts, Act II pacing/objective variants, act-pressure budgets, Act II economy/reward/shop tuning, and deterministic finale variants with focused unit and deterministic tests.
+- Work order 089 adds pure Act II debug helpers plus Playwright smoke for `ACT2-FINALE-SMOKE` in a narrow high-contrast/reduced-motion/performance viewport. The browser path uses `J` for the midpoint junction, `I` for first Act II sector entry, `E` for enemy-rich Act II pressure, `F` for finale smoke, and `Y` for the two-act debug summary.
+- Existing Playwright smoke still covers item-storm, enemy-rich, environmental-stress, dense-combat, forced-exit, forced-destruction, narrow HUD, pointer input, and keyboard-only flows; non-Chromium/manual-device validation remains release-closeout work.
+
 ## Known seed tests
 
 - `STARBREAK-SMOKE` — stable forgiving smoke path.
@@ -242,6 +248,7 @@ Phase 9 should add these seed/save fixtures:
 - `ACT2-ROUTE-LADDER` - Act II route pool fixture covering route tags, pressure/reward tradeoffs, and route-card copy.
 - `ACT2-PRESSURE-GAUNTLET` - Act II combined enemy/environment/item-pressure budget fixture.
 - `ACT2-ECONOMY-SNAPSHOT` - Act II reward, shop, vault, junction, summary, and save-accounting fixture under fresh and progressed saves; first covered by work order 087 through `tests/unit/actEconomy.test.ts`.
+- `ACT2-FINALE-SMOKE` - browser debug path for Act II junction, entry, enemy-rich pressure, finale, and two-act summary; first covered by work order 089 Playwright smoke.
 - `ACT2-FINALE-SMOKE` - deterministic second-act boss/finale, victory, summary, save, and boss-release hazard fairness fixture; first covered in work order 088 by `tests/unit/secondActFinale.test.ts`.
 
 ## Content validation checklist

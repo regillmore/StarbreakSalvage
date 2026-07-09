@@ -1670,7 +1670,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 089.
+- Completed in work order 089 with `J` inter-act junction smoke, `I` first Act II sector entry smoke, existing `F` finale smoke, and `Y` two-act summary smoke. Public helpers expose Act II sector indexes, deterministic debug route history, route tags, and summary result data, while overlays show route tags and objective state next to act progress, junction effects, act-pressure budgets, and finale telemetry. Playwright coverage now drives a narrow high-contrast/reduced-motion/performance Act II path through junction, pressure, finale, and summary.
 
 ### BC2 - Phase 9 release checklist
 

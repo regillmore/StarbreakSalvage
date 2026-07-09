@@ -126,10 +126,11 @@ describe('run summary details', () => {
           actSectorCount: 3,
           routeKind: 'shop',
           routeLabel: 'Shop',
+          routeTags: ['economy', 'core'],
           outcomeTitle: 'Coupon Ambush'
         }
       ])
-    ).toBe('Act I 1/3 S1 Shop: Coupon Ambush');
+    ).toBe('Act I 1/3 S1 Shop: Coupon Ambush [economy/core]');
   });
 
   it('records physical route effects for run summaries', () => {

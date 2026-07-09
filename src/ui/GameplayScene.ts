@@ -40,6 +40,7 @@ import {
 } from '../game/ActPressure';
 import { createActEconomyProfile } from '../game/ActEconomy';
 import { createActDebugState, formatActSectorLabel } from '../game/ActPlan';
+import { formatRouteTagSummary } from '../game/ActTwoDebug';
 import { createBuildSynergyModel, formatBuildSynergyHud } from '../game/BuildSynergy';
 import { createEnemyRolePressureSummary } from '../game/EnemyRolePressure';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
@@ -711,6 +712,7 @@ export class GameplayScene implements Scene {
     const background = this.getCurrentSector().background;
     const currentSector = this.getCurrentSector();
     const combatState = this.getCombatState();
+    const objectiveProgress = getObjectiveProgress(this.getWavePlan(), combatState);
     const entityCounts = getCombatEntityCounts(combatState);
     const sectorPacing = this.getSectorPacingPlan();
     const hazardZoneDirector = this.getHazardZoneDirectorPlan();
@@ -788,6 +790,8 @@ export class GameplayScene implements Scene {
         name: currentSector.sectorName,
         backgroundId: currentSector.background.id,
         objective: formatSectorObjectiveVariantDebug(currentSector.objective) ?? undefined,
+        objectiveState: objectiveProgress.readout,
+        routeTags: formatRouteTagSummary(currentSector.routeOptions) ?? undefined,
         encounterPacing: currentSector.encounterPacing ? 'paced' : undefined,
         pacing: sectorPacing.arcKind === 'standard' ? undefined : sectorPacing.debugLabel,
         pacingBeat:

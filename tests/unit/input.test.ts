@@ -35,7 +35,10 @@ describe('input helpers', () => {
     expect(primaryActionForKey('7')).toBe('debugDestroyPlayer');
     expect(primaryActionForKey('8')).toBe('debugSectorComplete');
     expect(primaryActionForKey('9')).toBe('debugLongScroll');
+    expect(primaryActionForKey('J')).toBe('debugActTwoJunction');
+    expect(primaryActionForKey('I')).toBe('debugActTwoEntry');
     expect(primaryActionForKey('F')).toBe('debugFinaleSmoke');
+    expect(primaryActionForKey('Y')).toBe('debugTwoActSummary');
   });
 
   it('uses provided binding maps for action lookup', () => {

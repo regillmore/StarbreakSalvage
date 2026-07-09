@@ -174,7 +174,7 @@ Exit criteria:
 - Existing debug shortcuts remain compatible with act state.
 - Accessibility settings keep Act II UI, HUD, hazards, bullets, pickups, and route cards readable.
 
-Status: planned for work order 089.
+Status: completed in work order 089. Public debug paths now cover the midpoint junction, first Act II sector, final-sector finale smoke, and a two-act debug summary through `J`, `I`, `F`, and `Y` behind `?debug=1`. The Act II smoke helpers expose deterministic sector indexes, route-history scaffolding, route-tag summaries, and summary result data; the debug overlay now reports route tags and objective state alongside act progress, junction effects, act-pressure budgets, and finale state. Playwright smoke covers a narrow high-contrast/reduced-motion/performance Act II path through junction, pressure, finale, and summary while keeping the existing debug smoke suite intact.
 
 ### P9.10 - Second-Act Release Candidate
 

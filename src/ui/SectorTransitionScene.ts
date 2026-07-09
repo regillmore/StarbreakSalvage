@@ -2,6 +2,7 @@ import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene, SceneDebugState } from '../app/Scene';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import { createActDebugState, formatActSectorLabel } from '../game/ActPlan';
+import { formatRouteTagSummary } from '../game/ActTwoDebug';
 import { formatInterActEffectsReadout } from '../game/InterActJunction';
 import {
   getCurrentSector,
@@ -171,6 +172,7 @@ export class SectorTransitionScene implements Scene {
         name: sector.sectorName,
         backgroundId: sector.background.id,
         objective: formatSectorObjectiveVariantDebug(sector.objective) ?? undefined,
+        routeTags: formatRouteTagSummary(sector.routeOptions) ?? undefined,
         encounterPacing: sector.encounterPacing ? 'paced' : undefined,
         pacing: pacing.arcKind === 'standard' ? undefined : pacing.debugLabel
       }

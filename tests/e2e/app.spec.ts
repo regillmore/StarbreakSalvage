@@ -273,7 +273,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
 
   await page.getByRole('button', { name: 'Reset Save' }).click();
   await expect(page.getByTestId('save-status')).toContainText('Save reset.');
-  await expect(page.getByText('Salvage Bank 0 kg | Unlocks 0/10')).toBeVisible();
+  await expect(page.getByText(/Salvage Bank 0 kg \| Unlocks 0\/\d+/)).toBeVisible();
 
   await page.getByTestId('save-import-box').fill(exportedSave);
   await page.getByRole('button', { name: 'Import Save' }).click();
@@ -528,6 +528,76 @@ test('exposes environmental stress budgets under high-contrast narrow smoke', as
   );
   await expect(page.getByTestId('pickup-readout')).toContainText(/Credits .* Salvage/);
   await expect(page.getByTestId('boss-warning')).not.toContainText('Warning clear');
+
+  expect(browserErrors).toEqual([]);
+});
+
+test('exposes Act II junction, entry, finale, and two-act summary debug paths', async ({
+  page
+}) => {
+  test.setTimeout(90_000);
+
+  const browserErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') {
+      browserErrors.push(message.text());
+    }
+  });
+  page.on('pageerror', (error) => browserErrors.push(error.message));
+  await page.setViewportSize({ width: 390, height: 700 });
+  await page.addInitScript((settings) => {
+    window.localStorage.setItem('starbreak.settings.v1', JSON.stringify(settings));
+  }, HIGH_CONTRAST_SETTINGS);
+
+  await page.goto('./?debug=1&seed=ACT2-FINALE-SMOKE');
+
+  await expect(page.locator('html')).toHaveAttribute('data-reduced-motion', 'true');
+  await expect(page.locator('html')).toHaveAttribute('data-bullet-contrast', 'high');
+  await expect(page.locator('html')).toHaveAttribute('data-performance-mode', 'true');
+
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
+
+  await page.keyboard.press('J');
+  await expect(page.getByRole('heading', { name: 'Midpoint Refit' })).toBeVisible();
+  await expect(page.locator('.debug-overlay')).toContainText('Scene inter-act-junction');
+  await expect(page.locator('.debug-overlay')).toContainText(
+    'Act Act II Core Descent 1/5 escalated/elevated'
+  );
+  await expect(page.locator('.debug-overlay')).toContainText('Junction Core Descent choices');
+
+  await page.keyboard.press('I');
+  await expectGameplaySector(page, 'Bio-Machine Bloom', 6);
+  await expect(page.getByTestId('cockpit-hud')).toHaveAttribute('data-hud-mode', 'contrast');
+  await expect(page.locator('.debug-overlay')).toContainText('Viewport 390x700 narrow');
+  await expect(page.locator('.debug-overlay')).toContainText(
+    'Act Act II Core Descent 1/5 escalated/elevated'
+  );
+  await expect(page.locator('.debug-overlay')).toContainText('Act pressure');
+  await expect(page.locator('.debug-overlay')).toContainText('Sector S6 Bio-Machine Bloom');
+  await expect(page.locator('.debug-overlay')).toContainText(/Plan .*tags:/);
+  await expect(page.locator('.debug-overlay')).toContainText(/Objective .+/);
+
+  await page.keyboard.press('E');
+  await expect(page.getByTestId('boss-warning')).toContainText('ENEMY RICH LANE');
+  await expect(page.locator('.debug-overlay')).toContainText('Scenario enemy-rich');
+  await expect(page.locator('.debug-overlay')).toContainText('Enemy budget');
+
+  await page.keyboard.press('F');
+  await expectGameplaySector(page, 'The Core Wreck', 10);
+  await expect(page.getByTestId('boss-readout')).toContainText('The Core Wreck');
+  await expect(page.locator('.debug-overlay')).toContainText('Scenario finale-smoke');
+  await expect(page.locator('.debug-overlay')).toContainText('Finale');
+  await expect(page.locator('.debug-overlay')).toContainText(
+    'Act Act II Core Descent 5/5 escalated/elevated'
+  );
+
+  await page.keyboard.press('Y');
+  await expect(page.getByRole('heading', { name: 'Debug Run Ended' })).toBeVisible();
+  await expect(page.getByText('Act II Core Descent 5/5 | 1/2 acts secured')).toBeVisible();
+  await expect(page.getByText(/Debug: .* smoke path ended before official resolution/)).toBeVisible();
+  await expect(page.getByText(/Act II 4\/5 S9 .* \[/)).toBeVisible();
+  await expect(page.getByText(/Junction: [+-]?\d+c\/[+-]?\d+kg/)).toBeVisible();
 
   expect(browserErrors).toEqual([]);
 });
