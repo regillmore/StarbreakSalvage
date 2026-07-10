@@ -25,11 +25,13 @@ import {
   type GameSettings
 } from '../core/settingsData';
 import {
+  createRunGenerationSaveFingerprint,
   generateRunSkeleton,
   type RouteOption,
   type RunSkeleton,
   type StartingContract
 } from '../game/Generation';
+import { acquireComponent, generateComponentSalvage } from '../game/Foundry';
 import {
   createRunActSaveContext,
   getInterActTransitionHandoff,
@@ -103,6 +105,7 @@ import { UnlockArchiveScene } from '../ui/UnlockArchiveScene';
 import type { ItemId } from '../content/items';
 import type { UpgradeId } from '../content/upgrades';
 import { UpgradeBayScene } from '../ui/UpgradeBayScene';
+import { FoundryScene } from '../ui/FoundryScene';
 
 export class GameApp {
   private readonly canvas: HTMLCanvasElement;
@@ -331,6 +334,7 @@ export class GameApp {
       this.currentRun,
       this.selectedContract,
       getEffectiveShipStats(this.selectedContract, this.runSession),
+      this.runSession.engineering,
       getCombatModifiersForSector(this.runSession, this.runSession.currentSectorIndex),
       createSectorConditionPlan({
         run: this.currentRun,
@@ -791,7 +795,7 @@ export class GameApp {
         route,
         (itemId) => {
           addItemToSession(this.runSession, itemId);
-          this.advanceAfterReward();
+          this.showFoundryAfterReward(route);
         },
         () => {
           const sector = getCurrentSector(this.currentRun, this.runSession);
@@ -799,7 +803,7 @@ export class GameApp {
             this.runSession,
             getRouteCreditReward(this.runSession, sector.index, createActEconomyProfile(sector))
           );
-          this.advanceAfterReward();
+          this.showFoundryAfterReward(route);
         }
       )
     );
@@ -874,6 +878,37 @@ export class GameApp {
     }
 
     this.showSectorTransition();
+  }
+
+  private showFoundryAfterReward(route: RouteOption): void {
+    const sector = getCurrentSector(this.currentRun, this.runSession);
+    const component = generateComponentSalvage({
+      seed: this.currentRun.seed,
+      saveFingerprint: createRunGenerationSaveFingerprint(
+        this.currentRun.unlockedIds,
+        this.currentRun.upgradeEffects
+      ),
+      sectorIndex: sector.index,
+      routeKind: route.kind,
+      sectorId: sector.sectorId,
+      bossRequired: sector.objective.bossRequired,
+      state: this.runSession.engineering
+    });
+    this.runSession.engineering = acquireComponent(this.runSession.engineering, component);
+    this.sceneManager.switchTo(
+      new FoundryScene(
+        this.uiRoot,
+        this.currentRun,
+        this.selectedContract,
+        this.runSession.engineering,
+        sector.index,
+        (engineering, salvageGained) => {
+          this.runSession.engineering = engineering;
+          this.runSession.salvage += salvageGained;
+          this.advanceAfterReward();
+        }
+      )
+    );
   }
 
   private showInterActJunction(sourceAct: RunActPlan, targetAct: RunActPlan): void {
@@ -1002,6 +1037,7 @@ export class GameApp {
         this.runSession.interActChoices,
         this.runSession.expedition,
         this.runSession.itemInstances,
+        this.runSession.engineering,
         this.saveData,
         this.lastSaveUpdate,
         () => {
@@ -1248,6 +1284,16 @@ export class GameApp {
           `Loadout ${debugState.shipLoadout.frameName} P${debugState.shipLoadout.powerDraw}/${debugState.shipLoadout.reactorOutput} H${debugState.shipLoadout.heatLoad}/${debugState.shipLoadout.thermalCapacity} M${debugState.shipLoadout.totalMass}/${debugState.shipLoadout.massCapacity} C${debugState.shipLoadout.commandDraw}/${debugState.shipLoadout.commandCapacity}`
         ]
       : [];
+    const engineeringDebug = debugState.engineering
+      ? [
+          `Foundry I${debugState.engineering.installedCount} C${debugState.engineering.cargoCount} H${debugState.engineering.historyCount} P${debugState.engineering.pendingCount} Inst ${debugState.engineering.instability}/${debugState.engineering.instabilityCapacity} Proc ${debugState.engineering.procBudget} ${debugState.engineering.effects} ${debugState.engineering.resources}`
+        ]
+      : [];
+    const combinedProcDebug = debugState.combinedProc
+      ? [
+          `Combined proc ${debugState.combinedProc.peakHook ?? 'none'} ${debugState.combinedProc.peakApplications}/${debugState.combinedProc.budget} total ${debugState.combinedProc.totalApplied} skip ${debugState.combinedProc.totalSkipped} order ${debugState.combinedProc.lastOrder.join('>') || 'none'}`
+        ]
+      : [];
     const upgradeDebug =
       debugState.upgradeEffects && debugState.upgradeEffects.length > 0
         ? [`Upgrades ${debugState.upgradeEffects.join(', ')}`]
@@ -1296,6 +1342,8 @@ export class GameApp {
       ...hudDebug,
       ...themeDebug,
       ...loadoutDebug,
+      ...engineeringDebug,
+      ...combinedProcDebug,
       ...upgradeDebug,
       ...progressionDebug,
       ...actDebug,

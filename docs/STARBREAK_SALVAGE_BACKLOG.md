@@ -1746,7 +1746,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 095.
+- Implemented in work order 095. Deterministic sector salvage now feeds a run-local foundry with reversible draft planning and explicit commit boundaries for install, remove, scrap, reroute, fuse, and overclock operations. Four quality tiers, nine sources, six affixes, and six bounded weapon recipes carry tags, compatibility, ancestry, instability, salvage value, resource costs, behavior, and presentation contracts. Evolutions materially alter topology, targeting, heat, defense, economy, or proc routing. Module and item hooks share an explicit deterministic order and 48-64 application budget with applied/skipped debug telemetry. The live post-reward foundry exposes legal/illegal previews, keyboard/pointer focus, narrow layouts, deterministic fusion outcomes, and commit-only salvage payouts; gameplay and summaries show the committed final ship and engineering history. Version-5 saves require no migration because engineering state ends with the run. Known seeds, save fingerprints, operation sequences, validation, combat effects, controls, summaries, and Chromium flows are covered.
 
 ## Epic BF - Phase 10 living expedition
 

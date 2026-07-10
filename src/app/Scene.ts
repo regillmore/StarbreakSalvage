@@ -8,6 +8,7 @@ import type { InputAction } from '../systems/InputSystem';
 import type { ContractThemeDebugState } from '../ui/ContractTheme';
 import type { MissionDebugState } from '../game/MissionDirector';
 import type { ShipLoadoutDebugState } from '../game/ShipLoadout';
+import type { EngineeringDebugState } from '../game/Foundry';
 
 export interface SceneDebugState {
   readonly seed: string;
@@ -45,6 +46,15 @@ export interface SceneDebugState {
   readonly hudMode?: string;
   readonly contractTheme?: ContractThemeDebugState;
   readonly shipLoadout?: ShipLoadoutDebugState;
+  readonly engineering?: EngineeringDebugState;
+  readonly combinedProc?: {
+    readonly budget: number;
+    readonly totalApplied: number;
+    readonly totalSkipped: number;
+    readonly peakHook: string | null;
+    readonly peakApplications: number;
+    readonly lastOrder: readonly string[];
+  };
   readonly mission?: MissionDebugState;
   readonly items?: ItemLoadoutStressModel;
   readonly enemyRoles?: EnemyRolePressureSummary;

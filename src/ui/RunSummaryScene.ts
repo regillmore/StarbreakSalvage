@@ -21,6 +21,12 @@ import { formatInterActHistory, type InterActChoiceRecord } from '../game/InterA
 import type { RouteHistoryEntry } from '../game/RunSession';
 import type { AppliedRouteOutcome } from '../game/RouteEvents';
 import type { ItemInstance } from '../game/Rewards';
+import {
+  createEngineeringDebugState,
+  formatEngineeringHistory,
+  resolveEngineeringSnapshot,
+  type EngineeringState
+} from '../game/Foundry';
 import { formatSectorConditionTimeline } from '../game/SectorConditions';
 import { formatHazardZoneDirectorTimeline } from '../game/HazardZoneDirector';
 import { formatSectorPacingTimeline } from '../game/SectorPacing';
@@ -52,6 +58,7 @@ export class RunSummaryScene implements Scene {
     private readonly interActChoices: readonly InterActChoiceRecord[],
     private readonly expeditionProgress: ExpeditionProgressState,
     private readonly itemInstances: readonly ItemInstance[],
+    private readonly engineering: EngineeringState,
     private readonly saveData: SaveData,
     private readonly saveUpdate: SaveUpdateResult | null,
     private readonly onBackToMenu: () => void,
@@ -79,6 +86,7 @@ export class RunSummaryScene implements Scene {
 
     const progress = createRunSummaryProgressModel(this.saveData, this.saveUpdate);
     const expedition = createExpeditionPathReadModel(this.run.expedition, this.expeditionProgress);
+    const finalEngineering = resolveEngineeringSnapshot(this.engineering.committed);
 
     const stats = document.createElement('dl');
     stats.className = 'summary-stats';
@@ -88,6 +96,9 @@ export class RunSummaryScene implements Scene {
       ['Contract', this.contract.shipName],
       ['Frame', this.contract.loadout.summary.frame],
       ['Starting Modules', this.contract.loadout.summary.modules],
+      ['Final Ship', finalEngineering.summary],
+      ['Final Modules', finalEngineering.loadout?.summary.modules ?? 'Invalid final loadout'],
+      ['Engineering History', formatEngineeringHistory(this.engineering.history)],
       ['Power Grid', this.contract.loadout.summary.powerGrid],
       ['Frame Systems', this.contract.loadout.summary.frameStats],
       ['Ship Theme', formatContractThemeSummary(this.contract)],
@@ -227,6 +238,7 @@ export class RunSummaryScene implements Scene {
           : undefined,
       contractTheme: createContractThemeDebugState(this.contract),
       shipLoadout: this.contract.loadout.debug,
+      engineering: createEngineeringDebugState(this.engineering),
       upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects)
     };
   }

@@ -140,6 +140,8 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.locator('.debug-overlay')).toContainText(
     /Loadout Redline Needle P\d+\/\d+ H\d+\/\d+ M\d+\/\d+ C\d+\/\d+/
   );
+  await expect(page.locator('.debug-overlay')).toContainText(/Foundry I\d+ C\d+ H\d+ P\d+/);
+  await expect(page.locator('.debug-overlay')).toContainText('Combined proc none 0/48');
   await expect(page.getByTestId('objective-readout')).toContainText(
     /ASSAULT|hostiles|fortification/i
   );
@@ -237,6 +239,24 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.locator('.reward-card').first()).toContainText(/Live effect|Bridge effect/);
 
   await page.getByRole('button', { name: /Take / }).first().click();
+  await expect(page.getByTestId('salvage-foundry')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Engineer The Ship' })).toBeVisible();
+  await expect(page.getByTestId('foundry-boundary')).toContainText(
+    /Undo restores the last commit/i
+  );
+  await expect(page.getByTestId('foundry-grid-readout')).toContainText('LEGAL DRAFT');
+  await expect(page.locator('.foundry-cargo-card').first()).toContainText(/scrap \d+/i);
+  await page
+    .locator('.foundry-cargo-card')
+    .first()
+    .getByRole('button', { name: /Reroute/ })
+    .click();
+  await expect(page.getByTestId('foundry-pending-history')).toContainText('Reroute');
+  await page.getByTestId('foundry-undo').click();
+  await expect(page.getByTestId('foundry-pending-history')).toContainText(
+    'No uncommitted changes.'
+  );
+  await page.getByTestId('foundry-commit').click();
   await expect(page.getByRole('heading', { name: /Running Audit briefing/ })).toBeVisible();
   await expect(page.locator('.transition-panel')).toHaveAttribute('data-contract-theme', 'redline');
 
@@ -276,6 +296,8 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.locator('.summary-stats')).toContainText('Redline Needle');
   await expect(page.locator('.summary-stats')).toContainText('Primary: Light Needle Laser');
   await expect(page.locator('.summary-stats')).toContainText(/Power \d+\/\d+ \| Heat \d+\/\d+/);
+  await expect(page.locator('.summary-stats')).toContainText('Engineering History');
+  await expect(page.locator('.summary-stats')).toContainText('Recovered');
   await expect(page.getByText('permadeath', { exact: true })).toBeVisible();
   await expect(page.getByText('Loss: ship destroyed and contract closed.')).toBeVisible();
   await expect(page.getByTestId('summary-item-list')).toContainText('Split Prism');
@@ -475,6 +497,7 @@ test('exposes item-heavy hook storm debug instrumentation', async ({ page }) => 
   await page.keyboard.down(' ');
   await expect(page.getByTestId('combat-status')).toContainText(/Shots [1-9]/);
   await expect(page.getByTestId('combat-status')).toContainText(/Hooks [1-9]/);
+  await expect(page.locator('.debug-overlay')).toContainText(/Combined proc onFire \d+\/\d+/);
   await page.keyboard.up(' ');
 
   expect(browserErrors).toEqual([]);
@@ -893,4 +916,6 @@ async function chooseFirstRouteAndReward(page: Page): Promise<void> {
 
   await expect(page.getByRole('heading', { name: 'Choose Reward' })).toBeVisible();
   await page.getByRole('button', { name: /Take / }).first().click();
+  await expect(page.getByTestId('salvage-foundry')).toBeVisible();
+  await page.getByTestId('foundry-skip').click();
 }

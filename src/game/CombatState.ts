@@ -30,12 +30,14 @@ import {
 import { updateEnemyMovement } from '../systems/EnemyMovement';
 import type { EnemyAttackFamily } from '../content/enemyRoles';
 import {
-  applyItemHooks,
-  applyItemHooksWithReport,
   hasItem,
   type EnemyKilledPayload,
+  type ItemHookName,
+  type ItemHookPayloadByName,
   type ProjectileBlueprint
 } from './ItemHooks';
+import { applyCombinedHooksWithReport, type CombinedHookDispatchReport } from './CombinedHooks';
+import { BASE_COMBINED_PROC_BUDGET, type EngineeringCombatProfile } from './Foundry';
 import type { EnvironmentObjectPlacementPlan } from './EnvironmentObjectPlacement';
 import { COMBAT_ARENA_HEIGHT } from './CombatGeometry';
 import {
@@ -226,12 +228,7 @@ export interface EnvironmentObjectState {
 }
 
 export type CombatEffectKind =
-  | 'special'
-  | 'bomb'
-  | 'graze'
-  | 'environmentHit'
-  | 'environmentBreak'
-  | 'chainReaction';
+  'special' | 'bomb' | 'graze' | 'environmentHit' | 'environmentBreak' | 'chainReaction';
 
 export interface CombatEffectState {
   readonly id: number;
@@ -292,9 +289,20 @@ export interface CombatState {
   nextLooseCurrencyIndex: number;
   readonly weapon: WeaponDefinition;
   items: readonly ItemInstance[];
+  readonly engineering: EngineeringCombatProfile | null;
+  procTelemetry: CombinedProcTelemetry;
   volleyIndex: number;
   stats: CombatStats;
   ended: boolean;
+}
+
+export interface CombinedProcTelemetry {
+  readonly budget: number;
+  readonly totalApplied: number;
+  readonly totalSkipped: number;
+  readonly peakHook: ItemHookName | null;
+  readonly peakApplications: number;
+  readonly lastOrder: readonly string[];
 }
 
 export interface EnemySpawn {
@@ -410,6 +418,7 @@ export interface CombatStateOptions {
   readonly sectorId?: string;
   readonly environmentObjectPlan?: EnvironmentObjectPlacementPlan | null;
   readonly looseCurrencyPlan?: LooseCurrencyPlan | null;
+  readonly engineering?: EngineeringCombatProfile | null;
 }
 
 export function createCombatState(
@@ -417,7 +426,9 @@ export function createCombatState(
   seed: string,
   options: CombatStateOptions = {}
 ): CombatState {
-  const weapon = getWeaponById(options.weaponId ?? 'weapon_light_needle_laser');
+  const weapon = getWeaponById(
+    options.engineering?.weaponId ?? options.weaponId ?? 'weapon_light_needle_laser'
+  );
   const bossDefinition = getBossById(options.bossId ?? DEFAULT_BOSS_ID);
   const shipStats = options.shipStats ?? DEFAULT_SHIP_STATS;
   const maxBombs = Math.max(0, Math.floor(shipStats.bombCapacity));
@@ -476,6 +487,15 @@ export function createCombatState(
     nextLooseCurrencyIndex: 0,
     weapon,
     items: options.items ?? [],
+    engineering: options.engineering ?? null,
+    procTelemetry: {
+      budget: options.engineering?.procBudget ?? BASE_COMBINED_PROC_BUDGET,
+      totalApplied: 0,
+      totalSkipped: 0,
+      peakHook: null,
+      peakApplications: 0,
+      lastOrder: []
+    },
     volleyIndex: 0,
     stats: {
       enemiesDestroyed: 0,
@@ -611,7 +631,12 @@ export function damageEnvironmentObjectsInRadius(
 
 export function damageEnvironmentObjectsInRect(
   state: CombatState,
-  rect: { readonly left: number; readonly top: number; readonly right: number; readonly bottom: number },
+  rect: {
+    readonly left: number;
+    readonly top: number;
+    readonly right: number;
+    readonly bottom: number;
+  },
   source: EnvironmentObjectDamageSource,
   damage: number
 ): number {
@@ -1539,7 +1564,7 @@ function destroyEnvironmentObject(
   options.visitedObjectIds.add(object.id);
 
   const baseReward = rollEnvironmentObjectReward(state, object, definition);
-  const hookReport = applyItemHooksWithReport('onEnvironmentObjectDestroyed', state.items, {
+  const hookReport = applyCombatHooksWithReport(state, 'onEnvironmentObjectDestroyed', {
     definitionId: definition.id,
     family: definition.family,
     kind: definition.kind,
@@ -1552,11 +1577,17 @@ function destroyEnvironmentObject(
   });
   const reward = {
     credits: hookReport.payload.rewardCredits,
-    salvage: hookReport.payload.rewardSalvage + Math.max(0, Math.floor(hookReport.payload.bonusSalvage))
+    salvage:
+      hookReport.payload.rewardSalvage + Math.max(0, Math.floor(hookReport.payload.bonusSalvage))
   };
   const droppedPickups = spawnEnvironmentObjectRewardPickups(state, object, reward);
 
-  addEnvironmentEffect(state, 'environmentBreak', object, getEnvironmentObjectEffectRadius(object) * 1.45);
+  addEnvironmentEffect(
+    state,
+    'environmentBreak',
+    object,
+    getEnvironmentObjectEffectRadius(object) * 1.45
+  );
   state.stats = {
     ...state.stats,
     environmentObjectsDestroyed: state.stats.environmentObjectsDestroyed + 1,
@@ -1646,7 +1677,9 @@ function triggerEnvironmentChainReaction(
 
   const maxTargets = Math.max(0, Math.floor(definition.chain.maxTargets));
   const targets = getActiveEnvironmentObjects(state)
-    .filter((candidate) => candidate.id !== object.id && !options.visitedObjectIds.has(candidate.id))
+    .filter(
+      (candidate) => candidate.id !== object.id && !options.visitedObjectIds.has(candidate.id)
+    )
     .filter(
       (candidate) =>
         getEnvironmentObjectDistanceSquared(state, object, candidate) <=
@@ -1724,7 +1757,12 @@ function environmentObjectOverlapsCircle(
 function environmentObjectOverlapsRect(
   state: Pick<CombatState, 'scrollDistance'>,
   object: EnvironmentObjectState,
-  rect: { readonly left: number; readonly top: number; readonly right: number; readonly bottom: number }
+  rect: {
+    readonly left: number;
+    readonly top: number;
+    readonly right: number;
+    readonly bottom: number;
+  }
 ): boolean {
   const objectRect = getEnvironmentObjectRect(state, object);
 
@@ -1983,7 +2021,7 @@ function updatePlayer(
   if (input.fire && player.fireCooldown <= 0 && player.weaponOverheatSeconds <= 0) {
     state.volleyIndex += 1;
 
-    const firePayload = applyItemHooks('onFire', state.items, {
+    const firePayload = applyCombatHooks(state, 'onFire', {
       volleyIndex: state.volleyIndex,
       projectiles: createWeaponProjectiles(state)
     });
@@ -2007,7 +2045,7 @@ function applySectorStartHooks(
   state: CombatState,
   context: { readonly sectorIndex: number; readonly sectorId: string }
 ): void {
-  const payload = applyItemHooks('onSectorStart', state.items, {
+  const payload = applyCombatHooks(state, 'onSectorStart', {
     sectorIndex: context.sectorIndex,
     sectorId: context.sectorId,
     creditsBonus: 0,
@@ -2104,8 +2142,9 @@ function createWeaponProjectiles(state: CombatState): ProjectileBlueprint[] {
 
 function addWeaponHeat(state: CombatState): void {
   const heatMultiplier = hasItem(state.items, 'item_heat_sink_saint') ? 0.7 : 1;
+  const engineeringMultiplier = state.engineering?.effects.heatPerShotMultiplier ?? 1;
   state.player.weaponHeat = clamp(
-    state.player.weaponHeat + state.weapon.heatPerShot * heatMultiplier,
+    state.player.weaponHeat + state.weapon.heatPerShot * heatMultiplier * engineeringMultiplier,
     0,
     state.weapon.overheatLimit
   );
@@ -2121,9 +2160,11 @@ function addWeaponHeat(state: CombatState): void {
 
 function ventWeaponHeat(state: CombatState, dt: number): void {
   const ventMultiplier = hasItem(state.items, 'item_heat_sink_saint') ? 1.35 : 1;
+  const engineeringMultiplier = state.engineering?.effects.heatVentMultiplier ?? 1;
   state.player.weaponHeat = Math.max(
     0,
-    state.player.weaponHeat - state.weapon.heatVentPerSecond * ventMultiplier * dt
+    state.player.weaponHeat -
+      state.weapon.heatVentPerSecond * ventMultiplier * engineeringMultiplier * dt
   );
 }
 
@@ -2134,7 +2175,7 @@ function activateSpecial(state: CombatState): void {
     return;
   }
 
-  const specialPayload = applyItemHooks('onSpecialUsed', state.items, {
+  const specialPayload = applyCombatHooks(state, 'onSpecialUsed', {
     projectiles: [-130, 0, 130].map((vx) => ({
       x: player.x,
       y: player.y - player.radius,
@@ -2186,7 +2227,7 @@ function activateBomb(state: CombatState, bounds: CombatBounds): void {
   const cancelledProjectiles = state.projectiles.filter(
     (projectile) => projectile.owner === 'enemy'
   ).length;
-  const bombPayload = applyItemHooks('onBombUsed', state.items, {
+  const bombPayload = applyCombatHooks(state, 'onBombUsed', {
     damage: BOMB_DAMAGE,
     bossDamageRatio: BOMB_BOSS_DAMAGE_RATIO,
     invulnerabilitySeconds: BOMB_INVULNERABILITY_SECONDS,
@@ -2289,7 +2330,7 @@ function spawnPlayerProjectiles(
   projectiles: readonly ProjectileBlueprint[]
 ): void {
   for (const projectile of projectiles) {
-    const spawnPayload = applyItemHooks('onProjectileSpawn', state.items, { projectile });
+    const spawnPayload = applyCombatHooks(state, 'onProjectileSpawn', { projectile });
     state.projectiles.push({
       id: getNextEntityId(state),
       owner: 'player',
@@ -2494,7 +2535,7 @@ function refreshBossPhase(state: CombatState, boss: BossState): void {
   );
   state.telegraphs = [];
 
-  const phasePayload = applyItemHooks('onBossPhaseChanged', state.items, {
+  const phasePayload = applyCombatHooks(state, 'onBossPhaseChanged', {
     bossId: boss.bossId,
     previousPhaseIndex,
     phaseIndex,
@@ -2634,7 +2675,7 @@ function resolveGraze(state: CombatState): void {
     }
 
     state.grazedProjectileIds.add(projectile.id);
-    const grazePayload = applyItemHooks('onGraze', state.items, {
+    const grazePayload = applyCombatHooks(state, 'onGraze', {
       projectileTags: projectile.tags,
       specialChargeGain: hasItem(state.items, 'item_phase_grazer')
         ? SPECIAL_CHARGE_PER_GRAZE * 1.55
@@ -2775,7 +2816,7 @@ function resolveCombatCollisions(state: CombatState): void {
       state.player.salvage += pickup.value;
     }
 
-    const pickupPayload = applyItemHooks('onPickupCollected', state.items, {
+    const pickupPayload = applyCombatHooks(state, 'onPickupCollected', {
       kind: pickup.kind,
       fireRateMultiplier: state.player.fireRateMultiplier
     });
@@ -2812,7 +2853,7 @@ function damageEnemyWithProjectile(
     return;
   }
 
-  const killPayload = applyItemHooks('onEnemyKilled', state.items, {
+  const killPayload = applyCombatHooks(state, 'onEnemyKilled', {
     projectileTags: projectile.tags,
     overkillDamage,
     bonusSalvage: 0,
@@ -2842,7 +2883,7 @@ function damageBossWithProjectile(
     return;
   }
 
-  const killPayload = applyItemHooks('onEnemyKilled', state.items, {
+  const killPayload = applyCombatHooks(state, 'onEnemyKilled', {
     projectileTags: projectile.tags,
     overkillDamage,
     bonusSalvage: 0,
@@ -2979,8 +3020,7 @@ function spawnLooseCurrencySpecs(
         spec.worldDistance === undefined
           ? spec.y
           : spec.y + state.scrollDistance - spec.worldDistance,
-      scrollDistanceLastFrame:
-        spec.worldDistance === undefined ? undefined : state.scrollDistance,
+      scrollDistanceLastFrame: spec.worldDistance === undefined ? undefined : state.scrollDistance,
       value
     });
     activePickups += 1;
@@ -2993,8 +3033,7 @@ function spawnLooseCurrencySpecs(
     state.stats = {
       ...state.stats,
       looseCurrencySpawned: state.stats.looseCurrencySpawned + spawnedValue,
-      looseCurrencySuppressedValue:
-        state.stats.looseCurrencySuppressedValue + suppressedValue
+      looseCurrencySuppressedValue: state.stats.looseCurrencySuppressedValue + suppressedValue
     };
   }
 
@@ -3030,11 +3069,12 @@ function damagePlayer(state: CombatState, damage: number): void {
     return;
   }
 
-  const outcome = applyDamage(state.player.hull, damage);
+  const adjustedDamage = damage * (state.engineering?.effects.damageTakenMultiplier ?? 1);
+  const outcome = applyDamage(state.player.hull, adjustedDamage);
   state.player.hull = outcome.hull;
   state.player.invulnerableSeconds = PLAYER_DAMAGE_INVULNERABILITY_SECONDS;
 
-  const hitPayload = applyItemHooks('onPlayerHit', state.items, {
+  const hitPayload = applyCombatHooks(state, 'onPlayerHit', {
     damage: outcome.damageApplied,
     revengeProjectiles: []
   });
@@ -3054,6 +3094,42 @@ function damagePlayer(state: CombatState, damage: number): void {
     damageTaken: state.stats.damageTaken + outcome.damageApplied,
     itemTriggers: state.stats.itemTriggers + hitPayload.revengeProjectiles.length
   };
+}
+
+function applyCombatHooks<THook extends ItemHookName>(
+  state: CombatState,
+  hook: THook,
+  payload: ItemHookPayloadByName[THook]
+): ItemHookPayloadByName[THook] {
+  return applyCombatHooksWithReport(state, hook, payload).payload;
+}
+
+function applyCombatHooksWithReport<THook extends ItemHookName>(
+  state: CombatState,
+  hook: THook,
+  payload: ItemHookPayloadByName[THook]
+): CombinedHookDispatchReport<THook> {
+  const report = applyCombinedHooksWithReport(
+    hook,
+    state.items,
+    state.engineering?.hooks ?? [],
+    payload,
+    { maxApplications: state.engineering?.procBudget ?? BASE_COMBINED_PROC_BUDGET }
+  );
+  const applicationCount = report.appliedSources.length;
+  state.procTelemetry = {
+    budget: report.maxApplications,
+    totalApplied: state.procTelemetry.totalApplied + applicationCount,
+    totalSkipped: state.procTelemetry.totalSkipped + report.skippedSources.length,
+    peakHook:
+      applicationCount > state.procTelemetry.peakApplications ? hook : state.procTelemetry.peakHook,
+    peakApplications: Math.max(state.procTelemetry.peakApplications, applicationCount),
+    lastOrder:
+      applicationCount > 0
+        ? report.appliedSources.map((source) => `${source.kind}:${source.sourceId}`)
+        : state.procTelemetry.lastOrder
+  };
+  return report;
 }
 
 function fireEnemyAttack(

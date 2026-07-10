@@ -291,7 +291,7 @@ export function applyItemHooksWithReport<THook extends ItemHookName>(
       continue;
     }
 
-    currentPayload = applySingleItemHook(hook, instance.itemId, instances, currentPayload);
+    currentPayload = applyItemHookInstance(hook, instance.itemId, instances, currentPayload);
     appliedItemIds.push(instance.itemId);
   }
 
@@ -318,7 +318,7 @@ export function hasItem(instances: readonly ItemInstance[], itemId: ItemId): boo
   return instances.some((instance) => instance.itemId === itemId);
 }
 
-function applySingleItemHook<THook extends ItemHookName>(
+export function applyItemHookInstance<THook extends ItemHookName>(
   hook: THook,
   itemId: ItemId,
   instances: readonly ItemInstance[],

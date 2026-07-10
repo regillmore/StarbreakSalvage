@@ -3,7 +3,8 @@ import type { FactionId } from '../content/factions';
 import type { UnlockId } from '../content/unlocks';
 import { createRng } from '../core/rng';
 import type { ActEconomyProfile } from './ActEconomy';
-import { applyItemHooks } from './ItemHooks';
+import { applyCombinedHooks } from './CombinedHooks';
+import type { EngineeringHookInstance } from './Foundry';
 import { generateRewardChoices, type ItemInstance } from './Rewards';
 
 export interface ShopInventoryItem {
@@ -39,18 +40,26 @@ export function generateShopInventory(options: {
   readonly bossFactionId?: FactionId;
   readonly bossGate?: boolean;
   readonly actEconomy?: ActEconomyProfile;
+  readonly engineeringHooks?: readonly EngineeringHookInstance[];
+  readonly procBudget?: number;
 }): ShopInventoryItem[] {
   const shopSeed = `${options.seed}:sector-${options.sectorIndex}:reroll-${options.rerollCount}`;
   const priceRng = createRng(shopSeed).fork('prices');
   const actStockBonus = options.actEconomy?.shopStockBonus ?? 0;
   const actPriceAdjustment = options.actEconomy?.shopPriceAdjustment ?? 0;
-  const shopPayload = applyItemHooks('onShopEntered', options.itemInstances ?? [], {
-    sectorIndex: options.sectorIndex,
-    rerollCount: options.rerollCount,
-    itemCount: (options.count ?? SHOP_ITEM_COUNT) + actStockBonus,
-    priceDiscount: options.priceDiscount ?? 0,
-    biasTags: options.biasTags ?? []
-  });
+  const shopPayload = applyCombinedHooks(
+    'onShopEntered',
+    options.itemInstances ?? [],
+    options.engineeringHooks ?? [],
+    {
+      sectorIndex: options.sectorIndex,
+      rerollCount: options.rerollCount,
+      itemCount: (options.count ?? SHOP_ITEM_COUNT) + actStockBonus,
+      priceDiscount: options.priceDiscount ?? 0,
+      biasTags: options.biasTags ?? []
+    },
+    { maxApplications: options.procBudget }
+  );
   const rewardChoices = generateRewardChoices({
     seed: shopSeed,
     poolId: 'combat',

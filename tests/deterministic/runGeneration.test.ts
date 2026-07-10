@@ -167,6 +167,7 @@ describe('deterministic generation guardrails', () => {
       'src/game/BackgroundPlan.ts',
       'src/game/BossArena.ts',
       'src/game/ExpeditionGraph.ts',
+      'src/game/Foundry.ts',
       'src/game/Generation.ts',
       'src/game/ScrollState.ts',
       'src/game/SectorFeatures.ts',

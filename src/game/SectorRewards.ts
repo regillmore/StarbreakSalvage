@@ -7,7 +7,8 @@ import {
   getRewardModifiersForSector,
   type RunSessionState
 } from './RunSession';
-import { applyItemHooks } from './ItemHooks';
+import { applyCombinedHooks } from './CombinedHooks';
+import { createEngineeringCombatProfile } from './Foundry';
 import { generateRewardChoices, type RewardChoice } from './Rewards';
 import { getRewardUpgradeBiasTags, getRewardUpgradeChoiceBonus } from './UpgradeEffects';
 import { createActEconomyProfile, getActEconomyRewardChoiceBonus } from './ActEconomy';
@@ -40,26 +41,33 @@ export function generateSectorRewardChoices(options: {
     poolId,
     sector.objective.bossRequired
   );
-  const rewardPayload = applyItemHooks('onRewardGenerated', options.session.itemInstances, {
-    routeKind: options.routeKind,
-    sectorIndex: sector.index,
-    poolId,
-    choiceCount:
-      options.count ??
-      3 +
-        choiceBonus +
-        upgradeChoiceBonus +
-        interActEffects.rewardChoiceBonus +
-        actRewardChoiceBonus,
-    biasTags: [
-      ...options.contract.itemBias,
-      ...getRouteBiasTags(options.routeKind),
-      ...modifierBiasTags,
-      ...upgradeBiasTags,
-      ...interActEffects.rewardBiasTags,
-      ...actEconomy.rewardBiasTags
-    ]
-  });
+  const engineering = createEngineeringCombatProfile(options.session.engineering);
+  const rewardPayload = applyCombinedHooks(
+    'onRewardGenerated',
+    options.session.itemInstances,
+    engineering.hooks,
+    {
+      routeKind: options.routeKind,
+      sectorIndex: sector.index,
+      poolId,
+      choiceCount:
+        options.count ??
+        3 +
+          choiceBonus +
+          upgradeChoiceBonus +
+          interActEffects.rewardChoiceBonus +
+          actRewardChoiceBonus,
+      biasTags: [
+        ...options.contract.itemBias,
+        ...getRouteBiasTags(options.routeKind),
+        ...modifierBiasTags,
+        ...upgradeBiasTags,
+        ...interActEffects.rewardBiasTags,
+        ...actEconomy.rewardBiasTags
+      ]
+    },
+    { maxApplications: engineering.procBudget }
+  );
   const poolProfileId = getSectorRewardPoolProfileId(
     rewardPayload.poolId,
     options.routeKind,

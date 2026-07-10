@@ -57,6 +57,11 @@ import {
 import { createEnvironmentStressDebugState } from '../game/EnvironmentStress';
 import { createLooseCurrencyPlan, type LooseCurrencyPlan } from '../game/LooseCurrency';
 import type { ItemInstance } from '../game/Rewards';
+import {
+  createEngineeringCombatProfile,
+  createEngineeringDebugState,
+  type EngineeringState
+} from '../game/Foundry';
 import { getSectorCompletionReason } from '../game/RunOutcome';
 import type { RouteCombatModifier } from '../game/RouteEvents';
 import type {
@@ -227,6 +232,7 @@ export class GameplayScene implements Scene {
     private readonly run: RunSkeleton,
     private readonly contract: StartingContract,
     private readonly shipStats: ShipStats,
+    private readonly engineeringState: EngineeringState,
     private readonly combatModifiers: readonly RouteCombatModifier[],
     private readonly sectorConditions: SectorConditionPlan,
     private readonly sectorIndex: number,
@@ -364,8 +370,12 @@ export class GameplayScene implements Scene {
     const loadout = document.createElement('p');
     loadout.className = 'hud-pill';
     loadout.dataset.testid = 'ship-loadout-readout';
-    loadout.setAttribute('aria-label', this.contract.loadout.hud.ariaLabel);
-    loadout.textContent = `${this.contract.loadout.hud.identity} | ${this.contract.loadout.hud.resources}`;
+    const engineering = createEngineeringCombatProfile(this.engineeringState);
+    loadout.setAttribute(
+      'aria-label',
+      `${engineering.frameName} engineered loadout. ${engineering.moduleSummary}. Instability ${engineering.instability} of ${engineering.instabilityCapacity}.`
+    );
+    loadout.textContent = `${engineering.frameName} | ${engineering.moduleSummary} | P${engineering.resources.powerDraw}/${engineering.resources.reactorOutput} H${engineering.resources.heatLoad}/${engineering.resources.thermalCapacity} | INST ${engineering.instability}/${engineering.instabilityCapacity}`;
 
     const readoutStrip = ownerDocument.createElement('div');
     readoutStrip.className = 'hud-readout-strip';
@@ -801,6 +811,8 @@ export class GameplayScene implements Scene {
       hudMode: hudTheme.mode,
       contractTheme: createContractThemeDebugState(this.contract),
       shipLoadout: this.contract.loadout.debug,
+      engineering: createEngineeringDebugState(this.engineeringState),
+      combinedProc: combatState.procTelemetry,
       items: itemStress,
       enemyRoles,
       environmentStress,
@@ -988,10 +1000,12 @@ export class GameplayScene implements Scene {
 
   private getCombatState(): CombatState {
     const wavePlan = this.getWavePlan();
+    const engineering = createEngineeringCombatProfile(this.engineeringState);
 
     this.combatState ??= createCombatState(this.getCombatBounds(), this.getCombatSeed(), {
-      weaponId: this.contract.startingWeaponId,
+      weaponId: engineering.weaponId,
       shipStats: this.shipStats,
+      engineering,
       startingHull: this.missionContext?.projection.startingHull,
       items: this.itemLoadout,
       bossId: this.getCurrentSector().bossId,

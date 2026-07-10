@@ -15,6 +15,19 @@ import {
 } from './acts';
 import { BACKGROUNDS, BACKGROUND_LAYER_KINDS, type BackgroundDefinition } from './backgrounds';
 import { BOSSES, type BossDefinition } from './bosses';
+import {
+  COMPONENT_AFFIXES,
+  COMPONENT_QUALITIES,
+  COMPONENT_QUALITY_IDS,
+  COMPONENT_SOURCE_DEFINITIONS,
+  COMPONENT_SOURCES,
+  ENGINEERING_EFFECT_KINDS,
+  WEAPON_EVOLUTION_RECIPES,
+  type ComponentAffixDefinition,
+  type ComponentQualityDefinition,
+  type ComponentSourceDefinition,
+  type WeaponEvolutionRecipeDefinition
+} from './engineering';
 import { FACTIONS, type FactionDefinition } from './factions';
 import {
   ENEMY_FORMATIONS,
@@ -171,6 +184,9 @@ export interface ContentValidationInput {
   readonly enemyFormations?: readonly EnemyFormationDefinition[];
   readonly enemyVariants?: readonly EnemyVariantDefinition[];
   readonly environmentObjects?: readonly EnvironmentObjectDefinition[];
+  readonly componentAffixes?: readonly ComponentAffixDefinition[];
+  readonly componentQualities?: readonly ComponentQualityDefinition[];
+  readonly componentSources?: readonly ComponentSourceDefinition[];
   readonly expeditionNodeProfiles?: readonly ExpeditionNodeProfileDefinition[];
   readonly missionStageProfiles?: readonly MissionStageProfileDefinition[];
   readonly missionObjectives?: readonly MissionObjectiveDefinition[];
@@ -190,6 +206,7 @@ export interface ContentValidationInput {
   readonly unlocks?: readonly UnlockDefinition[];
   readonly upgrades?: readonly UpgradeDefinition[];
   readonly weapons?: readonly WeaponDefinition[];
+  readonly weaponEvolutionRecipes?: readonly WeaponEvolutionRecipeDefinition[];
 }
 
 export function validateContent(input: ContentValidationInput = {}): string[] {
@@ -201,6 +218,9 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const enemyFormations = input.enemyFormations ?? ENEMY_FORMATIONS;
   const enemyVariants = input.enemyVariants ?? ENEMY_VARIANTS;
   const environmentObjects = input.environmentObjects ?? ENVIRONMENT_OBJECT_DEFINITIONS;
+  const componentAffixes = input.componentAffixes ?? COMPONENT_AFFIXES;
+  const componentQualities = input.componentQualities ?? COMPONENT_QUALITIES;
+  const componentSources = input.componentSources ?? COMPONENT_SOURCE_DEFINITIONS;
   const expeditionNodeProfiles = input.expeditionNodeProfiles ?? EXPEDITION_NODE_PROFILES;
   const missionStageProfiles = input.missionStageProfiles ?? MISSION_STAGE_PROFILES;
   const missionObjectives = input.missionObjectives ?? MISSION_OBJECTIVES;
@@ -222,6 +242,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const unlocks = input.unlocks ?? UNLOCKS;
   const upgrades = input.upgrades ?? UPGRADES;
   const weapons = input.weapons ?? WEAPONS;
+  const weaponEvolutionRecipes = input.weaponEvolutionRecipes ?? WEAPON_EVOLUTION_RECIPES;
   const errors: string[] = [];
   const achievementIds = new Set<string>();
   const backgroundIds = new Set<string>();
@@ -883,6 +904,14 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   }
 
   validateShipcraftDefinitions(errors, shipFrames, shipModules, ships, weapons);
+  validateEngineeringDefinitions(
+    errors,
+    componentQualities,
+    componentSources,
+    componentAffixes,
+    weaponEvolutionRecipes,
+    shipFrames
+  );
 
   const rewardedItemIds = new Set<string>();
   const rewardPoolIds = new Set<string>();
@@ -2906,6 +2935,148 @@ function getDuplicateStrings(values: readonly string[]): string[] {
   }
 
   return [...duplicates];
+}
+
+function validateEngineeringDefinitions(
+  errors: string[],
+  qualities: readonly ComponentQualityDefinition[],
+  sources: readonly ComponentSourceDefinition[],
+  affixes: readonly ComponentAffixDefinition[],
+  recipes: readonly WeaponEvolutionRecipeDefinition[],
+  frames: readonly ShipFrameDefinition[]
+): void {
+  const qualityIds = new Set<string>();
+  const sourceIds = new Set<string>();
+  const affixIds = new Set<string>();
+  const recipeIds = new Set<string>();
+  const knownQualityIds = new Set<string>(COMPONENT_QUALITY_IDS);
+  const knownSourceIds = new Set<string>(COMPONENT_SOURCES);
+  const effectKinds = new Set<string>(ENGINEERING_EFFECT_KINDS);
+  const slots = new Set<string>(SHIP_MODULE_SLOTS);
+  const tags = new Set<string>(SHIPCRAFT_TAGS);
+  const frameIds = new Set<string>(frames.map((frame) => frame.id));
+  const qualityTiers = new Set<number>();
+
+  if (qualities.length < COMPONENT_QUALITY_IDS.length) {
+    errors.push('Engineering must define every component quality');
+  }
+  for (const quality of qualities) {
+    const owner = `Component quality ${quality.id}`;
+    if (qualityIds.has(quality.id)) errors.push(`Duplicate component quality id: ${quality.id}`);
+    qualityIds.add(quality.id);
+    if (!knownQualityIds.has(quality.id)) errors.push(`${owner} has invalid id`);
+    if (qualityTiers.has(quality.tier)) errors.push(`${owner} duplicates tier ${quality.tier}`);
+    qualityTiers.add(quality.tier);
+    if (!quality.label.trim()) errors.push(`${owner} must have a label`);
+    validateNonNegativeInteger(errors, owner, 'tier', quality.tier);
+    validatePositiveNumber(errors, owner, 'salvageMultiplier', quality.salvageMultiplier);
+    validateNonNegativeInteger(errors, owner, 'baseInstability', quality.baseInstability);
+    validateNonNegativeInteger(errors, owner, 'overclockLimit', quality.overclockLimit);
+    validatePositiveNumber(errors, owner, 'effectMultiplier', quality.effectMultiplier);
+    if (!quality.presentation.summary.trim()) errors.push(`${owner} must have a summary`);
+    validateHexColor(errors, `${owner} presentation`, 'color', quality.presentation.color);
+  }
+
+  if (sources.length < COMPONENT_SOURCES.length) {
+    errors.push('Engineering must define every component source');
+  }
+  for (const source of sources) {
+    const owner = `Component source ${source.id}`;
+    if (sourceIds.has(source.id)) errors.push(`Duplicate component source id: ${source.id}`);
+    sourceIds.add(source.id);
+    if (!knownSourceIds.has(source.id)) errors.push(`${owner} has invalid id`);
+    if (!source.label.trim()) errors.push(`${owner} must have a label`);
+    validateNonNegativeInteger(errors, owner, 'qualityBias', source.qualityBias);
+    validateNonNegativeInteger(errors, owner, 'salvageBonus', source.salvageBonus);
+    validateNonNegativeInteger(errors, owner, 'instabilityBonus', source.instabilityBonus);
+    validateKnownUniqueValues(errors, owner, 'tag', source.tags, tags);
+  }
+
+  if (affixes.length < ENGINEERING_EFFECT_KINDS.length) {
+    errors.push('Engineering must define at least one affix per effect kind');
+  }
+  for (const affix of affixes) {
+    const owner = `Component affix ${affix.id}`;
+    if (affixIds.has(affix.id)) errors.push(`Duplicate component affix id: ${affix.id}`);
+    affixIds.add(affix.id);
+    if (!affix.name.trim()) errors.push(`${owner} must have a name`);
+    if (affix.allowedSlots.length === 0) errors.push(`${owner} must allow a slot`);
+    validateKnownUniqueValues(errors, owner, 'slot', affix.allowedSlots, slots);
+    validateKnownUniqueValues(errors, owner, 'required tag', affix.requiredAnyTags, tags);
+    validateKnownUniqueValues(errors, owner, 'incompatible tag', affix.incompatibleTags, tags);
+    validateEngineeringEffect(errors, owner, affix.effect, effectKinds);
+    validateEngineeringResourceDelta(errors, owner, affix.resourceDelta);
+    validateNonNegativeInteger(errors, owner, 'instability', affix.instability);
+    validateNonNegativeInteger(errors, owner, 'salvageBonus', affix.salvageBonus);
+    if (!affix.presentation.benefit.trim()) errors.push(`${owner} must describe its benefit`);
+    if (!affix.presentation.tradeoff.trim()) errors.push(`${owner} must describe its tradeoff`);
+    validateHexColor(errors, `${owner} presentation`, 'color', affix.presentation.color);
+  }
+
+  if (recipes.length < ENGINEERING_EFFECT_KINDS.length) {
+    errors.push('Engineering must define at least one weapon recipe per effect kind');
+  }
+  for (const recipe of recipes) {
+    const owner = `Weapon evolution recipe ${recipe.id}`;
+    if (recipeIds.has(recipe.id)) errors.push(`Duplicate weapon evolution recipe id: ${recipe.id}`);
+    recipeIds.add(recipe.id);
+    if (!recipe.name.trim()) errors.push(`${owner} must have a name`);
+    if (recipe.requiredBaseSlot !== 'primary') {
+      errors.push(`${owner} must evolve a primary module`);
+    }
+    validateKnownUniqueValues(errors, owner, 'base tag', recipe.requiredBaseTags, tags);
+    validateKnownUniqueValues(errors, owner, 'catalyst tag', recipe.catalystAnyTags, tags);
+    if (recipe.catalystAnyTags.length === 0) errors.push(`${owner} must require a catalyst tag`);
+    if (!qualityIds.has(recipe.minimumQuality)) {
+      errors.push(`${owner} references missing quality: ${recipe.minimumQuality}`);
+    }
+    validateKnownUniqueValues(errors, owner, 'blocked frame', recipe.blockedFrameIds, frameIds);
+    validatePositiveInteger(errors, owner, 'maximumApplications', recipe.maximumApplications);
+    validateNonNegativeInteger(errors, owner, 'instability', recipe.instability);
+    validateEngineeringResourceDelta(errors, owner, recipe.resourceDelta);
+    validateEngineeringEffect(errors, owner, recipe.effect, effectKinds);
+    if (!recipe.presentation.summary.trim()) errors.push(`${owner} must have a summary`);
+    if (!recipe.presentation.preview.trim()) errors.push(`${owner} must have preview copy`);
+    if (!recipe.presentation.risk.trim()) errors.push(`${owner} must expose risk copy`);
+    validateHexColor(errors, `${owner} presentation`, 'color', recipe.presentation.color);
+  }
+
+  for (const effectKind of ENGINEERING_EFFECT_KINDS) {
+    if (!affixes.some((affix) => affix.effect.kind === effectKind)) {
+      errors.push(`Engineering affixes must cover ${effectKind}`);
+    }
+    if (!recipes.some((recipe) => recipe.effect.kind === effectKind)) {
+      errors.push(`Weapon evolution recipes must cover ${effectKind}`);
+    }
+  }
+}
+
+function validateEngineeringEffect(
+  errors: string[],
+  owner: string,
+  effect: { readonly kind: string; readonly magnitude: number; readonly hookPriority: number },
+  effectKinds: ReadonlySet<string>
+): void {
+  if (!effectKinds.has(effect.kind)) errors.push(`${owner} has invalid effect: ${effect.kind}`);
+  validatePositiveNumber(errors, owner, 'effect magnitude', effect.magnitude);
+  validateNonNegativeInteger(errors, owner, 'hookPriority', effect.hookPriority);
+}
+
+function validateEngineeringResourceDelta(
+  errors: string[],
+  owner: string,
+  delta: {
+    readonly power: number;
+    readonly heat: number;
+    readonly mass: number;
+    readonly command: number;
+  }
+): void {
+  for (const [field, value] of Object.entries(delta)) {
+    if (!Number.isFinite(value) || !Number.isInteger(value)) {
+      errors.push(`${owner} must have integer ${field} delta`);
+    }
+  }
 }
 
 function validateShipcraftDefinitions(

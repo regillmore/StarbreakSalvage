@@ -8,7 +8,12 @@ import {
   getActEconomyCombatSalvageBonus,
   type ActEconomyProfile
 } from './ActEconomy';
-import { applyItemHooks } from './ItemHooks';
+import { applyCombinedHooks } from './CombinedHooks';
+import {
+  createEngineeringCombatProfile,
+  createEngineeringState,
+  type EngineeringState
+} from './Foundry';
 import type {
   RouteKind,
   RouteOption,
@@ -79,6 +84,7 @@ export interface RunSessionState {
   shopRerollsBySector: Record<number, number>;
   lastCombatResult: CombatRunResult | null;
   objectiveHistory: MissionObjectiveOutcomeRecord[];
+  engineering: EngineeringState;
 }
 
 export interface MissionObjectiveOutcomeRecord extends MissionObjectiveResultSnapshot {
@@ -123,7 +129,8 @@ export function createRunSession(
     interActChoices: [],
     shopRerollsBySector: {},
     lastCombatResult: null,
-    objectiveHistory: []
+    objectiveHistory: [],
+    engineering: createEngineeringState(contract.loadout)
   };
 }
 
@@ -246,22 +253,29 @@ function applyRouteChosenHooks(
   route: RouteOption,
   outcome: AppliedRouteOutcome
 ): AppliedRouteOutcome {
-  const payload = applyItemHooks('onRouteChosen', session.itemInstances, {
-    routeKind: route.kind,
-    sectorIndex: sector.index,
-    creditsDelta: outcome.effects.creditsDelta,
-    salvageDelta: outcome.effects.salvageDelta,
-    hullPatchDelta: outcome.effects.hullPatchDelta,
-    curseDelta: outcome.effects.curseDelta,
-    relicDelta: outcome.effects.relicDelta,
-    rewardChoiceBonus: outcome.effects.reward.choiceBonus,
-    rewardCreditBonus: outcome.effects.reward.creditBonus,
-    rewardBiasTags: outcome.effects.reward.biasTags,
-    rewardPoolIdOverride: outcome.effects.reward.poolIdOverride,
-    shopDiscount: outcome.effects.shop?.discount ?? 0,
-    shopStockBonus: outcome.effects.shop?.stockBonus ?? 0,
-    shopBiasTags: outcome.effects.shop?.biasTags ?? []
-  });
+  const engineering = createEngineeringCombatProfile(session.engineering);
+  const payload = applyCombinedHooks(
+    'onRouteChosen',
+    session.itemInstances,
+    engineering.hooks,
+    {
+      routeKind: route.kind,
+      sectorIndex: sector.index,
+      creditsDelta: outcome.effects.creditsDelta,
+      salvageDelta: outcome.effects.salvageDelta,
+      hullPatchDelta: outcome.effects.hullPatchDelta,
+      curseDelta: outcome.effects.curseDelta,
+      relicDelta: outcome.effects.relicDelta,
+      rewardChoiceBonus: outcome.effects.reward.choiceBonus,
+      rewardCreditBonus: outcome.effects.reward.creditBonus,
+      rewardBiasTags: outcome.effects.reward.biasTags,
+      rewardPoolIdOverride: outcome.effects.reward.poolIdOverride,
+      shopDiscount: outcome.effects.shop?.discount ?? 0,
+      shopStockBonus: outcome.effects.shop?.stockBonus ?? 0,
+      shopBiasTags: outcome.effects.shop?.biasTags ?? []
+    },
+    { maxApplications: engineering.procBudget }
+  );
   const hasShopPayload =
     outcome.effects.shop !== null ||
     payload.shopDiscount !== 0 ||

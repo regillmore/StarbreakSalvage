@@ -13,6 +13,7 @@ import {
   type RunSessionState
 } from '../game/RunSession';
 import { generateShopInventory, getShopRerollCost } from '../game/Shops';
+import { createEngineeringCombatProfile } from '../game/Foundry';
 import { getMarketDecoderReadout, getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import type { InputAction } from '../systems/InputSystem';
 import {
@@ -57,6 +58,7 @@ export class ShopScene implements Scene {
       ...interActEffects.rewardBiasTags,
       ...this.run.upgradeEffects.shopBiasTags
     ];
+    const engineering = createEngineeringCombatProfile(this.session.engineering);
     const inventory = generateShopInventory({
       seed: sector.shopSeed,
       sectorIndex: sector.index,
@@ -71,7 +73,9 @@ export class ShopScene implements Scene {
       sectorRole: sector.sectorName,
       bossFactionId: sector.bossFactionId,
       bossGate: sector.objective.bossRequired,
-      actEconomy
+      actEconomy,
+      engineeringHooks: engineering.hooks,
+      procBudget: engineering.procBudget
     });
     const rerollCost = getShopRerollCost(actEconomy, rerollCount);
     const actEconomyReadout = getActEconomyShopReadout(actEconomy);
