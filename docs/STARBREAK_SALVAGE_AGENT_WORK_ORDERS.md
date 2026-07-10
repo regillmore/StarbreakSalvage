@@ -1520,6 +1520,180 @@ Acceptance criteria:
 - Release docs document the two-act run, inter-act junction, Act II content, debug smoke, and manual browser gaps.
 - Phase 9 can be declared complete or explicitly deferred with documented blockers.
 
+Status: completed. `npm run check` passes with 66 test files and 379 tests, Playwright Chromium smoke passes all 11 paths including the Act II junction/entry/finale/summary journey, and production preview smoke returns HTTP 200 for `/StarbreakSalvage/` plus its hashed CSS and JavaScript assets. Phase 9 is closed as a local second-act playtest candidate. Manual non-Chromium, real-device, deployed-browser, run-length, balance, economy, and late-run readability checks remain documented risks rather than release blockers.
+
+## Phase 10 work orders
+
+Phase 10 turns the two-act route into a deeper expedition. The measured baseline run is about six minutes; these work orders should earn a roughly 12-20 minute structural target through multi-stage missions, branches, ship transformation, set pieces, and run-specific consequences rather than slower scroll, repeated waves, or inflated hull. Balance and final polish are intentionally secondary to building expandable systems.
+
+## Work order 091 - Expedition graph and run-length contract
+
+Goal: replace the one-sector/one-short-lane assumption with an expandable deterministic expedition model.
+
+Prompt:
+
+> Audit run generation, act plans, sector progression, route history, rewards, shops, junction flow, finale gates, save summaries, debug helpers, and E2E shortcuts for assumptions that one sector equals one gameplay lane. Implement a typed expedition graph containing acts, sectors, mission legs, encounter nodes, optional branches, safe transitions, expected duration/pressure bands, reward hooks, and finale gates. Generate the graph from seed plus save state and record player decisions separately. Preserve current ten-sector seeds and normalize older save/summary records. Expose graph and visited-path read models to HUD, summaries, and debug without private state access. Add validation, known-seed snapshots, migration tests, and a capacity test showing the baseline graph can support roughly 12-20 minutes of authored play without empty delay. Run checks.
+
+Acceptance criteria:
+
+- Same seed plus save state produces the same expedition graph; the same decision history produces the same visited path and major outcomes.
+- Existing contracts, acts, routes, summaries, debug shortcuts, and older saves remain readable during migration.
+- Nodes have stable ids, content references, entry/exit rules, pressure/duration bands, reward hooks, and validation.
+- Run-length capacity comes from encounter nodes and decisions, not global slowdown or enemy-hull inflation.
+
+Status: planned.
+
+## Work order 092 - Multi-stage mission director and transitions
+
+Goal: make an expedition node a reliable sequence of playable stages rather than one wave lane.
+
+Prompt:
+
+> Implement a data-driven mission director that consumes the expedition graph and advances explicit briefing, entry, combat, branch, relief, extraction, failure, and completion stages. Support deterministic stage schedules, branch conditions, checkpoint/resource carry rules, optional encounters, and stage-local scroll/world setup while reusing existing combat, wave, hazard, environment, reward, shop, boss, and scene contracts. Centralize transition events so frame catchup, simultaneous kills, item side effects, despawns, death, pause, abandon, and boss gates cannot skip, duplicate, or soft-lock stages. Add public HUD/debug/summary read models plus unit and integration coverage for advance, branch, resume, fail, complete, and old single-stage compatibility. Run checks.
+
+Acceptance criteria:
+
+- Mission stages enter, advance, branch, suspend, resume, fail, and complete through explicit tested transitions.
+- Stage changes preserve build, hull, resources, act/route context, and scroll-world state according to data contracts.
+- Frame catchup and every defeat/damage source remain objective-safe.
+- Keyboard, pointer, pause, abandon, reduced-motion, and narrow-view transitions remain usable.
+
+Status: planned.
+
+## Work order 093 - Objective grammar and mission anthology
+
+Goal: fill the mission runtime with varied, composable objectives that create meaningful run time.
+
+Prompt:
+
+> Build a validated objective grammar and first mission anthology for assault, pursuit, escort, salvage, defense, rescue, scan, sabotage, escape, and boss-approach play. Objectives should compose into multi-stage contracts with explicit success, partial-success, failure, branch, reward, faction, crew, and cleanup policies. Reuse enemies, variants, formations, hazards, destructibles, obstacles, loose currency, bosses, and route conditions while adding only the minimal new runtime primitives needed. Author at least eight distinct mission contracts across both acts, including optional high-risk branches and relief beats. Add known-seed schedules, objective-safety tests, content validation, HUD copy, route previews, debug jumps, and summary history. Run checks.
+
+Acceptance criteria:
+
+- At least eight multi-stage mission contracts materially differ in verbs, risk, pacing, and outcome.
+- Objective composition is data-driven and validation rejects impossible references, exits, reward rules, and cleanup policies.
+- Partial success and optional branches can change later rewards or state without corrupting run completion.
+- Missions add active play and decisions rather than repeated kill quotas or artificial waits.
+
+Status: planned.
+
+## Work order 094 - Modular ship frames, hardpoints, and power grid
+
+Goal: turn each starting contract into an extensible machine that can support future equipment systems.
+
+Prompt:
+
+> Refactor ship contracts toward validated frames and module loadouts. Add frame stats for hardpoint layout, reactor output, mass, cooling, heat routing, armor, shields, mobility, cargo, and command capacity. Add module contracts for primary, secondary, defense, engine, utility, drone, and experimental slots with power draw, heat, mass, tags, uniqueness, compatibility, and presentation metadata. Preserve current ships and weapons through explicit compatibility adapters rather than duplicating behavior. Add loadout resolution, HUD/preview/summary read models, save migration where required, and deterministic starting loadouts. Add tests for at least three materially different frames, legal/illegal combinations, power/heat resolution, collision parity, controls, fresh/progressed saves, and known seeds. Run checks.
+
+Acceptance criteria:
+
+- At least three frames support distinct legal configurations and operational tradeoffs.
+- Invalid slot, power, mass, tag, uniqueness, and compatibility combinations fail validation.
+- Current contract behavior remains available through the new authoritative model.
+- Loadout changes do not alter fixed-world collision or deterministic content generation unintentionally.
+
+Status: planned.
+
+## Work order 095 - Salvage foundry and weapon evolution
+
+Goal: let a ship transform during the run through deterministic engineering choices.
+
+Prompt:
+
+> Add deterministic component salvage and a mid-run foundry where players can install, remove, scrap, reroute, fuse, and overclock modules. Define component quality, source, tags, compatibility, recipe, affix, instability, and salvage-value contracts. Add bounded weapon evolution recipes that can alter projectile topology, targeting, heat, defense, economy, or item-hook behavior rather than only multiplying damage. Unify item and module hook ordering behind explicit combined proc budgets. Add previewable tradeoffs, clear undo/commit boundaries, keyboard/pointer focus, narrow layouts, engineering history, summary copy, debug fixtures, content validation, and known-seed tests. Run checks.
+
+Acceptance criteria:
+
+- Same seed, save state, acquired components, and foundry choices reproduce the same engineering results.
+- Install, scrap, fuse, and overclock choices materially change play and expose their costs/risks before commit.
+- Item/module interactions remain ordered, bounded, debug-visible, and test-covered.
+- Run summaries can explain the path from starting loadout to final ship.
+
+Status: planned.
+
+## Work order 096 - Capital ships, stations, and multi-part set pieces
+
+Goal: give sectors large physical places and targets that can anchor memorable missions.
+
+Prompt:
+
+> Implement composable multi-part world actors for capital ships, stations, wreck hulks, convoy structures, and exterior/interior transition beats. Define components for armor sections, turrets, hangars, shield emitters, engines, weak points, collision silhouettes, scrolling anchors, safe lanes, reward policies, and staged destruction. Build at least three original set-piece contracts from reusable components and integrate them with the mission director, objectives, hazards, formations, bombs, specials, item/module hooks, loose currency, boss locks, and accessibility settings. Keep damage/reward accounting deterministic from explicit events, cap debris/projectiles/effects, and add debug jumps, validation, unit tests, and Chromium smoke where practical. Run checks.
+
+Acceptance criteria:
+
+- At least three set pieces use reusable multi-part definitions rather than scene-specific scripts.
+- Target order, subsystem failure, staged destruction, objectives, and rewards cannot duplicate or soft-lock.
+- Geometry and safe lanes remain in the fixed 640x720 combat world across viewport sizes.
+- Reduced motion and performance mode simplify presentation without changing target geometry or stage timing.
+
+Status: planned.
+
+## Work order 097 - Faction campaigns and rival captains
+
+Goal: make factions react to the current run and create recognizable recurring opposition.
+
+Prompt:
+
+> Add a deterministic run-local faction campaign director that records aid, hostility, stolen assets, spared targets, completed contracts, territory pressure, and major mission outcomes. Generate named rival captains from original data-backed templates with ships, tactics, injuries, escapes, upgrades, grudges, rewards, and possible finale intervention. Feed faction/rival state into later mission options, shops, crew offers, enemy composition, set-piece ownership, route previews, and finale conditions without using frame-time randomness. Add retreat, capture, destruction, and recurrence policies; clear briefing/combat/summary copy; debug state; content validation; known-seed decision-history fixtures; and objective/reward safety tests. Run checks.
+
+Acceptance criteria:
+
+- Identical seed, save state, and decision history reproduce faction state, rival identity, adaptations, appearances, and outcomes.
+- At least three factions support distinct response policies and at least four rival archetypes can recur across a run.
+- Player actions visibly change later expedition content rather than only summary text.
+- Rival escape/capture/destruction cannot desync objectives, rewards, or finale gates.
+
+Status: planned.
+
+## Work order 098 - Crew, wingmates, and distress contracts
+
+Goal: add run-specific allies whose capabilities and fates create new tactical and narrative space.
+
+Prompt:
+
+> Add recruitable crew and wingmates with roles, traits, frame/module fit, command abilities, trust, injury, rescue, departure, and run-summary outcomes. Add deterministic bounded ally AI plus explicit focus, screen, salvage, regroup, and disengage commands. Acquire crew through distress calls, rescue stages, faction outcomes, and optional mission branches rather than a free menu grant. Integrate command capacity with modular frames and connect crew to mission options, foundry operations, faction reactions, rewards, defeat accounting, and finale outcomes. Add non-color-only ally identity, remappable command input, HUD states, narrow/reduced-motion/high-contrast treatment, debug fixtures, content validation, and tests for targeting, damage attribution, retreat, recovery, commands, and objective safety. Run checks.
+
+Acceptance criteria:
+
+- Multiple crew/wingmate roles produce distinct tactical options and mission consequences.
+- Ally behavior, commands, cooldowns, retreat, injury, and recovery are deterministic from explicit state and bounded by budgets.
+- Crew expands variety without becoming mandatory permanent raw power.
+- Allies remain readable and controllable with keyboard, pointer, high contrast, reduced motion, and narrow viewports.
+
+Status: planned.
+
+## Work order 099 - Expedition Scenario Lab, accessibility, and performance hardening
+
+Goal: make the expanded expedition inspectable and stress-testable without a full run.
+
+Prompt:
+
+> Add a local-only Scenario Lab reachable behind debug mode that can launch generated expedition nodes, mission stages, ship/module loadouts, foundry outcomes, set pieces, faction/rival states, crew states, and combined stress cases through public setup/read models. Add a bounded local run timeline for node transitions, decisions, duration, economy, engineering, faction, rival, crew, boss, and failure events; do not add telemetry or network calls. Extend debug budgets for mission actors, multi-part geometry, ally AI, module/item procs, and sustained expedition load. Add Playwright paths for representative new systems under narrow, high-contrast, reduced-motion, performance, and keyboard-only settings. Preserve all existing smoke shortcuts. Run checks.
+
+Acceptance criteria:
+
+- Debug/browser smoke can reach every Phase 10 system without private app-state access or a full expedition.
+- The timeline is bounded, local-only, save-safe, summary-readable, and deterministic for generated/decision events.
+- Existing item, enemy, environment, Act II, dense, destruction, exit, and long-scroll smoke remain green.
+- Accessibility and combined performance budgets are documented before final release hardening.
+
+Status: planned.
+
+## Work order 100 - Phase 10 expedition playtest release hardening
+
+Goal: ship the first expedition-depth and shipcraft playtest candidate.
+
+Prompt:
+
+> Audit Phase 10 for expedition determinism, mission-stage safety, run length, modular ship compatibility, foundry/evolution ordering, set-piece objectives, faction/rival recurrence, crew/ally behavior, save migration, summaries/timeline, debug Scenario Lab, accessibility, performance, browser load, GitHub Pages paths, and release docs. Fix blockers only. Update README, changelog, performance notes, Phase 10 plan, backlog, release checklist, QA docs, project plan, architecture notes, and work-order statuses. Run `npm run check`, Playwright smoke with escalation if available, and production preview asset-path smoke. Document manual non-Chromium, real-device, run-length, balance, content-volume, readability, ally-AI, and combinatorial loadout risks.
+
+Acceptance criteria:
+
+- Full checks, Chromium smoke, and production preview asset-path smoke pass or blockers are explicit.
+- A normal fresh-save expedition can traverse multi-stage missions, transform its ship, encounter a set piece, and resolve with faction/rival or crew consequences.
+- Release docs distinguish structural run-depth success from unfinished balance, content volume, art, audio, and narrative polish.
+- Phase 10 can be declared complete or explicitly deferred with documented blockers.
+
 Status: planned.
 
 ## Review subagent prompt

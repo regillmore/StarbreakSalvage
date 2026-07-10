@@ -190,7 +190,7 @@ Exit criteria:
 - Release docs document the two-act run, inter-act junction, Act II content, smoke paths, and manual browser gaps.
 - Phase 9 can be declared complete or explicitly deferred with documented blockers.
 
-Status: planned for work order 090.
+Status: completed by work order 090. `npm run check` passes with 66 test files and 379 tests, all 11 Playwright Chromium smoke paths pass, and production preview smoke returns HTTP 200 for the `/StarbreakSalvage/` page plus its hashed CSS and JavaScript assets. Manual non-Chromium, real-device, deployed-browser, run-length, balance, economy, and readability checks remain follow-up risks.
 
 ## Recommended Phase 9 Sequence
 
@@ -208,3 +208,5 @@ Status: planned for work order 090.
 ## Phase 9 Definition Of Done
 
 Phase 9 is done when a run can deterministically move from Act I through an inter-act junction into Act II, carry the player's build and resources forward, present distinct second-act sectors/routes/objectives/rewards, resolve through a second-act boss or finale, summarize Act I and Act II outcomes clearly, and retain the existing performance, accessibility, fixed-world parity, debug smoke, and GitHub Pages release guarantees.
+
+Status: complete as a local second-act playtest candidate. The measured roughly six-minute baseline run is shorter than the desired long-term arc; Phase 10 treats that as a structural-content opportunity rather than a reason to slow the existing simulation or inflate enemy durability.

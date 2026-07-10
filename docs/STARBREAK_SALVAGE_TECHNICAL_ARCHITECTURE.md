@@ -515,6 +515,67 @@ src/game/ActPressure.ts
 - Work order 089 adds `src/game/ActTwoDebug.ts` for public Act II smoke setup. The helpers identify Act II entry/finale indexes, scaffold deterministic debug route history, format route tags, and create debug summary results; app shortcuts should rebuild generated run/session state and expose details through DOM/debug readouts rather than private object access.
 - Playwright smoke should prefer public DOM/debug text assertions over private app object reads.
 
+## Phase 10 architecture priorities
+
+Phase 10 should turn the current route into an expedition without turning `GameApp`, `CombatState`, or scene classes into branching-script owners. Prefer four layers: validated content contracts, deterministic generated plans, runtime state machines that emit typed events, and public read models consumed by UI/debug/save/summary code.
+
+### Expedition graph and mission state
+
+- An `ExpeditionGraph` should own stable act, sector, mission-leg, encounter-node, branch, transition, reward-hook, duration-band, pressure-band, and finale-gate references.
+- Generate the graph once from seed plus save fingerprint. Store player decisions and visited-node state separately so a summary or recovered session can distinguish generated possibilities from the chosen path.
+- A `MissionDirector` should be an explicit state machine. Scene transitions may present mission state, but they should not decide whether briefing, entry, combat, branch, relief, extraction, failure, or completion occurs.
+- Mission objectives should consume typed gameplay events such as actor defeated, subsystem destroyed, area held, scan completed, cargo recovered, ally escaped, timer elapsed, and player extracted. Every objective must declare cleanup and partial/failure policies.
+- Current single-lane sectors should remain valid as one-node compatibility graphs during migration. Older last-run records can normalize to that form without rewriting stored history.
+
+### Modular ship and engineering state
+
+- Separate immutable frame definitions, module definitions, acquired component instances, and resolved runtime loadouts. Avoid storing computed fire cadence or hook arrays as authoritative save data.
+- A pure loadout resolver should validate hardpoints, power, mass, cooling, heat, compatibility, uniqueness, and tag requirements, then produce cached combat stats and ordered hook registrations.
+- Foundry operations should be explicit commands with preview and commit results. The same seed/save/component inventory plus command sequence must produce the same recipes, affixes, instability, salvage value, and final loadout.
+- Existing ship contracts and weapons should enter through compatibility definitions so migration does not create a second combat implementation.
+- Item and module effects should share dispatch ordering and combined budgets. Module code must not create an unbounded parallel hook pipeline.
+
+### Multi-part set pieces
+
+- Represent a capital ship or station as one set-piece instance with stable component ids, parent/child references, local transforms, damage policy, collision shapes, objective hooks, and staged state.
+- Convert local component geometry into the fixed 640x720 combat world through one scroll/set-piece transform. Presentation scaling must never affect targeting or safe lanes.
+- Route subsystem damage, chain reactions, disablement, destruction, rewards, and cleanup through typed set-piece events so simultaneous hits cannot duplicate outcomes.
+- Boss arena locks and hazard suppression remain separate policies. Set pieces may request those policies but must not bypass the fresh post-lock hazard telegraph rule.
+
+### Factions, rivals, and crew
+
+- A run-local `FactionCampaign` should fold typed mission/player events into compact faction state. Generated later-node options consume that state through explicit deterministic inputs and named RNG forks.
+- Rivals should be generated plans plus evolving run state: identity/tactics/ship are planned, while injury, escape, upgrades, grudges, and recurrence derive from recorded outcomes.
+- Crew definitions should remain content; recruited crew and wingmates should be small runtime records referencing definitions plus trust, injury, command, and mission state.
+- Ally AI must use bounded target queries and explicit command state. Damage attribution and objective policy should share the existing centralized defeat/accounting paths.
+
+### Run timeline and Scenario Lab
+
+- Emit compact timeline events for node/stage transitions, branch choices, economy, engineering, faction/rival/crew outcomes, bosses, and run end. Store ids and small payloads; resolve player-facing copy later.
+- Bound timeline length and per-category detail before it reaches save data. This is local diagnostics and summary context, never telemetry.
+- Scenario Lab setup helpers should accept public content/plan ids and return the same read models used by gameplay. Browser smoke should not mutate private fields to reach late systems.
+
+Recommended module direction:
+
+```text
+src/content/expeditions.ts
+src/content/missions.ts
+src/content/shipModules.ts
+src/content/setPieces.ts
+src/content/rivals.ts
+src/content/crew.ts
+src/game/ExpeditionGraph.ts
+src/game/MissionDirector.ts
+src/game/ShipLoadout.ts
+src/game/SalvageEngineering.ts
+src/game/SetPieceState.ts
+src/game/FactionCampaign.ts
+src/game/CrewCommand.ts
+src/game/RunTimeline.ts
+```
+
+The exact split should follow the work order 091 repository audit. Dependency direction is the constraint: content must not import scenes; generation must not call the DOM; runtime systems must not own presentation; UI/debug/save surfaces consume public read models.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

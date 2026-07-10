@@ -173,6 +173,24 @@ Current Phase 9 coverage:
 - Work orders 082-088 cover act planning, inter-act junction choice effects, Act II route contracts, Act II pacing/objective variants, act-pressure budgets, Act II economy/reward/shop tuning, and deterministic finale variants with focused unit and deterministic tests.
 - Work order 089 adds pure Act II debug helpers plus Playwright smoke for `ACT2-FINALE-SMOKE` in a narrow high-contrast/reduced-motion/performance viewport. The browser path uses `J` for the midpoint junction, `I` for first Act II sector entry, `E` for enemy-rich Act II pressure, `F` for finale smoke, and `Y` for the two-act debug summary.
 - Existing Playwright smoke still covers item-storm, enemy-rich, environmental-stress, dense-combat, forced-exit, forced-destruction, narrow HUD, pointer input, and keyboard-only flows; non-Chromium/manual-device validation remains release-closeout work.
+- Work order 090 closes the automated Phase 9 gate with 66 passing test files/379 tests, all 11 Playwright Chromium paths, and HTTP 200 production preview checks for the Pages subpath plus hashed CSS/JavaScript assets. Manual non-Chromium, real-device, deployed-browser, and full-run playtests remain open.
+
+## Phase 10 QA focus
+
+Phase 10 expands each route sector into a deterministic expedition graph with multi-stage missions, evolving ship configuration, physical set pieces, faction/rival consequence, and crew. Add tests closest to the new seams:
+
+- expedition graph snapshots for node identity, branches, duration/pressure bands, reward hooks, finale reachability, older ten-sector normalization, and decision-history replay;
+- mission director transition tests for entry, advance, branch, checkpoint, resume, partial success, failure, completion, frame catchup, simultaneous events, death, pause, abandon, and boss gates;
+- objective grammar validation and safety tests across assault, pursuit, escort, salvage, defense, rescue, scan, sabotage, escape, and boss-approach contracts;
+- frame/module loadout tests for hardpoints, power, mass, cooling, heat, compatibility, uniqueness, deterministic starts, collision parity, previews, HUD, and save migration;
+- foundry and evolution snapshots for component sources, install/scrap/fuse/overclock choices, recipe/affix results, undo/commit boundaries, item-module hook ordering, and combined proc caps;
+- set-piece component tests for targetable subsystems, scroll anchors, collision silhouettes, safe lanes, staged destruction, cleanup, rewards, hazard overlap, and objective safety;
+- faction/rival decision-history fixtures for response state, recurrence, escape/capture/destruction, adaptation, mission/shop/crew effects, and finale intervention;
+- crew/wingmate tests for acquisition, commands, targeting, damage attribution, retreat, injury, rescue, recovery, departure, objective accounting, and accessible identity;
+- Scenario Lab and bounded run-timeline tests that use public setup/read models, remain local-only, and cannot grow save records without limit;
+- Chromium smoke for representative expedition, foundry, set-piece, rival, and crew paths under narrow, keyboard-only, high-contrast, reduced-motion, and performance settings while every earlier smoke path remains green.
+
+The measured roughly six-minute Phase 9 baseline should be tracked as evidence, not fixed by sleeps or global slowdown. Phase 10 tests should report generated encounter capacity and eventual full-run duration, while qualitative balance remains a later playtest concern.
 
 ## Known seed tests
 
@@ -251,9 +269,19 @@ Phase 9 should add these seed/save fixtures:
 - `ACT2-FINALE-SMOKE` - browser debug path for Act II junction, entry, enemy-rich pressure, finale, and two-act summary; first covered by work order 089 Playwright smoke.
 - `ACT2-FINALE-SMOKE` - deterministic second-act boss/finale, victory, summary, save, and boss-release hazard fairness fixture; first covered in work order 088 by `tests/unit/secondActFinale.test.ts`.
 
+Phase 10 should add these seed/save/decision fixtures:
+
+- `EXPEDITION-GRAPH-SMOKE` - baseline two-act graph with stable mission nodes, optional branches, duration bands, and finale reachability.
+- `MISSION-BRANCH-CATCHUP` - multi-stage mission fixture for frame catchup, simultaneous completion events, partial success, and branch replay.
+- `FOUNDRY-EVOLUTION-GRID` - deterministic component, recipe, affix, install, fuse, and overclock history under fresh and progressed saves.
+- `CAPITAL-HULK-BREACH` - multi-part set-piece fixture for subsystem targeting, safe lanes, staged destruction, and reward cleanup.
+- `RIVAL-RETURNS-7` - decision-history fixture where a rival escapes, adapts, returns, and changes a later mission or finale.
+- `DISTRESS-WING-SMOKE` - crew rescue, recruitment, command, injury, retreat, and summary outcome path.
+- `EXPEDITION-COMBINED-STRESS` - Scenario Lab fixture for mission actors, set-piece parts, ally AI, item/module procs, hazards, projectiles, and bounded timeline instrumentation.
+
 ## Content validation checklist
 
-Phase 2 should extend this checklist as systems become real. In addition to the existing entries, content validation should cover ship stat ranges, objective references, wave references, implemented hook coverage, and unlock-gated pools for fresh and progressed saves. Phase 3 should extend it again for sector length ranges, scroll-speed modifiers, background-plan references, landmark references, hazard references, and distance marker ordering. Phase 4 should extend it again for ship appearance references, HUD theme keys, preview assets/primitives, and input/display settings defaults. Phase 5 should extend it again for upgrade definitions, upgrade prerequisites, upgrade effect references, icon categories, lunar sector references, lunar feature references, and destruction cue metadata. Phase 6 should extend it again for item family/source metadata, implementation status, unlock/discovery gates, source-weighted pools, synergy cluster references, and item card presentation data. Phase 7 should extend it again for enemy role metadata, movement/attack family references, variant eligibility, formation definitions, and longer-sector pacing references. Phase 8 should extend it again for richer hazard-zone definitions, destructible/obstacle definitions, loose currency scatter rules, safe-lane placement constraints, environmental stress budgets, and pickup economy caps. Phase 9 should extend it again for act definitions, inter-act junction choices, act route pools, Act II objective families, boss/finale references, and act-aware reward/economy pools.
+Phase 2 should extend this checklist as systems become real. In addition to the existing entries, content validation should cover ship stat ranges, objective references, wave references, implemented hook coverage, and unlock-gated pools for fresh and progressed saves. Phase 3 should extend it again for sector length ranges, scroll-speed modifiers, background-plan references, landmark references, hazard references, and distance marker ordering. Phase 4 should extend it again for ship appearance references, HUD theme keys, preview assets/primitives, and input/display settings defaults. Phase 5 should extend it again for upgrade definitions, upgrade prerequisites, upgrade effect references, icon categories, lunar sector references, lunar feature references, and destruction cue metadata. Phase 6 should extend it again for item family/source metadata, implementation status, unlock/discovery gates, source-weighted pools, synergy cluster references, and item card presentation data. Phase 7 should extend it again for enemy role metadata, movement/attack family references, variant eligibility, formation definitions, and longer-sector pacing references. Phase 8 should extend it again for richer hazard-zone definitions, destructible/obstacle definitions, loose currency scatter rules, safe-lane placement constraints, environmental stress budgets, and pickup economy caps. Phase 9 should extend it again for act definitions, inter-act junction choices, act route pools, Act II objective families, boss/finale references, and act-aware reward/economy pools. Phase 10 should extend it for expedition node references, mission transitions and cleanup policies, ship frame/module compatibility, foundry recipes and affixes, set-piece component graphs, faction/rival response rules, crew/command contracts, Scenario Lab fixtures, and bounded timeline events.
 
 - [ ] No duplicate IDs.
 - [ ] Every item tag is registered.
@@ -315,6 +343,8 @@ Phase 8 performance checks should include active hazard-zone count, hazard famil
 
 Phase 9 performance checks should include total two-act run length, act-transition DOM cost, Act II route-card density, Act II pressure budgets, combined enemy/environment/item debug smoke, second-act boss/finale load, summary size, save record size, and whether longer runs create fatigue or sustained frame-time pressure beyond current long-scroll smoke.
 
+Phase 10 performance checks should include expedition graph/mission schedule generation time, sustained full-run duration, mission-transition cleanup, active set-piece part and collision-shape counts, ally AI/command cost, module/item combined proc budgets, foundry/loadout DOM density, faction/rival state size, bounded timeline size, and Scenario Lab combined stress. Longer expeditions must keep active-field caps bounded rather than accumulating actors or event history across completed nodes.
+
 - [x] FPS overlay available behind debug flag.
 - [x] Projectile count visible in debug mode.
 - [ ] Particle count visible in debug mode.
@@ -335,7 +365,8 @@ Phase 9 performance checks should include total two-act run length, act-transiti
 - [x] Long-sector pressure visible in debug/summaries after work order 068 and in browser stress smoke after work order 069.
 - [x] Active hazard-zone, destructible/obstacle, loose currency, and environmental stress-budget counters visible in debug once Phase 8 lands.
 - [x] Environmental stress smoke covers at least one hazard/destructible/obstacle/currency path where practical.
-- [x] Act II pressure counters and finale debug state are visible through public debug readouts after work orders 086-088; broader browser smoke remains for work order 089.
+- [x] Act II pressure counters, finale debug state, and junction/entry/finale/summary Chromium smoke are visible through public readouts after work order 089.
+- [ ] Expedition node/stage, set-piece part, ally AI, module/item proc, and bounded timeline counters are visible after work order 099.
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [x] Heavy combat debug scene documented.
 - [x] Long-scroll debug scene documented.
@@ -352,6 +383,8 @@ Phase 4 accessibility checks should also cover narrow viewport HUD readability, 
 Phase 5 accessibility checks should also cover Upgrade Bay focus and purchase confirmation, upgrade icon text alternatives, non-color-only affordability state, sector exit/toast timing, lunar terrain bullet readability, and ship destruction fallback under reduced motion/performance/high-contrast settings.
 
 Phase 9 accessibility checks should also cover inter-act junction focus and copy, Act II route-card density, act progress HUD text, second-act boss/finale warnings, summary length, high-contrast bullets over Act II palettes, and reduced-motion treatment for longer transitions.
+
+Phase 10 accessibility checks should also cover mission briefings and branch focus, modular loadout/foundry comparisons, non-color-only power/heat/compatibility warnings, set-piece subsystem identity, rival and wingmate identity, remappable ally commands, reduced-motion stage transitions/destruction, high-contrast bullets over large actors, narrow expedition history, and Scenario Lab keyboard-only operation.
 
 - [x] Keyboard-only menu navigation.
 - [ ] Remappable controls.

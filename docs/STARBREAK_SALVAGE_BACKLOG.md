@@ -1682,4 +1682,132 @@ Acceptance:
 
 Status:
 
-- Planned for work order 090.
+- Completed in work order 090. Full checks pass with 66 test files and 379 tests, all 11 Playwright Chromium smoke paths pass, and production preview asset-path smoke returns HTTP 200 under `/StarbreakSalvage/`. Manual non-Chromium, real-device, deployed-browser, balance, economy, run-length, and late-run readability passes remain follow-up risks.
+
+## Epic BD - Phase 10 expedition graph and missions
+
+### BD1 - Expedition graph
+
+Acceptance:
+
+- Acts and sectors contain typed mission legs, encounter nodes, optional branches, transitions, pressure/duration bands, reward hooks, and finale gates.
+- Same seed plus save state reproduces the graph; the same decision history reproduces the visited path and major outcomes.
+- Older ten-sector seeds, summaries, and save records normalize safely.
+
+Status:
+
+- Planned for work order 091.
+
+### BD2 - Multi-stage mission runtime
+
+Acceptance:
+
+- Missions advance through explicit briefing, entry, combat, branch, relief, extraction, failure, and completion states.
+- Frame catchup, simultaneous kills, item effects, despawns, pause, abandon, death, and boss gates cannot skip or soft-lock stages.
+- Build, resources, act context, and scroll-world state carry between stages according to data contracts.
+
+Status:
+
+- Planned for work order 092.
+
+### BD3 - Objective grammar and mission anthology
+
+Acceptance:
+
+- At least eight multi-stage missions cover assault, pursuit, escort, salvage, defense, rescue, scan, sabotage, escape, or boss-approach verbs.
+- Objectives declare success, partial-success, failure, branch, reward, faction, crew, and cleanup policies.
+- Added run time comes from new decisions and active play rather than global slowdown or inflated hull.
+
+Status:
+
+- Planned for work order 093.
+
+## Epic BE - Phase 10 shipcraft
+
+### BE1 - Modular frames and hardpoints
+
+Acceptance:
+
+- Ship frames declare hardpoints, reactor, mass, cooling, heat routing, armor, shields, mobility, cargo, and command capacity.
+- Modules declare slot, power, heat, mass, tags, uniqueness, compatibility, behavior, and presentation metadata.
+- Existing contracts and weapons remain available through explicit compatibility adapters.
+
+Status:
+
+- Planned for work order 094.
+
+### BE2 - Salvage foundry and weapon evolution
+
+Acceptance:
+
+- Players can install, remove, scrap, reroute, fuse, and overclock deterministic component salvage during a run.
+- Weapon evolution changes topology, targeting, heat, defense, economy, or hook behavior rather than only damage numbers.
+- Item and module hooks have explicit ordering, combined proc budgets, debug state, and engineering history.
+
+Status:
+
+- Planned for work order 095.
+
+## Epic BF - Phase 10 living expedition
+
+### BF1 - Capital ships and stations
+
+Acceptance:
+
+- At least three reusable multi-part set pieces support targetable subsystems, safe collision geometry, staged destruction, objective hooks, and deterministic rewards.
+- Set pieces integrate with hazards, formations, bombs, specials, item/module effects, loose currency, and boss locks.
+- Performance and reduced-motion modes simplify visuals without changing geometry or stage timing.
+
+Status:
+
+- Planned for work order 096.
+
+### BF2 - Faction campaigns and rivals
+
+Acceptance:
+
+- Run-local faction state records aid, hostility, stolen assets, spared targets, contracts, and territory pressure.
+- Named rival captains can escape, adapt, recur, and intervene through deterministic decision history.
+- Faction/rival state changes later missions, shops, encounters, crew offers, set-piece ownership, or finale conditions.
+
+Status:
+
+- Planned for work order 097.
+
+### BF3 - Crew and wingmates
+
+Acceptance:
+
+- Recruitable crew and wingmates have roles, traits, commands, trust, injury, rescue, departure, and summary outcomes.
+- Ally AI and focus/screen/salvage/regroup/disengage commands are bounded, deterministic, accessible, and objective-safe.
+- Crew is acquired through mission consequences and expands variety without mandatory permanent power.
+
+Status:
+
+- Planned for work order 098.
+
+## Epic BG - Phase 10 release and QA
+
+### BG1 - Expedition Scenario Lab
+
+Acceptance:
+
+- Debug tooling can launch expedition nodes, mission stages, loadouts, foundry states, set pieces, rivals, crew, and combined stress through public models.
+- A bounded local-only run timeline records duration, choices, economy, engineering, faction, rival, crew, boss, and failure events without telemetry.
+- Chromium smoke covers representative Phase 10 systems under accessibility/performance settings while existing smoke remains green.
+
+Status:
+
+- Planned for work order 099.
+
+### BG2 - Phase 10 release checklist
+
+Acceptance:
+
+- `npm run check`, Playwright Chromium smoke, and production preview asset-path smoke pass before Phase 10 closeout.
+- A fresh-save expedition can traverse multi-stage missions, transform its ship, encounter a set piece, and resolve with faction/rival or crew consequences.
+- Manual browser, device, duration, balance, content-volume, readability, ally-AI, and combinatorial risks are documented.
+
+Status:
+
+- Planned for work order 100.

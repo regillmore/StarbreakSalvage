@@ -164,6 +164,8 @@
 - Concluded Phase 8 in planning docs and added the Phase 9 roadmap/work orders for a deterministic second act, inter-act junction, Act II route and sector pool, Act II pacing/objective variants, combat/environment escalation, economy tuning, second-act boss/finale, debug smoke, and release hardening.
 - Continued Phase 9 implementation through the act model, midpoint refit junction, Act II route-contract vocabulary, and Act II pacing/objective variants while leaving economy, boss/finale, debug smoke, and release hardening for work orders 086-090.
 - Completed the Phase 9 Act II rewards/shop/economy pass for work order 087, the deterministic second-act finale pass for work order 088, and the broader Act II debug smoke/accessibility/performance hardening pass for work order 089, leaving release closeout for work order 090.
+- Completed Phase 9 as a local second-act playtest candidate with 66 passing test files/379 tests, all 11 Chromium smoke paths, production preview asset-path evidence, and explicit manual browser/run-length/balance risks.
+- Added the Phase 10 expedition-depth and shipcraft roadmap plus work orders 091-100 for deterministic expedition graphs, multi-stage missions, modular frames, salvage engineering, multi-part set pieces, faction rivals, crew/wingmates, Scenario Lab coverage, and release hardening.
 - Started Phase 6 with a documented audit of the current 30-item catalog, repeated-reward risks, underrepresented archetypes, target item families, and bridge-effect follow-ups.
 - Formalized the Phase 6 item metadata contract and validation baseline before adding larger item batches.
 - Completed the first Phase 6 hook-surface expansion so work order 054 can add live catalog items against typed event payloads.

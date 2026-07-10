@@ -39,9 +39,11 @@ Phase 7 is complete as of validated work order 070. It added enemy behavior dept
 
 Phase 8 is complete as of validated work order 080. It added environmental pressure depth: richer hazard-zone schema/behavior/director work, destructible and obstacle content/runtime interactions, fixed-world obstacle lane safety, deterministic loose-currency lanes, environmental stress smoke, scroll-world object/loot presentation, and release-hardening docs.
 
-Phase 9 begins from that environmental systems playtest candidate. Its goal is to expand the loop into a deterministic second act: an explicit act model, inter-act junction, Act II route/sector pool, Act II pacing/objective variants, act-aware combat/environment pressure, economy tuning, second-act bosses/finale, debug smoke, and release hardening.
+Phase 9 is complete as of validated work order 090. It expanded the loop into a deterministic second act with an explicit act model, inter-act junction, Act II route/sector pool, Act II pacing/objective variants, act-aware combat/environment pressure, economy tuning, second-act bosses/finale, public debug smoke, full checks, and production preview evidence.
 
-See `docs/STARBREAK_SALVAGE_PHASE_9_PLAN.md` for the active Phase 9 roadmap. `docs/STARBREAK_SALVAGE_PHASE_8_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_7_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_6_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_5_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_4_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`, and `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md` remain historical records for concluded phases.
+Phase 10 begins from that second-act candidate and the measured roughly six-minute baseline run. Its goal is expedition depth and shipcraft: multi-stage mission graphs, modular frames, salvage engineering, capital-ship/station set pieces, run-local faction rivals, crew/wingmates, and a Scenario Lab. The structural target is roughly 12-20 minutes earned through play and decisions rather than slowdown or durability inflation.
+
+See `docs/STARBREAK_SALVAGE_PHASE_10_PLAN.md` for the active Phase 10 roadmap. `docs/STARBREAK_SALVAGE_PHASE_9_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_8_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_7_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_6_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_5_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_4_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`, and `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md` remain historical records for concluded phases.
 
 ## Milestones
 
@@ -764,7 +766,75 @@ Exit criteria:
 - `npm run check`, Playwright smoke where available, and production preview smoke pass.
 - Known run-length, balance, economy, browser, and readability risks are documented.
 
-Status: planned for work orders 089-090.
+Status: completed through work orders 089-090. Act II debug/accessibility smoke, full automated checks, 11 Playwright Chromium paths, production preview asset-path verification, and known-risk closeout are in place. Manual non-Chromium, real-device, deployed-browser, and full-run playtests remain follow-up work.
+
+## Phase 10 milestones
+
+### P10.1 - Expedition Graph Foundation
+
+Scope:
+
+- Replace the one-sector/one-short-lane assumption with deterministic mission legs, encounter nodes, branches, transitions, duration/pressure bands, and finale gates.
+
+Exit criteria:
+
+- Same seed plus save state reproduces the graph, and the same decision history reproduces the visited path.
+- Existing ten-sector runs and older save/summary records normalize safely.
+
+Status: planned for work order 091.
+
+### P10.2 - Multi-Stage Mission Runtime And Anthology
+
+Scope:
+
+- Add explicit mission-stage transitions and composable objective grammar.
+- Author multi-stage assault, pursuit, escort, salvage, defense, rescue, scan, sabotage, escape, and boss-approach contracts.
+
+Exit criteria:
+
+- Mission stages cannot skip, duplicate, or soft-lock under frame catchup, simultaneous events, death, pause, abandon, or boss gates.
+- Added run length comes from active play and decisions instead of delay.
+
+Status: planned for work orders 092-093.
+
+### P10.3 - Modular Shipcraft
+
+Scope:
+
+- Add ship frames, hardpoints, reactor/mass/cooling/heat contracts, modules, component salvage, foundry refits, and weapon evolution.
+
+Exit criteria:
+
+- Multiple legal frame/loadout identities exist and invalid combinations fail validation.
+- Same acquired components and engineering choices reproduce the same final ship.
+
+Status: planned for work orders 094-095.
+
+### P10.4 - Living Expedition Set Pieces
+
+Scope:
+
+- Add reusable multi-part capital ships/stations, run-local faction campaigns, recurring rival captains, crew, wingmates, and distress contracts.
+
+Exit criteria:
+
+- Large physical targets, faction/rival response, and ally outcomes materially change mission play and later expedition state.
+- Objective/reward accounting and fixed-world accessibility remain reliable.
+
+Status: planned for work orders 096-098.
+
+### P10.5 - Expedition Playtest Candidate
+
+Scope:
+
+- Add a local-only Scenario Lab, bounded run timeline, combined stress/accessibility smoke, save migration hardening, production preview evidence, and release docs.
+
+Exit criteria:
+
+- Full checks and browser/preview smoke pass.
+- A fresh-save expedition can traverse multi-stage missions, transform its ship, encounter a set piece, and resolve with faction/rival or crew consequences.
+
+Status: planned for work orders 099-100.
 
 ## Dependency map
 
@@ -815,6 +885,11 @@ M0 scaffold
                                                                                       -> P9.3 Act II route, pacing, and objectives
                                                                                         -> P9.4 Act II pressure, economy, and finale
                                                                                           -> P9.5 second-act playtest candidate
+                                                                                            -> P10.1 expedition graph foundation
+                                                                                              -> P10.2 multi-stage missions
+                                                                                                -> P10.3 modular shipcraft
+                                                                                                  -> P10.4 living expedition set pieces
+                                                                                                    -> P10.5 expedition playtest candidate
 ```
 
 Parallelizable:
@@ -839,6 +914,9 @@ High-conflict areas:
 - Death/destruction flow shared by combat, audio/VFX, and run summary.
 - Item definitions, hook handlers, reward pools, shop/vault generation, unlock gates, and summary/archive item presentation.
 - Act definitions, inter-act junction state, Act II route/economy profiles, second-act boss/finale gates, and two-act summary/save records.
+- Expedition graph and mission-stage state shared by generation, combat, routes, summaries, saves, and debug tools.
+- Ship frame/module/loadout resolution shared by contracts, combat, foundry UI, items, HUD, save migration, and summaries.
+- Set-piece component state, faction/rival event history, crew/ally state, and bounded run timeline records.
 
 ## First five PRs
 

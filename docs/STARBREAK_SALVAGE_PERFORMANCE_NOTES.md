@@ -158,7 +158,23 @@ Phase 9 expands run length with a second act. Keep the expansion measurable and 
 - Debug smoke should be able to reach the inter-act junction, Act II pressure, and finale without a full manual run.
 - Work order 088 keeps finale variants as deterministic boss-hull and arena-approach modifiers on the existing combat path, with an `F` debug shortcut for final-boss smoke; do not raise projectile, telegraph, object, or pickup caps for finale variants without a fresh stress pass.
 - Work order 089 adds `J`, `I`, and `Y` Act II smoke shortcuts around the existing `F` finale smoke. These shortcuts rebuild deterministic run/session state, apply bounded debug resources and a deterministic junction choice where needed, and expose route tags plus objective state in the public debug overlay instead of relying on private app state.
-- Production preview smoke should continue checking the static `/StarbreakSalvage/` base path after act routing changes.
+- Work order 090 closes the local Phase 9 gate with 66 passing test files/379 tests, all 11 Chromium smoke paths, and HTTP 200 preview checks for `/StarbreakSalvage/` plus its hashed CSS and JavaScript assets. Manual non-Chromium, real-device, and deployed-browser profiling remains open.
+
+## Phase 10 Expedition And Shipcraft Budget Targets
+
+Phase 10 adds more lived play per run. The roughly six-minute Phase 9 baseline is shorter than intended, but the remedy is generated mission capacity and consequential branches rather than global slowdown, repeated waves, higher hull, or permanently higher density.
+
+- Generate expedition graphs, mission schedules, rival plans, crew offers, and starting loadouts once from explicit seed/save context. Runtime decision events select already-valid branches or use named RNG forks; they must not add frame-time randomness.
+- Target roughly 12-20 minutes of baseline expedition capacity through mission stages, optional branches, relief beats, foundry choices, and set pieces. Treat this as a structural target until full playtests justify tighter timing.
+- Mission transitions must clean up or deliberately carry actors, projectiles, telegraphs, hazards, environment objects, loose currency, allies, and event subscriptions. Completed stages must not accumulate invisible per-frame work.
+- Multi-part set pieces need caps for active components, collision shapes, turrets, projectiles, debris, effects, and reward events. Broad-phase checks should precede any increase in active geometry.
+- Modular ship resolution belongs outside the hot loop where possible. Cache legal loadout stats and hook registries after foundry commits instead of recomputing compatibility, power, mass, or recipe graphs every frame.
+- Item and module hooks need one ordered dispatch path and shared proc/effect/projectile budgets. Weapon evolution must not bypass the existing item-storm safety contract.
+- Ally AI should use bounded target selection and command cadence. Do not perform unbounded all-pairs scans among enemies, set-piece parts, pickups, and crew every tick.
+- Faction, rival, crew, engineering, and mission history should emit compact typed events into a bounded local timeline. No telemetry, network calls, or unlimited save growth.
+- Foundry, loadout, briefing, faction, crew, and timeline UI should render from static view models on scene entry or committed state changes, not rebuild large DOM trees every animation frame.
+- Scenario Lab stress readouts should expose expedition node/stage, active set-piece parts/shapes, allies/targets, item/module procs, projectiles/telegraphs, environment objects, loose pickups, timeline events, and cleanup state together.
+- Performance mode and reduced motion may simplify backgrounds, debris, subsystem effects, ally trails, and transitions, but must not change mission timing, collision geometry, target selection, branch results, or generated content.
 
 ## Debug and Playtest Scenarios
 
@@ -262,3 +278,14 @@ The debug overlay total entity count includes player, enemies, boss, bullets, pi
 - Act II pressure can hide bullets if enemy formations, hazards, obstacles, and item effects peak together. Work order 089 adds browser smoke for Act II pressure under high contrast, reduced motion, performance mode, and a narrow viewport; keep using combined budget telemetry before raising caps.
 - Second-act boss arenas must preserve the boss-release hazard fairness rule so hidden warnings cannot become instant damage after a finale transition.
 - The first finale pass adds hull/approach pressure and summary/unlock hooks, not new projectile families; remaining work should keep profiling the `F` finale smoke alongside enemy-rich, environmental stress, and the `Y` two-act summary before adding denser final-phase attacks.
+
+## Phase 10 Playtest Risks
+
+- A deeper expedition can still feel padded if mission stages reuse the same kill quota. Require distinct verbs, branches, physical goals, and consequences before increasing nominal duration.
+- Mission cleanup bugs can leave invisible actors, timers, hooks, or event listeners alive across stages and create sustained slowdown or duplicated rewards.
+- Modular frames, items, evolved weapons, crew traits, and foundry affixes create a combinatorial proc surface. Shared hook ordering and caps must land before catalog volume grows.
+- Multi-part set pieces can turn collision and draw costs from entity-linear into part-heavy scans; keep part/shape budgets explicit and test combined hazard/projectile pressure.
+- Ally AI can create target thrash, path overlap, friendly visual noise, or objective attribution bugs. Bound scans and preserve non-color-only ally cues.
+- Faction/rival recurrence can corrupt determinism if runtime outcomes consume unrelated RNG streams. Decision history and named forks must be explicit.
+- A bounded run timeline can still bloat saves or summaries if verbose payloads are retained. Store stable ids and compact numeric outcomes, then resolve display copy from content tables.
+- The first 12-20 minute structural target is unbalanced by design. Full-run fatigue, economy, difficulty, and content repetition need later human playtests across fresh and progressed saves.
