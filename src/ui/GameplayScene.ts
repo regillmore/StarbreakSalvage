@@ -361,6 +361,12 @@ export class GameplayScene implements Scene {
     contract.className = 'hud-pill';
     contract.textContent = this.contract.shipName;
 
+    const loadout = document.createElement('p');
+    loadout.className = 'hud-pill';
+    loadout.dataset.testid = 'ship-loadout-readout';
+    loadout.setAttribute('aria-label', this.contract.loadout.hud.ariaLabel);
+    loadout.textContent = `${this.contract.loadout.hud.identity} | ${this.contract.loadout.hud.resources}`;
+
     const readoutStrip = ownerDocument.createElement('div');
     readoutStrip.className = 'hud-readout-strip';
     readoutStrip.append(
@@ -376,6 +382,7 @@ export class GameplayScene implements Scene {
       this.bossReadout,
       this.warningReadout,
       this.itemReadout,
+      loadout,
       contract
     );
     chrome.append(themeReadout, meterStrip);
@@ -793,6 +800,7 @@ export class GameplayScene implements Scene {
       inputMode: this.input.getActiveInputMode(),
       hudMode: hudTheme.mode,
       contractTheme: createContractThemeDebugState(this.contract),
+      shipLoadout: this.contract.loadout.debug,
       items: itemStress,
       enemyRoles,
       environmentStress,

@@ -24,6 +24,8 @@ describe('ship previews', () => {
       }
 
       expect(model.shipName).toBe(contract.shipName);
+      expect(model.frameName).toBe(contract.loadout.frameName);
+      expect(model.mountedModuleCount).toBe(contract.loadout.mounts.length);
       expect(model.weaponName).toBe(contract.startingWeaponName);
       expect(model.themeKey).toBe(contract.shipAppearance.hudThemeKey);
       expect(model.primaryColor).toBe(contract.shipAppearance.primaryColor);

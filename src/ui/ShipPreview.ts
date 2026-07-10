@@ -46,6 +46,8 @@ export type ShipPreviewPrimitive = ShipPreviewCircle | ShipPreviewLine | ShipPre
 export interface ShipPreviewModel {
   readonly variant: ShipPreviewVariant;
   readonly shipName: string;
+  readonly frameName: string;
+  readonly mountedModuleCount: number;
   readonly weaponName: string;
   readonly weaponPattern: WeaponPatternId;
   readonly patternLabel: string;
@@ -79,6 +81,8 @@ export function createShipPreviewModel(
   return {
     variant,
     shipName: contract.shipName,
+    frameName: contract.loadout.frameName,
+    mountedModuleCount: contract.loadout.mounts.length,
     weaponName: contract.startingWeaponName,
     weaponPattern: contract.startingWeaponPattern,
     patternLabel,
@@ -93,7 +97,7 @@ export function createShipPreviewModel(
     mountPrimitives: createMountPrimitives(appearance.weaponMounts, SHIP_RADIUS),
     weaponCuePrimitives: createWeaponCuePrimitives(contract.startingWeaponPattern, SHIP_RADIUS),
     roleBars,
-    ariaLabel: `${contract.shipName} ship preview, ${appearance.silhouette} silhouette, ${appearance.hudThemeKey} theme, ${contract.startingWeaponName} ${patternLabel} weapon`
+    ariaLabel: `${contract.shipName} ship preview, ${contract.loadout.frameName} frame with ${contract.loadout.mounts.length} mounted modules, ${appearance.silhouette} silhouette, ${appearance.hudThemeKey} theme, ${contract.startingWeaponName} ${patternLabel} weapon`
   };
 }
 

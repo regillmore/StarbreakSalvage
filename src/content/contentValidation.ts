@@ -99,6 +99,15 @@ import {
 } from './objectives';
 import { SECTORS, type SectorDefinition } from './sectors';
 import {
+  SHIP_FRAMES,
+  SHIP_MODULES,
+  SHIP_MODULE_MOUNT_SIZES,
+  SHIP_MODULE_SLOTS,
+  SHIPCRAFT_TAGS,
+  type ShipFrameDefinition,
+  type ShipModuleDefinition
+} from './shipModules';
+import {
   SHIP_HUD_THEME_KEYS,
   SHIP_SILHOUETTES,
   SHIP_WEAPON_MOUNT_HINTS,
@@ -116,6 +125,7 @@ import {
 import { WEAPONS, type WeaponDefinition } from './weapons';
 import { ITEM_HOOK_IMPLEMENTATIONS } from '../game/ItemHooks';
 import { COMBAT_ARENA_PADDING, COMBAT_ARENA_WIDTH } from '../game/CombatGeometry';
+import { validateShipLoadout } from '../game/ShipLoadout';
 import {
   ITEM_FAMILY_GATES,
   ITEM_UNLOCKS,
@@ -174,6 +184,8 @@ export interface ContentValidationInput {
   readonly itemUnlocks?: Readonly<Partial<Record<ItemId, UnlockId>>>;
   readonly rewardPools?: readonly RewardPoolDefinition[];
   readonly sectors?: readonly SectorDefinition[];
+  readonly shipFrames?: readonly ShipFrameDefinition[];
+  readonly shipModules?: readonly ShipModuleDefinition[];
   readonly ships?: readonly ShipDefinition[];
   readonly unlocks?: readonly UnlockDefinition[];
   readonly upgrades?: readonly UpgradeDefinition[];
@@ -204,6 +216,8 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const itemUnlocks = input.itemUnlocks ?? ITEM_UNLOCKS;
   const rewardPools = input.rewardPools ?? REWARD_POOLS;
   const sectors = input.sectors ?? SECTORS;
+  const shipFrames = input.shipFrames ?? SHIP_FRAMES;
+  const shipModules = input.shipModules ?? SHIP_MODULES;
   const ships = input.ships ?? SHIPS;
   const unlocks = input.unlocks ?? UNLOCKS;
   const upgrades = input.upgrades ?? UPGRADES;
@@ -867,6 +881,8 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
       ship.stats.startingSalvage
     );
   }
+
+  validateShipcraftDefinitions(errors, shipFrames, shipModules, ships, weapons);
 
   const rewardedItemIds = new Set<string>();
   const rewardPoolIds = new Set<string>();
@@ -2890,6 +2906,230 @@ function getDuplicateStrings(values: readonly string[]): string[] {
   }
 
   return [...duplicates];
+}
+
+function validateShipcraftDefinitions(
+  errors: string[],
+  frames: readonly ShipFrameDefinition[],
+  modules: readonly ShipModuleDefinition[],
+  ships: readonly ShipDefinition[],
+  weapons: readonly WeaponDefinition[]
+): void {
+  const frameIds = new Set<string>();
+  const moduleIds = new Set<string>();
+  const shipIds = new Set(ships.map((ship) => ship.id));
+  const weaponIds = new Set(weapons.map((weapon) => weapon.id));
+  const slots = new Set<string>(SHIP_MODULE_SLOTS);
+  const sizes = new Set<string>(SHIP_MODULE_MOUNT_SIZES);
+  const tags = new Set<string>(SHIPCRAFT_TAGS);
+
+  if (frames.length < 3) {
+    errors.push('Content must define at least three ship frames');
+  }
+
+  for (const frame of frames) {
+    const owner = `Ship frame ${frame.id}`;
+    if (frameIds.has(frame.id)) errors.push(`Duplicate ship frame id: ${frame.id}`);
+    frameIds.add(frame.id);
+
+    if (!frame.name.trim()) errors.push(`${owner} must have a name`);
+    if (!frame.role.trim()) errors.push(`${owner} must have a role`);
+    if (!shipIds.has(frame.legacyShipId)) {
+      errors.push(`${owner} references missing legacy ship: ${frame.legacyShipId}`);
+    }
+    validateKnownUniqueValues(errors, owner, 'tag', frame.tags, tags);
+    validatePositiveNumber(errors, `${owner} stats`, 'reactorOutput', frame.stats.reactorOutput);
+    validatePositiveNumber(errors, `${owner} stats`, 'mass', frame.stats.mass);
+    validatePositiveNumber(errors, `${owner} stats`, 'massCapacity', frame.stats.massCapacity);
+    validatePositiveNumber(errors, `${owner} stats`, 'cooling', frame.stats.cooling);
+    validateNonNegativeNumber(errors, `${owner} stats`, 'heatRouting', frame.stats.heatRouting);
+    validateNonNegativeNumber(errors, `${owner} stats`, 'armor', frame.stats.armor);
+    validateNonNegativeNumber(errors, `${owner} stats`, 'shields', frame.stats.shields);
+    validateNonNegativeNumber(errors, `${owner} stats`, 'mobility', frame.stats.mobility);
+    validateNonNegativeNumber(errors, `${owner} stats`, 'cargo', frame.stats.cargo);
+    validateNonNegativeNumber(
+      errors,
+      `${owner} stats`,
+      'commandCapacity',
+      frame.stats.commandCapacity
+    );
+    if (frame.stats.massCapacity <= frame.stats.mass) {
+      errors.push(`${owner} mass capacity must exceed dry mass`);
+    }
+    if (!frame.presentation.manufacturer.trim()) {
+      errors.push(`${owner} must have a manufacturer`);
+    }
+    if (!frame.presentation.summary.trim()) errors.push(`${owner} must have a summary`);
+    validateHexColor(
+      errors,
+      `${owner} presentation`,
+      'accentColor',
+      frame.presentation.accentColor
+    );
+
+    const hardpointIds = new Set<string>();
+    let primaryHardpoints = 0;
+    for (const hardpoint of frame.hardpoints) {
+      const hardpointOwner = `${owner} hardpoint ${hardpoint.id}`;
+      if (hardpointIds.has(hardpoint.id)) {
+        errors.push(`${owner} has duplicate hardpoint: ${hardpoint.id}`);
+      }
+      hardpointIds.add(hardpoint.id);
+      if (!hardpoint.id.trim()) errors.push(`${owner} hardpoint must have an id`);
+      if (!hardpoint.label.trim()) errors.push(`${hardpointOwner} must have a label`);
+      if (!slots.has(hardpoint.slot)) {
+        errors.push(`${hardpointOwner} has invalid slot: ${hardpoint.slot}`);
+      }
+      if (!sizes.has(hardpoint.size)) {
+        errors.push(`${hardpointOwner} has invalid size: ${hardpoint.size}`);
+      }
+      if (hardpoint.slot === 'primary') primaryHardpoints += 1;
+      validateKnownUniqueValues(
+        errors,
+        hardpointOwner,
+        'required module tag',
+        hardpoint.requiredModuleTags,
+        tags
+      );
+      validateKnownUniqueValues(
+        errors,
+        hardpointOwner,
+        'excluded module tag',
+        hardpoint.excludedModuleTags,
+        tags
+      );
+    }
+    if (primaryHardpoints === 0) errors.push(`${owner} must define a primary hardpoint`);
+  }
+
+  for (const ship of ships) {
+    const adapterCount = frames.filter((frame) => frame.legacyShipId === ship.id).length;
+    if (adapterCount !== 1) {
+      errors.push(`Ship ${ship.id} must have exactly one frame adapter; found ${adapterCount}`);
+    }
+  }
+
+  for (const module of modules) {
+    const owner = `Ship module ${module.id}`;
+    if (moduleIds.has(module.id)) errors.push(`Duplicate ship module id: ${module.id}`);
+    moduleIds.add(module.id);
+    if (!slots.has(module.slot)) errors.push(`${owner} has invalid slot: ${module.slot}`);
+    if (!sizes.has(module.size)) errors.push(`${owner} has invalid size: ${module.size}`);
+    validateNonNegativeNumber(errors, owner, 'powerDraw', module.powerDraw);
+    validateNonNegativeNumber(errors, owner, 'heat', module.heat);
+    validateNonNegativeNumber(errors, owner, 'mass', module.mass);
+    validateNonNegativeNumber(errors, owner, 'commandDraw', module.commandDraw);
+    validateKnownUniqueValues(errors, owner, 'tag', module.tags, tags);
+    if (!module.presentation.name.trim()) errors.push(`${owner} must have a name`);
+    if (!module.presentation.shortName.trim()) errors.push(`${owner} must have a short name`);
+    if (!module.presentation.summary.trim()) errors.push(`${owner} must have a summary`);
+    if (!module.presentation.icon.trim()) errors.push(`${owner} must have an icon`);
+    validateHexColor(
+      errors,
+      `${owner} presentation`,
+      'accentColor',
+      module.presentation.accentColor
+    );
+
+    validateKnownUniqueValues(
+      errors,
+      `${owner} compatibility`,
+      'required frame tag',
+      module.compatibility.requiredFrameTags,
+      tags
+    );
+    validateKnownUniqueValues(
+      errors,
+      `${owner} compatibility`,
+      'excluded frame tag',
+      module.compatibility.excludedFrameTags,
+      tags
+    );
+    validateKnownUniqueValues(
+      errors,
+      `${owner} compatibility`,
+      'required loadout tag',
+      module.compatibility.requiredLoadoutTags,
+      tags
+    );
+    validateKnownUniqueValues(
+      errors,
+      `${owner} compatibility`,
+      'excluded loadout tag',
+      module.compatibility.excludedLoadoutTags,
+      tags
+    );
+    validateKnownUniqueValues(
+      errors,
+      `${owner} compatibility`,
+      'allowed frame',
+      module.compatibility.allowedFrameIds,
+      frameIds
+    );
+    validateKnownUniqueValues(
+      errors,
+      `${owner} compatibility`,
+      'blocked frame',
+      module.compatibility.blockedFrameIds,
+      frameIds
+    );
+
+    if (module.behavior.kind === 'weaponAdapter') {
+      if (module.slot !== 'primary') {
+        errors.push(`${owner} weapon adapter must use the primary slot`);
+      }
+      if (!weaponIds.has(module.behavior.weaponId)) {
+        errors.push(`${owner} references missing weapon: ${module.behavior.weaponId}`);
+      }
+    } else if (!module.behavior.adapterId.trim()) {
+      errors.push(`${owner} must name its legacy system adapter`);
+    }
+  }
+
+  for (const slot of SHIP_MODULE_SLOTS) {
+    if (!modules.some((module) => module.slot === slot)) {
+      errors.push(`Ship modules must define at least one ${slot} module`);
+    }
+  }
+
+  const catalog = { frames, modules, ships, weapons };
+  for (const frame of frames) {
+    const validation = validateShipLoadout(
+      { frameId: frame.id, mounts: frame.startingLoadout },
+      catalog
+    );
+    for (const issue of validation.issues) {
+      errors.push(`Starting loadout ${frame.id}: ${issue.message}`);
+    }
+
+    const legacyShip = ships.find((ship) => ship.id === frame.legacyShipId);
+    if (!legacyShip || !validation.valid) continue;
+    const primaryMount = frame.startingLoadout
+      .map((mount) => modules.find((module) => module.id === mount.moduleId))
+      .find((module) => module?.slot === 'primary');
+    const weaponId =
+      primaryMount?.behavior.kind === 'weaponAdapter' ? primaryMount.behavior.weaponId : null;
+    if (weaponId !== legacyShip.weapon) {
+      errors.push(
+        `Starting loadout ${frame.id} selects ${weaponId ?? 'no weapon'} instead of legacy weapon ${legacyShip.weapon}`
+      );
+    }
+  }
+}
+
+function validateKnownUniqueValues(
+  errors: string[],
+  owner: string,
+  label: string,
+  values: readonly string[],
+  allowedValues: ReadonlySet<string>
+): void {
+  const seen = new Set<string>();
+  for (const value of values) {
+    if (seen.has(value)) errors.push(`${owner} has duplicate ${label}: ${value}`);
+    seen.add(value);
+    if (!allowedValues.has(value)) errors.push(`${owner} has invalid ${label}: ${value}`);
+  }
 }
 
 function validatePositiveNumber(

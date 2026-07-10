@@ -85,6 +85,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
   await expect(page.getByTestId('contract-ship-preview')).toHaveCount(3);
   await expect(page.getByTestId('selected-contract-preview')).toContainText(/.+/);
+  await expect(page.getByTestId('selected-loadout-preview')).toContainText(/frame/i);
   await expect(
     page.getByTestId('selected-contract-preview').getByRole('img', { name: /ship preview/ })
   ).toBeVisible();
@@ -113,6 +114,10 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
     .getByRole('button', { name: /Select|Selected/ })
     .click();
   await expect(page.getByTestId('selected-contract-preview')).toContainText('Debt Runner');
+  await expect(page.getByTestId('selected-contract-preview')).toContainText('Redline Needle frame');
+  await expect(page.getByTestId('selected-contract-preview')).toContainText(
+    /Power \d+\/\d+ \| Heat \d+\/\d+ \| Mass \d+\/\d+ \| Command \d+\/\d+/
+  );
 
   await page.getByRole('button', { name: 'Launch Contract' }).click();
 
@@ -131,6 +136,10 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('special-meter')).toHaveAttribute('aria-valuenow', '100');
   await expect(page.getByTestId('bomb-meter')).toHaveAttribute('aria-valuenow', '100');
   await expect(page.getByTestId('weapon-heat-meter')).toHaveAttribute('aria-valuenow', '0');
+  await expect(page.getByTestId('ship-loadout-readout')).toContainText('Redline Needle');
+  await expect(page.locator('.debug-overlay')).toContainText(
+    /Loadout Redline Needle P\d+\/\d+ H\d+\/\d+ M\d+\/\d+ C\d+\/\d+/
+  );
   await expect(page.getByTestId('objective-readout')).toContainText(
     /ASSAULT|hostiles|fortification/i
   );
@@ -264,6 +273,9 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByRole('heading', { name: 'Ship Destroyed' })).toBeVisible();
   await expect(page.locator('.summary-panel')).toHaveAttribute('data-contract-theme', 'redline');
   await expect(page.getByText(/redline theme \| needle silhouette/)).toBeVisible();
+  await expect(page.locator('.summary-stats')).toContainText('Redline Needle');
+  await expect(page.locator('.summary-stats')).toContainText('Primary: Light Needle Laser');
+  await expect(page.locator('.summary-stats')).toContainText(/Power \d+\/\d+ \| Heat \d+\/\d+/);
   await expect(page.getByText('permadeath', { exact: true })).toBeVisible();
   await expect(page.getByText('Loss: ship destroyed and contract closed.')).toBeVisible();
   await expect(page.getByTestId('summary-item-list')).toContainText('Split Prism');

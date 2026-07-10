@@ -1243,6 +1243,11 @@ export class GameApp {
     const themeDebug = debugState.contractTheme
       ? [`Theme ${debugState.contractTheme.themeKey}/${debugState.contractTheme.shipName}`]
       : [];
+    const loadoutDebug = debugState.shipLoadout
+      ? [
+          `Loadout ${debugState.shipLoadout.frameName} P${debugState.shipLoadout.powerDraw}/${debugState.shipLoadout.reactorOutput} H${debugState.shipLoadout.heatLoad}/${debugState.shipLoadout.thermalCapacity} M${debugState.shipLoadout.totalMass}/${debugState.shipLoadout.massCapacity} C${debugState.shipLoadout.commandDraw}/${debugState.shipLoadout.commandCapacity}`
+        ]
+      : [];
     const upgradeDebug =
       debugState.upgradeEffects && debugState.upgradeEffects.length > 0
         ? [`Upgrades ${debugState.upgradeEffects.join(', ')}`]
@@ -1290,6 +1295,7 @@ export class GameApp {
       ...inputDebug,
       ...hudDebug,
       ...themeDebug,
+      ...loadoutDebug,
       ...upgradeDebug,
       ...progressionDebug,
       ...actDebug,

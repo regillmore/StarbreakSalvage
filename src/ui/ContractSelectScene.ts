@@ -79,6 +79,11 @@ export class ContractSelectScene implements Scene {
       weapon.className = 'contract-detail';
       weapon.textContent = `Weapon: ${contract.startingWeaponName} | ${contract.startingWeaponPattern}`;
 
+      const frame = document.createElement('p');
+      frame.className = 'contract-detail';
+      frame.dataset.testid = `contract-loadout-${contract.shipId}`;
+      frame.textContent = `${contract.loadout.preview.title} | ${contract.loadout.preview.resourceLine}`;
+
       const stats = document.createElement('p');
       stats.className = 'contract-detail';
       stats.textContent = `Hull ${contract.shipStats.maxHull} | Speed ${contract.shipStats.speed} | Hit ${contract.shipStats.hitRadius} | Bombs ${contract.shipStats.bombCapacity}`;
@@ -101,6 +106,7 @@ export class ContractSelectScene implements Scene {
         header,
         summary,
         weapon,
+        frame,
         stats,
         economy,
         ...(contract.surveyNote ? [survey] : []),
@@ -158,11 +164,14 @@ export class ContractSelectScene implements Scene {
   public getDebugState(): {
     seed: string;
     entityCount: number;
+    shipLoadout?: StartingContract['loadout']['debug'];
     upgradeEffects?: readonly string[];
   } {
+    const selectedContract = this.run.contracts[this.selectedIndex];
     return {
       seed: this.run.seed,
       entityCount: 0,
+      shipLoadout: selectedContract?.loadout.debug,
       upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects)
     };
   }
@@ -244,6 +253,19 @@ export class ContractSelectScene implements Scene {
     weapon.className = 'contract-detail';
     weapon.textContent = `${model.weaponName} | Bias ${selectedContract.itemBias.slice(0, 3).join(' / ')}`;
 
+    const frame = document.createElement('p');
+    frame.className = 'contract-detail';
+    frame.dataset.testid = 'selected-loadout-preview';
+    frame.textContent = `${selectedContract.loadout.preview.title} | ${selectedContract.loadout.preview.role} | ${selectedContract.loadout.preview.hardpointLine}`;
+
+    const grid = document.createElement('p');
+    grid.className = 'contract-detail';
+    grid.textContent = selectedContract.loadout.preview.resourceLine;
+
+    const modules = document.createElement('p');
+    modules.className = 'contract-detail';
+    modules.textContent = `Mounted: ${selectedContract.loadout.preview.moduleLine}`;
+
     const perk = document.createElement('p');
     perk.textContent = `${selectedContract.perk}. Tradeoff: ${selectedContract.drawback}.`;
 
@@ -251,7 +273,16 @@ export class ContractSelectScene implements Scene {
     survey.className = 'contract-detail contract-survey-note';
     survey.textContent = selectedContract.surveyNote ?? '';
 
-    copy.append(kicker, title, weapon, perk, ...(selectedContract.surveyNote ? [survey] : []));
+    copy.append(
+      kicker,
+      title,
+      weapon,
+      frame,
+      grid,
+      modules,
+      perk,
+      ...(selectedContract.surveyNote ? [survey] : [])
+    );
     this.selectedPreviewElement.replaceChildren(preview, copy);
   }
 

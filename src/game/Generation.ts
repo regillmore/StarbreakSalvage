@@ -45,6 +45,7 @@ import {
 } from './SectorFeatures';
 import { createSectorObjectivePlan, type SectorObjectivePlan } from './SectorObjectives';
 import { createSecondActFinalePlan, type SecondActFinalePlan } from './SecondActFinale';
+import { createLegacyStartingLoadout, type ResolvedShipLoadout } from './ShipLoadout';
 import { resolveRunUpgradeEffects, type RunUpgradeEffects } from './UpgradeEffects';
 import {
   filterUnlockedBossCandidates,
@@ -61,6 +62,7 @@ export interface StartingContract {
   readonly shipId: ShipId;
   readonly shipName: string;
   readonly shipAppearance: ShipAppearance;
+  readonly loadout: ResolvedShipLoadout;
   readonly sponsor: string;
   readonly startingWeaponId: WeaponId;
   readonly startingWeaponName: string;
@@ -304,20 +306,22 @@ function generateStartingContracts(
   return selectedShips.map((ship, index) => {
     const sponsorRng = rng.fork(`contract-${index + 1}-${ship.id}-sponsor`);
     const rewardRng = rng.fork(`contract-${index + 1}-${ship.id}-reward`);
-    const weapon = getWeaponById(ship.weapon);
+    const loadout = createLegacyStartingLoadout(ship);
+    const weapon = getWeaponById(loadout.primaryWeaponId);
 
     return {
       id: `contract_${index + 1}_${ship.id.replace('ship_', '')}`,
       shipId: ship.id,
       shipName: ship.name,
       shipAppearance: ship.appearance,
+      loadout,
       sponsor: sponsorRng.choice(ship.sponsors),
-      startingWeaponId: ship.weapon,
+      startingWeaponId: loadout.primaryWeaponId,
       startingWeaponName: weapon.name,
       startingWeaponPattern: weapon.pattern,
-      shipStats: ship.stats,
-      startingCredits: ship.stats.startingCredits,
-      startingSalvage: ship.stats.startingSalvage,
+      shipStats: loadout.shipStats,
+      startingCredits: loadout.shipStats.startingCredits,
+      startingSalvage: loadout.shipStats.startingSalvage,
       perk: ship.perk,
       drawback: ship.drawback,
       summary: ship.contractSummary,
@@ -734,6 +738,18 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
     })),
     contracts: run.contracts.map((contract) => ({
       shipId: contract.shipId,
+      frameId: contract.loadout.frameId,
+      loadoutSignature: contract.loadout.signature,
+      modules: contract.loadout.mounts.map((mount) => mount.moduleId),
+      resources: {
+        power: [contract.loadout.resources.powerDraw, contract.loadout.resources.reactorOutput],
+        heat: [contract.loadout.resources.heatLoad, contract.loadout.resources.thermalCapacity],
+        mass: [contract.loadout.resources.totalMass, contract.loadout.resources.massCapacity],
+        command: [
+          contract.loadout.resources.commandDraw,
+          contract.loadout.resources.commandCapacity
+        ]
+      },
       sponsor: contract.sponsor,
       weaponPattern: contract.startingWeaponPattern,
       stats: {

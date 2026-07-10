@@ -1734,7 +1734,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 094.
+- Implemented in work order 094. Eight validated frames and 21 modules cover every shipcraft slot with explicit hardpoints, power, thermal, mass, command, compatibility, behavior, and presentation contracts. Deterministic starting loadouts now drive generated contracts, previews, HUD/debug telemetry, and summaries through stable signatures and resource read models. Compatibility adapters preserve every established ship stat and weapon implementation without duplicating projectile or collision behavior; legal primary swaps change weapons while leaving fixed hull geometry intact. Invalid slot, size, power, heat, mass, tag, uniqueness, frame/loadout compatibility, command, and adapter combinations fail validation. Version-5 saves require no migration because starting loadouts are derived rather than persisted. Fresh/progressed known seeds, content schemas, collision parity, controls, and Chromium surfaces are covered.
 
 ### BE2 - Salvage foundry and weapon evolution
 

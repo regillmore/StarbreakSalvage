@@ -280,6 +280,31 @@ describe('WaveDirector', () => {
         ],
         "contracts": [
           {
+            "frameId": "frame_parish_chapel",
+            "loadoutSignature": "frame_parish_chapel:choir-primary=module_primary_pulse_cannon,parish-engine=module_engine_vector_drive,orbit-command=module_drone_micro_choir",
+            "modules": [
+              "module_primary_pulse_cannon",
+              "module_engine_vector_drive",
+              "module_drone_micro_choir",
+            ],
+            "resources": {
+              "command": [
+                2,
+                4,
+              ],
+              "heat": [
+                10,
+                12,
+              ],
+              "mass": [
+                22,
+                25,
+              ],
+              "power": [
+                12,
+                14,
+              ],
+            },
             "rewardMultiplier": 1.01,
             "shipId": "ship_drone_chaplain",
             "sponsor": "Orbital Parish Mutual",
@@ -294,6 +319,31 @@ describe('WaveDirector', () => {
             "weaponPattern": "dual",
           },
           {
+            "frameId": "frame_redline_needle",
+            "loadoutSignature": "frame_redline_needle:nose-primary=module_primary_light_needle_laser,spine-engine=module_engine_vector_drive,ledger-utility=module_utility_credit_tractor",
+            "modules": [
+              "module_primary_light_needle_laser",
+              "module_engine_vector_drive",
+              "module_utility_credit_tractor",
+            ],
+            "resources": {
+              "command": [
+                0,
+                1,
+              ],
+              "heat": [
+                6,
+                10,
+              ],
+              "mass": [
+                16,
+                18,
+              ],
+              "power": [
+                9,
+                11,
+              ],
+            },
             "rewardMultiplier": 1.26,
             "shipId": "ship_debt_runner",
             "sponsor": "Redline Credit Union",
@@ -308,6 +358,32 @@ describe('WaveDirector', () => {
             "weaponPattern": "single",
           },
           {
+            "frameId": "frame_unmarked_reliquary",
+            "loadoutSignature": "frame_unmarked_reliquary:plain-primary=module_primary_basic_blaster,quiet-engine=module_engine_vector_drive,vault-utility=module_utility_relic_scanner,sealed-experimental=module_experimental_curse_sink",
+            "modules": [
+              "module_primary_basic_blaster",
+              "module_engine_vector_drive",
+              "module_utility_relic_scanner",
+              "module_experimental_curse_sink",
+            ],
+            "resources": {
+              "command": [
+                2,
+                3,
+              ],
+              "heat": [
+                12,
+                12,
+              ],
+              "mass": [
+                21,
+                22,
+              ],
+              "power": [
+                12,
+                12,
+              ],
+            },
             "rewardMultiplier": 1.03,
             "shipId": "ship_relic_thief",
             "sponsor": "Unmarked Vault Services",

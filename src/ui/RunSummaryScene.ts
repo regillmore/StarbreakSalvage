@@ -86,6 +86,10 @@ export class RunSummaryScene implements Scene {
     const statEntries: ReadonlyArray<readonly [string, string]> = [
       ['Seed', this.run.seed],
       ['Contract', this.contract.shipName],
+      ['Frame', this.contract.loadout.summary.frame],
+      ['Starting Modules', this.contract.loadout.summary.modules],
+      ['Power Grid', this.contract.loadout.summary.powerGrid],
+      ['Frame Systems', this.contract.loadout.summary.frameStats],
       ['Ship Theme', formatContractThemeSummary(this.contract)],
       ['Reached', getReachedSectorName(this.run, this.routeHistory, this.result)],
       ['Act Progress', formatActProgressSummary(this.run, this.routeHistory, this.result)],
@@ -222,6 +226,7 @@ export class RunSummaryScene implements Scene {
             })
           : undefined,
       contractTheme: createContractThemeDebugState(this.contract),
+      shipLoadout: this.contract.loadout.debug,
       upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects)
     };
   }
