@@ -116,6 +116,10 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
 
   await page.getByRole('button', { name: 'Launch Contract' }).click();
 
+  await expect(page.getByTestId('mission-briefing')).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Outer Debris Field briefing/ })).toBeVisible();
+  await page.keyboard.press('Enter');
+
   await expectGameplaySector(page, 'Outer Debris Field');
   await expect(page.getByTestId('distance-readout')).toContainText(/Distance \d+\/\d+u/);
   await expect(page.getByTestId('hull-readout')).toContainText('Hull');
@@ -140,6 +144,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.locator('.debug-overlay')).toContainText(
     'Expedition expedition_s01_operation 2/40 decisions 0'
   );
+  await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
   await expect(page.locator('.debug-overlay')).toContainText('Expedition capacity 16.0-19.7m');
   await expect(page.locator('.debug-overlay')).toContainText(
     /Viewport \d+x\d+ \w+ @[0-9.]+ DPR [0-9.]+/
@@ -175,6 +180,15 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
     /Outer Debris Field clear \| route telemetry/
   );
   await expect(page.locator('.debug-overlay')).toContainText(/Exit sectorComplete \d+%/);
+  await expect(page.getByTestId('mission-branch')).toBeVisible();
+  await page.getByTestId('mission-branch-optional').click();
+  await expect(page.getByTestId('expedition-readout')).toContainText(
+    /Salvage Sweep|Black Box Signal|Field Cache/
+  );
+  await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
+  await page.keyboard.press('8');
+  await expect(page.getByTestId('mission-relief')).toBeVisible();
+  await page.getByTestId('mission-relief-continue').click();
   await expect(page.getByRole('heading', { name: 'Choose Route' })).toBeVisible();
   await expect(page.locator('.route-panel')).toHaveAttribute('data-contract-theme', 'redline');
   await expect(page.getByTestId('contract-theme-strip')).toContainText(
@@ -207,10 +221,10 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.locator('.reward-card').first()).toContainText(/Live effect|Bridge effect/);
 
   await page.getByRole('button', { name: /Take / }).first().click();
-  await expect(page.getByRole('heading', { name: /Entering Trade War Corridor/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Trade War Corridor briefing/ })).toBeVisible();
   await expect(page.locator('.transition-panel')).toHaveAttribute('data-contract-theme', 'redline');
 
-  await page.getByRole('button', { name: 'Enter Sector' }).click();
+  await page.getByRole('button', { name: 'Begin Operation' }).click();
   await expectGameplaySector(page, 'Trade War Corridor');
 
   await page.keyboard.press('5');
@@ -386,6 +400,8 @@ test('reaches and instruments the deterministic lunar sector smoke path', async 
   await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
 
   await page.keyboard.press('Enter');
+  await expect(page.getByTestId('mission-briefing')).toBeVisible();
+  await page.keyboard.press('Enter');
   await expectGameplaySector(page, 'Outer Debris Field', 1);
   await expect(page.locator('.debug-overlay')).toContainText('Sector S1 Outer Debris Field');
 
@@ -420,6 +436,8 @@ test('exposes item-heavy hook storm debug instrumentation', async ({ page }) => 
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
 
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('mission-briefing')).toBeVisible();
   await page.keyboard.press('Enter');
   await expectGameplaySector(page, 'Outer Debris Field');
 
@@ -466,6 +484,8 @@ test('exposes enemy-rich formation pressure under high-contrast narrow smoke', a
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
 
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('mission-briefing')).toBeVisible();
   await page.keyboard.press('Enter');
   await expectGameplaySector(page, 'Outer Debris Field', 1);
 
@@ -524,6 +544,8 @@ test('exposes environmental stress budgets under high-contrast narrow smoke', as
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
 
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('mission-briefing')).toBeVisible();
   await page.keyboard.press('Enter');
   await expectGameplaySector(page, 'Outer Debris Field');
   await expect(page.locator('.debug-overlay')).toContainText('Viewport 390x700 narrow');
@@ -660,6 +682,8 @@ test('launches gameplay with reduced motion and high contrast settings by keyboa
   await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
 
   await page.keyboard.press('Enter');
+  await expect(page.getByTestId('mission-briefing')).toBeVisible();
+  await page.keyboard.press('Enter');
   await expectGameplaySector(page, 'Outer Debris Field');
   await expect(page.getByTestId('cockpit-hud')).toHaveAttribute('data-hud-mode', 'contrast');
   await expect(page.getByTestId('distance-readout')).toContainText(/Distance \d+\/\d+u/);
@@ -695,6 +719,8 @@ test('supports keyboard-only start, pause, end-run, and summary flow', async ({ 
     .poll(async () => page.getByTestId('selected-contract-preview').textContent())
     .not.toBe(firstPreviewText);
 
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('mission-briefing')).toBeVisible();
   await page.keyboard.press('Enter');
   await expectGameplaySector(page, 'Outer Debris Field');
   await expect(page.getByTestId('cockpit-hud')).toBeVisible();
@@ -736,6 +762,8 @@ test('supports pointer-guided movement and primary-button fire during gameplay',
   await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
 
   await page.keyboard.press('Enter');
+  await expect(page.getByTestId('mission-briefing')).toBeVisible();
+  await page.keyboard.press('Enter');
   await expectGameplaySector(page, 'Outer Debris Field');
 
   const startPosition = await page.getByTestId('player-position').textContent();
@@ -770,6 +798,8 @@ test('keeps the gameplay HUD and safe frame readable in a narrow viewport', asyn
   await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
 
   await page.keyboard.press('Enter');
+  await expect(page.getByTestId('mission-briefing')).toBeVisible();
+  await page.keyboard.press('Enter');
   await expectGameplaySector(page, 'Outer Debris Field');
   await expect(page.locator('.debug-overlay')).toContainText(
     'Viewport 390x700 narrow @0.57 DPR 1.00'
@@ -796,14 +826,17 @@ test('keeps the gameplay HUD and safe frame readable in a narrow viewport', asyn
 async function forceCompleteSectorAndEnterNext(page: Page, nextSectorName: string): Promise<void> {
   await page.keyboard.press('8');
   await expect(page.getByTestId('sector-exit-toast')).toContainText(/clear \| route telemetry/);
+  await expect(page.getByTestId('mission-branch')).toBeVisible();
+  await page.getByTestId('mission-branch-direct').click();
+  await page.getByTestId('mission-relief-continue').click();
   await expect(page.getByRole('heading', { name: 'Choose Route' })).toBeVisible();
 
   await chooseFirstRouteAndReward(page);
   await expect(
-    page.getByRole('heading', { name: new RegExp(`Entering ${nextSectorName}`) })
+    page.getByRole('heading', { name: new RegExp(`${nextSectorName} briefing`) })
   ).toBeVisible();
 
-  await page.getByRole('button', { name: 'Enter Sector' }).click();
+  await page.getByRole('button', { name: 'Begin Operation' }).click();
   await expectGameplaySector(page, nextSectorName);
 }
 

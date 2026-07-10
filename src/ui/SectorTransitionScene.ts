@@ -24,6 +24,7 @@ import {
   formatSectorObjectiveVariantReadout
 } from '../game/SectorObjectives';
 import { getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
+import type { MissionDebugState, MissionReadModel } from '../game/MissionDirector';
 import type { InputAction } from '../systems/InputSystem';
 import {
   applyContractScreenTheme,
@@ -41,7 +42,9 @@ export class SectorTransitionScene implements Scene {
     private readonly run: RunSkeleton,
     private readonly session: RunSessionState,
     private readonly contract: StartingContract,
-    private readonly onEnterSector: () => void
+    private readonly onEnterSector: () => void,
+    private readonly mission: MissionReadModel | null = null,
+    private readonly missionDebug: MissionDebugState | null = null
   ) {}
 
   public enter(): void {
@@ -63,6 +66,7 @@ export class SectorTransitionScene implements Scene {
     const scroll = applySectorPacingToScroll(routeConditionedScroll, pacing);
     const shell = document.createElement('main');
     shell.className = 'scene-panel transition-panel';
+    shell.dataset.testid = 'mission-briefing';
     shell.setAttribute('aria-labelledby', 'transition-title');
     const theme = createContractScreenThemeModel(
       this.contract,
@@ -76,7 +80,7 @@ export class SectorTransitionScene implements Scene {
 
     const title = document.createElement('h1');
     title.id = 'transition-title';
-    title.textContent = `Entering ${sector.sectorName}`;
+    title.textContent = this.mission?.stageLabel ?? `Entering ${sector.sectorName}`;
 
     const routeLine = document.createElement('p');
     routeLine.className = 'transition-copy';
@@ -111,7 +115,7 @@ export class SectorTransitionScene implements Scene {
     const enterButton = document.createElement('button');
     enterButton.className = 'primary-button';
     enterButton.type = 'button';
-    enterButton.textContent = 'Enter Sector';
+    enterButton.textContent = this.mission ? 'Begin Operation' : 'Enter Sector';
     enterButton.addEventListener('click', this.onEnterSector);
 
     shell.append(
@@ -162,6 +166,7 @@ export class SectorTransitionScene implements Scene {
       act: createActDebugState(sector.act),
       contractTheme: createContractThemeDebugState(this.contract),
       upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects),
+      mission: this.missionDebug ?? undefined,
       progression: {
         runCredits: this.session.credits,
         runSalvage: this.session.salvage

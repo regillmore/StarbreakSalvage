@@ -77,6 +77,11 @@ import {
   type ItemUnlockTier,
   type RewardPoolDefinition
 } from './items';
+import {
+  MISSION_STAGE_KINDS,
+  MISSION_STAGE_PROFILES,
+  type MissionStageProfileDefinition
+} from './missions';
 import { SECTORS, type SectorDefinition } from './sectors';
 import {
   SHIP_HUD_THEME_KEYS,
@@ -142,6 +147,7 @@ export interface ContentValidationInput {
   readonly enemyVariants?: readonly EnemyVariantDefinition[];
   readonly environmentObjects?: readonly EnvironmentObjectDefinition[];
   readonly expeditionNodeProfiles?: readonly ExpeditionNodeProfileDefinition[];
+  readonly missionStageProfiles?: readonly MissionStageProfileDefinition[];
   readonly factions?: readonly FactionDefinition[];
   readonly hazardZones?: readonly HazardZoneDefinition[];
   readonly items?: readonly ItemDefinition[];
@@ -167,6 +173,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const enemyVariants = input.enemyVariants ?? ENEMY_VARIANTS;
   const environmentObjects = input.environmentObjects ?? ENVIRONMENT_OBJECT_DEFINITIONS;
   const expeditionNodeProfiles = input.expeditionNodeProfiles ?? EXPEDITION_NODE_PROFILES;
+  const missionStageProfiles = input.missionStageProfiles ?? MISSION_STAGE_PROFILES;
   const factions = input.factions ?? FACTIONS;
   const hazardZones = input.hazardZones ?? HAZARD_ZONE_DEFINITIONS;
   const items = input.items ?? ITEMS;
@@ -300,6 +307,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     completionRules: expeditionCompletionRules,
     transitionPolicies: expeditionTransitionPolicies
   });
+  validateMissionStageProfiles(errors, missionStageProfiles);
 
   if (items.length < 30) {
     errors.push('Content must define at least 30 items');
@@ -1013,6 +1021,65 @@ function validateExpeditionNodeProfiles(
       profile.duration.targetSeconds > profile.duration.maxSeconds
     ) {
       errors.push(`${owner} must order duration bounds`);
+    }
+  }
+}
+
+function validateMissionStageProfiles(
+  errors: string[],
+  profiles: readonly MissionStageProfileDefinition[]
+): void {
+  const profileIds = new Set<string>();
+  const stageKinds = new Set<string>(MISSION_STAGE_KINDS);
+  const representedKinds = new Set(profiles.map((profile) => profile.kind));
+
+  for (const kind of MISSION_STAGE_KINDS) {
+    if (!representedKinds.has(kind)) {
+      errors.push(`Content must define a mission profile for stage kind: ${kind}`);
+    }
+  }
+
+  for (const profile of profiles) {
+    const owner = `Mission stage profile ${profile.id}`;
+
+    if (profileIds.has(profile.id)) {
+      errors.push(`Duplicate mission stage profile id: ${profile.id}`);
+    }
+    profileIds.add(profile.id);
+
+    if (!profile.id.trim()) {
+      errors.push('Mission stage profile must have an id');
+    }
+    if (!profile.label.trim()) {
+      errors.push(`${owner} must have a label`);
+    }
+    if (!stageKinds.has(profile.kind)) {
+      errors.push(`${owner} has invalid stage kind: ${profile.kind}`);
+    }
+    if (profile.carry.build !== 'carry' || profile.carry.resources !== 'carry') {
+      errors.push(`${owner} must preserve build and resources`);
+    }
+    if (!['reset', 'carry'].includes(profile.carry.hull)) {
+      errors.push(`${owner} has invalid hull carry policy: ${profile.carry.hull}`);
+    }
+    if (!['reset', 'continue'].includes(profile.carry.scrollWorld)) {
+      errors.push(`${owner} has invalid scroll-world policy: ${profile.carry.scrollWorld}`);
+    }
+    if (profile.kind === 'combat' && !profile.world) {
+      errors.push(`${owner} combat stage must define world setup`);
+    }
+    if (profile.kind !== 'combat' && profile.world) {
+      errors.push(`${owner} non-combat stage cannot define world setup`);
+    }
+    if (profile.world) {
+      validatePositiveNumber(errors, owner, 'scroll length scale', profile.world.scrollLengthScale);
+      validatePositiveNumber(errors, owner, 'wave count scale', profile.world.waveCountScale);
+      if (!['inherit', 'none'].includes(profile.world.bossPolicy)) {
+        errors.push(`${owner} has invalid boss policy: ${profile.world.bossPolicy}`);
+      }
+      if (!profile.world.seedNamespace.trim()) {
+        errors.push(`${owner} must define a seed namespace`);
+      }
     }
   }
 }

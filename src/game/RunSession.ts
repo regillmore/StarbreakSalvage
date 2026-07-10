@@ -17,11 +17,19 @@ import type {
   StartingContract
 } from './Generation';
 import {
-  advanceExpeditionCompatibilityProgress,
   createExpeditionProgress,
   recordExpeditionDecision,
   type ExpeditionProgressState
 } from './ExpeditionGraph';
+import {
+  createMissionDirectorState,
+  createMissionSchedule,
+  synchronizeExpeditionProgressWithMission,
+  transitionMission,
+  type MissionDirectorState,
+  type MissionEvent,
+  type MissionTransitionResult
+} from './MissionDirector';
 import {
   combineInterActEffects,
   createInterActChoiceRecord,
@@ -55,6 +63,7 @@ export interface RouteHistoryEntry {
 export interface RunSessionState {
   currentSectorIndex: number;
   expedition: ExpeditionProgressState;
+  mission: MissionDirectorState;
   credits: number;
   salvage: number;
   distanceTraveled: number;
@@ -74,9 +83,21 @@ export function createRunSession(
   contract: StartingContract,
   options: { readonly unlockedIds?: readonly UnlockId[] } = {}
 ): RunSessionState {
+  const missionSchedule = createMissionSchedule(run.expedition, 0);
+  const mission = createMissionDirectorState(missionSchedule, {
+    credits: contract.startingCredits,
+    salvage: contract.startingSalvage
+  });
+  const expedition = synchronizeExpeditionProgressWithMission(
+    createExpeditionProgress(run.expedition),
+    missionSchedule,
+    mission
+  );
+
   return {
     currentSectorIndex: 0,
-    expedition: createExpeditionProgress(run.expedition),
+    expedition,
+    mission,
     credits: contract.startingCredits,
     salvage: contract.startingSalvage,
     distanceTraveled: 0,
@@ -352,13 +373,46 @@ export function incrementShopRerollCount(session: RunSessionState, sectorIndex: 
 }
 
 export function advanceSector(run: RunSkeleton, session: RunSessionState): boolean {
-  session.expedition = advanceExpeditionCompatibilityProgress(
-    run.expedition,
-    session.expedition,
-    session.currentSectorIndex
-  );
   session.currentSectorIndex += 1;
-  return !isRunComplete(run, session);
+  if (isRunComplete(run, session)) {
+    return false;
+  }
+
+  resetMissionForCurrentSector(run, session);
+  return true;
+}
+
+export function resetMissionForCurrentSector(
+  run: RunSkeleton,
+  session: RunSessionState
+): MissionDirectorState {
+  const schedule = createMissionSchedule(run.expedition, session.currentSectorIndex);
+  session.mission = createMissionDirectorState(schedule, {
+    credits: session.credits,
+    salvage: session.salvage
+  });
+  session.expedition = synchronizeExpeditionProgressWithMission(
+    session.expedition,
+    schedule,
+    session.mission
+  );
+  return session.mission;
+}
+
+export function dispatchMissionEvent(
+  run: RunSkeleton,
+  session: RunSessionState,
+  event: MissionEvent
+): MissionTransitionResult {
+  const schedule = createMissionSchedule(run.expedition, session.currentSectorIndex);
+  const result = transitionMission(schedule, session.mission, event);
+  session.mission = result.state;
+  session.expedition = synchronizeExpeditionProgressWithMission(
+    session.expedition,
+    schedule,
+    session.mission
+  );
+  return result;
 }
 
 export function recordExpeditionBranchDecision(

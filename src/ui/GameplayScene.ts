@@ -58,6 +58,11 @@ import { createLooseCurrencyPlan, type LooseCurrencyPlan } from '../game/LooseCu
 import type { ItemInstance } from '../game/Rewards';
 import { getSectorCompletionReason } from '../game/RunOutcome';
 import type { RouteCombatModifier } from '../game/RouteEvents';
+import type {
+  MissionCombatProjection,
+  MissionDebugState,
+  MissionReadModel
+} from '../game/MissionDirector';
 import { getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import { createHudMeterModel, createHudThemeModel, type HudThemeOptions } from './HudTheme';
 import { createContractThemeDebugState } from './ContractTheme';
@@ -157,6 +162,12 @@ interface HudMeterElements {
   readonly value: HTMLSpanElement;
 }
 
+export interface GameplayMissionContext {
+  readonly projection: MissionCombatProjection;
+  readonly readModel: MissionReadModel;
+  readonly debugState: MissionDebugState;
+}
+
 export class GameplayScene implements Scene {
   public readonly id = 'gameplay';
 
@@ -225,7 +236,8 @@ export class GameplayScene implements Scene {
     private readonly onFeedback: (cues: readonly CombatFeedbackCue[]) => void,
     private readonly onPause: (scene: GameplayScene) => void,
     private readonly onGameOver: (result: CombatRunResult) => void,
-    private readonly onSectorComplete: (result: CombatRunResult) => void
+    private readonly onSectorComplete: (result: CombatRunResult) => void,
+    private readonly missionContext: GameplayMissionContext | null = null
   ) {
     this.positionReadout = document.createElement('p');
     this.positionReadout.className = 'sr-only';
@@ -339,7 +351,9 @@ export class GameplayScene implements Scene {
       this.getCurrentSector().act
     )} | Sector ${this.sectorIndex + 1} | ${this.getCurrentSectorName()} | Expedition ${
       expedition.currentNodeLabel
-    } | nodes ${expedition.visitedNodeCount}/${expedition.totalNodeCount}`;
+    } | nodes ${expedition.visitedNodeCount}/${expedition.totalNodeCount}${
+      this.missionContext ? ` | ${this.missionContext.readModel.stageLabel}` : ''
+    }`;
 
     const contract = document.createElement('p');
     contract.className = 'hud-pill';
@@ -445,12 +459,14 @@ export class GameplayScene implements Scene {
       }
 
       this.emitFeedback(['runEnd']);
-      this.onGameOver(result);
+      this.onGameOver(this.withWorldOffset(result));
       return;
     }
 
     const progress = getObjectiveProgress(this.getWavePlan(), state);
-    const completionReason = getSectorCompletionReason(this.run, this.sectorIndex, progress);
+    const completionReason =
+      (progress.complete ? this.missionContext?.projection.completionReason : null) ??
+      getSectorCompletionReason(this.run, this.sectorIndex, progress);
 
     if (!this.sectorCompleted && completionReason) {
       this.sectorCompleted = true;
@@ -667,7 +683,7 @@ export class GameplayScene implements Scene {
   }
 
   public getRunResult(reason: 'abandoned' | 'debug' = 'abandoned'): CombatRunResult {
-    return forceCombatEnd(this.getCombatState(), reason);
+    return this.withWorldOffset(forceCombatEnd(this.getCombatState(), reason));
   }
 
   public prepareDebugFinaleSmoke(): boolean {
@@ -752,6 +768,7 @@ export class GameplayScene implements Scene {
         : undefined,
       arenaPhase: this.bossArenaUpdate.phase,
       debugScenario: this.debugScenario ?? undefined,
+      mission: this.missionContext?.debugState,
       backgroundPrimitives: background.primitiveCount,
       backgroundLayers: background.layers.length,
       activeLandmarks: activeLandmarks.length,
@@ -831,7 +848,7 @@ export class GameplayScene implements Scene {
       reducedMotion: getHudThemeOptions(this.uiRoot.ownerDocument).reducedMotion,
       debugFast: options.debugFast
     });
-    this.exitSequenceResult = forceCombatEnd(state, reason);
+    this.exitSequenceResult = this.withWorldOffset(forceCombatEnd(state, reason));
     this.emitFeedback(['sectorClear']);
     this.syncExitSequenceUi();
     this.syncReadouts();
@@ -965,8 +982,9 @@ export class GameplayScene implements Scene {
     this.combatState ??= createCombatState(this.getCombatBounds(), this.getCombatSeed(), {
       weaponId: this.contract.startingWeaponId,
       shipStats: this.shipStats,
+      startingHull: this.missionContext?.projection.startingHull,
       items: this.itemLoadout,
-      bossId: this.run.sectors[this.sectorIndex]?.bossId,
+      bossId: this.getCurrentSector().bossId,
       bossSpawnAtSeconds: this.getCurrentArenaPlan() ? null : wavePlan.bossSpawnAtSeconds,
       spawnSchedule: wavePlan.spawnSchedule,
       enemyHullBonus: this.getEnemyHullBonus(),
@@ -1068,7 +1086,7 @@ export class GameplayScene implements Scene {
       return this.wavePlan;
     }
 
-    const sector = this.run.sectors[this.sectorIndex];
+    const sector = this.getCurrentSector();
 
     if (!sector) {
       throw new Error(`No sector exists at index ${this.sectorIndex}.`);
@@ -1247,7 +1265,7 @@ export class GameplayScene implements Scene {
   }
 
   private getCurrentSector(): RunSkeleton['sectors'][number] {
-    const sector = this.run.sectors[this.sectorIndex];
+    const sector = this.missionContext?.projection.sector ?? this.run.sectors[this.sectorIndex];
 
     if (!sector) {
       throw new Error(`No sector exists at index ${this.sectorIndex}.`);
@@ -1320,7 +1338,17 @@ export class GameplayScene implements Scene {
 
   private getCombatSeed(): string {
     const sector = this.run.sectors[this.sectorIndex];
-    return `${this.run.seed}:combat:${sector?.sectorId ?? this.sectorIndex + 1}`;
+    const suffix = this.missionContext?.projection.combatSeedSuffix;
+    return `${this.run.seed}:combat:${sector?.sectorId ?? this.sectorIndex + 1}${
+      suffix ? `:${suffix}` : ''
+    }`;
+  }
+
+  private withWorldOffset(result: CombatRunResult): CombatRunResult {
+    return {
+      ...result,
+      worldOffset: this.getScrollState().worldOffset
+    };
   }
 
   private getCurrentBossName(): string {

@@ -1708,7 +1708,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 092.
+- Implemented in work order 092. Each expedition sector now compiles into a deterministic mission schedule with explicit briefing, entry, combat, branch, optional-combat, relief, extraction, failure, and completion stages. A guarded idempotent transition reducer centralizes objective completion, pause/resume, abandon, failure, and finale handling; data contracts control checkpoint hull/resource/world carry and optional stage-local combat projection. The live loop exposes mission HUD/debug/summary models and includes keyboard, pointer, reduced-motion, narrow-view, unit/integration, compatibility, and Chromium smoke coverage.
 
 ### BD3 - Objective grammar and mission anthology
 

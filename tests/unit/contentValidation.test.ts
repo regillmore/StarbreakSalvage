@@ -19,6 +19,10 @@ import {
   EXPEDITION_NODE_PROFILES,
   type ExpeditionNodeProfileDefinition
 } from '../../src/content/expeditions';
+import {
+  MISSION_STAGE_PROFILES,
+  type MissionStageProfileDefinition
+} from '../../src/content/missions';
 import { FACTIONS, type FactionDefinition } from '../../src/content/factions';
 import { HAZARD_ZONE_DEFINITIONS, type HazardZoneDefinition } from '../../src/content/hazardZones';
 import {
@@ -46,6 +50,7 @@ const baseEnemyFormation = ENEMY_FORMATIONS[0] as EnemyFormationDefinition;
 const baseEnemyVariant = ENEMY_VARIANTS[0] as EnemyVariantDefinition;
 const baseEnvironmentObject = ENVIRONMENT_OBJECT_DEFINITIONS[0] as EnvironmentObjectDefinition;
 const baseExpeditionNodeProfile = EXPEDITION_NODE_PROFILES[0] as ExpeditionNodeProfileDefinition;
+const baseMissionStageProfile = MISSION_STAGE_PROFILES[0] as MissionStageProfileDefinition;
 const baseHazardZone = HAZARD_ZONE_DEFINITIONS[0] as HazardZoneDefinition;
 const baseSector = SECTORS[0] as SectorDefinition;
 const baseShip = SHIPS[0] as ShipDefinition;
@@ -77,6 +82,7 @@ describe('validateContent', () => {
     expect(BACKGROUNDS).toHaveLength(6);
     expect(ENVIRONMENT_OBJECT_DEFINITIONS.length).toBeGreaterThanOrEqual(8);
     expect(EXPEDITION_NODE_PROFILES.length).toBeGreaterThanOrEqual(6);
+    expect(MISSION_STAGE_PROFILES.length).toBeGreaterThanOrEqual(8);
     expect(UPGRADES.length).toBeGreaterThanOrEqual(6);
     expect(representedArchetypes).toHaveLength(ITEM_ARCHETYPES.length);
     expect(representedArchetypes.length).toBeGreaterThanOrEqual(6);
@@ -128,6 +134,42 @@ describe('validateContent', () => {
     );
     expect(errors).toContain(
       'Expedition node profile expedition_profile_invalid has invalid transition policy: dropState'
+    );
+  });
+
+  it('rejects invalid mission stage profiles and carry contracts', () => {
+    const errors = validateContent({
+      missionStageProfiles: [
+        ...MISSION_STAGE_PROFILES,
+        { ...baseMissionStageProfile, label: 'Duplicate profile' },
+        {
+          ...baseMissionStageProfile,
+          id: 'mission_invalid',
+          label: '',
+          kind: 'teleport',
+          carry: {
+            build: 'drop',
+            hull: 'discard',
+            resources: 'drop',
+            routeContext: 'carry',
+            scrollWorld: 'teleport'
+          },
+          world: null
+        } as unknown as MissionStageProfileDefinition
+      ]
+    });
+
+    expect(errors).toContain(`Duplicate mission stage profile id: ${baseMissionStageProfile.id}`);
+    expect(errors).toContain('Mission stage profile mission_invalid must have a label');
+    expect(errors).toContain(
+      'Mission stage profile mission_invalid has invalid stage kind: teleport'
+    );
+    expect(errors).toContain('Mission stage profile mission_invalid must preserve build and resources');
+    expect(errors).toContain(
+      'Mission stage profile mission_invalid has invalid hull carry policy: discard'
+    );
+    expect(errors).toContain(
+      'Mission stage profile mission_invalid has invalid scroll-world policy: teleport'
     );
   });
 

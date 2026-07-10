@@ -50,6 +50,7 @@ import {
   applyInterActChoice,
   applyRouteOutcome,
   createRunSession,
+  dispatchMissionEvent,
   getCombatModifiersForSector,
   getCurrentSector,
   getEffectiveShipStats,
@@ -57,16 +58,24 @@ import {
   hasInterActChoiceForSourceAct,
   incrementShopRerollCount,
   recordSectorCombatResult,
+  recordExpeditionBranchDecision,
+  resetMissionForCurrentSector,
   spendCredits,
   type RunSessionState
 } from '../game/RunSession';
 import { getSaveRecordSectorCount } from '../game/RunOutcome';
+import { createExpeditionDebugState, createExpeditionPathReadModel } from '../game/ExpeditionGraph';
 import {
-  createExpeditionDebugState,
-  createExpeditionPathReadModel,
-  enterExpeditionCompatibilitySector,
-  synchronizeExpeditionCompatibilityProgress
-} from '../game/ExpeditionGraph';
+  createMissionCombatProjection,
+  createMissionDebugState,
+  createMissionReadModel,
+  createMissionSchedule,
+  formatMissionTimeline,
+  getMissionBranchOptions,
+  getMissionStage,
+  type MissionEvent,
+  type MissionTransitionResult
+} from '../game/MissionDirector';
 import { generateRouteOutcome, type AppliedRouteOutcome } from '../game/RouteEvents';
 import { createSectorConditionPlan } from '../game/SectorConditions';
 import { getSecondActFinaleSectorIndex } from '../game/SecondActFinale';
@@ -78,6 +87,8 @@ import { ContractSelectScene } from '../ui/ContractSelectScene';
 import { GameplayScene } from '../ui/GameplayScene';
 import { InterActJunctionScene } from '../ui/InterActJunctionScene';
 import { MainMenuScene } from '../ui/MainMenuScene';
+import { MissionBranchScene } from '../ui/MissionBranchScene';
+import { MissionReliefScene } from '../ui/MissionReliefScene';
 import { PauseScene } from '../ui/PauseScene';
 import { RewardScene } from '../ui/RewardScene';
 import { RouteEventScene } from '../ui/RouteEventScene';
@@ -282,7 +293,7 @@ export class GameApp {
           this.lastRunResult = null;
           this.lastSaveUpdate = null;
           this.summarySaved = false;
-          this.showGameplay();
+          this.showSectorTransition();
         },
         () => {
           this.showMainMenu();
@@ -298,10 +309,18 @@ export class GameApp {
   }
 
   private createGameplayScene(): GameplayScene {
-    this.runSession.expedition = enterExpeditionCompatibilitySector(
-      this.currentRun.expedition,
-      this.runSession.expedition,
-      this.runSession.currentSectorIndex
+    const schedule = this.getCurrentMissionSchedule();
+    const missionReadModel = createMissionReadModel(schedule, this.runSession.mission);
+    const stage = getMissionStage(schedule, this.runSession.mission.currentStageId);
+
+    if (stage.kind !== 'combat') {
+      throw new Error(`Cannot enter gameplay during mission stage ${stage.kind}.`);
+    }
+
+    const projection = createMissionCombatProjection(
+      schedule,
+      this.runSession.mission,
+      getCurrentSector(this.currentRun, this.runSession)
     );
 
     return new GameplayScene(
@@ -329,10 +348,15 @@ export class GameApp {
         this.showPause(pausedScene);
       },
       (result) => {
-        this.showRunSummary(result);
+        this.handleMissionFailure(result);
       },
       (result) => {
-        this.handleSectorComplete(result);
+        this.handleMissionCombatComplete(result);
+      },
+      {
+        projection,
+        readModel: missionReadModel,
+        debugState: createMissionDebugState(schedule, this.runSession.mission)
       }
     );
   }
@@ -387,6 +411,7 @@ export class GameApp {
     }
 
     this.runSession.currentSectorIndex = scenario.actTwoEntrySectorIndex;
+    resetMissionForCurrentSector(this.currentRun, this.runSession);
     this.runSession.distanceTraveled = scenario.distanceBeforeActTwo;
     this.runSession.credits = Math.max(this.runSession.credits, 32);
     this.runSession.salvage = Math.max(this.runSession.salvage, 8);
@@ -402,10 +427,12 @@ export class GameApp {
     }
 
     this.runSession.currentSectorIndex = scenario.actTwoEntrySectorIndex;
+    resetMissionForCurrentSector(this.currentRun, this.runSession);
     this.runSession.distanceTraveled = scenario.distanceBeforeActTwo;
     this.runSession.credits = Math.max(this.runSession.credits, 32);
     this.runSession.salvage = Math.max(this.runSession.salvage, 8);
     this.applyDefaultDebugInterActChoice();
+    this.prepareDebugMissionCombat();
     this.showGameplay();
   }
 
@@ -418,6 +445,7 @@ export class GameApp {
     }
 
     this.runSession.currentSectorIndex = scenario.finaleSectorIndex;
+    resetMissionForCurrentSector(this.currentRun, this.runSession);
     this.runSession.distanceTraveled = scenario.distanceBeforeFinale;
     this.runSession.credits = Math.max(this.runSession.credits, 72);
     this.runSession.salvage = Math.max(this.runSession.salvage, 18);
@@ -438,12 +466,14 @@ export class GameApp {
     }
 
     this.runSession.currentSectorIndex = finaleSectorIndex;
+    resetMissionForCurrentSector(this.currentRun, this.runSession);
     this.runSession.distanceTraveled = this.currentRun.sectors
       .slice(0, finaleSectorIndex)
       .reduce((total, sector) => total + sector.scroll.length, 0);
     this.runSession.credits = Math.max(this.runSession.credits, 36);
     this.runSession.salvage = Math.max(this.runSession.salvage, 6);
     this.applyDefaultDebugInterActChoice();
+    this.prepareDebugMissionCombat();
 
     const gameplayScene = this.createGameplayScene();
     gameplayScene.prepareDebugFinaleSmoke();
@@ -484,11 +514,150 @@ export class GameApp {
     }
   }
 
-  private handleSectorComplete(result: CombatRunResult): void {
+  private handleMissionCombatComplete(result: CombatRunResult): void {
+    const stageId = this.runSession.mission.currentStageId;
+    const transition = this.dispatchCurrentMission({
+      id: `${stageId}:combat-complete`,
+      type: 'completeCombat',
+      checkpoint: {
+        hull: result.remainingHull ?? null,
+        scrollDistance: result.distanceTraveled,
+        worldOffset: result.worldOffset ?? result.distanceTraveled,
+        credits: this.runSession.credits + result.credits,
+        salvage: this.runSession.salvage + result.salvage
+      }
+    });
+
+    if (transition.disposition !== 'advanced') {
+      return;
+    }
+
     this.lastRunResult = result;
     const sector = getCurrentSector(this.currentRun, this.runSession);
     recordSectorCombatResult(this.runSession, result, createActEconomyProfile(sector));
-    this.showRouteChoice();
+    const nextStage = getMissionStage(
+      this.getCurrentMissionSchedule(),
+      this.runSession.mission.currentStageId
+    );
+
+    if (nextStage.kind === 'branch') {
+      this.showMissionBranch();
+      return;
+    }
+
+    if (nextStage.kind === 'relief') {
+      this.showMissionRelief();
+      return;
+    }
+
+    throw new Error(`Combat advanced to unexpected mission stage ${nextStage.kind}.`);
+  }
+
+  private prepareDebugMissionCombat(): void {
+    if (
+      getMissionStage(this.getCurrentMissionSchedule(), this.runSession.mission.currentStageId)
+        .kind === 'briefing'
+    ) {
+      this.dispatchCurrentMission({
+        id: `${this.runSession.mission.currentStageId}:debug-briefing`,
+        type: 'confirmBriefing'
+      });
+      this.dispatchCurrentMission({
+        id: `${this.runSession.mission.currentStageId}:debug-entry`,
+        type: 'completeEntry'
+      });
+    }
+  }
+
+  private handleMissionFailure(result: CombatRunResult): void {
+    if (
+      this.runSession.mission.status !== 'failed' &&
+      this.runSession.mission.status !== 'completed'
+    ) {
+      this.dispatchCurrentMission({
+        id: `${this.runSession.mission.currentStageId}:fail:${result.reason}`,
+        type: 'fail',
+        reason: result.reason
+      });
+    }
+    this.showRunSummary(result);
+  }
+
+  private getCurrentMissionSchedule() {
+    const sectorIndex = Math.min(
+      this.currentRun.expedition.sectors.length - 1,
+      Math.max(0, this.runSession.mission.sectorIndex)
+    );
+    return createMissionSchedule(this.currentRun.expedition, sectorIndex);
+  }
+
+  private dispatchCurrentMission(event: MissionEvent): MissionTransitionResult {
+    return dispatchMissionEvent(this.currentRun, this.runSession, event);
+  }
+
+  private showMissionBranch(): void {
+    const schedule = this.getCurrentMissionSchedule();
+    this.sceneManager.switchTo(
+      new MissionBranchScene(
+        this.uiRoot,
+        this.currentRun.seed,
+        this.selectedContract,
+        createMissionReadModel(schedule, this.runSession.mission),
+        createMissionDebugState(schedule, this.runSession.mission),
+        getMissionBranchOptions(schedule, this.runSession.mission),
+        this.runSession.credits,
+        this.runSession.salvage,
+        (option) => {
+          const result = this.dispatchCurrentMission({
+            id: `${this.runSession.mission.currentStageId}:branch:${option.id}`,
+            type: 'selectBranch',
+            optionId: option.id
+          });
+
+          if (result.disposition !== 'advanced' || !schedule.branch) {
+            return;
+          }
+
+          recordExpeditionBranchDecision(
+            this.currentRun,
+            this.runSession,
+            schedule.branch.id,
+            option.id
+          );
+          const stage = getMissionStage(schedule, this.runSession.mission.currentStageId);
+          if (stage.kind === 'combat') {
+            this.showGameplay();
+          } else {
+            this.showMissionRelief();
+          }
+        }
+      )
+    );
+  }
+
+  private showMissionRelief(): void {
+    const schedule = this.getCurrentMissionSchedule();
+    this.sceneManager.switchTo(
+      new MissionReliefScene(
+        this.uiRoot,
+        this.currentRun.seed,
+        this.selectedContract,
+        createMissionReadModel(schedule, this.runSession.mission),
+        createMissionDebugState(schedule, this.runSession.mission),
+        this.runSession.mission.checkpoint.hull,
+        this.runSession.credits,
+        this.runSession.salvage,
+        () => {
+          const result = this.dispatchCurrentMission({
+            id: `${this.runSession.mission.currentStageId}:relief-complete`,
+            type: 'completeRelief'
+          });
+          if (result.disposition === 'advanced') {
+            this.showRouteChoice();
+          }
+        }
+      )
+    );
   }
 
   private showRouteChoice(): void {
@@ -610,10 +779,22 @@ export class GameApp {
   }
 
   private advanceAfterReward(): void {
+    const missionResult = this.dispatchCurrentMission({
+      id: `${this.runSession.mission.currentStageId}:extraction-complete`,
+      type: 'completeExtraction'
+    });
+
+    if (missionResult.disposition !== 'advanced') {
+      return;
+    }
+
     const previousSectorIndex = this.runSession.currentSectorIndex;
 
     if (!advanceSector(this.currentRun, this.runSession)) {
-      this.showRunSummary(this.lastRunResult ?? undefined);
+      const victory = this.lastRunResult
+        ? { ...this.lastRunResult, reason: 'victory' as const }
+        : undefined;
+      this.showRunSummary(victory);
       return;
     }
 
@@ -664,6 +845,7 @@ export class GameApp {
   }
 
   private showSectorTransition(): void {
+    const schedule = this.getCurrentMissionSchedule();
     this.sceneManager.switchTo(
       new SectorTransitionScene(
         this.uiRoot,
@@ -671,22 +853,50 @@ export class GameApp {
         this.runSession,
         this.selectedContract,
         () => {
-          this.showGameplay();
-        }
+          const briefing = this.dispatchCurrentMission({
+            id: `${this.runSession.mission.currentStageId}:briefing-confirmed`,
+            type: 'confirmBriefing'
+          });
+          if (briefing.disposition !== 'advanced') {
+            return;
+          }
+
+          const entry = this.dispatchCurrentMission({
+            id: `${this.runSession.mission.currentStageId}:entry-complete`,
+            type: 'completeEntry'
+          });
+          if (entry.disposition === 'advanced') {
+            this.showGameplay();
+          }
+        },
+        createMissionReadModel(schedule, this.runSession.mission),
+        createMissionDebugState(schedule, this.runSession.mission)
       )
     );
   }
 
   private showPause(gameplayScene: GameplayScene): void {
+    if (this.runSession.mission.status === 'active') {
+      this.dispatchCurrentMission({
+        id: `${this.runSession.mission.currentStageId}:suspend:${this.runSession.mission.transitions.length}`,
+        type: 'suspend'
+      });
+    }
     this.sceneManager.switchTo(
       new PauseScene(
         this.uiRoot,
         gameplayScene,
         (resumedScene) => {
-          this.showGameplay(resumedScene);
+          const result = this.dispatchCurrentMission({
+            id: `${this.runSession.mission.currentStageId}:resume:${this.runSession.mission.transitions.length}`,
+            type: 'resume'
+          });
+          if (result.disposition === 'advanced') {
+            this.showGameplay(resumedScene);
+          }
         },
         () => {
-          this.showRunSummary(gameplayScene.getRunResult('abandoned'));
+          this.handleMissionFailure(gameplayScene.getRunResult('abandoned'));
         },
         () => {
           this.showSettings(() => this.showPause(gameplayScene));
@@ -696,7 +906,7 @@ export class GameApp {
   }
 
   private abandonAtInterActJunction(): void {
-    this.showRunSummary({
+    this.handleMissionFailure({
       reason: 'abandoned',
       survivedSeconds: this.lastRunResult?.survivedSeconds ?? 0,
       distanceTraveled: 0,
@@ -715,12 +925,8 @@ export class GameApp {
 
   private showRunSummary(result?: CombatRunResult): void {
     this.lastRunResult = result ?? this.lastRunResult;
-    this.runSession.expedition = synchronizeExpeditionCompatibilityProgress(
-      this.currentRun.expedition,
-      this.runSession.expedition,
-      this.runSession.currentSectorIndex
-    );
     this.lastSaveUpdate = this.saveRunSummary(this.lastRunResult);
+    const schedule = this.getCurrentMissionSchedule();
     this.sceneManager.switchTo(
       new RunSummaryScene(
         this.uiRoot,
@@ -736,7 +942,8 @@ export class GameApp {
         this.lastSaveUpdate,
         () => {
           this.showMainMenu();
-        }
+        },
+        formatMissionTimeline(schedule, this.runSession.mission)
       )
     );
   }
@@ -868,12 +1075,10 @@ export class GameApp {
     }
 
     const debugState = this.sceneManager.getDebugState();
-    const expeditionProgress = synchronizeExpeditionCompatibilityProgress(
+    const expedition = createExpeditionDebugState(
       this.currentRun.expedition,
-      this.runSession.expedition,
-      this.runSession.currentSectorIndex
+      this.runSession.expedition
     );
-    const expedition = createExpeditionDebugState(this.currentRun.expedition, expeditionProgress);
     const scrollDebug =
       debugState.distance === undefined ||
       debugState.sectorLength === undefined ||
@@ -909,6 +1114,12 @@ export class GameApp {
             .filter((part): part is string => Boolean(part))
             .join('/')}`
         ].filter((line) => line.length > 0)
+      : [];
+    const missionDebug = debugState.mission
+      ? [
+          `Mission ${debugState.mission.kind} ${debugState.mission.status}`,
+          `Stage ${debugState.mission.stage} | T${debugState.mission.transitions}`
+        ]
       : [];
     const objectiveDebug = debugState.sector?.objectiveState
       ? [`Objective ${debugState.sector.objectiveState}`]
@@ -1015,6 +1226,7 @@ export class GameApp {
       ...finaleDebug,
       ...interActDebug,
       ...expeditionDebug,
+      ...missionDebug,
       ...sectorDebug,
       ...objectiveDebug,
       ...sectorPacingDebug,

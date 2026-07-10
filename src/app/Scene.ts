@@ -6,6 +6,7 @@ import type { ItemLoadoutStressModel } from '../game/ItemStress';
 import type { SecondActFinaleDebugState } from '../game/SecondActFinale';
 import type { InputAction } from '../systems/InputSystem';
 import type { ContractThemeDebugState } from '../ui/ContractTheme';
+import type { MissionDebugState } from '../game/MissionDirector';
 
 export interface SceneDebugState {
   readonly seed: string;
@@ -42,6 +43,7 @@ export interface SceneDebugState {
   readonly inputMode?: string;
   readonly hudMode?: string;
   readonly contractTheme?: ContractThemeDebugState;
+  readonly mission?: MissionDebugState;
   readonly items?: ItemLoadoutStressModel;
   readonly enemyRoles?: EnemyRolePressureSummary;
   readonly environmentStress?: EnvironmentStressDebugState;

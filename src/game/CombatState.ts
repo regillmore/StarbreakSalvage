@@ -325,6 +325,8 @@ export interface CombatRunResult {
   readonly shotsFired: number;
   readonly pickupsCollected: number;
   readonly damageTaken: number;
+  readonly remainingHull?: number;
+  readonly worldOffset?: number;
   readonly itemTriggers: number;
   readonly itemNames: readonly string[];
 }
@@ -390,6 +392,7 @@ const DEFAULT_SHIP_STATS: ShipStats = {
 export interface CombatStateOptions {
   readonly weaponId?: WeaponId;
   readonly shipStats?: ShipStats;
+  readonly startingHull?: number | null;
   readonly items?: readonly ItemInstance[];
   readonly bossId?: BossId;
   readonly bossSpawnAtSeconds?: number | null;
@@ -433,7 +436,7 @@ export function createCombatState(
       radius: shipStats.hitRadius,
       speed: shipStats.speed,
       pickupPullRange: shipStats.pickupPullRange,
-      hull: shipStats.maxHull,
+      hull: clamp(options.startingHull ?? shipStats.maxHull, 0, shipStats.maxHull),
       maxHull: shipStats.maxHull,
       fireCooldown: 0,
       weaponHeat: 0,
@@ -1348,6 +1351,7 @@ export function createCombatRunResult(
     shotsFired: state.stats.shotsFired,
     pickupsCollected: state.stats.pickupsCollected,
     damageTaken: state.stats.damageTaken,
+    remainingHull: state.player.hull,
     itemTriggers: state.stats.itemTriggers,
     itemNames: getItemNames(state.items)
   };
