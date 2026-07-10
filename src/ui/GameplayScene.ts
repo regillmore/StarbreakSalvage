@@ -44,6 +44,10 @@ import { formatRouteTagSummary } from '../game/ActTwoDebug';
 import { createBuildSynergyModel, formatBuildSynergyHud } from '../game/BuildSynergy';
 import { createEnemyRolePressureSummary } from '../game/EnemyRolePressure';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
+import {
+  createExpeditionPathReadModel,
+  type ExpeditionProgressState
+} from '../game/ExpeditionGraph';
 import { createItemLoadoutStressModel, createItemStormLoadout } from '../game/ItemStress';
 import {
   createEnvironmentObjectPlacementPlan,
@@ -213,6 +217,7 @@ export class GameplayScene implements Scene {
     private readonly combatModifiers: readonly RouteCombatModifier[],
     private readonly sectorConditions: SectorConditionPlan,
     private readonly sectorIndex: number,
+    private readonly expeditionProgress: ExpeditionProgressState,
     private readonly itemLoadout: readonly ItemInstance[],
     private readonly startingCredits: number,
     private readonly startingSalvage: number,
@@ -328,9 +333,13 @@ export class GameplayScene implements Scene {
 
     const sector = document.createElement('p');
     sector.className = 'hud-pill';
+    sector.dataset.testid = 'expedition-readout';
+    const expedition = createExpeditionPathReadModel(this.run.expedition, this.expeditionProgress);
     sector.textContent = `${formatActSectorLabel(
       this.getCurrentSector().act
-    )} | Sector ${this.sectorIndex + 1} | ${this.getCurrentSectorName()}`;
+    )} | Sector ${this.sectorIndex + 1} | ${this.getCurrentSectorName()} | Expedition ${
+      expedition.currentNodeLabel
+    } | nodes ${expedition.visitedNodeCount}/${expedition.totalNodeCount}`;
 
     const contract = document.createElement('p');
     contract.className = 'hud-pill';

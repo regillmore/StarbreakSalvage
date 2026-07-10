@@ -1541,7 +1541,7 @@ Acceptance criteria:
 - Nodes have stable ids, content references, entry/exit rules, pressure/duration bands, reward hooks, and validation.
 - Run-length capacity comes from encounter nodes and decisions, not global slowdown or enemy-hull inflation.
 
-Status: planned.
+Status: implemented. `src/content/expeditions.ts` defines validated node profiles and optional opportunity contracts, while `src/game/ExpeditionGraph.ts` generates an immutable two-act graph from seed plus effective unlock/upgrade state. The current ten-sector route maps to 40 stable nodes (30 required compatibility nodes and 10 optional branches), explicit mission legs, content references, reward hooks, safe transitions, checkpoint/finale gates, and separate decision/progress records. Required target capacity is 962 seconds (about 16.0 minutes), expanding to 1182 seconds (about 19.7 minutes) when all optional nodes are authored and selected. `RunSkeleton`, `RunSession`, HUD, summaries, debug overlay, and v5 last-run saves consume public read models; v4 saves migrate safely. The current live combat loop still executes one compatibility operation per sector until work order 092 adds the mission state machine. Known-seed, decision replay, graph validation, content validation, capacity, compatibility progress, save migration, and browser-facing readout coverage are in place. `npm run check` passes with 67 test files and 389 tests, all 11 Chromium smoke paths pass, and production preview smoke returns HTTP 200 for the Pages subpath plus current hashed CSS/JavaScript assets.
 
 ## Work order 092 - Multi-stage mission director and transitions
 

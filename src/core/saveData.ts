@@ -10,9 +10,13 @@ import {
 } from '../content/upgrades';
 import type { CombatEndReason } from '../game/CombatState';
 
-export const SAVE_STORAGE_KEY = 'starbreak.save.v4';
-export const LEGACY_SAVE_STORAGE_KEYS = ['starbreak.save.v3', 'starbreak.save.v2'] as const;
-export const SAVE_SCHEMA_VERSION = 4;
+export const SAVE_STORAGE_KEY = 'starbreak.save.v5';
+export const LEGACY_SAVE_STORAGE_KEYS = [
+  'starbreak.save.v4',
+  'starbreak.save.v3',
+  'starbreak.save.v2'
+] as const;
+export const SAVE_SCHEMA_VERSION = 5;
 
 export interface StorageLike {
   getItem(key: string): string | null;
@@ -52,6 +56,10 @@ export interface LastRunSummary {
   readonly finaleVariantId: string | null;
   readonly finaleVariantName: string | null;
   readonly finaleCleared: boolean;
+  readonly expeditionGraphId: string | null;
+  readonly expeditionVisitedNodeIds: readonly string[];
+  readonly expeditionDecisionIds: readonly string[];
+  readonly expeditionTargetSeconds: number | null;
   readonly sectorsCleared: number;
   readonly survivedSeconds: number;
   readonly distanceTraveled: number;
@@ -92,6 +100,10 @@ export interface RunSaveRecord {
   readonly finaleVariantId?: string | null;
   readonly finaleVariantName?: string | null;
   readonly finaleCleared?: boolean;
+  readonly expeditionGraphId?: string | null;
+  readonly expeditionVisitedNodeIds?: readonly string[];
+  readonly expeditionDecisionIds?: readonly string[];
+  readonly expeditionTargetSeconds?: number | null;
   readonly survivedSeconds: number;
   readonly distanceTraveled: number;
   readonly sectorLength: number | null;
@@ -154,6 +166,18 @@ interface SaveDataV2 {
 
 interface SaveDataV3 {
   readonly version: 3;
+  readonly salvageBank?: number;
+  readonly unlockedIds?: readonly string[];
+  readonly purchasedUpgradeIds?: readonly string[];
+  readonly achievementIds?: readonly string[];
+  readonly discoveredItemIds?: readonly string[];
+  readonly discoveredItemFamilyIds?: readonly string[];
+  readonly stats?: Record<string, unknown>;
+  readonly lastRun?: unknown;
+}
+
+interface SaveDataV4 {
+  readonly version: 4;
   readonly salvageBank?: number;
   readonly unlockedIds?: readonly string[];
   readonly purchasedUpgradeIds?: readonly string[];
@@ -268,6 +292,10 @@ export function importSaveData(serialized: string): SaveData {
     return migrateV3Save(parsed as unknown as SaveDataV3);
   }
 
+  if (parsed.version === 4) {
+    return migrateV4Save(parsed as unknown as SaveDataV4);
+  }
+
   if (parsed.version !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Unsupported save version: ${String(parsed.version)}`);
   }
@@ -356,6 +384,10 @@ export function applyRunRecordToSave(current: SaveData, record: RunSaveRecord): 
         finaleVariantId: sanitizeNullableText(record.finaleVariantId),
         finaleVariantName: sanitizeNullableText(record.finaleVariantName),
         finaleCleared: record.finaleCleared === true && record.reason === 'victory',
+        expeditionGraphId: sanitizeNullableText(record.expeditionGraphId),
+        expeditionVisitedNodeIds: sanitizeExpeditionIds(record.expeditionVisitedNodeIds),
+        expeditionDecisionIds: sanitizeExpeditionIds(record.expeditionDecisionIds),
+        expeditionTargetSeconds: sanitizeNullableCount(record.expeditionTargetSeconds),
         sectorsCleared: record.sectorsCleared,
         survivedSeconds: record.survivedSeconds,
         distanceTraveled: Math.max(0, Math.floor(record.distanceTraveled)),
@@ -488,6 +520,13 @@ function migrateV3Save(data: SaveDataV3): SaveData {
   });
 }
 
+function migrateV4Save(data: SaveDataV4): SaveData {
+  return normalizeSaveData({
+    ...data,
+    version: SAVE_SCHEMA_VERSION
+  });
+}
+
 function normalizeSaveData(input: Record<string, unknown>): SaveData {
   const stats = isRecord(input.stats) ? input.stats : {};
   const discoveredItemIds = sanitizeItemIds(input.discoveredItemIds);
@@ -556,6 +595,10 @@ function normalizeLastRun(value: unknown): LastRunSummary | null {
     finaleVariantId: sanitizeNullableText(value.finaleVariantId),
     finaleVariantName: sanitizeNullableText(value.finaleVariantName),
     finaleCleared: value.finaleCleared === true && reason === 'victory',
+    expeditionGraphId: sanitizeNullableText(value.expeditionGraphId),
+    expeditionVisitedNodeIds: sanitizeExpeditionIds(value.expeditionVisitedNodeIds),
+    expeditionDecisionIds: sanitizeExpeditionIds(value.expeditionDecisionIds),
+    expeditionTargetSeconds: sanitizeNullableCount(value.expeditionTargetSeconds),
     sectorsCleared: sanitizeCount(value.sectorsCleared),
     survivedSeconds: sanitizeCount(value.survivedSeconds),
     distanceTraveled: sanitizeCount(value.distanceTraveled),
@@ -609,6 +652,16 @@ function sanitizeItemFamilyIds(value: unknown): ItemFamily[] {
 
   const validIds = new Set<string>(ITEM_FAMILIES);
   return uniqueStrings(value).filter((id): id is ItemFamily => validIds.has(id));
+}
+
+function sanitizeExpeditionIds(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return uniqueStrings(value)
+    .filter((id) => id.length <= 180 && /^[a-zA-Z0-9_:-]+$/.test(id))
+    .slice(0, 128);
 }
 
 function sanitizeActId(value: unknown): ActId | null {

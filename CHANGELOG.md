@@ -67,9 +67,12 @@
 - Added a shared Act II economy profile for reward weighting, reward choice bonuses, route payout tuning, shop stock/prices/reroll costs, repair/vault scarcity, loose-currency value budgets, summary economy copy, and save-compatible upgrade-progress framing.
 - Added deterministic Act II finale variants that tune final boss hull and arena approach through the existing boss path, expose finale state in HUD/debug/summary/save records, preserve boss-release hazard fairness, unlock the Core Descent music flag on victory, and add an `F` debug shortcut for final-boss smoke.
 - Added Act II debug smoke shortcuts for the inter-act junction, first Act II sector entry, finale, and two-act summary, with route-tag and live objective-state telemetry in the debug overlay.
+- Added the Phase 10 expedition foundation: deterministic seed-plus-save graphs with stable act/sector/mission-leg/node/branch/gate ids, validated duration/pressure/reward/content contracts, separate session decision/progress state, cockpit/summary/debug read models, 16.0-19.7 minutes of structural target capacity, and v4-to-v5 save migration.
 
 ### Testing
 
+- Added expedition graph/content validation, known-seed snapshots, fresh/progressed save-state variation, deterministic decision replay, compatibility progress, capacity, broken-reference, save-migration, HUD/debug, and no-`Math.random()` coverage.
+- Verified work order 091 with 67 passing test files/389 tests, all 11 Playwright Chromium paths, and production preview asset-path smoke under `/StarbreakSalvage/`.
 - Added a repeatable Phase 6 item catalog audit helper and unit coverage for the current rarity, tag, hook, reward-pool, archetype, unlock, target-family, and bridge-effect baseline.
 - Added item metadata validation for family/source/status/stacking/UI tags, bridge/planned implementation notes, reward-pool source drift, unlock-gate drift, and unsupported starter rarity/source combinations.
 - Added hook validation and unit coverage for newly registered hook names, deterministic hook ordering, inert future hook surfaces, and bounded dispatch/proc limits.

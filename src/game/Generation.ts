@@ -36,6 +36,7 @@ import {
 } from './ActRouteContracts';
 import { createBackgroundPlan, type BackgroundPlan } from './BackgroundPlan';
 import { createBossArenaPlan, summarizeBossArenaPlan, type BossArenaPlan } from './BossArena';
+import { createExpeditionGraph, type ExpeditionGraph } from './ExpeditionGraph';
 import { createSectorScrollPlan, type SectorScrollPlan } from './ScrollState';
 import {
   createSectorFeaturePlan,
@@ -43,10 +44,7 @@ import {
   type SectorFeaturePlan
 } from './SectorFeatures';
 import { createSectorObjectivePlan, type SectorObjectivePlan } from './SectorObjectives';
-import {
-  createSecondActFinalePlan,
-  type SecondActFinalePlan
-} from './SecondActFinale';
+import { createSecondActFinalePlan, type SecondActFinalePlan } from './SecondActFinale';
 import { resolveRunUpgradeEffects, type RunUpgradeEffects } from './UpgradeEffects';
 import {
   filterUnlockedBossCandidates,
@@ -93,7 +91,7 @@ export interface RouteOption {
 
 export interface SectorRoute {
   readonly index: number;
-  readonly sectorId: string;
+  readonly sectorId: SectorId;
   readonly sectorName: string;
   readonly act: ActSectorContext;
   readonly bossId: BossId;
@@ -120,6 +118,7 @@ export interface RunSkeleton {
   readonly upgradeEffects: RunUpgradeEffects;
   readonly seedSurvey: string | null;
   readonly acts: readonly RunActPlan[];
+  readonly expedition: ExpeditionGraph;
   readonly contracts: readonly StartingContract[];
   readonly sectors: readonly SectorRoute[];
 }
@@ -223,6 +222,14 @@ export function generateRunSkeleton(
       getGeneratedActContext(actContexts, index)
     )
   );
+  const saveFingerprint = createRunGenerationSaveFingerprint(unlockedIds, upgradeEffects);
+  const expedition = createExpeditionGraph({
+    seed,
+    saveFingerprint,
+    acts,
+    sectors,
+    rng: rootRng.fork('expedition-graph')
+  });
 
   return {
     seed,
@@ -231,9 +238,19 @@ export function generateRunSkeleton(
     upgradeEffects,
     seedSurvey: createSeedSurveyText(upgradeEffects, sectors),
     acts,
+    expedition,
     contracts,
     sectors
   };
+}
+
+export function createRunGenerationSaveFingerprint(
+  unlockedIds: readonly UnlockId[],
+  upgradeEffects: Pick<RunUpgradeEffects, 'activeUpgradeIds'>
+): string {
+  const unlocks = [...unlockedIds].sort().join(',') || 'fresh';
+  const upgrades = [...upgradeEffects.activeUpgradeIds].sort().join(',') || 'none';
+  return `unlocks=${unlocks}|upgrades=${upgrades}`;
 }
 
 function selectSectorSequence(seed: string): readonly SectorDefinition[] {
@@ -674,6 +691,21 @@ function createSeedSurveyText(
 export function summarizeRunSkeleton(run: RunSkeleton): unknown {
   return {
     seed: run.seed,
+    expedition: {
+      id: run.expedition.id,
+      schemaVersion: run.expedition.schemaVersion,
+      saveFingerprint: run.expedition.saveFingerprint,
+      actCount: run.expedition.acts.length,
+      sectorCount: run.expedition.sectors.length,
+      nodeCount: run.expedition.nodes.length,
+      branchCount: run.expedition.branches.length,
+      gates: run.expedition.gates.map((gate) => ({
+        actId: gate.actId,
+        kind: gate.kind,
+        transition: gate.transitionKind
+      })),
+      capacity: run.expedition.capacity
+    },
     ...(run.upgradeEffects.activeUpgradeIds.length > 0
       ? {
           upgrades: {

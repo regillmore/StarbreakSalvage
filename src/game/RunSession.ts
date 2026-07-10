@@ -17,6 +17,12 @@ import type {
   StartingContract
 } from './Generation';
 import {
+  advanceExpeditionCompatibilityProgress,
+  createExpeditionProgress,
+  recordExpeditionDecision,
+  type ExpeditionProgressState
+} from './ExpeditionGraph';
+import {
   combineInterActEffects,
   createInterActChoiceRecord,
   type InterActChoice,
@@ -48,6 +54,7 @@ export interface RouteHistoryEntry {
 
 export interface RunSessionState {
   currentSectorIndex: number;
+  expedition: ExpeditionProgressState;
   credits: number;
   salvage: number;
   distanceTraveled: number;
@@ -69,6 +76,7 @@ export function createRunSession(
 ): RunSessionState {
   return {
     currentSectorIndex: 0,
+    expedition: createExpeditionProgress(run.expedition),
     credits: contract.startingCredits,
     salvage: contract.startingSalvage,
     distanceTraveled: 0,
@@ -344,6 +352,25 @@ export function incrementShopRerollCount(session: RunSessionState, sectorIndex: 
 }
 
 export function advanceSector(run: RunSkeleton, session: RunSessionState): boolean {
+  session.expedition = advanceExpeditionCompatibilityProgress(
+    run.expedition,
+    session.expedition,
+    session.currentSectorIndex
+  );
   session.currentSectorIndex += 1;
   return !isRunComplete(run, session);
+}
+
+export function recordExpeditionBranchDecision(
+  run: RunSkeleton,
+  session: RunSessionState,
+  branchId: string,
+  optionId: string
+): void {
+  session.expedition = recordExpeditionDecision(
+    run.expedition,
+    session.expedition,
+    branchId,
+    optionId
+  );
 }

@@ -192,6 +192,12 @@ Phase 10 expands each route sector into a deterministic expedition graph with mu
 
 The measured roughly six-minute Phase 9 baseline should be tracked as evidence, not fixed by sleeps or global slowdown. Phase 10 tests should report generated encounter capacity and eventual full-run duration, while qualitative balance remains a later playtest concern.
 
+Current Phase 10 coverage:
+
+- Work order 091 adds graph/content validation, compact known-seed snapshots for `STARBREAK-SMOKE`, `LASER-TAX-404`, and `EXPEDITION-GRAPH-SMOKE`, fresh/progressed save-fingerprint variation, deterministic decision replay, broken-reference fixtures, compatibility progress tests, and a capacity assertion for 962 required-target seconds plus 1182 all-optional seconds.
+- Save tests migrate v4 records to v5, normalize missing expedition fields, and round-trip graph/path/decision/duration summary data. Existing act, sector, route, reward, shop, finale, and deterministic suites remain green.
+- The existing Chromium shell/narrow-HUD smoke now asserts the public expedition HUD and debug readouts. Work order 092 still needs browser paths that actually advance mission stages and select optional branches.
+
 ## Known seed tests
 
 - `STARBREAK-SMOKE` — stable forgiving smoke path.
@@ -271,8 +277,8 @@ Phase 9 should add these seed/save fixtures:
 
 Phase 10 should add these seed/save/decision fixtures:
 
-- `EXPEDITION-GRAPH-SMOKE` - baseline two-act graph with stable mission nodes, optional branches, duration bands, and finale reachability.
-- `MISSION-BRANCH-CATCHUP` - multi-stage mission fixture for frame catchup, simultaneous completion events, partial success, and branch replay.
+- `EXPEDITION-GRAPH-SMOKE` - baseline two-act graph with stable mission nodes, optional branches, duration bands, and finale reachability; implemented in work order 091 graph/capacity snapshots.
+- `MISSION-BRANCH-CATCHUP` - multi-stage mission fixture for frame catchup, simultaneous completion events, partial success, and branch replay; work order 091 covers deterministic branch/path replay, with runtime catchup deferred to work order 092.
 - `FOUNDRY-EVOLUTION-GRID` - deterministic component, recipe, affix, install, fuse, and overclock history under fresh and progressed saves.
 - `CAPITAL-HULK-BREACH` - multi-part set-piece fixture for subsystem targeting, safe lanes, staged destruction, and reward cleanup.
 - `RIVAL-RETURNS-7` - decision-history fixture where a rival escapes, adapts, returns, and changes a later mission or finale.

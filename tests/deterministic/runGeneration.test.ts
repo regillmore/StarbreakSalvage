@@ -33,15 +33,15 @@ describe('generateRunSkeleton', () => {
     expect(run.seed).toBe('STARBREAK-SMOKE');
     expect(run.acts.map((act) => [act.id, act.shortLabel, act.sectorIds])).toEqual([
       [
-          'act_outer_rim',
-          'Act I',
-          [
-            'sector_outer_debris_field',
-            'sector_trade_war_corridor',
-            'sector_bio_machine_bloom',
-            'sector_corporate_kill_grid',
-            'sector_trade_war_corridor'
-          ]
+        'act_outer_rim',
+        'Act I',
+        [
+          'sector_outer_debris_field',
+          'sector_trade_war_corridor',
+          'sector_bio_machine_bloom',
+          'sector_corporate_kill_grid',
+          'sector_trade_war_corridor'
+        ]
       ],
       [
         'act_core_descent',
@@ -166,6 +166,7 @@ describe('deterministic generation guardrails', () => {
       'src/core/rng.ts',
       'src/game/BackgroundPlan.ts',
       'src/game/BossArena.ts',
+      'src/game/ExpeditionGraph.ts',
       'src/game/Generation.ts',
       'src/game/ScrollState.ts',
       'src/game/SectorFeatures.ts',

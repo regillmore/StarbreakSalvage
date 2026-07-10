@@ -781,7 +781,7 @@ Exit criteria:
 - Same seed plus save state reproduces the graph, and the same decision history reproduces the visited path.
 - Existing ten-sector runs and older save/summary records normalize safely.
 
-Status: planned for work order 091.
+Status: implemented by work order 091. The run skeleton now carries a deterministic expedition graph generated from seed plus effective save state, while the session owns separate decision and visited-path records. Current ten-sector play projects through 30 required compatibility nodes; ten optional branch nodes expand the target plan from about 16.0 to 19.7 minutes without changing combat speed. Graph/content validation, known-seed snapshots, v4-to-v5 save migration, and HUD/summary/debug read models are in place for the work order 092 runtime handoff.
 
 ### P10.2 - Multi-Stage Mission Runtime And Anthology
 

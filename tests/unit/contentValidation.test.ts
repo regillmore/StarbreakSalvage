@@ -15,6 +15,10 @@ import {
   ENVIRONMENT_OBJECT_DEFINITIONS,
   type EnvironmentObjectDefinition
 } from '../../src/content/environmentObjects';
+import {
+  EXPEDITION_NODE_PROFILES,
+  type ExpeditionNodeProfileDefinition
+} from '../../src/content/expeditions';
 import { FACTIONS, type FactionDefinition } from '../../src/content/factions';
 import { HAZARD_ZONE_DEFINITIONS, type HazardZoneDefinition } from '../../src/content/hazardZones';
 import {
@@ -41,6 +45,7 @@ const baseBoss = BOSSES[0] as BossDefinition;
 const baseEnemyFormation = ENEMY_FORMATIONS[0] as EnemyFormationDefinition;
 const baseEnemyVariant = ENEMY_VARIANTS[0] as EnemyVariantDefinition;
 const baseEnvironmentObject = ENVIRONMENT_OBJECT_DEFINITIONS[0] as EnvironmentObjectDefinition;
+const baseExpeditionNodeProfile = EXPEDITION_NODE_PROFILES[0] as ExpeditionNodeProfileDefinition;
 const baseHazardZone = HAZARD_ZONE_DEFINITIONS[0] as HazardZoneDefinition;
 const baseSector = SECTORS[0] as SectorDefinition;
 const baseShip = SHIPS[0] as ShipDefinition;
@@ -71,9 +76,59 @@ describe('validateContent', () => {
     expect(FACTIONS).toHaveLength(4);
     expect(BACKGROUNDS).toHaveLength(6);
     expect(ENVIRONMENT_OBJECT_DEFINITIONS.length).toBeGreaterThanOrEqual(8);
+    expect(EXPEDITION_NODE_PROFILES.length).toBeGreaterThanOrEqual(6);
     expect(UPGRADES.length).toBeGreaterThanOrEqual(6);
     expect(representedArchetypes).toHaveLength(ITEM_ARCHETYPES.length);
     expect(representedArchetypes.length).toBeGreaterThanOrEqual(6);
+  });
+
+  it('rejects invalid expedition node profiles', () => {
+    const errors = validateContent({
+      expeditionNodeProfiles: [
+        baseExpeditionNodeProfile,
+        { ...baseExpeditionNodeProfile, label: 'Duplicate profile' },
+        {
+          ...baseExpeditionNodeProfile,
+          id: 'expedition_profile_invalid',
+          label: '',
+          nodeKind: 'ambush',
+          legKind: 'interlude',
+          pressureBand: 'impossible',
+          duration: { minSeconds: 20, targetSeconds: 10, maxSeconds: 5 },
+          entryRule: 'teleport',
+          completionRule: 'never',
+          transitionPolicy: 'dropState'
+        } as unknown as ExpeditionNodeProfileDefinition
+      ]
+    });
+
+    expect(errors).toContain(
+      `Duplicate expedition node profile id: ${baseExpeditionNodeProfile.id}`
+    );
+    expect(errors).toContain(
+      'Expedition node profile expedition_profile_invalid must have a label'
+    );
+    expect(errors).toContain(
+      'Expedition node profile expedition_profile_invalid has invalid node kind: ambush'
+    );
+    expect(errors).toContain(
+      'Expedition node profile expedition_profile_invalid has invalid leg kind: interlude'
+    );
+    expect(errors).toContain(
+      'Expedition node profile expedition_profile_invalid has invalid pressure band: impossible'
+    );
+    expect(errors).toContain(
+      'Expedition node profile expedition_profile_invalid must order duration bounds'
+    );
+    expect(errors).toContain(
+      'Expedition node profile expedition_profile_invalid has invalid entry rule: teleport'
+    );
+    expect(errors).toContain(
+      'Expedition node profile expedition_profile_invalid has invalid completion rule: never'
+    );
+    expect(errors).toContain(
+      'Expedition node profile expedition_profile_invalid has invalid transition policy: dropState'
+    );
   });
 
   it('rejects invalid act definitions', () => {
@@ -185,9 +240,7 @@ describe('validateContent', () => {
     );
     expect(errors).toContain('Act route contract act2_missing must have a reward tier hint');
     expect(errors).toContain('Act route contract act2_missing must have a pressure hint');
-    expect(errors).toContain(
-      'Act route contract act2_missing has invalid route tag: missing_tag'
-    );
+    expect(errors).toContain('Act route contract act2_missing has invalid route tag: missing_tag');
     expect(errors).toContain(
       'Act route contract act2_missing sector fit has invalid allowed sector: sector_missing'
     );

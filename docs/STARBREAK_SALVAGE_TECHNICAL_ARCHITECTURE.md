@@ -525,7 +525,18 @@ Phase 10 should turn the current route into an expedition without turning `GameA
 - Generate the graph once from seed plus save fingerprint. Store player decisions and visited-node state separately so a summary or recovered session can distinguish generated possibilities from the chosen path.
 - A `MissionDirector` should be an explicit state machine. Scene transitions may present mission state, but they should not decide whether briefing, entry, combat, branch, relief, extraction, failure, or completion occurs.
 - Mission objectives should consume typed gameplay events such as actor defeated, subsystem destroyed, area held, scan completed, cargo recovered, ally escaped, timer elapsed, and player extracted. Every objective must declare cleanup and partial/failure policies.
-- Current single-lane sectors should remain valid as one-node compatibility graphs during migration. Older last-run records can normalize to that form without rewriting stored history.
+- Current single-lane sectors should remain valid through an explicit compatibility projection during migration. Older last-run records can normalize without rewriting stored history.
+
+Work order 091 audit and implementation:
+
+- The old authoritative chain was `RunSkeleton.sectors[index]` -> one `GameplayScene` -> route/shop/reward -> `advanceSector`. Route history counted completed sector decisions, save summaries inferred progress from sector and route counts, and debug shortcuts assigned `currentSectorIndex` directly. Rewards, shops, junctions, finales, and smoke helpers all referenced sector indexes rather than stable encounter identity.
+- `src/content/expeditions.ts` now owns validated node profiles for approach, standard/escalated operation, opportunity, extraction, checkpoint, and finale stages plus seeded optional opportunity contracts.
+- `src/game/ExpeditionGraph.ts` creates a graph after existing sectors are fully generated, using a new named RNG fork so contract, sector, boss, route, wave, reward, and shop results do not move. `ExpeditionTypes.ts` keeps the schema reusable, and `ExpeditionValidation.ts` owns structural/reference checks. The graph carries stable act/sector/leg/node/branch/gate ids, content references, duration/pressure bands, entry/completion/transition policies, and reward hooks.
+- `RunSkeleton.expedition` is immutable. `RunSession.expedition` separately owns visited node ids and branch decision records. Pure path resolution makes the same decision history reproduce the same node path and outcome ids.
+- Current gameplay explicitly enters one operation node per sector and marks required ingress/operation/gate nodes during the existing reward advance. It does not execute optional nodes or multiple stages yet; that is the work order 092 handoff.
+- Public read models feed the cockpit sector strip, run summary, and DOM debug overlay. Debug index jumps synchronize compatibility progress without accessing graph internals from browser tests.
+- Save schema v5 stores graph id, visited node ids, decision ids, and target duration on the last-run summary. The loader checks `starbreak.save.v5`, migrates deployed v4 data from `starbreak.save.v4`, and normalizes older summaries to null/empty expedition fields.
+- The generated baseline has 30 required nodes targeting 962 seconds (about 16.0 minutes). Ten optional nodes raise authored target capacity to 1182 seconds (about 19.7 minutes). These are content budgets, not a claim that work order 091 changed the current roughly six-minute live run.
 
 ### Modular ship and engineering state
 
@@ -565,6 +576,8 @@ src/content/setPieces.ts
 src/content/rivals.ts
 src/content/crew.ts
 src/game/ExpeditionGraph.ts
+src/game/ExpeditionTypes.ts
+src/game/ExpeditionValidation.ts
 src/game/MissionDirector.ts
 src/game/ShipLoadout.ts
 src/game/SalvageEngineering.ts

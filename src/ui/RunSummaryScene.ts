@@ -12,6 +12,11 @@ import {
 import { createBuildSynergyModel, formatBuildSynergySummary } from '../game/BuildSynergy';
 import type { CombatRunResult } from '../game/CombatState';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
+import {
+  createExpeditionPathReadModel,
+  formatExpeditionCapacity,
+  type ExpeditionProgressState
+} from '../game/ExpeditionGraph';
 import { formatInterActHistory, type InterActChoiceRecord } from '../game/InterActJunction';
 import type { RouteHistoryEntry } from '../game/RunSession';
 import type { AppliedRouteOutcome } from '../game/RouteEvents';
@@ -19,10 +24,7 @@ import type { ItemInstance } from '../game/Rewards';
 import { formatSectorConditionTimeline } from '../game/SectorConditions';
 import { formatHazardZoneDirectorTimeline } from '../game/HazardZoneDirector';
 import { formatSectorPacingTimeline } from '../game/SectorPacing';
-import {
-  formatSecondActFinaleOutcome,
-  getSecondActFinalePlan
-} from '../game/SecondActFinale';
+import { formatSecondActFinaleOutcome, getSecondActFinalePlan } from '../game/SecondActFinale';
 import { formatRunUpgradeEffects, getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import type { InputAction } from '../systems/InputSystem';
 import {
@@ -48,6 +50,7 @@ export class RunSummaryScene implements Scene {
     private readonly routeHistory: readonly RouteHistoryEntry[],
     private readonly routeOutcomes: readonly AppliedRouteOutcome[],
     private readonly interActChoices: readonly InterActChoiceRecord[],
+    private readonly expeditionProgress: ExpeditionProgressState,
     private readonly itemInstances: readonly ItemInstance[],
     private readonly saveData: SaveData,
     private readonly saveUpdate: SaveUpdateResult | null,
@@ -73,6 +76,7 @@ export class RunSummaryScene implements Scene {
     title.textContent = getSummaryTitle(this.result);
 
     const progress = createRunSummaryProgressModel(this.saveData, this.saveUpdate);
+    const expedition = createExpeditionPathReadModel(this.run.expedition, this.expeditionProgress);
 
     const stats = document.createElement('dl');
     stats.className = 'summary-stats';
@@ -98,6 +102,8 @@ export class RunSummaryScene implements Scene {
       ['Routes', formatRouteHistory(this.routeHistory)],
       ['Act Route', formatActRouteHistory(this.routeHistory)],
       ['Act Timeline', formatRunActTimeline(this.run.acts)],
+      ['Expedition Path', expedition.summary],
+      ['Expedition Capacity', formatExpeditionCapacity(this.run.expedition.capacity)],
       ['Inter-Act Refit', formatInterActHistory(this.interActChoices)],
       [
         'Economy By Act',

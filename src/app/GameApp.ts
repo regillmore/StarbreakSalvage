@@ -61,6 +61,12 @@ import {
   type RunSessionState
 } from '../game/RunSession';
 import { getSaveRecordSectorCount } from '../game/RunOutcome';
+import {
+  createExpeditionDebugState,
+  createExpeditionPathReadModel,
+  enterExpeditionCompatibilitySector,
+  synchronizeExpeditionCompatibilityProgress
+} from '../game/ExpeditionGraph';
 import { generateRouteOutcome, type AppliedRouteOutcome } from '../game/RouteEvents';
 import { createSectorConditionPlan } from '../game/SectorConditions';
 import { getSecondActFinaleSectorIndex } from '../game/SecondActFinale';
@@ -292,6 +298,12 @@ export class GameApp {
   }
 
   private createGameplayScene(): GameplayScene {
+    this.runSession.expedition = enterExpeditionCompatibilitySector(
+      this.currentRun.expedition,
+      this.runSession.expedition,
+      this.runSession.currentSectorIndex
+    );
+
     return new GameplayScene(
       this.uiRoot,
       this.input,
@@ -305,6 +317,7 @@ export class GameApp {
         routeOutcomes: this.runSession.routeOutcomes
       }),
       this.runSession.currentSectorIndex,
+      this.runSession.expedition,
       this.runSession.itemInstances,
       this.runSession.credits,
       this.runSession.salvage,
@@ -702,6 +715,11 @@ export class GameApp {
 
   private showRunSummary(result?: CombatRunResult): void {
     this.lastRunResult = result ?? this.lastRunResult;
+    this.runSession.expedition = synchronizeExpeditionCompatibilityProgress(
+      this.currentRun.expedition,
+      this.runSession.expedition,
+      this.runSession.currentSectorIndex
+    );
     this.lastSaveUpdate = this.saveRunSummary(this.lastRunResult);
     this.sceneManager.switchTo(
       new RunSummaryScene(
@@ -712,6 +730,7 @@ export class GameApp {
         this.runSession.routeHistory,
         this.runSession.routeOutcomes,
         this.runSession.interActChoices,
+        this.runSession.expedition,
         this.runSession.itemInstances,
         this.saveData,
         this.lastSaveUpdate,
@@ -753,6 +772,10 @@ export class GameApp {
     const actSaveContext = createRunActSaveContext(this.currentRun.acts, sectorsCleared);
     const sector = this.currentRun.sectors[this.runSession.currentSectorIndex];
     const finale = sector?.finale ?? null;
+    const expedition = createExpeditionPathReadModel(
+      this.currentRun.expedition,
+      this.runSession.expedition
+    );
 
     return {
       seed: this.currentRun.seed,
@@ -769,6 +792,12 @@ export class GameApp {
       finaleVariantId: finale?.variantId ?? null,
       finaleVariantName: finale?.variantName ?? null,
       finaleCleared: result.reason === 'victory' && finale !== null,
+      expeditionGraphId: expedition.graphId,
+      expeditionVisitedNodeIds: expedition.visitedNodeIds,
+      expeditionDecisionIds: this.runSession.expedition.decisions.map(
+        (decision) => `${decision.branchId}:${decision.optionId}`
+      ),
+      expeditionTargetSeconds: expedition.baselineTargetSeconds,
       survivedSeconds: result.survivedSeconds,
       distanceTraveled: this.runSession.distanceTraveled + currentDistance,
       sectorLength: result.sectorLength,
@@ -839,6 +868,12 @@ export class GameApp {
     }
 
     const debugState = this.sceneManager.getDebugState();
+    const expeditionProgress = synchronizeExpeditionCompatibilityProgress(
+      this.currentRun.expedition,
+      this.runSession.expedition,
+      this.runSession.currentSectorIndex
+    );
+    const expedition = createExpeditionDebugState(this.currentRun.expedition, expeditionProgress);
     const scrollDebug =
       debugState.distance === undefined ||
       debugState.sectorLength === undefined ||
@@ -951,6 +986,10 @@ export class GameApp {
           }`
         ]
       : [];
+    const expeditionDebug = [
+      `Expedition ${expedition.currentNodeId} ${expedition.visitedNodes}/${expedition.totalNodes} decisions ${expedition.decisions}`,
+      `Expedition capacity ${expedition.baselineMinutes.toFixed(1)}-${expedition.expandedMinutes.toFixed(1)}m`
+    ];
 
     this.debugOverlay.textContent = [
       `FPS ${Math.round(this.frameStats.fps)}`,
@@ -975,6 +1014,7 @@ export class GameApp {
       ...actDebug,
       ...finaleDebug,
       ...interActDebug,
+      ...expeditionDebug,
       ...sectorDebug,
       ...objectiveDebug,
       ...sectorPacingDebug,

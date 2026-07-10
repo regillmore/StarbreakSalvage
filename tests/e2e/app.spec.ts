@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 const SCRAP_BAY_SAVE = {
-  version: 4,
+  version: 5,
   salvageBank: 8,
   unlockedIds: [],
   purchasedUpgradeIds: [],
@@ -127,6 +127,9 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('bomb-meter')).toHaveAttribute('aria-valuenow', '100');
   await expect(page.getByTestId('weapon-heat-meter')).toHaveAttribute('aria-valuenow', '0');
   await expect(page.getByTestId('objective-readout')).toContainText(/waves|targets|Boss/i);
+  await expect(page.getByTestId('expedition-readout')).toContainText(
+    'Expedition Outer Debris Field Operation | nodes 2/40'
+  );
   await expect(page.getByTestId('hint-readout')).toContainText('Hint');
   await expect(page.getByTestId('verb-readout')).toContainText('Special');
   await expect(page.getByTestId('weapon-readout')).toContainText('Heat');
@@ -134,6 +137,10 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('item-readout')).toContainText('Prism Battery');
   await expect(page.locator('.debug-overlay')).toContainText('Theme redline/Debt Runner');
   await expect(page.locator('.debug-overlay')).toContainText('HUD standard');
+  await expect(page.locator('.debug-overlay')).toContainText(
+    'Expedition expedition_s01_operation 2/40 decisions 0'
+  );
+  await expect(page.locator('.debug-overlay')).toContainText('Expedition capacity 16.0-19.7m');
   await expect(page.locator('.debug-overlay')).toContainText(
     /Viewport \d+x\d+ \w+ @[0-9.]+ DPR [0-9.]+/
   );
@@ -266,10 +273,12 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
 
   await page.getByRole('button', { name: 'Export Save' }).click();
   const exportedSave = await page.getByTestId('save-import-box').inputValue();
-  expect(exportedSave).toContain('"version": 4');
+  expect(exportedSave).toContain('"version": 5');
   expect(exportedSave).toContain('"purchasedUpgradeIds":');
   expect(exportedSave).toContain('"discoveredItemIds":');
   expect(exportedSave).toContain('"discoveredItemFamilyIds":');
+  expect(exportedSave).toContain('"expeditionGraphId":');
+  expect(exportedSave).toContain('"expeditionVisitedNodeIds":');
 
   await page.getByRole('button', { name: 'Reset Save' }).click();
   await expect(page.getByTestId('save-status')).toContainText('Save reset.');
@@ -299,7 +308,7 @@ test('opens the Upgrade Bay and purchases an upgrade from banked scrap', async (
   await page.setViewportSize({ width: 390, height: 700 });
   await page.addInitScript(
     ({ save, settings }) => {
-      window.localStorage.setItem('starbreak.save.v4', JSON.stringify(save));
+      window.localStorage.setItem('starbreak.save.v5', JSON.stringify(save));
       window.localStorage.setItem('starbreak.settings.v1', JSON.stringify(settings));
     },
     { save: SCRAP_BAY_SAVE, settings: HIGH_CONTRAST_SETTINGS }
@@ -344,7 +353,7 @@ test('opens the Upgrade Bay and purchases an upgrade from banked scrap', async (
   await expect(surveyRig).toContainText('Installed in the archive.');
 
   const savedUpgradeIds = await page.evaluate(() => {
-    const raw = window.localStorage.getItem('starbreak.save.v4');
+    const raw = window.localStorage.getItem('starbreak.save.v5');
     return raw ? JSON.parse(raw).purchasedUpgradeIds : [];
   });
   expect(savedUpgradeIds).toEqual(['upgrade_contract_survey_rig']);
@@ -595,7 +604,9 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
   await page.keyboard.press('Y');
   await expect(page.getByRole('heading', { name: 'Debug Run Ended' })).toBeVisible();
   await expect(page.getByText('Act II Core Descent 5/5 | 1/2 acts secured')).toBeVisible();
-  await expect(page.getByText(/Debug: .* smoke path ended before official resolution/)).toBeVisible();
+  await expect(
+    page.getByText(/Debug: .* smoke path ended before official resolution/)
+  ).toBeVisible();
   await expect(page.getByText(/Act II 4\/5 S9 .* \[/)).toBeVisible();
   await expect(page.getByText(/Junction: [+-]?\d+c\/[+-]?\d+kg/)).toBeVisible();
 
@@ -769,6 +780,7 @@ test('keeps the gameplay HUD and safe frame readable in a narrow viewport', asyn
   await expect(page.locator('.debug-overlay')).toContainText('Input none');
   await expect(page.locator('.debug-overlay')).toContainText('HUD standard');
   await expect(page.getByTestId('objective-readout')).toBeVisible();
+  await expect(page.getByTestId('expedition-readout')).toBeVisible();
 
   const hudBox = await page.locator('.game-hud').boundingBox();
   if (!hudBox) {

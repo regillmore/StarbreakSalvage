@@ -47,6 +47,16 @@ import {
   type EnvironmentObjectDefinition
 } from './environmentObjects';
 import {
+  EXPEDITION_COMPLETION_RULES,
+  EXPEDITION_ENTRY_RULES,
+  EXPEDITION_LEG_KINDS,
+  EXPEDITION_NODE_KINDS,
+  EXPEDITION_NODE_PROFILES,
+  EXPEDITION_PRESSURE_BANDS,
+  EXPEDITION_TRANSITION_POLICIES,
+  type ExpeditionNodeProfileDefinition
+} from './expeditions';
+import {
   ITEM_FAMILIES,
   ITEM_ARCHETYPES,
   ITEM_HOOKS,
@@ -131,6 +141,7 @@ export interface ContentValidationInput {
   readonly enemyFormations?: readonly EnemyFormationDefinition[];
   readonly enemyVariants?: readonly EnemyVariantDefinition[];
   readonly environmentObjects?: readonly EnvironmentObjectDefinition[];
+  readonly expeditionNodeProfiles?: readonly ExpeditionNodeProfileDefinition[];
   readonly factions?: readonly FactionDefinition[];
   readonly hazardZones?: readonly HazardZoneDefinition[];
   readonly items?: readonly ItemDefinition[];
@@ -155,6 +166,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const enemyFormations = input.enemyFormations ?? ENEMY_FORMATIONS;
   const enemyVariants = input.enemyVariants ?? ENEMY_VARIANTS;
   const environmentObjects = input.environmentObjects ?? ENVIRONMENT_OBJECT_DEFINITIONS;
+  const expeditionNodeProfiles = input.expeditionNodeProfiles ?? EXPEDITION_NODE_PROFILES;
   const factions = input.factions ?? FACTIONS;
   const hazardZones = input.hazardZones ?? HAZARD_ZONE_DEFINITIONS;
   const items = input.items ?? ITEMS;
@@ -222,6 +234,12 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const environmentObjectAccessibilityVariants = new Set<string>(
     ENVIRONMENT_OBJECT_ACCESSIBILITY_VARIANTS
   );
+  const expeditionNodeKinds = new Set<string>(EXPEDITION_NODE_KINDS);
+  const expeditionLegKinds = new Set<string>(EXPEDITION_LEG_KINDS);
+  const expeditionPressureBands = new Set<string>(EXPEDITION_PRESSURE_BANDS);
+  const expeditionEntryRules = new Set<string>(EXPEDITION_ENTRY_RULES);
+  const expeditionCompletionRules = new Set<string>(EXPEDITION_COMPLETION_RULES);
+  const expeditionTransitionPolicies = new Set<string>(EXPEDITION_TRANSITION_POLICIES);
   const hazardZoneIds = new Set<string>(HAZARD_ZONE_IDS);
   const hazardZoneFamilies = new Set<string>(HAZARD_ZONE_FAMILIES);
   const hazardZoneTelegraphShapes = new Set<string>(HAZARD_ZONE_TELEGRAPH_SHAPES);
@@ -273,6 +291,14 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     objectiveKinds: sectorObjectiveKinds,
     routeTags: actRouteTags,
     unlocks: canonicalUnlockIds
+  });
+  validateExpeditionNodeProfiles(errors, expeditionNodeProfiles, {
+    nodeKinds: expeditionNodeKinds,
+    legKinds: expeditionLegKinds,
+    pressureBands: expeditionPressureBands,
+    entryRules: expeditionEntryRules,
+    completionRules: expeditionCompletionRules,
+    transitionPolicies: expeditionTransitionPolicies
   });
 
   if (items.length < 30) {
@@ -929,6 +955,68 @@ export function assertValidContent(input: ContentValidationInput = {}): void {
   }
 }
 
+function validateExpeditionNodeProfiles(
+  errors: string[],
+  profiles: readonly ExpeditionNodeProfileDefinition[],
+  registries: {
+    readonly nodeKinds: ReadonlySet<string>;
+    readonly legKinds: ReadonlySet<string>;
+    readonly pressureBands: ReadonlySet<string>;
+    readonly entryRules: ReadonlySet<string>;
+    readonly completionRules: ReadonlySet<string>;
+    readonly transitionPolicies: ReadonlySet<string>;
+  }
+): void {
+  const profileIds = new Set<string>();
+
+  if (profiles.length < EXPEDITION_NODE_KINDS.length) {
+    errors.push('Content must define expedition profiles for the current node kinds');
+  }
+
+  for (const profile of profiles) {
+    const owner = `Expedition node profile ${profile.id}`;
+
+    if (profileIds.has(profile.id)) {
+      errors.push(`Duplicate expedition node profile id: ${profile.id}`);
+    }
+    profileIds.add(profile.id);
+
+    if (!profile.id.trim()) {
+      errors.push('Expedition node profile must have an id');
+    }
+    if (!profile.label.trim()) {
+      errors.push(`${owner} must have a label`);
+    }
+    if (!registries.nodeKinds.has(profile.nodeKind)) {
+      errors.push(`${owner} has invalid node kind: ${profile.nodeKind}`);
+    }
+    if (!registries.legKinds.has(profile.legKind)) {
+      errors.push(`${owner} has invalid leg kind: ${profile.legKind}`);
+    }
+    if (!registries.pressureBands.has(profile.pressureBand)) {
+      errors.push(`${owner} has invalid pressure band: ${profile.pressureBand}`);
+    }
+    if (!registries.entryRules.has(profile.entryRule)) {
+      errors.push(`${owner} has invalid entry rule: ${profile.entryRule}`);
+    }
+    if (!registries.completionRules.has(profile.completionRule)) {
+      errors.push(`${owner} has invalid completion rule: ${profile.completionRule}`);
+    }
+    if (!registries.transitionPolicies.has(profile.transitionPolicy)) {
+      errors.push(`${owner} has invalid transition policy: ${profile.transitionPolicy}`);
+    }
+    validatePositiveNumber(errors, owner, 'minimum duration', profile.duration.minSeconds);
+    validatePositiveNumber(errors, owner, 'target duration', profile.duration.targetSeconds);
+    validatePositiveNumber(errors, owner, 'maximum duration', profile.duration.maxSeconds);
+    if (
+      profile.duration.minSeconds > profile.duration.targetSeconds ||
+      profile.duration.targetSeconds > profile.duration.maxSeconds
+    ) {
+      errors.push(`${owner} must order duration bounds`);
+    }
+  }
+}
+
 function validateActDefinitions(
   errors: string[],
   acts: readonly ActDefinition[],
@@ -981,9 +1069,24 @@ function validateActDefinitions(
       errors.push(`${owner} must have a summary`);
     }
 
-    validatePositiveInteger(errors, `${owner} sector budget`, 'plannedSectors', act.sectorBudget.plannedSectors);
-    validatePositiveInteger(errors, `${owner} sector budget`, 'minSectors', act.sectorBudget.minSectors);
-    validatePositiveInteger(errors, `${owner} sector budget`, 'maxSectors', act.sectorBudget.maxSectors);
+    validatePositiveInteger(
+      errors,
+      `${owner} sector budget`,
+      'plannedSectors',
+      act.sectorBudget.plannedSectors
+    );
+    validatePositiveInteger(
+      errors,
+      `${owner} sector budget`,
+      'minSectors',
+      act.sectorBudget.minSectors
+    );
+    validatePositiveInteger(
+      errors,
+      `${owner} sector budget`,
+      'maxSectors',
+      act.sectorBudget.maxSectors
+    );
 
     if (act.sectorBudget.minSectors > act.sectorBudget.maxSectors) {
       errors.push(`${owner} sector budget must order min/max sectors`);
@@ -1073,9 +1176,7 @@ function validateActDefinitions(
         !actIds.has(act.transition.nextActId) &&
         !acts.some((candidate) => candidate.id === act.transition.nextActId)
       ) {
-        errors.push(
-          `${owner} transition references missing next act: ${act.transition.nextActId}`
-        );
+        errors.push(`${owner} transition references missing next act: ${act.transition.nextActId}`);
       }
     }
   }

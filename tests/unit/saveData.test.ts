@@ -113,6 +113,42 @@ describe('saveData', () => {
     expect(migrated.discoveredItemFamilyIds).toEqual([]);
   });
 
+  it('migrates v4 saves and normalizes missing expedition summary fields', () => {
+    const migrated = importSaveData(
+      JSON.stringify({
+        version: 4,
+        salvageBank: 11,
+        unlockedIds: [],
+        purchasedUpgradeIds: [],
+        achievementIds: [],
+        discoveredItemIds: [],
+        discoveredItemFamilyIds: [],
+        stats: { runsEnded: 1 },
+        lastRun: {
+          seed: 'PHASE9-LEGACY',
+          contractId: 'contract_1',
+          contractName: 'Debt Runner',
+          reason: 'victory',
+          sectorsCleared: 10,
+          survivedSeconds: 360,
+          salvageRecovered: 7
+        }
+      })
+    );
+
+    expect(migrated.version).toBe(SAVE_SCHEMA_VERSION);
+    expect(migrated.salvageBank).toBe(11);
+    expect(migrated.lastRun).toEqual(
+      expect.objectContaining({
+        seed: 'PHASE9-LEGACY',
+        expeditionGraphId: null,
+        expeditionVisitedNodeIds: [],
+        expeditionDecisionIds: [],
+        expeditionTargetSeconds: null
+      })
+    );
+  });
+
   it('round-trips through export and import', () => {
     const runSave = applyRunRecordToSave(createDefaultSaveData(), {
       seed: 'STARBREAK-SMOKE',
@@ -178,6 +214,12 @@ describe('saveData', () => {
       finaleVariantId: 'reactorBreach',
       finaleVariantName: 'Reactor Breach',
       finaleCleared: true,
+      expeditionGraphId: 'expedition_core-wreck_091',
+      expeditionVisitedNodeIds: ['expedition_s01_ingress', 'expedition_s01_operation'],
+      expeditionDecisionIds: [
+        'expedition_branch_s01_opportunity:expedition_branch_s01_opportunity_detour'
+      ],
+      expeditionTargetSeconds: 962,
       survivedSeconds: 184,
       distanceTraveled: 2536,
       sectorLength: 2536,
@@ -200,6 +242,13 @@ describe('saveData', () => {
     expect(save.lastRun?.finaleVariantId).toBe('reactorBreach');
     expect(save.lastRun?.finaleVariantName).toBe('Reactor Breach');
     expect(save.lastRun?.finaleCleared).toBe(true);
+    expect(save.lastRun?.expeditionGraphId).toBe('expedition_core-wreck_091');
+    expect(save.lastRun?.expeditionVisitedNodeIds).toEqual([
+      'expedition_s01_ingress',
+      'expedition_s01_operation'
+    ]);
+    expect(save.lastRun?.expeditionDecisionIds).toHaveLength(1);
+    expect(save.lastRun?.expeditionTargetSeconds).toBe(962);
     expect(save.lastRun?.sectorsCleared).toBe(5);
     expect(save.lastRun?.distanceTraveled).toBe(2536);
     expect(save.lastRun?.sectorLength).toBe(2536);
@@ -266,6 +315,10 @@ describe('saveData', () => {
     expect(normalized.lastRun?.finaleVariantId).toBeNull();
     expect(normalized.lastRun?.finaleVariantName).toBeNull();
     expect(normalized.lastRun?.finaleCleared).toBe(false);
+    expect(normalized.lastRun?.expeditionGraphId).toBeNull();
+    expect(normalized.lastRun?.expeditionVisitedNodeIds).toEqual([]);
+    expect(normalized.lastRun?.expeditionDecisionIds).toEqual([]);
+    expect(normalized.lastRun?.expeditionTargetSeconds).toBeNull();
     expect(normalized.lastRun?.distanceTraveled).toBe(0);
     expect(normalized.lastRun?.sectorLength).toBeNull();
   });
@@ -363,15 +416,15 @@ describe('saveData', () => {
       'upgrade_salvage_escrow_index'
     ]);
 
-    storage.setItem(LEGACY_SAVE_STORAGE_KEYS[1], '{"version":2,"salvageBank":5}');
+    storage.setItem(LEGACY_SAVE_STORAGE_KEYS[2], '{"version":2,"salvageBank":5}');
     expect(resetSaveData(storage)).toEqual(createDefaultSaveData());
     expect(storage.getItem(SAVE_STORAGE_KEY)).toBeNull();
-    expect(storage.getItem(LEGACY_SAVE_STORAGE_KEYS[1])).toBeNull();
+    expect(storage.getItem(LEGACY_SAVE_STORAGE_KEYS[2])).toBeNull();
   });
 
   it('loads legacy v2 storage and marks it for repair/write-forward', () => {
     const storage = new MemoryStorage();
-    storage.setItem(LEGACY_SAVE_STORAGE_KEYS[1], '{"version":2,"salvageBank":7}');
+    storage.setItem(LEGACY_SAVE_STORAGE_KEYS[2], '{"version":2,"salvageBank":7}');
 
     const loaded = loadSaveData(storage);
 
@@ -385,7 +438,7 @@ describe('saveData', () => {
   it('loads legacy v3 storage and preserves discovery records when present', () => {
     const storage = new MemoryStorage();
     storage.setItem(
-      LEGACY_SAVE_STORAGE_KEYS[0],
+      LEGACY_SAVE_STORAGE_KEYS[1],
       '{"version":3,"salvageBank":7,"discoveredItemIds":["item_split_prism"]}'
     );
 

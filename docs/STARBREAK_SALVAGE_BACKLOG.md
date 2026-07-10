@@ -1696,7 +1696,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 091.
+- Implemented in work order 091. The generated run now owns a validated immutable expedition graph with two acts, ten sector plans, 40 stable encounter nodes/mission legs, ten optional branches, explicit entry/exit and transition policies, content/reward/shop references, checkpoint/finale gates, and 16.0-19.7 minutes of structural target capacity. Mutable decisions and visited-node progress live separately in `RunSession`, current one-lane sectors advance through a compatibility projection, public read models feed HUD/summary/debug/save surfaces, and v4 saves migrate to the v5 expedition-aware last-run schema.
 
 ### BD2 - Multi-stage mission runtime
 

@@ -46,6 +46,8 @@ Exit criteria:
 - Existing ten-sector seeds and older summary/save records migrate or normalize safely.
 - A baseline graph has enough encounter capacity for a 12-20 minute run without relying on empty delay.
 
+Status: implemented by work order 091. Seed plus effective unlock/upgrade state now produces an immutable graph of two acts, ten sector plans, 40 stable nodes, 40 mission legs, ten optional branches, and explicit checkpoint/finale gates. Public progress and decision records stay separate from generation; HUD, summaries, debug, and v5 last-run saves consume graph/path read models, with v4 migration coverage. The required-node target is about 16.0 minutes and the all-optional target is about 19.7 minutes. Live gameplay remains on the explicit one-operation-per-sector compatibility projection until work order 092. Full checks pass with 67 test files/389 tests, all 11 Chromium paths pass, and production preview asset-path smoke is green.
+
 ### P10.2 - Multi-Stage Mission Runtime
 
 Scope:

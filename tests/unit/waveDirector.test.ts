@@ -79,18 +79,18 @@ describe('WaveDirector', () => {
       sector.majorWaves[2],
       sector.majorWaves[2]
     ]);
-    expect(plan.spawnSchedule.filter((_spawn, index) => index % 2 === 0).map((spawn) => spawn.xRatio)).toEqual([
-      0.56,
-      0.56,
-      0.56
-    ]);
-    expect(plan.spawnSchedule.filter((_spawn, index) => index % 2 === 1).every((spawn) => spawn.xRatio >= 0.14 && spawn.xRatio <= 0.86)).toBe(true);
+    expect(
+      plan.spawnSchedule.filter((_spawn, index) => index % 2 === 0).map((spawn) => spawn.xRatio)
+    ).toEqual([0.56, 0.56, 0.56]);
+    expect(
+      plan.spawnSchedule
+        .filter((_spawn, index) => index % 2 === 1)
+        .every((spawn) => spawn.xRatio >= 0.14 && spawn.xRatio <= 0.86)
+    ).toBe(true);
     expect(plan.spawnSchedule.every((spawn) => spawn.targetY >= 92 && spawn.targetY <= 158)).toBe(
       true
     );
-    expect(plan.spawnSchedule[1]?.atDistance).toBe(
-      (plan.spawnSchedule[0]?.atDistance ?? 0) + 34
-    );
+    expect(plan.spawnSchedule[1]?.atDistance).toBe((plan.spawnSchedule[0]?.atDistance ?? 0) + 34);
   });
 
   it('requires exit distance, issued waves, cleared enemies, and target kills before completion', () => {
@@ -322,6 +322,35 @@ describe('WaveDirector', () => {
             "weaponPattern": "single",
           },
         ],
+        "expedition": {
+          "actCount": 2,
+          "branchCount": 10,
+          "capacity": {
+            "baselineMaxSeconds": 1326,
+            "baselineMinSeconds": 612,
+            "baselineTargetSeconds": 962,
+            "expandedTargetSeconds": 1182,
+            "optionalNodeCount": 10,
+            "requiredNodeCount": 30,
+          },
+          "gates": [
+            {
+              "actId": "act_outer_rim",
+              "kind": "checkpoint",
+              "transition": "interActJunction",
+            },
+            {
+              "actId": "act_core_descent",
+              "kind": "finale",
+              "transition": "victory",
+            },
+          ],
+          "id": "expedition_starbreak-smoke_53f226d4",
+          "nodeCount": 40,
+          "saveFingerprint": "unlocks=unlock_boss_auditor_drill,unlock_challenge_debt_ceiling,unlock_faction_bloom_hive,unlock_item_executive_override,unlock_music_core_descent,unlock_music_outer_debris,unlock_ship_corporate_test_pilot,unlock_ship_phase_courier,unlock_ship_relic_thief,unlock_ship_scrap_monk,unlock_ship_shield_bruiser|upgrades=none",
+          "schemaVersion": 1,
+          "sectorCount": 10,
+        },
         "sectors": [
           {
             "act": {
