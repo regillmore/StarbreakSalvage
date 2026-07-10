@@ -136,9 +136,11 @@ import {
   type UpgradeDefinition
 } from './upgrades';
 import { WEAPONS, type WeaponDefinition } from './weapons';
+import { SET_PIECES, type SetPieceDefinition } from './setPieces';
 import { ITEM_HOOK_IMPLEMENTATIONS } from '../game/ItemHooks';
 import { COMBAT_ARENA_PADDING, COMBAT_ARENA_WIDTH } from '../game/CombatGeometry';
 import { validateShipLoadout } from '../game/ShipLoadout';
+import { validateSetPieceContent } from '../game/SetPiece';
 import {
   ITEM_FAMILY_GATES,
   ITEM_UNLOCKS,
@@ -200,6 +202,7 @@ export interface ContentValidationInput {
   readonly itemUnlocks?: Readonly<Partial<Record<ItemId, UnlockId>>>;
   readonly rewardPools?: readonly RewardPoolDefinition[];
   readonly sectors?: readonly SectorDefinition[];
+  readonly setPieces?: readonly SetPieceDefinition[];
   readonly shipFrames?: readonly ShipFrameDefinition[];
   readonly shipModules?: readonly ShipModuleDefinition[];
   readonly ships?: readonly ShipDefinition[];
@@ -236,6 +239,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const itemUnlocks = input.itemUnlocks ?? ITEM_UNLOCKS;
   const rewardPools = input.rewardPools ?? REWARD_POOLS;
   const sectors = input.sectors ?? SECTORS;
+  const setPieces = input.setPieces ?? SET_PIECES;
   const shipFrames = input.shipFrames ?? SHIP_FRAMES;
   const shipModules = input.shipModules ?? SHIP_MODULES;
   const ships = input.ships ?? SHIPS;
@@ -367,6 +371,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     acts: canonicalActIds,
     itemTags: tagRegistry
   });
+  errors.push(...validateSetPieceContent(setPieces).errors);
 
   if (items.length < 30) {
     errors.push('Content must define at least 30 items');

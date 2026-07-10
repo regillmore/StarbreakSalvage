@@ -4,6 +4,8 @@
 
 Phase 9 is complete as a local second-act playtest candidate. A seeded run can cross ten sectors in two acts, stop at a deterministic midpoint refit, carry its build and economy into Act II, and resolve through a second-act finale. Full checks, 11 Chromium smoke tests, and production preview asset-path smoke pass.
 
+Work orders 091-096 now provide the expedition graph, multi-stage missions and objective anthology, modular shipcraft, salvage engineering, and the first physical set-piece layer. Sectors 1, 7, and 10 host a capital ship, station, and wreck convoy assembled from shared subsystem templates; faction campaigns, rivals, crew, and the Scenario Lab remain ahead.
+
 The resulting run currently takes about six minutes in a normal local playthrough. That is useful diagnostic evidence: adding a second act expanded the route model, but it did not yet create enough lived experience inside each sector. Phase 10 should add consequential play and decisions instead of stretching timers, inflating hull, or simply adding a third act.
 
 ## Phase 10 Product Goal
@@ -103,6 +105,8 @@ Exit criteria:
 - Set pieces interact safely with objectives, hazards, formations, bombs, item effects, loose currency, boss locks, and lane constraints.
 - Damage and destruction order are deterministic from explicit events and cannot duplicate rewards or strand objectives.
 - Performance/reduced-motion modes simplify presentation without changing target geometry or stage timing.
+
+Status: implemented by work order 096. `src/content/setPieces.ts` defines seven reusable component templates and three original assemblies; `src/game/SetPiece.ts` creates stable plans, dependency-gated runtime state, typed one-shot destruction/stage/completion events, fixed-world geometry, safe lanes, bounded formations, boss-lock state, debug jumps, public read models, and validation. Combat routes weapons, specials, bombs, hazards, contact, objective credit, loose currency, turret shots, and hangar launches through the shared actor state. The opening and Act II station contracts lock travel at their anchor until complete, while the final wreck train also gates the existing boss arena. Reduced-motion and performance settings only simplify canvas presentation. Unit/deterministic coverage and all 11 Chromium smoke paths pass.
 
 ### P10.6 - Faction Campaigns And Rival Captains
 

@@ -492,6 +492,17 @@ describe('WaveDirector', () => {
               "startOffset": 299,
             },
             "sectorId": "sector_outer_debris_field",
+            "setPiece": {
+              "anchorDistance": 606,
+              "bossLock": "none",
+              "id": "setpiece_ledger_hecaton",
+              "reinforcementFormation": "formation_screen",
+              "safeLane": {
+                "label": "port maintenance lane",
+                "maxX": 216,
+                "minX": 34,
+              },
+            },
           },
           {
             "act": {
@@ -1003,6 +1014,17 @@ describe('WaveDirector', () => {
               "startOffset": 60370,
             },
             "sectorId": "sector_lunar_surface",
+            "setPiece": {
+              "anchorDistance": 1443,
+              "bossLock": "none",
+              "id": "setpiece_bloom_spindle",
+              "reinforcementFormation": "formation_ring",
+              "safeLane": {
+                "label": "starboard evacuation lane",
+                "maxX": 606,
+                "minX": 424,
+              },
+            },
           },
           {
             "act": {
@@ -1342,6 +1364,17 @@ describe('WaveDirector', () => {
               "startOffset": 90870,
             },
             "sectorId": "sector_core_wreck",
+            "setPiece": {
+              "anchorDistance": 3214,
+              "bossLock": "untilComplete",
+              "id": "setpiece_court_wreck_train",
+              "reinforcementFormation": "formation_convoy",
+              "safeLane": {
+                "label": "center tow corridor",
+                "maxX": 388,
+                "minX": 252,
+              },
+            },
           },
         ],
         "seed": "STARBREAK-SMOKE",
@@ -1400,7 +1433,13 @@ function makeProgressState(
       enemyProjectilesCancelled: 0,
       environmentObjectsDestroyed: 0,
       environmentRewardsDropped: 0,
-      environmentChainReactions: 0
+      environmentChainReactions: 0,
+      setPieceComponentsDestroyed: 0,
+      setPieceStagesCompleted: 0,
+      setPiecesCompleted: 0,
+      setPieceRewardsDropped: 0,
+      setPieceProjectilesFired: 0,
+      setPieceReinforcementsSpawned: 0
     }
   };
 }

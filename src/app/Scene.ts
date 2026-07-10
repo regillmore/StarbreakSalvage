@@ -34,6 +34,10 @@ export interface SceneDebugState {
     readonly environmentObjects: number;
     readonly destructibles: number;
     readonly obstacles: number;
+    readonly setPieceComponents?: number;
+    readonly setPieceTargets?: number;
+    readonly setPieceProjectiles?: number;
+    readonly setPieceProjectileCap?: number;
   };
   readonly distance?: number;
   readonly sectorLength?: number;
@@ -59,6 +63,19 @@ export interface SceneDebugState {
   readonly items?: ItemLoadoutStressModel;
   readonly enemyRoles?: EnemyRolePressureSummary;
   readonly environmentStress?: EnvironmentStressDebugState;
+  readonly setPiece?: {
+    readonly active: boolean;
+    readonly name: string;
+    readonly stageLabel: string;
+    readonly beat: string;
+    readonly targetLabel: string;
+    readonly destroyedComponents: number;
+    readonly totalComponents: number;
+    readonly objectiveTargetsDestroyed: number;
+    readonly objectiveTargetsTotal: number;
+    readonly safeLaneLabel: string;
+    readonly bossLockActive: boolean;
+  };
   readonly actPressure?: ActPressureDebugState;
   readonly finale?: SecondActFinaleDebugState;
   readonly upgradeEffects?: readonly string[];

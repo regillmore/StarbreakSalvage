@@ -340,6 +340,8 @@ function createCounts(overrides: Partial<CombatEntityCounts>): CombatEntityCount
     environmentObjects: 0,
     destructibles: 0,
     obstacles: 0,
+    setPieceComponents: 0,
+    setPieceTargets: 0,
     ...overrides
   };
 }

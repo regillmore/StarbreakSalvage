@@ -1259,7 +1259,8 @@ export class GameApp {
             `Pickups/FX ${debugState.entityCounts.pickups}/${debugState.entityCounts.effects}`,
             `Loose ${debugState.entityCounts.looseCurrencyPickups}/${debugState.entityCounts.looseCurrencyPickupCap} V${debugState.entityCounts.looseCurrencyValue}/${debugState.entityCounts.looseCurrencyValueCap} C${debugState.entityCounts.looseCurrencyCredits}/S${debugState.entityCounts.looseCurrencySalvage}`,
             `Telegraphs ${debugState.entityCounts.telegraphs}`,
-            `Environment ${debugState.entityCounts.environmentObjects} (D${debugState.entityCounts.destructibles}/O${debugState.entityCounts.obstacles})`
+            `Environment ${debugState.entityCounts.environmentObjects} (D${debugState.entityCounts.destructibles}/O${debugState.entityCounts.obstacles})`,
+            `Set-piece parts ${debugState.entityCounts.setPieceComponents ?? 0} targets ${debugState.entityCounts.setPieceTargets ?? 0} shots ${debugState.entityCounts.setPieceProjectiles ?? 0}/${debugState.entityCounts.setPieceProjectileCap ?? 0}`
           ];
     const arenaDebug =
       debugState.arenaPhase && debugState.arenaPhase !== 'none'
@@ -1292,6 +1293,11 @@ export class GameApp {
     const combinedProcDebug = debugState.combinedProc
       ? [
           `Combined proc ${debugState.combinedProc.peakHook ?? 'none'} ${debugState.combinedProc.peakApplications}/${debugState.combinedProc.budget} total ${debugState.combinedProc.totalApplied} skip ${debugState.combinedProc.totalSkipped} order ${debugState.combinedProc.lastOrder.join('>') || 'none'}`
+        ]
+      : [];
+    const setPieceDebug = debugState.setPiece
+      ? [
+          `Set-piece ${debugState.setPiece.name} ${debugState.setPiece.beat} ${debugState.setPiece.destroyedComponents}/${debugState.setPiece.totalComponents} target ${debugState.setPiece.targetLabel} lane ${debugState.setPiece.safeLaneLabel}${debugState.setPiece.bossLockActive ? ' BOSS-LOCK' : ''}`
         ]
       : [];
     const upgradeDebug =
@@ -1344,6 +1350,7 @@ export class GameApp {
       ...loadoutDebug,
       ...engineeringDebug,
       ...combinedProcDebug,
+      ...setPieceDebug,
       ...upgradeDebug,
       ...progressionDebug,
       ...actDebug,

@@ -736,7 +736,8 @@ function projectObjectiveSector(
       startOffset: stage.optional ? continuedOffset : sector.scroll.startOffset
     },
     arena: stage.optional ? null : sector.arena,
-    finale: stage.optional ? null : sector.finale
+    finale: stage.optional ? null : sector.finale,
+    setPiece: stage.optional ? null : sector.setPiece
   };
 }
 

@@ -553,6 +553,13 @@ Work order 091 audit and implementation:
 - Route subsystem damage, chain reactions, disablement, destruction, rewards, and cleanup through typed set-piece events so simultaneous hits cannot duplicate outcomes.
 - Boss arena locks and hazard suppression remain separate policies. Set pieces may request those policies but must not bypass the fresh post-lock hazard telegraph rule.
 
+Work order 096 implementation:
+
+- `src/content/setPieces.ts` owns seven shared subsystem templates and three actor definitions. Each actor declares stable component/stage ids, dependencies, collision silhouettes, rewards, a fixed safe lane, a scroll anchor, a reinforcement formation, a boss-lock policy, and actor-local caps.
+- `src/game/SetPiece.ts` converts those definitions into one runtime state with dependency-gated targets and idempotent component, stage, and completion events. Area damage snapshots the targetable layer before applying one bomb/hazard event, so a single broad hit cannot tunnel through multiple dependency stages.
+- `CombatState` remains the accounting boundary. Weapon/special/bomb/hazard damage, contact pushout, loose-currency scatter, objective credit, capped turret shots, bounded hangar formations, and result summaries all consume the actor state. Destroyed subsystems stop future output; completed finale state releases the existing boss arena rather than replacing it.
+- Canvas rendering consumes component screen states derived from the same 640x720 scroll transform used by collision. High contrast changes colors and labels; reduced motion and performance mode remove glow/detail only.
+
 ### Factions, rivals, and crew
 
 - A run-local `FactionCampaign` should fold typed mission/player events into compact faction state. Generated later-node options consume that state through explicit deterministic inputs and named RNG forks.

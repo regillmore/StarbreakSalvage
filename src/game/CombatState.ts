@@ -16,6 +16,7 @@ import { FACTIONS, getFactionById, type FactionId } from '../content/factions';
 import { getEnemyFormationById, type EnemyFormationId } from '../content/enemyFormations';
 import { getEnemyVariantById, type EnemyVariantId } from '../content/enemyVariants';
 import type { ItemTag } from '../content/items';
+import { getSetPieceById } from '../content/setPieces';
 import type { ShipStats, WeaponId } from '../content/ships';
 import { getWeaponById, type WeaponDefinition } from '../content/weapons';
 import { clamp, type Vector2 } from '../core/math';
@@ -52,6 +53,21 @@ import {
 } from './LooseCurrency';
 import { getItemNames, type ItemInstance } from './Rewards';
 import type { MissionObjectiveResultSnapshot } from './ObjectiveDirector';
+import {
+  createSetPieceReinforcementSpawns,
+  createSetPieceState,
+  damageSetPieceComponent,
+  damageSetPieceComponentsInRadius as damageActorComponentsInRadius,
+  damageSetPieceComponentsInRect as damageActorComponentsInRect,
+  getActiveSetPieceComponents,
+  getSetPieceComponentRect,
+  getSetPieceComponentScreenY,
+  setPieceComponentOverlapsCircle,
+  updateSetPieceState,
+  type SetPiecePlan,
+  type SetPieceRuntimeEvent,
+  type SetPieceState
+} from './SetPiece';
 
 export type ProjectileOwner = 'player' | 'enemy';
 export type PickupKind = 'credit' | 'salvage';
@@ -121,6 +137,7 @@ export interface ProjectileState {
   readonly procDepth: number;
   readonly environmentDamageSource?: EnvironmentObjectDamageSource;
   readonly factionId?: FactionId;
+  readonly setPieceSourceId?: string;
 }
 
 export interface EnemyState {
@@ -259,6 +276,12 @@ export interface CombatStats {
   readonly environmentObjectsDestroyed: number;
   readonly environmentRewardsDropped: number;
   readonly environmentChainReactions: number;
+  readonly setPieceComponentsDestroyed: number;
+  readonly setPieceStagesCompleted: number;
+  readonly setPiecesCompleted: number;
+  readonly setPieceRewardsDropped: number;
+  readonly setPieceProjectilesFired: number;
+  readonly setPieceReinforcementsSpawned: number;
 }
 
 export interface CombatState {
@@ -281,6 +304,7 @@ export interface CombatState {
   telegraphs: TelegraphState[];
   pickups: PickupState[];
   environmentObjects: EnvironmentObjectState[];
+  setPiece: SetPieceState | null;
   effects: CombatEffectState[];
   grazedProjectileIds: Set<number>;
   formationRewardsClaimed: Set<string>;
@@ -341,6 +365,13 @@ export interface CombatRunResult {
   readonly missionObjective?: MissionObjectiveResultSnapshot;
   readonly itemTriggers: number;
   readonly itemNames: readonly string[];
+  readonly setPiece?: {
+    readonly name: string;
+    readonly completed: boolean;
+    readonly destroyedComponents: number;
+    readonly totalComponents: number;
+    readonly stagesCompleted: number;
+  };
 }
 
 export interface CombatEntityCounts {
@@ -364,6 +395,10 @@ export interface CombatEntityCounts {
   readonly environmentObjects: number;
   readonly destructibles: number;
   readonly obstacles: number;
+  readonly setPieceComponents?: number;
+  readonly setPieceTargets?: number;
+  readonly setPieceProjectiles?: number;
+  readonly setPieceProjectileCap?: number;
 }
 
 const PLAYER_DAMAGE_INVULNERABILITY_SECONDS = 0.55;
@@ -417,6 +452,7 @@ export interface CombatStateOptions {
   readonly sectorIndex?: number;
   readonly sectorId?: string;
   readonly environmentObjectPlan?: EnvironmentObjectPlacementPlan | null;
+  readonly setPiecePlan?: SetPiecePlan | null;
   readonly looseCurrencyPlan?: LooseCurrencyPlan | null;
   readonly engineering?: EngineeringCombatProfile | null;
 }
@@ -477,6 +513,7 @@ export function createCombatState(
     telegraphs: [],
     pickups: [],
     environmentObjects: [],
+    setPiece: createSetPieceState(options.setPiecePlan ?? null),
     effects: [],
     grazedProjectileIds: new Set<number>(),
     formationRewardsClaimed: new Set<string>(),
@@ -515,7 +552,13 @@ export function createCombatState(
       enemyProjectilesCancelled: 0,
       environmentObjectsDestroyed: 0,
       environmentRewardsDropped: 0,
-      environmentChainReactions: 0
+      environmentChainReactions: 0,
+      setPieceComponentsDestroyed: 0,
+      setPieceStagesCompleted: 0,
+      setPiecesCompleted: 0,
+      setPieceRewardsDropped: 0,
+      setPieceProjectilesFired: 0,
+      setPieceReinforcementsSpawned: 0
     },
     ended: false
   };
@@ -559,6 +602,10 @@ export function updateCombatState(
   updateTelegraphs(state, safeDt);
   updateCombatEffects(state, safeDt);
   updateEnvironmentObjects(state, safeDt);
+  if (state.setPiece) {
+    updateSetPieceState(state.setPiece, safeDt);
+    updateSetPieceSubsystems(state, bounds);
+  }
   spawnDueLooseCurrency(state, bounds);
   updatePickups(state, safeDt, bounds);
   resolveGraze(state);
@@ -671,6 +718,9 @@ export function spawnBoss(
     state.projectiles = [];
     state.telegraphs = [];
     state.environmentObjects = [];
+    if (state.setPiece && !state.setPiece.completed) {
+      state.setPiece = null;
+    }
     state.nextSpawnIndex = state.spawnSchedule.length;
   }
 
@@ -1289,6 +1339,7 @@ export function prepareDebugLongScrollScenario(state: CombatState, scrollDistanc
   state.effects = [];
   state.pickups = [];
   state.environmentObjects = [];
+  state.setPiece = null;
   state.boss = null;
   state.bossSpawned = false;
   state.nextSpawnIndex = state.spawnSchedule.length;
@@ -1313,6 +1364,7 @@ export function getCombatEntityCounts(state: CombatState): CombatEntityCounts {
   }
 
   const environmentObjects = getActiveEnvironmentObjects(state);
+  const setPieceComponents = getActiveSetPieceComponents(state.setPiece, state.scrollDistance);
   const looseCurrency = summarizeLooseCurrencyPickups(state.pickups);
 
   for (const object of environmentObjects) {
@@ -1323,6 +1375,9 @@ export function getCombatEntityCounts(state: CombatState): CombatEntityCounts {
 
   const obstacles = environmentObjects.length - destructibles;
   const enemyProjectiles = state.projectiles.length - playerProjectiles;
+  const setPieceProjectiles = state.projectiles.filter(
+    (projectile) => projectile.setPieceSourceId !== undefined
+  ).length;
   const pickupsAndEffects = state.pickups.length + state.effects.length;
   const boss = Number(state.boss !== null);
 
@@ -1335,7 +1390,8 @@ export function getCombatEntityCounts(state: CombatState): CombatEntityCounts {
       state.pickups.length +
       state.telegraphs.length +
       state.effects.length +
-      environmentObjects.length,
+      environmentObjects.length +
+      setPieceComponents.length,
     player: 1,
     enemies: state.enemies.length,
     boss,
@@ -1354,7 +1410,15 @@ export function getCombatEntityCounts(state: CombatState): CombatEntityCounts {
     telegraphs: state.telegraphs.length,
     environmentObjects: environmentObjects.length,
     destructibles,
-    obstacles
+    obstacles,
+    ...(state.setPiece
+      ? {
+          setPieceComponents: setPieceComponents.length,
+          setPieceTargets: setPieceComponents.filter((component) => component.targetable).length,
+          setPieceProjectiles,
+          setPieceProjectileCap: state.setPiece.plan.caps.projectiles
+        }
+      : {})
   };
 }
 
@@ -1384,8 +1448,70 @@ export function createCombatRunResult(
     damageTaken: state.stats.damageTaken,
     remainingHull: state.player.hull,
     itemTriggers: state.stats.itemTriggers,
-    itemNames: getItemNames(state.items)
+    itemNames: getItemNames(state.items),
+    ...(state.setPiece
+      ? {
+          setPiece: {
+            name: state.setPiece.plan.name,
+            completed: state.setPiece.completed,
+            destroyedComponents: state.stats.setPieceComponentsDestroyed,
+            totalComponents: state.setPiece.components.length,
+            stagesCompleted: state.stats.setPieceStagesCompleted
+          }
+        }
+      : {})
   };
+}
+
+export function damageSetPieceComponentsInRadius(
+  state: CombatState,
+  x: number,
+  y: number,
+  radius: number,
+  source: EnvironmentObjectDamageSource,
+  damage: number
+): number {
+  if (source === 'chainReaction') {
+    return 0;
+  }
+
+  const events = damageActorComponentsInRadius(
+    state.setPiece,
+    state.scrollDistance,
+    x,
+    y,
+    radius,
+    source,
+    damage
+  );
+  applySetPieceRuntimeEvents(state, events);
+  return events.filter((event) => event.type === 'componentDestroyed').length;
+}
+
+export function damageSetPieceComponentsInRect(
+  state: CombatState,
+  rect: {
+    readonly left: number;
+    readonly top: number;
+    readonly right: number;
+    readonly bottom: number;
+  },
+  source: EnvironmentObjectDamageSource,
+  damage: number
+): number {
+  if (source === 'chainReaction') {
+    return 0;
+  }
+
+  const events = damageActorComponentsInRect(
+    state.setPiece,
+    state.scrollDistance,
+    rect,
+    source,
+    damage
+  );
+  applySetPieceRuntimeEvents(state, events);
+  return events.filter((event) => event.type === 'componentDestroyed').length;
 }
 
 export function applyPlayerDamage(state: CombatState, damage: number): void {
@@ -1481,6 +1607,123 @@ function updateEnvironmentObjects(state: CombatState, dt: number): void {
     object.hitFlashSeconds = Math.max(0, object.hitFlashSeconds - dt);
     object.hazardCooldownSeconds = Math.max(0, object.hazardCooldownSeconds - dt);
   }
+}
+
+function updateSetPieceSubsystems(state: CombatState, bounds: CombatBounds): void {
+  const setPiece = state.setPiece;
+
+  if (
+    !setPiece ||
+    setPiece.completed ||
+    state.scrollDistance < setPiece.plan.anchorDistance - 100
+  ) {
+    return;
+  }
+
+  for (const component of getActiveSetPieceComponents(setPiece, state.scrollDistance)) {
+    if (!component.targetable || component.destroyed || component.subsystemCooldownSeconds > 0) {
+      continue;
+    }
+
+    if (component.kind === 'turret') {
+      fireSetPieceTurret(state, component.id);
+    } else if (component.kind === 'hangar' && !component.subsystemTriggered) {
+      launchSetPieceReinforcements(state, bounds, component.id);
+    }
+  }
+}
+
+function fireSetPieceTurret(state: CombatState, componentId: string): void {
+  const setPiece = state.setPiece;
+  const component = setPiece?.components.find((candidate) => candidate.id === componentId);
+
+  if (!setPiece || !component) {
+    return;
+  }
+
+  const actorProjectileCount = state.projectiles.filter(
+    (projectile) => projectile.setPieceSourceId === setPiece.plan.id
+  ).length;
+
+  if (actorProjectileCount >= setPiece.plan.caps.projectiles) {
+    return;
+  }
+
+  const definition = getSetPieceById(setPiece.plan.definitionId);
+  const y = getSetPieceComponentScreenY(state.scrollDistance, component);
+  const dx = state.player.x - component.x;
+  const dy = state.player.y - y;
+  const distance = Math.max(1, Math.hypot(dx, dy));
+  const speed = 215;
+
+  state.projectiles.push({
+    id: getNextEntityId(state),
+    owner: 'enemy',
+    x: component.x,
+    y,
+    vx: (dx / distance) * speed,
+    vy: (dy / distance) * speed,
+    radius: 6,
+    damage: 1,
+    ttl: 4,
+    tags: ['plasma'],
+    procDepth: 0,
+    factionId: definition.factionId,
+    setPieceSourceId: setPiece.plan.id
+  });
+  component.subsystemCooldownSeconds = 1.3 + (component.x % 5) * 0.04;
+  state.stats = {
+    ...state.stats,
+    setPieceProjectilesFired: state.stats.setPieceProjectilesFired + 1
+  };
+}
+
+function launchSetPieceReinforcements(
+  state: CombatState,
+  bounds: CombatBounds,
+  componentId: string
+): void {
+  const setPiece = state.setPiece;
+  const component = setPiece?.components.find((candidate) => candidate.id === componentId);
+
+  if (!setPiece || !component || component.subsystemTriggered) {
+    return;
+  }
+
+  component.subsystemTriggered = true;
+  const spawns = createSetPieceReinforcementSpawns(setPiece.plan).slice(
+    0,
+    setPiece.plan.caps.reinforcementEnemies
+  );
+
+  for (const spawn of spawns) {
+    const x = clamp(spawn.xRatio, 0.1, 0.9) * bounds.width;
+    const maxHull = spawn.hull + state.enemyHullBonus;
+    state.enemies.push({
+      id: getNextEntityId(state),
+      factionId: spawn.factionId,
+      variantId: null,
+      formationId: spawn.formationId ?? null,
+      formationInstanceId: spawn.formationInstanceId ?? null,
+      formationLabel: spawn.formationLabel ?? null,
+      formationMemberIndex: spawn.formationMemberIndex ?? null,
+      formationMemberCount: spawn.formationMemberCount ?? null,
+      x,
+      y: -24,
+      radius: 17,
+      hull: maxHull,
+      maxHull,
+      drift: (spawn.xRatio - 0.5) * 32,
+      targetY: spawn.targetY,
+      homeX: x,
+      fireCooldown: Math.max(0.35, spawn.fireDelay * state.enemyFireDelayMultiplier)
+    });
+  }
+
+  state.stats = {
+    ...state.stats,
+    setPieceReinforcementsSpawned: state.stats.setPieceReinforcementsSpawned + spawns.length
+  };
 }
 
 function isEnvironmentObjectActive(state: CombatState, object: EnvironmentObjectState): boolean {
@@ -1652,6 +1895,84 @@ function spawnEnvironmentObjectRewardPickups(
       debugLabel: object.debugLabel
     })
   );
+}
+
+function applySetPieceRuntimeEvents(
+  state: CombatState,
+  events: readonly SetPieceRuntimeEvent[]
+): void {
+  const setPiece = state.setPiece;
+
+  if (!setPiece || events.length === 0) {
+    return;
+  }
+
+  let droppedPickups = 0;
+
+  for (const event of events) {
+    const screenY = event.y + state.scrollDistance - setPiece.plan.anchorDistance;
+    const rewards = [
+      { kind: 'credits' as const, value: event.credits },
+      { kind: 'salvage' as const, value: event.salvage }
+    ];
+
+    for (const reward of rewards) {
+      const remainingPickupBudget = Math.max(
+        0,
+        setPiece.plan.caps.rewardPickups - state.stats.setPieceRewardsDropped - droppedPickups
+      );
+
+      if (reward.value <= 0 || remainingPickupBudget <= 0) {
+        continue;
+      }
+
+      droppedPickups += spawnLooseCurrencySpecs(
+        state,
+        createLooseCurrencyScatter({
+          seed: state.seed,
+          sourceId: `${event.id}:${reward.kind}`,
+          source: 'destructible',
+          x: event.x,
+          y: screenY,
+          worldDistance: state.scrollDistance,
+          credits: reward.kind === 'credits' ? reward.value : 0,
+          salvage: reward.kind === 'salvage' ? reward.value : 0,
+          maxPickups: 1,
+          debugLabel: event.label
+        })
+      );
+    }
+
+    if (state.effects.length < MAX_ENVIRONMENT_FEEDBACK_EFFECTS) {
+      state.effects.push({
+        id: getNextEntityId(state),
+        kind: event.type === 'componentDestroyed' ? 'environmentBreak' : 'chainReaction',
+        x: event.x,
+        y: screenY,
+        radius:
+          event.type === 'setPieceCompleted' ? 108 : event.type === 'stageCompleted' ? 72 : 48,
+        ttl: event.type === 'setPieceCompleted' ? 0.58 : 0.3,
+        maxTtl: event.type === 'setPieceCompleted' ? 0.58 : 0.3
+      });
+    }
+  }
+
+  state.stats = {
+    ...state.stats,
+    environmentObjectsDestroyed:
+      state.stats.environmentObjectsDestroyed +
+      events.filter((event) => event.type === 'componentDestroyed').length,
+    setPieceComponentsDestroyed:
+      state.stats.setPieceComponentsDestroyed +
+      events.filter((event) => event.type === 'componentDestroyed').length,
+    setPieceStagesCompleted:
+      state.stats.setPieceStagesCompleted +
+      events.filter((event) => event.type === 'stageCompleted').length,
+    setPiecesCompleted:
+      state.stats.setPiecesCompleted +
+      events.filter((event) => event.type === 'setPieceCompleted').length,
+    setPieceRewardsDropped: state.stats.setPieceRewardsDropped + droppedPickups
+  };
 }
 
 function triggerEnvironmentChainReaction(
@@ -1839,6 +2160,46 @@ function resolveEnvironmentObjectPlayerCollision(
   }
 }
 
+function resolveSetPiecePlayerCollision(state: CombatState, safeFrame: CombatSafeFrame): void {
+  const setPiece = state.setPiece;
+
+  if (!setPiece) {
+    return;
+  }
+
+  const safeLaneCenter = (setPiece.plan.safeLane.minX + setPiece.plan.safeLane.maxX) / 2;
+
+  for (const component of getActiveSetPieceComponents(setPiece, state.scrollDistance)) {
+    if (
+      !component.blocksMovement ||
+      !setPieceComponentOverlapsCircle(
+        state.scrollDistance,
+        component,
+        state.player.x,
+        state.player.y,
+        state.player.radius
+      )
+    ) {
+      continue;
+    }
+
+    const rect = getSetPieceComponentRect(state.scrollDistance, component);
+    const pushX =
+      safeLaneCenter < component.x
+        ? rect.left - state.player.radius - ENVIRONMENT_CONTACT_PUSH_EPSILON
+        : rect.right + state.player.radius + ENVIRONMENT_CONTACT_PUSH_EPSILON;
+    state.player.x = clamp(
+      pushX,
+      safeFrame.x + state.player.radius,
+      safeFrame.x + safeFrame.width - state.player.radius
+    );
+
+    if (component.contactDamage > 0) {
+      damagePlayer(state, component.contactDamage);
+    }
+  }
+}
+
 function pushPlayerOutOfCircleObject(
   state: CombatState,
   object: EnvironmentObjectState,
@@ -1997,6 +2358,7 @@ function updatePlayer(
     safeFrame.y + safeFrame.height - player.radius
   );
   resolveEnvironmentObjectPlayerCollision(state, safeFrame);
+  resolveSetPiecePlayerCollision(state, safeFrame);
   player.fireCooldown = Math.max(0, player.fireCooldown - dt);
   player.weaponOverheatSeconds = Math.max(0, player.weaponOverheatSeconds - dt);
   ventWeaponHeat(state, dt);
@@ -2297,6 +2659,14 @@ function activateBomb(state: CombatState, bounds: CombatBounds): void {
   }
 
   damageEnvironmentObjectsInRadius(
+    state,
+    player.x,
+    player.y,
+    Math.max(1, bombPayload.effectRadius),
+    'bomb',
+    Math.max(0, bombPayload.damage)
+  );
+  damageSetPieceComponentsInRadius(
     state,
     player.x,
     player.y,
@@ -2738,6 +3108,36 @@ function resolveCombatCollisions(state: CombatState): void {
       if (boss && !projectileIdsToRemove.has(projectile.id) && circlesOverlap(projectile, boss)) {
         damageBossWithProjectile(state, boss, projectile);
         projectileIdsToRemove.add(projectile.id);
+      }
+
+      if (!projectileIdsToRemove.has(projectile.id)) {
+        for (const component of getActiveSetPieceComponents(state.setPiece, state.scrollDistance)) {
+          if (
+            !setPieceComponentOverlapsCircle(
+              state.scrollDistance,
+              component,
+              projectile.x,
+              projectile.y,
+              projectile.radius
+            )
+          ) {
+            continue;
+          }
+
+          if (state.setPiece) {
+            applySetPieceRuntimeEvents(
+              state,
+              damageSetPieceComponent(
+                state.setPiece,
+                component.id,
+                projectile.environmentDamageSource === 'special' ? 'special' : 'weapon',
+                projectile.damage
+              )
+            );
+          }
+          projectileIdsToRemove.add(projectile.id);
+          break;
+        }
       }
 
       if (!projectileIdsToRemove.has(projectile.id)) {

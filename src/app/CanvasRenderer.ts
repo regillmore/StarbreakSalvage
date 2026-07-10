@@ -39,6 +39,12 @@ import type { CombatBounds } from '../game/CombatState';
 import { getPlayerShipCueState, type PlayerShipCueState } from './ShipCombatCues';
 import { calculateViewportLayout, type ViewportLayout } from './ViewportLayout';
 import type { PlayerDestructionPresentation } from '../game/PlayerDestruction';
+import {
+  getSetPieceComponentTemplate,
+  type SetPieceCollisionShape,
+  type SetPieceComponentKind,
+  type SetPieceComponentTemplateId
+} from '../content/setPieces';
 
 const BACKGROUND_SEED = 'STARBREAK-SALVAGE-SHELL';
 const DEFAULT_PLAYER_SHIP_APPEARANCE: ShipAppearance = {
@@ -147,14 +153,24 @@ export interface EnvironmentObjectRenderState {
   readonly debugLabel: string;
 }
 
+export interface SetPieceComponentRenderState {
+  readonly templateId: SetPieceComponentTemplateId;
+  readonly kind: SetPieceComponentKind;
+  readonly collisionShape: SetPieceCollisionShape;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly radius: number;
+  readonly hull: number;
+  readonly maxHull: number;
+  readonly targetable: boolean;
+  readonly hitFlashSeconds: number;
+}
+
 export interface CombatEffectRenderState {
   readonly kind:
-    | 'special'
-    | 'bomb'
-    | 'graze'
-    | 'environmentHit'
-    | 'environmentBreak'
-    | 'chainReaction';
+    'special' | 'bomb' | 'graze' | 'environmentHit' | 'environmentBreak' | 'chainReaction';
   readonly x: number;
   readonly y: number;
   readonly radius: number;
@@ -1354,6 +1370,66 @@ export class CanvasRenderer {
     context.restore();
   }
 
+  public paintSetPieceComponent(component: SetPieceComponentRenderState): void {
+    const context = this.context;
+    const template = getSetPieceComponentTemplate(component.templateId);
+    const highContrast = this.settings.bulletContrast === 'high';
+    const color = highContrast
+      ? template.rendering.highContrastColor
+      : template.rendering.normalColor;
+    const healthRatio = clamp(component.hull / Math.max(1, component.maxHull), 0, 1);
+    const halfWidth =
+      component.collisionShape === 'circle' ? component.radius : component.width / 2;
+    const halfHeight =
+      component.collisionShape === 'circle' ? component.radius : component.height / 2;
+
+    context.save();
+    context.translate(component.x, component.y);
+    context.fillStyle = color;
+    context.strokeStyle = component.hitFlashSeconds > 0 ? '#ffffff' : color;
+    context.lineWidth = component.targetable ? 3 : 5;
+    context.globalAlpha = component.targetable ? (highContrast ? 0.58 : 0.46) : 0.24;
+    context.shadowColor = color;
+    context.shadowBlur =
+      this.settings.reducedMotion || this.settings.performanceMode
+        ? 0
+        : component.hitFlashSeconds > 0
+          ? 16
+          : 8;
+
+    if (component.collisionShape === 'circle') {
+      context.beginPath();
+      context.arc(0, 0, component.radius, 0, Math.PI * 2);
+      context.fill();
+      context.globalAlpha = 1;
+      context.stroke();
+    } else {
+      context.fillRect(-halfWidth, -halfHeight, component.width, component.height);
+      context.globalAlpha = 1;
+      context.strokeRect(-halfWidth, -halfHeight, component.width, component.height);
+    }
+
+    if (!this.settings.performanceMode) {
+      context.shadowBlur = 0;
+      context.globalAlpha = highContrast ? 1 : 0.82;
+      context.fillStyle = highContrast ? '#03050d' : '#f8fbff';
+      context.font = 'bold 10px ui-monospace, monospace';
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.fillText(component.targetable ? template.rendering.glyph : 'LOCK', 0, 0);
+    }
+
+    context.shadowBlur = 0;
+    context.globalAlpha = 1;
+    context.strokeStyle = highContrast ? '#ffef5f' : component.targetable ? '#7cf7ff' : '#6f7a85';
+    context.lineWidth = 3;
+    context.beginPath();
+    context.moveTo(-halfWidth, halfHeight + 7);
+    context.lineTo(-halfWidth + halfWidth * 2 * healthRatio, halfHeight + 7);
+    context.stroke();
+    context.restore();
+  }
+
   public paintPickup(pickup: PickupRenderState): void {
     const context = this.context;
     const velocityCues = getVelocityCueState(this.settings);
@@ -1407,8 +1483,7 @@ export class CanvasRenderer {
     if (velocityCues.impactStreakAlpha > 0) {
       context.globalAlpha = alpha * velocityCues.impactStreakAlpha;
       context.strokeStyle = color;
-      context.lineWidth =
-        effect.kind === 'bomb' || effect.kind === 'environmentBreak' ? 3 : 2;
+      context.lineWidth = effect.kind === 'bomb' || effect.kind === 'environmentBreak' ? 3 : 2;
       for (const offset of [-0.48, 0, 0.48]) {
         context.beginPath();
         context.moveTo(offset * radius * 0.58, -radius * 0.8);
@@ -1420,8 +1495,7 @@ export class CanvasRenderer {
     context.globalAlpha = effect.kind === 'graze' ? alpha * 0.78 : alpha * 0.62;
     context.strokeStyle = color;
     context.fillStyle = color;
-    context.lineWidth =
-      effect.kind === 'bomb' || effect.kind === 'environmentBreak' ? 4 : 2;
+    context.lineWidth = effect.kind === 'bomb' || effect.kind === 'environmentBreak' ? 4 : 2;
     context.shadowColor = color;
     context.shadowBlur = this.settings.reducedMotion ? 0 : 14;
     context.beginPath();
@@ -1665,8 +1739,7 @@ export class CanvasRenderer {
         y < rect.bottom;
         y += style.patternStride + 34, index += 1
       ) {
-        const x =
-          rect.centerX + (index % 2 === 0 ? -rect.width * 0.22 : rect.width * 0.22) + drift;
+        const x = rect.centerX + (index % 2 === 0 ? -rect.width * 0.22 : rect.width * 0.22) + drift;
         context.beginPath();
         context.arc(x, y, 7, 0, Math.PI * 2);
         context.stroke();
@@ -1689,7 +1762,11 @@ export class CanvasRenderer {
       context.quadraticCurveTo(rect.centerX, frontY - 34, rect.right, frontY + 8);
       context.stroke();
       context.globalAlpha *= 0.82;
-      for (let y = rect.top + 34, index = 0; y < rect.bottom; y += style.patternStride, index += 1) {
+      for (
+        let y = rect.top + 34, index = 0;
+        y < rect.bottom;
+        y += style.patternStride, index += 1
+      ) {
         const x = rect.left + ((index * 41) % Math.max(1, rect.width));
         context.beginPath();
         context.moveTo(x - rect.width * 0.22, y + 10);
@@ -1705,7 +1782,11 @@ export class CanvasRenderer {
 
     if (style.behaviorKind === 'plasmaCurtain') {
       context.setLineDash([]);
-      for (let y = rect.top + 30, index = 0; y < rect.bottom; y += style.patternStride, index += 1) {
+      for (
+        let y = rect.top + 30, index = 0;
+        y < rect.bottom;
+        y += style.patternStride, index += 1
+      ) {
         const x = rect.left + ((index * 37) % Math.max(1, rect.width));
         context.beginPath();
         context.moveTo(x - 14, y - 6);

@@ -112,6 +112,12 @@ export class RunSummaryScene implements Scene {
       ['Sectors Cleared', `${getSectorsCleared(this.run, this.routeHistory, this.result)}`],
       ['Destroyed', `${this.result?.enemiesDestroyed ?? 0}`],
       ['Bosses', `${this.result?.bossesDefeated ?? 0}`],
+      [
+        'Set Piece',
+        this.result?.setPiece
+          ? `${this.result.setPiece.name} | ${this.result.setPiece.completed ? 'neutralized' : 'incomplete'} | components ${this.result.setPiece.destroyedComponents}/${this.result.setPiece.totalComponents} | stages ${this.result.setPiece.stagesCompleted}`
+          : 'No set-piece contract in final sector'
+      ],
       ['Credits', `${this.result?.credits ?? 0}`],
       ['Salvage', `${this.result?.salvage ?? 0} kg`],
       ['Damage Taken', `${this.result?.damageTaken ?? 0}`],

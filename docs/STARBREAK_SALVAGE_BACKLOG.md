@@ -1760,7 +1760,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 096.
+- Implemented in work order 096. Seven shared component templates compose three original capital/station/wreck-convoy contracts with dependency-gated targets, exterior/interior/destruction stages, fixed safe lanes, deterministic one-shot rewards, objective credit, bounded turret/hangar pressure, hazard/bomb/special integration, scroll anchors, public debug/read models, and finale boss-lock release. Accessibility modes preserve collision geometry and stage timing while simplifying presentation; unit, deterministic, and Chromium coverage is green.
 
 ### BF2 - Faction campaigns and rivals
 

@@ -45,6 +45,7 @@ import {
 } from './SectorFeatures';
 import { createSectorObjectivePlan, type SectorObjectivePlan } from './SectorObjectives';
 import { createSecondActFinalePlan, type SecondActFinalePlan } from './SecondActFinale';
+import { createSetPiecePlan, type SetPiecePlan } from './SetPiece';
 import { createLegacyStartingLoadout, type ResolvedShipLoadout } from './ShipLoadout';
 import { resolveRunUpgradeEffects, type RunUpgradeEffects } from './UpgradeEffects';
 import {
@@ -109,6 +110,7 @@ export interface SectorRoute {
   readonly features: SectorFeaturePlan;
   readonly arena: BossArenaPlan | null;
   readonly finale: SecondActFinalePlan | null;
+  readonly setPiece: SetPiecePlan | null;
   readonly rewardPoolSeed: string;
   readonly shopSeed: string;
 }
@@ -383,6 +385,11 @@ function generateSectorRoute(
     bossFactionId: boss.factionId,
     rng: rng.fork('finale')
   });
+  const setPiece = createSetPiecePlan({
+    sectorIndex: index,
+    scrollLength: scroll.length,
+    bossArena: arena
+  });
 
   return {
     index,
@@ -402,6 +409,7 @@ function generateSectorRoute(
     features,
     arena,
     finale,
+    setPiece,
     rewardPoolSeed: rng.fork('reward-pool').seedLabel,
     shopSeed: rng.fork('shop').seedLabel
   };
@@ -813,7 +821,18 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
         primitiveCount: sector.background.primitiveCount
       },
       features: summarizeSectorFeaturePlan(sector.features),
-      ...(sector.arena ? { arena: summarizeBossArenaPlan(sector.arena) } : {})
+      ...(sector.arena ? { arena: summarizeBossArenaPlan(sector.arena) } : {}),
+      ...(sector.setPiece
+        ? {
+            setPiece: {
+              id: sector.setPiece.definitionId,
+              anchorDistance: sector.setPiece.anchorDistance,
+              safeLane: sector.setPiece.safeLane,
+              bossLock: sector.setPiece.bossLock,
+              reinforcementFormation: sector.setPiece.reinforcement.formationId
+            }
+          }
+        : {})
     }))
   };
 }

@@ -109,6 +109,8 @@ describe('MissionDirector', () => {
     );
     expect(projection.sector.scroll.length).toBeLessThan(run.sectors[0]!.scroll.length);
     expect(projection.sector.scroll.startOffset).toBeGreaterThanOrEqual(CHECKPOINT.worldOffset);
+    expect(run.sectors[0]!.setPiece).not.toBeNull();
+    expect(projection.sector.setPiece).toBeNull();
     expect(projection.completionReason).toBe('sectorComplete');
 
     state = apply(schedule, state, {

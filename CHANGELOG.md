@@ -4,6 +4,7 @@
 
 ### Gameplay and UX
 
+- Added three reusable multi-part set-piece contracts: the Hecaton Ledger Ark capital ship, Bloom Spindle Exchange station, and Court Wreck-Train Crown convoy hulk. Their shield emitters, armor, turrets, hangars, engines, couplers, and weak points use dependency-gated targeting, exterior/interior/destruction stages, fixed 640x720 safe lanes, capped subsystem pressure, deterministic loose-currency rewards, objective accounting, and a finale boss lock, with a public `U` debug jump and accessibility-aware rendering.
 - Added data-driven sector objectives, deterministic directed wave schedules, HUD objective progress, and boss-gated late sectors.
 - Added first-pass special burst fire, bomb danger cancellation, deterministic graze charge, verb HUD readouts, and procedural cues for those verbs.
 - Added contract-specific ship stats, starting economy, weapon projectile patterns, heat/overheat reload behavior, and weapon HUD readouts.

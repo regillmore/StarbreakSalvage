@@ -142,6 +142,13 @@ import {
   formatSectorObjectiveVariantReadout
 } from '../game/SectorObjectives';
 import {
+  getActiveSetPieceComponents,
+  getSetPieceComponentScreenState,
+  getSetPieceDebugJumpDistance,
+  getSetPieceReadModel,
+  isSetPieceBossLockReleased
+} from '../game/SetPiece';
+import {
   createCombatFeedbackSnapshot,
   diffCombatFeedback,
   type CombatFeedbackCue
@@ -416,7 +423,16 @@ export class GameplayScene implements Scene {
     const state = this.getCombatState();
     const arenaBeforeScroll = this.updateBossArena(scrollState.distance, state);
 
-    advanceScrollState(scrollState, dt, arenaBeforeScroll.speedOverride ?? undefined);
+    const setPieceTravelLocked = Boolean(
+      state.setPiece &&
+      !state.setPiece.completed &&
+      scrollState.distance >= state.setPiece.plan.anchorDistance
+    );
+    advanceScrollState(
+      scrollState,
+      dt,
+      setPieceTravelLocked ? 0 : (arenaBeforeScroll.speedOverride ?? undefined)
+    );
 
     const arenaAfterScroll = this.updateBossArena(scrollState.distance, state);
     const feedbackBefore = createCombatFeedbackSnapshot(state);
@@ -483,9 +499,11 @@ export class GameplayScene implements Scene {
     }
 
     const progress = getObjectiveProgress(this.getWavePlan(), state);
-    const completionReason =
-      (progress.complete ? this.missionContext?.projection.completionReason : null) ??
-      getSectorCompletionReason(this.run, this.sectorIndex, progress);
+    const setPieceComplete = !state.setPiece || state.setPiece.completed;
+    const completionReason = setPieceComplete
+      ? ((progress.complete ? this.missionContext?.projection.completionReason : null) ??
+        getSectorCompletionReason(this.run, this.sectorIndex, progress))
+      : null;
 
     if (!this.sectorCompleted && completionReason) {
       this.sectorCompleted = true;
@@ -515,6 +533,12 @@ export class GameplayScene implements Scene {
 
     for (const object of getActiveEnvironmentObjects(state)) {
       renderer.paintEnvironmentObject(getEnvironmentObjectScreenState(state, object));
+    }
+
+    for (const component of getActiveSetPieceComponents(state.setPiece, state.scrollDistance)) {
+      renderer.paintSetPieceComponent(
+        getSetPieceComponentScreenState(state.scrollDistance, component)
+      );
     }
 
     for (const pickup of state.pickups) {
@@ -699,6 +723,21 @@ export class GameplayScene implements Scene {
       this.debugScenario = 'long-scroll';
       this.syncReadouts();
     }
+
+    if (action === 'debugSetPiece' && this.debugEnabled) {
+      const state = this.getCombatState();
+      const jumpDistance = getSetPieceDebugJumpDistance(state.setPiece?.plan ?? null);
+
+      if (jumpDistance !== null) {
+        const scroll = this.getScrollState();
+        setScrollDistance(scroll, jumpDistance, scroll.plan.baseSpeed);
+        state.scrollDistance = scroll.distance;
+        this.updateBossArena(scroll.distance, state);
+        this.sectorCompleted = false;
+        this.debugScenario = `set-piece:${state.setPiece?.plan.definitionId ?? 'none'}`;
+        this.syncReadouts();
+      }
+    }
   }
 
   public getRunResult(reason: 'abandoned' | 'debug' = 'abandoned'): CombatRunResult {
@@ -763,6 +802,7 @@ export class GameplayScene implements Scene {
     const itemStress = createItemLoadoutStressModel(combatState.items);
     const enemyRoles = createEnemyRolePressureSummary(combatState);
     const environmentStress = createEnvironmentStressDebugState(activeHazards, entityCounts);
+    const setPiece = getSetPieceReadModel(combatState.setPiece);
     const hudTheme = createHudThemeModel(
       this.contract.shipAppearance,
       getHudThemeOptions(this.uiRoot.ownerDocument)
@@ -816,6 +856,7 @@ export class GameplayScene implements Scene {
       items: itemStress,
       enemyRoles,
       environmentStress,
+      setPiece: setPiece ?? undefined,
       actPressure: createActPressureDebugState({
         model: this.getActPressureModel(),
         enemyRoles,
@@ -1002,6 +1043,7 @@ export class GameplayScene implements Scene {
     const wavePlan = this.getWavePlan();
     const engineering = createEngineeringCombatProfile(this.engineeringState);
 
+    const setPiecePlan = this.getCurrentSector().setPiece;
     this.combatState ??= createCombatState(this.getCombatBounds(), this.getCombatSeed(), {
       weaponId: engineering.weaponId,
       shipStats: this.shipStats,
@@ -1018,6 +1060,7 @@ export class GameplayScene implements Scene {
       sectorIndex: this.sectorIndex,
       sectorId: this.getCurrentSector().sectorId,
       environmentObjectPlan: this.getEnvironmentObjectPlan(),
+      setPiecePlan,
       looseCurrencyPlan: this.getLooseCurrencyPlan()
     });
     return this.combatState;
@@ -1284,7 +1327,8 @@ export class GameplayScene implements Scene {
 
     this.bossArenaUpdate = updateBossArenaState(this.getBossArenaState(), {
       distance,
-      supportComplete: supportProgress.supportComplete,
+      supportComplete:
+        supportProgress.supportComplete && isSetPieceBossLockReleased(state.setPiece),
       bossActive: state.boss !== null,
       bossAlreadySpawned: state.bossSpawned,
       bossDefeated: state.stats.bossesDefeated > 0
@@ -1331,7 +1375,15 @@ export class GameplayScene implements Scene {
       .filter((part): part is string => Boolean(part))
       .join(' | ');
     this.economyReadout.textContent = `Credits ${this.startingCredits + state.player.credits} | Salvage ${this.startingSalvage + state.player.salvage}`;
-    this.objectiveReadout.textContent = getObjectiveProgress(this.getWavePlan(), state).readout;
+    const setPiece = getSetPieceReadModel(state.setPiece);
+    this.objectiveReadout.textContent = [
+      getObjectiveProgress(this.getWavePlan(), state).readout,
+      setPiece
+        ? `${setPiece.name}: ${setPiece.stageLabel} | target ${setPiece.targetLabel} | ${setPiece.destroyedComponents}/${setPiece.totalComponents}`
+        : null
+    ]
+      .filter((part): part is string => Boolean(part))
+      .join(' | ');
     this.verbReadout.textContent = this.getVerbReadout(state);
     this.weaponReadout.textContent = this.getWeaponReadout(state);
     this.syncMeters(state);
@@ -1345,6 +1397,9 @@ export class GameplayScene implements Scene {
     this.warningReadout.textContent =
       state.telegraphs[0]?.label ??
       this.getActiveHazards()[0]?.hazard.label ??
+      (setPiece && setPiece.active
+        ? `${setPiece.stageLabel}; safe ${setPiece.safeLaneLabel}`
+        : null) ??
       formatBossArenaReadout(this.bossArenaUpdate.phase) ??
       'Warning clear';
     this.itemReadout.textContent = this.getBuildReadout(state);

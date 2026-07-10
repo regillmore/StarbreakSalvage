@@ -197,6 +197,7 @@ Current Phase 10 coverage:
 - Work order 091 adds graph/content validation, compact known-seed snapshots for `STARBREAK-SMOKE`, `LASER-TAX-404`, and `EXPEDITION-GRAPH-SMOKE`, fresh/progressed save-fingerprint variation, deterministic decision replay, broken-reference fixtures, compatibility progress tests, and a capacity assertion for 962 required-target seconds plus 1182 all-optional seconds.
 - Save tests migrate v4 records to v5, normalize missing expedition fields, and round-trip graph/path/decision/duration summary data. Existing act, sector, route, reward, shop, finale, and deterministic suites remain green.
 - The existing Chromium shell/narrow-HUD smoke now asserts the public expedition HUD and debug readouts. Work order 092 still needs browser paths that actually advance mission stages and select optional branches.
+- Work order 096 adds validation and unit coverage for three assemblies, shared template reuse, known sector/anchor selection, dependency order, one-shot stage/completion rewards, boss-lock release, fixed safe-lane geometry, viewport/settings parity, bomb/special/hazard damage, contact pushout, capped turret fire, cancellable hangar formation launches, objective accounting, and summary/debug read models. The main Chromium path verifies the Hecaton contract readout, public `U` jump, safe-lane telemetry, and fixed 640x720 world while all 11 existing smoke paths remain green.
 
 ## Known seed tests
 

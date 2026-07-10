@@ -168,6 +168,17 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   );
   await expect(page.locator('.debug-overlay')).toContainText(/Canvas \d+x\d+/);
   await expect(page.locator('.debug-overlay')).toContainText(/Safe \d+,\d+ \d+x\d+/);
+  await expect(page.getByTestId('objective-readout')).toContainText('Hecaton Ledger Ark');
+  await expect(page.locator('.debug-overlay')).toContainText(
+    /Set-piece Hecaton Ledger Ark exterior 0\/7 target Shield Emitter lane port maintenance lane/
+  );
+
+  await page.keyboard.press('U');
+  await expect(page.locator('.debug-overlay')).toContainText(
+    'Scenario set-piece:setpiece_ledger_hecaton'
+  );
+  await expect(page.getByTestId('distance-readout')).toContainText(/Distance [4-9]\d\d\//);
+  await expect(page.locator('.debug-overlay')).toContainText(/World 640x720/);
 
   const startPosition = await page.getByTestId('player-position').textContent();
   await page.keyboard.down('ArrowRight');

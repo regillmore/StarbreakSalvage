@@ -7,11 +7,7 @@ import type { ActiveSectorHazard } from '../../src/game/SectorFeatures';
 describe('createEnvironmentStressDebugState', () => {
   it('summarizes hazard labels, physical objects, loose currency, and budget status', () => {
     const summary = createEnvironmentStressDebugState(
-      [
-        createHazard('mine_belt'),
-        createHazard('salvage_storm'),
-        createHazard('mine_belt')
-      ],
+      [createHazard('mine_belt'), createHazard('salvage_storm'), createHazard('mine_belt')],
       createCounts({
         environmentObjects: 6,
         destructibles: 4,
@@ -100,6 +96,8 @@ function createCounts(overrides: Partial<CombatEntityCounts>): CombatEntityCount
     environmentObjects: 0,
     destructibles: 0,
     obstacles: 0,
+    setPieceComponents: 0,
+    setPieceTargets: 0,
     ...overrides
   };
 }
