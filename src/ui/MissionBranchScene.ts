@@ -48,8 +48,14 @@ export class MissionBranchScene implements Scene {
 
     const copy = document.createElement('p');
     copy.className = 'transition-copy';
-    copy.textContent =
-      'The primary operation is clear. Extract now or carry the current hull and build into an optional pressure lane.';
+    const hasOptional = this.options.some((option) => !option.default);
+    copy.textContent = `${this.mission.contractTitle}: ${
+      this.mission.latestOutcome ? `primary outcome ${this.mission.latestOutcome}. ` : ''
+    }${
+      hasOptional
+        ? 'Extract now or carry the current hull and build into an optional pressure lane.'
+        : 'The optional pressure lane is unavailable; bank the outcome and extract.'
+    }`;
 
     const grid = document.createElement('div');
     grid.className = 'route-grid';

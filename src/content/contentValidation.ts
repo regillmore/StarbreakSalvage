@@ -82,6 +82,21 @@ import {
   MISSION_STAGE_PROFILES,
   type MissionStageProfileDefinition
 } from './missions';
+import {
+  MISSION_BRANCH_POLICIES,
+  MISSION_CLEANUP_POLICIES,
+  MISSION_CONTRACTS,
+  MISSION_CREW_POLICIES,
+  MISSION_FAILURE_POLICIES,
+  MISSION_FACTION_POLICIES,
+  MISSION_OBJECTIVE_COMPARISONS,
+  MISSION_OBJECTIVE_METRICS,
+  MISSION_OUTCOME_EXITS,
+  MISSION_OBJECTIVE_VERBS,
+  MISSION_OBJECTIVES,
+  type MissionContractDefinition,
+  type MissionObjectiveDefinition
+} from './objectives';
 import { SECTORS, type SectorDefinition } from './sectors';
 import {
   SHIP_HUD_THEME_KEYS,
@@ -148,6 +163,8 @@ export interface ContentValidationInput {
   readonly environmentObjects?: readonly EnvironmentObjectDefinition[];
   readonly expeditionNodeProfiles?: readonly ExpeditionNodeProfileDefinition[];
   readonly missionStageProfiles?: readonly MissionStageProfileDefinition[];
+  readonly missionObjectives?: readonly MissionObjectiveDefinition[];
+  readonly missionContracts?: readonly MissionContractDefinition[];
   readonly factions?: readonly FactionDefinition[];
   readonly hazardZones?: readonly HazardZoneDefinition[];
   readonly items?: readonly ItemDefinition[];
@@ -174,6 +191,8 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const environmentObjects = input.environmentObjects ?? ENVIRONMENT_OBJECT_DEFINITIONS;
   const expeditionNodeProfiles = input.expeditionNodeProfiles ?? EXPEDITION_NODE_PROFILES;
   const missionStageProfiles = input.missionStageProfiles ?? MISSION_STAGE_PROFILES;
+  const missionObjectives = input.missionObjectives ?? MISSION_OBJECTIVES;
+  const missionContracts = input.missionContracts ?? MISSION_CONTRACTS;
   const factions = input.factions ?? FACTIONS;
   const hazardZones = input.hazardZones ?? HAZARD_ZONE_DEFINITIONS;
   const items = input.items ?? ITEMS;
@@ -308,6 +327,11 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     transitionPolicies: expeditionTransitionPolicies
   });
   validateMissionStageProfiles(errors, missionStageProfiles);
+  validateMissionObjectives(errors, missionObjectives);
+  validateMissionContracts(errors, missionContracts, missionObjectives, {
+    acts: canonicalActIds,
+    itemTags: tagRegistry
+  });
 
   if (items.length < 30) {
     errors.push('Content must define at least 30 items');
@@ -1079,6 +1103,145 @@ function validateMissionStageProfiles(
       }
       if (!profile.world.seedNamespace.trim()) {
         errors.push(`${owner} must define a seed namespace`);
+      }
+    }
+  }
+}
+
+function validateMissionObjectives(
+  errors: string[],
+  objectives: readonly MissionObjectiveDefinition[]
+): void {
+  const ids = new Set<string>();
+  const verbs = new Set<string>(MISSION_OBJECTIVE_VERBS);
+  const metrics = new Set<string>(MISSION_OBJECTIVE_METRICS);
+  const comparisons = new Set<string>(MISSION_OBJECTIVE_COMPARISONS);
+  const cleanupPolicies = new Set<string>(MISSION_CLEANUP_POLICIES);
+
+  for (const objective of objectives) {
+    const owner = `Mission objective ${objective.id}`;
+    if (ids.has(objective.id)) errors.push(`Duplicate mission objective id: ${objective.id}`);
+    ids.add(objective.id);
+    if (!objective.id.trim()) errors.push('Mission objective must have an id');
+    if (!objective.label.trim()) errors.push(`${owner} must have a label`);
+    if (!objective.hudVerb.trim()) errors.push(`${owner} must have HUD copy`);
+    if (!objective.summary.trim()) errors.push(`${owner} must have a summary`);
+    if (!verbs.has(objective.verb)) errors.push(`${owner} has invalid verb: ${objective.verb}`);
+    if (!cleanupPolicies.has(objective.cleanupPolicy)) {
+      errors.push(`${owner} has invalid cleanup policy: ${objective.cleanupPolicy}`);
+    }
+    if (
+      !Number.isFinite(objective.partialSuccessThreshold) ||
+      objective.partialSuccessThreshold <= 0 ||
+      objective.partialSuccessThreshold > 1
+    ) {
+      errors.push(`${owner} must have a partial-success threshold in (0, 1]`);
+    }
+    if (!objective.clauses.some((clause) => clause.required)) {
+      errors.push(`${owner} must have at least one required clause`);
+    }
+    const clauseIds = new Set<string>();
+    for (const clause of objective.clauses) {
+      if (clauseIds.has(clause.id)) errors.push(`${owner} has duplicate clause id: ${clause.id}`);
+      clauseIds.add(clause.id);
+      if (!metrics.has(clause.metric)) errors.push(`${owner} has invalid metric: ${clause.metric}`);
+      if (!comparisons.has(clause.comparison)) {
+        errors.push(`${owner} has invalid comparison: ${clause.comparison}`);
+      }
+      if (!Number.isFinite(clause.target) || clause.target < 0) {
+        errors.push(`${owner} clause ${clause.id} must have a non-negative target`);
+      }
+      if (
+        (clause.metric === 'enemyDefeatRatio' || clause.metric === 'travelRatio') &&
+        clause.target > 1
+      ) {
+        errors.push(`${owner} clause ${clause.id} ratio target cannot exceed 1`);
+      }
+      if (!clause.label.trim()) errors.push(`${owner} clause ${clause.id} must have a label`);
+    }
+    validatePositiveNumber(errors, owner, 'scroll length scale', objective.world.scrollLengthScale);
+    validatePositiveNumber(errors, owner, 'wave count scale', objective.world.waveCountScale);
+    if (
+      !Number.isInteger(objective.world.environmentTargetCount) ||
+      objective.world.environmentTargetCount <= 0
+    ) {
+      errors.push(`${owner} must have a positive environment target count`);
+    }
+    if (!['mixed', 'destructibles'].includes(objective.world.environmentMode)) {
+      errors.push(`${owner} has invalid environment mode: ${objective.world.environmentMode}`);
+    }
+    if (!['inherit', 'salvage', 'hazard'].includes(objective.world.looseCurrencyBias)) {
+      errors.push(`${owner} has invalid loose-currency bias: ${objective.world.looseCurrencyBias}`);
+    }
+    if (
+      !objective.successCopy.trim() ||
+      !objective.partialSuccessCopy.trim() ||
+      !objective.failureCopy.trim()
+    ) {
+      errors.push(`${owner} must define success, partial-success, and failure copy`);
+    }
+  }
+}
+
+function validateMissionContracts(
+  errors: string[],
+  contracts: readonly MissionContractDefinition[],
+  objectives: readonly MissionObjectiveDefinition[],
+  registries: { readonly acts: ReadonlySet<string>; readonly itemTags: ReadonlySet<string> }
+): void {
+  const ids = new Set<string>();
+  const objectiveIds = new Set(objectives.map((objective) => objective.id));
+  const branchPolicies = new Set<string>(MISSION_BRANCH_POLICIES);
+  const failurePolicies = new Set<string>(MISSION_FAILURE_POLICIES);
+  const factionPolicies = new Set<string>(MISSION_FACTION_POLICIES);
+  const crewPolicies = new Set<string>(MISSION_CREW_POLICIES);
+  const outcomeExits = new Set<string>(MISSION_OUTCOME_EXITS);
+
+  if (contracts.length < 8) errors.push('Content must define at least eight mission contracts');
+  for (const contract of contracts) {
+    const owner = `Mission contract ${contract.id}`;
+    if (ids.has(contract.id)) errors.push(`Duplicate mission contract id: ${contract.id}`);
+    ids.add(contract.id);
+    if (!contract.title.trim()) errors.push(`${owner} must have a title`);
+    if (!contract.summary.trim()) errors.push(`${owner} must have a summary`);
+    if (!objectiveIds.has(contract.primaryObjectiveId)) {
+      errors.push(`${owner} references missing primary objective: ${contract.primaryObjectiveId}`);
+    }
+    if (!objectiveIds.has(contract.optionalObjectiveId)) {
+      errors.push(
+        `${owner} references missing optional objective: ${contract.optionalObjectiveId}`
+      );
+    }
+    if (contract.eligibleActIds.length === 0) errors.push(`${owner} must target at least one act`);
+    for (const actId of contract.eligibleActIds) {
+      if (!registries.acts.has(actId)) errors.push(`${owner} references missing act: ${actId}`);
+    }
+    if (!branchPolicies.has(contract.branchPolicy)) {
+      errors.push(`${owner} has invalid branch policy: ${contract.branchPolicy}`);
+    }
+    if (!failurePolicies.has(contract.failurePolicy)) {
+      errors.push(`${owner} has invalid failure policy: ${contract.failurePolicy}`);
+    }
+    if (!factionPolicies.has(contract.factionPolicy)) {
+      errors.push(`${owner} has invalid faction policy: ${contract.factionPolicy}`);
+    }
+    if (!crewPolicies.has(contract.crewPolicy)) {
+      errors.push(`${owner} has invalid crew policy: ${contract.crewPolicy}`);
+    }
+    if (!contract.reliefCopy.trim() || !contract.routePreview.trim()) {
+      errors.push(`${owner} must define relief and route-preview copy`);
+    }
+    for (const outcome of ['success', 'partialSuccess', 'failure'] as const) {
+      const exit = contract.outcomeExits[outcome];
+      if (!outcomeExits.has(exit)) errors.push(`${owner} has invalid ${outcome} exit: ${exit}`);
+    }
+    for (const [outcome, rule] of Object.entries(contract.rewardPolicy)) {
+      if (rule.choiceBonus < 0 || rule.creditBonus < 0 || rule.salvageBonus < 0) {
+        errors.push(`${owner} has invalid ${outcome} reward rule`);
+      }
+      for (const tag of rule.biasTags) {
+        if (!registries.itemTags.has(tag))
+          errors.push(`${owner} reward references invalid tag: ${tag}`);
       }
     }
   }

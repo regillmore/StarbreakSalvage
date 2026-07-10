@@ -88,14 +88,17 @@ export class SectorTransitionScene implements Scene {
 
     const objectiveLine = document.createElement('p');
     objectiveLine.className = 'transition-copy';
-    objectiveLine.textContent = [
-      `${sector.objective.label} | Travel ${Math.floor(scroll.length)}u | ${
-        sector.objective.requiredEnemyKills
-      } targets${sector.objective.bossRequired ? ' + boss gate' : ''}`,
-      formatSectorObjectiveVariantReadout(sector.objective)
-    ]
-      .filter((part): part is string => part !== null)
-      .join(' | ');
+    objectiveLine.dataset.testid = 'mission-objective-preview';
+    objectiveLine.textContent = this.mission?.objectiveBrief
+      ? `${this.mission.contractSummary} | ${this.mission.objectiveBrief}`
+      : [
+          `${sector.objective.label} | Travel ${Math.floor(scroll.length)}u | ${
+            sector.objective.requiredEnemyKills
+          } targets${sector.objective.bossRequired ? ' + boss gate' : ''}`,
+          formatSectorObjectiveVariantReadout(sector.objective)
+        ]
+          .filter((part): part is string => part !== null)
+          .join(' | ');
 
     const conditionLine = document.createElement('p');
     conditionLine.className = 'transition-copy';

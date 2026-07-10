@@ -30,7 +30,9 @@ export const INPUT_ACTIONS = [
   'debugActTwoJunction',
   'debugActTwoEntry',
   'debugFinaleSmoke',
-  'debugTwoActSummary'
+  'debugTwoActSummary',
+  'debugMissionAnthology',
+  'debugMissionOptional'
 ] as const;
 
 export type InputAction = (typeof INPUT_ACTIONS)[number];
@@ -79,7 +81,9 @@ export const DEFAULT_KEY_BINDINGS: KeyBindingMap = {
   debugActTwoJunction: ['J'],
   debugActTwoEntry: ['I'],
   debugFinaleSmoke: ['F'],
-  debugTwoActSummary: ['Y']
+  debugTwoActSummary: ['Y'],
+  debugMissionAnthology: ['M'],
+  debugMissionOptional: ['N']
 };
 
 export function normalizeKey(key: string): string {

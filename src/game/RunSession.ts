@@ -28,8 +28,10 @@ import {
   transitionMission,
   type MissionDirectorState,
   type MissionEvent,
+  type MissionSchedule,
   type MissionTransitionResult
 } from './MissionDirector';
+import type { MissionObjectiveResultSnapshot } from './ObjectiveDirector';
 import {
   combineInterActEffects,
   createInterActChoiceRecord,
@@ -76,6 +78,15 @@ export interface RunSessionState {
   interActChoices: InterActChoiceRecord[];
   shopRerollsBySector: Record<number, number>;
   lastCombatResult: CombatRunResult | null;
+  objectiveHistory: MissionObjectiveOutcomeRecord[];
+}
+
+export interface MissionObjectiveOutcomeRecord extends MissionObjectiveResultSnapshot {
+  readonly sectorIndex: number;
+  readonly actId: ActId;
+  readonly reward: RouteRewardModifier;
+  readonly salvageBonus: number;
+  readonly cursePenalty: number;
 }
 
 export function createRunSession(
@@ -111,7 +122,8 @@ export function createRunSession(
     routeOutcomes: [],
     interActChoices: [],
     shopRerollsBySector: {},
-    lastCombatResult: null
+    lastCombatResult: null,
+    objectiveHistory: []
   };
 }
 
@@ -144,6 +156,45 @@ export function recordSectorCombatResult(
     result.salvage +
     Math.max(1, result.enemiesDestroyed) +
     getActEconomyCombatSalvageBonus(actEconomy, result);
+}
+
+export function recordMissionObjectiveOutcome(
+  session: RunSessionState,
+  schedule: MissionSchedule,
+  result: CombatRunResult
+): MissionObjectiveOutcomeRecord | null {
+  const outcome = result.missionObjective;
+  const contract = schedule.contract;
+  if (!outcome || !contract) {
+    return null;
+  }
+
+  const existing = session.objectiveHistory.find((record) => record.stageId === outcome.stageId);
+  if (existing) {
+    return existing;
+  }
+
+  const rewardRule = contract.rewardPolicy[outcome.outcome];
+  const optionalBonus = outcome.optional && outcome.outcome === 'success' ? 1 : 0;
+  const cursePenalty =
+    outcome.outcome === 'failure' && contract.failurePolicy === 'continueWithPenalty' ? 1 : 0;
+  const record: MissionObjectiveOutcomeRecord = {
+    ...outcome,
+    sectorIndex: schedule.sectorIndex,
+    actId: schedule.contract.eligibleActIds[0]!,
+    reward: {
+      choiceBonus: rewardRule.choiceBonus + optionalBonus,
+      creditBonus: rewardRule.creditBonus + optionalBonus,
+      biasTags: rewardRule.biasTags,
+      poolIdOverride: null
+    },
+    salvageBonus: rewardRule.salvageBonus + optionalBonus,
+    cursePenalty
+  };
+  session.objectiveHistory = [...session.objectiveHistory, record];
+  session.salvage += record.salvageBonus;
+  session.curse += record.cursePenalty;
+  return record;
 }
 
 export function recordRouteChoice(
@@ -267,9 +318,14 @@ export function getRewardModifiersForSector(
   session: RunSessionState,
   sectorIndex: number
 ): RouteRewardModifier[] {
-  return session.routeOutcomes
-    .filter((outcome) => outcome.sectorIndex === sectorIndex)
-    .map((outcome) => outcome.effects.reward);
+  return [
+    ...session.routeOutcomes
+      .filter((outcome) => outcome.sectorIndex === sectorIndex)
+      .map((outcome) => outcome.effects.reward),
+    ...session.objectiveHistory
+      .filter((outcome) => outcome.sectorIndex === sectorIndex)
+      .map((outcome) => outcome.reward)
+  ];
 }
 
 export function getShopModifiersForSector(

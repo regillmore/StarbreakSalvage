@@ -30,6 +30,7 @@ import {
 } from '../game/CombatState';
 import type { BossId } from '../content/bosses';
 import type { SectorId } from '../content/sectors';
+import { getEnvironmentObjectsForSector } from '../content/environmentObjects';
 import type { ShipStats } from '../content/ships';
 import { createRng } from '../core/rng';
 import {
@@ -63,6 +64,7 @@ import type {
   MissionDebugState,
   MissionReadModel
 } from '../game/MissionDirector';
+import { createMissionObjectiveResultSnapshot } from '../game/ObjectiveDirector';
 import { getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import { createHudMeterModel, createHudThemeModel, type HudThemeOptions } from './HudTheme';
 import { createContractThemeDebugState } from './ContractTheme';
@@ -1012,6 +1014,13 @@ export class GameplayScene implements Scene {
       sectorIndex: this.sectorIndex,
       scrollLength: this.getCurrentScrollPlan().length,
       rng: createRng(`${this.getCombatSeed()}:environment-objects`),
+      definitions:
+        this.missionContext?.projection.objectiveWorld?.environmentMode === 'destructibles'
+          ? getEnvironmentObjectsForSector(sector.sectorId).filter(
+              (definition) => definition.damageInteraction.destructible
+            )
+          : undefined,
+      targetCount: this.missionContext?.projection.objectiveWorld?.environmentTargetCount,
       hazards: features.hazards,
       enemySpawnLanes: wavePlan.spawnSchedule
         .filter((spawn) => spawn.atDistance !== null && spawn.atDistance !== undefined)
@@ -1054,6 +1063,11 @@ export class GameplayScene implements Scene {
   }
 
   private getLooseCurrencyRouteBias(): 'none' | 'hazard' | 'elite' | 'market' | 'salvage' {
+    const objectiveBias = this.missionContext?.projection.objectiveWorld?.looseCurrencyBias;
+    if (objectiveBias === 'salvage' || objectiveBias === 'hazard') {
+      return objectiveBias;
+    }
+
     if (this.sectorConditions.modifiers.some((modifier) => modifier.source === 'shop')) {
       return 'market';
     }
@@ -1114,7 +1128,8 @@ export class GameplayScene implements Scene {
       challenge: this.hasEnemyVariantChallengePressure(),
       eliteEncounter: this.hasEnemyVariantElitePressure(),
       formationClusterWaves: sectorPacing.formationClusterWaveIndexes,
-      actPressure: this.getActPressureModel()
+      actPressure: this.getActPressureModel(),
+      missionObjective: this.missionContext?.projection.missionObjective
     });
 
     return this.wavePlan;
@@ -1345,9 +1360,23 @@ export class GameplayScene implements Scene {
   }
 
   private withWorldOffset(result: CombatRunResult): CombatRunResult {
+    const plan = this.missionContext?.projection.missionObjective;
+    const progress = plan ? getObjectiveProgress(this.getWavePlan(), this.getCombatState()) : null;
+    const missionProgress = progress?.missionObjective;
     return {
       ...result,
-      worldOffset: this.getScrollState().worldOffset
+      worldOffset: this.getScrollState().worldOffset,
+      missionObjective:
+        plan && missionProgress && this.missionContext
+          ? createMissionObjectiveResultSnapshot(
+              plan,
+              missionProgress,
+              this.missionContext.projection.stageId,
+              missionProgress.outcome === 'active' && result.reason === 'sectorComplete'
+                ? 'success'
+                : undefined
+            )
+          : result.missionObjective
     };
   }
 

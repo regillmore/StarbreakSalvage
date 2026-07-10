@@ -1720,7 +1720,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 093.
+- Implemented in work order 093. A validated objective grammar now composes ten authored multi-stage contracts across both acts: assault, pursuit, salvage, rescue, defense, scan, sabotage, escape, escort, and boss approach. Contracts declare success, partial-success, failure, outcome exits, optional-branch eligibility, rewards, faction/crew consequences, cleanup, relief, and stage-local world policy. Live objective evaluation reuses combat, waves, formations, hazards, destructibles, loose currency, bosses, route rewards, and mission transitions; outcomes feed HUD/debug copy, route previews, reward modifiers, and summary history. Known-seed, objective-safety, validation, integration, debug-jump, and Chromium coverage are green.
 
 ## Epic BE - Phase 10 shipcraft
 

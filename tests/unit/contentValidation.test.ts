@@ -23,6 +23,12 @@ import {
   MISSION_STAGE_PROFILES,
   type MissionStageProfileDefinition
 } from '../../src/content/missions';
+import {
+  MISSION_CONTRACTS,
+  MISSION_OBJECTIVES,
+  type MissionContractDefinition,
+  type MissionObjectiveDefinition
+} from '../../src/content/objectives';
 import { FACTIONS, type FactionDefinition } from '../../src/content/factions';
 import { HAZARD_ZONE_DEFINITIONS, type HazardZoneDefinition } from '../../src/content/hazardZones';
 import {
@@ -51,6 +57,8 @@ const baseEnemyVariant = ENEMY_VARIANTS[0] as EnemyVariantDefinition;
 const baseEnvironmentObject = ENVIRONMENT_OBJECT_DEFINITIONS[0] as EnvironmentObjectDefinition;
 const baseExpeditionNodeProfile = EXPEDITION_NODE_PROFILES[0] as ExpeditionNodeProfileDefinition;
 const baseMissionStageProfile = MISSION_STAGE_PROFILES[0] as MissionStageProfileDefinition;
+const baseMissionObjective = MISSION_OBJECTIVES[0] as MissionObjectiveDefinition;
+const baseMissionContract = MISSION_CONTRACTS[0] as MissionContractDefinition;
 const baseHazardZone = HAZARD_ZONE_DEFINITIONS[0] as HazardZoneDefinition;
 const baseSector = SECTORS[0] as SectorDefinition;
 const baseShip = SHIPS[0] as ShipDefinition;
@@ -83,6 +91,8 @@ describe('validateContent', () => {
     expect(ENVIRONMENT_OBJECT_DEFINITIONS.length).toBeGreaterThanOrEqual(8);
     expect(EXPEDITION_NODE_PROFILES.length).toBeGreaterThanOrEqual(6);
     expect(MISSION_STAGE_PROFILES.length).toBeGreaterThanOrEqual(8);
+    expect(MISSION_OBJECTIVES).toHaveLength(10);
+    expect(MISSION_CONTRACTS).toHaveLength(10);
     expect(UPGRADES.length).toBeGreaterThanOrEqual(6);
     expect(representedArchetypes).toHaveLength(ITEM_ARCHETYPES.length);
     expect(representedArchetypes.length).toBeGreaterThanOrEqual(6);
@@ -164,12 +174,91 @@ describe('validateContent', () => {
     expect(errors).toContain(
       'Mission stage profile mission_invalid has invalid stage kind: teleport'
     );
-    expect(errors).toContain('Mission stage profile mission_invalid must preserve build and resources');
+    expect(errors).toContain(
+      'Mission stage profile mission_invalid must preserve build and resources'
+    );
     expect(errors).toContain(
       'Mission stage profile mission_invalid has invalid hull carry policy: discard'
     );
     expect(errors).toContain(
       'Mission stage profile mission_invalid has invalid scroll-world policy: teleport'
+    );
+  });
+
+  it('rejects impossible objective grammar and mission anthology references', () => {
+    const invalidObjective = {
+      ...baseMissionObjective,
+      id: 'objective_invalid',
+      label: '',
+      verb: 'waiting',
+      cleanupPolicy: 'leakEverything',
+      partialSuccessThreshold: 2,
+      clauses: [
+        {
+          id: 'bad',
+          metric: 'unknownMetric',
+          comparison: 'equals',
+          target: -1,
+          label: '',
+          required: false
+        }
+      ],
+      successCopy: '',
+      partialSuccessCopy: '',
+      failureCopy: ''
+    } as unknown as MissionObjectiveDefinition;
+    const invalidContract = {
+      ...baseMissionContract,
+      id: 'contract_invalid',
+      title: '',
+      primaryObjectiveId: 'objective_missing',
+      optionalObjectiveId: 'objective_missing_optional',
+      eligibleActIds: ['act_missing'],
+      branchPolicy: 'never',
+      failurePolicy: 'corruptRun',
+      factionPolicy: 'unknownFaction',
+      crewPolicy: 'eraseCrew',
+      outcomeExits: {
+        success: 'nowhere',
+        partialSuccess: 'branch',
+        failure: 'relief'
+      },
+      reliefCopy: '',
+      routePreview: '',
+      rewardPolicy: {
+        ...baseMissionContract.rewardPolicy,
+        success: {
+          choiceBonus: -1,
+          creditBonus: -1,
+          salvageBonus: -1,
+          biasTags: ['invalid-tag']
+        }
+      }
+    } as unknown as MissionContractDefinition;
+    const errors = validateContent({
+      missionObjectives: [...MISSION_OBJECTIVES, baseMissionObjective, invalidObjective],
+      missionContracts: [...MISSION_CONTRACTS, baseMissionContract, invalidContract]
+    });
+
+    expect(errors).toContain(`Duplicate mission objective id: ${baseMissionObjective.id}`);
+    expect(errors).toContain('Mission objective objective_invalid has invalid verb: waiting');
+    expect(errors).toContain(
+      'Mission objective objective_invalid has invalid cleanup policy: leakEverything'
+    );
+    expect(errors).toContain(
+      'Mission objective objective_invalid must have at least one required clause'
+    );
+    expect(errors).toContain(`Duplicate mission contract id: ${baseMissionContract.id}`);
+    expect(errors).toContain(
+      'Mission contract contract_invalid references missing primary objective: objective_missing'
+    );
+    expect(errors).toContain(
+      'Mission contract contract_invalid references missing act: act_missing'
+    );
+    expect(errors).toContain('Mission contract contract_invalid has invalid success reward rule');
+    expect(errors).toContain('Mission contract contract_invalid has invalid success exit: nowhere');
+    expect(errors).toContain(
+      'Mission contract contract_invalid reward references invalid tag: invalid-tag'
     );
   });
 

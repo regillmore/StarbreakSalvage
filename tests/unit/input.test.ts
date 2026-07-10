@@ -39,6 +39,8 @@ describe('input helpers', () => {
     expect(primaryActionForKey('I')).toBe('debugActTwoEntry');
     expect(primaryActionForKey('F')).toBe('debugFinaleSmoke');
     expect(primaryActionForKey('Y')).toBe('debugTwoActSummary');
+    expect(primaryActionForKey('M')).toBe('debugMissionAnthology');
+    expect(primaryActionForKey('N')).toBe('debugMissionOptional');
   });
 
   it('uses provided binding maps for action lookup', () => {

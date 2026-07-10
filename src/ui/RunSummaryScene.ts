@@ -55,7 +55,8 @@ export class RunSummaryScene implements Scene {
     private readonly saveData: SaveData,
     private readonly saveUpdate: SaveUpdateResult | null,
     private readonly onBackToMenu: () => void,
-    private readonly missionTimeline: string | null = null
+    private readonly missionTimeline: string | null = null,
+    private readonly objectiveHistory: string | null = null
   ) {}
 
   public enter(): void {
@@ -105,6 +106,7 @@ export class RunSummaryScene implements Scene {
       ['Act Timeline', formatRunActTimeline(this.run.acts)],
       ['Expedition Path', expedition.summary],
       ['Mission Timeline', this.missionTimeline ?? 'Legacy single-stage run'],
+      ['Objective History', this.objectiveHistory ?? 'No objective outcomes recorded.'],
       ['Expedition Capacity', formatExpeditionCapacity(this.run.expedition.capacity)],
       ['Inter-Act Refit', formatInterActHistory(this.interActChoices)],
       [

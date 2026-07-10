@@ -923,7 +923,7 @@ describe('CombatState', () => {
     expect(getObjectiveProgress(plan, state).complete).toBe(true);
   });
 
-  it('counts despawned formation members as cleared targets without rewards', () => {
+  it('separates despawned formation members from defeated targets without rewards', () => {
     const formationSpawns = createFormationSpawnSchedule('formation-objective-despawn', 2);
     const plan = createFormationTargetPlan(2);
     const state = createCombatState(bounds, 'FORMATION-DESPAWN-CLEAR', {
@@ -937,7 +937,8 @@ describe('CombatState', () => {
     updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
 
     expect(state.enemies).toHaveLength(0);
-    expect(state.stats.enemiesDestroyed).toBe(2);
+    expect(state.stats.enemiesDestroyed).toBe(0);
+    expect(state.stats.enemiesEscaped).toBe(2);
     expect(state.pickups).toHaveLength(0);
     expect(getObjectiveProgress(plan, state).complete).toBe(true);
   });

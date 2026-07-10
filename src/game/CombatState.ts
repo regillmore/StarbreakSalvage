@@ -49,6 +49,7 @@ import {
   type LooseCurrencyTier
 } from './LooseCurrency';
 import { getItemNames, type ItemInstance } from './Rewards';
+import type { MissionObjectiveResultSnapshot } from './ObjectiveDirector';
 
 export type ProjectileOwner = 'player' | 'enemy';
 export type PickupKind = 'credit' | 'salvage';
@@ -244,6 +245,7 @@ export interface CombatEffectState {
 
 export interface CombatStats {
   readonly enemiesDestroyed: number;
+  readonly enemiesEscaped: number;
   readonly bossesDefeated: number;
   readonly shotsFired: number;
   readonly pickupsCollected: number;
@@ -321,12 +323,14 @@ export interface CombatRunResult {
   readonly credits: number;
   readonly salvage: number;
   readonly enemiesDestroyed: number;
+  readonly enemiesEscaped?: number;
   readonly bossesDefeated: number;
   readonly shotsFired: number;
   readonly pickupsCollected: number;
   readonly damageTaken: number;
   readonly remainingHull?: number;
   readonly worldOffset?: number;
+  readonly missionObjective?: MissionObjectiveResultSnapshot;
   readonly itemTriggers: number;
   readonly itemNames: readonly string[];
 }
@@ -475,6 +479,7 @@ export function createCombatState(
     volleyIndex: 0,
     stats: {
       enemiesDestroyed: 0,
+      enemiesEscaped: 0,
       bossesDefeated: 0,
       shotsFired: 0,
       pickupsCollected: 0,
@@ -1347,6 +1352,7 @@ export function createCombatRunResult(
     credits: state.player.credits,
     salvage: state.player.salvage,
     enemiesDestroyed: state.stats.enemiesDestroyed,
+    enemiesEscaped: state.stats.enemiesEscaped,
     bossesDefeated: state.stats.bossesDefeated,
     shotsFired: state.stats.shotsFired,
     pickupsCollected: state.stats.pickupsCollected,
@@ -2878,10 +2884,7 @@ function cleanupEntities(state: CombatState, bounds: CombatBounds): void {
 
   for (const enemy of state.enemies) {
     if (enemy.y >= bounds.height + enemy.radius * 2) {
-      recordEnemyDefeat(state, enemy, despawnedEnemyIds, {
-        dropPickups: false,
-        grantSpecialCharge: false
-      });
+      recordEnemyEscape(state, enemy, despawnedEnemyIds);
     }
   }
 
@@ -3315,6 +3318,22 @@ function recordEnemyDefeat(
     gainSpecialCharge(state, SPECIAL_CHARGE_PER_KILL);
   }
 
+  return true;
+}
+
+function recordEnemyEscape(
+  state: CombatState,
+  enemy: EnemyState,
+  enemyIdsToRemove: Set<number>
+): boolean {
+  if (enemyIdsToRemove.has(enemy.id)) {
+    return false;
+  }
+  enemyIdsToRemove.add(enemy.id);
+  state.stats = {
+    ...state.stats,
+    enemiesEscaped: state.stats.enemiesEscaped + 1
+  };
   return true;
 }
 

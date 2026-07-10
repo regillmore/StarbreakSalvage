@@ -14,6 +14,11 @@ import type { SectorScrollPlan } from './ScrollState';
 import type { SectorObjectivePlan } from './SectorObjectives';
 import { getWaveStartSeconds } from './SectorObjectives';
 import type { ActPressureModel } from './ActPressure';
+import {
+  getMissionObjectiveProgress,
+  type MissionObjectivePlan,
+  type MissionObjectiveProgress
+} from './ObjectiveDirector';
 
 export interface DirectedWave {
   readonly index: number;
@@ -30,6 +35,7 @@ export interface WaveDirectorPlan {
   readonly bossSpawnAtSeconds: number | null;
   readonly sectorLength: number | null;
   readonly encounterPacing: SectorEncounterPacingDefinition | null;
+  readonly missionObjective: MissionObjectivePlan | null;
 }
 
 export interface ObjectiveProgress {
@@ -47,6 +53,7 @@ export interface ObjectiveProgress {
   readonly bossComplete: boolean;
   readonly bossDefeated: boolean;
   readonly complete: boolean;
+  readonly missionObjective: MissionObjectiveProgress | null;
 }
 
 export type ObjectiveProgressState = Pick<
@@ -71,6 +78,7 @@ export interface WaveDirectorOptions {
   readonly enableFormations?: boolean;
   readonly formationClusterWaves?: readonly number[];
   readonly actPressure?: ActPressureModel;
+  readonly missionObjective?: MissionObjectivePlan | null;
 }
 
 const DISTANCE_WAVE_WINDOW_START_RATIO = 0.12;
@@ -134,7 +142,8 @@ export function createWaveDirectorPlan(options: WaveDirectorOptions): WaveDirect
     spawnSchedule,
     bossSpawnAtSeconds: options.objective.bossSpawnAtSeconds,
     sectorLength: options.scroll?.length ?? null,
-    encounterPacing: options.pacing ?? null
+    encounterPacing: options.pacing ?? null,
+    missionObjective: options.missionObjective ?? null
   };
 }
 
@@ -151,7 +160,10 @@ export function getObjectiveProgress(
   const distanceRemaining =
     requiredDistance === null ? 0 : Math.max(0, requiredDistance - distanceTraveled);
   const distanceComplete = requiredDistance === null || distanceRemaining <= 0;
-  const supportKills = Math.max(0, state.stats.enemiesDestroyed - state.stats.bossesDefeated);
+  const supportKills = Math.max(
+    0,
+    state.stats.enemiesDestroyed - state.stats.bossesDefeated + state.stats.enemiesEscaped
+  );
   const cappedSupportKills = Math.min(supportKills, plan.objective.requiredEnemyKills);
   const completedWaves = Math.min(
     plan.objective.requiredWaves,
@@ -163,19 +175,31 @@ export function getObjectiveProgress(
   const supportComplete =
     cappedSupportKills >= plan.objective.requiredEnemyKills && allSpawnsIssued && supportFieldClear;
   const bossComplete = !plan.objective.bossRequired || bossDefeated;
-  const complete = distanceComplete && supportComplete && bossComplete && bossFieldClear;
+  const missionObjective = plan.missionObjective
+    ? getMissionObjectiveProgress(plan.missionObjective, plan.objective, plan.sectorLength, {
+        ...state,
+        spawnSchedule: plan.spawnSchedule,
+        bossSpawned: state.stats.bossesDefeated > 0 || state.boss !== null
+      })
+    : null;
+  const resolvedSupportComplete = missionObjective?.preBossResolved ?? supportComplete;
+  const complete =
+    missionObjective?.terminal ??
+    (distanceComplete && supportComplete && bossComplete && bossFieldClear);
 
   return {
-    label: plan.objective.label,
-    readout: formatObjectiveReadout(plan, {
-      distanceTraveled,
-      requiredDistance,
-      supportKills: cappedSupportKills,
-      completedWaves,
-      bossDefeated,
-      supportComplete,
-      distanceComplete
-    }),
+    label: missionObjective?.label ?? plan.objective.label,
+    readout:
+      missionObjective?.readout ??
+      formatObjectiveReadout(plan, {
+        distanceTraveled,
+        requiredDistance,
+        supportKills: cappedSupportKills,
+        completedWaves,
+        bossDefeated,
+        supportComplete,
+        distanceComplete
+      }),
     distanceTraveled,
     requiredDistance,
     distanceRemaining,
@@ -184,10 +208,11 @@ export function getObjectiveProgress(
     requiredEnemyKills: plan.objective.requiredEnemyKills,
     completedWaves,
     requiredWaves: plan.objective.requiredWaves,
-    supportComplete,
+    supportComplete: resolvedSupportComplete,
     bossComplete,
     bossDefeated,
-    complete
+    complete,
+    missionObjective
   };
 }
 

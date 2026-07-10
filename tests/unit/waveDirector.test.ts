@@ -1308,6 +1308,7 @@ function makeProgressState(
     scrollDistance: overrides.scrollDistance ?? 0,
     stats: {
       enemiesDestroyed: overrides.enemiesDestroyed ?? 0,
+      enemiesEscaped: 0,
       bossesDefeated: overrides.bossesDefeated ?? 0,
       shotsFired: 0,
       pickupsCollected: 0,

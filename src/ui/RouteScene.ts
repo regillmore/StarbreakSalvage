@@ -9,6 +9,8 @@ import {
   type RunSessionState
 } from '../game/RunSession';
 import { getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
+import { selectMissionContract } from '../game/MissionDirector';
+import { getMissionObjective } from '../content/objectives';
 import type { InputAction } from '../systems/InputSystem';
 import {
   applyContractScreenTheme,
@@ -52,6 +54,14 @@ export class RouteScene implements Scene {
     const routeGrid = document.createElement('div');
     routeGrid.className = 'route-grid';
     const interActEffects = getInterActEffectsForSector(this.session, sector);
+    const latestObjective = this.session.objectiveHistory.at(-1);
+    const nextSectorIndex = this.session.currentSectorIndex + 1;
+    const nextContract = this.run.expedition.sectors[nextSectorIndex]
+      ? selectMissionContract(this.run.expedition, nextSectorIndex)
+      : null;
+    const nextObjective = nextContract
+      ? getMissionObjective(nextContract.primaryObjectiveId)
+      : null;
 
     this.routeButtons.length = 0;
 
@@ -94,6 +104,14 @@ export class RouteScene implements Scene {
       intel.className = 'choice-body route-intel-hint';
       intel.textContent = intelHint;
 
+      const missionPreview = document.createElement('span');
+      missionPreview.className = 'choice-body route-contract-hint';
+      missionPreview.dataset.testid = `route-${route.kind}-mission-preview`;
+      missionPreview.textContent =
+        nextContract && nextObjective
+          ? `Next mission: ${nextContract.title} / ${nextObjective.hudVerb}. ${nextContract.routePreview}`
+          : `Final extraction. ${latestObjective?.summary ?? 'Mission ledger ready to close.'}`;
+
       routeButton.append(
         name,
         risk,
@@ -101,13 +119,19 @@ export class RouteScene implements Scene {
         ...(route.pressureHint ? [pressure] : []),
         ...(route.rewardTierHint ? [reward] : []),
         ...(route.environmentalHint ? [environment] : []),
-        ...(intelHint ? [intel] : [])
+        ...(intelHint ? [intel] : []),
+        missionPreview
       );
       routeGrid.append(routeButton);
       this.routeButtons.push(routeButton);
     }
 
-    shell.append(eyebrow, createContractThemeStrip(this.uiRoot.ownerDocument, theme), title, routeGrid);
+    shell.append(
+      eyebrow,
+      createContractThemeStrip(this.uiRoot.ownerDocument, theme),
+      title,
+      routeGrid
+    );
     this.uiRoot.replaceChildren(shell);
     this.routeButtons[0]?.focus();
   }

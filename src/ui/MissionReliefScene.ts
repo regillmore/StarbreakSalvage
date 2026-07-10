@@ -50,8 +50,7 @@ export class MissionReliefScene implements Scene {
 
     const copy = document.createElement('p');
     copy.className = 'transition-copy';
-    copy.textContent =
-      'Combat state is settled exactly once. Review the route claim before leaving this mission.';
+    copy.textContent = `${this.mission.reliefCopy} Combat state is settled exactly once; review the route claim before leaving this mission.`;
 
     const button = document.createElement('button');
     button.className = 'primary-button';

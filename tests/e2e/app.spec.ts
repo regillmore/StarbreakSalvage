@@ -117,7 +117,8 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.getByRole('button', { name: 'Launch Contract' }).click();
 
   await expect(page.getByTestId('mission-briefing')).toBeVisible();
-  await expect(page.getByRole('heading', { name: /Outer Debris Field briefing/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Breach Levy briefing/ })).toBeVisible();
+  await expect(page.getByTestId('mission-objective-preview')).toContainText('ASSAULT');
   await page.keyboard.press('Enter');
 
   await expectGameplaySector(page, 'Outer Debris Field');
@@ -130,7 +131,9 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('special-meter')).toHaveAttribute('aria-valuenow', '100');
   await expect(page.getByTestId('bomb-meter')).toHaveAttribute('aria-valuenow', '100');
   await expect(page.getByTestId('weapon-heat-meter')).toHaveAttribute('aria-valuenow', '0');
-  await expect(page.getByTestId('objective-readout')).toContainText(/waves|targets|Boss/i);
+  await expect(page.getByTestId('objective-readout')).toContainText(
+    /ASSAULT|hostiles|fortification/i
+  );
   await expect(page.getByTestId('expedition-readout')).toContainText(
     'Expedition Outer Debris Field Operation | nodes 2/40'
   );
@@ -145,6 +148,9 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
     'Expedition expedition_s01_operation 2/40 decisions 0'
   );
   await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
+  await expect(page.locator('.debug-overlay')).toContainText(
+    'Contract contract_breach_levy | Objective assault/objective_breach_assault'
+  );
   await expect(page.locator('.debug-overlay')).toContainText('Expedition capacity 16.0-19.7m');
   await expect(page.locator('.debug-overlay')).toContainText(
     /Viewport \d+x\d+ \w+ @[0-9.]+ DPR [0-9.]+/
@@ -182,14 +188,15 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.locator('.debug-overlay')).toContainText(/Exit sectorComplete \d+%/);
   await expect(page.getByTestId('mission-branch')).toBeVisible();
   await page.getByTestId('mission-branch-optional').click();
-  await expect(page.getByTestId('expedition-readout')).toContainText(
-    /Salvage Sweep|Black Box Signal|Field Cache/
-  );
+  await expect(page.getByTestId('expedition-readout')).toContainText('Field Salvage');
   await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
   await page.keyboard.press('8');
   await expect(page.getByTestId('mission-relief')).toBeVisible();
   await page.getByTestId('mission-relief-continue').click();
   await expect(page.getByRole('heading', { name: 'Choose Route' })).toBeVisible();
+  await expect(page.getByTestId('route-shop-mission-preview')).toContainText(
+    'Next mission: Running Audit / PURSUE'
+  );
   await expect(page.locator('.route-panel')).toHaveAttribute('data-contract-theme', 'redline');
   await expect(page.getByTestId('contract-theme-strip')).toContainText(
     'REDLINE CONTRACT | Debt Runner'
@@ -221,7 +228,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.locator('.reward-card').first()).toContainText(/Live effect|Bridge effect/);
 
   await page.getByRole('button', { name: /Take / }).first().click();
-  await expect(page.getByRole('heading', { name: /Trade War Corridor briefing/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Running Audit briefing/ })).toBeVisible();
   await expect(page.locator('.transition-panel')).toHaveAttribute('data-contract-theme', 'redline');
 
   await page.getByRole('button', { name: 'Begin Operation' }).click();
@@ -272,6 +279,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('upgrade-progress-callout')).toContainText(/upgrade|next/i);
   await expect(page.getByTestId('unlock-summary')).toContainText('Unlocked:');
   await expect(page.getByTestId('seed-share-link')).toHaveValue(/seed=STARBREAK-SMOKE/);
+  await expect(page.getByText(/Breach Levy\/Breach Assault: success/)).toBeVisible();
 
   await page.getByRole('button', { name: 'Copy Seed Link' }).click();
   await expect(page.getByTestId('seed-share-status')).toContainText(/Seed link/);
@@ -632,6 +640,11 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
   await expect(page.getByText(/Act II 4\/5 S9 .* \[/)).toBeVisible();
   await expect(page.getByText(/Junction: [+-]?\d+c\/[+-]?\d+kg/)).toBeVisible();
 
+  await page.keyboard.press('M');
+  await expect(page.getByTestId('mission-objective-preview')).toContainText('SABOTAGE');
+  await page.keyboard.press('N');
+  await expect(page.getByTestId('objective-readout')).toContainText('SABOTAGE');
+
   expect(browserErrors).toEqual([]);
 });
 
@@ -832,9 +845,10 @@ async function forceCompleteSectorAndEnterNext(page: Page, nextSectorName: strin
   await expect(page.getByRole('heading', { name: 'Choose Route' })).toBeVisible();
 
   await chooseFirstRouteAndReward(page);
-  await expect(
-    page.getByRole('heading', { name: new RegExp(`${nextSectorName} briefing`) })
-  ).toBeVisible();
+  await expect(page.getByTestId('mission-briefing')).toBeVisible();
+  await expect(page.getByTestId('mission-objective-preview')).toContainText(
+    /ASSAULT|PURSUE|SALVAGE|RESCUE|DEFEND|SCAN|SABOTAGE|ESCAPE|ESCORT|BREACH GATE/
+  );
 
   await page.getByRole('button', { name: 'Begin Operation' }).click();
   await expectGameplaySector(page, nextSectorName);
