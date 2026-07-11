@@ -1862,7 +1862,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 104.
+- Implemented in work order 104. Three seed/save-stable carrier plans use four limited slots drawn from seven facility types. A bounded reducer supports repair, replacement, rerouting, upgrades, crew posts, posture, cargo, and deterministic hull/heat/debt/pursuit/access consequences with one optional staging action per sector. Carrier influence changes mission access, engineering, recovery, rewards, faction markets, and bounded future support/boarding capacity. Snapshot v4, summaries, timeline, lazy command-deck UI, public `Q` fixture, unit/endurance coverage, and narrow accessible Chromium flow are live.
 
 ### BI3 - Boarding and derelict incursions
 

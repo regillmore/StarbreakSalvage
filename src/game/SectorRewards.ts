@@ -12,6 +12,7 @@ import { createEngineeringCombatProfile } from './Foundry';
 import { generateRewardChoices, type RewardChoice } from './Rewards';
 import { getRewardUpgradeBiasTags, getRewardUpgradeChoiceBonus } from './UpgradeEffects';
 import { createActEconomyProfile, getActEconomyRewardChoiceBonus } from './ActEconomy';
+import { createCarrierInfluence } from './CarrierCommand';
 
 export function generateSectorRewardChoices(options: {
   readonly run: RunSkeleton;
@@ -42,6 +43,7 @@ export function generateSectorRewardChoices(options: {
     sector.objective.bossRequired
   );
   const engineering = createEngineeringCombatProfile(options.session.engineering);
+  const carrier = createCarrierInfluence(options.run.carrierPlan, options.session.carrier);
   const rewardPayload = applyCombinedHooks(
     'onRewardGenerated',
     options.session.itemInstances,
@@ -56,14 +58,16 @@ export function generateSectorRewardChoices(options: {
           choiceBonus +
           upgradeChoiceBonus +
           interActEffects.rewardChoiceBonus +
-          actRewardChoiceBonus,
+          actRewardChoiceBonus +
+          carrier.rewardChoiceBonus,
       biasTags: [
         ...options.contract.itemBias,
         ...getRouteBiasTags(options.routeKind),
         ...modifierBiasTags,
         ...upgradeBiasTags,
         ...interActEffects.rewardBiasTags,
-        ...actEconomy.rewardBiasTags
+        ...actEconomy.rewardBiasTags,
+        ...carrier.rewardBiasTags
       ]
     },
     { maxApplications: engineering.procBudget }

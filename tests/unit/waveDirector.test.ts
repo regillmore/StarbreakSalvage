@@ -307,6 +307,20 @@ describe('WaveDirector', () => {
             "transition": "victory",
           },
         ],
+        "carrier": {
+          "cargoCapacity": 8,
+          "carrierId": "carrier_cinder_tender",
+          "facilities": [
+            "foundry",
+            "reactor",
+            "medbay",
+            "hangar",
+          ],
+          "id": "carrier:STARBREAK-SMOKE:carrier_cinder_tender:10cqree",
+          "liaisonFactionId": "faction_scrap_court",
+          "name": "Cinder Tender",
+          "origin": "recovered",
+        },
         "contracts": [
           {
             "frameId": "frame_parish_chapel",

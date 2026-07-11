@@ -16,6 +16,12 @@ import {
 import { BACKGROUNDS, BACKGROUND_LAYER_KINDS, type BackgroundDefinition } from './backgrounds';
 import { BOSSES, type BossDefinition } from './bosses';
 import {
+  CARRIERS,
+  CARRIER_FACILITIES,
+  type CarrierDefinition,
+  type CarrierFacilityDefinition
+} from './carriers';
+import {
   COMPONENT_AFFIXES,
   COMPONENT_QUALITIES,
   COMPONENT_QUALITY_IDS,
@@ -185,6 +191,8 @@ export interface ContentValidationInput {
   readonly achievements?: readonly AchievementDefinition[];
   readonly backgrounds?: readonly BackgroundDefinition[];
   readonly bosses?: readonly BossDefinition[];
+  readonly carriers?: readonly CarrierDefinition[];
+  readonly carrierFacilities?: readonly CarrierFacilityDefinition[];
   readonly enemyFormations?: readonly EnemyFormationDefinition[];
   readonly enemyVariants?: readonly EnemyVariantDefinition[];
   readonly environmentObjects?: readonly EnvironmentObjectDefinition[];
@@ -220,6 +228,8 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const achievements = input.achievements ?? ACHIEVEMENTS;
   const backgrounds = input.backgrounds ?? BACKGROUNDS;
   const bosses = input.bosses ?? BOSSES;
+  const carriers = input.carriers ?? CARRIERS;
+  const carrierFacilities = input.carrierFacilities ?? CARRIER_FACILITIES;
   const enemyFormations = input.enemyFormations ?? ENEMY_FORMATIONS;
   const enemyVariants = input.enemyVariants ?? ENEMY_VARIANTS;
   const environmentObjects = input.environmentObjects ?? ENVIRONMENT_OBJECT_DEFINITIONS;
@@ -349,6 +359,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     transitionKinds: actTransitionKinds,
     sectors: canonicalSectorIds
   });
+  validateCarrierDefinitions(errors, carriers, carrierFacilities, new Set(factions.map((faction) => faction.id)));
   validateActRouteContracts(errors, actRouteContracts, {
     acts: canonicalActIds,
     routeKinds: actRouteKinds,
@@ -1462,6 +1473,49 @@ function validateActDefinitions(
       ) {
         errors.push(`${owner} transition references missing next act: ${act.transition.nextActId}`);
       }
+    }
+  }
+}
+
+function validateCarrierDefinitions(
+  errors: string[],
+  carriers: readonly CarrierDefinition[],
+  facilities: readonly CarrierFacilityDefinition[],
+  factionIds: ReadonlySet<string>
+): void {
+  const facilityTypes = new Set<string>();
+  for (const facility of facilities) {
+    if (facilityTypes.has(facility.type)) errors.push(`Duplicate carrier facility type: ${facility.type}`);
+    facilityTypes.add(facility.type);
+    if (!facility.label.trim() || !facility.summary.trim() || !facility.influence.trim()) {
+      errors.push(`Carrier facility ${facility.type} must define label, summary, and influence`);
+    }
+    if (!Number.isInteger(facility.upgradeCost) || facility.upgradeCost < 1) {
+      errors.push(`Carrier facility ${facility.type} has invalid upgrade cost`);
+    }
+  }
+  const carrierIds = new Set<string>();
+  for (const carrier of carriers) {
+    const owner = `Carrier ${carrier.id}`;
+    if (carrierIds.has(carrier.id)) errors.push(`Duplicate carrier id: ${carrier.id}`);
+    carrierIds.add(carrier.id);
+    if (!carrier.name.trim() || !carrier.summary.trim()) errors.push(`${owner} must define name and summary`);
+    if (!Number.isInteger(carrier.maxHull) || carrier.maxHull < 1) errors.push(`${owner} has invalid max hull`);
+    if (!Number.isInteger(carrier.cargoCapacity) || carrier.cargoCapacity < 1) errors.push(`${owner} has invalid cargo capacity`);
+    if (carrier.startingFacilities.length !== carrier.facilitySlots || carrier.facilitySlots < 1) {
+      errors.push(`${owner} starting facilities must fill its limited slots`);
+    }
+    if (new Set(carrier.startingFacilities).size !== carrier.startingFacilities.length) {
+      errors.push(`${owner} has duplicate starting facilities`);
+    }
+    for (const type of [...carrier.startingFacilities, ...carrier.replacementOrder]) {
+      if (!facilityTypes.has(type)) errors.push(`${owner} references missing facility: ${type}`);
+    }
+    if (new Set(carrier.replacementOrder).size !== facilityTypes.size) {
+      errors.push(`${owner} replacement order must cover every facility type`);
+    }
+    if (!factionIds.has(carrier.liaisonFactionId)) {
+      errors.push(`${owner} references missing liaison faction: ${carrier.liaisonFactionId}`);
     }
   }
 }

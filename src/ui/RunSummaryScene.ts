@@ -52,6 +52,7 @@ import {
   formatFrontierOutcome,
   type FrontierDecisionState
 } from '../game/NullFrontier';
+import { formatCarrierSummary, type CarrierState } from '../game/CarrierCommand';
 
 export class RunSummaryScene implements Scene {
   public readonly id = 'run-summary';
@@ -75,7 +76,8 @@ export class RunSummaryScene implements Scene {
     private readonly factionCampaign: FactionCampaignState | null = null,
     private readonly crewRoster: CrewRosterState | null = null,
     private readonly runTimeline: RunTimelineState | null = null,
-    private readonly frontierDecision: FrontierDecisionState | null = null
+    private readonly frontierDecision: FrontierDecisionState | null = null,
+    private readonly carrier: CarrierState | null = null
   ) {}
 
   public enter(): void {
@@ -136,6 +138,12 @@ export class RunSummaryScene implements Scene {
       ['Win/Loss', getOutcomeDetail(this.result)],
       ['Finale', formatFinaleOutcomeSummary(this.run, this.result)],
       ['Frontier Campaign', formatFrontierCampaign(this.run.frontierCampaign)],
+      [
+        'Mobile Carrier',
+        this.carrier
+          ? formatCarrierSummary(this.run.carrierPlan, this.carrier)
+          : 'Carrier state not recorded.'
+      ],
       [
         'Voyage Ending',
         this.frontierDecision

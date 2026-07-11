@@ -96,6 +96,8 @@ Exit criteria:
 - Staging remains concise, keyboard/pointer accessible, and snapshot-safe.
 - The carrier expands build variety without becoming permanent account-level power.
 
+Status: implemented by work order 104. Three deterministic carrier hull plans fill four limited slots from seven data-validated facility types. A bounded carrier reducer owns facility condition/level/power/crew posts, hull, heat, debt, pursuit, posture, faction access, and capacity-checked cargo through explicit idempotent events. The command deck appears only at the clean required-operation staging checkpoint and permits one optional command action per sector. Public influence read models feed mission-option restrictions, foundry salvage, reward choices/tags, early crew recovery, faction markets, and future support/boarding capacity without touching permanent power. Snapshot v4 stores and validates carrier identity/state and retires v1-v3 safely; the deck is a lazy, narrow/contrast/reduced-motion-compatible DOM scene.
+
 ### P11.5 - Boarding And Derelict Incursions
 
 Work order 105 adds a distinct close-quarters operation family:

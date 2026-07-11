@@ -56,6 +56,7 @@ import {
   addItemToSession,
   aggregateCombatRunResults,
   advanceSector,
+  applyCarrierCommand,
   applyFrontierDecision,
   applyInterActChoice,
   applyRouteOutcome,
@@ -76,6 +77,7 @@ import {
   recordExpeditionBranchDecision,
   resetMissionForCurrentSector,
   spendCredits,
+  stowCarrierCargo,
   type RunSessionState
 } from '../game/RunSession';
 import { getSaveRecordSectorCount } from '../game/RunOutcome';
@@ -135,9 +137,12 @@ import type { ScenarioLabId } from '../game/ScenarioLab';
 import {
   RunSnapshotCoordinator,
   createRunSnapshotSummary,
-  type RunSnapshotV3
+  type RunSnapshotV4
 } from '../game/RunSnapshot';
 import { getOperationalInfluence } from '../game/OperationalMap';
+import {
+  createCarrierInfluence
+} from '../game/CarrierCommand';
 
 export class GameApp {
   private readonly canvas: HTMLCanvasElement;
@@ -160,7 +165,7 @@ export class GameApp {
   private lastRunResult: CombatRunResult | null = null;
   private lastSaveUpdate: SaveUpdateResult | null = null;
   private summarySaved = false;
-  private runSnapshot: RunSnapshotV3 | null = null;
+  private runSnapshot: RunSnapshotV4 | null = null;
   private runSnapshotNotice: string | null = null;
   private snapshotEligible = false;
   private frameStats: FrameStats = {
@@ -498,7 +503,12 @@ export class GameApp {
     const crewProfile = createCrewCombatProfile(
       this.currentRun.crewRoster,
       this.runSession.crewRoster,
-      resolvedLoadout
+      resolvedLoadout,
+      {
+        excludedCandidateIds: this.runSession.carrier.facilities
+          .map((facility) => facility.assignedCrewId)
+          .filter((candidateId): candidateId is string => candidateId !== null)
+      }
     );
 
     return new GameplayScene(
@@ -564,6 +574,9 @@ export class GameApp {
         return true;
       case 'debugFrontierGate':
         this.showDebugFrontierGate();
+        return true;
+      case 'debugCarrierDeck':
+        this.showDebugCarrierDeck();
         return true;
       case 'debugTwoActSummary':
         this.showDebugTwoActSummary();
@@ -1095,6 +1108,13 @@ export class GameApp {
           .commandHeadroom
       }
     );
+    const carrierInfluence = createCarrierInfluence(
+      this.currentRun.carrierPlan,
+      this.runSession.carrier
+    );
+    const missionOptions = getMissionBranchOptions(schedule, this.runSession.mission).filter(
+      (option) => option.default || carrierInfluence.optionalMissionAccess
+    );
     this.sceneManager.switchTo(
       new OperationalMapScene(
         this.uiRoot,
@@ -1106,7 +1126,7 @@ export class GameApp {
         this.selectedContract,
         createMissionReadModel(schedule, this.runSession.mission),
         createMissionDebugState(schedule, this.runSession.mission),
-        getMissionBranchOptions(schedule, this.runSession.mission),
+        missionOptions,
         this.runSession.credits,
         this.runSession.salvage,
         (option) => {
@@ -1152,7 +1172,10 @@ export class GameApp {
             : null,
           crewCandidate
             ? `Distress option: the optional lane can recover ${crewCandidate.callsign} and ${crewCandidate.wingName}.`
-            : null
+            : null,
+          carrierInfluence.optionalMissionAccess
+            ? `${this.currentRun.carrierPlan.name}: optional operations available; support ${carrierInfluence.supportCapacity}, boarding ${carrierInfluence.boardingCapacity}.`
+            : `${this.currentRun.carrierPlan.name}: optional operation access restricted by carrier hull, heat, or debt.`
         ]
           .filter((copy): copy is string => Boolean(copy))
           .join(' ') || null
@@ -1163,6 +1186,11 @@ export class GameApp {
 
   private showMissionRelief(): void {
     const schedule = this.getCurrentMissionSchedule();
+    const stage = getMissionStage(schedule, this.runSession.mission.currentStageId);
+    if (stage.operationalRole === 'staging') {
+      void this.showCommandDeck(schedule);
+      return;
+    }
     this.sceneManager.switchTo(
       new OperationalMapScene(
         this.uiRoot,
@@ -1198,6 +1226,47 @@ export class GameApp {
     this.checkpointRun(
       'operationalMap',
       `${createMissionReadModel(schedule, this.runSession.mission).stageLabel} checkpoint`
+    );
+  }
+
+  private async showCommandDeck(schedule = this.getCurrentMissionSchedule()): Promise<void> {
+    const { CommandDeckScene } = await import('../ui/CommandDeckScene');
+    const continueRelief = () => {
+      const result = this.dispatchCurrentMission({
+        id: `${this.runSession.mission.currentStageId}:relief-complete`,
+        type: 'completeRelief'
+      });
+      if (result.disposition !== 'advanced') return;
+      const nextStage = getMissionStage(schedule, this.runSession.mission.currentStageId);
+      if (nextStage.kind === 'combat') this.showGameplay();
+      else if (nextStage.kind === 'extraction') this.showRouteChoice();
+    };
+    this.sceneManager.switchTo(
+      new CommandDeckScene(
+        this.uiRoot,
+        this.currentRun.carrierPlan,
+        this.runSession.carrier,
+        this.currentRun.crewRoster,
+        this.runSession.crewRoster,
+        this.selectedContract,
+        this.runSession.currentSectorIndex,
+        this.runSession.credits,
+        this.runSession.salvage,
+        (option) => {
+          const result = applyCarrierCommand(
+            this.currentRun,
+            this.runSession,
+            option.command,
+            `carrier-command:${this.runSession.currentSectorIndex}:${option.id}`
+          );
+          if (result.disposition === 'applied') void this.showCommandDeck(schedule);
+        },
+        continueRelief
+      )
+    );
+    this.checkpointRun(
+      'operationalMap',
+      `${this.currentRun.carrierPlan.name} command deck checkpoint`
     );
   }
 
@@ -1381,6 +1450,24 @@ export class GameApp {
     this.showFrontierGate(sourceAct, targetAct);
   }
 
+  private showDebugCarrierDeck(): void {
+    this.resetDebugRunState();
+    this.runSession.currentSectorIndex = Math.min(1, this.currentRun.sectors.length - 1);
+    resetMissionForCurrentSector(this.currentRun, this.runSession);
+    const schedule = this.getCurrentMissionSchedule();
+    const stagingId = schedule.reliefStageId;
+    if (!stagingId) return;
+    this.runSession.mission = {
+      ...this.runSession.mission,
+      currentStageId: stagingId,
+      visitedStageIds: [schedule.startStageId, stagingId]
+    };
+    this.runSession.credits = Math.max(this.runSession.credits, 30);
+    this.runSession.salvage = Math.max(this.runSession.salvage, 20);
+    this.runSession.crewRoster = createDebugCrewRosterState(this.currentRun.crewRoster);
+    void this.showCommandDeck(schedule);
+  }
+
   private showFrontierGate(sourceAct: RunActPlan, targetAct: RunActPlan): void {
     this.sceneManager.switchTo(
       new FrontierGateScene(
@@ -1428,6 +1515,14 @@ export class GameApp {
       state: this.runSession.engineering
     });
     this.runSession.engineering = acquireComponent(this.runSession.engineering, component);
+    stowCarrierCargo(this.currentRun, this.runSession, {
+      id: component.id,
+      label: component.sourceLabel,
+      kind: 'component',
+      size: 1,
+      value: component.salvageValue,
+      sectorIndex: this.runSession.currentSectorIndex
+    });
     recordRunSessionTimelineEvent(this.runSession, {
       id: `engineering-acquire:${component.id}`,
       category: 'engineering',
@@ -1438,6 +1533,10 @@ export class GameApp {
       detailId: component.moduleId
     });
     const crewAssist = getCrewFoundryAssist(this.currentRun.crewRoster, this.runSession.crewRoster);
+    const carrierInfluence = createCarrierInfluence(
+      this.currentRun.carrierPlan,
+      this.runSession.carrier
+    );
     this.sceneManager.switchTo(
       new FoundryScene(
         this.uiRoot,
@@ -1447,7 +1546,10 @@ export class GameApp {
         sector.index,
         (engineering, salvageGained) => {
           this.runSession.engineering = engineering;
-          this.runSession.salvage += salvageGained + (crewAssist?.salvageBonus ?? 0);
+          this.runSession.salvage +=
+            salvageGained +
+            (crewAssist?.salvageBonus ?? 0) +
+            carrierInfluence.foundrySalvageBonus;
           if (crewAssist) {
             recordCrewRosterEvent(this.runSession, this.currentRun.crewRoster, {
               id: `foundry-assist:${sector.index}:${crewAssist.candidateId}`,
@@ -1461,7 +1563,10 @@ export class GameApp {
             category: 'engineering',
             kind: 'commit',
             sectorIndex: this.runSession.currentSectorIndex,
-            value: salvageGained + (crewAssist?.salvageBonus ?? 0),
+            value:
+              salvageGained +
+              (crewAssist?.salvageBonus ?? 0) +
+              carrierInfluence.foundrySalvageBonus,
             subjectId: engineering.committed.frameId,
             detailId: `history-${engineering.history.length}`
           });
@@ -1630,7 +1735,8 @@ export class GameApp {
         this.runSession.factionCampaign,
         this.runSession.crewRoster,
         this.runSession.timeline,
-        this.runSession.frontierDecision
+        this.runSession.frontierDecision,
+        this.runSession.carrier
       )
     );
   }
@@ -1909,6 +2015,12 @@ export class GameApp {
           ...debugState.runTimeline.latest.map((entry) => `Timeline ${entry}`)
         ]
       : [];
+    const carrierDebug = debugState.carrier
+      ? [
+          `Carrier ${debugState.carrier.name} hull ${debugState.carrier.hull} ${debugState.carrier.pressure} ${debugState.carrier.posture} cargo ${debugState.carrier.cargo}`,
+          `Carrier facilities ${debugState.carrier.facilities.join(' / ')} events ${debugState.carrier.historyCount}`
+        ]
+      : [];
     const scenarioLabDebug = debugState.scenarioLab
       ? [
           `Scenario Lab ${debugState.scenarioLab.activeScenario ?? 'catalog'} ${debugState.scenarioLab.scenarioCount} cases`,
@@ -1970,6 +2082,7 @@ export class GameApp {
       ...factionCampaignDebug,
       ...crewDebug,
       ...timelineDebug,
+      ...carrierDebug,
       ...scenarioLabDebug,
       ...upgradeDebug,
       ...progressionDebug,

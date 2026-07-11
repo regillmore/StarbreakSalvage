@@ -28,6 +28,8 @@ describe('ExpeditionEndurance', () => {
     expect(report.maxTimelineEntries).toBeLessThanOrEqual(96);
     expect(report.maxFactionHistory).toBeLessThanOrEqual(64);
     expect(report.maxCrewHistory).toBeLessThanOrEqual(64);
+    expect(report.maxCarrierHistory).toBeLessThanOrEqual(64);
+    expect(report.maxCarrierCargo).toBeLessThanOrEqual(16);
     expect(report.maxEngineeringHistory).toBeLessThanOrEqual(3);
   });
 });

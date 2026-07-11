@@ -54,7 +54,7 @@ describe('Null Frontier', () => {
     }
   });
 
-  it('restores the chosen campaign and breach decision from a v3 snapshot', () => {
+  it('restores the chosen campaign and breach decision from the current snapshot', () => {
     const run = generateRunSkeleton('FRONTIER-SNAPSHOT');
     const contract = run.contracts[0]!;
     const session = createRunSession(run, contract);
@@ -69,7 +69,7 @@ describe('Null Frontier', () => {
     });
     const restored = restoreRunSnapshot(snapshot);
 
-    expect(snapshot.version).toBe(3);
+    expect(snapshot.version).toBe(4);
     expect(restored.run.frontierCampaign).toEqual(run.frontierCampaign);
     expect(restored.session.frontierDecision.decision).toBe('breach');
     expect(restored.session.currentSectorIndex).toBe(10);

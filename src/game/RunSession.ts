@@ -89,6 +89,17 @@ import {
   type FrontierDecision,
   type FrontierDecisionState
 } from './NullFrontier';
+import {
+  applyCarrierCommand as reduceCarrierCommand,
+  createCarrierInfluence,
+  createCarrierState,
+  resolveCarrierTransit,
+  stowCarrierCargo as reduceCarrierCargo,
+  type CarrierCargoEntry,
+  type CarrierCommand,
+  type CarrierCommandResult,
+  type CarrierState
+} from './CarrierCommand';
 
 export interface RouteHistoryEntry {
   readonly sectorIndex: number;
@@ -121,6 +132,7 @@ export interface RunSessionState {
   routeOutcomes: AppliedRouteOutcome[];
   interActChoices: InterActChoiceRecord[];
   frontierDecision: FrontierDecisionState;
+  carrier: CarrierState;
   shopRerollsBySector: Record<number, number>;
   lastCombatResult: CombatRunResult | null;
   objectiveHistory: MissionObjectiveOutcomeRecord[];
@@ -175,6 +187,7 @@ export function createRunSession(
     routeOutcomes: [],
     interActChoices: [],
     frontierDecision: createFrontierDecisionState(actTwoSectorIndex),
+    carrier: createCarrierState(run.carrierPlan),
     shopRerollsBySector: {},
     lastCombatResult: null,
     objectiveHistory: [],
@@ -190,6 +203,75 @@ export function createRunSession(
       detailId: run.expedition.id
     })
   };
+}
+
+export function applyCarrierCommand(
+  run: RunSkeleton,
+  session: RunSessionState,
+  command: CarrierCommand,
+  eventId = `carrier-command:${session.currentSectorIndex}:${session.carrier.history.length}`
+): CarrierCommandResult {
+  if (command.kind === 'assignCrew') {
+    const member = session.crewRoster.members.find(
+      (candidate) => candidate.candidateId === command.candidateId
+    );
+    const alreadyAssigned = session.carrier.facilities.some(
+      (facility) => facility.assignedCrewId === command.candidateId
+    );
+    if (member?.status !== 'active' || alreadyAssigned) {
+      return {
+        state: session.carrier,
+        disposition: 'rejected',
+        label: 'Crew member unavailable for carrier post',
+        creditCost: 0,
+        salvageCost: 0
+      };
+    }
+  }
+  const result = reduceCarrierCommand({
+    plan: run.carrierPlan,
+    state: session.carrier,
+    eventId,
+    sectorIndex: session.currentSectorIndex,
+    command,
+    availableCredits: session.credits,
+    availableSalvage: session.salvage
+  });
+  if (result.disposition !== 'applied') return result;
+  session.carrier = result.state;
+  session.credits -= result.creditCost;
+  session.salvage -= result.salvageCost;
+  recordRunSessionTimelineEvent(session, {
+    id: eventId,
+    category: 'carrier',
+    kind: command.kind,
+    sectorIndex: session.currentSectorIndex,
+    value: result.salvageCost,
+    subjectId: run.carrierPlan.carrierId,
+    detailId: result.label
+  });
+  return result;
+}
+
+export function stowCarrierCargo(
+  run: RunSkeleton,
+  session: RunSessionState,
+  cargo: CarrierCargoEntry
+): CarrierState {
+  const next = reduceCarrierCargo({ plan: run.carrierPlan, state: session.carrier, cargo });
+  if (next !== session.carrier) {
+    session.carrier = next;
+    recordRunSessionTimelineEvent(session, {
+      id: `carrier-cargo:${cargo.id}`,
+      category: 'carrier',
+      kind: 'cargo',
+      sectorIndex: cargo.sectorIndex,
+      value: cargo.value,
+      subjectId: cargo.id,
+      detailId: cargo.kind
+    });
+  }
+  return session.carrier;
 }
 
 export function applyFrontierDecision(
@@ -719,10 +801,16 @@ export function advanceSector(run: RunSkeleton, session: RunSessionState): boole
     return false;
   }
 
+  session.carrier = resolveCarrierTransit(
+    run.carrierPlan,
+    session.carrier,
+    session.currentSectorIndex
+  );
+  const carrierInfluence = createCarrierInfluence(run.carrierPlan, session.carrier);
   session.crewRoster = recoverEligibleCrew(
     run.crewRoster,
     session.crewRoster,
-    session.currentSectorIndex
+    session.currentSectorIndex + carrierInfluence.crewRecoveryAdvance
   );
   recordRunSessionTimelineEvent(session, {
     id: `sector-enter:${session.currentSectorIndex}`,

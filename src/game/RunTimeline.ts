@@ -5,6 +5,7 @@ export const RUN_TIMELINE_CATEGORIES = [
   'duration',
   'economy',
   'engineering',
+  'carrier',
   'faction',
   'rival',
   'crew',

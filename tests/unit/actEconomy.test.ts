@@ -47,8 +47,8 @@ describe('Act II economy tuning', () => {
     expect(snapshot).toEqual(repeated);
     expect(snapshot).toMatchSnapshot('fresh act II economy');
     expect(snapshot.shop.count).toBe(5);
-    expect(snapshot.eliteRewards).toHaveLength(4);
-    expect(snapshot.vaultRewards).toHaveLength(4);
+    expect(snapshot.eliteRewards).toHaveLength(5);
+    expect(snapshot.vaultRewards).toHaveLength(5);
     expect(snapshot.rerollCosts).toEqual([3, 4]);
   });
 

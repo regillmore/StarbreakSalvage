@@ -8,6 +8,7 @@ import {
 import { ACT_DEFINITIONS, type ActDefinition } from '../../src/content/acts';
 import { BACKGROUNDS, type BackgroundDefinition } from '../../src/content/backgrounds';
 import { BOSSES, type BossDefinition } from '../../src/content/bosses';
+import { CARRIERS, CARRIER_FACILITIES } from '../../src/content/carriers';
 import { validateContent } from '../../src/content/contentValidation';
 import { ENEMY_FORMATIONS, type EnemyFormationDefinition } from '../../src/content/enemyFormations';
 import { ENEMY_VARIANTS, type EnemyVariantDefinition } from '../../src/content/enemyVariants';
@@ -88,6 +89,8 @@ describe('validateContent', () => {
     expect(ACT_ROUTE_CONTRACTS.length).toBeGreaterThanOrEqual(13);
     expect(FACTIONS).toHaveLength(4);
     expect(BACKGROUNDS).toHaveLength(11);
+    expect(CARRIERS).toHaveLength(3);
+    expect(CARRIER_FACILITIES).toHaveLength(7);
     expect(ENVIRONMENT_OBJECT_DEFINITIONS.length).toBeGreaterThanOrEqual(8);
     expect(EXPEDITION_NODE_PROFILES.length).toBeGreaterThanOrEqual(6);
     expect(MISSION_STAGE_PROFILES.length).toBeGreaterThanOrEqual(8);

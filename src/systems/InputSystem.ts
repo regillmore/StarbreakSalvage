@@ -40,6 +40,7 @@ export const INPUT_ACTIONS = [
   'debugActTwoEntry',
   'debugFinaleSmoke',
   'debugFrontierGate',
+  'debugCarrierDeck',
   'debugTwoActSummary',
   'debugMissionAnthology',
   'debugMissionOptional'
@@ -101,6 +102,7 @@ export const DEFAULT_KEY_BINDINGS: KeyBindingMap = {
   debugActTwoEntry: ['I'],
   debugFinaleSmoke: ['F'],
   debugFrontierGate: ['G'],
+  debugCarrierDeck: ['Q'],
   debugTwoActSummary: ['Y'],
   debugMissionAnthology: ['M'],
   debugMissionOptional: ['N']

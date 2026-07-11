@@ -13,11 +13,12 @@ import { resolveEngineeringSnapshot } from './Foundry';
 import type { RunSessionState } from './RunSession';
 import { validateRunTimelineState } from './RunTimeline';
 import { validateOperationalProgressState } from './OperationalMap';
+import { createCarrierInfluence } from './CarrierCommand';
 
-export const RUN_SNAPSHOT_SCHEMA_VERSION = 3;
-export const RUN_SNAPSHOT_STORAGE_KEY = 'starbreak.run.v3';
-export const LEGACY_RUN_SNAPSHOT_STORAGE_KEYS = ['starbreak.run.v2', 'starbreak.run.v1'] as const;
-export const LEGACY_RUN_SNAPSHOT_STORAGE_KEY = LEGACY_RUN_SNAPSHOT_STORAGE_KEYS[1];
+export const RUN_SNAPSHOT_SCHEMA_VERSION = 4;
+export const RUN_SNAPSHOT_STORAGE_KEY = 'starbreak.run.v4';
+export const LEGACY_RUN_SNAPSHOT_STORAGE_KEYS = ['starbreak.run.v3', 'starbreak.run.v2', 'starbreak.run.v1'] as const;
+export const LEGACY_RUN_SNAPSHOT_STORAGE_KEY = LEGACY_RUN_SNAPSHOT_STORAGE_KEYS[2];
 export const RUN_SNAPSHOT_MAX_BYTES = 512 * 1024;
 
 export type RunSnapshotResumeTarget = 'sectorTransition' | 'gameplay' | 'operationalMap';
@@ -28,16 +29,16 @@ export interface RunSnapshotCheckpoint {
   readonly sequence: number;
 }
 
-export interface RunSnapshotExtensionsV3 {
-  readonly carrier: null;
+export interface RunSnapshotExtensionsV4 {
+  readonly carrier: { readonly planId: string };
   readonly boarding: null;
   readonly factionFronts: null;
   readonly fleet: null;
   readonly apex: null;
 }
 
-export interface RunSnapshotV3 {
-  readonly version: 3;
+export interface RunSnapshotV4 {
+  readonly version: 4;
   readonly plan: {
     readonly seed: string;
     readonly graphId: string;
@@ -48,18 +49,18 @@ export interface RunSnapshotV3 {
   };
   readonly checkpoint: RunSnapshotCheckpoint;
   readonly session: RunSessionState;
-  readonly extensions: RunSnapshotExtensionsV3;
+  readonly extensions: RunSnapshotExtensionsV4;
 }
 
 export interface RestoredRunSnapshot {
-  readonly snapshot: RunSnapshotV3;
+  readonly snapshot: RunSnapshotV4;
   readonly run: RunSkeleton;
   readonly contract: StartingContract;
   readonly session: RunSessionState;
 }
 
 export interface RunSnapshotLoadResult {
-  readonly snapshot: RunSnapshotV3 | null;
+  readonly snapshot: RunSnapshotV4 | null;
   readonly repaired: boolean;
   readonly error: string | null;
 }
@@ -88,7 +89,7 @@ export class RunSnapshotCoordinator {
     readonly session: RunSessionState;
     readonly target: RunSnapshotResumeTarget;
     readonly label: string;
-  }): RunSnapshotV3 {
+  }): RunSnapshotV4 {
     const snapshot = createRunSnapshot({
       ...options,
       sequence: options.session.timeline.entries.length
@@ -98,7 +99,7 @@ export class RunSnapshotCoordinator {
     return snapshot;
   }
 
-  public restore(snapshot: RunSnapshotV3): RestoredRunSnapshot {
+  public restore(snapshot: RunSnapshotV4): RestoredRunSnapshot {
     return restoreRunSnapshot(snapshot);
   }
 
@@ -114,12 +115,12 @@ export function createRunSnapshot(options: {
   readonly target: RunSnapshotResumeTarget;
   readonly label: string;
   readonly sequence?: number;
-}): RunSnapshotV3 {
+}): RunSnapshotV4 {
   const generationFingerprint = createRunGenerationSaveFingerprint(
     options.run.unlockedIds,
     options.run.upgradeEffects
   );
-  const snapshot: RunSnapshotV3 = {
+  const snapshot: RunSnapshotV4 = {
     version: RUN_SNAPSHOT_SCHEMA_VERSION,
     plan: {
       seed: options.run.seed,
@@ -136,7 +137,7 @@ export function createRunSnapshot(options: {
     },
     session: options.session,
     extensions: {
-      carrier: null,
+      carrier: { planId: options.run.carrierPlan.id },
       boarding: null,
       factionFronts: null,
       fleet: null,
@@ -146,7 +147,7 @@ export function createRunSnapshot(options: {
   return importRunSnapshot(exportRunSnapshot(snapshot));
 }
 
-export function restoreRunSnapshot(snapshot: RunSnapshotV3): RestoredRunSnapshot {
+export function restoreRunSnapshot(snapshot: RunSnapshotV4): RestoredRunSnapshot {
   const run = generateRunSkeleton(snapshot.plan.seed, {
     unlockedIds: snapshot.plan.unlockedIds,
     purchasedUpgradeIds: snapshot.plan.purchasedUpgradeIds
@@ -161,6 +162,9 @@ export function restoreRunSnapshot(snapshot: RunSnapshotV3): RestoredRunSnapshot
   if (run.expedition.id !== snapshot.plan.graphId) {
     throw new Error('Run snapshot graph identity does not match regenerated content.');
   }
+  if (snapshot.extensions.carrier.planId !== run.carrierPlan.id) {
+    throw new Error('Run snapshot carrier plan identity does not match regenerated content.');
+  }
   const contract = run.contracts.find((candidate) => candidate.id === snapshot.plan.contractId);
   if (!contract)
     throw new Error(`Run snapshot contract is unavailable: ${snapshot.plan.contractId}.`);
@@ -173,7 +177,7 @@ export function restoreRunSnapshot(snapshot: RunSnapshotV3): RestoredRunSnapshot
   };
 }
 
-export function createRunSnapshotSummary(snapshot: RunSnapshotV3): RunSnapshotSummary {
+export function createRunSnapshotSummary(snapshot: RunSnapshotV4): RunSnapshotSummary {
   const restored = restoreRunSnapshot(snapshot);
   const sector = restored.run.sectors[restored.session.currentSectorIndex]!;
   return {
@@ -197,7 +201,7 @@ export function loadRunSnapshot(storage: StorageLike): RunSnapshotLoadResult {
       return {
         snapshot: null,
         repaired: true,
-        error: 'A pre-Null-Frontier expedition snapshot was retired safely.'
+        error: 'A pre-carrier expedition snapshot was retired safely.'
       };
     }
     return { snapshot: null, repaired: false, error: null };
@@ -216,7 +220,7 @@ export function loadRunSnapshot(storage: StorageLike): RunSnapshotLoadResult {
   }
 }
 
-export function writeRunSnapshot(storage: StorageLike, snapshot: RunSnapshotV3): void {
+export function writeRunSnapshot(storage: StorageLike, snapshot: RunSnapshotV4): void {
   storage.setItem(RUN_SNAPSHOT_STORAGE_KEY, exportRunSnapshot(snapshot));
 }
 
@@ -225,7 +229,7 @@ export function clearRunSnapshot(storage: StorageLike): void {
   for (const key of LEGACY_RUN_SNAPSHOT_STORAGE_KEYS) storage.removeItem(key);
 }
 
-export function exportRunSnapshot(snapshot: RunSnapshotV3): string {
+export function exportRunSnapshot(snapshot: RunSnapshotV4): string {
   const serialized = JSON.stringify(snapshot);
   const byteLength = new TextEncoder().encode(serialized).byteLength;
   if (byteLength > RUN_SNAPSHOT_MAX_BYTES) {
@@ -234,7 +238,7 @@ export function exportRunSnapshot(snapshot: RunSnapshotV3): string {
   return serialized;
 }
 
-export function importRunSnapshot(serialized: string): RunSnapshotV3 {
+export function importRunSnapshot(serialized: string): RunSnapshotV4 {
   if (new TextEncoder().encode(serialized).byteLength > RUN_SNAPSHOT_MAX_BYTES) {
     throw new Error(`Run snapshot exceeds ${RUN_SNAPSHOT_MAX_BYTES} bytes.`);
   }
@@ -266,12 +270,15 @@ export function importRunSnapshot(serialized: string): RunSnapshotV3 {
     throw new Error('Run snapshot checkpoint is invalid.');
   }
   if (!isRecord(parsed.extensions)) throw new Error('Run snapshot extensions are missing.');
-  for (const key of ['carrier', 'boarding', 'factionFronts', 'fleet', 'apex']) {
+  if (!isRecord(parsed.extensions.carrier) || typeof parsed.extensions.carrier.planId !== 'string') {
+    throw new Error('Run snapshot v4 carrier extension is invalid.');
+  }
+  for (const key of ['boarding', 'factionFronts', 'fleet', 'apex']) {
     if (parsed.extensions[key] !== null) {
-      throw new Error(`Run snapshot v1 extension ${key} must be null.`);
+      throw new Error(`Run snapshot v4 extension ${key} must be null.`);
     }
   }
-  return parsed as unknown as RunSnapshotV3;
+  return parsed as unknown as RunSnapshotV4;
 }
 
 function validateSnapshotSession(
@@ -309,6 +316,27 @@ function validateSnapshotSession(
     !Number.isFinite(session.frontierDecision.salvageAwarded)
   ) {
     throw new Error('Run snapshot frontier decision state is invalid.');
+  }
+  if (
+    !isRecord(session.carrier) ||
+    session.carrier.planId !== run.carrierPlan.id ||
+    !Array.isArray(session.carrier.facilities) ||
+    session.carrier.facilities.length !== run.carrierPlan.facilitySlots ||
+    !Array.isArray(session.carrier.cargo) ||
+    !Array.isArray(session.carrier.history) ||
+    session.carrier.history.length > 64 ||
+    !Array.isArray(session.carrier.processedEventIds) ||
+    session.carrier.processedEventIds.length > 128 ||
+    !Number.isFinite(session.carrier.hull) ||
+    !Number.isFinite(session.carrier.heat) ||
+    !Number.isFinite(session.carrier.debt) ||
+    !Number.isFinite(session.carrier.pursuit)
+  ) {
+    throw new Error('Run snapshot carrier state is invalid.');
+  }
+  const carrierInfluence = createCarrierInfluence(run.carrierPlan, session.carrier);
+  if (carrierInfluence.cargoUsed > carrierInfluence.cargoCapacity) {
+    throw new Error('Run snapshot carrier cargo exceeds capacity.');
   }
   try {
     for (const instance of session.itemInstances) getItemById(instance.itemId);

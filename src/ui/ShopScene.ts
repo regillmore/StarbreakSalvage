@@ -29,6 +29,7 @@ import {
   createFactionCampaignDebugState,
   getFactionCampaignInfluence
 } from '../game/FactionCampaign';
+import { createCarrierInfluence } from '../game/CarrierCommand';
 
 export class ShopScene implements Scene {
   public readonly id = 'shop';
@@ -55,11 +56,14 @@ export class ShopScene implements Scene {
       this.session.factionCampaign,
       sector
     );
+    const carrier = createCarrierInfluence(this.run.carrierPlan, this.session.carrier);
+    const carrierAccess = carrier.factionAccess[sector.bossFactionId];
     const priceDiscount =
       shopModifiers.reduce((total, modifier) => total + modifier.discount, 0) +
       interActEffects.shopDiscount +
       this.run.upgradeEffects.shopDiscount +
-      campaign.shopDiscount;
+      campaign.shopDiscount +
+      (carrierAccess ? carrier.shopDiscount : -3);
     const stockBonus =
       shopModifiers.reduce((total, modifier) => total + modifier.stockBonus, 0) +
       this.run.upgradeEffects.shopStockBonus;
@@ -67,7 +71,8 @@ export class ShopScene implements Scene {
       ...shopModifiers.flatMap((modifier) => modifier.biasTags),
       ...interActEffects.rewardBiasTags,
       ...this.run.upgradeEffects.shopBiasTags,
-      ...campaign.shopBiasTags
+      ...campaign.shopBiasTags,
+      ...carrier.rewardBiasTags
     ];
     const engineering = createEngineeringCombatProfile(this.session.engineering);
     const inventory = generateShopInventory({
@@ -106,7 +111,10 @@ export class ShopScene implements Scene {
       `Credits ${this.session.credits}`,
       priceDiscount > 0 ? `Permit -${priceDiscount} prices` : null,
       actEconomyReadout,
-      `${campaign.responseLabel} ${campaign.shopDiscount >= 0 ? 'permit' : 'warrant'} ${campaign.shopDiscount >= 0 ? '-' : '+'}${Math.abs(campaign.shopDiscount)}`
+      `${campaign.responseLabel} ${campaign.shopDiscount >= 0 ? 'permit' : 'warrant'} ${campaign.shopDiscount >= 0 ? '-' : '+'}${Math.abs(campaign.shopDiscount)}`,
+      carrierAccess
+        ? `${this.run.carrierPlan.name} access -${carrier.shopDiscount}`
+        : `${this.run.carrierPlan.name} access restricted +3`
     ]
       .filter(Boolean)
       .join(' | ');

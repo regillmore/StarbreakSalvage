@@ -201,8 +201,8 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('expedition-readout')).toContainText('Black Box Signal');
   await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
   await page.keyboard.press('8');
-  await expect(page.getByTestId('mission-relief')).toBeVisible();
-  await page.getByTestId('mission-relief-continue').click();
+  await expect(page.getByTestId('command-deck')).toBeVisible();
+  await page.getByTestId('command-deck-continue').click();
   await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
   await page.keyboard.press('U');
   await expect(page.locator('.debug-overlay')).toContainText(
@@ -702,6 +702,18 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
   ).toHaveText('10');
   await expect(page.getByText('Act II Core Descent 5/5 | 2/3 acts secured')).toBeVisible();
 
+  await page.keyboard.press('Q');
+  await expect(page.getByTestId('command-deck')).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Command Deck/ })).toBeVisible();
+  await expect(page.getByTestId('carrier-risk-readout')).toContainText(/Hull .* Heat .* Debt .* Pursuit/);
+  await expect(page.locator('[data-facility]')).toHaveCount(4);
+  await page.locator('[data-testid^="carrier-service-"]').click();
+  await expect(page.locator('.debug-overlay')).toContainText('Carrier');
+  await expect(page.getByTestId('command-deck-continue')).toHaveText('Launch Gate Operation');
+  await page.getByTestId('command-deck-continue').focus();
+  await page.keyboard.press('Enter');
+  await expectGameplaySector(page, 'Trade War Corridor', 2);
+
   await page.keyboard.press('M');
   await expect(page.getByTestId('mission-objective-preview')).toContainText('SABOTAGE');
   await page.keyboard.press('N');
@@ -939,8 +951,8 @@ test('suspends, reloads, resumes, and clears a versioned expedition snapshot', a
   await page.getByTestId('resume-expedition').click();
   await expect(page.getByTestId('mission-branch')).toBeVisible();
   await page.keyboard.press('Enter');
-  await expect(page.getByTestId('mission-relief')).toBeVisible();
-  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('command-deck')).toBeVisible();
+  await page.getByTestId('command-deck-continue').click();
   await expectGameplaySector(page, 'Outer Debris Field');
 
   await page.keyboard.press('Escape');
@@ -1035,7 +1047,7 @@ async function forceCompleteSectorAndEnterNext(page: Page, nextSectorName: strin
   await expect(page.getByTestId('sector-exit-toast')).toContainText(/clear \| route telemetry/);
   await expect(page.getByTestId('mission-branch')).toBeVisible();
   await page.getByTestId('mission-branch-direct').click();
-  await page.getByTestId('mission-relief-continue').click();
+  await page.getByTestId('command-deck-continue').click();
   await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
   await page.keyboard.press('8');
   await expect(page.getByTestId('mission-branch')).toBeVisible();

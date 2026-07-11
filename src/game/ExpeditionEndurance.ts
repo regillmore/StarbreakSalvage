@@ -23,6 +23,8 @@ export interface ExpeditionEnduranceBoundaryReport {
   readonly engineeringHistory: number;
   readonly factionHistory: number;
   readonly crewHistory: number;
+  readonly carrierHistory: number;
+  readonly carrierCargo: number;
   readonly timelineEntries: number;
   readonly itemCount: number;
   readonly setPieceComponents: number;
@@ -37,6 +39,8 @@ export interface ExpeditionEnduranceReport {
   readonly maxTimelineEntries: number;
   readonly maxFactionHistory: number;
   readonly maxCrewHistory: number;
+  readonly maxCarrierHistory: number;
+  readonly maxCarrierCargo: number;
   readonly maxEngineeringHistory: number;
   readonly totalRoundTrips: number;
 }
@@ -93,6 +97,8 @@ export function runExpeditionEnduranceHarness(options: {
     maxTimelineEntries: Math.max(...boundaries.map((boundary) => boundary.timelineEntries)),
     maxFactionHistory: Math.max(...boundaries.map((boundary) => boundary.factionHistory)),
     maxCrewHistory: Math.max(...boundaries.map((boundary) => boundary.crewHistory)),
+    maxCarrierHistory: Math.max(...boundaries.map((boundary) => boundary.carrierHistory)),
+    maxCarrierCargo: Math.max(...boundaries.map((boundary) => boundary.carrierCargo)),
     maxEngineeringHistory: Math.max(...boundaries.map((boundary) => boundary.engineeringHistory)),
     totalRoundTrips: boundaries.length
   };
@@ -130,6 +136,8 @@ function roundTripBoundary(options: {
     engineeringHistory: restored.session.engineering.history.length,
     factionHistory: restored.session.factionCampaign.history.length,
     crewHistory: restored.session.crewRoster.history.length,
+    carrierHistory: restored.session.carrier.history.length,
+    carrierCargo: restored.session.carrier.cargo.length,
     timelineEntries: restored.session.timeline.entries.length,
     itemCount: restored.session.itemInstances.length,
     setPieceComponents,

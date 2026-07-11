@@ -372,10 +372,14 @@ export function getRecruitableCrewCandidate(
 export function createCrewCombatProfile(
   plan: CrewRosterPlan,
   state: CrewRosterState,
-  loadout: ResolvedShipLoadout
+  loadout: ResolvedShipLoadout,
+  options: { readonly excludedCandidateIds?: readonly string[] } = {}
 ): CrewCombatProfile {
   const headroom = Math.max(0, loadout.resources.commandHeadroom);
-  const active = state.members.filter((member) => member.status === 'active');
+  const excluded = new Set(options.excludedCandidateIds ?? []);
+  const active = state.members.filter(
+    (member) => member.status === 'active' && !excluded.has(member.candidateId)
+  );
   const members: CrewCombatMemberProfile[] = [];
   const overflowCandidateIds: string[] = [];
   let used = 0;

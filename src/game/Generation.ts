@@ -53,6 +53,7 @@ import {
   type FrontierLaw,
   type NullFrontierCampaignPlan
 } from './NullFrontier';
+import { createCarrierPlan, type CarrierPlan } from './CarrierCommand';
 import { createLegacyStartingLoadout, type ResolvedShipLoadout } from './ShipLoadout';
 import { resolveRunUpgradeEffects, type RunUpgradeEffects } from './UpgradeEffects';
 import {
@@ -134,6 +135,7 @@ export interface RunSkeleton {
   readonly factionCampaign: FactionCampaignPlan;
   readonly crewRoster: CrewRosterPlan;
   readonly frontierCampaign: NullFrontierCampaignPlan;
+  readonly carrierPlan: CarrierPlan;
   readonly contracts: readonly StartingContract[];
   readonly sectors: readonly SectorRoute[];
 }
@@ -230,6 +232,11 @@ export function generateRunSkeleton(
     saveFingerprint,
     rng: rootRng.fork('null-frontier')
   });
+  const carrierPlan = createCarrierPlan({
+    seed,
+    saveFingerprint,
+    rng: rootRng.fork('carrier')
+  });
   const sectorSequence = selectSectorSequence(seed, frontierCampaign);
   const acts = createRunActPlan(sectorSequence);
   const actContexts = createActSectorContexts(acts);
@@ -276,6 +283,7 @@ export function generateRunSkeleton(
       ...frontierCampaign,
       standardTargetSeconds: expedition.capacity.baselineTargetSeconds
     },
+    carrierPlan,
     contracts,
     sectors
   };
@@ -777,6 +785,15 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
       standardTargetSeconds: run.frontierCampaign.standardTargetSeconds,
       laws: run.frontierCampaign.sectors.map((sector) => [sector.sectorId, sector.law.id]),
       factionHooks: run.frontierCampaign.sectors.map((sector) => sector.factionHook)
+    },
+    carrier: {
+      id: run.carrierPlan.id,
+      carrierId: run.carrierPlan.carrierId,
+      name: run.carrierPlan.name,
+      origin: run.carrierPlan.origin,
+      facilities: run.carrierPlan.startingFacilities,
+      cargoCapacity: run.carrierPlan.baseCargoCapacity,
+      liaisonFactionId: run.carrierPlan.liaisonFactionId
     },
     ...(run.upgradeEffects.activeUpgradeIds.length > 0
       ? {

@@ -695,6 +695,14 @@ seed + permanent save fingerprint
 - Run sessions and the bounded timeline store the frontier decision. Snapshot schema/storage v3 validates it and retires v1/v2 independently of permanent save v5. Early extraction saves ten cleared sectors; frontier victory saves all fifteen and identifies the generated campaign in finale metadata.
 - Graph nodes retain their schema-v2 topology but use 75% duration bands. The complete standard projection is 1,689 seconds (28.15 minutes), and every detour/pursuit projects 2,199 seconds (36.65 minutes), with simulation speed and durability unchanged.
 
+### Work order 104 implementation
+
+- `src/content/carriers.ts` defines three carrier hull contracts and seven facility definitions. Each generated run receives one seed/save-fingerprint-stable `CarrierPlan` with four slots, bounded base cargo, replacement order, and liaison faction.
+- `src/game/CarrierCommand.ts` owns the plain-data carrier reducer and influence read model. Commands are idempotent, spend explicit run-local resources, allow only one command action per sector, and cap history at 64 entries/128 ids. Transit deterministically folds posture, powered facilities, hull, heat, debt, pursuit, damage, and access without runtime RNG.
+- Carrier influence is consumed at existing seams: mission branches can close optional lanes under critical carrier pressure; the foundry stows component manifests and gains facility salvage; rewards consume vault/foundry bias and choice capacity; injured crew can recover early; shops consume liaison access and discounts. Hangar/foundry state exposes bounded support and boarding capacities for later systems rather than instantiating premature parallel engines.
+- `CommandDeckScene` appears only at the clean staging relief boundary and is dynamically imported. The scene consumes read models/callbacks, uses native buttons and text status under narrow/contrast/reduced-motion settings, and offers a direct continue path without mandatory upkeep.
+- Snapshot schema/storage v4 validates carrier plan identity, facility count, numeric pressure fields, cargo capacity, and history bounds. The carrier remains inside run-local session state and a small carrier extension identity; permanent save v5 is unchanged and v1-v3 snapshots retire safely.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

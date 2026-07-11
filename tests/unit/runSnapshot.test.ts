@@ -7,6 +7,7 @@ import {
   RUN_SNAPSHOT_MAX_BYTES,
   RUN_SNAPSHOT_STORAGE_KEY,
   LEGACY_RUN_SNAPSHOT_STORAGE_KEY,
+  LEGACY_RUN_SNAPSHOT_STORAGE_KEYS,
   RunSnapshotCoordinator,
   clearRunSnapshot,
   createRunSnapshot,
@@ -52,7 +53,7 @@ describe('RunSnapshot', () => {
     expect(restored.session).toEqual(session);
     expect(restored.session).not.toBe(session);
     expect(restored.snapshot.extensions).toEqual({
-      carrier: null,
+      carrier: { planId: run.carrierPlan.id },
       boarding: null,
       factionFronts: null,
       fleet: null,
@@ -149,6 +150,17 @@ describe('RunSnapshot', () => {
     expect(storage.getItem(SAVE_STORAGE_KEY)).toBe('permanent-save-sentinel');
   });
 
+  it('retires every pre-carrier snapshot generation safely', () => {
+    for (const key of LEGACY_RUN_SNAPSHOT_STORAGE_KEYS) {
+      const storage = new MemoryStorage();
+      storage.setItem(SAVE_STORAGE_KEY, 'permanent-save-sentinel');
+      storage.setItem(key, '{"legacy":true}');
+      expect(loadRunSnapshot(storage)).toMatchObject({ snapshot: null, repaired: true });
+      expect(storage.getItem(key)).toBeNull();
+      expect(storage.getItem(SAVE_STORAGE_KEY)).toBe('permanent-save-sentinel');
+    }
+  });
+
   it('rejects plan, contract, mission, and extension drift before restore', () => {
     const run = generateRunSkeleton('SNAPSHOT-DRIFT');
     const contract = run.contracts[0]!;
@@ -182,7 +194,7 @@ describe('RunSnapshot', () => {
           extensions: { ...snapshot.extensions, carrier: { id: 'too-early' } }
         })
       )
-    ).toThrow(/extension carrier must be null/);
+    ).toThrow(/carrier extension is invalid/);
   });
 
   it('enforces the snapshot byte budget and explicit storage helpers', () => {

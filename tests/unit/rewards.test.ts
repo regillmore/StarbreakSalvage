@@ -167,7 +167,7 @@ describe('reward generation', () => {
           sourceHint: 'Elite pool'
         },
         {
-          id: 'item_market_echo_locator',
+          id: 'item_prototype_vent_script',
           profile: 'elite',
           sourceHint: 'Elite pool'
         }
@@ -179,7 +179,7 @@ describe('reward generation', () => {
           sourceHint: 'vault source'
         },
         {
-          id: 'item_excess_warhead_clause',
+          id: 'item_plasma_bloom_filter',
           profile: 'vault',
           sourceHint: 'vault source'
         },
@@ -201,7 +201,7 @@ describe('reward generation', () => {
           sourceHint: 'Lunar pool'
         },
         {
-          id: 'item_crater_shadow_lens',
+          id: 'item_regolith_scoop_array',
           profile: 'lunar',
           sourceHint: 'lunar source'
         }

@@ -26,6 +26,10 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
       "item_phase_breaker_subpoena",
       "boss source",
     ],
+    [
+      "item_missile_splinter_warrant",
+      "Elite pool",
+    ],
   ],
   "rerollCosts": [
     3,
@@ -78,6 +82,10 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
       "item_arc_window_invoice",
       "vault source",
     ],
+    [
+      "item_plasma_bloom_filter",
+      "vault source",
+    ],
   ],
 }
 `;
@@ -107,6 +115,10 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
     [
       "item_phase_breaker_subpoena",
       "boss source",
+    ],
+    [
+      "item_missile_splinter_warrant",
+      "Elite pool",
     ],
   ],
   "rerollCosts": [
@@ -167,6 +179,10 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
     ],
     [
       "item_plasma_bloom_filter",
+      "vault source",
+    ],
+    [
+      "item_excess_warhead_clause",
       "vault source",
     ],
   ],
