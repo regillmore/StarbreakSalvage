@@ -18,6 +18,7 @@ import {
   getActiveEnvironmentObjects,
   getEnvironmentObjectScreenState,
   prepareDebugEnvironmentStressScenario,
+  prepareDebugCombinedPhaseTenScenario,
   prepareDebugItemStormScenario,
   prepareDebugEnemyRichScenario,
   prepareDebugLongScrollScenario,
@@ -31,6 +32,8 @@ import {
 } from '../game/CombatState';
 import { CREW_COMMANDS, type CrewCommand } from '../content/crew';
 import type { CrewCombatProfile } from '../game/CrewCommand';
+import { createRunTimelineDebugState, type RunTimelineState } from '../game/RunTimeline';
+import type { ScenarioLabGameplayPreset } from '../game/ScenarioLab';
 import type { BossId } from '../content/bosses';
 import { getFactionById } from '../content/factions';
 import type { SectorId } from '../content/sectors';
@@ -243,6 +246,7 @@ export class GameplayScene implements Scene {
   private queuedSpecial = false;
   private queuedBomb = false;
   private debugScenario: string | null = null;
+  private scenarioLabPreset: ScenarioLabGameplayPreset | null = null;
 
   public constructor(
     private readonly uiRoot: HTMLElement,
@@ -266,7 +270,8 @@ export class GameplayScene implements Scene {
     private readonly missionContext: GameplayMissionContext | null = null,
     private readonly campaignInfluence: FactionCampaignInfluence | null = null,
     private readonly campaignState: FactionCampaignState | null = null,
-    private readonly crewProfile: CrewCombatProfile | null = null
+    private readonly crewProfile: CrewCombatProfile | null = null,
+    private readonly runTimeline: RunTimelineState | null = null
   ) {
     this.positionReadout = document.createElement('p');
     this.positionReadout.className = 'sr-only';
@@ -790,6 +795,30 @@ export class GameplayScene implements Scene {
     return this.withWorldOffset(forceCombatEnd(this.getCombatState(), reason));
   }
 
+  public prepareScenarioLabPreset(preset: ScenarioLabGameplayPreset): void {
+    const state = this.getCombatState();
+    const feedbackBefore = createCombatFeedbackSnapshot(state);
+    this.scenarioLabPreset = preset;
+
+    if (preset === 'setPiece' || preset === 'combined') {
+      const jumpDistance = getSetPieceDebugJumpDistance(state.setPiece?.plan ?? null);
+      if (jumpDistance !== null) {
+        const scroll = this.getScrollState();
+        setScrollDistance(scroll, jumpDistance, scroll.plan.baseSpeed);
+        state.scrollDistance = scroll.distance;
+        this.updateBossArena(scroll.distance, state);
+      }
+    }
+    if (preset === 'combined') {
+      prepareDebugCombinedPhaseTenScenario(state, this.getCombatBounds());
+    }
+
+    this.sectorCompleted = false;
+    this.debugScenario = `lab:${preset}`;
+    this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
+    this.syncReadouts();
+  }
+
   public prepareDebugFinaleSmoke(): boolean {
     const sector = this.getCurrentSector();
     const finale = sector.finale;
@@ -918,6 +947,21 @@ export class GameplayScene implements Scene {
           (ally) => `${ally.callsign}:${ally.status}:H${ally.hull}/${ally.maxHull}:${ally.fitLabel}`
         )
       },
+      runTimeline: this.runTimeline ? createRunTimelineDebugState(this.runTimeline) : undefined,
+      scenarioLab: this.scenarioLabPreset
+        ? {
+            scenarioCount: 8,
+            activeScenario: this.scenarioLabPreset,
+            systems: [
+              'mission actors',
+              'multi-part geometry',
+              'ally AI',
+              'module/item procs',
+              'sustained load'
+            ],
+            budget: `E${entityCounts.enemies} A${entityCounts.allies} P${entityCounts.projectiles} G${entityCounts.setPieceComponents ?? 0} H${combatState.procTelemetry.budget}`
+          }
+        : undefined,
       actPressure: createActPressureDebugState({
         model: this.getActPressureModel(),
         enemyRoles,

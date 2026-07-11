@@ -347,6 +347,42 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   width: min(94vw, 1040px);
 }
 
+.scenario-lab-panel {
+  max-height: min(94vh, 900px);
+  overflow: auto;
+}
+
+.scenario-lab-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.scenario-lab-card {
+  min-height: 0;
+}
+
+.scenario-lab-setup,
+.scenario-lab-budget,
+.scenario-timeline-list {
+  font-family: 'Cascadia Mono', 'Courier New', monospace;
+  font-size: 0.78rem;
+}
+
+.scenario-timeline-list {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding-left: 1.5rem;
+  text-align: left;
+}
+
+@media (max-width: 640px) {
+  .scenario-lab-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .reward-panel,
 .shop-panel,
 .foundry-panel {

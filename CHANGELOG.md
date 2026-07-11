@@ -4,6 +4,8 @@
 
 ### Gameplay and UX
 
+- Added a debug-only eight-card Expedition Scenario Lab for generated nodes, optional missions, foundry/loadout state, set pieces, recurring rivals, crew command, combined Phase 10 pressure, and timeline audit through public run/session/read models. The `B` shortcut and main-menu button remain local, use no telemetry, and yield to explicitly remapped gameplay controls.
+- Added a deterministic run-local timeline for node/stage transitions, choices, duration, economy, engineering, faction, rival, crew, boss, and run-end/failure events, capped at 96 display entries and 192 processed ids with summary and debug readouts and no save-schema change.
 - Added three reusable multi-part set-piece contracts: the Hecaton Ledger Ark capital ship, Bloom Spindle Exchange station, and Court Wreck-Train Crown convoy hulk. Their shield emitters, armor, turrets, hangars, engines, couplers, and weak points use dependency-gated targeting, exterior/interior/destruction stages, fixed 640x720 safe lanes, capped subsystem pressure, deterministic loose-currency rewards, objective accounting, and a finale boss lock, with a public `U` debug jump and accessibility-aware rendering.
 - Added data-driven sector objectives, deterministic directed wave schedules, HUD objective progress, and boss-gated late sectors.
 - Added first-pass special burst fire, bomb danger cancellation, deterministic graze charge, verb HUD readouts, and procedural cues for those verbs.
@@ -76,6 +78,7 @@
 
 ### Testing
 
+- Added Scenario Lab definition/setup and timeline fold/bounds tests plus a narrow keyboard-only Chromium path covering high contrast, reduced motion, performance mode, combined set-piece/crew/item/environment pressure, timeline audit, and foundry access.
 - Added expedition graph/content validation, known-seed snapshots, fresh/progressed save-state variation, deterministic decision replay, compatibility progress, capacity, broken-reference, save-migration, HUD/debug, and no-`Math.random()` coverage.
 - Verified work order 091 with 67 passing test files/389 tests, all 11 Playwright Chromium paths, and production preview asset-path smoke under `/StarbreakSalvage/`.
 - Added a repeatable Phase 6 item catalog audit helper and unit coverage for the current rarity, tag, hook, reward-pool, archetype, unlock, target-family, and bridge-effect baseline.

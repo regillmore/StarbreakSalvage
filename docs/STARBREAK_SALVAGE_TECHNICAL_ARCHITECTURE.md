@@ -586,9 +586,10 @@ Work order 098 implementation:
 
 ### Run timeline and Scenario Lab
 
-- Emit compact timeline events for node/stage transitions, branch choices, economy, engineering, faction/rival/crew outcomes, bosses, and run end. Store ids and small payloads; resolve player-facing copy later.
-- Bound timeline length and per-category detail before it reaches save data. This is local diagnostics and summary context, never telemetry.
-- Scenario Lab setup helpers should accept public content/plan ids and return the same read models used by gameplay. Browser smoke should not mutate private fields to reach late systems.
+- `src/game/RunTimeline.ts` folds compact idempotent node/stage, branch, economy, engineering, faction/rival/crew, boss, duration, and run-end events. It retains 96 display entries and 192 processed ids, calculates elapsed time only from explicit simulation/result durations, formats summaries/debug rows after the fold, and remains a run-session field rather than save data or telemetry.
+- `src/game/ScenarioLab.ts` owns eight declarative debug definitions and the public setup function. Each call creates a fresh seeded `RunSession`, applies named faction/crew/foundry fixtures, and advances stages with exported mission/session events. The UI receives a compact setup read model and never reaches through `GameApp` private fields.
+- `ScenarioLabScene` routes launches into the production transition, gameplay, and foundry scenes. The combined gameplay preset composes existing enemy-rich/environment stress helpers with the generated set-piece, three-ally crew fixture, engineering/faction state, and 23-item hook loadout; normal entity/proc/geometry caps remain authoritative.
+- The lab is available only when `?debug=1` is active, creates no external requests, and discards each fixture when another scenario or menu route is selected. Explicitly remapped gameplay controls suppress colliding debug shortcuts.
 
 Recommended module direction:
 

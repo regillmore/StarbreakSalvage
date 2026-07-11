@@ -1352,6 +1352,23 @@ export function prepareDebugEnvironmentStressScenario(
   });
 }
 
+export function prepareDebugCombinedPhaseTenScenario(
+  state: CombatState,
+  bounds: CombatBounds
+): void {
+  prepareDebugEnemyRichScenario(state, bounds);
+  const enemies = [...state.enemies];
+  const projectiles = [...state.projectiles];
+  const telegraphs = [...state.telegraphs];
+  const combatEffects = [...state.effects];
+  prepareDebugEnvironmentStressScenario(state, bounds);
+  state.enemies = enemies;
+  state.projectiles = projectiles;
+  state.telegraphs = telegraphs;
+  state.effects = [...combatEffects, ...state.effects].slice(0, MAX_ENVIRONMENT_FEEDBACK_EFFECTS);
+  state.player.invulnerableSeconds = 2;
+}
+
 export function prepareDebugItemStormScenario(
   state: CombatState,
   bounds: CombatBounds,

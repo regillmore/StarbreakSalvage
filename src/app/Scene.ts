@@ -10,6 +10,7 @@ import type { MissionDebugState } from '../game/MissionDirector';
 import type { ShipLoadoutDebugState } from '../game/ShipLoadout';
 import type { EngineeringDebugState } from '../game/Foundry';
 import type { FactionCampaignDebugState } from '../game/FactionCampaign';
+import type { RunTimelineDebugState } from '../game/RunTimeline';
 
 export interface SceneDebugState {
   readonly seed: string;
@@ -85,6 +86,13 @@ export interface SceneDebugState {
     readonly commandCooldown: number;
     readonly issuedCommands: number;
     readonly allies: readonly string[];
+  };
+  readonly runTimeline?: RunTimelineDebugState;
+  readonly scenarioLab?: {
+    readonly scenarioCount: number;
+    readonly activeScenario: string | null;
+    readonly systems: readonly string[];
+    readonly budget: string;
   };
   readonly actPressure?: ActPressureDebugState;
   readonly finale?: SecondActFinaleDebugState;

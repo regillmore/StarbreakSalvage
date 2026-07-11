@@ -713,6 +713,62 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
   expect(browserErrors).toEqual([]);
 });
 
+test('opens Phase 10 Scenario Lab fixtures under narrow accessible performance settings', async ({
+  page
+}) => {
+  test.setTimeout(90_000);
+  const browserErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') browserErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => browserErrors.push(error.message));
+  await page.setViewportSize({ width: 390, height: 700 });
+  await page.addInitScript((settings) => {
+    window.localStorage.setItem('starbreak.settings.v1', JSON.stringify(settings));
+  }, HIGH_CONTRAST_SETTINGS);
+
+  await page.goto('./?debug=1&seed=SCENARIO-LAB-SMOKE');
+  await expect(page.locator('html')).toHaveAttribute('data-reduced-motion', 'true');
+  await expect(page.locator('html')).toHaveAttribute('data-bullet-contrast', 'high');
+  await expect(page.locator('html')).toHaveAttribute('data-performance-mode', 'true');
+
+  for (let index = 0; index < 5; index += 1) await page.keyboard.press('Tab');
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('scenario-lab')).toBeVisible();
+  await expect(page.getByTestId('scenario-lab-intro')).toContainText('deterministic session');
+  await expect(page.locator('[data-testid^="scenario-lab-lab_"]')).toHaveCount(8);
+  await expect(page.locator('.debug-overlay')).toContainText('Scenario Lab catalog 8 cases');
+
+  for (let index = 0; index < 6; index += 1) await page.keyboard.press('Tab');
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('cockpit-hud')).toBeVisible();
+  await expect(page.locator('.debug-overlay')).toContainText('Scenario lab:combined');
+  await expect(page.locator('.debug-overlay')).toContainText('Scenario Lab combined 8 cases');
+  await expect(page.locator('.debug-overlay')).toContainText('Set-piece');
+  await expect(page.locator('.debug-overlay')).toContainText('Allies');
+  await expect(page.locator('.debug-overlay')).toContainText('Combined proc');
+  await expect(page.locator('.debug-overlay')).toContainText('Timeline');
+
+  await page.keyboard.press('B');
+  await expect(page.getByTestId('scenario-lab')).toBeVisible();
+  for (let index = 0; index < 7; index += 1) await page.keyboard.press('Tab');
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('scenario-timeline')).toBeVisible();
+  await expect(page.getByTestId('scenario-timeline-list')).toContainText('decision:fixture');
+  await expect(page.getByTestId('scenario-timeline-list')).toContainText('boss:fixture');
+
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('scenario-lab')).toBeVisible();
+  for (let index = 0; index < 2; index += 1) await page.keyboard.press('Tab');
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('salvage-foundry')).toBeVisible();
+  await expect(page.getByTestId('foundry-boundary')).toContainText('Scenario Lab fixture');
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('scenario-lab')).toBeVisible();
+
+  expect(browserErrors).toEqual([]);
+});
+
 test('launches gameplay with reduced motion and high contrast settings by keyboard', async ({
   page
 }) => {

@@ -1798,7 +1798,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 099.
+- Implemented in work order 099. Eight declarative debug-only scenarios create fresh deterministic sessions through public mission/session helpers and open the normal transition, gameplay, and foundry surfaces for expedition nodes, optional stages, loadouts/engineering, set pieces, rivals, crew, combined pressure, and timeline audit. The local run timeline is deterministic, summary-readable, save-safe, telemetry-free, and bounded to 96 display entries plus 192 processed ids. Debug instrumentation combines mission actors, 7-8 set-piece parts, up to three allies, item/module proc budgets, environment/object/pickup pressure, timeline categories, and cleanup-relevant entity counts. A 390x700 keyboard-only Chromium path covers high contrast, reduced motion, performance mode, combined stress, timeline, and foundry while the full 12-path suite preserves prior shortcuts.
 
 ### BG2 - Phase 10 release checklist
 

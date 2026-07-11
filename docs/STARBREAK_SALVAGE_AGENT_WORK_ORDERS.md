@@ -1679,7 +1679,9 @@ Acceptance criteria:
 - Existing item, enemy, environment, Act II, dense, destruction, exit, and long-scroll smoke remain green.
 - Accessibility and combined performance budgets are documented before final release hardening.
 
-Status: planned.
+Status: implemented. Debug mode now exposes an eight-card Expedition Scenario Lab from the main menu and the remap-safe `B` shortcut. Declarative definitions create fresh deterministic run sessions for an expedition briefing, optional mission combat, three-component foundry fixture, set-piece anchor, returning rival, three-member crew wing, combined Phase 10 pressure, and timeline audit. Launches advance through exported mission/session events and open the production transition, gameplay, and foundry scenes; browser smoke does not mutate private app fields. The combined preset composes existing bounded enemy-rich and environmental fixtures with the generated 7-8-part set piece, up to three allies, a 23-item hook loadout, and public faction/engineering state. `RunTimeline` folds explicit events into at most 96 display entries and 192 processed ids, derives elapsed time only from supplied durations, appears in debug and run summaries, never enters save data, and makes no network or telemetry calls. Debug readouts now join mission, geometry, ally, proc, entity, and timeline budgets.
+
+Verification: `npm run check` passes with 79 test files and 463 tests; all 12 Playwright Chromium smoke paths pass, including the new 390x700 keyboard-only high-contrast/reduced-motion/performance Scenario Lab path. Production preview returns HTTP 200 for `/StarbreakSalvage/` and both hashed CSS/JavaScript assets. The build remains green with a 657.78 kB main-chunk warning; code splitting, manual non-Chromium/real-device profiling, full-run duration, balance, and combined readability remain work-order-100 risks.
 
 ## Work order 100 - Phase 10 expedition playtest release hardening
 

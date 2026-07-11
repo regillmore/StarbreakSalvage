@@ -32,6 +32,7 @@ export const INPUT_ACTIONS = [
   'debugSetPiece',
   'debugRivalCampaign',
   'debugCrewWing',
+  'debugScenarioLab',
   'debugSectorComplete',
   'debugDestroyPlayer',
   'debugLongScroll',
@@ -91,6 +92,7 @@ export const DEFAULT_KEY_BINDINGS: KeyBindingMap = {
   debugSetPiece: ['U'],
   debugRivalCampaign: ['R'],
   debugCrewWing: ['T'],
+  debugScenarioLab: ['B'],
   debugSectorComplete: ['8'],
   debugDestroyPlayer: ['7'],
   debugLongScroll: ['9'],
@@ -119,10 +121,18 @@ export function actionsForKey(
   bindings: KeyBindingMap = DEFAULT_KEY_BINDINGS
 ): InputAction[] {
   const normalizedKey = normalizeKey(key);
-
-  return INPUT_ACTIONS.filter((action) =>
+  const matches = INPUT_ACTIONS.filter((action) =>
     bindings[action].some((boundKey) => normalizeKey(boundKey) === normalizedKey)
   );
+  const hasExplicitGameplayRemap = matches.some(
+    (action) =>
+      !action.startsWith('debug') &&
+      !DEFAULT_KEY_BINDINGS[action].some((boundKey) => normalizeKey(boundKey) === normalizedKey)
+  );
+
+  return hasExplicitGameplayRemap
+    ? matches.filter((action) => !action.startsWith('debug'))
+    : matches;
 }
 
 export function primaryActionForKey(

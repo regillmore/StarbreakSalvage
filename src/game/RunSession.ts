@@ -68,6 +68,12 @@ import {
   type CrewRosterPlan,
   type CrewRosterState
 } from './CrewCommand';
+import {
+  createRunTimeline,
+  recordRunTimelineEvent,
+  type RunTimelineEvent,
+  type RunTimelineState
+} from './RunTimeline';
 
 export interface RouteHistoryEntry {
   readonly sectorIndex: number;
@@ -104,6 +110,7 @@ export interface RunSessionState {
   engineering: EngineeringState;
   factionCampaign: FactionCampaignState;
   crewRoster: CrewRosterState;
+  timeline: RunTimelineState;
 }
 
 export interface MissionObjectiveOutcomeRecord extends MissionObjectiveResultSnapshot {
@@ -151,7 +158,15 @@ export function createRunSession(
     objectiveHistory: [],
     engineering: createEngineeringState(contract.loadout),
     factionCampaign: createFactionCampaignState(run.factionCampaign),
-    crewRoster: createCrewRosterState(run.crewRoster)
+    crewRoster: createCrewRosterState(run.crewRoster),
+    timeline: recordRunTimelineEvent(createRunTimeline(), {
+      id: `run-start:${run.seed}:${contract.id}`,
+      category: 'run',
+      kind: 'start',
+      sectorIndex: 0,
+      subjectId: contract.id,
+      detailId: run.expedition.id
+    })
   };
 }
 
@@ -184,6 +199,25 @@ export function recordSectorCombatResult(
     result.salvage +
     Math.max(1, result.enemiesDestroyed) +
     getActEconomyCombatSalvageBonus(actEconomy, result);
+  recordRunSessionTimelineEvent(session, {
+    id: `combat:${session.currentSectorIndex}:${result.reason}:${session.mission.transitions.length}`,
+    category: result.bossesDefeated > 0 ? 'boss' : 'duration',
+    kind: result.bossesDefeated > 0 ? 'defeated' : 'combat',
+    sectorIndex: session.currentSectorIndex,
+    durationSeconds: result.survivedSeconds,
+    value: result.enemiesDestroyed,
+    subjectId: result.reason,
+    detailId: result.crew ? `crew-${result.crew.members.length}` : null
+  });
+  recordRunSessionTimelineEvent(session, {
+    id: `combat-economy:${session.currentSectorIndex}:${session.mission.transitions.length}`,
+    category: 'economy',
+    kind: 'combatReward',
+    sectorIndex: session.currentSectorIndex,
+    value: result.credits + result.salvage,
+    subjectId: `credits-${result.credits}`,
+    detailId: `salvage-${result.salvage}`
+  });
 }
 
 export function recordMissionObjectiveOutcome(
@@ -222,6 +256,15 @@ export function recordMissionObjectiveOutcome(
   session.objectiveHistory = [...session.objectiveHistory, record];
   session.salvage += record.salvageBonus;
   session.curse += record.cursePenalty;
+  recordRunSessionTimelineEvent(session, {
+    id: `objective:${outcome.stageId}`,
+    category: 'mission',
+    kind: outcome.outcome,
+    sectorIndex: schedule.sectorIndex,
+    value: outcome.completionRatio,
+    subjectId: outcome.contractId,
+    detailId: outcome.objectiveId
+  });
   return record;
 }
 
@@ -267,6 +310,24 @@ export function applyRouteOutcome(
     session.relicsRecovered + adjustedOutcome.effects.relicDelta
   );
   session.routeOutcomes = [...session.routeOutcomes, adjustedOutcome];
+  recordRunSessionTimelineEvent(session, {
+    id: `route:${adjustedOutcome.id}`,
+    category: 'decision',
+    kind: 'route',
+    sectorIndex: Math.max(0, sector.index - 1),
+    value: route.risk,
+    subjectId: route.kind,
+    detailId: adjustedOutcome.id
+  });
+  recordRunSessionTimelineEvent(session, {
+    id: `route-economy:${adjustedOutcome.id}`,
+    category: 'economy',
+    kind: 'routeDelta',
+    sectorIndex: Math.max(0, sector.index - 1),
+    value: adjustedOutcome.effects.creditsDelta + adjustedOutcome.effects.salvageDelta,
+    subjectId: `credits-${adjustedOutcome.effects.creditsDelta}`,
+    detailId: `salvage-${adjustedOutcome.effects.salvageDelta}`
+  });
 
   if (factionCampaignPlan) {
     recordRouteCampaignConsequence(session, factionCampaignPlan, sector, route, adjustedOutcome.id);
@@ -284,6 +345,16 @@ export function recordFactionCampaignEvent(
   if (result.disposition === 'applied') {
     session.credits += result.reward.credits;
     session.salvage += result.reward.salvage;
+    recordRunSessionTimelineEvent(session, {
+      id: `timeline:${event.id}`,
+      category:
+        event.type === 'rivalEncounter' || event.type === 'rivalOutcome' ? 'rival' : 'faction',
+      kind: event.type,
+      sectorIndex: event.sectorIndex,
+      value: result.reward.credits + result.reward.salvage,
+      subjectId: event.factionId,
+      detailId: 'rivalId' in event ? (event.rivalId ?? null) : null
+    });
   }
 
   return result;
@@ -296,7 +367,24 @@ export function recordCrewRosterEvent(
 ): CrewEventResult {
   const result = applyCrewRosterEvent(plan, session.crewRoster, event);
   session.crewRoster = result.state;
+  if (result.disposition === 'applied') {
+    recordRunSessionTimelineEvent(session, {
+      id: `timeline:${event.id}`,
+      category: 'crew',
+      kind: event.type,
+      sectorIndex: event.sectorIndex,
+      subjectId: 'candidateId' in event ? event.candidateId : null,
+      detailId: event.type === 'missionOutcome' ? event.outcome : null
+    });
+  }
   return result;
+}
+
+export function recordRunSessionTimelineEvent(
+  session: RunSessionState,
+  event: RunTimelineEvent
+): void {
+  session.timeline = recordRunTimelineEvent(session.timeline, event);
 }
 
 function recordRouteCampaignConsequence(
@@ -445,6 +533,15 @@ export function applyInterActChoice(
   session.hullPatch = Math.max(0, session.hullPatch + choice.effects.hullPatchDelta);
   session.curse = Math.max(0, session.curse + choice.effects.curseDelta);
   session.interActChoices = [...session.interActChoices, record];
+  recordRunSessionTimelineEvent(session, {
+    id: `inter-act:${record.id}`,
+    category: 'decision',
+    kind: 'interActRefit',
+    sectorIndex: session.currentSectorIndex,
+    value: choice.effects.creditsDelta + choice.effects.salvageDelta,
+    subjectId: choice.id,
+    detailId: choice.targetActId
+  });
   return record;
 }
 
@@ -535,6 +632,14 @@ export function advanceSector(run: RunSkeleton, session: RunSessionState): boole
     session.crewRoster,
     session.currentSectorIndex
   );
+  recordRunSessionTimelineEvent(session, {
+    id: `sector-enter:${session.currentSectorIndex}`,
+    category: 'node',
+    kind: 'sectorEnter',
+    sectorIndex: session.currentSectorIndex,
+    subjectId: run.sectors[session.currentSectorIndex]?.sectorId ?? null,
+    detailId: run.expedition.sectors[session.currentSectorIndex]?.sectorId ?? null
+  });
   resetMissionForCurrentSector(run, session);
   return true;
 }
@@ -569,6 +674,16 @@ export function dispatchMissionEvent(
     schedule,
     session.mission
   );
+  if (result.disposition === 'advanced') {
+    recordRunSessionTimelineEvent(session, {
+      id: `mission-transition:${event.id}`,
+      category: event.type === 'selectBranch' ? 'decision' : 'node',
+      kind: event.type,
+      sectorIndex: session.currentSectorIndex,
+      subjectId: result.state.currentStageId,
+      detailId: event.type === 'fail' ? event.reason : null
+    });
+  }
   return result;
 }
 
@@ -584,4 +699,12 @@ export function recordExpeditionBranchDecision(
     branchId,
     optionId
   );
+  recordRunSessionTimelineEvent(session, {
+    id: `expedition-decision:${branchId}:${optionId}`,
+    category: 'decision',
+    kind: 'branch',
+    sectorIndex: session.currentSectorIndex,
+    subjectId: branchId,
+    detailId: optionId
+  });
 }

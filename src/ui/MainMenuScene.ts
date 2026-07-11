@@ -17,7 +17,8 @@ export class MainMenuScene implements Scene {
     private readonly onStartRun: (seedInput: string) => void,
     private readonly onOpenArchive: () => void,
     private readonly onOpenUpgradeBay: () => void,
-    private readonly onOpenSettings: () => void
+    private readonly onOpenSettings: () => void,
+    private readonly onOpenScenarioLab: (() => void) | null = null
   ) {}
 
   public enter(): void {
@@ -110,7 +111,24 @@ export class MainMenuScene implements Scene {
     status.dataset.testid = 'boot-status';
     status.textContent = `Bank ${this.saveSummary.salvageBank} kg | Unlocks ${this.saveSummary.unlockCount} | Upgrades ${this.saveSummary.upgradeCount} | Runs ${this.saveSummary.runsEnded}`;
 
-    shell.append(title, tagline, seedForm, archiveButton, upgradeBayButton, settingsButton, status);
+    const scenarioLabButton = document.createElement('button');
+    scenarioLabButton.className = 'secondary-button title-button';
+    scenarioLabButton.type = 'button';
+    scenarioLabButton.dataset.testid = 'open-scenario-lab';
+    scenarioLabButton.textContent = 'Scenario Lab [Debug]';
+    scenarioLabButton.hidden = this.onOpenScenarioLab === null;
+    scenarioLabButton.addEventListener('click', () => this.onOpenScenarioLab?.());
+
+    shell.append(
+      title,
+      tagline,
+      seedForm,
+      archiveButton,
+      upgradeBayButton,
+      settingsButton,
+      scenarioLabButton,
+      status
+    );
     this.uiRoot.replaceChildren(shell);
     seedInput.focus();
   }

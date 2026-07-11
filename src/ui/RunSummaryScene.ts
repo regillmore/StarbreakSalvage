@@ -46,6 +46,7 @@ import { createItemCardViewModel } from './ItemCardViewModel';
 import { createRunSummaryProgressModel } from './RunSummaryProgress';
 import { formatFactionCampaignSummary, type FactionCampaignState } from '../game/FactionCampaign';
 import { formatCrewRosterSummary, type CrewRosterState } from '../game/CrewCommand';
+import { formatRunTimeline, type RunTimelineState } from '../game/RunTimeline';
 
 export class RunSummaryScene implements Scene {
   public readonly id = 'run-summary';
@@ -67,7 +68,8 @@ export class RunSummaryScene implements Scene {
     private readonly missionTimeline: string | null = null,
     private readonly objectiveHistory: string | null = null,
     private readonly factionCampaign: FactionCampaignState | null = null,
-    private readonly crewRoster: CrewRosterState | null = null
+    private readonly crewRoster: CrewRosterState | null = null,
+    private readonly runTimeline: RunTimelineState | null = null
   ) {}
 
   public enter(): void {
@@ -143,6 +145,10 @@ export class RunSummaryScene implements Scene {
         this.crewRoster
           ? formatCrewRosterSummary(this.run.crewRoster, this.crewRoster, this.result?.reason)
           : 'No run-local crew roster recorded.'
+      ],
+      [
+        'Run Timeline',
+        this.runTimeline ? formatRunTimeline(this.runTimeline) : 'No timeline recorded.'
       ],
       ['Expedition Capacity', formatExpeditionCapacity(this.run.expedition.capacity)],
       ['Inter-Act Refit', formatInterActHistory(this.interActChoices)],

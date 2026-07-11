@@ -375,7 +375,7 @@ Phase 10 performance checks should include expedition graph/mission schedule gen
 - [x] Active hazard-zone, destructible/obstacle, loose currency, and environmental stress-budget counters visible in debug once Phase 8 lands.
 - [x] Environmental stress smoke covers at least one hazard/destructible/obstacle/currency path where practical.
 - [x] Act II pressure counters, finale debug state, and junction/entry/finale/summary Chromium smoke are visible through public readouts after work order 089.
-- [ ] Expedition node/stage, set-piece part, ally AI, module/item proc, and bounded timeline counters are visible after work order 099.
+- [x] Expedition node/stage, set-piece part, ally AI, module/item proc, and bounded timeline counters are visible after work order 099.
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [x] Heavy combat debug scene documented.
 - [x] Long-scroll debug scene documented.

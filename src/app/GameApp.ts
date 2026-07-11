@@ -68,6 +68,7 @@ import {
   recordMissionObjectiveOutcome,
   recordFactionCampaignEvent,
   recordCrewRosterEvent,
+  recordRunSessionTimelineEvent,
   recordExpeditionBranchDecision,
   resetMissionForCurrentSector,
   spendCredits,
@@ -113,6 +114,8 @@ import type { ItemId } from '../content/items';
 import type { UpgradeId } from '../content/upgrades';
 import { UpgradeBayScene } from '../ui/UpgradeBayScene';
 import { FoundryScene } from '../ui/FoundryScene';
+import { ScenarioLabScene } from '../ui/ScenarioLabScene';
+import { ScenarioTimelineScene } from '../ui/ScenarioTimelineScene';
 import {
   createDebugFactionCampaignState,
   createFactionCampaignCombatModifier,
@@ -126,6 +129,7 @@ import {
   getCrewFoundryAssist,
   getRecruitableCrewCandidate
 } from '../game/CrewCommand';
+import { createScenarioLabLaunch, type ScenarioLabId } from '../game/ScenarioLab';
 
 export class GameApp {
   private readonly canvas: HTMLCanvasElement;
@@ -248,9 +252,82 @@ export class GameApp {
         },
         () => {
           this.showSettings(() => this.showMainMenu());
-        }
+        },
+        this.debugEnabled ? () => this.showScenarioLab() : null
       )
     );
+  }
+
+  private showScenarioLab(): void {
+    this.resetDebugRunState();
+    this.sceneManager.switchTo(
+      new ScenarioLabScene(
+        this.uiRoot,
+        this.currentRun,
+        this.selectedContract,
+        (id) => this.launchScenarioLab(id),
+        () => this.showMainMenu()
+      )
+    );
+  }
+
+  private launchScenarioLab(id: ScenarioLabId): void {
+    const launch = createScenarioLabLaunch({
+      run: this.currentRun,
+      contract: this.selectedContract,
+      scenarioId: id,
+      unlockedIds: this.saveData.unlockedIds
+    });
+    this.runSession = launch.session;
+    this.lastRunResult = null;
+    this.lastSaveUpdate = null;
+    this.summarySaved = false;
+
+    if (launch.definition.target === 'transition') {
+      this.showSectorTransition();
+      return;
+    }
+    if (launch.definition.target === 'timeline') {
+      this.sceneManager.switchTo(
+        new ScenarioTimelineScene(
+          this.uiRoot,
+          launch.definition,
+          launch.readout,
+          launch.session.timeline,
+          () => this.showScenarioLab()
+        )
+      );
+      return;
+    }
+    if (launch.definition.target === 'foundry') {
+      this.sceneManager.switchTo(
+        new FoundryScene(
+          this.uiRoot,
+          this.currentRun,
+          this.selectedContract,
+          launch.session.engineering,
+          launch.session.currentSectorIndex + 1,
+          (engineering, salvageGained) => {
+            this.runSession.engineering = engineering;
+            recordRunSessionTimelineEvent(this.runSession, {
+              id: `scenario-lab:${id}:foundry-complete`,
+              category: 'engineering',
+              kind: 'labCommit',
+              sectorIndex: this.runSession.currentSectorIndex,
+              value: salvageGained,
+              subjectId: engineering.committed.frameId
+            });
+            this.showScenarioLab();
+          },
+          'Scenario Lab fixture; changes remain local to this disposable run.'
+        )
+      );
+      return;
+    }
+
+    const gameplayScene = this.createGameplayScene();
+    gameplayScene.prepareScenarioLabPreset(launch.definition.gameplayPreset);
+    this.sceneManager.switchTo(gameplayScene);
   }
 
   private showSettings(onBack: () => void): void {
@@ -425,7 +502,8 @@ export class GameApp {
       },
       campaignInfluence,
       this.runSession.factionCampaign,
-      crewProfile
+      crewProfile,
+      this.runSession.timeline
     );
   }
 
@@ -458,6 +536,9 @@ export class GameApp {
         return true;
       case 'debugCrewWing':
         this.showDebugCrewWing();
+        return true;
+      case 'debugScenarioLab':
+        this.showScenarioLab();
         return true;
       default:
         return false;
@@ -1159,6 +1240,15 @@ export class GameApp {
       state: this.runSession.engineering
     });
     this.runSession.engineering = acquireComponent(this.runSession.engineering, component);
+    recordRunSessionTimelineEvent(this.runSession, {
+      id: `engineering-acquire:${component.id}`,
+      category: 'engineering',
+      kind: 'acquire',
+      sectorIndex: this.runSession.currentSectorIndex,
+      value: component.salvageValue,
+      subjectId: component.id,
+      detailId: component.moduleId
+    });
     const crewAssist = getCrewFoundryAssist(this.currentRun.crewRoster, this.runSession.crewRoster);
     this.sceneManager.switchTo(
       new FoundryScene(
@@ -1178,6 +1268,15 @@ export class GameApp {
               candidateId: crewAssist.candidateId
             });
           }
+          recordRunSessionTimelineEvent(this.runSession, {
+            id: `engineering-commit:${sector.index}:${engineering.history.length}`,
+            category: 'engineering',
+            kind: 'commit',
+            sectorIndex: this.runSession.currentSectorIndex,
+            value: salvageGained + (crewAssist?.salvageBonus ?? 0),
+            subjectId: engineering.committed.frameId,
+            detailId: `history-${engineering.history.length}`
+          });
           this.advanceAfterReward();
         },
         crewAssist?.label ?? null
@@ -1298,6 +1397,16 @@ export class GameApp {
 
   private showRunSummary(result?: CombatRunResult): void {
     this.lastRunResult = result ?? this.lastRunResult;
+    if (this.lastRunResult) {
+      recordRunSessionTimelineEvent(this.runSession, {
+        id: `run-end:${this.lastRunResult.reason}`,
+        category: 'run',
+        kind: this.lastRunResult.reason,
+        sectorIndex: this.runSession.currentSectorIndex,
+        subjectId: this.currentRun.seed,
+        detailId: this.lastRunResult.reason
+      });
+    }
     this.lastSaveUpdate = this.saveRunSummary(this.lastRunResult);
     const schedule = this.getCurrentMissionSchedule();
     this.sceneManager.switchTo(
@@ -1320,7 +1429,8 @@ export class GameApp {
         formatMissionTimeline(schedule, this.runSession.mission),
         formatMissionObjectiveHistory(this.runSession.objectiveHistory),
         this.runSession.factionCampaign,
-        this.runSession.crewRoster
+        this.runSession.crewRoster,
+        this.runSession.timeline
       )
     );
   }
@@ -1591,6 +1701,20 @@ export class GameApp {
           `Allies ${debugState.crew.allies.join(' / ') || 'none'}`
         ]
       : [];
+    const timelineDebug = debugState.runTimeline
+      ? [
+          `Timeline ${debugState.runTimeline.entries}/${debugState.runTimeline.capacity} dropped ${debugState.runTimeline.dropped} elapsed ${debugState.runTimeline.elapsedSeconds.toFixed(1)}s`,
+          `Timeline cats ${debugState.runTimeline.categories.join(' / ') || 'none'}`,
+          ...debugState.runTimeline.latest.map((entry) => `Timeline ${entry}`)
+        ]
+      : [];
+    const scenarioLabDebug = debugState.scenarioLab
+      ? [
+          `Scenario Lab ${debugState.scenarioLab.activeScenario ?? 'catalog'} ${debugState.scenarioLab.scenarioCount} cases`,
+          `Scenario systems ${debugState.scenarioLab.systems.join('/') || 'none'}`,
+          `Scenario budget ${debugState.scenarioLab.budget}`
+        ]
+      : [];
     const upgradeDebug =
       debugState.upgradeEffects && debugState.upgradeEffects.length > 0
         ? [`Upgrades ${debugState.upgradeEffects.join(', ')}`]
@@ -1644,6 +1768,8 @@ export class GameApp {
       ...setPieceDebug,
       ...factionCampaignDebug,
       ...crewDebug,
+      ...timelineDebug,
+      ...scenarioLabDebug,
       ...upgradeDebug,
       ...progressionDebug,
       ...actDebug,

@@ -4,7 +4,7 @@
 
 Phase 9 is complete as a local second-act playtest candidate. A seeded run can cross ten sectors in two acts, stop at a deterministic midpoint refit, carry its build and economy into Act II, and resolve through a second-act finale. Full checks, 11 Chromium smoke tests, and production preview asset-path smoke pass.
 
-Work orders 091-098 now provide the expedition graph, multi-stage missions and objective anthology, modular shipcraft, salvage engineering, physical set pieces, run-local faction campaigns and rivals, plus recruitable crew and wingmates. Sectors 1, 7, and 10 host a capital ship, station, and wreck convoy assembled from shared subsystem templates. Four faction policies, four seeded recurring captains, and five deterministic crew roles now react through combat, missions, routes, shops, foundry operations, set-piece ownership, and finale outcomes; the Scenario Lab and release hardening remain ahead.
+Work orders 091-099 now provide the expedition graph, multi-stage missions and objective anthology, modular shipcraft, salvage engineering, physical set pieces, run-local faction campaigns and rivals, recruitable crew and wingmates, plus an eight-card debug-only Scenario Lab and bounded local run timeline. Sectors 1, 7, and 10 host a capital ship, station, and wreck convoy assembled from shared subsystem templates. Four faction policies, four seeded recurring captains, and five deterministic crew roles now react through combat, missions, routes, shops, foundry operations, set-piece ownership, and finale outcomes. Public setup/read models can reach every Phase 10 system without a full expedition; final release hardening remains ahead.
 
 The resulting run currently takes about six minutes in a normal local playthrough. That is useful diagnostic evidence: adding a second act expanded the route model, but it did not yet create enough lived experience inside each sector. Phase 10 should add consequential play and decisions instead of stretching timers, inflating hull, or simply adding a third act.
 
@@ -153,6 +153,8 @@ Exit criteria:
 - `npm run check`, Playwright Chromium smoke, and production preview asset-path smoke pass.
 - Debug/browser smoke can reach every new system without playing a full expedition.
 - Manual non-Chromium, real-device, run-length, balance, readability, and content-volume gaps are explicit.
+
+Status: Scenario Lab, bounded timeline, combined debug budgets, and narrow keyboard-only accessible Chromium coverage were implemented by work order 099. `npm run check` passes with 79 files/463 tests, all 12 Chromium paths pass, and production preview asset paths return HTTP 200. Work order 100 still owns final release audit, manual-risk documentation, and closeout; the 657.78 kB main chunk remains a profiling/code-splitting warning.
 
 ## Recommended Work Order Sequence
 

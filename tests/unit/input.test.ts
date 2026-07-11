@@ -35,6 +35,7 @@ describe('input helpers', () => {
     expect(primaryActionForKey('U')).toBe('debugSetPiece');
     expect(primaryActionForKey('R')).toBe('debugRivalCampaign');
     expect(primaryActionForKey('T')).toBe('debugCrewWing');
+    expect(primaryActionForKey('B')).toBe('debugScenarioLab');
     expect(primaryActionForKey('L')).toBe('crewFocus');
     expect(primaryActionForKey('C')).toBe('crewScreen');
     expect(primaryActionForKey('V')).toBe('crewSalvage');
@@ -53,6 +54,7 @@ describe('input helpers', () => {
 
   it('uses provided binding maps for action lookup', () => {
     expect(actionsForKey('G', { ...DEFAULT_KEY_BINDINGS, fire: ['G'] })).toEqual(['fire']);
+    expect(actionsForKey('B', { ...DEFAULT_KEY_BINDINGS, bomb: ['B'] })).toEqual(['bomb']);
   });
 
   it('normalizes diagonal movement speed', () => {
