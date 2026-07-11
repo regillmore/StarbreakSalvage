@@ -16,11 +16,19 @@ import { validateOperationalProgressState } from './OperationalMap';
 import { createCarrierInfluence } from './CarrierCommand';
 import { validateBoardingCampaignState } from './BoardingOperation';
 import { validateFactionFrontState } from './FactionFront';
+import { validateCrewArcState } from './CrewArc';
 
-export const RUN_SNAPSHOT_SCHEMA_VERSION = 6;
-export const RUN_SNAPSHOT_STORAGE_KEY = 'starbreak.run.v6';
-export const LEGACY_RUN_SNAPSHOT_STORAGE_KEYS = ['starbreak.run.v5', 'starbreak.run.v4', 'starbreak.run.v3', 'starbreak.run.v2', 'starbreak.run.v1'] as const;
-export const LEGACY_RUN_SNAPSHOT_STORAGE_KEY = LEGACY_RUN_SNAPSHOT_STORAGE_KEYS[4];
+export const RUN_SNAPSHOT_SCHEMA_VERSION = 7;
+export const RUN_SNAPSHOT_STORAGE_KEY = 'starbreak.run.v7';
+export const LEGACY_RUN_SNAPSHOT_STORAGE_KEYS = [
+  'starbreak.run.v6',
+  'starbreak.run.v5',
+  'starbreak.run.v4',
+  'starbreak.run.v3',
+  'starbreak.run.v2',
+  'starbreak.run.v1'
+] as const;
+export const LEGACY_RUN_SNAPSHOT_STORAGE_KEY = LEGACY_RUN_SNAPSHOT_STORAGE_KEYS[5];
 export const RUN_SNAPSHOT_MAX_BYTES = 512 * 1024;
 
 export type RunSnapshotResumeTarget = 'sectorTransition' | 'gameplay' | 'operationalMap';
@@ -31,16 +39,17 @@ export interface RunSnapshotCheckpoint {
   readonly sequence: number;
 }
 
-export interface RunSnapshotExtensionsV6 {
+export interface RunSnapshotExtensionsV7 {
   readonly carrier: { readonly planId: string };
   readonly boarding: { readonly planId: string };
   readonly factionFronts: { readonly planId: string };
+  readonly crewArcs: { readonly planId: string };
   readonly fleet: null;
   readonly apex: null;
 }
 
-export interface RunSnapshotV6 {
-  readonly version: 6;
+export interface RunSnapshotV7 {
+  readonly version: 7;
   readonly plan: {
     readonly seed: string;
     readonly graphId: string;
@@ -51,18 +60,18 @@ export interface RunSnapshotV6 {
   };
   readonly checkpoint: RunSnapshotCheckpoint;
   readonly session: RunSessionState;
-  readonly extensions: RunSnapshotExtensionsV6;
+  readonly extensions: RunSnapshotExtensionsV7;
 }
 
 export interface RestoredRunSnapshot {
-  readonly snapshot: RunSnapshotV6;
+  readonly snapshot: RunSnapshotV7;
   readonly run: RunSkeleton;
   readonly contract: StartingContract;
   readonly session: RunSessionState;
 }
 
 export interface RunSnapshotLoadResult {
-  readonly snapshot: RunSnapshotV6 | null;
+  readonly snapshot: RunSnapshotV7 | null;
   readonly repaired: boolean;
   readonly error: string | null;
 }
@@ -91,7 +100,7 @@ export class RunSnapshotCoordinator {
     readonly session: RunSessionState;
     readonly target: RunSnapshotResumeTarget;
     readonly label: string;
-  }): RunSnapshotV6 {
+  }): RunSnapshotV7 {
     const snapshot = createRunSnapshot({
       ...options,
       sequence: options.session.timeline.entries.length
@@ -101,7 +110,7 @@ export class RunSnapshotCoordinator {
     return snapshot;
   }
 
-  public restore(snapshot: RunSnapshotV6): RestoredRunSnapshot {
+  public restore(snapshot: RunSnapshotV7): RestoredRunSnapshot {
     return restoreRunSnapshot(snapshot);
   }
 
@@ -117,12 +126,12 @@ export function createRunSnapshot(options: {
   readonly target: RunSnapshotResumeTarget;
   readonly label: string;
   readonly sequence?: number;
-}): RunSnapshotV6 {
+}): RunSnapshotV7 {
   const generationFingerprint = createRunGenerationSaveFingerprint(
     options.run.unlockedIds,
     options.run.upgradeEffects
   );
-  const snapshot: RunSnapshotV6 = {
+  const snapshot: RunSnapshotV7 = {
     version: RUN_SNAPSHOT_SCHEMA_VERSION,
     plan: {
       seed: options.run.seed,
@@ -142,6 +151,7 @@ export function createRunSnapshot(options: {
       carrier: { planId: options.run.carrierPlan.id },
       boarding: { planId: options.run.boardingCampaign.id },
       factionFronts: { planId: options.run.factionFronts.id },
+      crewArcs: { planId: options.run.crewArcs.id },
       fleet: null,
       apex: null
     }
@@ -149,7 +159,7 @@ export function createRunSnapshot(options: {
   return importRunSnapshot(exportRunSnapshot(snapshot));
 }
 
-export function restoreRunSnapshot(snapshot: RunSnapshotV6): RestoredRunSnapshot {
+export function restoreRunSnapshot(snapshot: RunSnapshotV7): RestoredRunSnapshot {
   const run = generateRunSkeleton(snapshot.plan.seed, {
     unlockedIds: snapshot.plan.unlockedIds,
     purchasedUpgradeIds: snapshot.plan.purchasedUpgradeIds
@@ -173,6 +183,9 @@ export function restoreRunSnapshot(snapshot: RunSnapshotV6): RestoredRunSnapshot
   if (snapshot.extensions.factionFronts.planId !== run.factionFronts.id) {
     throw new Error('Run snapshot faction-front plan identity does not match regenerated content.');
   }
+  if (snapshot.extensions.crewArcs.planId !== run.crewArcs.id) {
+    throw new Error('Run snapshot crew-arc plan identity does not match regenerated content.');
+  }
   const contract = run.contracts.find((candidate) => candidate.id === snapshot.plan.contractId);
   if (!contract)
     throw new Error(`Run snapshot contract is unavailable: ${snapshot.plan.contractId}.`);
@@ -185,7 +198,7 @@ export function restoreRunSnapshot(snapshot: RunSnapshotV6): RestoredRunSnapshot
   };
 }
 
-export function createRunSnapshotSummary(snapshot: RunSnapshotV6): RunSnapshotSummary {
+export function createRunSnapshotSummary(snapshot: RunSnapshotV7): RunSnapshotSummary {
   const restored = restoreRunSnapshot(snapshot);
   const sector = restored.run.sectors[restored.session.currentSectorIndex]!;
   return {
@@ -209,7 +222,7 @@ export function loadRunSnapshot(storage: StorageLike): RunSnapshotLoadResult {
       return {
         snapshot: null,
         repaired: true,
-        error: 'A pre-faction-front expedition snapshot was retired safely.'
+        error: 'A pre-crew-arc expedition snapshot was retired safely.'
       };
     }
     return { snapshot: null, repaired: false, error: null };
@@ -228,7 +241,7 @@ export function loadRunSnapshot(storage: StorageLike): RunSnapshotLoadResult {
   }
 }
 
-export function writeRunSnapshot(storage: StorageLike, snapshot: RunSnapshotV6): void {
+export function writeRunSnapshot(storage: StorageLike, snapshot: RunSnapshotV7): void {
   storage.setItem(RUN_SNAPSHOT_STORAGE_KEY, exportRunSnapshot(snapshot));
 }
 
@@ -237,7 +250,7 @@ export function clearRunSnapshot(storage: StorageLike): void {
   for (const key of LEGACY_RUN_SNAPSHOT_STORAGE_KEYS) storage.removeItem(key);
 }
 
-export function exportRunSnapshot(snapshot: RunSnapshotV6): string {
+export function exportRunSnapshot(snapshot: RunSnapshotV7): string {
   const serialized = JSON.stringify(snapshot);
   const byteLength = new TextEncoder().encode(serialized).byteLength;
   if (byteLength > RUN_SNAPSHOT_MAX_BYTES) {
@@ -246,7 +259,7 @@ export function exportRunSnapshot(snapshot: RunSnapshotV6): string {
   return serialized;
 }
 
-export function importRunSnapshot(serialized: string): RunSnapshotV6 {
+export function importRunSnapshot(serialized: string): RunSnapshotV7 {
   if (new TextEncoder().encode(serialized).byteLength > RUN_SNAPSHOT_MAX_BYTES) {
     throw new Error(`Run snapshot exceeds ${RUN_SNAPSHOT_MAX_BYTES} bytes.`);
   }
@@ -278,21 +291,36 @@ export function importRunSnapshot(serialized: string): RunSnapshotV6 {
     throw new Error('Run snapshot checkpoint is invalid.');
   }
   if (!isRecord(parsed.extensions)) throw new Error('Run snapshot extensions are missing.');
-  if (!isRecord(parsed.extensions.carrier) || typeof parsed.extensions.carrier.planId !== 'string') {
-    throw new Error('Run snapshot v6 carrier extension is invalid.');
+  if (
+    !isRecord(parsed.extensions.carrier) ||
+    typeof parsed.extensions.carrier.planId !== 'string'
+  ) {
+    throw new Error('Run snapshot v7 carrier extension is invalid.');
   }
-  if (!isRecord(parsed.extensions.boarding) || typeof parsed.extensions.boarding.planId !== 'string') {
-    throw new Error('Run snapshot v6 boarding extension is invalid.');
+  if (
+    !isRecord(parsed.extensions.boarding) ||
+    typeof parsed.extensions.boarding.planId !== 'string'
+  ) {
+    throw new Error('Run snapshot v7 boarding extension is invalid.');
   }
-  if (!isRecord(parsed.extensions.factionFronts) || typeof parsed.extensions.factionFronts.planId !== 'string') {
-    throw new Error('Run snapshot v6 faction-front extension is invalid.');
+  if (
+    !isRecord(parsed.extensions.factionFronts) ||
+    typeof parsed.extensions.factionFronts.planId !== 'string'
+  ) {
+    throw new Error('Run snapshot v7 faction-front extension is invalid.');
+  }
+  if (
+    !isRecord(parsed.extensions.crewArcs) ||
+    typeof parsed.extensions.crewArcs.planId !== 'string'
+  ) {
+    throw new Error('Run snapshot v7 crew-arc extension is invalid.');
   }
   for (const key of ['fleet', 'apex']) {
     if (parsed.extensions[key] !== null) {
-      throw new Error(`Run snapshot v6 extension ${key} must be null.`);
+      throw new Error(`Run snapshot v7 extension ${key} must be null.`);
     }
   }
-  return parsed as unknown as RunSnapshotV6;
+  return parsed as unknown as RunSnapshotV7;
 }
 
 function validateSnapshotSession(
@@ -357,6 +385,9 @@ function validateSnapshotSession(
   }
   if (validateFactionFrontState(run.factionFronts, session.factionFronts).length > 0) {
     throw new Error('Run snapshot faction-front state is invalid.');
+  }
+  if (validateCrewArcState(run.crewArcs, session.crewArcs).length > 0) {
+    throw new Error('Run snapshot crew-arc state is invalid.');
   }
   try {
     for (const instance of session.itemInstances) getItemById(instance.itemId);

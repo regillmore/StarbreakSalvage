@@ -1010,7 +1010,7 @@ export class GameplayScene implements Scene {
       runTimeline: this.runTimeline ? createRunTimelineDebugState(this.runTimeline) : undefined,
       scenarioLab: this.scenarioLabPreset
         ? {
-            scenarioCount: 10,
+            scenarioCount: 11,
             activeScenario: this.scenarioLabPreset,
             systems: [
               'mission actors',
@@ -1230,7 +1230,10 @@ export class GameplayScene implements Scene {
         atDistance:
           spawn.atDistance === null || spawn.atDistance === undefined
             ? spawn.atDistance
-            : Math.min(this.getCurrentScrollPlan().length - 80, spawn.atDistance + 110 + index * 70),
+            : Math.min(
+                this.getCurrentScrollPlan().length - 80,
+                spawn.atDistance + 110 + index * 70
+              ),
         waveLabel: `${this.campaignInfluence?.front?.mapCue ?? '[FRONT]'} reinforcement`,
         factionId: this.campaignInfluence?.front?.ownerFactionId ?? spawn.factionId,
         formationInstanceId: `front-reinforcement:${this.sectorIndex}:${index}`,
@@ -1997,9 +2000,7 @@ function formatBoardingDistanceReadout(
   elapsedSeconds: number
 ): string {
   const current =
-    operation.rooms.find(
-      (room) => distance >= room.startDistance && distance < room.endDistance
-    ) ??
+    operation.rooms.find((room) => distance >= room.startDistance && distance < room.endDistance) ??
     operation.rooms.find((room) => distance < room.startDistance) ??
     operation.rooms.at(-1);
   const roomNumber = current ? current.index + 1 : operation.rooms.length;

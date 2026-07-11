@@ -44,18 +44,25 @@ describe('CarrierCommand', () => {
     );
     const repair = commandOptions.find((option) => option.command.kind === 'repairFacility')!;
     const first = applySessionCarrierCommand(run, session, repair.command, 'carrier:test:repair');
-    const duplicate = applySessionCarrierCommand(run, session, repair.command, 'carrier:test:repair');
+    const duplicate = applySessionCarrierCommand(
+      run,
+      session,
+      repair.command,
+      'carrier:test:repair'
+    );
     expect(first.disposition).toBe('applied');
     expect(session.salvage).toBe(18);
     expect(duplicate.disposition).toBe('duplicate');
     expect(session.carrier.history).toHaveLength(1);
-    expect(createCarrierCommandOptions({
-      plan: run.carrierPlan,
-      state: session.carrier,
-      crewPlan: run.crewRoster,
-      crewState: session.crewRoster,
-      sectorIndex: 0
-    })).toEqual([]);
+    expect(
+      createCarrierCommandOptions({
+        plan: run.carrierPlan,
+        state: session.carrier,
+        crewPlan: run.crewRoster,
+        crewState: session.crewRoster,
+        sectorIndex: 0
+      })
+    ).toEqual([]);
   });
 
   it('derives mission, engineering, crew, market, support, and boarding hooks from facilities', () => {
@@ -64,7 +71,13 @@ describe('CarrierCommand', () => {
     const base = createCarrierInfluence(run.carrierPlan, session.carrier);
     expect(base.cargoCapacity).toBeGreaterThanOrEqual(run.carrierPlan.baseCargoCapacity);
     expect(base.optionalMissionAccess).toBe(true);
-    expect(base.supportCapacity + base.boardingCapacity + base.foundrySalvageBonus + base.crewRecoveryAdvance + base.shopDiscount).toBeGreaterThan(0);
+    expect(
+      base.supportCapacity +
+        base.boardingCapacity +
+        base.foundrySalvageBonus +
+        base.crewRecoveryAdvance +
+        base.shopDiscount
+    ).toBeGreaterThan(0);
 
     const pressured = {
       ...session.carrier,
@@ -89,12 +102,22 @@ describe('CarrierCommand', () => {
       crewState: session.crewRoster,
       sectorIndex: 0
     }).find((option) => option.command.kind === 'assignCrew')!;
-    expect(applySessionCarrierCommand(run, session, assignment.command, 'carrier:crew-post').disposition).toBe('applied');
-    const assignedId = assignment.command.kind === 'assignCrew' ? assignment.command.candidateId : '';
-    const profile = createCrewCombatProfile(run.crewRoster, session.crewRoster, run.contracts[0]!.loadout, {
-      excludedCandidateIds: [assignedId]
-    });
-    expect(session.carrier.facilities.some((facility) => facility.assignedCrewId === assignedId)).toBe(true);
+    expect(
+      applySessionCarrierCommand(run, session, assignment.command, 'carrier:crew-post').disposition
+    ).toBe('applied');
+    const assignedId =
+      assignment.command.kind === 'assignCrew' ? assignment.command.candidateId : '';
+    const profile = createCrewCombatProfile(
+      run.crewRoster,
+      session.crewRoster,
+      run.contracts[0]!.loadout,
+      {
+        excludedCandidateIds: [assignedId]
+      }
+    );
+    expect(
+      session.carrier.facilities.some((facility) => facility.assignedCrewId === assignedId)
+    ).toBe(true);
     expect(profile.members.some((member) => member.candidateId === assignedId)).toBe(false);
   });
 
@@ -107,7 +130,14 @@ describe('CarrierCommand', () => {
       state = stowCarrierCargo({
         plan: run.carrierPlan,
         state,
-        cargo: { id: `cargo-${index}`, label: `Cargo ${index}`, kind: 'claim', size: 1, value: 2, sectorIndex: index }
+        cargo: {
+          id: `cargo-${index}`,
+          label: `Cargo ${index}`,
+          kind: 'claim',
+          size: 1,
+          value: 2,
+          sectorIndex: index
+        }
       });
     }
     expect(createCarrierInfluence(run.carrierPlan, state).cargoUsed).toBe(capacity);
@@ -132,9 +162,15 @@ describe('CarrierCommand', () => {
     }).find((candidate) => candidate.command.kind === 'setPosture')!;
     applySessionCarrierCommand(run, session, option.command, 'carrier:snapshot:posture');
     expect(advanceSector(run, session)).toBe(true);
-    const snapshot = createRunSnapshot({ run, contract, session, target: 'sectorTransition', label: 'Carrier transit' });
+    const snapshot = createRunSnapshot({
+      run,
+      contract,
+      session,
+      target: 'sectorTransition',
+      label: 'Carrier transit'
+    });
     const restored = restoreRunSnapshot(snapshot);
-    expect(snapshot.version).toBe(6);
+    expect(snapshot.version).toBe(7);
     expect(snapshot.extensions.carrier.planId).toBe(run.carrierPlan.id);
     expect(restored.session.carrier).toEqual(session.carrier);
     expect(restored.run.carrierPlan).toEqual(run.carrierPlan);
@@ -143,8 +179,8 @@ describe('CarrierCommand', () => {
   it('validates the carrier catalog and rejects incomplete replacement contracts', () => {
     expect(validateContent()).toEqual([]);
     const invalid = { ...CARRIERS[0]!, replacementOrder: CARRIERS[0]!.replacementOrder.slice(1) };
-    expect(validateContent({ carriers: [invalid], carrierFacilities: CARRIER_FACILITIES })).toContain(
-      `Carrier ${invalid.id} replacement order must cover every facility type`
-    );
+    expect(
+      validateContent({ carriers: [invalid], carrierFacilities: CARRIER_FACILITIES })
+    ).toContain(`Carrier ${invalid.id} replacement order must cover every facility type`);
   });
 });

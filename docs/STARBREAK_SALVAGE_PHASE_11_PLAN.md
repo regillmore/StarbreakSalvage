@@ -144,6 +144,8 @@ Exit criteria:
 - Relationships unlock options and complications rather than unconditional stat growth.
 - Summary/timeline copy explains who survived, changed, departed, or took command.
 
+Status: implemented by work order 107. Ten data-driven, seed/save-stable arcs assign five generated crew identities to three explicit outcome gates spanning later sectors. Mission, carrier, boarding, faction, rival, injury, module, command, and rescue events are the only progression sources. Each second gate pauses at an explicit two-way Crew Quarters decision, and resolution owns bounded relationships, rank, fate, succession, history, and processed ids beside the authoritative recruitment/injury roster. Promotion spends additional command headroom; paired cadence costs hull; conflict can exclude one partner; departure and mutiny remove the affected ally. Snapshot/storage v7 validates and resumes arc state while retiring v1-v6 safely. Summaries, timeline/debug readouts, endurance bounds, and an eleventh accessible Scenario Lab fixture expose resolved and waiting arcs.
+
 ### P11.8 - Fleetcraft And Deployable Support
 
 Work order 108 expands shipcraft into a small expedition fleet:
@@ -177,7 +179,7 @@ Exit criteria:
 Work order 110 closes the phase:
 
 - expand Scenario Lab for snapshots, multi-operation itineraries, frontier sectors, carrier states, boarding, faction fronts, crew arcs, fleetcraft, apex hunts, and combined endurance;
-- harden save v6 migration, resume/recovery, accessibility, performance, browser load, GitHub Pages paths, and release documentation;
+- harden run-snapshot v7 retirement/recovery and permanent-save v5 migration, plus accessibility, performance, browser load, GitHub Pages paths, and release documentation;
 - measure fresh/progressed, standard/extraction/completionist run lengths locally and document manual gaps.
 
 Exit criteria:

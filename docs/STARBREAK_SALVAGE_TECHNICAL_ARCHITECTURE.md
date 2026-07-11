@@ -719,6 +719,14 @@ seed + permanent save fingerprint
 - `getFactionCampaignInfluence` composes front ownership with existing ledger/rival state. Combat, sector conditions, shops, routes, transitions, crew recruitment, carrier access, set-piece ownership, finale pressure, summaries, and run-record ending names consume that composed model. Reinforcement clones are bounded, do not count for required objectives, and retain existing actor/projectile budgets.
 - `RunSession` is the event-orchestration seam for faction, route, boarding, crew, and carrier sources. Snapshot schema/storage v6 validates front plan/state/history and retires v1-v5 independently of permanent save v5. The tenth Scenario Lab fixture and endurance harness use public front setup/debug models.
 
+### Work order 107 implementation
+
+- `src/content/crewArcs.ts` is the ten-arc catalog. Every definition has a theme, three explicit source gates, two authored choices, relationship/trust deltas, a campaign outcome, a named tactical pairing, and player-readable risk copy.
+- `src/game/CrewArc.ts` owns immutable seed/save-stable plans plus the bounded arc reducer, choice reducer, pair/rank/fate/succession state, combat influence adapter, accessible read models, validation, summaries, and debug fixture. It imports no DOM, canvas, audio, or app state.
+- The existing `CrewCommand` roster remains authoritative for recruitment, availability, injury, recovery, trust, and deployment. `RunSession` translates newly resolved arc outcomes into one roster event, preventing a second crew lifecycle. Departed or mutinied crew leave the wing; other choices apply authored trust changes.
+- Combat receives a precomputed influence map when the existing crew profile is built. Promotions trade one command slot for hull or damage, bonds trade one hull for paired cadence, and hardened conflict excludes one partner. Existing three-ally and shared projectile/query budgets remain unchanged.
+- `CrewQuartersScene` is a lazy presentation boundary reached from briefings. It consumes roster and arc read models, uses native buttons and semantic text, and owns no mutations beyond callbacks. Snapshot schema/storage v7 validates arc identity/state and retires v1-v6; summaries, timeline, Scenario Lab, and endurance consume the same public state.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

@@ -37,9 +37,7 @@ describe('FactionFront', () => {
     expect(new Set(first.factionFronts.sectors.map((front) => front.baselineKind))).toEqual(
       new Set(FACTION_FRONT_KINDS)
     );
-    expect(FACTION_FRONT_STRATEGIES).toHaveLength(
-      FACTIONS.length * FACTION_FRONT_STANCES.length
-    );
+    expect(FACTION_FRONT_STRATEGIES).toHaveLength(FACTIONS.length * FACTION_FRONT_STANCES.length);
     expect(validateContent()).toEqual([]);
     expect(
       validateContent({ factionFrontStrategies: FACTION_FRONT_STRATEGIES.slice(1) })
@@ -108,13 +106,18 @@ describe('FactionFront', () => {
     expect(alliedInfluence.nodePolicy).toBe('create');
     expect(alliedInfluence.mapCue).toMatch(/^\[/);
     expect(isFactionFrontNodeAvailable(alliedInfluence, reserveNode)).toBe(true);
-    expect(projectFactionFrontBranchOptions(branch.options, run.expedition.nodes, alliedInfluence))
-      .toEqual(expect.arrayContaining([expect.objectContaining({ label: expect.stringContaining('[') })]));
+    expect(
+      projectFactionFrontBranchOptions(branch.options, run.expedition.nodes, alliedInfluence)
+    ).toEqual(
+      expect.arrayContaining([expect.objectContaining({ label: expect.stringContaining('[') })])
+    );
     if (hostileInfluence.nodePolicy === 'close') {
       expect(isFactionFrontNodeAvailable(hostileInfluence, reserveNode)).toBe(false);
       expect(
         projectFactionFrontBranchOptions(branch.options, run.expedition.nodes, hostileInfluence)
-      ).not.toEqual(expect.arrayContaining([expect.objectContaining({ targetNodeId: reserveNode.id })]));
+      ).not.toEqual(
+        expect.arrayContaining([expect.objectContaining({ targetNodeId: reserveNode.id })])
+      );
       const map = createOperationalMapReadModel({
         graph: run.expedition,
         sectorIndex: 1,
@@ -247,7 +250,7 @@ describe('FactionFront', () => {
       label: 'Moved faction front'
     });
     const restored = restoreRunSnapshot(snapshot);
-    expect(snapshot.version).toBe(6);
+    expect(snapshot.version).toBe(7);
     expect(snapshot.extensions.factionFronts.planId).toBe(run.factionFronts.id);
     expect(restored.session.factionFronts).toEqual(session.factionFronts);
   });

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added ten deterministic multi-node crew arcs covering bonds, conflicts, fears, ambitions, loyalty, promotions, paired abilities, specialist posts, rescue, departure, mutiny, and command succession.
+- Mission, carrier, boarding, faction, rival, injury, module, command, and rescue outcomes now advance bounded run-local arc state. Explicit Crew Quarters choices change trust, relationships, ranks, paired tactics, availability, and fates; promoted allies consume extra command capacity, paired fire trades durability for cadence, and severe conflict can break a wing pairing.
+- Added accessible Crew Quarters roster/choice UI, crew-arc timeline and summary readouts, snapshot/storage v7 persistence with safe v1-v6 retirement, endurance bounds, deterministic tests, and an eleventh public Scenario Lab fixture.
+
 - Added deterministic run-local faction fronts across all fifteen sectors, with territory, blockade, convoy, distress, market, contested-set-piece, and carrier-access states plus distinct alliance, hostility, and opportunist strategies for all four factions.
 - Aid, theft, contracts, spared targets, rival outcomes, boarding, crew ties, and carrier commands now move only later fronts through a bounded idempotent reducer. Front influence can create, transform, or close reserve operations and changes ownership, hazards, reinforcements, support, prices, recruitment, carrier access, set-piece control, and coalition/siege/fractured ending posture.
 - Added non-color front map cues and forecasts, front-aware combat/HUD/shop/route/transition/summary/debug consumers, snapshot/storage v6 persistence with safe v1-v5 retirement, endurance budgets, and a tenth accessible Scenario Lab fixture.

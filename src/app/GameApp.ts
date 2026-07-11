@@ -74,6 +74,8 @@ import {
   recordBoardingOperationOutcome,
   recordFactionCampaignEvent,
   recordCrewRosterEvent,
+  recordCrewArcEvent,
+  chooseCrewArcOption,
   recordRunSessionTimelineEvent,
   recordExpeditionBranchDecision,
   resetMissionForCurrentSector,
@@ -134,16 +136,15 @@ import {
   getCrewFoundryAssist,
   getRecruitableCrewCandidate
 } from '../game/CrewCommand';
+import { createCrewArcCombatInfluence } from '../game/CrewArc';
 import type { ScenarioLabId } from '../game/ScenarioLab';
 import {
   RunSnapshotCoordinator,
   createRunSnapshotSummary,
-  type RunSnapshotV6
+  type RunSnapshotV7
 } from '../game/RunSnapshot';
 import { getOperationalInfluence } from '../game/OperationalMap';
-import {
-  createCarrierInfluence
-} from '../game/CarrierCommand';
+import { createCarrierInfluence } from '../game/CarrierCommand';
 import { getBoardingOperationForNode } from '../game/BoardingOperation';
 import {
   createFactionFrontCampaignReadModel,
@@ -173,7 +174,7 @@ export class GameApp {
   private lastRunResult: CombatRunResult | null = null;
   private lastSaveUpdate: SaveUpdateResult | null = null;
   private summarySaved = false;
-  private runSnapshot: RunSnapshotV6 | null = null;
+  private runSnapshot: RunSnapshotV7 | null = null;
   private runSnapshotNotice: string | null = null;
   private snapshotEligible = false;
   private frameStats: FrameStats = {
@@ -339,6 +340,10 @@ export class GameApp {
       );
       return;
     }
+    if (launch.definition.target === 'crewQuarters') {
+      void this.showCrewQuarters(() => void this.showScenarioLab());
+      return;
+    }
     if (launch.definition.target === 'foundry') {
       this.sceneManager.switchTo(
         new FoundryScene(
@@ -469,7 +474,7 @@ export class GameApp {
 
     const sector = getCurrentSector(this.currentRun, this.runSession);
     const operationNode = stage.nodeId
-      ? this.currentRun.expedition.nodes.find((node) => node.id === stage.nodeId) ?? null
+      ? (this.currentRun.expedition.nodes.find((node) => node.id === stage.nodeId) ?? null)
       : null;
     const boardingOperation = operationNode
       ? getBoardingOperationForNode(this.currentRun.boardingCampaign, operationNode)
@@ -496,13 +501,18 @@ export class GameApp {
       campaignInfluence.rival &&
       campaignInfluence.rival.status !== 'engaged'
     ) {
-      recordFactionCampaignEvent(this.runSession, this.currentRun.factionCampaign, {
-        id: `${stage.id}:rival-encounter:${campaignInfluence.rival.id}`,
-        type: 'rivalEncounter',
-        sectorIndex: this.runSession.currentSectorIndex,
-        factionId: campaignInfluence.rival.factionId,
-        rivalId: campaignInfluence.rival.id
-      }, this.currentRun.factionFronts);
+      recordFactionCampaignEvent(
+        this.runSession,
+        this.currentRun.factionCampaign,
+        {
+          id: `${stage.id}:rival-encounter:${campaignInfluence.rival.id}`,
+          type: 'rivalEncounter',
+          sectorIndex: this.runSession.currentSectorIndex,
+          factionId: campaignInfluence.rival.factionId,
+          rivalId: campaignInfluence.rival.id
+        },
+        this.currentRun.factionFronts
+      );
       campaignInfluence = getFactionCampaignInfluence(
         this.currentRun.factionCampaign,
         this.runSession.factionCampaign,
@@ -524,7 +534,12 @@ export class GameApp {
       {
         excludedCandidateIds: this.runSession.carrier.facilities
           .map((facility) => facility.assignedCrewId)
-          .filter((candidateId): candidateId is string => candidateId !== null)
+          .filter((candidateId): candidateId is string => candidateId !== null),
+        arcInfluence: createCrewArcCombatInfluence(
+          this.currentRun.crewArcs,
+          this.runSession.crewArcs,
+          this.runSession.crewRoster
+        )
       }
     );
 
@@ -842,21 +857,31 @@ export class GameApp {
           : 'success';
 
     if (completedStage.operationalRole === 'gate' && schedule.contract) {
-      recordFactionCampaignEvent(this.runSession, this.currentRun.factionCampaign, {
-        id: `${stageId}:campaign-contract`,
-        type: 'contractCompleted',
-        sectorIndex,
-        factionId: encounterFactionId,
-        contractId: schedule.contract.id
-      }, this.currentRun.factionFronts);
-      recordFactionCampaignEvent(this.runSession, this.currentRun.factionCampaign, {
-        id: `${stageId}:campaign-outcome`,
-        type: 'missionOutcome',
-        sectorIndex,
-        factionId: encounterFactionId,
-        contractId: schedule.contract.id,
-        outcome: campaignOutcome
-      }, this.currentRun.factionFronts);
+      recordFactionCampaignEvent(
+        this.runSession,
+        this.currentRun.factionCampaign,
+        {
+          id: `${stageId}:campaign-contract`,
+          type: 'contractCompleted',
+          sectorIndex,
+          factionId: encounterFactionId,
+          contractId: schedule.contract.id
+        },
+        this.currentRun.factionFronts
+      );
+      recordFactionCampaignEvent(
+        this.runSession,
+        this.currentRun.factionCampaign,
+        {
+          id: `${stageId}:campaign-outcome`,
+          type: 'missionOutcome',
+          sectorIndex,
+          factionId: encounterFactionId,
+          contractId: schedule.contract.id,
+          outcome: campaignOutcome
+        },
+        this.currentRun.factionFronts
+      );
     }
 
     const combatRival = result.rivalEncounter;
@@ -867,18 +892,23 @@ export class GameApp {
     );
     if (combatRival || unresolvedRival) {
       const rivalId = combatRival?.rivalId ?? unresolvedRival!.id;
-      recordFactionCampaignEvent(this.runSession, this.currentRun.factionCampaign, {
-        id: `${stageId}:rival-outcome:${rivalId}`,
-        type: 'rivalOutcome',
-        sectorIndex,
-        factionId: combatRival?.rivalId
-          ? (this.currentRun.factionCampaign.rivals.find(
-              (candidate) => candidate.id === combatRival.rivalId
-            )?.factionId ?? encounterFactionId)
-          : unresolvedRival!.factionId,
-        rivalId,
-        outcome: combatRival?.outcome ?? 'escaped'
-      }, this.currentRun.factionFronts);
+      recordFactionCampaignEvent(
+        this.runSession,
+        this.currentRun.factionCampaign,
+        {
+          id: `${stageId}:rival-outcome:${rivalId}`,
+          type: 'rivalOutcome',
+          sectorIndex,
+          factionId: combatRival?.rivalId
+            ? (this.currentRun.factionCampaign.rivals.find(
+                (candidate) => candidate.id === combatRival.rivalId
+              )?.factionId ?? encounterFactionId)
+            : unresolvedRival!.factionId,
+          rivalId,
+          outcome: combatRival?.outcome ?? 'escaped'
+        },
+        this.currentRun.factionFronts
+      );
     }
 
     if (isOptionalStage && campaignOutcome === 'success') {
@@ -888,32 +918,52 @@ export class GameApp {
         sectorIndex
       );
       if (capturable) {
-        recordFactionCampaignEvent(this.runSession, this.currentRun.factionCampaign, {
-          id: `${stageId}:rival-captured:${capturable.id}`,
-          type: 'rivalOutcome',
-          sectorIndex,
-          factionId: capturable.factionId,
-          rivalId: capturable.id,
-          outcome: 'captured'
-        }, this.currentRun.factionFronts);
+        recordFactionCampaignEvent(
+          this.runSession,
+          this.currentRun.factionCampaign,
+          {
+            id: `${stageId}:rival-captured:${capturable.id}`,
+            type: 'rivalOutcome',
+            sectorIndex,
+            factionId: capturable.factionId,
+            rivalId: capturable.id,
+            outcome: 'captured'
+          },
+          this.currentRun.factionFronts
+        );
       }
     }
 
     for (const member of result.crew?.members ?? []) {
-      recordCrewRosterEvent(this.runSession, this.currentRun.crewRoster, {
-        id: `${stageId}:crew-combat:${member.candidateId}`,
-        type: 'combatOutcome',
-        sectorIndex,
-        candidateId: member.candidateId,
-        injured: member.injured,
-        retreated: member.retreated,
-        enemiesDefeated: member.enemiesDefeated,
-        salvageRecovered: member.salvageRecovered
-      }, this.currentRun.factionFronts);
+      recordCrewRosterEvent(
+        this.runSession,
+        this.currentRun.crewRoster,
+        {
+          id: `${stageId}:crew-combat:${member.candidateId}`,
+          type: 'combatOutcome',
+          sectorIndex,
+          candidateId: member.candidateId,
+          injured: member.injured,
+          retreated: member.retreated,
+          enemiesDefeated: member.enemiesDefeated,
+          salvageRecovered: member.salvageRecovered
+        },
+        this.currentRun.factionFronts
+      );
+      if (member.injured) {
+        recordCrewArcEvent(this.currentRun, this.runSession, {
+          id: `${stageId}:crew-arc-injury:${member.candidateId}`,
+          source: 'injury',
+          sectorIndex,
+          candidateIds: [member.candidateId],
+          positive: false,
+          detail: `${member.candidateId} returned injured`
+        });
+      }
     }
 
     const operationNode = completedStage.nodeId
-      ? this.currentRun.expedition.nodes.find((node) => node.id === completedStage.nodeId) ?? null
+      ? (this.currentRun.expedition.nodes.find((node) => node.id === completedStage.nodeId) ?? null)
       : null;
     const boardingOperation = operationNode
       ? getBoardingOperationForNode(this.currentRun.boardingCampaign, operationNode)
@@ -921,13 +971,57 @@ export class GameApp {
     const crewPolicy = boardingOperation?.integrations.includes('crew')
       ? 'protectSpecialist'
       : (schedule.contract?.crewPolicy ?? 'none');
-    recordCrewRosterEvent(this.runSession, this.currentRun.crewRoster, {
-      id: `${stageId}:crew-mission-outcome`,
-      type: 'missionOutcome',
+    recordCrewRosterEvent(
+      this.runSession,
+      this.currentRun.crewRoster,
+      {
+        id: `${stageId}:crew-mission-outcome`,
+        type: 'missionOutcome',
+        sectorIndex,
+        outcome: campaignOutcome,
+        crewPolicy
+      },
+      this.currentRun.factionFronts
+    );
+    const activeCrewIds = this.runSession.crewRoster.members
+      .filter((member) => member.status === 'active' || member.status === 'injured')
+      .map((member) => member.candidateId);
+    recordCrewArcEvent(this.currentRun, this.runSession, {
+      id: `${stageId}:crew-arc-mission`,
+      source: 'mission',
       sectorIndex,
-      outcome: campaignOutcome,
-      crewPolicy
-    }, this.currentRun.factionFronts);
+      candidateIds: activeCrewIds,
+      positive: campaignOutcome !== 'failure',
+      detail: `${completedStage.label} ${campaignOutcome}`
+    });
+    recordCrewArcEvent(this.currentRun, this.runSession, {
+      id: `${stageId}:crew-arc-faction`,
+      source: 'faction',
+      sectorIndex,
+      candidateIds: activeCrewIds,
+      positive: campaignOutcome !== 'failure',
+      detail: `${encounterFactionId} front contact`
+    });
+    if (combatRival || unresolvedRival) {
+      recordCrewArcEvent(this.currentRun, this.runSession, {
+        id: `${stageId}:crew-arc-rival`,
+        source: 'rival',
+        sectorIndex,
+        candidateIds: activeCrewIds,
+        positive: combatRival?.outcome === 'destroyed',
+        detail: `rival ${combatRival?.outcome ?? 'escaped'}`
+      });
+    }
+    if ((result.crew?.issuedCommands ?? 0) > 0) {
+      recordCrewArcEvent(this.currentRun, this.runSession, {
+        id: `${stageId}:crew-arc-command`,
+        source: 'command',
+        sectorIndex,
+        candidateIds: result.crew?.members.map((member) => member.candidateId) ?? [],
+        positive: campaignOutcome !== 'failure',
+        detail: `${result.crew?.command ?? 'formation'} command`
+      });
+    }
     const campaignInfluence = getFactionCampaignInfluence(
       this.currentRun.factionCampaign,
       this.runSession.factionCampaign,
@@ -947,28 +1041,46 @@ export class GameApp {
           })
         : null;
     if (candidate) {
-      const recruitment = recordCrewRosterEvent(this.runSession, this.currentRun.crewRoster, {
-        id: `${stageId}:crew-recruit:${candidate.id}`,
-        type: 'recruit',
-        sectorIndex,
-        candidateId: candidate.id,
-        commandHeadroom,
-        source:
-          crewPolicy === 'protectSpecialist'
-            ? 'protected specialist transfer'
-            : crewPolicy === 'recordCandidate'
-              ? 'distress rescue manifest'
-              : 'trusted faction distress channel'
-      }, this.currentRun.factionFronts);
-      if (recruitment.disposition === 'applied') {
-        recordFactionCampaignEvent(this.runSession, this.currentRun.factionCampaign, {
-          id: `${stageId}:crew-faction-aid:${candidate.id}`,
-          type: 'aid',
+      const recruitment = recordCrewRosterEvent(
+        this.runSession,
+        this.currentRun.crewRoster,
+        {
+          id: `${stageId}:crew-recruit:${candidate.id}`,
+          type: 'recruit',
           sectorIndex,
-          factionId: candidate.factionId,
-          amount: 1,
-          reason: `rescued ${candidate.callsign}`
-        }, this.currentRun.factionFronts);
+          candidateId: candidate.id,
+          commandHeadroom,
+          source:
+            crewPolicy === 'protectSpecialist'
+              ? 'protected specialist transfer'
+              : crewPolicy === 'recordCandidate'
+                ? 'distress rescue manifest'
+                : 'trusted faction distress channel'
+        },
+        this.currentRun.factionFronts
+      );
+      if (recruitment.disposition === 'applied') {
+        recordCrewArcEvent(this.currentRun, this.runSession, {
+          id: `${stageId}:crew-arc-rescue:${candidate.id}`,
+          source: 'rescue',
+          sectorIndex,
+          candidateIds: [candidate.id],
+          positive: true,
+          detail: `${candidate.callsign} joined the voyage`
+        });
+        recordFactionCampaignEvent(
+          this.runSession,
+          this.currentRun.factionCampaign,
+          {
+            id: `${stageId}:crew-faction-aid:${candidate.id}`,
+            type: 'aid',
+            sectorIndex,
+            factionId: candidate.factionId,
+            amount: 1,
+            reason: `rescued ${candidate.callsign}`
+          },
+          this.currentRun.factionFronts
+        );
       }
     }
     const operationCheckpoint = {
@@ -1004,7 +1116,8 @@ export class GameApp {
       recordBoardingOperationOutcome(this.currentRun, this.runSession, boardingOperation, {
         eventId: `${stageId}:boarding-settled`,
         outcome: campaignOutcome,
-        completionRatio: result.missionObjective?.completionRatio ?? (campaignOutcome === 'success' ? 1 : 0),
+        completionRatio:
+          result.missionObjective?.completionRatio ?? (campaignOutcome === 'success' ? 1 : 0),
         retreated: result.reason === 'abandoned'
       });
     }
@@ -1092,7 +1205,8 @@ export class GameApp {
     const schedule = this.getCurrentMissionSchedule();
     const stage = getMissionStage(schedule, this.runSession.mission.currentStageId);
     const node = stage.nodeId
-      ? this.currentRun.expedition.nodes.find((candidate) => candidate.id === stage.nodeId) ?? null
+      ? (this.currentRun.expedition.nodes.find((candidate) => candidate.id === stage.nodeId) ??
+        null)
       : null;
     const boardingOperation = node
       ? getBoardingOperationForNode(this.currentRun.boardingCampaign, node)
@@ -1172,22 +1286,23 @@ export class GameApp {
       this.runSession.factionFronts,
       this.runSession.currentSectorIndex
     );
-    const availableMissionOptions = getMissionBranchOptions(schedule, this.runSession.mission).filter(
-      (option) => {
-        if (option.default) return true;
-        const target = this.currentRun.expedition.nodes.find(
-          (node) => node.id === option.targetNodeId
-        );
-        const boarding = target
-          ? getBoardingOperationForNode(this.currentRun.boardingCampaign, target)
-          : null;
-        return (
-          carrierInfluence.optionalMissionAccess &&
-          (!boarding || carrierInfluence.boardingCapacity > 0) &&
-          (!target || isFactionFrontNodeAvailable(frontInfluence, target))
-        );
-      }
-    );
+    const availableMissionOptions = getMissionBranchOptions(
+      schedule,
+      this.runSession.mission
+    ).filter((option) => {
+      if (option.default) return true;
+      const target = this.currentRun.expedition.nodes.find(
+        (node) => node.id === option.targetNodeId
+      );
+      const boarding = target
+        ? getBoardingOperationForNode(this.currentRun.boardingCampaign, target)
+        : null;
+      return (
+        carrierInfluence.optionalMissionAccess &&
+        (!boarding || carrierInfluence.boardingCapacity > 0) &&
+        (!target || isFactionFrontNodeAvailable(frontInfluence, target))
+      );
+    });
     const missionOptions = projectFactionFrontBranchOptions(
       availableMissionOptions,
       this.currentRun.expedition.nodes,
@@ -1219,13 +1334,18 @@ export class GameApp {
           }
 
           if (capturableRival && option.default) {
-            recordFactionCampaignEvent(this.runSession, this.currentRun.factionCampaign, {
-              id: `${currentBranch.id}:${option.id}:spared:${capturableRival.id}`,
-              type: 'targetSpared',
-              sectorIndex: this.runSession.currentSectorIndex,
-              factionId: capturableRival.factionId,
-              rivalId: capturableRival.id
-            }, this.currentRun.factionFronts);
+            recordFactionCampaignEvent(
+              this.runSession,
+              this.currentRun.factionCampaign,
+              {
+                id: `${currentBranch.id}:${option.id}:spared:${capturableRival.id}`,
+                type: 'targetSpared',
+                sectorIndex: this.runSession.currentSectorIndex,
+                factionId: capturableRival.factionId,
+                rivalId: capturableRival.id
+              },
+              this.currentRun.factionFronts
+            );
           }
 
           recordExpeditionBranchDecision(
@@ -1491,10 +1611,7 @@ export class GameApp {
 
     const previousSectorIndex = this.runSession.currentSectorIndex;
 
-    const frontierHandoff = getFrontierChoiceHandoff(
-      this.currentRun.acts,
-      previousSectorIndex
-    );
+    const frontierHandoff = getFrontierChoiceHandoff(this.currentRun.acts, previousSectorIndex);
     if (frontierHandoff && this.runSession.frontierDecision.decision === 'unresolved') {
       this.showFrontierGate(frontierHandoff.sourceAct, frontierHandoff.targetAct);
       return;
@@ -1579,9 +1696,7 @@ export class GameApp {
           applyFrontierDecision(this.runSession, 'breach');
           if (!advanceSector(this.currentRun, this.runSession)) {
             this.showRunSummary(
-              this.lastRunResult
-                ? { ...this.lastRunResult, reason: 'victory' as const }
-                : undefined
+              this.lastRunResult ? { ...this.lastRunResult, reason: 'victory' as const } : undefined
             );
             return;
           }
@@ -1638,17 +1753,28 @@ export class GameApp {
         (engineering, salvageGained) => {
           this.runSession.engineering = engineering;
           this.runSession.salvage +=
-            salvageGained +
-            (crewAssist?.salvageBonus ?? 0) +
-            carrierInfluence.foundrySalvageBonus;
+            salvageGained + (crewAssist?.salvageBonus ?? 0) + carrierInfluence.foundrySalvageBonus;
           if (crewAssist) {
-            recordCrewRosterEvent(this.runSession, this.currentRun.crewRoster, {
-              id: `foundry-assist:${sector.index}:${crewAssist.candidateId}`,
-              type: 'foundryAssist',
-              sectorIndex: this.runSession.currentSectorIndex,
-              candidateId: crewAssist.candidateId
-            }, this.currentRun.factionFronts);
+            recordCrewRosterEvent(
+              this.runSession,
+              this.currentRun.crewRoster,
+              {
+                id: `foundry-assist:${sector.index}:${crewAssist.candidateId}`,
+                type: 'foundryAssist',
+                sectorIndex: this.runSession.currentSectorIndex,
+                candidateId: crewAssist.candidateId
+              },
+              this.currentRun.factionFronts
+            );
           }
+          recordCrewArcEvent(this.currentRun, this.runSession, {
+            id: `foundry-arc:${sector.index}:${engineering.history.length}`,
+            source: 'module',
+            sectorIndex: this.runSession.currentSectorIndex,
+            candidateIds: crewAssist ? [crewAssist.candidateId] : [],
+            positive: true,
+            detail: `committed ${engineering.committed.frameId}`
+          });
           recordRunSessionTimelineEvent(this.runSession, {
             id: `engineering-commit:${sector.index}:${engineering.history.length}`,
             category: 'engineering',
@@ -1730,7 +1856,29 @@ export class GameApp {
           }
         },
         createMissionReadModel(schedule, this.runSession.mission),
-        createMissionDebugState(schedule, this.runSession.mission)
+        createMissionDebugState(schedule, this.runSession.mission),
+        () => void this.showCrewQuarters()
+      )
+    );
+  }
+
+  private async showCrewQuarters(
+    onBack: () => void = () => this.showSectorTransition()
+  ): Promise<void> {
+    const { CrewQuartersScene } = await import('../ui/CrewQuartersScene');
+    this.sceneManager.switchTo(
+      new CrewQuartersScene(
+        this.uiRoot,
+        this.currentRun.crewRoster,
+        this.runSession.crewRoster,
+        this.currentRun.crewArcs,
+        this.runSession.crewArcs,
+        this.runSession.currentSectorIndex,
+        (arcId, optionId) => {
+          chooseCrewArcOption(this.currentRun, this.runSession, arcId, optionId);
+          void this.showCrewQuarters(onBack);
+        },
+        onBack
       )
     );
   }
@@ -1839,7 +1987,8 @@ export class GameApp {
         this.runSession.frontierDecision,
         this.runSession.carrier,
         this.runSession.boarding,
-        this.runSession.factionFronts
+        this.runSession.factionFronts,
+        this.runSession.crewArcs
       )
     );
   }
@@ -2143,6 +2292,13 @@ export class GameApp {
           `Front ending ${debugState.factionFronts.ending}`
         ]
       : [];
+    const crewArcDebug = debugState.crewArcs
+      ? [
+          `Crew arcs pending ${debugState.crewArcs.pending} resolved ${debugState.crewArcs.resolved} successor ${debugState.crewArcs.successor ?? 'none'} events ${debugState.crewArcs.historyCount}`,
+          `Crew relationships ${debugState.crewArcs.relationships.join(' / ') || 'none'}`,
+          `Crew fates ${debugState.crewArcs.fates.join(' / ') || 'none'}`
+        ]
+      : [];
     const scenarioLabDebug = debugState.scenarioLab
       ? [
           `Scenario Lab ${debugState.scenarioLab.activeScenario ?? 'catalog'} ${debugState.scenarioLab.scenarioCount} cases`,
@@ -2207,6 +2363,7 @@ export class GameApp {
       ...carrierDebug,
       ...boardingDebug,
       ...factionFrontDebug,
+      ...crewArcDebug,
       ...scenarioLabDebug,
       ...upgradeDebug,
       ...progressionDebug,

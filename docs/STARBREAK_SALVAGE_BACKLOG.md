@@ -1900,7 +1900,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 107.
+- Implemented in work order 107. Ten deterministic three-node arcs cover bonds, conflicts, fears, ambitions, loyalty, promotion, paired abilities, specialist posts, rescue, departure, mutiny, and succession. Only explicit mission, carrier, boarding, faction, rival, injury, module, command, and rescue outcomes advance them. Crew Quarters exposes two-way risk-bearing decisions and full rank/fate/relationship state. Combat consumes bounded tradeoffs through command cost, formation durability, cadence, and partner availability; roster departure/mutiny and trust remain authoritative. Snapshot v7, summaries/timeline/debug state, endurance bounds, and an eleventh accessible Scenario Lab fixture are live.
 
 ### BJ3 - Fleetcraft and deployable support
 

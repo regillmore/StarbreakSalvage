@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { BOARDING_CONTRACTS, BOARDING_OBJECTIVE_KINDS, BOARDING_TARGET_KINDS } from '../../src/content/boarding';
+import {
+  BOARDING_CONTRACTS,
+  BOARDING_OBJECTIVE_KINDS,
+  BOARDING_TARGET_KINDS
+} from '../../src/content/boarding';
 import {
   createBoardingCampaignState,
   createBoardingMissionObjectivePlan,
@@ -21,9 +25,9 @@ describe('BoardingOperation', () => {
     expect(first.boardingCampaign).toEqual(second.boardingCampaign);
     expect(first.boardingCampaign.operations).toHaveLength(BOARDING_CONTRACTS.length);
     expect(validateBoardingCampaignPlan(first.boardingCampaign)).toEqual([]);
-    expect(new Set(first.boardingCampaign.operations.map((operation) => operation.targetKind))).toEqual(
-      new Set(BOARDING_TARGET_KINDS)
-    );
+    expect(
+      new Set(first.boardingCampaign.operations.map((operation) => operation.targetKind))
+    ).toEqual(new Set(BOARDING_TARGET_KINDS));
     expect(
       new Set(first.boardingCampaign.operations.flatMap((operation) => operation.objectiveKinds))
     ).toEqual(new Set(BOARDING_OBJECTIVE_KINDS));
@@ -106,7 +110,10 @@ describe('BoardingOperation', () => {
     expect(success.stowedLoot.length).toBeGreaterThan(0);
     expect(duplicate.disposition).toBe('duplicate');
     expect(partial.status).toBe('partialSuccess');
-    expect(partial.state.operations.find((entry) => entry.operationId === partialOperation!.id)?.loot[0]?.custody).toBe('held');
+    expect(
+      partial.state.operations.find((entry) => entry.operationId === partialOperation!.id)?.loot[0]
+        ?.custody
+    ).toBe('held');
     expect(retreat.status).toBe('retreated');
     expect(retreat.state.operations.every((entry) => entry.cleanupActorsRetained === 0)).toBe(true);
     expect(validateBoardingCampaignState(run.boardingCampaign, retreat.state)).toEqual([]);
@@ -116,7 +123,9 @@ describe('BoardingOperation', () => {
     const run = generateRunSkeleton('BOARDING-CONSEQUENCES');
     const contract = run.contracts[0]!;
     const session = createRunSession(run, contract);
-    const foundryOperation = run.boardingCampaign.operations.find((operation) => operation.integrations.includes('foundry'))!;
+    const foundryOperation = run.boardingCampaign.operations.find((operation) =>
+      operation.integrations.includes('foundry')
+    )!;
     const engineeringBefore = session.engineering.committed.components.length;
     const cargoBefore = session.carrier.cargo.length;
     const settlement = recordBoardingOperationOutcome(run, session, foundryOperation, {
@@ -131,7 +140,9 @@ describe('BoardingOperation', () => {
     expect(session.carrier.cargo.length).toBeGreaterThan(cargoBefore);
     expect(session.boarding.unlockedHooks).toContain(`foundry:${foundryOperation.contractId}`);
 
-    const rivalOperation = run.boardingCampaign.operations.find((operation) => operation.integrations.includes('rival'))!;
+    const rivalOperation = run.boardingCampaign.operations.find((operation) =>
+      operation.integrations.includes('rival')
+    )!;
     recordBoardingOperationOutcome(run, session, rivalOperation, {
       eventId: 'boarding-rival-outcome',
       outcome: 'success',
@@ -140,7 +151,9 @@ describe('BoardingOperation', () => {
     });
     expect(session.factionCampaign.rivals.some((rival) => rival.status === 'captured')).toBe(true);
 
-    const apexOperation = run.boardingCampaign.operations.find((operation) => operation.integrations.includes('apex'))!;
+    const apexOperation = run.boardingCampaign.operations.find((operation) =>
+      operation.integrations.includes('apex')
+    )!;
     recordBoardingOperationOutcome(run, session, apexOperation, {
       eventId: 'boarding-apex-outcome',
       outcome: 'partialSuccess',
@@ -169,7 +182,7 @@ describe('BoardingOperation', () => {
       label: 'Boarding custody'
     });
     const restored = restoreRunSnapshot(snapshot);
-    expect(snapshot.version).toBe(6);
+    expect(snapshot.version).toBe(7);
     expect(snapshot.extensions.boarding.planId).toBe(run.boardingCampaign.id);
     expect(restored.session.boarding).toEqual(session.boarding);
   });

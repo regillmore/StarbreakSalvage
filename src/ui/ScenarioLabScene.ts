@@ -71,7 +71,7 @@ export class ScenarioLabScene implements Scene {
 
       const setup = document.createElement('span');
       setup.className = 'choice-body scenario-lab-setup';
-      setup.textContent = `${preview.sector} | ${preview.missionStage} | ${preview.frame} | engineering ${preview.engineeringHistory} | faction ${preview.factionEvents} | fronts ${preview.frontEvents} | crew ${preview.crewEvents} | timeline ${preview.timelineEvents}`;
+      setup.textContent = `${preview.sector} | ${preview.missionStage} | ${preview.frame} | engineering ${preview.engineeringHistory} | faction ${preview.factionEvents} | fronts ${preview.frontEvents} | crew ${preview.crewEvents} | arcs ${preview.arcEvents} | timeline ${preview.timelineEvents}`;
 
       const budget = document.createElement('span');
       budget.className = 'choice-body scenario-lab-budget';

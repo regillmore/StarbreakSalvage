@@ -12,6 +12,7 @@ import { getShipFrameById } from '../content/shipModules';
 import { clamp } from '../core/math';
 import { createRng } from '../core/rng';
 import type { ResolvedShipLoadout } from './ShipLoadout';
+import type { CrewArcCombatInfluence } from './CrewArc';
 
 export type CrewMemberStatus = 'available' | 'active' | 'injured' | 'departed';
 
@@ -97,6 +98,16 @@ export type CrewRosterEvent =
       readonly type: 'foundryAssist';
       readonly sectorIndex: number;
       readonly candidateId: string;
+    }
+  | {
+      readonly id: string;
+      readonly type: 'arcOutcome';
+      readonly sectorIndex: number;
+      readonly candidateId: string;
+      readonly outcome:
+        'promotion' | 'departure' | 'mutiny' | 'rescue' | 'succession' | 'relationship';
+      readonly trustDelta: number;
+      readonly reason: string;
     };
 
 export interface CrewEventResult {
@@ -300,6 +311,26 @@ export function applyCrewRosterEvent(
       trust: clamp(member.trust + 1, 0, 8)
     });
     label = `${crewName(plan, member.candidateId)} assisted the foundry`;
+  } else if (event.type === 'arcOutcome') {
+    const index = memberIndex(state, event.candidateId);
+    const member = state.members[index];
+    if (!member || member.status === 'available')
+      return rejected(state, 'Crew arc outcome unavailable');
+    if (event.outcome === 'departure' || event.outcome === 'mutiny') {
+      members = replaceMember(members, index, {
+        ...member,
+        status: 'departed',
+        recoverySectorIndex: null,
+        departureReason: event.reason
+      });
+    } else {
+      members = replaceMember(members, index, {
+        ...member,
+        status: member.status === 'injured' ? 'injured' : 'active',
+        trust: clamp(member.trust + event.trustDelta, 0, 8)
+      });
+    }
+    label = `${crewName(plan, member.candidateId)}: ${event.outcome}`;
   }
 
   return {
@@ -373,10 +404,16 @@ export function createCrewCombatProfile(
   plan: CrewRosterPlan,
   state: CrewRosterState,
   loadout: ResolvedShipLoadout,
-  options: { readonly excludedCandidateIds?: readonly string[] } = {}
+  options: {
+    readonly excludedCandidateIds?: readonly string[];
+    readonly arcInfluence?: CrewArcCombatInfluence;
+  } = {}
 ): CrewCombatProfile {
   const headroom = Math.max(0, loadout.resources.commandHeadroom);
-  const excluded = new Set(options.excludedCandidateIds ?? []);
+  const excluded = new Set([
+    ...(options.excludedCandidateIds ?? []),
+    ...(options.arcInfluence?.excludedCandidateIds ?? [])
+  ]);
   const active = state.members.filter(
     (member) => member.status === 'active' && !excluded.has(member.candidateId)
   );
@@ -388,7 +425,9 @@ export function createCrewCombatProfile(
     const candidate = plan.candidates.find((entry) => entry.id === member.candidateId);
     if (!candidate) continue;
     const role = getCrewRole(candidate.roleId);
-    if (members.length >= MAX_ACTIVE_WINGMATES || used + role.commandCost > headroom) {
+    const influence = options.arcInfluence?.byCandidateId[candidate.id];
+    const commandCost = Math.max(1, role.commandCost + (influence?.commandCostDelta ?? 0));
+    if (members.length >= MAX_ACTIVE_WINGMATES || used + commandCost > headroom) {
       overflowCandidateIds.push(candidate.id);
       continue;
     }
@@ -399,17 +438,20 @@ export function createCrewCombatProfile(
       callsign: candidate.callsign,
       roleId: candidate.roleId,
       role: role.role,
-      trait: role.trait,
+      trait: influence?.relationshipLabel
+        ? `${role.trait} ${influence.relationshipLabel}`
+        : role.trait,
       preferredCommand: role.preferredCommand,
-      commandCost: role.commandCost,
-      maxHull: role.hull + Number(fit.score > 0),
+      commandCost,
+      maxHull: Math.max(1, role.hull + Number(fit.score > 0) + (influence?.hullDelta ?? 0)),
       moveSpeed: role.moveSpeed,
-      fireCooldownSeconds: role.fireCooldownSeconds,
-      projectileDamage: role.projectileDamage + Number(fit.score >= 2),
-      fitLabel: fit.label,
+      fireCooldownSeconds: role.fireCooldownSeconds * (influence?.fireDelayMultiplier ?? 1),
+      projectileDamage:
+        role.projectileDamage + Number(fit.score >= 2) + (influence?.damageDelta ?? 0),
+      fitLabel: influence ? `${fit.label} · ${influence.rank}` : fit.label,
       cue: role.cue
     });
-    used += role.commandCost;
+    used += commandCost;
   }
 
   return { members, commandHeadroom: headroom, commandUsed: used, overflowCandidateIds };

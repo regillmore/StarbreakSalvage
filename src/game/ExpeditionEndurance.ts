@@ -24,6 +24,7 @@ export interface ExpeditionEnduranceBoundaryReport {
   readonly factionHistory: number;
   readonly factionFrontHistory: number;
   readonly crewHistory: number;
+  readonly crewArcHistory: number;
   readonly carrierHistory: number;
   readonly carrierCargo: number;
   readonly timelineEntries: number;
@@ -41,6 +42,7 @@ export interface ExpeditionEnduranceReport {
   readonly maxFactionHistory: number;
   readonly maxFactionFrontHistory: number;
   readonly maxCrewHistory: number;
+  readonly maxCrewArcHistory: number;
   readonly maxCarrierHistory: number;
   readonly maxCarrierCargo: number;
   readonly maxEngineeringHistory: number;
@@ -98,10 +100,9 @@ export function runExpeditionEnduranceHarness(options: {
     maxSnapshotBytes: Math.max(...boundaries.map((boundary) => boundary.snapshotBytes)),
     maxTimelineEntries: Math.max(...boundaries.map((boundary) => boundary.timelineEntries)),
     maxFactionHistory: Math.max(...boundaries.map((boundary) => boundary.factionHistory)),
-    maxFactionFrontHistory: Math.max(
-      ...boundaries.map((boundary) => boundary.factionFrontHistory)
-    ),
+    maxFactionFrontHistory: Math.max(...boundaries.map((boundary) => boundary.factionFrontHistory)),
     maxCrewHistory: Math.max(...boundaries.map((boundary) => boundary.crewHistory)),
+    maxCrewArcHistory: Math.max(...boundaries.map((boundary) => boundary.crewArcHistory)),
     maxCarrierHistory: Math.max(...boundaries.map((boundary) => boundary.carrierHistory)),
     maxCarrierCargo: Math.max(...boundaries.map((boundary) => boundary.carrierCargo)),
     maxEngineeringHistory: Math.max(...boundaries.map((boundary) => boundary.engineeringHistory)),
@@ -142,6 +143,7 @@ function roundTripBoundary(options: {
     factionHistory: restored.session.factionCampaign.history.length,
     factionFrontHistory: restored.session.factionFronts.history.length,
     crewHistory: restored.session.crewRoster.history.length,
+    crewArcHistory: restored.session.crewArcs.history.length,
     carrierHistory: restored.session.carrier.history.length,
     carrierCargo: restored.session.carrier.cargo.length,
     timelineEntries: restored.session.timeline.entries.length,

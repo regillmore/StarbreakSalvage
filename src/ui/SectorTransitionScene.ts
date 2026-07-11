@@ -44,6 +44,7 @@ import {
   getFactionCampaignInfluence
 } from '../game/FactionCampaign';
 import { createCrewDebugState } from '../game/CrewCommand';
+import { createCrewArcDebugState, createCrewArcRosterReadModel } from '../game/CrewArc';
 
 export class SectorTransitionScene implements Scene {
   public readonly id = 'sector-transition';
@@ -55,7 +56,8 @@ export class SectorTransitionScene implements Scene {
     private readonly contract: StartingContract,
     private readonly onEnterSector: () => void,
     private readonly mission: MissionReadModel | null = null,
-    private readonly missionDebug: MissionDebugState | null = null
+    private readonly missionDebug: MissionDebugState | null = null,
+    private readonly onOpenCrewQuarters: (() => void) | null = null
   ) {}
 
   public enter(): void {
@@ -156,6 +158,14 @@ export class SectorTransitionScene implements Scene {
       crew.roster.length > 0
         ? `Crew manifest: ${crew.roster.join(' | ')} | Commands FOCUS [L], SCREEN [C], SALVAGE [V], REGROUP [O], DISENGAGE [Z].`
         : 'Crew manifest: no wingmates. Rescue and specialist contracts can add run-local allies.';
+    const arcLine = document.createElement('p');
+    arcLine.className = 'transition-copy';
+    arcLine.dataset.testid = 'crew-arc-brief';
+    arcLine.textContent = createCrewArcRosterReadModel(
+      this.run.crewArcs,
+      this.session.crewArcs,
+      this.run.crewRoster
+    ).summary;
 
     const schedule = createMissionSchedule(this.run.expedition, this.session.currentSectorIndex);
     const currentStage = getMissionStage(schedule, this.session.mission.currentStageId);
@@ -182,6 +192,13 @@ export class SectorTransitionScene implements Scene {
     enterButton.type = 'button';
     enterButton.textContent = this.mission ? 'Begin Operation' : 'Enter Sector';
     enterButton.addEventListener('click', this.onEnterSector);
+    const crewButton = document.createElement('button');
+    crewButton.className = 'secondary-button';
+    crewButton.type = 'button';
+    crewButton.dataset.testid = 'open-crew-quarters';
+    crewButton.textContent = 'Crew Quarters';
+    crewButton.hidden = this.onOpenCrewQuarters === null;
+    crewButton.addEventListener('click', () => this.onOpenCrewQuarters?.());
 
     shell.append(
       eyebrow,
@@ -193,7 +210,9 @@ export class SectorTransitionScene implements Scene {
       waveLine,
       campaignLine,
       crewLine,
+      arcLine,
       operationalLine,
+      crewButton,
       enterButton
     );
     this.uiRoot.replaceChildren(shell);
@@ -208,7 +227,9 @@ export class SectorTransitionScene implements Scene {
 
   public handleAction(action: InputAction): void {
     if (action === 'confirm') {
-      this.onEnterSector();
+      const focused = this.uiRoot.ownerDocument.activeElement;
+      if (focused instanceof HTMLButtonElement) focused.click();
+      else this.onEnterSector();
     }
   }
 
@@ -251,6 +272,11 @@ export class SectorTransitionScene implements Scene {
         issuedCommands: 0,
         allies: createCrewDebugState(this.run.crewRoster, this.session.crewRoster).roster
       },
+      crewArcs: createCrewArcDebugState(
+        this.run.crewArcs,
+        this.session.crewArcs,
+        this.run.crewRoster
+      ),
       progression: {
         runCredits: this.session.credits,
         runSalvage: this.session.salvage

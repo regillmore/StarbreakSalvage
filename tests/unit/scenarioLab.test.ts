@@ -68,6 +68,13 @@ describe('ScenarioLab', () => {
     expect(fronts.session.factionFronts.history).toHaveLength(4);
     expect(fronts.readout.frontEvents).toBe(4);
 
+    const crewArcs = launch('lab_crew_arcs');
+    expect(crewArcs.readout.target).toBe('crewQuarters');
+    expect(crewArcs.readout.arcEvents).toBeGreaterThan(2);
+    expect(crewArcs.session.crewArcs.arcs.some((arc) => arc.status === 'awaitingChoice')).toBe(
+      true
+    );
+
     const timeline = launch('lab_timeline_audit').session.timeline;
     expect(new Set(timeline.entries.map((entry) => entry.category))).toEqual(
       new Set([

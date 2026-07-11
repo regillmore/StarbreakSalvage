@@ -48,16 +48,14 @@ import { createSecondActFinalePlan, type SecondActFinalePlan } from './SecondAct
 import { createSetPiecePlan, type SetPiecePlan } from './SetPiece';
 import { createFactionCampaignPlan, type FactionCampaignPlan } from './FactionCampaign';
 import { createCrewRosterPlan, type CrewRosterPlan } from './CrewCommand';
+import { createCrewArcPlan, type CrewArcPlan } from './CrewArc';
 import {
   createNullFrontierCampaignPlan,
   type FrontierLaw,
   type NullFrontierCampaignPlan
 } from './NullFrontier';
 import { createCarrierPlan, type CarrierPlan } from './CarrierCommand';
-import {
-  createBoardingCampaignPlan,
-  type BoardingCampaignPlan
-} from './BoardingOperation';
+import { createBoardingCampaignPlan, type BoardingCampaignPlan } from './BoardingOperation';
 import { createFactionFrontPlan, type FactionFrontPlan } from './FactionFront';
 import { createLegacyStartingLoadout, type ResolvedShipLoadout } from './ShipLoadout';
 import { resolveRunUpgradeEffects, type RunUpgradeEffects } from './UpgradeEffects';
@@ -139,6 +137,7 @@ export interface RunSkeleton {
   readonly expedition: ExpeditionGraph;
   readonly factionCampaign: FactionCampaignPlan;
   readonly crewRoster: CrewRosterPlan;
+  readonly crewArcs: CrewArcPlan;
   readonly frontierCampaign: NullFrontierCampaignPlan;
   readonly carrierPlan: CarrierPlan;
   readonly boardingCampaign: BoardingCampaignPlan;
@@ -286,6 +285,12 @@ export function generateRunSkeleton(
     saveFingerprint,
     sectorCount: sectors.length
   });
+  const crewArcs = createCrewArcPlan({
+    seed,
+    saveFingerprint,
+    sectorCount: sectors.length,
+    crewRoster
+  });
 
   return {
     seed,
@@ -297,6 +302,7 @@ export function generateRunSkeleton(
     expedition,
     factionCampaign,
     crewRoster,
+    crewArcs,
     frontierCampaign: {
       ...frontierCampaign,
       standardTargetSeconds: expedition.capacity.baselineTargetSeconds

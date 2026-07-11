@@ -1841,7 +1841,13 @@ Acceptance criteria:
 - Injury, promotion, departure, mutiny, rescue, and command succession resolve deterministically and safely.
 - Summary/timeline surfaces explain each known crew member's fate and major relationships.
 
-Status: planned for Phase 11.
+Status: implemented. `src/content/crewArcs.ts` defines ten original three-node arcs covering bonds, conflicts, fears, ambitions, loyalty, promotions, paired abilities, specialist posts, rescue, departure, mutiny, and command succession. `src/game/CrewArc.ts` deterministically assigns those arcs across the five generated identities and later sectors, then owns bounded choice, relationship, rank, fate, succession, event, read-model, validation, summary, debug, and combat-influence state without replacing the existing recruitment/injury/recovery roster.
+
+Mission completion, carrier commands/posts, boarding settlements, faction and rival contact, injuries, foundry commits, issued wing commands, and rescues are the only arc inputs. The second matching node opens an explicit two-option Crew Quarters decision with named risk and consequence; the third resolves it. Promotion and succession spend extra command headroom, paired fire gains cadence while losing hull, and severe conflict excludes one partner. Departure and mutiny remove that member from the authoritative roster, while rescue and every relationship choice apply their authored trust change. The accessible lazy Crew Quarters scene exposes every identity, status, trust, rank, fate, relationship, and pending choice from briefings.
+
+Snapshot/storage v7 persists and validates the arc plan/state while retiring v1-v6 independently of permanent save v5. Run summaries and the bounded timeline explain known arcs, relationships, ranks, altered fates, and succession. Scenario Lab adds an eleventh public crew-arc fixture with both resolved and waiting decisions; endurance reports the 96-entry arc-history ceiling. Seven new deterministic crew-arc tests cover generation, gating, choices, outcomes, tactical tradeoffs, roster synchronization, read models, and snapshot restore.
+
+Verification: `npm run verify:release` passes with 87 Vitest files and 512 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the GitHub Pages preview asset smoke. Chromium reaches the eleventh Scenario Lab crew-arc fixture through public setup and verifies roster, relationships, fates, and debug state at 390x700 under high-contrast, reduced-motion, performance settings. The build emits 783.95 kB minified/212.03 kB gzip initial JavaScript, unchanged 26.76 kB CSS, a new 3.67 kB minified/1.42 kB gzip lazy Crew Quarters chunk, and 6.71 kB lazy Scenario Lab setup. The 22.47 kB minified core increase is measured; the existing warning remains open for later state, snapshot-validation, and orchestration splitting.
 
 ## Work order 108 - Fleetcraft and deployable support ships
 
@@ -1883,7 +1889,7 @@ Goal: ship the first resumable deep-voyage playtest candidate.
 
 Prompt:
 
-> Audit Phase 11 for expedition replay, run snapshot/save-v6 migration, suspend/resume recovery, multi-operation cleanup, frontier generation, extraction/frontier outcomes, carrier state, boarding, faction fronts, crew arcs, fleetcraft, apex hunts, divergent endings, summaries/timeline, accessibility, performance, browser load, GitHub Pages paths, and release docs. Fix blockers only. Expand Scenario Lab and endurance fixtures so public debug/browser paths can reach every system without a full voyage. Measure fresh/progressed standard, early-extraction, and completionist run lengths locally. Update all active plans, backlog, work orders, README, changelog, QA, release, performance, architecture, and known-risk docs. Run `npm run verify:release` with escalation for Chromium where needed.
+> Audit Phase 11 for expedition replay, run-snapshot v7 retirement/recovery, permanent-save v5 migration, suspend/resume recovery, multi-operation cleanup, frontier generation, extraction/frontier outcomes, carrier state, boarding, faction fronts, crew arcs, fleetcraft, apex hunts, divergent endings, summaries/timeline, accessibility, performance, browser load, GitHub Pages paths, and release docs. Fix blockers only. Expand Scenario Lab and endurance fixtures so public debug/browser paths can reach every system without a full voyage. Measure fresh/progressed standard, early-extraction, and completionist run lengths locally. Update all active plans, backlog, work orders, README, changelog, QA, release, performance, architecture, and known-risk docs. Run `npm run verify:release` with escalation for Chromium where needed.
 
 Acceptance criteria:
 

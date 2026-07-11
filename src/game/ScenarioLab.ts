@@ -1,4 +1,5 @@
 import { createDebugCrewRosterState } from './CrewCommand';
+import { createDebugCrewArcState } from './CrewArc';
 import type { UnlockId } from '../content/unlocks';
 import { createDebugFactionFrontState } from './FactionFront';
 import { createDebugFactionCampaignState } from './FactionCampaign';
@@ -25,11 +26,13 @@ export const SCENARIO_LAB_IDS = [
   'lab_combined_pressure',
   'lab_boarding_incursion',
   'lab_faction_fronts',
+  'lab_crew_arcs',
   'lab_timeline_audit'
 ] as const;
 export type ScenarioLabId = (typeof SCENARIO_LAB_IDS)[number];
-export type ScenarioLabTarget = 'transition' | 'gameplay' | 'foundry' | 'timeline';
-export type ScenarioLabGameplayPreset = 'none' | 'setPiece' | 'rival' | 'crew' | 'combined' | 'boarding' | 'front';
+export type ScenarioLabTarget = 'transition' | 'gameplay' | 'foundry' | 'crewQuarters' | 'timeline';
+export type ScenarioLabGameplayPreset =
+  'none' | 'setPiece' | 'rival' | 'crew' | 'combined' | 'boarding' | 'front';
 
 export interface ScenarioLabDefinition {
   readonly id: ScenarioLabId;
@@ -64,6 +67,7 @@ export interface ScenarioLabSetupReadModel {
   readonly crewEvents: number;
   readonly timelineEvents: number;
   readonly frontEvents: number;
+  readonly arcEvents: number;
   readonly summary: string;
 }
 
@@ -157,6 +161,16 @@ export const SCENARIO_LAB_DEFINITIONS: readonly ScenarioLabDefinition[] = [
     { factionFixture: true, crewFixture: true }
   ),
   scenario(
+    'lab_crew_arcs',
+    'Crew Arcs And Fates',
+    'Inspect a deterministic voyage cast with resolved and waiting relationship decisions, ranks, paired behavior, and fates.',
+    ['crew-arcs', 'relationships', 'choices', 'promotions', 'fates', 'succession'],
+    7,
+    'crewQuarters',
+    'none',
+    { factionFixture: true, crewFixture: true }
+  ),
+  scenario(
     'lab_timeline_audit',
     'Run Timeline Audit',
     'Inspect deterministic node, decision, economy, engineering, faction, rival, crew, boss, duration, and run events.',
@@ -202,6 +216,11 @@ export function createScenarioLabLaunch(options: {
   }
   if (definition.crewFixture) {
     session.crewRoster = createDebugCrewRosterState(options.run.crewRoster);
+    session.crewArcs = createDebugCrewArcState(
+      options.run.crewArcs,
+      options.run.crewRoster,
+      session.crewRoster
+    );
   }
   if (definition.engineeringFixture) {
     session.engineering = createFoundryDebugFixture(session.engineering, {
@@ -274,6 +293,7 @@ export function createScenarioLabSetupReadModel(
     crewEvents: session.crewRoster.history.length,
     timelineEvents: session.timeline.entries.length,
     frontEvents: session.factionFronts.history.length,
+    arcEvents: session.crewArcs.history.length,
     summary: `${definition.title} | ${definition.systems.join('+')} | ${definition.pressureBudget}`
   };
 }

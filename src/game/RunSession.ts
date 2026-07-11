@@ -118,6 +118,16 @@ import {
   type FactionFrontPlan,
   type FactionFrontState
 } from './FactionFront';
+import {
+  applyCrewArcEvent,
+  chooseCrewArcOption as reduceCrewArcChoice,
+  createCrewArcState,
+  getCrewArcDefinition,
+  type CrewArcChoiceResult,
+  type CrewArcEvent,
+  type CrewArcEventResult,
+  type CrewArcState
+} from './CrewArc';
 
 export interface RouteHistoryEntry {
   readonly sectorIndex: number;
@@ -159,6 +169,7 @@ export interface RunSessionState {
   engineering: EngineeringState;
   factionCampaign: FactionCampaignState;
   crewRoster: CrewRosterState;
+  crewArcs: CrewArcState;
   timeline: RunTimelineState;
 }
 
@@ -216,6 +227,7 @@ export function createRunSession(
     engineering: createEngineeringState(contract.loadout),
     factionCampaign: createFactionCampaignState(run.factionCampaign),
     crewRoster: createCrewRosterState(run.crewRoster),
+    crewArcs: createCrewArcState(run.crewArcs, run.crewRoster),
     timeline: recordRunTimelineEvent(createRunTimeline(), {
       id: `run-start:${run.seed}:${contract.id}`,
       category: 'run',
@@ -271,6 +283,19 @@ export function applyCarrierCommand(
     value: result.salvageCost,
     subjectId: run.carrierPlan.carrierId,
     detailId: result.label
+  });
+  recordCrewArcEvent(run, session, {
+    id: `${eventId}:crew-arc`,
+    source: 'carrier',
+    sectorIndex: session.currentSectorIndex,
+    candidateIds:
+      command.kind === 'assignCrew'
+        ? [command.candidateId]
+        : session.crewRoster.members
+            .filter((member) => member.status === 'active')
+            .map((member) => member.candidateId),
+    positive: true,
+    detail: result.label
   });
   recordFactionFrontEvent(session, run.factionFronts, {
     id: `${eventId}:front`,
@@ -426,19 +451,24 @@ export function recordBoardingOperationOutcome(
         session.factionFronts,
         operation.sectorIndex
       ).ownerFactionId;
-      recordFactionCampaignEvent(session, run.factionCampaign, {
-        id: `${options.eventId}:faction`,
-        type: 'missionOutcome',
-        sectorIndex: operation.sectorIndex,
-        factionId: frontFactionId,
-        contractId: operation.contractId,
-        outcome: options.outcome
-      }, run.factionFronts);
+      recordFactionCampaignEvent(
+        session,
+        run.factionCampaign,
+        {
+          id: `${options.eventId}:faction`,
+          type: 'missionOutcome',
+          sectorIndex: operation.sectorIndex,
+          factionId: frontFactionId,
+          contractId: operation.contractId,
+          outcome: options.outcome
+        },
+        run.factionFronts
+      );
       recordFactionFrontEvent(session, run.factionFronts, {
         id: `${options.eventId}:boarding-front`,
         source: 'boarding',
         sectorIndex: operation.sectorIndex,
-      factionId: sector.bossFactionId,
+        factionId: sector.bossFactionId,
         amount: options.outcome === 'failure' ? 1 : options.outcome === 'success' ? -3 : -1,
         reason: `${operation.title} ${options.outcome}`
       });
@@ -451,21 +481,31 @@ export function recordBoardingOperationOutcome(
       return state && state.status !== 'captured' && state.status !== 'destroyed';
     });
     if (rival) {
-      recordFactionCampaignEvent(session, run.factionCampaign, {
-        id: `${options.eventId}:rival-encounter:${rival.id}`,
-        type: 'rivalEncounter',
-        sectorIndex: operation.sectorIndex,
-        factionId: rival.factionId,
-        rivalId: rival.id
-      }, run.factionFronts);
-      recordFactionCampaignEvent(session, run.factionCampaign, {
-        id: `${options.eventId}:rival-capture:${rival.id}`,
-        type: 'rivalOutcome',
-        sectorIndex: operation.sectorIndex,
-        factionId: rival.factionId,
-        rivalId: rival.id,
-        outcome: 'captured'
-      }, run.factionFronts);
+      recordFactionCampaignEvent(
+        session,
+        run.factionCampaign,
+        {
+          id: `${options.eventId}:rival-encounter:${rival.id}`,
+          type: 'rivalEncounter',
+          sectorIndex: operation.sectorIndex,
+          factionId: rival.factionId,
+          rivalId: rival.id
+        },
+        run.factionFronts
+      );
+      recordFactionCampaignEvent(
+        session,
+        run.factionCampaign,
+        {
+          id: `${options.eventId}:rival-capture:${rival.id}`,
+          type: 'rivalOutcome',
+          sectorIndex: operation.sectorIndex,
+          factionId: rival.factionId,
+          rivalId: rival.id,
+          outcome: 'captured'
+        },
+        run.factionFronts
+      );
     }
   }
 
@@ -477,6 +517,16 @@ export function recordBoardingOperationOutcome(
     value: settlement.stowedLoot.reduce((total, loot) => total + loot.value, 0),
     subjectId: operation.id,
     detailId: settlement.unlockedHooks.join('|') || null
+  });
+  recordCrewArcEvent(run, session, {
+    id: `${options.eventId}:crew-arc`,
+    source: 'boarding',
+    sectorIndex: operation.sectorIndex,
+    candidateIds: session.crewRoster.members
+      .filter((member) => member.status === 'active' || member.status === 'injured')
+      .map((member) => member.candidateId),
+    positive: options.outcome !== 'failure',
+    detail: `${operation.title} ${options.outcome}`
   });
   return settlement;
 }
@@ -723,7 +773,11 @@ export function recordCrewRosterEvent(
       subjectId: 'candidateId' in event ? event.candidateId : null,
       detailId: event.type === 'missionOutcome' ? event.outcome : null
     });
-    if (factionFrontPlan && 'candidateId' in event && (event.type === 'recruit' || event.type === 'foundryAssist')) {
+    if (
+      factionFrontPlan &&
+      'candidateId' in event &&
+      (event.type === 'recruit' || event.type === 'foundryAssist')
+    ) {
       const candidate = plan.candidates.find((entry) => entry.id === event.candidateId);
       if (candidate) {
         recordFactionFrontEvent(session, factionFrontPlan, {
@@ -738,6 +792,100 @@ export function recordCrewRosterEvent(
     }
   }
   return result;
+}
+
+export function recordCrewArcEvent(
+  run: RunSkeleton,
+  session: RunSessionState,
+  event: CrewArcEvent
+): CrewArcEventResult {
+  const previous = session.crewArcs;
+  const result = applyCrewArcEvent({
+    plan: run.crewArcs,
+    state: previous,
+    rosterPlan: run.crewRoster,
+    rosterState: session.crewRoster,
+    event
+  });
+  session.crewArcs = result.state;
+  if (result.disposition !== 'applied') return result;
+
+  recordRunSessionTimelineEvent(session, {
+    id: `timeline:${event.id}`,
+    category: 'crew',
+    kind: `arc:${event.source}`,
+    sectorIndex: event.sectorIndex,
+    value: result.advancedArcIds.length,
+    subjectId: event.candidateIds[0] ?? null,
+    detailId: result.advancedArcIds.join('|') || event.detail
+  });
+
+  for (const arcId of result.advancedArcIds) {
+    const before = previous.arcs.find((arc) => arc.arcId === arcId);
+    const after = result.state.arcs.find((arc) => arc.arcId === arcId);
+    if (before?.status === 'resolved' || after?.status !== 'resolved' || !after.outcome) continue;
+    const planEntry = run.crewArcs.arcs.find((arc) => arc.id === arcId);
+    if (!planEntry) continue;
+    const definition = getCrewArcDefinition(planEntry.definitionId);
+    const selected = definition.options.find((option) => option.id === after.selectedOptionId);
+    if (!selected) continue;
+    const rosterOutcome = mapCrewArcRosterOutcome(after.outcome);
+    recordCrewRosterEvent(
+      session,
+      run.crewRoster,
+      {
+        id: `${event.id}:roster:${arcId}`,
+        type: 'arcOutcome',
+        sectorIndex: event.sectorIndex,
+        candidateId: planEntry.primaryCandidateId,
+        outcome: rosterOutcome,
+        trustDelta: selected.trustDelta,
+        reason: `${after.outcome} resolved through ${event.source}`
+      },
+      run.factionFronts
+    );
+  }
+  return result;
+}
+
+export function chooseCrewArcOption(
+  run: RunSkeleton,
+  session: RunSessionState,
+  arcId: string,
+  optionId: string,
+  eventId = `crew-arc-choice:${arcId}:${optionId}:${session.currentSectorIndex}`
+): CrewArcChoiceResult {
+  const result = reduceCrewArcChoice({
+    plan: run.crewArcs,
+    state: session.crewArcs,
+    arcId,
+    optionId,
+    eventId,
+    sectorIndex: session.currentSectorIndex
+  });
+  session.crewArcs = result.state;
+  if (result.disposition === 'applied') {
+    recordRunSessionTimelineEvent(session, {
+      id: `timeline:${eventId}`,
+      category: 'crew',
+      kind: 'arc:choice',
+      sectorIndex: session.currentSectorIndex,
+      subjectId: arcId,
+      detailId: optionId
+    });
+  }
+  return result;
+}
+
+function mapCrewArcRosterOutcome(
+  outcome: CrewArcState['arcs'][number]['outcome']
+): 'promotion' | 'departure' | 'mutiny' | 'rescue' | 'succession' | 'relationship' {
+  if (outcome === 'departure' || outcome === 'mutiny' || outcome === 'rescue') return outcome;
+  if (outcome === 'commandSuccession') return 'succession';
+  if (outcome === 'promotion' || outcome === 'pairedAbility' || outcome === 'specialistPost') {
+    return 'promotion';
+  }
+  return 'relationship';
 }
 
 export function recordFactionFrontEvent(
@@ -777,25 +925,35 @@ function recordRouteCampaignConsequence(
   factionFrontPlan?: FactionFrontPlan
 ): void {
   if (route.kind === 'shop' || route.kind === 'repair') {
-    recordFactionCampaignEvent(session, plan, {
-      id: `${outcomeId}:campaign-aid`,
-      type: 'aid',
-      sectorIndex: Math.max(0, sector.index - 1),
-      factionId: sector.bossFactionId,
-      amount: 1,
-      reason: route.kind === 'shop' ? 'market permit honored' : 'repair crew protected'
-    }, factionFrontPlan);
+    recordFactionCampaignEvent(
+      session,
+      plan,
+      {
+        id: `${outcomeId}:campaign-aid`,
+        type: 'aid',
+        sectorIndex: Math.max(0, sector.index - 1),
+        factionId: sector.bossFactionId,
+        amount: 1,
+        reason: route.kind === 'shop' ? 'market permit honored' : 'repair crew protected'
+      },
+      factionFrontPlan
+    );
     return;
   }
 
   if (route.kind === 'factionAmbush' || route.kind === 'vault') {
-    recordFactionCampaignEvent(session, plan, {
-      id: `${outcomeId}:campaign-theft`,
-      type: 'assetStolen',
-      sectorIndex: Math.max(0, sector.index - 1),
-      factionId: sector.bossFactionId,
-      value: route.kind === 'factionAmbush' ? 2 : 1
-    }, factionFrontPlan);
+    recordFactionCampaignEvent(
+      session,
+      plan,
+      {
+        id: `${outcomeId}:campaign-theft`,
+        type: 'assetStolen',
+        sectorIndex: Math.max(0, sector.index - 1),
+        factionId: sector.bossFactionId,
+        value: route.kind === 'factionAmbush' ? 2 : 1
+      },
+      factionFrontPlan
+    );
   }
 }
 

@@ -154,6 +154,7 @@ import { validateShipLoadout } from '../game/ShipLoadout';
 import { validateSetPieceContent } from '../game/SetPiece';
 import { validateFactionCampaignContent } from '../game/FactionCampaign';
 import { validateCrewContent } from '../game/CrewCommand';
+import { validateCrewArcContent } from '../game/CrewArc';
 import {
   ITEM_FAMILY_GATES,
   ITEM_UNLOCKS,
@@ -376,7 +377,12 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     transitionKinds: actTransitionKinds,
     sectors: canonicalSectorIds
   });
-  validateCarrierDefinitions(errors, carriers, carrierFacilities, new Set(factions.map((faction) => faction.id)));
+  validateCarrierDefinitions(
+    errors,
+    carriers,
+    carrierFacilities,
+    new Set(factions.map((faction) => faction.id))
+  );
   validateActRouteContracts(errors, actRouteContracts, {
     acts: canonicalActIds,
     routeKinds: actRouteKinds,
@@ -404,6 +410,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   errors.push(...validateSetPieceContent(setPieces).errors);
   errors.push(...validateFactionCampaignContent());
   errors.push(...validateCrewContent());
+  errors.push(...validateCrewArcContent());
 
   if (items.length < 30) {
     errors.push('Content must define at least 30 items');
@@ -1502,7 +1509,8 @@ function validateCarrierDefinitions(
 ): void {
   const facilityTypes = new Set<string>();
   for (const facility of facilities) {
-    if (facilityTypes.has(facility.type)) errors.push(`Duplicate carrier facility type: ${facility.type}`);
+    if (facilityTypes.has(facility.type))
+      errors.push(`Duplicate carrier facility type: ${facility.type}`);
     facilityTypes.add(facility.type);
     if (!facility.label.trim() || !facility.summary.trim() || !facility.influence.trim()) {
       errors.push(`Carrier facility ${facility.type} must define label, summary, and influence`);
@@ -1516,9 +1524,12 @@ function validateCarrierDefinitions(
     const owner = `Carrier ${carrier.id}`;
     if (carrierIds.has(carrier.id)) errors.push(`Duplicate carrier id: ${carrier.id}`);
     carrierIds.add(carrier.id);
-    if (!carrier.name.trim() || !carrier.summary.trim()) errors.push(`${owner} must define name and summary`);
-    if (!Number.isInteger(carrier.maxHull) || carrier.maxHull < 1) errors.push(`${owner} has invalid max hull`);
-    if (!Number.isInteger(carrier.cargoCapacity) || carrier.cargoCapacity < 1) errors.push(`${owner} has invalid cargo capacity`);
+    if (!carrier.name.trim() || !carrier.summary.trim())
+      errors.push(`${owner} must define name and summary`);
+    if (!Number.isInteger(carrier.maxHull) || carrier.maxHull < 1)
+      errors.push(`${owner} has invalid max hull`);
+    if (!Number.isInteger(carrier.cargoCapacity) || carrier.cargoCapacity < 1)
+      errors.push(`${owner} has invalid cargo capacity`);
     if (carrier.startingFacilities.length !== carrier.facilitySlots || carrier.facilitySlots < 1) {
       errors.push(`${owner} starting facilities must fill its limited slots`);
     }

@@ -13,6 +13,7 @@ import type { FactionCampaignDebugState } from '../game/FactionCampaign';
 import type { RunTimelineDebugState } from '../game/RunTimeline';
 import type { CarrierDebugState } from '../game/CarrierCommand';
 import type { FactionFrontDebugState } from '../game/FactionFront';
+import type { CrewArcDebugState } from '../game/CrewArc';
 
 export interface SceneDebugState {
   readonly seed: string;
@@ -103,6 +104,7 @@ export interface SceneDebugState {
     readonly integrations: readonly string[];
   };
   readonly factionFronts?: FactionFrontDebugState;
+  readonly crewArcs?: CrewArcDebugState;
   readonly scenarioLab?: {
     readonly scenarioCount: number;
     readonly activeScenario: string | null;

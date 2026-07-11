@@ -58,6 +58,7 @@ import {
   type BoardingCampaignState
 } from '../game/BoardingOperation';
 import { formatFactionFrontSummary, type FactionFrontState } from '../game/FactionFront';
+import { formatCrewArcSummary, type CrewArcState } from '../game/CrewArc';
 
 export class RunSummaryScene implements Scene {
   public readonly id = 'run-summary';
@@ -84,7 +85,8 @@ export class RunSummaryScene implements Scene {
     private readonly frontierDecision: FrontierDecisionState | null = null,
     private readonly carrier: CarrierState | null = null,
     private readonly boarding: BoardingCampaignState | null = null,
-    private readonly factionFronts: FactionFrontState | null = null
+    private readonly factionFronts: FactionFrontState | null = null,
+    private readonly crewArcs: CrewArcState | null = null
   ) {}
 
   public enter(): void {
@@ -125,21 +127,11 @@ export class RunSummaryScene implements Scene {
       ['Ship Theme', formatContractThemeSummary(this.contract)],
       [
         'Reached',
-        getReachedSectorName(
-          this.run,
-          this.routeHistory,
-          this.result,
-          this.frontierDecision
-        )
+        getReachedSectorName(this.run, this.routeHistory, this.result, this.frontierDecision)
       ],
       [
         'Act Progress',
-        formatActProgressSummary(
-          this.run,
-          this.routeHistory,
-          this.result,
-          this.frontierDecision
-        )
+        formatActProgressSummary(this.run, this.routeHistory, this.result, this.frontierDecision)
       ],
       ['Outcome', getOutcomeLabel(this.result)],
       ['Win/Loss', getOutcomeDetail(this.result)],
@@ -177,12 +169,7 @@ export class RunSummaryScene implements Scene {
       ['Distance', formatDistanceSummary(this.result)],
       [
         'Sectors Cleared',
-        `${getSectorsCleared(
-          this.run,
-          this.routeHistory,
-          this.result,
-          this.frontierDecision
-        )}`
+        `${getSectorsCleared(this.run, this.routeHistory, this.result, this.frontierDecision)}`
       ],
       ['Destroyed', `${this.result?.enemiesDestroyed ?? 0}`],
       ['Bosses', `${this.result?.bossesDefeated ?? 0}`],
@@ -213,6 +200,12 @@ export class RunSummaryScene implements Scene {
         this.crewRoster
           ? formatCrewRosterSummary(this.run.crewRoster, this.crewRoster, this.result?.reason)
           : 'No run-local crew roster recorded.'
+      ],
+      [
+        'Crew Arcs And Fates',
+        this.crewArcs
+          ? formatCrewArcSummary(this.run.crewArcs, this.crewArcs, this.run.crewRoster)
+          : 'No relationship arcs recorded.'
       ],
       [
         'Run Timeline',
@@ -323,12 +316,8 @@ export class RunSummaryScene implements Scene {
               actSectorCount: actContext.actSectorCount ?? act.sectorCount,
               runSectorIndex: Math.min(
                 this.run.sectors.length,
-                getSectorsCleared(
-                  this.run,
-                  this.routeHistory,
-                  this.result,
-                  this.frontierDecision
-                ) + 1
+                getSectorsCleared(this.run, this.routeHistory, this.result, this.frontierDecision) +
+                  1
               ),
               routeGrammar: act.routeGrammar,
               rewardTier: act.rewardTier,
