@@ -12,12 +12,14 @@ import { createMissionSchedule } from './MissionDirector';
 import { resolveEngineeringSnapshot } from './Foundry';
 import type { RunSessionState } from './RunSession';
 import { validateRunTimelineState } from './RunTimeline';
+import { validateOperationalProgressState } from './OperationalMap';
 
-export const RUN_SNAPSHOT_SCHEMA_VERSION = 1;
-export const RUN_SNAPSHOT_STORAGE_KEY = 'starbreak.run.v1';
+export const RUN_SNAPSHOT_SCHEMA_VERSION = 2;
+export const RUN_SNAPSHOT_STORAGE_KEY = 'starbreak.run.v2';
+export const LEGACY_RUN_SNAPSHOT_STORAGE_KEY = 'starbreak.run.v1';
 export const RUN_SNAPSHOT_MAX_BYTES = 512 * 1024;
 
-export type RunSnapshotResumeTarget = 'sectorTransition' | 'gameplay';
+export type RunSnapshotResumeTarget = 'sectorTransition' | 'gameplay' | 'operationalMap';
 
 export interface RunSnapshotCheckpoint {
   readonly target: RunSnapshotResumeTarget;
@@ -25,7 +27,7 @@ export interface RunSnapshotCheckpoint {
   readonly sequence: number;
 }
 
-export interface RunSnapshotExtensionsV1 {
+export interface RunSnapshotExtensionsV2 {
   readonly carrier: null;
   readonly boarding: null;
   readonly factionFronts: null;
@@ -33,8 +35,8 @@ export interface RunSnapshotExtensionsV1 {
   readonly apex: null;
 }
 
-export interface RunSnapshotV1 {
-  readonly version: 1;
+export interface RunSnapshotV2 {
+  readonly version: 2;
   readonly plan: {
     readonly seed: string;
     readonly graphId: string;
@@ -45,18 +47,18 @@ export interface RunSnapshotV1 {
   };
   readonly checkpoint: RunSnapshotCheckpoint;
   readonly session: RunSessionState;
-  readonly extensions: RunSnapshotExtensionsV1;
+  readonly extensions: RunSnapshotExtensionsV2;
 }
 
 export interface RestoredRunSnapshot {
-  readonly snapshot: RunSnapshotV1;
+  readonly snapshot: RunSnapshotV2;
   readonly run: RunSkeleton;
   readonly contract: StartingContract;
   readonly session: RunSessionState;
 }
 
 export interface RunSnapshotLoadResult {
-  readonly snapshot: RunSnapshotV1 | null;
+  readonly snapshot: RunSnapshotV2 | null;
   readonly repaired: boolean;
   readonly error: string | null;
 }
@@ -85,7 +87,7 @@ export class RunSnapshotCoordinator {
     readonly session: RunSessionState;
     readonly target: RunSnapshotResumeTarget;
     readonly label: string;
-  }): RunSnapshotV1 {
+  }): RunSnapshotV2 {
     const snapshot = createRunSnapshot({
       ...options,
       sequence: options.session.timeline.entries.length
@@ -95,7 +97,7 @@ export class RunSnapshotCoordinator {
     return snapshot;
   }
 
-  public restore(snapshot: RunSnapshotV1): RestoredRunSnapshot {
+  public restore(snapshot: RunSnapshotV2): RestoredRunSnapshot {
     return restoreRunSnapshot(snapshot);
   }
 
@@ -111,12 +113,12 @@ export function createRunSnapshot(options: {
   readonly target: RunSnapshotResumeTarget;
   readonly label: string;
   readonly sequence?: number;
-}): RunSnapshotV1 {
+}): RunSnapshotV2 {
   const generationFingerprint = createRunGenerationSaveFingerprint(
     options.run.unlockedIds,
     options.run.upgradeEffects
   );
-  const snapshot: RunSnapshotV1 = {
+  const snapshot: RunSnapshotV2 = {
     version: RUN_SNAPSHOT_SCHEMA_VERSION,
     plan: {
       seed: options.run.seed,
@@ -143,7 +145,7 @@ export function createRunSnapshot(options: {
   return importRunSnapshot(exportRunSnapshot(snapshot));
 }
 
-export function restoreRunSnapshot(snapshot: RunSnapshotV1): RestoredRunSnapshot {
+export function restoreRunSnapshot(snapshot: RunSnapshotV2): RestoredRunSnapshot {
   const run = generateRunSkeleton(snapshot.plan.seed, {
     unlockedIds: snapshot.plan.unlockedIds,
     purchasedUpgradeIds: snapshot.plan.purchasedUpgradeIds
@@ -170,7 +172,7 @@ export function restoreRunSnapshot(snapshot: RunSnapshotV1): RestoredRunSnapshot
   };
 }
 
-export function createRunSnapshotSummary(snapshot: RunSnapshotV1): RunSnapshotSummary {
+export function createRunSnapshotSummary(snapshot: RunSnapshotV2): RunSnapshotSummary {
   const restored = restoreRunSnapshot(snapshot);
   const sector = restored.run.sectors[restored.session.currentSectorIndex]!;
   return {
@@ -187,7 +189,17 @@ export function createRunSnapshotSummary(snapshot: RunSnapshotV1): RunSnapshotSu
 
 export function loadRunSnapshot(storage: StorageLike): RunSnapshotLoadResult {
   const raw = storage.getItem(RUN_SNAPSHOT_STORAGE_KEY);
-  if (!raw) return { snapshot: null, repaired: false, error: null };
+  if (!raw) {
+    if (storage.getItem(LEGACY_RUN_SNAPSHOT_STORAGE_KEY)) {
+      storage.removeItem(LEGACY_RUN_SNAPSHOT_STORAGE_KEY);
+      return {
+        snapshot: null,
+        repaired: true,
+        error: 'A pre-operational-map expedition snapshot was retired safely.'
+      };
+    }
+    return { snapshot: null, repaired: false, error: null };
+  }
   try {
     const snapshot = importRunSnapshot(raw);
     restoreRunSnapshot(snapshot);
@@ -202,15 +214,16 @@ export function loadRunSnapshot(storage: StorageLike): RunSnapshotLoadResult {
   }
 }
 
-export function writeRunSnapshot(storage: StorageLike, snapshot: RunSnapshotV1): void {
+export function writeRunSnapshot(storage: StorageLike, snapshot: RunSnapshotV2): void {
   storage.setItem(RUN_SNAPSHOT_STORAGE_KEY, exportRunSnapshot(snapshot));
 }
 
 export function clearRunSnapshot(storage: StorageLike): void {
   storage.removeItem(RUN_SNAPSHOT_STORAGE_KEY);
+  storage.removeItem(LEGACY_RUN_SNAPSHOT_STORAGE_KEY);
 }
 
-export function exportRunSnapshot(snapshot: RunSnapshotV1): string {
+export function exportRunSnapshot(snapshot: RunSnapshotV2): string {
   const serialized = JSON.stringify(snapshot);
   const byteLength = new TextEncoder().encode(serialized).byteLength;
   if (byteLength > RUN_SNAPSHOT_MAX_BYTES) {
@@ -219,7 +232,7 @@ export function exportRunSnapshot(snapshot: RunSnapshotV1): string {
   return serialized;
 }
 
-export function importRunSnapshot(serialized: string): RunSnapshotV1 {
+export function importRunSnapshot(serialized: string): RunSnapshotV2 {
   if (new TextEncoder().encode(serialized).byteLength > RUN_SNAPSHOT_MAX_BYTES) {
     throw new Error(`Run snapshot exceeds ${RUN_SNAPSHOT_MAX_BYTES} bytes.`);
   }
@@ -242,7 +255,9 @@ export function importRunSnapshot(serialized: string): RunSnapshotV1 {
     throw new Error('Run snapshot plan identity is invalid.');
   }
   if (
-    (parsed.checkpoint.target !== 'sectorTransition' && parsed.checkpoint.target !== 'gameplay') ||
+    (parsed.checkpoint.target !== 'sectorTransition' &&
+      parsed.checkpoint.target !== 'gameplay' &&
+      parsed.checkpoint.target !== 'operationalMap') ||
     typeof parsed.checkpoint.label !== 'string' ||
     !isNonNegativeInteger(parsed.checkpoint.sequence)
   ) {
@@ -254,7 +269,7 @@ export function importRunSnapshot(serialized: string): RunSnapshotV1 {
       throw new Error(`Run snapshot v1 extension ${key} must be null.`);
     }
   }
-  return parsed as unknown as RunSnapshotV1;
+  return parsed as unknown as RunSnapshotV2;
 }
 
 function validateSnapshotSession(
@@ -321,16 +336,31 @@ function validateSnapshotSession(
   ) {
     throw new Error('Run snapshot mission stage history is invalid.');
   }
+  if (
+    !Array.isArray(session.mission.selectedBranchOptionIds) ||
+    session.mission.selectedBranchOptionIds.some(
+      (optionId) =>
+        !run.expedition.branches.some((branch) =>
+          branch.options.some((option) => option.id === optionId)
+        )
+    )
+  ) {
+    throw new Error('Run snapshot mission branch history is invalid.');
+  }
   const currentStage = schedule.stages.find(
     (stage) => stage.id === session.mission.currentStageId
   )!;
   if (
     (target === 'gameplay' && currentStage.kind !== 'combat') ||
     (target === 'sectorTransition' && currentStage.kind !== 'briefing') ||
+    (target === 'operationalMap' &&
+      currentStage.kind !== 'branch' &&
+      currentStage.kind !== 'relief') ||
     (target === 'gameplay' &&
       session.mission.status !== 'active' &&
       session.mission.status !== 'suspended') ||
-    (target === 'sectorTransition' && session.mission.status !== 'active')
+    ((target === 'sectorTransition' || target === 'operationalMap') &&
+      session.mission.status !== 'active')
   ) {
     throw new Error('Run snapshot checkpoint target does not match its mission stage.');
   }
@@ -360,6 +390,9 @@ function validateSnapshotSession(
   }
   if (validateRunTimelineState(session.timeline).length > 0) {
     throw new Error('Run snapshot timeline is invalid.');
+  }
+  if (validateOperationalProgressState(run.expedition, session.operational).length > 0) {
+    throw new Error('Run snapshot operational boundary history is invalid.');
   }
   try {
     if (!resolveEngineeringSnapshot(session.engineering.committed).valid) {

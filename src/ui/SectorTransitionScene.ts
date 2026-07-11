@@ -24,7 +24,13 @@ import {
   formatSectorObjectiveVariantReadout
 } from '../game/SectorObjectives';
 import { getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
-import type { MissionDebugState, MissionReadModel } from '../game/MissionDirector';
+import {
+  createMissionSchedule,
+  getMissionStage,
+  type MissionDebugState,
+  type MissionReadModel
+} from '../game/MissionDirector';
+import { createOperationalMapReadModel } from '../game/OperationalMap';
 import type { InputAction } from '../systems/InputSystem';
 import {
   applyContractScreenTheme,
@@ -150,6 +156,26 @@ export class SectorTransitionScene implements Scene {
         ? `Crew manifest: ${crew.roster.join(' | ')} | Commands FOCUS [L], SCREEN [C], SALVAGE [V], REGROUP [O], DISENGAGE [Z].`
         : 'Crew manifest: no wingmates. Rescue and specialist contracts can add run-local allies.';
 
+    const schedule = createMissionSchedule(this.run.expedition, this.session.currentSectorIndex);
+    const currentStage = getMissionStage(schedule, this.session.mission.currentStageId);
+    const operationalMap = createOperationalMapReadModel({
+      graph: this.run.expedition,
+      sectorIndex: this.session.currentSectorIndex,
+      expedition: this.session.expedition,
+      operational: this.session.operational,
+      currentNodeId: currentStage.nodeId
+    });
+    const operationalLine = document.createElement('p');
+    operationalLine.className = 'transition-copy';
+    operationalLine.dataset.testid = 'operational-map-preview';
+    operationalLine.textContent = `${operationalMap.operationRange} | ${operationalMap.nodes
+      .filter((node) => ['advance', 'detour', 'gate', 'pursuit'].includes(node.role))
+      .map(
+        (node) =>
+          `${node.optional ? 'Optional' : 'Required'} ${node.label}: ${node.timeEstimate}, danger ${node.danger}, ${node.reward}; ${node.consequence}`
+      )
+      .join(' | ')}`;
+
     const enterButton = document.createElement('button');
     enterButton.className = 'primary-button';
     enterButton.type = 'button';
@@ -166,6 +192,7 @@ export class SectorTransitionScene implements Scene {
       waveLine,
       campaignLine,
       crewLine,
+      operationalLine,
       enterButton
     );
     this.uiRoot.replaceChildren(shell);

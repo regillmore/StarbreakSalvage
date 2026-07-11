@@ -677,6 +677,16 @@ seed + permanent save fingerprint
 - Main-menu and pause scenes remain presentation-only: they receive a snapshot summary and callbacks, while regeneration, validation, storage, and repair live outside the DOM. Explicitly focused main-menu buttons now own keyboard confirm, preserving native resume/discard/settings/archive intent.
 - Scenario Lab, Scenario Timeline, and declarative Scenario setup are loaded through dynamic `import()`. The build emits 1.52 kB, 2.89 kB, and 5.39 kB minified lazy chunks. The initial bundle is 663.24 kB minified/179.38 kB gzip after adding core snapshot support, up 5.46 kB from work order 100; warning thresholds remain unchanged.
 
+### Work order 102 implementation
+
+- Expedition graph schema v2 makes each ten-sector plan executable as `ingress -> advance -> detour? -> staging -> gate -> pursuit? -> extraction`. Every sector owns exactly one node for each role, two branch records, five required nodes, two optional nodes, coarse operational intel, and stable content references. The default path has two combat operations; independent decisions can add detour and pursuit operations.
+- Mission schedule v2 is a generic guarded stage graph rather than a fixed primary/optional block. Stage definitions name their operational role, next stage, and branch id; schedule read models expose all operation, branch, and relief ids while retaining first-stage compatibility fields. Partial success can bypass the current optional lane into the next relief checkpoint, and failure still enters the terminal failure path.
+- `src/game/OperationalMap.ts` owns the bounded operational settlement reducer, zero-retained-world cleanup record, one-shot optional payout, later-operation influence, validation, and public map read model. Successful detours reduce gate scroll/wave scale; successful pursuits increase the following sector's advance scale. It is not imported by the combat hot loop.
+- `src/ui/OperationalMapScene.ts` consumes the graph/session read model and callbacks. Its DOM itinerary and action cards expose approximate time, danger, reward, consequence, and faction/crew/ship risks with native focus, keyboard confirm, pointer activation, narrow wrapping, and non-color status labels.
+- Run snapshot schema/storage v2 adds operational history and a settled `operationalMap` resume target. Restore validates mission branch ids and operational node/cleanup history; a v1 record is removed independently with a clear recovery notice while permanent save v5 remains untouched. Active combat still restarts from its operation-entry checkpoint.
+- Boss arenas, reusable set pieces, and finales are projected only into the required gate operation. Advance, detour, and pursuit projections reuse the same sector/combat contracts with bounded scale and clear combat-world disposal between scene instances.
+- Graph capacity is now 70 nodes and 20 decisions: 1458 required-route target seconds (24.3 minutes) and 1898 all-optional target seconds (31.6 minutes). The initial bundle is 678.74 kB minified/183.34 kB gzip and CSS is 26.76 kB; the measured warning remains open.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

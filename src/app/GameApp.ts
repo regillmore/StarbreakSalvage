@@ -53,6 +53,7 @@ import { resolveSeedEntry } from '../game/SeedEntry';
 import {
   addCredits,
   addItemToSession,
+  aggregateCombatRunResults,
   advanceSector,
   applyInterActChoice,
   applyRouteOutcome,
@@ -66,6 +67,7 @@ import {
   incrementShopRerollCount,
   recordSectorCombatResult,
   recordMissionObjectiveOutcome,
+  recordMissionOperationBoundary,
   recordFactionCampaignEvent,
   recordCrewRosterEvent,
   recordRunSessionTimelineEvent,
@@ -99,8 +101,7 @@ import { ContractSelectScene } from '../ui/ContractSelectScene';
 import { GameplayScene } from '../ui/GameplayScene';
 import { InterActJunctionScene } from '../ui/InterActJunctionScene';
 import { MainMenuScene } from '../ui/MainMenuScene';
-import { MissionBranchScene } from '../ui/MissionBranchScene';
-import { MissionReliefScene } from '../ui/MissionReliefScene';
+import { OperationalMapScene } from '../ui/OperationalMapScene';
 import { PauseScene } from '../ui/PauseScene';
 import { RewardScene } from '../ui/RewardScene';
 import { RouteEventScene } from '../ui/RouteEventScene';
@@ -131,8 +132,9 @@ import type { ScenarioLabId } from '../game/ScenarioLab';
 import {
   RunSnapshotCoordinator,
   createRunSnapshotSummary,
-  type RunSnapshotV1
+  type RunSnapshotV2
 } from '../game/RunSnapshot';
+import { getOperationalInfluence } from '../game/OperationalMap';
 
 export class GameApp {
   private readonly canvas: HTMLCanvasElement;
@@ -155,7 +157,7 @@ export class GameApp {
   private lastRunResult: CombatRunResult | null = null;
   private lastSaveUpdate: SaveUpdateResult | null = null;
   private summarySaved = false;
-  private runSnapshot: RunSnapshotV1 | null = null;
+  private runSnapshot: RunSnapshotV2 | null = null;
   private runSnapshotNotice: string | null = null;
   private snapshotEligible = false;
   private frameStats: FrameStats = {
@@ -449,19 +451,24 @@ export class GameApp {
       throw new Error(`Cannot enter gameplay during mission stage ${stage.kind}.`);
     }
 
+    const sector = getCurrentSector(this.currentRun, this.runSession);
     const projection = createMissionCombatProjection(
       schedule,
       this.runSession.mission,
-      getCurrentSector(this.currentRun, this.runSession)
+      sector,
+      getOperationalInfluence(
+        this.runSession.operational,
+        this.runSession.currentSectorIndex,
+        stage.operationalRole
+      )
     );
-    const sector = getCurrentSector(this.currentRun, this.runSession);
     let campaignInfluence = getFactionCampaignInfluence(
       this.currentRun.factionCampaign,
       this.runSession.factionCampaign,
       sector
     );
     if (
-      stage.id !== schedule.optionalStageId &&
+      !stage.optional &&
       campaignInfluence.rival &&
       campaignInfluence.rival.status !== 'engaged'
     ) {
@@ -687,7 +694,7 @@ export class GameApp {
     this.runSession.credits = Math.max(this.runSession.credits, 36);
     this.runSession.salvage = Math.max(this.runSession.salvage, 6);
     this.applyDefaultDebugInterActChoice();
-    this.prepareDebugMissionCombat();
+    this.prepareDebugGateOperation();
 
     const gameplayScene = this.createGameplayScene();
     gameplayScene.prepareDebugFinaleSmoke();
@@ -779,9 +786,10 @@ export class GameApp {
   private handleMissionCombatComplete(result: CombatRunResult): void {
     const stageId = this.runSession.mission.currentStageId;
     const schedule = this.getCurrentMissionSchedule();
+    const completedStage = getMissionStage(schedule, stageId);
     const sector = getCurrentSector(this.currentRun, this.runSession);
     const sectorIndex = this.runSession.currentSectorIndex;
-    const isOptionalStage = stageId === schedule.optionalStageId;
+    const isOptionalStage = completedStage.optional;
     const objectiveOutcome = result.missionObjective?.outcome;
     const campaignOutcome =
       objectiveOutcome === 'failure'
@@ -790,7 +798,7 @@ export class GameApp {
           ? 'partialSuccess'
           : 'success';
 
-    if (!isOptionalStage && schedule.contract) {
+    if (completedStage.operationalRole === 'gate' && schedule.contract) {
       recordFactionCampaignEvent(this.runSession, this.currentRun.factionCampaign, {
         id: `${stageId}:campaign-contract`,
         type: 'contractCompleted',
@@ -911,16 +919,17 @@ export class GameApp {
         });
       }
     }
+    const operationCheckpoint = {
+      hull: result.remainingHull ?? null,
+      scrollDistance: result.distanceTraveled,
+      worldOffset: result.worldOffset ?? result.distanceTraveled,
+      credits: this.runSession.credits + result.credits,
+      salvage: this.runSession.salvage + result.salvage
+    };
     const transition = this.dispatchCurrentMission({
       id: `${stageId}:combat-complete`,
       type: 'completeCombat',
-      checkpoint: {
-        hull: result.remainingHull ?? null,
-        scrollDistance: result.distanceTraveled,
-        worldOffset: result.worldOffset ?? result.distanceTraveled,
-        credits: this.runSession.credits + result.credits,
-        salvage: this.runSession.salvage + result.salvage
-      },
+      checkpoint: operationCheckpoint,
       objectiveOutcome: result.missionObjective
     });
 
@@ -928,9 +937,20 @@ export class GameApp {
       return;
     }
 
-    this.lastRunResult = result;
     recordMissionObjectiveOutcome(this.runSession, schedule, result);
     recordSectorCombatResult(this.runSession, result, createActEconomyProfile(sector));
+    this.lastRunResult = this.runSession.lastCombatResult;
+    const operationNode = completedStage.nodeId
+      ? this.currentRun.expedition.nodes.find((node) => node.id === completedStage.nodeId)
+      : null;
+    if (operationNode) {
+      recordMissionOperationBoundary(this.runSession, {
+        id: `${stageId}:settled`,
+        node: operationNode,
+        outcome: campaignOutcome,
+        checkpoint: operationCheckpoint
+      });
+    }
     const nextStage = getMissionStage(
       this.getCurrentMissionSchedule(),
       this.runSession.mission.currentStageId
@@ -970,6 +990,47 @@ export class GameApp {
     }
   }
 
+  private prepareDebugGateOperation(): void {
+    this.prepareDebugMissionCombat();
+    let schedule = this.getCurrentMissionSchedule();
+    let stage = getMissionStage(schedule, this.runSession.mission.currentStageId);
+    if (stage.operationalRole === 'gate') return;
+    if (stage.operationalRole !== 'advance') {
+      throw new Error(`Debug gate setup cannot advance from ${stage.operationalRole}.`);
+    }
+    this.dispatchCurrentMission({
+      id: `${stage.id}:debug-complete`,
+      type: 'completeCombat',
+      checkpoint: {
+        hull: getEffectiveShipStats(this.selectedContract, this.runSession).maxHull,
+        scrollDistance: 900,
+        worldOffset: 10_900,
+        credits: this.runSession.credits,
+        salvage: this.runSession.salvage
+      }
+    });
+    schedule = this.getCurrentMissionSchedule();
+    stage = getMissionStage(schedule, this.runSession.mission.currentStageId);
+    const branch = stage.branchId
+      ? schedule.branches.find((candidate) => candidate.id === stage.branchId)
+      : null;
+    const direct = branch?.options.find((option) => option.default);
+    if (!branch || !direct) {
+      throw new Error('Debug gate setup could not resolve the staging route.');
+    }
+    this.dispatchCurrentMission({
+      id: `${stage.id}:debug-direct`,
+      type: 'selectBranch',
+      optionId: direct.id
+    });
+    recordExpeditionBranchDecision(this.currentRun, this.runSession, branch.id, direct.id);
+    stage = getMissionStage(schedule, this.runSession.mission.currentStageId);
+    this.dispatchCurrentMission({
+      id: `${stage.id}:debug-staging`,
+      type: 'completeRelief'
+    });
+  }
+
   private handleMissionFailure(result: CombatRunResult): void {
     if (
       this.runSession.mission.status !== 'failed' &&
@@ -981,7 +1042,7 @@ export class GameApp {
         reason: result.reason
       });
     }
-    this.showRunSummary(result);
+    this.showRunSummary(aggregateCombatRunResults(this.runSession.lastCombatResult, result));
   }
 
   private getCurrentMissionSchedule() {
@@ -998,6 +1059,13 @@ export class GameApp {
 
   private showMissionBranch(): void {
     const schedule = this.getCurrentMissionSchedule();
+    const branchStage = getMissionStage(schedule, this.runSession.mission.currentStageId);
+    const currentBranch = branchStage.branchId
+      ? schedule.branches.find((branch) => branch.id === branchStage.branchId)
+      : null;
+    if (!currentBranch) {
+      throw new Error(`Operational map stage ${branchStage.id} has no branch.`);
+    }
     const sector = getCurrentSector(this.currentRun, this.runSession);
     const capturableRival = getCapturableRivalForSector(
       this.currentRun.factionCampaign,
@@ -1022,9 +1090,13 @@ export class GameApp {
       }
     );
     this.sceneManager.switchTo(
-      new MissionBranchScene(
+      new OperationalMapScene(
         this.uiRoot,
-        this.currentRun.seed,
+        this.currentRun.expedition,
+        this.runSession.expedition,
+        this.runSession.operational,
+        schedule,
+        this.runSession.mission,
         this.selectedContract,
         createMissionReadModel(schedule, this.runSession.mission),
         createMissionDebugState(schedule, this.runSession.mission),
@@ -1038,13 +1110,13 @@ export class GameApp {
             optionId: option.id
           });
 
-          if (result.disposition !== 'advanced' || !schedule.branch) {
+          if (result.disposition !== 'advanced') {
             return;
           }
 
           if (capturableRival && option.default) {
             recordFactionCampaignEvent(this.runSession, this.currentRun.factionCampaign, {
-              id: `${schedule.branch.id}:${option.id}:spared:${capturableRival.id}`,
+              id: `${currentBranch.id}:${option.id}:spared:${capturableRival.id}`,
               type: 'targetSpared',
               sectorIndex: this.runSession.currentSectorIndex,
               factionId: capturableRival.factionId,
@@ -1055,16 +1127,19 @@ export class GameApp {
           recordExpeditionBranchDecision(
             this.currentRun,
             this.runSession,
-            schedule.branch.id,
+            currentBranch.id,
             option.id
           );
           const stage = getMissionStage(schedule, this.runSession.mission.currentStageId);
           if (stage.kind === 'combat') {
             this.showGameplay();
-          } else {
+          } else if (stage.kind === 'relief') {
             this.showMissionRelief();
+          } else if (stage.kind === 'extraction') {
+            this.showRouteChoice();
           }
         },
+        () => {},
         [
           capturableRival
             ? `Rival option: extract and let ${capturableRival.name} recur, or pursue the optional lane to capture ${capturableRival.shipName}.`
@@ -1077,30 +1152,46 @@ export class GameApp {
           .join(' ') || null
       )
     );
+    this.checkpointRun('operationalMap', `${branchStage.label} checkpoint`);
   }
 
   private showMissionRelief(): void {
     const schedule = this.getCurrentMissionSchedule();
     this.sceneManager.switchTo(
-      new MissionReliefScene(
+      new OperationalMapScene(
         this.uiRoot,
-        this.currentRun.seed,
+        this.currentRun.expedition,
+        this.runSession.expedition,
+        this.runSession.operational,
+        schedule,
+        this.runSession.mission,
         this.selectedContract,
         createMissionReadModel(schedule, this.runSession.mission),
         createMissionDebugState(schedule, this.runSession.mission),
-        this.runSession.mission.checkpoint.hull,
+        [],
         this.runSession.credits,
         this.runSession.salvage,
+        () => {},
         () => {
           const result = this.dispatchCurrentMission({
             id: `${this.runSession.mission.currentStageId}:relief-complete`,
             type: 'completeRelief'
           });
           if (result.disposition === 'advanced') {
-            this.showRouteChoice();
+            const nextStage = getMissionStage(schedule, this.runSession.mission.currentStageId);
+            if (nextStage.kind === 'combat') {
+              this.showGameplay();
+            } else if (nextStage.kind === 'extraction') {
+              this.showRouteChoice();
+            }
           }
-        }
+        },
+        'Combat world cleanup is settled; no actors, projectiles, hooks, or pending payouts cross this checkpoint.'
       )
+    );
+    this.checkpointRun(
+      'operationalMap',
+      `${createMissionReadModel(schedule, this.runSession.mission).stageLabel} checkpoint`
     );
   }
 
@@ -1419,7 +1510,7 @@ export class GameApp {
   private abandonAtInterActJunction(): void {
     this.handleMissionFailure({
       reason: 'abandoned',
-      survivedSeconds: this.lastRunResult?.survivedSeconds ?? 0,
+      survivedSeconds: 0,
       distanceTraveled: 0,
       sectorLength: null,
       credits: this.runSession.credits,
@@ -1491,14 +1582,6 @@ export class GameApp {
   }
 
   private createSaveRecord(result: CombatRunResult): RunSaveRecord {
-    const previousCombat = this.runSession.lastCombatResult;
-    const previousEnemies =
-      previousCombat && previousCombat !== result ? previousCombat.enemiesDestroyed : 0;
-    const previousBosses =
-      previousCombat && previousCombat !== result ? previousCombat.bossesDefeated : 0;
-    const previousTriggers =
-      previousCombat && previousCombat !== result ? previousCombat.itemTriggers : 0;
-    const currentDistance = previousCombat === result ? 0 : result.distanceTraveled;
     const sectorsCleared = getSaveRecordSectorCount(
       this.currentRun,
       this.runSession.currentSectorIndex,
@@ -1535,14 +1618,14 @@ export class GameApp {
       ),
       expeditionTargetSeconds: expedition.baselineTargetSeconds,
       survivedSeconds: result.survivedSeconds,
-      distanceTraveled: this.runSession.distanceTraveled + currentDistance,
+      distanceTraveled: result.distanceTraveled,
       sectorLength: result.sectorLength,
       sectorsCleared,
-      bossesDefeated: result.bossesDefeated + previousBosses,
-      enemiesDestroyed: result.enemiesDestroyed + previousEnemies,
+      bossesDefeated: result.bossesDefeated,
+      enemiesDestroyed: result.enemiesDestroyed,
       creditsRecovered: Math.max(result.credits, this.runSession.credits),
       salvageRecovered: Math.max(result.salvage, this.runSession.salvage),
-      itemTriggers: result.itemTriggers + previousTriggers,
+      itemTriggers: result.itemTriggers,
       itemIds: this.runSession.itemInstances.map((item) => item.itemId)
     };
   }
@@ -1844,7 +1927,10 @@ export class GameApp {
     });
   }
 
-  private checkpointRun(target: 'sectorTransition' | 'gameplay', label: string): void {
+  private checkpointRun(
+    target: 'sectorTransition' | 'gameplay' | 'operationalMap',
+    label: string
+  ): void {
     if (!this.snapshotEligible) return;
     try {
       this.runSnapshot = this.runSnapshotCoordinator.checkpoint({
@@ -1888,6 +1974,20 @@ export class GameApp {
           }
         }
         this.showGameplay();
+        return;
+      }
+      if (restored.snapshot.checkpoint.target === 'operationalMap') {
+        const stage = getMissionStage(
+          this.getCurrentMissionSchedule(),
+          this.runSession.mission.currentStageId
+        );
+        if (stage.kind === 'branch') {
+          this.showMissionBranch();
+        } else if (stage.kind === 'relief') {
+          this.showMissionRelief();
+        } else {
+          throw new Error(`Operational-map snapshot points to ${stage.kind}.`);
+        }
         return;
       }
       this.showSectorTransition();

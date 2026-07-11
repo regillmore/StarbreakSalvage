@@ -3,9 +3,11 @@ import {
   EXPEDITION_ENTRY_RULES,
   EXPEDITION_NODE_KINDS,
   EXPEDITION_NODE_PROFILES,
+  EXPEDITION_OPERATIONAL_ROLES,
   EXPEDITION_OPPORTUNITIES,
   EXPEDITION_PRESSURE_BANDS,
   EXPEDITION_REWARD_HOOKS,
+  EXPEDITION_RISK_BANDS,
   EXPEDITION_TRANSITION_POLICIES,
   getExpeditionNodeProfile
 } from '../content/expeditions';
@@ -25,6 +27,8 @@ export function validateExpeditionGraph(graph: ExpeditionGraph): string[] {
   const knownTransitionPolicies = new Set<string>(EXPEDITION_TRANSITION_POLICIES);
   const knownRewardHooks = new Set<string>(EXPEDITION_REWARD_HOOKS);
   const knownProfileIds = new Set(EXPEDITION_NODE_PROFILES.map((profile) => profile.id));
+  const knownOperationalRoles = new Set<string>(EXPEDITION_OPERATIONAL_ROLES);
+  const knownRiskBands = new Set<string>(EXPEDITION_RISK_BANDS);
   const knownOpportunityIds = new Set(
     EXPEDITION_OPPORTUNITIES.map((opportunity) => opportunity.id)
   );
@@ -57,6 +61,21 @@ export function validateExpeditionGraph(graph: ExpeditionGraph): string[] {
     }
     if (!knownPressureBands.has(node.pressureBand)) {
       errors.push(`Expedition node ${node.id} has invalid pressure band: ${node.pressureBand}`);
+    }
+    if (!knownOperationalRoles.has(node.operationalRole)) {
+      errors.push(
+        `Expedition node ${node.id} has invalid operational role: ${node.operationalRole}`
+      );
+    }
+    if (
+      !knownRiskBands.has(node.intel.danger) ||
+      !node.intel.reward.trim() ||
+      !node.intel.consequence.trim() ||
+      !node.intel.factionRisk.trim() ||
+      !node.intel.crewRisk.trim() ||
+      !node.intel.shipRisk.trim()
+    ) {
+      errors.push(`Expedition node ${node.id} has invalid operational intel`);
     }
     if (!knownEntryRules.has(node.entryRule)) {
       errors.push(`Expedition node ${node.id} has invalid entry rule: ${node.entryRule}`);
@@ -159,6 +178,14 @@ export function validateExpeditionGraph(graph: ExpeditionGraph): string[] {
     for (const node of graph.nodes.filter((candidate) => sector.nodeIds.includes(candidate.id))) {
       if (node.sectorPlanId !== sector.id || node.content.sectorId !== sector.sectorId) {
         errors.push(`Expedition sector ${sector.id} has mismatched node content: ${node.id}`);
+      }
+    }
+    const sectorRoles = graph.nodes
+      .filter((candidate) => sector.nodeIds.includes(candidate.id))
+      .map((node) => node.operationalRole);
+    for (const role of EXPEDITION_OPERATIONAL_ROLES) {
+      if (sectorRoles.filter((candidate) => candidate === role).length !== 1) {
+        errors.push(`Expedition sector ${sector.id} must define one ${role} node`);
       }
     }
     for (const legId of sector.missionLegIds) {

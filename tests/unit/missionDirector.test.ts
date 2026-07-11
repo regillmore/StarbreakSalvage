@@ -43,15 +43,21 @@ describe('MissionDirector', () => {
       'branch',
       'combat',
       'relief',
+      'combat',
+      'branch',
+      'combat',
+      'relief',
       'extraction',
       'failure',
       'completion'
     ]);
-    expect(first.stages.find((stage) => stage.optional)?.world).toMatchObject({
-      scrollLengthScale: 0.38,
-      waveCountScale: 0.5,
+    expect(first.stages.find((stage) => stage.operationalRole === 'detour')?.world).toMatchObject({
+      scrollLengthScale: 0.34,
+      waveCountScale: 0.45,
       bossPolicy: 'none'
     });
+    expect(first.operationStageIds).toHaveLength(4);
+    expect(first.branches).toHaveLength(2);
   });
 
   it('advances a direct mission through every required stage exactly once', () => {
@@ -78,13 +84,28 @@ describe('MissionDirector', () => {
       optionId: direct?.id ?? ''
     });
     expect(getMissionStage(schedule, state.currentStageId).kind).toBe('relief');
+    state = apply(schedule, state, { id: 'staging', type: 'completeRelief' });
+    expect(getMissionStage(schedule, state.currentStageId).operationalRole).toBe('gate');
+    state = apply(schedule, state, {
+      id: 'gate-operation',
+      type: 'completeCombat',
+      checkpoint: CHECKPOINT
+    });
+    expect(getMissionStage(schedule, state.currentStageId).kind).toBe('branch');
+    const extract = getMissionBranchOptions(schedule, state).find((option) => option.default);
+    state = apply(schedule, state, {
+      id: 'extraction-branch',
+      type: 'selectBranch',
+      optionId: extract?.id ?? ''
+    });
+    expect(getMissionStage(schedule, state.currentStageId).kind).toBe('relief');
     state = apply(schedule, state, { id: 'relief', type: 'completeRelief' });
     expect(getMissionStage(schedule, state.currentStageId).kind).toBe('extraction');
     state = apply(schedule, state, { id: 'extraction', type: 'completeExtraction' });
 
     expect(state.status).toBe('completed');
     expect(state.currentStageId).toBe(schedule.completionStageId);
-    expect(state.transitions).toHaveLength(6);
+    expect(state.transitions).toHaveLength(9);
     expect(createMissionReadModel(schedule, state).stageKind).toBe('completion');
   });
 

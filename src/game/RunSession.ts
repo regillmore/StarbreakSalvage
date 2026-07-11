@@ -31,6 +31,7 @@ import {
   createMissionSchedule,
   synchronizeExpeditionProgressWithMission,
   transitionMission,
+  type MissionCheckpoint,
   type MissionDirectorState,
   type MissionEvent,
   type MissionSchedule,
@@ -74,6 +75,14 @@ import {
   type RunTimelineEvent,
   type RunTimelineState
 } from './RunTimeline';
+import {
+  createOperationalProgressState,
+  recordOperationBoundary,
+  type OperationBoundaryResult,
+  type OperationalOutcome,
+  type OperationalProgressState
+} from './OperationalMap';
+import type { ExpeditionEncounterNode } from './ExpeditionTypes';
 
 export interface RouteHistoryEntry {
   readonly sectorIndex: number;
@@ -94,6 +103,7 @@ export interface RunSessionState {
   currentSectorIndex: number;
   expedition: ExpeditionProgressState;
   mission: MissionDirectorState;
+  operational: OperationalProgressState;
   credits: number;
   salvage: number;
   distanceTraveled: number;
@@ -141,6 +151,7 @@ export function createRunSession(
     currentSectorIndex: 0,
     expedition,
     mission,
+    operational: createOperationalProgressState(),
     credits: contract.startingCredits,
     salvage: contract.startingSalvage,
     distanceTraveled: 0,
@@ -170,6 +181,32 @@ export function createRunSession(
   };
 }
 
+export function recordMissionOperationBoundary(
+  session: RunSessionState,
+  options: {
+    readonly id: string;
+    readonly node: ExpeditionEncounterNode;
+    readonly outcome: OperationalOutcome;
+    readonly checkpoint: MissionCheckpoint;
+  }
+): OperationBoundaryResult {
+  const result = recordOperationBoundary(session.operational, options);
+  session.operational = result.state;
+  if (result.disposition === 'applied') {
+    session.salvage += result.salvageAwarded;
+    recordRunSessionTimelineEvent(session, {
+      id: `operation-boundary:${options.id}`,
+      category: 'node',
+      kind: options.node.operationalRole,
+      sectorIndex: options.node.sectorIndex,
+      value: result.salvageAwarded,
+      subjectId: options.node.id,
+      detailId: result.consequence
+    });
+  }
+  return result;
+}
+
 export function getCurrentSector(run: RunSkeleton, session: RunSessionState): SectorRoute {
   const sector = run.sectors[session.currentSectorIndex];
 
@@ -189,7 +226,7 @@ export function recordSectorCombatResult(
   result: CombatRunResult,
   actEconomy?: ActEconomyProfile
 ): void {
-  session.lastCombatResult = result;
+  session.lastCombatResult = aggregateCombatRunResults(session.lastCombatResult, result);
   session.distanceTraveled += result.distanceTraveled;
   session.credits +=
     result.credits +
@@ -218,6 +255,28 @@ export function recordSectorCombatResult(
     subjectId: `credits-${result.credits}`,
     detailId: `salvage-${result.salvage}`
   });
+}
+
+export function aggregateCombatRunResults(
+  previous: CombatRunResult | null,
+  result: CombatRunResult
+): CombatRunResult {
+  if (!previous) return result;
+  return {
+    ...result,
+    survivedSeconds: previous.survivedSeconds + result.survivedSeconds,
+    distanceTraveled: previous.distanceTraveled + result.distanceTraveled,
+    credits: previous.credits + result.credits,
+    salvage: previous.salvage + result.salvage,
+    enemiesDestroyed: previous.enemiesDestroyed + result.enemiesDestroyed,
+    enemiesEscaped: (previous.enemiesEscaped ?? 0) + (result.enemiesEscaped ?? 0),
+    bossesDefeated: previous.bossesDefeated + result.bossesDefeated,
+    shotsFired: previous.shotsFired + result.shotsFired,
+    pickupsCollected: previous.pickupsCollected + result.pickupsCollected,
+    damageTaken: previous.damageTaken + result.damageTaken,
+    itemTriggers: previous.itemTriggers + result.itemTriggers,
+    itemNames: [...new Set([...previous.itemNames, ...result.itemNames])]
+  };
 }
 
 export function recordMissionObjectiveOutcome(

@@ -1,7 +1,29 @@
 export type ExpeditionNodeKind =
-  'approach' | 'operation' | 'opportunity' | 'extraction' | 'checkpoint' | 'finale';
+  | 'approach'
+  | 'operation'
+  | 'opportunity'
+  | 'staging'
+  | 'pursuit'
+  | 'extraction'
+  | 'checkpoint'
+  | 'finale';
 
-export type ExpeditionLegKind = 'approach' | 'operation' | 'opportunity' | 'gate';
+export type ExpeditionLegKind =
+  'approach' | 'operation' | 'opportunity' | 'staging' | 'pursuit' | 'gate';
+
+export type ExpeditionOperationalRole =
+  'ingress' | 'advance' | 'detour' | 'staging' | 'gate' | 'pursuit' | 'extraction';
+
+export type ExpeditionRiskBand = 'low' | 'guarded' | 'high' | 'critical';
+
+export interface ExpeditionOperationalIntel {
+  readonly danger: ExpeditionRiskBand;
+  readonly reward: string;
+  readonly consequence: string;
+  readonly factionRisk: string;
+  readonly crewRisk: string;
+  readonly shipRisk: string;
+}
 
 export type ExpeditionPressureBand = 'relief' | 'baseline' | 'elevated' | 'boss' | 'finale';
 
@@ -57,6 +79,8 @@ export const EXPEDITION_NODE_KINDS: readonly ExpeditionNodeKind[] = [
   'approach',
   'operation',
   'opportunity',
+  'staging',
+  'pursuit',
   'extraction',
   'checkpoint',
   'finale'
@@ -66,7 +90,26 @@ export const EXPEDITION_LEG_KINDS: readonly ExpeditionLegKind[] = [
   'approach',
   'operation',
   'opportunity',
+  'staging',
+  'pursuit',
   'gate'
+];
+
+export const EXPEDITION_OPERATIONAL_ROLES: readonly ExpeditionOperationalRole[] = [
+  'ingress',
+  'advance',
+  'detour',
+  'staging',
+  'gate',
+  'pursuit',
+  'extraction'
+];
+
+export const EXPEDITION_RISK_BANDS: readonly ExpeditionRiskBand[] = [
+  'low',
+  'guarded',
+  'high',
+  'critical'
 ];
 
 export const EXPEDITION_PRESSURE_BANDS: readonly ExpeditionPressureBand[] = [
@@ -157,6 +200,28 @@ export const EXPEDITION_NODE_PROFILES: readonly ExpeditionNodeProfileDefinition[
     transitionPolicy: 'clearCombat'
   },
   {
+    id: 'expedition_profile_staging',
+    label: 'Relief and staging',
+    nodeKind: 'staging',
+    legKind: 'staging',
+    pressureBand: 'relief',
+    duration: { minSeconds: 6, targetSeconds: 10, maxSeconds: 16 },
+    entryRule: 'afterNode',
+    completionRule: 'routeResolved',
+    transitionPolicy: 'carryState'
+  },
+  {
+    id: 'expedition_profile_pursuit',
+    label: 'Optional pursuit',
+    nodeKind: 'pursuit',
+    legKind: 'pursuit',
+    pressureBand: 'elevated',
+    duration: { minSeconds: 14, targetSeconds: 22, maxSeconds: 34 },
+    entryRule: 'branchChoice',
+    completionRule: 'optionalObjective',
+    transitionPolicy: 'clearCombat'
+  },
+  {
     id: 'expedition_profile_extraction',
     label: 'Sector extraction',
     nodeKind: 'extraction',
@@ -173,7 +238,7 @@ export const EXPEDITION_NODE_PROFILES: readonly ExpeditionNodeProfileDefinition[
     nodeKind: 'checkpoint',
     legKind: 'gate',
     pressureBand: 'boss',
-    duration: { minSeconds: 24, targetSeconds: 38, maxSeconds: 55 },
+    duration: { minSeconds: 8, targetSeconds: 13, maxSeconds: 20 },
     entryRule: 'afterNode',
     completionRule: 'bossDefeated',
     transitionPolicy: 'clearCombat'
@@ -184,7 +249,7 @@ export const EXPEDITION_NODE_PROFILES: readonly ExpeditionNodeProfileDefinition[
     nodeKind: 'finale',
     legKind: 'gate',
     pressureBand: 'finale',
-    duration: { minSeconds: 34, targetSeconds: 55, maxSeconds: 80 },
+    duration: { minSeconds: 10, targetSeconds: 16, maxSeconds: 24 },
     entryRule: 'afterNode',
     completionRule: 'victory',
     transitionPolicy: 'victory'

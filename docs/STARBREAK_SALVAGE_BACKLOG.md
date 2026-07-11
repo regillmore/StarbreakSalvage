@@ -1836,7 +1836,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 102.
+- Implemented in work order 102. Expedition graph v2 defines ingress, advance, detour, staging, gate, pursuit, and extraction nodes in every existing sector with two branch records and 2-4 executable combat operations. Mission schedule v2 carries checkpointed hull/build/resources/world state through both required operations and either optional lane. Detour success suppresses gate pressure; pursuit success grants an idempotent salvage award and raises the next advance. A bounded operational ledger records outcomes and zero-retained actor/projectile/hook cleanup, while the public map presents time/danger/reward/consequence and faction/crew/ship risk bands under keyboard, pointer, narrow, contrast, and reduced-motion-compatible DOM. Snapshot v2 restores briefing, gameplay, or settled-map checkpoints and safely retires v1 independently of permanent save v5. Current structural capacity is 1458 required-route seconds and 1898 all-optional seconds across ten sectors.
 
 ## Epic BI - Phase 11 frontier and staging
 

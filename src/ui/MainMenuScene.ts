@@ -192,7 +192,9 @@ export class MainMenuScene implements Scene {
     boundary.textContent =
       this.resumeSummary.target === 'gameplay'
         ? 'Resume restarts the current operation from its safe entry checkpoint.'
-        : 'Resume returns to the saved mission briefing checkpoint.';
+        : this.resumeSummary.target === 'operationalMap'
+          ? 'Resume returns to the settled operational map checkpoint.'
+          : 'Resume returns to the saved mission briefing checkpoint.';
     const actions = document.createElement('div');
     actions.className = 'button-row';
     const resume = document.createElement('button');

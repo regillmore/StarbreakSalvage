@@ -897,6 +897,62 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
   line-height: 1.45;
 }
 
+.operational-map-panel {
+  max-height: min(94vh, 880px);
+  overflow: auto;
+}
+
+.operational-itinerary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.operational-node {
+  display: grid;
+  gap: 0.24rem;
+  min-width: 0;
+  padding: 0.62rem 0.72rem;
+  border: 1px solid rgba(124, 247, 255, 0.24);
+  border-radius: 7px;
+  color: #dbe8ee;
+  background: rgba(7, 11, 28, 0.72);
+  overflow-wrap: anywhere;
+}
+
+.operational-node strong {
+  color: #7cf7ff;
+}
+
+.operational-node span {
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.operational-node-completed {
+  border-color: rgba(114, 242, 167, 0.5);
+  background: rgba(25, 78, 62, 0.22);
+}
+
+.operational-node-current,
+.operational-node-available {
+  border-color: rgba(255, 209, 102, 0.62);
+  box-shadow: 0 0 0 1px rgba(255, 209, 102, 0.12) inset;
+}
+
+.operational-node-bypassed {
+  opacity: 0.55;
+}
+
+.operational-map-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
 .archive-panel {
   max-height: min(92vh, 820px);
   overflow: auto;
@@ -1620,6 +1676,11 @@ html[data-bullet-contrast='high'] .hud-meter-track {
   .archive-grid,
   .summary-item-grid,
   .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .operational-itinerary,
+  .operational-map-actions {
     grid-template-columns: 1fr;
   }
 

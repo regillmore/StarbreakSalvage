@@ -146,7 +146,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
     /ASSAULT|hostiles|fortification/i
   );
   await expect(page.getByTestId('expedition-readout')).toContainText(
-    'Expedition Outer Debris Field Operation | nodes 2/40'
+    'Expedition Outer Debris Field Operation | nodes 2/70'
   );
   await expect(page.getByTestId('hint-readout')).toContainText('Hint');
   await expect(page.getByTestId('verb-readout')).toContainText('Special');
@@ -156,30 +156,18 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.locator('.debug-overlay')).toContainText('Theme redline/Debt Runner');
   await expect(page.locator('.debug-overlay')).toContainText('HUD standard');
   await expect(page.locator('.debug-overlay')).toContainText(
-    'Expedition expedition_s01_operation 2/40 decisions 0'
+    'Expedition expedition_s01_operation 2/70 decisions 0'
   );
   await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
   await expect(page.locator('.debug-overlay')).toContainText(
     'Contract contract_breach_levy | Objective assault/objective_breach_assault'
   );
-  await expect(page.locator('.debug-overlay')).toContainText('Expedition capacity 16.0-19.7m');
+  await expect(page.locator('.debug-overlay')).toContainText('Expedition capacity 24.3-31.6m');
   await expect(page.locator('.debug-overlay')).toContainText(
     /Viewport \d+x\d+ \w+ @[0-9.]+ DPR [0-9.]+/
   );
   await expect(page.locator('.debug-overlay')).toContainText(/Canvas \d+x\d+/);
   await expect(page.locator('.debug-overlay')).toContainText(/Safe \d+,\d+ \d+x\d+/);
-  await expect(page.getByTestId('objective-readout')).toContainText('Hecaton Ledger Ark');
-  await expect(page.locator('.debug-overlay')).toContainText(
-    /Set-piece Hecaton Ledger Ark exterior 0\/7 target Shield Emitter lane port maintenance lane/
-  );
-
-  await page.keyboard.press('U');
-  await expect(page.locator('.debug-overlay')).toContainText(
-    'Scenario set-piece:setpiece_ledger_hecaton'
-  );
-  await expect(page.getByTestId('distance-readout')).toContainText(/Distance [4-9]\d\d\//);
-  await expect(page.locator('.debug-overlay')).toContainText(/World 640x720/);
-
   const startPosition = await page.getByTestId('player-position').textContent();
   await page.keyboard.down('ArrowRight');
   await page.waitForTimeout(180);
@@ -210,7 +198,20 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.locator('.debug-overlay')).toContainText(/Exit sectorComplete \d+%/);
   await expect(page.getByTestId('mission-branch')).toBeVisible();
   await page.getByTestId('mission-branch-optional').click();
-  await expect(page.getByTestId('expedition-readout')).toContainText('Field Salvage');
+  await expect(page.getByTestId('expedition-readout')).toContainText('Black Box Signal');
+  await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
+  await page.keyboard.press('8');
+  await expect(page.getByTestId('mission-relief')).toBeVisible();
+  await page.getByTestId('mission-relief-continue').click();
+  await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
+  await page.keyboard.press('U');
+  await expect(page.locator('.debug-overlay')).toContainText(
+    'Scenario set-piece:setpiece_ledger_hecaton'
+  );
+  await expect(page.getByTestId('objective-readout')).toContainText('Hecaton Ledger Ark');
+  await page.keyboard.press('8');
+  await expect(page.getByTestId('mission-branch')).toBeVisible();
+  await page.getByTestId('mission-branch-optional').click();
   await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
   await page.keyboard.press('8');
   await expect(page.getByTestId('mission-relief')).toBeVisible();
@@ -294,7 +295,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.locator('.debug-overlay')).toContainText('Entities 1');
   await expect(page.locator('.debug-overlay')).toContainText('Projectiles 0 (P0/E0)');
   await expect(page.locator('.debug-overlay')).toContainText('Pickups/FX 0/0');
-  await expect(page.getByTestId('distance-readout')).toContainText(/Distance 1\d{3}\/\d+u/);
+  await expect(page.getByTestId('distance-readout')).toContainText(/Distance [5-9]\d{2}\/\d+u/);
 
   await page.keyboard.press('7');
   await expect(page.getByTestId('player-destruction-toast')).toContainText(
@@ -914,6 +915,19 @@ test('suspends, reloads, resumes, and clears a versioned expedition snapshot', a
   await expectGameplaySector(page, 'Outer Debris Field');
   await expect(page.locator('.debug-overlay')).toContainText('Scene gameplay');
 
+  await page.keyboard.press('8');
+  await expect(page.getByTestId('mission-branch')).toBeVisible();
+  await page.reload();
+  await expect(page.getByTestId('run-snapshot-panel')).toContainText(
+    'settled operational map checkpoint'
+  );
+  await page.getByTestId('resume-expedition').click();
+  await expect(page.getByTestId('mission-branch')).toBeVisible();
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('mission-relief')).toBeVisible();
+  await page.keyboard.press('Enter');
+  await expectGameplaySector(page, 'Outer Debris Field');
+
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'End Run' }).click();
   await expect(page.getByRole('heading', { name: 'Contract Suspended' })).toBeVisible();
@@ -1004,6 +1018,11 @@ test('keeps the gameplay HUD and safe frame readable in a narrow viewport', asyn
 async function forceCompleteSectorAndEnterNext(page: Page, nextSectorName: string): Promise<void> {
   await page.keyboard.press('8');
   await expect(page.getByTestId('sector-exit-toast')).toContainText(/clear \| route telemetry/);
+  await expect(page.getByTestId('mission-branch')).toBeVisible();
+  await page.getByTestId('mission-branch-direct').click();
+  await page.getByTestId('mission-relief-continue').click();
+  await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
+  await page.keyboard.press('8');
   await expect(page.getByTestId('mission-branch')).toBeVisible();
   await page.getByTestId('mission-branch-direct').click();
   await page.getByTestId('mission-relief-continue').click();

@@ -83,6 +83,30 @@ export const MISSION_STAGE_PROFILES: readonly MissionStageProfileDefinition[] = 
     }
   },
   {
+    id: 'mission_operation_advance',
+    kind: 'combat',
+    label: 'Advance operation',
+    carry: RESET_STAGE,
+    world: {
+      scrollLengthScale: 0.55,
+      waveCountScale: 0.65,
+      bossPolicy: 'none',
+      seedNamespace: 'advance-operation'
+    }
+  },
+  {
+    id: 'mission_operation_gate',
+    kind: 'combat',
+    label: 'Required gate operation',
+    carry: CARRY_STAGE,
+    world: {
+      scrollLengthScale: 0.65,
+      waveCountScale: 0.8,
+      bossPolicy: 'inherit',
+      seedNamespace: 'gate-operation'
+    }
+  },
+  {
     id: 'mission_optional_operation',
     kind: 'combat',
     label: 'Optional encounter',
@@ -92,6 +116,30 @@ export const MISSION_STAGE_PROFILES: readonly MissionStageProfileDefinition[] = 
       waveCountScale: 0.5,
       bossPolicy: 'none',
       seedNamespace: 'opportunity'
+    }
+  },
+  {
+    id: 'mission_detour_operation',
+    kind: 'combat',
+    label: 'Optional detour',
+    carry: CARRY_STAGE,
+    world: {
+      scrollLengthScale: 0.34,
+      waveCountScale: 0.45,
+      bossPolicy: 'none',
+      seedNamespace: 'detour-operation'
+    }
+  },
+  {
+    id: 'mission_pursuit_operation',
+    kind: 'combat',
+    label: 'Optional pursuit',
+    carry: CARRY_STAGE,
+    world: {
+      scrollLengthScale: 0.32,
+      waveCountScale: 0.4,
+      bossPolicy: 'none',
+      seedNamespace: 'pursuit-operation'
     }
   },
   {

@@ -5,6 +5,8 @@ import {
   type ExpeditionDurationBand,
   type ExpeditionEntryRule,
   type ExpeditionLegKind,
+  type ExpeditionOperationalIntel,
+  type ExpeditionOperationalRole,
   type ExpeditionRewardHook,
   type ExpeditionTransitionPolicy
 } from '../content/expeditions';
@@ -60,11 +62,18 @@ export function createExpeditionGraph(options: {
       offset < options.sectors.length - 1 ? createNodeId(sectorNumber + 1, 'ingress') : null;
     const ingressNodeId = createNodeId(sectorNumber, 'ingress');
     const operationNodeId = createNodeId(sectorNumber, 'operation');
-    const opportunityNodeId = createNodeId(sectorNumber, 'opportunity');
-    const gateNodeId = createNodeId(sectorNumber, 'gate');
-    const branchId = `expedition_branch_s${padSector(sectorNumber)}_opportunity`;
+    const opportunityNodeId = createNodeId(sectorNumber, 'detour');
+    const stagingNodeId = createNodeId(sectorNumber, 'staging');
+    const gateOperationNodeId = createNodeId(sectorNumber, 'gate_operation');
+    const pursuitNodeId = createNodeId(sectorNumber, 'pursuit');
+    const gateNodeId = createNodeId(sectorNumber, 'exit');
+    const opportunityBranchId = `expedition_branch_s${padSector(sectorNumber)}_detour`;
+    const pursuitBranchId = `expedition_branch_s${padSector(sectorNumber)}_pursuit`;
     const opportunity = options.rng
       .fork(`sector-${sectorNumber}-opportunity:${options.saveFingerprint}`)
+      .choice(EXPEDITION_OPPORTUNITIES);
+    const pursuitOpportunity = options.rng
+      .fork(`sector-${sectorNumber}-pursuit:${options.saveFingerprint}`)
       .choice(EXPEDITION_OPPORTUNITIES);
     const act = options.acts.find((candidate) => candidate.id === sector.act.actId);
 
@@ -91,17 +100,18 @@ export function createExpeditionGraph(options: {
       : isActExit && act.transition.kind === 'interActJunction'
         ? 'interActJunction'
         : getExpeditionNodeProfile(gateProfileId).transitionPolicy;
-    const commonContent = createContentReferences(sector, null);
+    const commonContent = createContentReferences(sector, null, false);
     const ingress = createNode({
       id: ingressNodeId,
       profileId: 'expedition_profile_ingress',
       label: `${sector.sectorName} Ingress`,
       sectorPlanId,
-      sectorIndex: sector.index,
+      sectorIndex: offset,
       actId: sector.act.actId,
       optional: false,
       nextNodeIds: [operationNodeId],
       rewardHooks: [],
+      operationalRole: 'ingress',
       content: commonContent,
       entryRule: isActEntry ? 'actHandoff' : undefined
     });
@@ -110,11 +120,12 @@ export function createExpeditionGraph(options: {
       profileId: operationProfileId,
       label: `${sector.sectorName} Operation`,
       sectorPlanId,
-      sectorIndex: sector.index,
+      sectorIndex: offset,
       actId: sector.act.actId,
       optional: false,
-      nextNodeIds: [gateNodeId, opportunityNodeId],
+      nextNodeIds: [stagingNodeId, opportunityNodeId],
       rewardHooks: ['combatPayout'],
+      operationalRole: 'advance',
       content: commonContent
     });
     const opportunityNode = createNode({
@@ -122,12 +133,56 @@ export function createExpeditionGraph(options: {
       profileId: 'expedition_profile_opportunity',
       label: opportunity.label,
       sectorPlanId,
-      sectorIndex: sector.index,
+      sectorIndex: offset,
+      actId: sector.act.actId,
+      optional: true,
+      nextNodeIds: [stagingNodeId],
+      rewardHooks: opportunity.rewardHooks,
+      operationalRole: 'detour',
+      intelConsequence: 'Success establishes support that reduces pressure at the required gate.',
+      content: createContentReferences(sector, opportunity.id, false)
+    });
+    const staging = createNode({
+      id: stagingNodeId,
+      profileId: 'expedition_profile_staging',
+      label: `${sector.sectorName} Staging Window`,
+      sectorPlanId,
+      sectorIndex: offset,
+      actId: sector.act.actId,
+      optional: false,
+      nextNodeIds: [gateOperationNodeId],
+      rewardHooks: [],
+      operationalRole: 'staging',
+      content: commonContent
+    });
+    const gateOperation = createNode({
+      id: gateOperationNodeId,
+      profileId: operationProfileId,
+      label: `${sector.sectorName} Gate Operation`,
+      sectorPlanId,
+      sectorIndex: offset,
+      actId: sector.act.actId,
+      optional: false,
+      nextNodeIds: [gateNodeId, pursuitNodeId],
+      rewardHooks: ['combatPayout'],
+      operationalRole: 'gate',
+      intelConsequence: 'Clears the required gate and determines whether pursuit remains viable.',
+      content: createContentReferences(sector, null, true)
+    });
+    const pursuitNode = createNode({
+      id: pursuitNodeId,
+      profileId: 'expedition_profile_pursuit',
+      label: `Pursuit: ${pursuitOpportunity.label}`,
+      sectorPlanId,
+      sectorIndex: offset,
       actId: sector.act.actId,
       optional: true,
       nextNodeIds: [gateNodeId],
-      rewardHooks: opportunity.rewardHooks,
-      content: createContentReferences(sector, opportunity.id)
+      rewardHooks: pursuitOpportunity.rewardHooks,
+      operationalRole: 'pursuit',
+      intelConsequence:
+        'A successful pursuit improves salvage but carries pressure into the next sector.',
+      content: createContentReferences(sector, pursuitOpportunity.id, false)
     });
     const gateRewardHooks = createGateRewardHooks(sector, isActExit, isFinale);
     const gate = createNode({
@@ -139,21 +194,29 @@ export function createExpeditionGraph(options: {
           ? `${sector.sectorName} Checkpoint`
           : `${sector.sectorName} Extraction`,
       sectorPlanId,
-      sectorIndex: sector.index,
+      sectorIndex: offset,
       actId: sector.act.actId,
       optional: false,
       nextNodeIds: nextSectorEntryNodeId ? [nextSectorEntryNodeId] : [],
       rewardHooks: gateRewardHooks,
+      operationalRole: 'extraction',
       content: commonContent,
       transitionPolicy: gateTransitionPolicy
     });
 
-    nodes.push(ingress, operation, opportunityNode, gate);
+    nodes.push(ingress, operation, opportunityNode, staging, gateOperation, pursuitNode, gate);
 
     const legSpecs: readonly [ExpeditionLegKind, string, boolean, readonly string[]][] = [
       ['approach', `${sector.sectorName} approach`, false, [ingressNodeId]],
-      ['operation', `${sector.sectorName} operation`, false, [operationNodeId]],
+      [
+        'operation',
+        `${sector.sectorName} required operations`,
+        false,
+        [operationNodeId, gateOperationNodeId]
+      ],
       ['opportunity', opportunity.label, true, [opportunityNodeId]],
+      ['staging', `${sector.sectorName} staging`, false, [stagingNodeId]],
+      ['pursuit', pursuitNode.label, true, [pursuitNodeId]],
       ['gate', gate.label, false, [gateNodeId]]
     ];
     const sectorMissionLegs = legSpecs.map(([kind, label, optional, nodeIds]) =>
@@ -162,25 +225,49 @@ export function createExpeditionGraph(options: {
     missionLegs.push(...sectorMissionLegs);
 
     branches.push({
-      id: branchId,
+      id: opportunityBranchId,
       sectorPlanId,
       sourceNodeId: operationNodeId,
-      label: `${sector.sectorName} opportunity`,
+      label: `${sector.sectorName} approach decision`,
       options: [
         {
-          id: `${branchId}_press_on`,
-          label: 'Press On',
-          summary: 'Keep the contract line and proceed to the sector gate.',
-          targetNodeId: gateNodeId,
+          id: `${opportunityBranchId}_stage`,
+          label: 'Stage for the Gate',
+          summary: 'Preserve hull and move directly into the staging window.',
+          targetNodeId: stagingNodeId,
           outcomeId: 'expedition_outcome_direct',
           default: true
         },
         {
-          id: `${branchId}_detour`,
+          id: `${opportunityBranchId}_detour`,
           label: opportunity.label,
-          summary: opportunity.summary,
+          summary: `${opportunity.summary} Success reduces pressure at the required gate.`,
           targetNodeId: opportunityNodeId,
           outcomeId: opportunity.id,
+          default: false
+        }
+      ]
+    });
+    branches.push({
+      id: pursuitBranchId,
+      sectorPlanId,
+      sourceNodeId: gateOperationNodeId,
+      label: `${sector.sectorName} extraction decision`,
+      options: [
+        {
+          id: `${pursuitBranchId}_extract`,
+          label: 'Extract',
+          summary: 'Bank the sector outcome and leave the pursuit wake behind.',
+          targetNodeId: gateNodeId,
+          outcomeId: 'expedition_outcome_extract',
+          default: true
+        },
+        {
+          id: `${pursuitBranchId}_commit`,
+          label: pursuitNode.label,
+          summary: 'Commit to a final pressure lane for salvage and a future pursuit consequence.',
+          targetNodeId: pursuitNodeId,
+          outcomeId: `${pursuitOpportunity.id}_pursuit`,
           default: false
         }
       ]
@@ -188,17 +275,31 @@ export function createExpeditionGraph(options: {
 
     sectors.push({
       id: sectorPlanId,
-      sectorIndex: sector.index,
+      sectorIndex: offset,
       sectorId: sector.sectorId,
       sectorName: sector.sectorName,
       actId: sector.act.actId,
       entryNodeId: ingressNodeId,
       exitNodeIds: [gateNodeId],
       missionLegIds: sectorMissionLegs.map((leg) => leg.id),
-      nodeIds: [ingressNodeId, operationNodeId, opportunityNodeId, gateNodeId],
-      requiredNodeIds: [ingressNodeId, operationNodeId, gateNodeId],
-      optionalNodeIds: [opportunityNodeId],
-      branchIds: [branchId]
+      nodeIds: [
+        ingressNodeId,
+        operationNodeId,
+        opportunityNodeId,
+        stagingNodeId,
+        gateOperationNodeId,
+        pursuitNodeId,
+        gateNodeId
+      ],
+      requiredNodeIds: [
+        ingressNodeId,
+        operationNodeId,
+        stagingNodeId,
+        gateOperationNodeId,
+        gateNodeId
+      ],
+      optionalNodeIds: [opportunityNodeId, pursuitNodeId],
+      branchIds: [opportunityBranchId, pursuitBranchId]
     });
 
     if (isActExit) {
@@ -206,7 +307,7 @@ export function createExpeditionGraph(options: {
         id: `expedition_gate_${act.id}`,
         actId: act.id,
         sectorPlanId,
-        nodeId: gateNodeId,
+        nodeId: gateOperationNodeId,
         kind: act.bossGate.kind,
         required: act.bossGate.required,
         transitionKind: act.transition.kind
@@ -241,7 +342,7 @@ export function createExpeditionGraph(options: {
   }
 
   const partialGraph = {
-    schemaVersion: 1 as const,
+    schemaVersion: 2 as const,
     id: graphId,
     seed: options.seed,
     saveFingerprint: options.saveFingerprint,
@@ -517,6 +618,8 @@ function createNode(options: {
   readonly optional: boolean;
   readonly nextNodeIds: readonly string[];
   readonly rewardHooks: readonly ExpeditionRewardHook[];
+  readonly operationalRole: ExpeditionOperationalRole;
+  readonly intelConsequence?: string;
   readonly content: ExpeditionNodeContentReferences;
   readonly entryRule?: ExpeditionEntryRule;
   readonly transitionPolicy?: ExpeditionTransitionPolicy;
@@ -539,6 +642,12 @@ function createNode(options: {
     optional: options.optional,
     nextNodeIds: options.nextNodeIds,
     rewardHooks: options.rewardHooks,
+    operationalRole: options.operationalRole,
+    intel: createOperationalIntel(
+      options.operationalRole,
+      profile.pressureBand,
+      options.intelConsequence
+    ),
     content: options.content
   };
 }
@@ -571,18 +680,90 @@ function createMissionLeg(
 
 function createContentReferences(
   sector: ExpeditionGraphSourceSector,
-  opportunityId: string | null
+  opportunityId: string | null,
+  includeBoss: boolean
 ): ExpeditionNodeContentReferences {
   return {
     sectorId: sector.sectorId,
     objectiveKind: sector.objective.kind,
     majorWaveIds: sector.majorWaves,
-    bossId: sector.objective.bossRequired ? sector.bossId : null,
+    bossId: includeBoss && sector.objective.bossRequired ? sector.bossId : null,
     routeKinds: sector.routeOptions.map((route) => route.kind),
     rewardPoolSeed: sector.rewardPoolSeed,
     shopSeed: sector.shopSeed,
     opportunityId,
     finaleVariantId: sector.finale?.variantId ?? null
+  };
+}
+
+function createOperationalIntel(
+  role: ExpeditionOperationalRole,
+  pressureBand: ExpeditionEncounterNode['pressureBand'],
+  consequenceOverride?: string
+): ExpeditionOperationalIntel {
+  const danger =
+    pressureBand === 'finale'
+      ? 'critical'
+      : pressureBand === 'boss' || pressureBand === 'elevated'
+        ? 'high'
+        : pressureBand === 'baseline'
+          ? 'guarded'
+          : 'low';
+  const defaults: Record<ExpeditionOperationalRole, Omit<ExpeditionOperationalIntel, 'danger'>> = {
+    ingress: {
+      reward: 'Route confirmation',
+      consequence: 'Commits the ship to the sector itinerary.',
+      factionRisk: 'Observed',
+      crewRisk: 'Low',
+      shipRisk: 'Low'
+    },
+    advance: {
+      reward: 'Contract progress',
+      consequence: 'Opens the detour and required-gate routes.',
+      factionRisk: 'Contested',
+      crewRisk: 'Guarded',
+      shipRisk: 'Guarded'
+    },
+    detour: {
+      reward: 'Support and salvage',
+      consequence: 'Success reduces pressure at the required gate.',
+      factionRisk: 'Opportunity dependent',
+      crewRisk: 'High',
+      shipRisk: 'High'
+    },
+    staging: {
+      reward: 'World checkpoint',
+      consequence: 'Settles combat state and carries build, hull, and resources.',
+      factionRisk: 'Low',
+      crewRisk: 'Low',
+      shipRisk: 'Low'
+    },
+    gate: {
+      reward: 'Sector gate clearance',
+      consequence: 'Determines ownership pressure and pursuit access.',
+      factionRisk: 'Contested',
+      crewRisk: 'High',
+      shipRisk: 'High'
+    },
+    pursuit: {
+      reward: 'High-yield salvage',
+      consequence: 'Success carries pursuit pressure into the next sector.',
+      factionRisk: 'Escalating',
+      crewRisk: 'High',
+      shipRisk: 'Critical'
+    },
+    extraction: {
+      reward: 'Sector payout access',
+      consequence: 'Banks the itinerary and clears the combat world.',
+      factionRisk: 'Resolved',
+      crewRisk: 'Low',
+      shipRisk: 'Low'
+    }
+  };
+  return {
+    danger,
+    ...defaults[role],
+    consequence: consequenceOverride ?? defaults[role].consequence
   };
 }
 

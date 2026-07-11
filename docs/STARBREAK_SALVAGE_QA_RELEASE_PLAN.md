@@ -222,8 +222,9 @@ Phase 11 makes long-run state resumable and expands campaign topology. Add cover
 Current Phase 11 coverage:
 
 - Work order 101 adds snapshot round-trip equality, regenerated plan/graph/contract identity, suspended mission state, permanent-save isolation, corrupt/unsupported recovery, invalid mission and reserved-extension rejection, byte caps, storage lifecycle, and summary coverage.
+- Work order 102 adds graph-v2 role/topology/known-seed capacity validation, two- and four-operation mission replay, independent branch histories, partial-success bypass, idempotent operational payouts, zero-retained-world cleanup assertions, detour/pursuit influence, public intel read models, snapshot-v2 operational-map restore, and safe v1 retirement.
 - `ExpeditionEndurance` runs every current Scenario Lab definition plus a final-sector checkpoint through repeated snapshot create/export/restore cycles, checking deterministic reports, pending-foundry cleanup, 512 KiB snapshot limits, 96-entry timeline, 64-entry faction/crew histories, and set-piece/item/engineering presence.
-- The thirteenth Chromium path starts a run, enters combat, explicitly suspends, reloads the page, resumes by keyboard, verifies operation restart, ends the run, and proves the snapshot clears. The prior keyboard pause/end-run path remains green.
+- The main Chromium path executes all four first-sector operations through both optional map choices before route/reward/foundry progression. The snapshot path covers combat suspend/reload, keyboard resume, settled-map reload/resume, required-gate continuation, run end, and snapshot clearing; Act II/finale, narrow, high-contrast, reduced-motion, pointer, and prior keyboard paths remain green.
 - Production build smoke covers the initial JavaScript/CSS and all three lazy Scenario Lab chunks through emitted HTML/module loading; manual storage quota, browser eviction, multi-tab contention, and long real-device restore timing remain open.
 
 ## Known seed tests

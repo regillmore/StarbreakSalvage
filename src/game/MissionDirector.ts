@@ -21,7 +21,9 @@ import {
 import type {
   ExpeditionBranch,
   ExpeditionBranchOption,
+  ExpeditionEncounterNode,
   ExpeditionGraph,
+  ExpeditionOperationalRole,
   ExpeditionProgressState
 } from './ExpeditionTypes';
 
@@ -38,6 +40,9 @@ export interface MissionStageDefinition {
   readonly carry: MissionCarryPolicy;
   readonly world: MissionWorldSetup | null;
   readonly objectiveId: string | null;
+  readonly operationalRole: ExpeditionOperationalRole | null;
+  readonly branchId: string | null;
+  readonly nextStageId: string | null;
 }
 
 export interface MissionSchedule {
@@ -49,13 +54,18 @@ export interface MissionSchedule {
   readonly label: string;
   readonly startStageId: string;
   readonly operationStageId: string;
+  readonly operationStageIds: readonly string[];
   readonly optionalStageId: string | null;
+  readonly optionalStageIds: readonly string[];
   readonly branchStageId: string | null;
+  readonly branchStageIds: readonly string[];
   readonly reliefStageId: string | null;
+  readonly reliefStageIds: readonly string[];
   readonly extractionStageId: string | null;
   readonly failureStageId: string;
   readonly completionStageId: string;
   readonly branch: ExpeditionBranch | null;
+  readonly branches: readonly ExpeditionBranch[];
   readonly branchConditions: Readonly<Record<string, MissionBranchCondition>>;
   readonly contract: MissionContractDefinition | null;
   readonly stages: readonly MissionStageDefinition[];
@@ -91,6 +101,7 @@ export interface MissionDirectorState {
   readonly currentStageId: string;
   readonly suspendedStageId: string | null;
   readonly selectedBranchOptionId: string | null;
+  readonly selectedBranchOptionIds: readonly string[];
   readonly visitedStageIds: readonly string[];
   readonly processedEventIds: readonly string[];
   readonly transitions: readonly MissionTransitionRecord[];
@@ -147,6 +158,9 @@ export interface MissionReadModel {
   readonly objectiveBrief: string;
   readonly reliefCopy: string;
   readonly latestOutcome: MissionObjectiveResultSnapshot['outcome'] | null;
+  readonly operationalRole: ExpeditionOperationalRole | null;
+  readonly operationNumber: number;
+  readonly operationCount: number;
 }
 
 export interface MissionDebugState {
@@ -175,6 +189,14 @@ export interface MissionCombatProjection {
   readonly completionReason: 'sectorComplete';
   readonly missionObjective: MissionObjectivePlan | null;
   readonly objectiveWorld: MissionObjectiveWorldDefinition | null;
+  readonly operationalRole: ExpeditionOperationalRole | null;
+  readonly influenceLabel: string | null;
+}
+
+export interface MissionOperationalInfluence {
+  readonly scrollLengthScale: number;
+  readonly waveCountScale: number;
+  readonly label: string;
 }
 
 export function createMissionSchedule(
@@ -188,107 +210,173 @@ export function createMissionSchedule(
   }
 
   const nodes = sectorPlan.nodeIds.map((id) => getGraphNode(graph, id));
-  const ingress = nodes.find((node) => node.kind === 'approach');
-  const operation = nodes.find((node) => node.kind === 'operation');
-  const opportunity = nodes.find((node) => node.kind === 'opportunity');
-  const gate = nodes.find(
-    (node) => node.kind === 'extraction' || node.kind === 'checkpoint' || node.kind === 'finale'
-  );
-  const branch = graph.branches.find((candidate) => candidate.sectorPlanId === sectorPlan.id);
+  const nodeByRole = new Map(nodes.map((node) => [node.operationalRole, node]));
+  const ingress = nodeByRole.get('ingress');
+  const advance = nodeByRole.get('advance');
+  const detour = nodeByRole.get('detour');
+  const staging = nodeByRole.get('staging');
+  const gateOperation = nodeByRole.get('gate');
+  const pursuit = nodeByRole.get('pursuit');
+  const extraction = nodeByRole.get('extraction');
+  const branches = graph.branches.filter((candidate) => candidate.sectorPlanId === sectorPlan.id);
 
-  if (!ingress || !operation || !gate || !branch) {
+  if (
+    !ingress ||
+    !advance ||
+    !detour ||
+    !staging ||
+    !gateOperation ||
+    !pursuit ||
+    !extraction ||
+    branches.length !== 2
+  ) {
     throw new Error(`Expedition sector ${sectorPlan.id} cannot produce a complete mission.`);
   }
 
   const contract = selectMissionContract(graph, sectorIndex, sectorPlan.actId);
   const primaryObjective = getMissionObjective(contract.primaryObjectiveId);
   const optionalObjective = getMissionObjective(contract.optionalObjectiveId);
-  const authoredBranch: ExpeditionBranch = {
+  const authoredBranches = branches.map((branch, branchIndex): ExpeditionBranch => ({
     ...branch,
-    label: `${contract.title} field decision`,
+    label:
+      branchIndex === 0
+        ? `${contract.title} approach decision`
+        : `${contract.title} extraction decision`,
     options: branch.options.map((option) =>
       option.default
-        ? {
-            ...option,
-            summary: `Bank the ${primaryObjective.label} outcome and enter the relief window.`
-          }
+        ? option
         : {
             ...option,
-            label: optionalObjective.label,
-            summary: `High-risk optional: ${optionalObjective.summary}`
+            summary: `High-risk optional: ${optionalObjective.summary} ${option.summary}`
           }
     )
-  };
+  }));
+  const approachBranch = authoredBranches.find((branch) => branch.sourceNodeId === advance.id)!;
+  const pursuitBranch = authoredBranches.find(
+    (branch) => branch.sourceNodeId === gateOperation.id
+  )!;
 
   const prefix = `mission_s${String(sectorIndex + 1).padStart(2, '0')}`;
+  const ids = {
+    briefing: `${prefix}:briefing`,
+    entry: `${prefix}:entry`,
+    advance: `${prefix}:advance`,
+    approachBranch: `${prefix}:approach-map`,
+    detour: `${prefix}:optional-detour`,
+    staging: `${prefix}:staging`,
+    gate: `${prefix}:gate`,
+    pursuitBranch: `${prefix}:pursuit-map`,
+    pursuit: `${prefix}:optional-pursuit`,
+    relief: `${prefix}:relief`,
+    extraction: `${prefix}:extraction`,
+    failure: `${prefix}:failure`,
+    completion: `${prefix}:completion`
+  };
   const stages = [
-    createStage(prefix, 'briefing', 'mission_briefing', `${contract.title} briefing`, ingress.id),
-    createStage(prefix, 'entry', 'mission_entry', `${sectorPlan.sectorName} entry`, ingress.id),
+    createStage(prefix, 'briefing', 'mission_briefing', `${contract.title} briefing`, ingress, {
+      nextStageId: ids.entry
+    }),
+    createStage(prefix, 'entry', 'mission_entry', `${sectorPlan.sectorName} entry`, ingress, {
+      nextStageId: ids.advance
+    }),
     createStage(
       prefix,
-      'operation',
-      'mission_operation',
-      primaryObjective.label,
-      operation.id,
-      false,
-      primaryObjective.id
+      'advance',
+      'mission_operation_advance',
+      `${primaryObjective.label}: advance`,
+      advance,
+      { objectiveId: primaryObjective.id, nextStageId: ids.approachBranch }
     ),
-    createStage(prefix, 'branch', 'mission_branch', authoredBranch.label, operation.id),
-    ...(opportunity
-      ? [
-          createStage(
-            prefix,
-            'optional',
-            'mission_optional_operation',
-            optionalObjective.label,
-            opportunity.id,
-            true,
-            optionalObjective.id
-          )
-        ]
-      : []),
-    createStage(prefix, 'relief', 'mission_relief', `${sectorPlan.sectorName} relief`, gate.id),
-    createStage(prefix, 'extraction', 'mission_extraction', gate.label, gate.id),
-    createStage(prefix, 'failure', 'mission_failure', `${sectorPlan.sectorName} failed`, gate.id),
+    createStage(prefix, 'approach-map', 'mission_branch', approachBranch.label, advance, {
+      branchId: approachBranch.id
+    }),
+    createStage(prefix, 'optional-detour', 'mission_detour_operation', detour.label, detour, {
+      optional: true,
+      objectiveId: optionalObjective.id,
+      nextStageId: ids.staging
+    }),
+    createStage(prefix, 'staging', 'mission_relief', staging.label, staging, {
+      nextStageId: ids.gate
+    }),
+    createStage(
+      prefix,
+      'gate',
+      'mission_operation_gate',
+      `${primaryObjective.label}: required gate`,
+      gateOperation,
+      { objectiveId: primaryObjective.id, nextStageId: ids.pursuitBranch }
+    ),
+    createStage(prefix, 'pursuit-map', 'mission_branch', pursuitBranch.label, gateOperation, {
+      branchId: pursuitBranch.id
+    }),
+    createStage(prefix, 'optional-pursuit', 'mission_pursuit_operation', pursuit.label, pursuit, {
+      optional: true,
+      objectiveId: optionalObjective.id,
+      nextStageId: ids.relief
+    }),
+    createStage(prefix, 'relief', 'mission_relief', `${sectorPlan.sectorName} relief`, extraction, {
+      nextStageId: ids.extraction
+    }),
+    createStage(prefix, 'extraction', 'mission_extraction', extraction.label, extraction, {
+      nextStageId: ids.completion
+    }),
+    createStage(
+      prefix,
+      'failure',
+      'mission_failure',
+      `${sectorPlan.sectorName} failed`,
+      extraction
+    ),
     createStage(
       prefix,
       'completion',
       'mission_completion',
       `${sectorPlan.sectorName} complete`,
-      gate.id
+      extraction
     )
   ];
+  const operationStageIds = [ids.advance, ids.detour, ids.gate, ids.pursuit];
+  const optionalStageIds = [ids.detour, ids.pursuit];
+  const branchStageIds = [ids.approachBranch, ids.pursuitBranch];
+  const reliefStageIds = [ids.staging, ids.relief];
 
   return {
-    id: `${graph.id}:${sectorPlan.id}:mission-v1`,
+    id: `${graph.id}:${sectorPlan.id}:mission-v2`,
     graphId: graph.id,
     mode: 'expedition',
     sectorIndex,
     sectorPlanId: sectorPlan.id,
     label: `${sectorPlan.sectorName} mission`,
-    startStageId: `${prefix}:briefing`,
-    operationStageId: `${prefix}:operation`,
-    optionalStageId: opportunity ? `${prefix}:optional` : null,
-    branchStageId: `${prefix}:branch`,
-    reliefStageId: `${prefix}:relief`,
-    extractionStageId: `${prefix}:extraction`,
-    failureStageId: `${prefix}:failure`,
-    completionStageId: `${prefix}:completion`,
-    branch: authoredBranch,
+    startStageId: ids.briefing,
+    operationStageId: ids.advance,
+    operationStageIds,
+    optionalStageId: ids.detour,
+    optionalStageIds,
+    branchStageId: ids.approachBranch,
+    branchStageIds,
+    reliefStageId: ids.staging,
+    reliefStageIds,
+    extractionStageId: ids.extraction,
+    failureStageId: ids.failure,
+    completionStageId: ids.completion,
+    branch: approachBranch,
+    branches: authoredBranches,
     branchConditions: Object.fromEntries(
-      authoredBranch.options.map((option) => [
-        option.id,
-        option.default
-          ? ({ kind: 'always' } as const)
-          : ({
-              kind: 'checkpointAndOutcome',
-              minimumHull: 1,
-              acceptedOutcomes:
-                contract.branchPolicy === 'afterSuccess'
-                  ? (['success'] as const)
-                  : (['success', 'partialSuccess'] as const)
-            } as const)
-      ])
+      authoredBranches
+        .flatMap((branch) => branch.options)
+        .map((option) => [
+          option.id,
+          option.default
+            ? ({ kind: 'always' } as const)
+            : ({
+                kind: 'checkpointAndOutcome',
+                minimumHull: 1,
+                acceptedOutcomes:
+                  contract.branchPolicy === 'afterSuccess'
+                    ? (['success'] as const)
+                    : (['success', 'partialSuccess'] as const)
+              } as const)
+        ])
     ),
     contract,
     stages
@@ -334,13 +422,18 @@ export function createSingleStageCompatibilityMissionSchedule(options: {
     label: options.label,
     startStageId: operation.id,
     operationStageId: operation.id,
+    operationStageIds: [operation.id],
     optionalStageId: null,
+    optionalStageIds: [],
     branchStageId: null,
+    branchStageIds: [],
     reliefStageId: null,
+    reliefStageIds: [],
     extractionStageId: null,
     failureStageId: failure.id,
     completionStageId: completion.id,
     branch: null,
+    branches: [],
     branchConditions: {},
     contract: null,
     stages: [operation, failure, completion]
@@ -358,6 +451,7 @@ export function createMissionDirectorState(
     currentStageId: schedule.startStageId,
     suspendedStageId: null,
     selectedBranchOptionId: null,
+    selectedBranchOptionIds: [],
     visitedStageIds: [schedule.startStageId],
     processedEventIds: [],
     transitions: [],
@@ -427,11 +521,16 @@ export function transitionMission(
   }
 
   if (event.type === 'confirmBriefing' && current.kind === 'briefing') {
-    return advance(schedule, state, event, requireStageId(schedule, 'entry'));
+    return advance(
+      schedule,
+      state,
+      event,
+      current.nextStageId ?? requireStageId(schedule, 'entry')
+    );
   }
 
   if (event.type === 'completeEntry' && current.kind === 'entry') {
-    return advance(schedule, state, event, schedule.operationStageId);
+    return advance(schedule, state, event, current.nextStageId ?? schedule.operationStageId);
   }
 
   if (event.type === 'completeCombat' && current.kind === 'combat') {
@@ -440,11 +539,11 @@ export function transitionMission(
     const nextStageId =
       schedule.mode === 'singleStageCompatibility'
         ? schedule.completionStageId
-        : current.id === schedule.optionalStageId || outcomeExit === 'relief'
-          ? requireStageId(schedule, 'relief')
-          : outcomeExit === 'failure'
-            ? schedule.failureStageId
-            : requireStageId(schedule, 'branch');
+        : outcomeExit === 'failure'
+          ? schedule.failureStageId
+          : outcomeExit === 'relief'
+            ? getNextStageByKind(schedule, current.id, 'relief')
+            : (current.nextStageId ?? schedule.failureStageId);
     return advance(schedule, state, event, nextStageId, {
       status:
         schedule.mode === 'singleStageCompatibility'
@@ -465,7 +564,7 @@ export function transitionMission(
   }
 
   if (event.type === 'selectBranch' && current.kind === 'branch') {
-    const option = getBranchOption(schedule, event.optionId);
+    const option = getBranchOption(schedule, event.optionId, current.branchId);
 
     if (!option) {
       return reject(state, `Unknown mission branch option ${event.optionId}.`);
@@ -475,18 +574,33 @@ export function transitionMission(
       return reject(state, `Mission branch option ${event.optionId} is not currently available.`);
     }
 
-    const nextStageId =
-      schedule.optionalStageId &&
-      getMissionStage(schedule, schedule.optionalStageId).nodeId === option.targetNodeId
-        ? schedule.optionalStageId
-        : requireStageId(schedule, 'relief');
+    const nextStageId = schedule.stages.find(
+      (stage) =>
+        stage.nodeId === option.targetNodeId &&
+        stage.kind !== 'failure' &&
+        stage.kind !== 'completion'
+    )?.id;
+    if (!nextStageId) {
+      return reject(state, `Mission branch option ${event.optionId} has no target stage.`);
+    }
+    const branch = current.branchId
+      ? schedule.branches.find((candidate) => candidate.id === current.branchId)
+      : null;
+    const branchOptionIds = new Set(branch?.options.map((candidate) => candidate.id) ?? []);
     return advance(schedule, state, event, nextStageId, {
-      selectedBranchOptionId: option.id
+      selectedBranchOptionId: option.id,
+      selectedBranchOptionIds: [
+        ...state.selectedBranchOptionIds.filter((id) => !branchOptionIds.has(id)),
+        option.id
+      ]
     });
   }
 
   if (event.type === 'completeRelief' && current.kind === 'relief') {
-    return advance(schedule, state, event, requireStageId(schedule, 'extraction'));
+    if (!current.nextStageId) {
+      return reject(state, `Relief stage ${current.id} has no continuation.`);
+    }
+    return advance(schedule, state, event, current.nextStageId);
   }
 
   if (event.type === 'completeExtraction' && current.kind === 'extraction') {
@@ -515,7 +629,11 @@ export function getMissionBranchOptions(
   schedule: MissionSchedule,
   state?: MissionDirectorState
 ): readonly ExpeditionBranchOption[] {
-  const options = schedule.branch?.options ?? [];
+  const stage = state ? getMissionStage(schedule, state.currentStageId) : null;
+  const branch = stage?.branchId
+    ? schedule.branches.find((candidate) => candidate.id === stage.branchId)
+    : schedule.branch;
+  const options = branch?.options ?? [];
   return state
     ? options.filter((option) => isMissionBranchOptionAvailable(schedule, state, option.id))
     : options;
@@ -571,6 +689,10 @@ export function createMissionReadModel(
         })
       : null;
   const latestOutcome = state.objectiveOutcomes.at(-1) ?? null;
+  const operationIndex = schedule.operationStageIds.indexOf(stage.id);
+  const visitedOperationCount = schedule.operationStageIds.filter((id) =>
+    state.visitedStageIds.includes(id)
+  ).length;
 
   return {
     scheduleId: schedule.id,
@@ -591,7 +713,10 @@ export function createMissionReadModel(
     objectiveVerb: objective?.verb ?? null,
     objectiveBrief: objectivePlan ? formatMissionObjectiveBrief(objectivePlan) : '',
     reliefCopy: schedule.contract?.reliefCopy ?? 'Pressure clear; extraction is available.',
-    latestOutcome: latestOutcome?.outcome ?? null
+    latestOutcome: latestOutcome?.outcome ?? null,
+    operationalRole: stage.operationalRole,
+    operationNumber: operationIndex >= 0 ? operationIndex + 1 : visitedOperationCount,
+    operationCount: schedule.operationStageIds.length
   };
 }
 
@@ -645,7 +770,8 @@ export function synchronizeExpeditionProgressWithMission(
 export function createMissionCombatProjection(
   schedule: MissionSchedule,
   state: MissionDirectorState,
-  sector: SectorRoute
+  sector: SectorRoute,
+  influence?: MissionOperationalInfluence
 ): MissionCombatProjection {
   const stage = getMissionStage(schedule, state.currentStageId);
 
@@ -663,7 +789,7 @@ export function createMissionCombatProjection(
         })
       : null;
   const projectedSector = objective
-    ? projectObjectiveSector(sector, stage, state, objective.world, objective.label)
+    ? projectObjectiveSector(sector, stage, state, objective.world, objective.label, influence)
     : sector;
 
   return {
@@ -675,7 +801,9 @@ export function createMissionCombatProjection(
     startingHull: stage.carry.hull === 'carry' ? state.checkpoint.hull : null,
     completionReason: 'sectorComplete',
     missionObjective,
-    objectiveWorld: objective?.world ?? null
+    objectiveWorld: objective?.world ?? null,
+    operationalRole: stage.operationalRole,
+    influenceLabel: influence?.label ?? null
   };
 }
 
@@ -684,7 +812,8 @@ function projectObjectiveSector(
   stage: MissionStageDefinition,
   state: MissionDirectorState,
   objectiveWorld: MissionObjectiveWorldDefinition,
-  objectiveLabel: string
+  objectiveLabel: string,
+  influence?: MissionOperationalInfluence
 ): SectorRoute {
   const world = stage.world;
 
@@ -697,20 +826,30 @@ function projectObjectiveSector(
     Math.min(
       sector.majorWaves.length,
       Math.ceil(
-        sector.objective.requiredWaves * world.waveCountScale * objectiveWorld.waveCountScale
+        sector.objective.requiredWaves *
+          world.waveCountScale *
+          objectiveWorld.waveCountScale *
+          (influence?.waveCountScale ?? 1)
       )
     )
   );
   const majorWaves = sector.majorWaves.slice(0, requiredWaves);
   const scrollLength = Math.max(
     640,
-    Math.round(sector.scroll.length * world.scrollLengthScale * objectiveWorld.scrollLengthScale)
+    Math.round(
+      sector.scroll.length *
+        world.scrollLengthScale *
+        objectiveWorld.scrollLengthScale *
+        (influence?.scrollLengthScale ?? 1)
+    )
   );
   const continuedOffset = Math.max(
     sector.scroll.startOffset + sector.scroll.length,
     state.checkpoint.worldOffset
   );
 
+  const isTerminalOperation = stage.operationalRole === 'gate';
+  const continuesWorld = stage.carry.scrollWorld === 'continue';
   return {
     ...sector,
     sectorName: stage.optional ? stage.label : sector.sectorName,
@@ -720,24 +859,27 @@ function projectObjectiveSector(
       label: objectiveLabel,
       requiredWaves,
       requiredEnemyKills: requiredWaves * sector.objective.spawnsPerWave,
-      bossRequired: world.bossPolicy === 'inherit' && sector.objective.bossRequired,
-      bossSpawnAtSeconds: stage.optional ? null : sector.objective.bossSpawnAtSeconds,
+      bossRequired:
+        isTerminalOperation && world.bossPolicy === 'inherit' && sector.objective.bossRequired,
+      bossSpawnAtSeconds: isTerminalOperation ? sector.objective.bossSpawnAtSeconds : null,
       variantId: 'standardSweep',
       variantLabel: objectiveLabel,
-      variantSummary: stage.optional
-        ? 'A compact deterministic objective carried from the operation checkpoint.'
-        : 'An authored mission objective composed by the expedition anthology.',
+      variantSummary: `${
+        stage.optional ? 'Optional' : 'Required'
+      } deterministic operation carried through the sector itinerary.${
+        influence ? ` ${influence.label}` : ''
+      }`,
       pressureBand: 'volatile',
       travelGateRatio: 1
     },
     scroll: {
       ...sector.scroll,
       length: scrollLength,
-      startOffset: stage.optional ? continuedOffset : sector.scroll.startOffset
+      startOffset: continuesWorld ? continuedOffset : sector.scroll.startOffset
     },
-    arena: stage.optional ? null : sector.arena,
-    finale: stage.optional ? null : sector.finale,
-    setPiece: stage.optional ? null : sector.setPiece
+    arena: isTerminalOperation ? sector.arena : null,
+    finale: isTerminalOperation ? sector.finale : null,
+    setPiece: isTerminalOperation ? sector.setPiece : null
   };
 }
 
@@ -746,21 +888,29 @@ function createStage(
   token: string,
   profileId: string,
   label: string,
-  nodeId: string,
-  optional = false,
-  objectiveId: string | null = null
+  node: ExpeditionEncounterNode | string,
+  options: {
+    readonly optional?: boolean;
+    readonly objectiveId?: string | null;
+    readonly branchId?: string | null;
+    readonly nextStageId?: string | null;
+  } = {}
 ): MissionStageDefinition {
   const profile = getMissionStageProfile(profileId);
+  const nodeId = typeof node === 'string' ? node : node.id;
   return {
     id: `${prefix}:${token}`,
     profileId,
     kind: profile.kind,
     label,
     nodeId,
-    optional,
+    optional: options.optional ?? false,
     carry: profile.carry,
     world: profile.world,
-    objectiveId
+    objectiveId: options.objectiveId ?? null,
+    operationalRole: typeof node === 'string' ? null : node.operationalRole,
+    branchId: options.branchId ?? null,
+    nextStageId: options.nextStageId ?? null
   };
 }
 
@@ -796,15 +946,39 @@ function getGraphNode(graph: ExpeditionGraph, nodeId: string) {
 
 function getBranchOption(
   schedule: MissionSchedule,
-  optionId: string
+  optionId: string,
+  branchId?: string | null
 ): ExpeditionBranchOption | null {
-  return schedule.branch?.options.find((candidate) => candidate.id === optionId) ?? null;
+  const branches = branchId
+    ? schedule.branches.filter((candidate) => candidate.id === branchId)
+    : schedule.branches;
+  return (
+    branches.flatMap((branch) => branch.options).find((candidate) => candidate.id === optionId) ??
+    null
+  );
 }
 
 function requireStageId(schedule: MissionSchedule, token: string): string {
   const stage = schedule.stages.find((candidate) => candidate.id.endsWith(`:${token}`));
   if (!stage) {
     throw new Error(`Mission schedule ${schedule.id} is missing ${token}.`);
+  }
+  return stage.id;
+}
+
+function getNextStageByKind(
+  schedule: MissionSchedule,
+  currentStageId: string,
+  kind: MissionStageKind
+): string {
+  const currentIndex = schedule.stages.findIndex((stage) => stage.id === currentStageId);
+  const stage = schedule.stages
+    .slice(currentIndex + 1)
+    .find((candidate) => candidate.kind === kind);
+  if (!stage) {
+    throw new Error(
+      `Mission schedule ${schedule.id} has no ${kind} stage after ${currentStageId}.`
+    );
   }
   return stage.id;
 }

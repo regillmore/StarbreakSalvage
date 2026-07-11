@@ -64,6 +64,8 @@ Exit criteria:
 - Optional nodes materially change later operations instead of only adding rewards.
 - Stage cleanup cannot retain invisible actors, projectiles, hooks, or duplicated payouts.
 
+Status: implemented by work order 102. Expedition graph schema v2 generates seven explicit nodes per current sector: ingress, required advance, optional detour, staging, required gate, optional pursuit, and extraction, with two independently replayable branch decisions. Mission schedule v2 executes two required combat worlds and up to two optional worlds while carrying hull, build, economy, objective, faction/rival, crew, engineering, and scroll checkpoints. Successful detours reduce gate length/wave pressure; successful pursuits grant one-shot salvage and raise the next sector's advance pressure. `OperationalMap` owns the bounded idempotent settlement ledger, cleanup contract, consequence projection, validation, and public intel read model; `OperationalMapScene` provides keyboard/pointer cards with coarse time, danger, reward, consequence, and faction/crew/ship risk bands. Snapshot v2 adds settled-map checkpoints and operational validation while safely retiring v1 without touching permanent save v5. The ten-sector graph projects 1458 required-route seconds (24.3 minutes) and 1898 all-optional seconds (31.6 minutes); these are structural estimates awaiting deployed full-run timing.
+
 ### P11.3 - Null Frontier Third Act
 
 Work order 103 adds a new frontier beyond the current finale:

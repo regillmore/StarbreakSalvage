@@ -6,6 +6,7 @@ import { createRunSession, dispatchMissionEvent } from '../../src/game/RunSessio
 import {
   RUN_SNAPSHOT_MAX_BYTES,
   RUN_SNAPSHOT_STORAGE_KEY,
+  LEGACY_RUN_SNAPSHOT_STORAGE_KEY,
   RunSnapshotCoordinator,
   clearRunSnapshot,
   createRunSnapshot,
@@ -92,6 +93,37 @@ describe('RunSnapshot', () => {
     expect(storage.getItem(SAVE_STORAGE_KEY)).toBe('permanent-save-sentinel');
   });
 
+  it('restores a settled operational-map checkpoint without replaying its payout', () => {
+    const run = generateRunSkeleton('SNAPSHOT-OPERATIONAL-MAP');
+    const contract = run.contracts[0]!;
+    const session = createRunSession(run, contract);
+    dispatchMissionEvent(run, session, { id: 'briefing', type: 'confirmBriefing' });
+    dispatchMissionEvent(run, session, { id: 'entry', type: 'completeEntry' });
+    dispatchMissionEvent(run, session, {
+      id: 'advance-complete',
+      type: 'completeCombat',
+      checkpoint: {
+        hull: 3,
+        scrollDistance: 640,
+        worldOffset: 10_640,
+        credits: session.credits,
+        salvage: session.salvage
+      }
+    });
+    const snapshot = createRunSnapshot({
+      run,
+      contract,
+      session,
+      target: 'operationalMap',
+      label: 'Approach decision'
+    });
+    const restored = restoreRunSnapshot(snapshot);
+
+    expect(restored.session).toEqual(session);
+    expect(restored.session.mission.currentStageId).toContain('approach-map');
+    expect(createRunSnapshotSummary(snapshot).target).toBe('operationalMap');
+  });
+
   it('removes corrupt or unsupported snapshots without touching permanent save data', () => {
     for (const payload of ['{broken', JSON.stringify({ version: 999 })]) {
       const storage = new MemoryStorage();
@@ -104,6 +136,17 @@ describe('RunSnapshot', () => {
       expect(storage.getItem(RUN_SNAPSHOT_STORAGE_KEY)).toBeNull();
       expect(storage.getItem(SAVE_STORAGE_KEY)).toBe('permanent-save-sentinel');
     }
+  });
+
+  it('retires a legacy v1 run snapshot without touching permanent progression', () => {
+    const storage = new MemoryStorage();
+    storage.setItem(SAVE_STORAGE_KEY, 'permanent-save-sentinel');
+    storage.setItem(LEGACY_RUN_SNAPSHOT_STORAGE_KEY, '{"version":1}');
+    const result = loadRunSnapshot(storage);
+
+    expect(result).toMatchObject({ snapshot: null, repaired: true });
+    expect(storage.getItem(LEGACY_RUN_SNAPSHOT_STORAGE_KEY)).toBeNull();
+    expect(storage.getItem(SAVE_STORAGE_KEY)).toBe('permanent-save-sentinel');
   });
 
   it('rejects plan, contract, mission, and extension drift before restore', () => {

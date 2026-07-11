@@ -20,15 +20,26 @@ describe('ExpeditionGraph', () => {
     expect(validateExpeditionGraph(graph)).toEqual([]);
     expect(graph.acts).toHaveLength(2);
     expect(graph.sectors).toHaveLength(10);
-    expect(graph.nodes).toHaveLength(40);
-    expect(graph.missionLegs).toHaveLength(40);
-    expect(graph.branches).toHaveLength(10);
+    expect(graph.nodes).toHaveLength(70);
+    expect(graph.missionLegs).toHaveLength(60);
+    expect(graph.branches).toHaveLength(20);
     expect(graph.gates.map((gate) => [gate.actId, gate.kind, gate.transitionKind])).toEqual([
       ['act_outer_rim', 'checkpoint', 'interActJunction'],
       ['act_core_descent', 'finale', 'victory']
     ]);
     expect(graph.startNodeId).toBe('expedition_s01_ingress');
-    expect(graph.terminalNodeIds).toEqual(['expedition_s10_gate']);
+    expect(graph.terminalNodeIds).toEqual(['expedition_s10_exit']);
+
+    for (const sector of graph.sectors) {
+      expect(
+        sector.nodeIds.map(
+          (nodeId) => graph.nodes.find((node) => node.id === nodeId)?.operationalRole
+        )
+      ).toEqual(['ingress', 'advance', 'detour', 'staging', 'gate', 'pursuit', 'extraction']);
+      expect(sector.requiredNodeIds).toHaveLength(5);
+      expect(sector.optionalNodeIds).toHaveLength(2);
+      expect(sector.branchIds).toHaveLength(2);
+    }
 
     for (const node of graph.nodes) {
       expect(node.id).toMatch(/^expedition_s\d{2}_/);
@@ -107,24 +118,27 @@ describe('ExpeditionGraph', () => {
     expect(afterFirstSector.visitedNodeIds).toEqual([
       'expedition_s01_ingress',
       'expedition_s01_operation',
-      'expedition_s01_gate',
+      'expedition_s01_staging',
+      'expedition_s01_gate_operation',
+      'expedition_s01_exit',
       'expedition_s02_ingress'
     ]);
-    expect(afterFirstSector.visitedNodeIds).not.toContain('expedition_s01_opportunity');
+    expect(afterFirstSector.visitedNodeIds).not.toContain('expedition_s01_detour');
+    expect(afterFirstSector.visitedNodeIds).not.toContain('expedition_s01_pursuit');
     expect(model.currentNodeId).toBe('expedition_s06_ingress');
-    expect(model.visitedNodeCount).toBe(16);
+    expect(model.visitedNodeCount).toBe(26);
     expect(model.visitedSectorCount).toBe(6);
   });
 
-  it('provides 12-20 minutes of structural target capacity without changing combat speed', () => {
+  it('provides a 20-35 minute multi-operation capacity without changing combat speed', () => {
     const capacity = generateRunSkeleton('EXPEDITION-GRAPH-SMOKE').expedition.capacity;
 
-    expect(capacity.requiredNodeCount).toBe(30);
-    expect(capacity.optionalNodeCount).toBe(10);
-    expect(capacity.baselineTargetSeconds).toBeGreaterThanOrEqual(12 * 60);
-    expect(capacity.baselineTargetSeconds).toBeLessThanOrEqual(20 * 60);
+    expect(capacity.requiredNodeCount).toBe(50);
+    expect(capacity.optionalNodeCount).toBe(20);
+    expect(capacity.baselineTargetSeconds).toBeGreaterThanOrEqual(20 * 60);
+    expect(capacity.baselineTargetSeconds).toBeLessThanOrEqual(30 * 60);
     expect(capacity.expandedTargetSeconds).toBeGreaterThan(capacity.baselineTargetSeconds);
-    expect(capacity.expandedTargetSeconds).toBeLessThanOrEqual(20 * 60);
+    expect(capacity.expandedTargetSeconds).toBeLessThanOrEqual(35 * 60);
   });
 
   it('keeps compact known-seed graph snapshots', () => {
@@ -151,115 +165,145 @@ describe('ExpeditionGraph', () => {
       [
         {
           "capacity": {
-            "baselineMaxSeconds": 1326,
-            "baselineMinSeconds": 612,
-            "baselineTargetSeconds": 962,
-            "expandedTargetSeconds": 1182,
-            "optionalNodeCount": 10,
-            "requiredNodeCount": 30,
+            "baselineMaxSeconds": 2000,
+            "baselineMinSeconds": 936,
+            "baselineTargetSeconds": 1458,
+            "expandedTargetSeconds": 1898,
+            "optionalNodeCount": 20,
+            "requiredNodeCount": 50,
           },
           "gates": [
             {
               "actId": "act_outer_rim",
               "kind": "checkpoint",
-              "nodeId": "expedition_s05_gate",
+              "nodeId": "expedition_s05_gate_operation",
               "transition": "interActJunction",
             },
             {
               "actId": "act_core_descent",
               "kind": "finale",
-              "nodeId": "expedition_s10_gate",
+              "nodeId": "expedition_s10_gate_operation",
               "transition": "victory",
             },
           ],
           "id": "expedition_starbreak-smoke_53f226d4",
           "opportunities": [
             "expedition_opportunity_salvage_sweep",
+            "expedition_opportunity_salvage_sweep",
+            "expedition_opportunity_field_cache",
+            "expedition_opportunity_salvage_sweep",
+            "expedition_opportunity_field_cache",
+            "expedition_opportunity_salvage_sweep",
+            "expedition_opportunity_salvage_sweep",
+            "expedition_opportunity_salvage_sweep",
+            "expedition_opportunity_black_box",
+            "expedition_opportunity_field_cache",
+            "expedition_opportunity_salvage_sweep",
             "expedition_opportunity_field_cache",
             "expedition_opportunity_field_cache",
+            "expedition_opportunity_salvage_sweep",
+            "expedition_opportunity_salvage_sweep",
             "expedition_opportunity_salvage_sweep",
             "expedition_opportunity_black_box",
             "expedition_opportunity_salvage_sweep",
-            "expedition_opportunity_field_cache",
             "expedition_opportunity_salvage_sweep",
-            "expedition_opportunity_black_box",
             "expedition_opportunity_salvage_sweep",
           ],
           "seed": "STARBREAK-SMOKE",
         },
         {
           "capacity": {
-            "baselineMaxSeconds": 1326,
-            "baselineMinSeconds": 612,
-            "baselineTargetSeconds": 962,
-            "expandedTargetSeconds": 1182,
-            "optionalNodeCount": 10,
-            "requiredNodeCount": 30,
+            "baselineMaxSeconds": 2000,
+            "baselineMinSeconds": 936,
+            "baselineTargetSeconds": 1458,
+            "expandedTargetSeconds": 1898,
+            "optionalNodeCount": 20,
+            "requiredNodeCount": 50,
           },
           "gates": [
             {
               "actId": "act_outer_rim",
               "kind": "checkpoint",
-              "nodeId": "expedition_s05_gate",
+              "nodeId": "expedition_s05_gate_operation",
               "transition": "interActJunction",
             },
             {
               "actId": "act_core_descent",
               "kind": "finale",
-              "nodeId": "expedition_s10_gate",
+              "nodeId": "expedition_s10_gate_operation",
               "transition": "victory",
             },
           ],
           "id": "expedition_laser-tax-404_60d04233",
           "opportunities": [
             "expedition_opportunity_black_box",
+            "expedition_opportunity_black_box",
+            "expedition_opportunity_field_cache",
+            "expedition_opportunity_black_box",
+            "expedition_opportunity_black_box",
             "expedition_opportunity_field_cache",
             "expedition_opportunity_black_box",
             "expedition_opportunity_black_box",
             "expedition_opportunity_black_box",
+            "expedition_opportunity_field_cache",
+            "expedition_opportunity_black_box",
             "expedition_opportunity_black_box",
             "expedition_opportunity_salvage_sweep",
             "expedition_opportunity_black_box",
+            "expedition_opportunity_black_box",
+            "expedition_opportunity_salvage_sweep",
             "expedition_opportunity_salvage_sweep",
             "expedition_opportunity_field_cache",
+            "expedition_opportunity_field_cache",
+            "expedition_opportunity_black_box",
           ],
           "seed": "LASER-TAX-404",
         },
         {
           "capacity": {
-            "baselineMaxSeconds": 1326,
-            "baselineMinSeconds": 612,
-            "baselineTargetSeconds": 962,
-            "expandedTargetSeconds": 1182,
-            "optionalNodeCount": 10,
-            "requiredNodeCount": 30,
+            "baselineMaxSeconds": 2000,
+            "baselineMinSeconds": 936,
+            "baselineTargetSeconds": 1458,
+            "expandedTargetSeconds": 1898,
+            "optionalNodeCount": 20,
+            "requiredNodeCount": 50,
           },
           "gates": [
             {
               "actId": "act_outer_rim",
               "kind": "checkpoint",
-              "nodeId": "expedition_s05_gate",
+              "nodeId": "expedition_s05_gate_operation",
               "transition": "interActJunction",
             },
             {
               "actId": "act_core_descent",
               "kind": "finale",
-              "nodeId": "expedition_s10_gate",
+              "nodeId": "expedition_s10_gate_operation",
               "transition": "victory",
             },
           ],
           "id": "expedition_expedition-graph-smoke_5bca58c1",
           "opportunities": [
             "expedition_opportunity_salvage_sweep",
+            "expedition_opportunity_salvage_sweep",
+            "expedition_opportunity_black_box",
+            "expedition_opportunity_salvage_sweep",
+            "expedition_opportunity_field_cache",
+            "expedition_opportunity_black_box",
+            "expedition_opportunity_salvage_sweep",
+            "expedition_opportunity_field_cache",
+            "expedition_opportunity_field_cache",
+            "expedition_opportunity_field_cache",
+            "expedition_opportunity_black_box",
+            "expedition_opportunity_black_box",
+            "expedition_opportunity_field_cache",
+            "expedition_opportunity_salvage_sweep",
+            "expedition_opportunity_salvage_sweep",
+            "expedition_opportunity_black_box",
             "expedition_opportunity_black_box",
             "expedition_opportunity_field_cache",
             "expedition_opportunity_salvage_sweep",
             "expedition_opportunity_field_cache",
-            "expedition_opportunity_black_box",
-            "expedition_opportunity_field_cache",
-            "expedition_opportunity_salvage_sweep",
-            "expedition_opportunity_black_box",
-            "expedition_opportunity_salvage_sweep",
           ],
           "seed": "EXPEDITION-GRAPH-SMOKE",
         },

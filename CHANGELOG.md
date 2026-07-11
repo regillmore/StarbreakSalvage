@@ -4,6 +4,8 @@
 
 ### Gameplay and UX
 
+- Rebuilt every generated sector as a live two-to-four-operation itinerary with required advance/gate operations, optional support detours and high-yield pursuits, staging relief, extraction, two public map decisions, honest time/danger/reward/risk previews, and optional outcomes that suppress the current gate or raise pressure in the next sector.
+- Added an idempotent operational boundary ledger with explicit world checkpoints, bounded history, one-shot optional salvage, zero-retained actor/projectile/hook cleanup records, operational-map suspend/resume, snapshot v2 validation, and safe retirement of pre-map v1 run snapshots.
 - Added a separately versioned suspended-expedition snapshot with generated-plan/graph/contract identity, safe briefing or operation-entry targets, complete Phase 10 run-session state, reserved Phase 11 extension slots, corruption recovery, a main-menu resume/discard panel, and a pause-menu suspend action. Resuming active combat deliberately restarts the operation from its safe entry checkpoint.
 - Added a debug-only eight-card Expedition Scenario Lab for generated nodes, optional missions, foundry/loadout state, set pieces, recurring rivals, crew command, combined Phase 10 pressure, and timeline audit through public run/session/read models. The `B` shortcut and main-menu button remain local, use no telemetry, and yield to explicitly remapped gameplay controls.
 - Added a deterministic run-local timeline for node/stage transitions, choices, duration, economy, engineering, faction, rival, crew, boss, and run-end/failure events, capped at 96 display entries and 192 processed ids with summary and debug readouts and no save-schema change.
@@ -78,6 +80,8 @@
 - Added bounded wingmate combat and five remappable commands: focus fire, projectile screening, salvage recovery, regroup repair, and disengagement. Ally damage and pickups use centralized objective/reward accounting, while non-color canvas labels, HUD/pointer controls, accessibility treatment, debug budgets, and the public `T` crew fixture keep the system inspectable.
 
 ### Testing
+
+- Added deterministic four-operation replay, operational-map intel/consequence, duplicate-payout/cleanup, later-pressure, graph-v2, partial-success, operational snapshot, legacy snapshot retirement, narrow UI, all-optional browser, and finale-fixture regression coverage.
 
 - Added run-snapshot round-trip, plan/contract/mission/extension drift, corruption/permanent-save isolation, byte-cap, storage, and suspended-state tests plus a public deterministic endurance harness that repeats all eight Scenario Lab boundaries and the finale checkpoint across regenerated snapshot restores.
 - Added keyboard Chromium coverage for suspend, reload, resume, operation restart, and snapshot cleanup while preserving the existing keyboard-only pause/end-run path.

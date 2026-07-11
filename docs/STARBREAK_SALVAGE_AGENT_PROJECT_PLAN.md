@@ -866,6 +866,8 @@ Exit criteria:
 - Standard frontier victories support 20-30 minutes of meaningful structural play.
 - Short extraction and longer frontier outcomes are both complete and deterministic.
 
+Status: the executable-topology half is implemented by work order 102. Each existing sector now runs two required and up to two optional operations through a public operational map, explicit staging/cleanup checkpoints, two deterministic decisions, and later-node pressure consequences. Graph/snapshot schemas move to v2, operational settlement remains separate from permanent progression, and current ten-sector capacity projects 24.3 required-route or 31.6 all-optional minutes. Work order 103 remains responsible for the Null Frontier and the Act II extraction/breach choice.
+
 ### P11.3 - Carrier And Boarding Layer
 
 Scope:

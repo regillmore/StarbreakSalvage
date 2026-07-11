@@ -6,11 +6,19 @@ import type {
   ExpeditionEntryRule,
   ExpeditionLegKind,
   ExpeditionNodeKind,
+  ExpeditionOperationalIntel,
+  ExpeditionOperationalRole,
   ExpeditionPressureBand,
   ExpeditionRewardHook,
   ExpeditionTransitionPolicy
 } from '../content/expeditions';
 import type { SectorId, SectorObjectiveKind } from '../content/sectors';
+
+export type {
+  ExpeditionOperationalIntel,
+  ExpeditionOperationalRole,
+  ExpeditionRiskBand
+} from '../content/expeditions';
 
 export interface ExpeditionGraphSourceSector {
   readonly index: number;
@@ -65,6 +73,8 @@ export interface ExpeditionEncounterNode {
   readonly optional: boolean;
   readonly nextNodeIds: readonly string[];
   readonly rewardHooks: readonly ExpeditionRewardHook[];
+  readonly operationalRole: ExpeditionOperationalRole;
+  readonly intel: ExpeditionOperationalIntel;
   readonly content: ExpeditionNodeContentReferences;
 }
 
@@ -141,7 +151,7 @@ export interface ExpeditionCapacity {
 }
 
 export interface ExpeditionGraph {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 2;
   readonly id: string;
   readonly seed: string;
   readonly saveFingerprint: string;

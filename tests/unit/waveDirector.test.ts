@@ -400,14 +400,14 @@ describe('WaveDirector', () => {
         ],
         "expedition": {
           "actCount": 2,
-          "branchCount": 10,
+          "branchCount": 20,
           "capacity": {
-            "baselineMaxSeconds": 1326,
-            "baselineMinSeconds": 612,
-            "baselineTargetSeconds": 962,
-            "expandedTargetSeconds": 1182,
-            "optionalNodeCount": 10,
-            "requiredNodeCount": 30,
+            "baselineMaxSeconds": 2000,
+            "baselineMinSeconds": 936,
+            "baselineTargetSeconds": 1458,
+            "expandedTargetSeconds": 1898,
+            "optionalNodeCount": 20,
+            "requiredNodeCount": 50,
           },
           "gates": [
             {
@@ -422,9 +422,9 @@ describe('WaveDirector', () => {
             },
           ],
           "id": "expedition_starbreak-smoke_53f226d4",
-          "nodeCount": 40,
+          "nodeCount": 70,
           "saveFingerprint": "unlocks=unlock_boss_auditor_drill,unlock_challenge_debt_ceiling,unlock_faction_bloom_hive,unlock_item_executive_override,unlock_music_core_descent,unlock_music_outer_debris,unlock_ship_corporate_test_pilot,unlock_ship_phase_courier,unlock_ship_relic_thief,unlock_ship_scrap_monk,unlock_ship_shield_bruiser|upgrades=none",
-          "schemaVersion": 1,
+          "schemaVersion": 2,
           "sectorCount": 10,
         },
         "factionCampaign": {
