@@ -90,6 +90,17 @@ export interface SceneDebugState {
   };
   readonly runTimeline?: RunTimelineDebugState;
   readonly carrier?: CarrierDebugState;
+  readonly boarding?: {
+    readonly operationId: string;
+    readonly title: string;
+    readonly target: string;
+    readonly rooms: number;
+    readonly doors: number;
+    readonly hazards: number;
+    readonly loot: number;
+    readonly extractionSeconds: number | null;
+    readonly integrations: readonly string[];
+  };
   readonly scenarioLab?: {
     readonly scenarioCount: number;
     readonly activeScenario: string | null;

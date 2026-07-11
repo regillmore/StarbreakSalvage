@@ -6,7 +6,11 @@ import {
   formatRunTimelineEntry,
   type RunTimelineState
 } from '../game/RunTimeline';
-import type { ScenarioLabDefinition, ScenarioLabSetupReadModel } from '../game/ScenarioLab';
+import {
+  SCENARIO_LAB_IDS,
+  type ScenarioLabDefinition,
+  type ScenarioLabSetupReadModel
+} from '../game/ScenarioLab';
 import type { InputAction } from '../systems/InputSystem';
 
 export class ScenarioTimelineScene implements Scene {
@@ -62,7 +66,7 @@ export class ScenarioTimelineScene implements Scene {
       entityCount: 0,
       runTimeline: createRunTimelineDebugState(this.timeline),
       scenarioLab: {
-        scenarioCount: 8,
+        scenarioCount: SCENARIO_LAB_IDS.length,
         activeScenario: this.definition.id,
         systems: this.definition.systems,
         budget: this.definition.pressureBudget

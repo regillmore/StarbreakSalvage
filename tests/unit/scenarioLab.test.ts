@@ -54,6 +54,16 @@ describe('ScenarioLab', () => {
     expect(combined.session.factionCampaign.history.length).toBeGreaterThan(3);
     expect(combined.session.crewRoster.history).toHaveLength(3);
 
+    const boarding = launch('lab_boarding_incursion');
+    expect(boarding.session.mission.currentStageId).toContain('optional');
+    expect(
+      run.boardingCampaign.operations.some(
+        (operation) =>
+          operation.sectorIndex === boarding.session.currentSectorIndex &&
+          operation.operationalRole === 'detour'
+      )
+    ).toBe(true);
+
     const timeline = launch('lab_timeline_audit').session.timeline;
     expect(new Set(timeline.entries.map((entry) => entry.category))).toEqual(
       new Set([

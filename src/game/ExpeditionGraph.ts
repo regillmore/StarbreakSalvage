@@ -30,6 +30,7 @@ import type {
   ExpeditionSectorPlan
 } from './ExpeditionTypes';
 import { validateExpeditionGraph } from './ExpeditionValidation';
+import type { BoardingOperationPlan } from './BoardingOperation';
 
 export type * from './ExpeditionTypes';
 export { validateExpeditionGraph } from './ExpeditionValidation';
@@ -40,6 +41,7 @@ export function createExpeditionGraph(options: {
   readonly acts: readonly RunActPlan[];
   readonly sectors: readonly ExpeditionGraphSourceSector[];
   readonly rng: Rng;
+  readonly boardingOperations?: readonly BoardingOperationPlan[];
 }): ExpeditionGraph {
   if (options.acts.length === 0 || options.sectors.length === 0) {
     throw new Error('Expedition graph requires at least one act and sector.');
@@ -76,6 +78,12 @@ export function createExpeditionGraph(options: {
       .fork(`sector-${sectorNumber}-pursuit:${options.saveFingerprint}`)
       .choice(EXPEDITION_OPPORTUNITIES);
     const act = options.acts.find((candidate) => candidate.id === sector.act.actId);
+    const detourBoarding = options.boardingOperations?.find(
+      (operation) => operation.sectorIndex === offset && operation.operationalRole === 'detour'
+    );
+    const pursuitBoarding = options.boardingOperations?.find(
+      (operation) => operation.sectorIndex === offset && operation.operationalRole === 'pursuit'
+    );
 
     if (!act) {
       throw new Error(
@@ -133,7 +141,7 @@ export function createExpeditionGraph(options: {
     const opportunityNode = createNode({
       id: opportunityNodeId,
       profileId: 'expedition_profile_opportunity',
-      label: opportunity.label,
+      label: detourBoarding ? `Board: ${detourBoarding.title}` : opportunity.label,
       sectorPlanId,
       sectorIndex: offset,
       actId: sector.act.actId,
@@ -142,7 +150,7 @@ export function createExpeditionGraph(options: {
       rewardHooks: opportunity.rewardHooks,
       operationalRole: 'detour',
       intelConsequence: 'Success establishes support that reduces pressure at the required gate.',
-      content: createContentReferences(sector, opportunity.id, false)
+      content: createContentReferences(sector, opportunity.id, false, detourBoarding?.id ?? null)
     });
     const staging = createNode({
       id: stagingNodeId,
@@ -174,7 +182,9 @@ export function createExpeditionGraph(options: {
     const pursuitNode = createNode({
       id: pursuitNodeId,
       profileId: 'expedition_profile_pursuit',
-      label: `Pursuit: ${pursuitOpportunity.label}`,
+      label: pursuitBoarding
+        ? `Pursuit Boarding: ${pursuitBoarding.title}`
+        : `Pursuit: ${pursuitOpportunity.label}`,
       sectorPlanId,
       sectorIndex: offset,
       actId: sector.act.actId,
@@ -184,7 +194,12 @@ export function createExpeditionGraph(options: {
       operationalRole: 'pursuit',
       intelConsequence:
         'A successful pursuit improves salvage but carries pressure into the next sector.',
-      content: createContentReferences(sector, pursuitOpportunity.id, false)
+      content: createContentReferences(
+        sector,
+        pursuitOpportunity.id,
+        false,
+        pursuitBoarding?.id ?? null
+      )
     });
     const gateRewardHooks = createGateRewardHooks(sector, isActExit, isFinale);
     const gate = createNode({
@@ -242,8 +257,10 @@ export function createExpeditionGraph(options: {
         },
         {
           id: `${opportunityBranchId}_detour`,
-          label: opportunity.label,
-          summary: `${opportunity.summary} Success reduces pressure at the required gate.`,
+          label: detourBoarding ? `Board: ${detourBoarding.title}` : opportunity.label,
+          summary: detourBoarding
+            ? `${detourBoarding.summary} Interior custody and consequences persist after extraction.`
+            : `${opportunity.summary} Success reduces pressure at the required gate.`,
           targetNodeId: opportunityNodeId,
           outcomeId: opportunity.id,
           default: false
@@ -267,7 +284,9 @@ export function createExpeditionGraph(options: {
         {
           id: `${pursuitBranchId}_commit`,
           label: pursuitNode.label,
-          summary: 'Commit to a final pressure lane for salvage and a future pursuit consequence.',
+          summary: pursuitBoarding
+            ? `${pursuitBoarding.summary} Commit before sector extraction.`
+            : 'Commit to a final pressure lane for salvage and a future pursuit consequence.',
           targetNodeId: pursuitNodeId,
           outcomeId: `${pursuitOpportunity.id}_pursuit`,
           default: false
@@ -692,7 +711,8 @@ function createMissionLeg(
 function createContentReferences(
   sector: ExpeditionGraphSourceSector,
   opportunityId: string | null,
-  includeBoss: boolean
+  includeBoss: boolean,
+  boardingOperationId: string | null = null
 ): ExpeditionNodeContentReferences {
   return {
     sectorId: sector.sectorId,
@@ -703,6 +723,7 @@ function createContentReferences(
     rewardPoolSeed: sector.rewardPoolSeed,
     shopSeed: sector.shopSeed,
     opportunityId,
+    boardingOperationId,
     finaleVariantId: sector.finale?.variantId ?? null
   };
 }

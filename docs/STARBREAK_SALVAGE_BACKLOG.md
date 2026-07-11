@@ -1874,7 +1874,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 105.
+- Implemented in work order 105. Six deterministic boarding contracts cover capital ships, stations, wrecks, derelicts, and every requested verb through bounded four-to-seven-room plans, doors/bulkheads, subsystem rooms, hazards, loot custody, partial success, retreat, timed extraction, and zero-retained cleanup. Selected optional expedition nodes project those plans through the existing combat/build/objective/collision engine. Outcomes feed carrier cargo, crew recruitment, faction history, foundry inventory, rival capture, and future apex hooks. Snapshot v5, run summaries/timeline, carrier-capacity gating, and a ninth accessible Scenario Lab fixture are live.
 
 ## Epic BJ - Phase 11 living campaign
 

@@ -703,6 +703,14 @@ seed + permanent save fingerprint
 - `CommandDeckScene` appears only at the clean staging relief boundary and is dynamically imported. The scene consumes read models/callbacks, uses native buttons and text status under narrow/contrast/reduced-motion settings, and offers a direct continue path without mandatory upkeep.
 - Snapshot schema/storage v4 validates carrier plan identity, facility count, numeric pressure fields, cargo capacity, and history bounds. The carrier remains inside run-local session state and a small carrier extension identity; permanent save v5 is unchanged and v1-v3 snapshots retire safely.
 
+### Work order 105 implementation
+
+- `src/content/boarding.ts` is the six-contract catalog; `src/game/BoardingOperation.ts` is the deterministic plan/state/reducer/read-model boundary. It owns room, door, hazard, loot-custody, translated-loadout, cross-system hook, history-bound, and zero-retained-cleanup contracts without importing the combat hot loop.
+- Boarding campaigns are immutable run-generation products. Selected detour/pursuit nodes carry a stable boarding operation reference while expedition schema v2 topology and mission stage sequencing remain unchanged.
+- `MissionDirector` projects a boarding operation into a shorter sector, reusing the same fixed-step `GameplayScene`/`CombatState`, engineered weapon and module profile, items/hooks, crew allies, projectiles, collision, objective director, environment objects, hazards, pause, destruction, exit, and operational accounting. `CanvasRenderer.paintBoardingInterior` is presentation only.
+- `RunSession.recordBoardingOperationOutcome` is the orchestration seam for carrier custody, foundry component acquisition, faction events, rival capture, timeline entries, and forward-compatible crew/apex signals. The reducer is idempotent and caps history at 64 entries/128 ids.
+- Snapshot schema/storage v5 adds boarding plan identity plus validated session state, retires v1-v4 independently of permanent save v5, and preserves operation-entry restart semantics. Run summaries and the ninth Scenario Lab fixture consume public read models.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

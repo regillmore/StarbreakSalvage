@@ -112,6 +112,8 @@ Exit criteria:
 - Room generation, doors, hazards, targets, loot, and extraction are deterministic and cleanup-safe.
 - At least four boarding contracts connect to carrier, crew, faction, foundry, and apex-hunt outcomes.
 
+Status: implemented by work order 105. Six seed/save-stable contracts assign selected detour and pursuit nodes to capital-ship, station, wreck, or derelict incursions. A bounded boarding domain generates four-to-seven-room chains, doors, subsystem rooms, hazards, custody loot, and optional purge clocks, then projects them through the existing ship combat, build, crew, objective, collision, exit, destruction, pause, and operational settlement paths. The interior renderer/readout changes spatial rhythm and names translated ship tools without a second simulation. Success, partial success, failure, death, retreat, and resume are explicit; cleanup retains no actors. Carrier capacity gates access, while settlements can alter carrier cargo, foundry inventory, crew recruitment, faction history, rivals, and future apex hooks. Snapshot/storage v5 and the ninth Scenario Lab card persist and expose the system.
+
 ### P11.6 - Dynamic Faction Fronts
 
 Work order 106 turns faction state into map-scale pressure:

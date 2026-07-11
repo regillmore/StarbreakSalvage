@@ -125,6 +125,14 @@ export function validateExpeditionGraph(graph: ExpeditionGraph): string[] {
     if (node.optional !== (node.content.opportunityId !== null)) {
       errors.push(`Expedition node ${node.id} optional state must match opportunity content`);
     }
+    if (
+      node.content.boardingOperationId !== null &&
+      (!node.optional ||
+        (node.operationalRole !== 'detour' && node.operationalRole !== 'pursuit') ||
+        !node.content.boardingOperationId.startsWith('boarding-operation-'))
+    ) {
+      errors.push(`Expedition node ${node.id} has an invalid boarding operation reference.`);
+    }
   }
 
   if (!nodeIds.has(graph.startNodeId)) {

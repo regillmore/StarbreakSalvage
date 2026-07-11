@@ -38,7 +38,7 @@ export class ScenarioLabScene implements Scene {
     intro.className = 'transition-copy';
     intro.dataset.testid = 'scenario-lab-intro';
     intro.textContent =
-      'Launch authoritative Phase 10 plans without completing a full run. Each card creates a fresh deterministic session from public scenario and timeline models.';
+      'Launch authoritative voyage plans without completing a full run. Each card creates a fresh deterministic session from public scenario and timeline models.';
 
     const grid = document.createElement('div');
     grid.className = 'scenario-lab-grid';

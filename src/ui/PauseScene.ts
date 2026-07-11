@@ -12,7 +12,8 @@ export class PauseScene implements Scene {
     private readonly onResume: (scene: GameplayScene) => void,
     private readonly onEndRun: () => void,
     private readonly onOpenSettings: () => void,
-    private readonly onSuspendRun: () => void
+    private readonly onSuspendRun: () => void,
+    private readonly operationExit: 'endRun' | 'retreatBoarding' = 'endRun'
   ) {}
 
   public enter(): void {
@@ -25,7 +26,10 @@ export class PauseScene implements Scene {
     title.textContent = 'Paused';
 
     const status = document.createElement('p');
-    status.textContent = 'The contract remains legally active.';
+    status.textContent =
+      this.operationExit === 'retreatBoarding'
+        ? 'The incursion remains active. Retreat banks only custody already carried to the lock.'
+        : 'The contract remains legally active.';
 
     const controls = document.createElement('div');
     controls.className = 'button-row';
@@ -39,7 +43,7 @@ export class PauseScene implements Scene {
     const endButton = document.createElement('button');
     endButton.className = 'secondary-button';
     endButton.type = 'button';
-    endButton.textContent = 'End Run';
+    endButton.textContent = this.operationExit === 'retreatBoarding' ? 'Retreat Incursion' : 'End Run';
     endButton.addEventListener('click', this.onEndRun);
 
     const settingsButton = document.createElement('button');

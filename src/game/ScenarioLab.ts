@@ -22,11 +22,12 @@ export const SCENARIO_LAB_IDS = [
   'lab_rival_return',
   'lab_crew_command',
   'lab_combined_pressure',
+  'lab_boarding_incursion',
   'lab_timeline_audit'
 ] as const;
 export type ScenarioLabId = (typeof SCENARIO_LAB_IDS)[number];
 export type ScenarioLabTarget = 'transition' | 'gameplay' | 'foundry' | 'timeline';
-export type ScenarioLabGameplayPreset = 'none' | 'setPiece' | 'rival' | 'crew' | 'combined';
+export type ScenarioLabGameplayPreset = 'none' | 'setPiece' | 'rival' | 'crew' | 'combined' | 'boarding';
 
 export interface ScenarioLabDefinition {
   readonly id: ScenarioLabId;
@@ -133,6 +134,16 @@ export const SCENARIO_LAB_DEFINITIONS: readonly ScenarioLabDefinition[] = [
     { factionFixture: true, crewFixture: true, engineeringFixture: true }
   ),
   scenario(
+    'lab_boarding_incursion',
+    'Boarding Incursion',
+    'Launch a generated room-chain boarding contract with translated ship systems and custody stakes.',
+    ['boarding', 'rooms', 'bulkheads', 'hazards', 'custody', 'carrier'],
+    2,
+    'gameplay',
+    'boarding',
+    { optionalMission: true, crewFixture: true, engineeringFixture: true }
+  ),
+  scenario(
     'lab_timeline_audit',
     'Run Timeline Audit',
     'Inspect deterministic node, decision, economy, engineering, faction, rival, crew, boss, duration, and run events.',
@@ -160,7 +171,13 @@ export function createScenarioLabLaunch(options: {
   const session = createRunSession(options.run, options.contract, {
     unlockedIds: options.unlockedIds
   });
-  session.currentSectorIndex = Math.min(definition.sectorIndex, options.run.sectors.length - 1);
+  const boardingSectorIndex =
+    definition.id === 'lab_boarding_incursion'
+      ? (options.run.boardingCampaign.operations.find(
+          (operation) => operation.operationalRole === 'detour'
+        )?.sectorIndex ?? definition.sectorIndex)
+      : definition.sectorIndex;
+  session.currentSectorIndex = Math.min(boardingSectorIndex, options.run.sectors.length - 1);
   resetMissionForCurrentSector(options.run, session);
   session.credits = 48;
   session.salvage = 12;

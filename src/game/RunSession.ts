@@ -10,8 +10,10 @@ import {
 } from './ActEconomy';
 import { applyCombinedHooks } from './CombinedHooks';
 import {
+  acquireComponent,
   createEngineeringCombatProfile,
   createEngineeringState,
+  generateComponentSalvage,
   type EngineeringState
 } from './Foundry';
 import type {
@@ -100,6 +102,13 @@ import {
   type CarrierCommandResult,
   type CarrierState
 } from './CarrierCommand';
+import {
+  createBoardingCampaignState,
+  settleBoardingOperation,
+  type BoardingCampaignState,
+  type BoardingOperationPlan,
+  type BoardingSettlementResult
+} from './BoardingOperation';
 
 export interface RouteHistoryEntry {
   readonly sectorIndex: number;
@@ -133,6 +142,7 @@ export interface RunSessionState {
   interActChoices: InterActChoiceRecord[];
   frontierDecision: FrontierDecisionState;
   carrier: CarrierState;
+  boarding: BoardingCampaignState;
   shopRerollsBySector: Record<number, number>;
   lastCombatResult: CombatRunResult | null;
   objectiveHistory: MissionObjectiveOutcomeRecord[];
@@ -188,6 +198,7 @@ export function createRunSession(
     interActChoices: [],
     frontierDecision: createFrontierDecisionState(actTwoSectorIndex),
     carrier: createCarrierState(run.carrierPlan),
+    boarding: createBoardingCampaignState(run.boardingCampaign),
     shopRerollsBySector: {},
     lastCombatResult: null,
     objectiveHistory: [],
@@ -320,6 +331,117 @@ export function recordMissionOperationBoundary(
     });
   }
   return result;
+}
+
+export function recordBoardingOperationOutcome(
+  run: RunSkeleton,
+  session: RunSessionState,
+  operation: BoardingOperationPlan,
+  options: {
+    readonly eventId: string;
+    readonly outcome: 'success' | 'partialSuccess' | 'failure';
+    readonly completionRatio: number;
+    readonly retreated: boolean;
+  }
+): BoardingSettlementResult {
+  const settlement = settleBoardingOperation({
+    plan: run.boardingCampaign,
+    state: session.boarding,
+    operation,
+    ...options
+  });
+  if (settlement.disposition !== 'applied') return settlement;
+  session.boarding = settlement.state;
+
+  for (const loot of settlement.stowedLoot) {
+    stowCarrierCargo(run, session, {
+      id: loot.id,
+      label: loot.label,
+      kind: operation.integrations.includes('apex') ? 'specimen' : 'claim',
+      size: loot.size,
+      value: loot.value,
+      sectorIndex: operation.sectorIndex
+    });
+  }
+
+  if (operation.integrations.includes('foundry') && options.outcome !== 'failure') {
+    const component = generateComponentSalvage({
+      seed: run.seed,
+      saveFingerprint: run.boardingCampaign.saveFingerprint,
+      sectorIndex: operation.sectorIndex + 1,
+      routeKind: 'vault',
+      sectorId: run.sectors[operation.sectorIndex]?.sectorId ?? 'boarding',
+      bossRequired: false,
+      state: session.engineering
+    });
+    session.engineering = acquireComponent(session.engineering, component);
+    stowCarrierCargo(run, session, {
+      id: component.id,
+      label: `${operation.title} component`,
+      kind: 'component',
+      size: 1,
+      value: component.salvageValue,
+      sectorIndex: operation.sectorIndex
+    });
+    recordRunSessionTimelineEvent(session, {
+      id: `${options.eventId}:foundry:${component.id}`,
+      category: 'engineering',
+      kind: 'boardingRecipe',
+      sectorIndex: operation.sectorIndex,
+      value: component.salvageValue,
+      subjectId: component.id,
+      detailId: operation.contractId
+    });
+  }
+
+  if (operation.integrations.includes('faction')) {
+    const sector = run.sectors[operation.sectorIndex];
+    if (sector) {
+      recordFactionCampaignEvent(session, run.factionCampaign, {
+        id: `${options.eventId}:faction`,
+        type: 'missionOutcome',
+        sectorIndex: operation.sectorIndex,
+        factionId: sector.bossFactionId,
+        contractId: operation.contractId,
+        outcome: options.outcome
+      });
+    }
+  }
+
+  if (operation.integrations.includes('rival') && options.outcome === 'success') {
+    const rival = run.factionCampaign.rivals.find((candidate) => {
+      const state = session.factionCampaign.rivals.find((entry) => entry.rivalId === candidate.id);
+      return state && state.status !== 'captured' && state.status !== 'destroyed';
+    });
+    if (rival) {
+      recordFactionCampaignEvent(session, run.factionCampaign, {
+        id: `${options.eventId}:rival-encounter:${rival.id}`,
+        type: 'rivalEncounter',
+        sectorIndex: operation.sectorIndex,
+        factionId: rival.factionId,
+        rivalId: rival.id
+      });
+      recordFactionCampaignEvent(session, run.factionCampaign, {
+        id: `${options.eventId}:rival-capture:${rival.id}`,
+        type: 'rivalOutcome',
+        sectorIndex: operation.sectorIndex,
+        factionId: rival.factionId,
+        rivalId: rival.id,
+        outcome: 'captured'
+      });
+    }
+  }
+
+  recordRunSessionTimelineEvent(session, {
+    id: `${options.eventId}:boarding`,
+    category: 'node',
+    kind: options.retreated ? 'boardingRetreat' : `boarding${options.outcome}`,
+    sectorIndex: operation.sectorIndex,
+    value: settlement.stowedLoot.reduce((total, loot) => total + loot.value, 0),
+    subjectId: operation.id,
+    detailId: settlement.unlockedHooks.join('|') || null
+  });
+  return settlement;
 }
 
 export function getCurrentSector(run: RunSkeleton, session: RunSessionState): SectorRoute {

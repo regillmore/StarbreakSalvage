@@ -54,6 +54,7 @@ export interface ExpeditionNodeContentReferences {
   readonly rewardPoolSeed: string;
   readonly shopSeed: string;
   readonly opportunityId: string | null;
+  readonly boardingOperationId: string | null;
   readonly finaleVariantId: string | null;
 }
 

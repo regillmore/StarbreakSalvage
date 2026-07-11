@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added six deterministic boarding contracts spanning capital ships, stations, wrecks, and derelicts, with four-to-seven-room chains, bulkheads, subsystem spaces, interior hazards, custody loot, partial success, timed extraction, and voluntary retreat.
+- Boarding reuses the existing fixed-step ship combat, engineered loadout, items, crew, projectile, collision, objective, pause/destruction/exit, and cleanup contracts; the renderer adds an interior rail/bulkhead layer and the HUD explains translated breach-cutter, room-clear, special, module, crew, and collision roles.
+- Boarding settlements now produce bounded run-local consequences for carrier cargo, specialist recruitment, faction history, foundry components, rival capture, and future apex hooks. Run snapshot/storage v5 validates boarding plan identity and state while retiring v1-v4 safely; Scenario Lab now exposes nine fixtures including an accessible boarding incursion.
+
 ### Gameplay and UX
 
 - Rebuilt every generated sector as a live two-to-four-operation itinerary with required advance/gate operations, optional support detours and high-yield pursuits, staging relief, extraction, two public map decisions, honest time/danger/reward/risk previews, and optional outcomes that suppress the current gate or raise pressure in the next sector.

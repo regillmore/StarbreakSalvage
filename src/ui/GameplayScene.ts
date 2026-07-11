@@ -172,6 +172,10 @@ import {
   type InputAction,
   type InputSystem
 } from '../systems/InputSystem';
+import {
+  createBoardingTranslatedLoadout,
+  type BoardingOperationPlan
+} from '../game/BoardingOperation';
 
 const DEBUG_BOSS_SHORTCUTS: Partial<Record<InputAction, BossId>> = {
   debugBossOne: 'boss_auditor_drone_xl',
@@ -359,6 +363,7 @@ export class GameplayScene implements Scene {
     hud.dataset.testid = 'cockpit-hud';
     hud.dataset.hudTheme = hudTheme.themeKey;
     hud.dataset.hudMode = hudTheme.mode;
+    hud.dataset.operationMode = this.missionContext?.projection.operationMode ?? 'flight';
     hud.setAttribute('aria-label', `${this.contract.shipName} cockpit status`);
 
     for (const [property, value] of Object.entries(hudTheme.cssVariables)) {
@@ -408,6 +413,25 @@ export class GameplayScene implements Scene {
     );
     loadout.textContent = `${engineering.frameName} | ${engineering.moduleSummary} | P${engineering.resources.powerDraw}/${engineering.resources.reactorOutput} H${engineering.resources.heatLoad}/${engineering.resources.thermalCapacity} | INST ${engineering.instability}/${engineering.instabilityCapacity}`;
 
+    const boarding = ownerDocument.createElement('p');
+    boarding.className = 'hud-pill hud-pill-wide hud-pill-system';
+    boarding.dataset.testid = 'boarding-readout';
+    const boardingOperation = this.missionContext?.projection.boardingOperation;
+    if (boardingOperation) {
+      const translation = createBoardingTranslatedLoadout({
+        weaponName: this.getCombatState().weapon.name,
+        moduleSummary: engineering.moduleSummary,
+        crewCount: this.crewProfile?.members.length ?? 0
+      });
+      boarding.textContent = `${boardingOperation.title} | ${boardingOperation.rooms.length} rooms / ${boardingOperation.doors.length} bulkheads | ${translation.summary}`;
+      boarding.setAttribute(
+        'aria-label',
+        `${boardingOperation.title} boarding incursion. ${boardingOperation.summary}. ${translation.primary}. ${translation.modules}. ${translation.crew}. ${translation.bomb}. ${translation.special}. ${translation.collision}.`
+      );
+    } else {
+      boarding.hidden = true;
+    }
+
     const readoutStrip = ownerDocument.createElement('div');
     readoutStrip.className = 'hud-readout-strip';
     readoutStrip.append(
@@ -425,6 +449,7 @@ export class GameplayScene implements Scene {
       this.warningReadout,
       this.itemReadout,
       loadout,
+      boarding,
       contract
     );
     chrome.append(themeReadout, meterStrip);
@@ -559,6 +584,13 @@ export class GameplayScene implements Scene {
 
     renderer.paintBackground(scroll.cameraOffset, this.getCurrentSector().background);
     renderer.beginGameplayLayer();
+    if (this.missionContext?.projection.boardingOperation) {
+      renderer.paintBoardingInterior(
+        this.missionContext.projection.boardingOperation,
+        scroll.distance,
+        bounds
+      );
+    }
     renderer.paintSectorLandmarks(
       getVisibleSectorLandmarks(this.getCurrentFeatures(), scroll.distance, bounds.height),
       bounds
@@ -795,6 +827,10 @@ export class GameplayScene implements Scene {
     return this.withWorldOffset(forceCombatEnd(this.getCombatState(), reason));
   }
 
+  public isBoardingOperation(): boolean {
+    return this.missionContext?.projection.operationMode === 'boarding';
+  }
+
   public prepareScenarioLabPreset(preset: ScenarioLabGameplayPreset): void {
     const state = this.getCombatState();
     const feedbackBefore = createCombatFeedbackSnapshot(state);
@@ -903,6 +939,21 @@ export class GameplayScene implements Scene {
       arenaPhase: this.bossArenaUpdate.phase,
       debugScenario: this.debugScenario ?? undefined,
       mission: this.missionContext?.debugState,
+      boarding: this.missionContext?.projection.boardingOperation
+        ? {
+            operationId: this.missionContext.projection.boardingOperation.id,
+            title: this.missionContext.projection.boardingOperation.title,
+            target: this.missionContext.projection.boardingOperation.targetKind,
+            rooms: this.missionContext.projection.boardingOperation.rooms.length,
+            doors: this.missionContext.projection.boardingOperation.doors.length,
+            hazards: this.missionContext.projection.boardingOperation.rooms.filter(
+              (room) => room.hazard !== null
+            ).length,
+            loot: this.missionContext.projection.boardingOperation.loot.length,
+            extractionSeconds: this.missionContext.projection.boardingOperation.extractionSeconds,
+            integrations: this.missionContext.projection.boardingOperation.integrations
+          }
+        : undefined,
       backgroundPrimitives: background.primitiveCount,
       backgroundLayers: background.layers.length,
       activeLandmarks: activeLandmarks.length,
@@ -950,7 +1001,7 @@ export class GameplayScene implements Scene {
       runTimeline: this.runTimeline ? createRunTimelineDebugState(this.runTimeline) : undefined,
       scenarioLab: this.scenarioLabPreset
         ? {
-            scenarioCount: 8,
+            scenarioCount: 9,
             activeScenario: this.scenarioLabPreset,
             systems: [
               'mission actors',
@@ -1493,7 +1544,13 @@ export class GameplayScene implements Scene {
     )}`;
     this.hullReadout.textContent = `Hull ${state.player.hull}/${state.player.maxHull}`;
     this.distanceReadout.textContent = [
-      formatScrollReadout(this.getScrollState()),
+      this.missionContext?.projection.boardingOperation
+        ? formatBoardingDistanceReadout(
+            this.missionContext.projection.boardingOperation,
+            this.getScrollState().distance,
+            state.timeSeconds
+          )
+        : formatScrollReadout(this.getScrollState()),
       formatBossArenaReadout(this.bossArenaUpdate.phase)
     ]
       .filter((part): part is string => Boolean(part))
@@ -1576,6 +1633,19 @@ export class GameplayScene implements Scene {
     const plan = this.missionContext?.projection.missionObjective;
     const progress = plan ? getObjectiveProgress(this.getWavePlan(), this.getCombatState()) : null;
     const missionProgress = progress?.missionObjective;
+    const boardingDeadline = this.missionContext?.projection.boardingOperation?.extractionSeconds;
+    const timedOut =
+      boardingDeadline !== null &&
+      boardingDeadline !== undefined &&
+      this.getCombatState().timeSeconds > boardingDeadline;
+    const outcomeOverride =
+      timedOut && missionProgress && plan
+        ? missionProgress.completionRatio >= plan.partialSuccessThreshold
+          ? 'partialSuccess'
+          : 'failure'
+        : missionProgress?.outcome === 'active' && result.reason === 'sectorComplete'
+          ? 'success'
+          : undefined;
     return {
       ...result,
       worldOffset: this.getScrollState().worldOffset,
@@ -1585,9 +1655,7 @@ export class GameplayScene implements Scene {
               plan,
               missionProgress,
               this.missionContext.projection.stageId,
-              missionProgress.outcome === 'active' && result.reason === 'sectorComplete'
-                ? 'success'
-                : undefined
+              outcomeOverride
             )
           : result.missionObjective
     };
@@ -1619,7 +1687,9 @@ export class GameplayScene implements Scene {
         ? `OVERHEAT ${state.player.weaponOverheatSeconds.toFixed(1)}s`
         : `Heat ${heatPercent}%`;
 
-    return `${state.weapon.name} | ${state.weapon.pattern} | ${heatStatus}`;
+    return `${state.weapon.name}${
+      this.missionContext?.projection.operationMode === 'boarding' ? ' / BREACH CUTTER' : ''
+    } | ${state.weapon.pattern} | ${heatStatus}`;
   }
 
   private syncMeters(state: CombatState): void {
@@ -1783,7 +1853,10 @@ export class GameplayScene implements Scene {
   }
 
   private getCombatBounds(): CombatBounds {
-    return createDefaultCombatBounds();
+    const bounds = createDefaultCombatBounds();
+    return this.missionContext?.projection.operationMode === 'boarding'
+      ? { ...bounds, padding: 60 }
+      : bounds;
   }
 
   private getViewportLayout(): ViewportLayout {
@@ -1884,6 +1957,24 @@ function formatCrewCommandButton(command: CrewCommand): string {
             ? 'O'
             : 'Z';
   return `${command.toUpperCase()} [${key}]`;
+}
+
+function formatBoardingDistanceReadout(
+  operation: BoardingOperationPlan,
+  distance: number,
+  elapsedSeconds: number
+): string {
+  const current =
+    operation.rooms.find(
+      (room) => distance >= room.startDistance && distance < room.endDistance
+    ) ??
+    operation.rooms.find((room) => distance < room.startDistance) ??
+    operation.rooms.at(-1);
+  const roomNumber = current ? current.index + 1 : operation.rooms.length;
+  const timer = operation.extractionSeconds
+    ? ` | purge ${Math.max(0, operation.extractionSeconds - elapsedSeconds).toFixed(0)}s`
+    : '';
+  return `Interior ${roomNumber}/${operation.rooms.length} ${current?.label ?? 'Extraction'} | ${Math.round(distance)}/${operation.scrollLength}m${timer}`;
 }
 
 function createHudMeterElement(

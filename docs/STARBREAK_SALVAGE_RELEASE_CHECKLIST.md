@@ -1,12 +1,12 @@
 # Starbreak Salvage Release Checklist
 
-Release candidate: Phase 11 mobile-carrier voyage workspace
+Release candidate: Phase 11 boarding-incursion voyage workspace
 
 Date: 2026-07-11
 
 ## Milestone Status
 
-Phases 1-10 and work orders 101-103 are deployed historical foundations. Work order 104 adds a deterministic four-slot mobile carrier, bounded command/cargo/transit state, a lazy command-deck staging scene, and snapshot v4 carrier persistence while retaining the live multi-operation and frontier contracts.
+Phases 1-10 and work orders 101-104 are deployed historical foundations. Work order 105 adds six deterministic room-chain boarding contracts through the existing combat engine, bounded custody and cleanup state, cross-voyage carrier/crew/faction/foundry/rival/apex consequences, a ninth Scenario Lab fixture, and snapshot v5 boarding persistence while retaining the live multi-operation, frontier, and carrier contracts.
 
 The deployed completionist measurement is approximately 12 minutes with every optional path taken. That doubles the roughly six-minute Phase 9 baseline and reaches the lower edge of Phase 10's 12-20 minute structural target through mission stages, decisions, foundry work, set pieces, factions/rivals, and crew—not global slowdown or durability inflation.
 
@@ -16,7 +16,7 @@ The deployed completionist measurement is approximately 12 minutes with every op
 | ------------------------------ | ------ | ----------------------------------------------------------------------------------- |
 | TypeScript                     | Pass   | `npm run check`                                                                     |
 | ESLint                         | Pass   | `npm run check`                                                                     |
-| Unit/deterministic/integration | Pass   | 82 files, 478 tests                                                                 |
+| Unit/deterministic/integration | Pass   | 85 files, 498 tests                                                                 |
 | Production build               | Pass   | Vite emits `dist/` under `/StarbreakSalvage/`                                       |
 | Playwright Chromium            | Pass   | 13 smoke paths, including Scenario Lab and keyboard suspend/reload/resume coverage  |
 | Production preview paths       | Pass   | `npm run test:preview` checks the Pages base plus emitted hashed JavaScript and CSS |
@@ -38,7 +38,7 @@ Local Windows note: Playwright requires escalation because Chromium lives under 
 | Crew/ally behavior         | Pass                  | Up to three allies use bounded enemy/projectile/pickup queries; commands, injury, recovery, disengagement, damage attribution, objective safety, trust, and departure have deterministic coverage.                                                         |
 | Save migration             | Pass                  | Version-5 permanent data migration, repair, import/export, and last-run normalization are tested. Run-local engineering/faction/crew/timeline state is deliberately not a suspend snapshot in Phase 10.                                                    |
 | Timeline and summaries     | Pass                  | Timeline keeps 96 display entries and 192 processed ids, uses explicit durations, remains local/save-safe, and appears in debug and summaries.                                                                                                             |
-| Scenario Lab               | Pass                  | Eight declarative public-model fixtures reach every Phase 10 domain without private app-state mutation or a full run.                                                                                                                                      |
+| Scenario Lab               | Pass                  | Nine declarative public-model fixtures reach every Phase 10 domain plus boarding without private app-state mutation or a full run.                                                                                                                         |
 | Accessibility              | Pass with manual gaps | Automated smoke covers keyboard-only flow, 390x700, high contrast, reduced motion, performance mode, pointer controls, remapping precedence, and non-color readouts. Real devices and non-Chromium remain manual.                                          |
 | Performance                | Pass with warning     | Combined stress caps and debug counts are explicit. Functional Chromium smoke passes. The 657.78 kB minified main bundle still exceeds Vite's 500 kB warning threshold; sustained frame-time/allocation profiling and code splitting remain Phase 11 work. |
 | Browser/Pages load         | Pass locally          | Vite base path and Pages workflow are correct; the repeatable preview smoke verifies base and hashed assets. Public deployment confirmation remains a user/deployment step.                                                                                |

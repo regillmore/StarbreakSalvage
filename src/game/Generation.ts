@@ -54,6 +54,10 @@ import {
   type NullFrontierCampaignPlan
 } from './NullFrontier';
 import { createCarrierPlan, type CarrierPlan } from './CarrierCommand';
+import {
+  createBoardingCampaignPlan,
+  type BoardingCampaignPlan
+} from './BoardingOperation';
 import { createLegacyStartingLoadout, type ResolvedShipLoadout } from './ShipLoadout';
 import { resolveRunUpgradeEffects, type RunUpgradeEffects } from './UpgradeEffects';
 import {
@@ -136,6 +140,7 @@ export interface RunSkeleton {
   readonly crewRoster: CrewRosterPlan;
   readonly frontierCampaign: NullFrontierCampaignPlan;
   readonly carrierPlan: CarrierPlan;
+  readonly boardingCampaign: BoardingCampaignPlan;
   readonly contracts: readonly StartingContract[];
   readonly sectors: readonly SectorRoute[];
 }
@@ -251,12 +256,18 @@ export function generateRunSkeleton(
       frontierCampaign.sectors.find((candidate) => candidate.sectorId === sector.id)?.law ?? null
     )
   );
+  const boardingCampaign = createBoardingCampaignPlan({
+    seed,
+    saveFingerprint,
+    sectors
+  });
   const expedition = createExpeditionGraph({
     seed,
     saveFingerprint,
     acts,
     sectors,
-    rng: rootRng.fork('expedition-graph')
+    rng: rootRng.fork('expedition-graph'),
+    boardingOperations: boardingCampaign.operations
   });
   const factionCampaign = createFactionCampaignPlan({
     seed,
@@ -284,6 +295,7 @@ export function generateRunSkeleton(
       standardTargetSeconds: expedition.capacity.baselineTargetSeconds
     },
     carrierPlan,
+    boardingCampaign,
     contracts,
     sectors
   };

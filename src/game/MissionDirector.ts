@@ -26,6 +26,11 @@ import type {
   ExpeditionOperationalRole,
   ExpeditionProgressState
 } from './ExpeditionTypes';
+import {
+  createBoardingMissionObjectivePlan,
+  projectSectorForBoarding,
+  type BoardingOperationPlan
+} from './BoardingOperation';
 
 export type MissionScheduleMode = 'expedition' | 'singleStageCompatibility';
 export type MissionStatus = 'active' | 'suspended' | 'failed' | 'completed';
@@ -191,6 +196,8 @@ export interface MissionCombatProjection {
   readonly objectiveWorld: MissionObjectiveWorldDefinition | null;
   readonly operationalRole: ExpeditionOperationalRole | null;
   readonly influenceLabel: string | null;
+  readonly operationMode: 'flight' | 'boarding';
+  readonly boardingOperation: BoardingOperationPlan | null;
 }
 
 export interface MissionOperationalInfluence {
@@ -771,7 +778,8 @@ export function createMissionCombatProjection(
   schedule: MissionSchedule,
   state: MissionDirectorState,
   sector: SectorRoute,
-  influence?: MissionOperationalInfluence
+  influence?: MissionOperationalInfluence,
+  boardingOperation?: BoardingOperationPlan | null
 ): MissionCombatProjection {
   const stage = getMissionStage(schedule, state.currentStageId);
 
@@ -788,9 +796,15 @@ export function createMissionCombatProjection(
           optional: stage.optional
         })
       : null;
-  const projectedSector = objective
+  const missionProjectedSector = objective
     ? projectObjectiveSector(sector, stage, state, objective.world, objective.label, influence)
     : sector;
+  const projectedSector = boardingOperation
+    ? projectSectorForBoarding(missionProjectedSector, boardingOperation)
+    : missionProjectedSector;
+  const projectedObjective = boardingOperation
+    ? createBoardingMissionObjectivePlan(boardingOperation, missionObjective)
+    : missionObjective;
 
   return {
     stageId: stage.id,
@@ -800,10 +814,20 @@ export function createMissionCombatProjection(
     combatSeedSuffix: `${stage.world.seedNamespace}:${stage.id}`,
     startingHull: stage.carry.hull === 'carry' ? state.checkpoint.hull : null,
     completionReason: 'sectorComplete',
-    missionObjective,
-    objectiveWorld: objective?.world ?? null,
+    missionObjective: projectedObjective,
+    objectiveWorld: boardingOperation
+      ? {
+          scrollLengthScale: 1,
+          waveCountScale: 1,
+          environmentMode: 'destructibles',
+          environmentTargetCount: Math.min(6, boardingOperation.doors.length),
+          looseCurrencyBias: 'salvage'
+        }
+      : (objective?.world ?? null),
     operationalRole: stage.operationalRole,
-    influenceLabel: influence?.label ?? null
+    influenceLabel: influence?.label ?? null,
+    operationMode: boardingOperation ? 'boarding' : 'flight',
+    boardingOperation: boardingOperation ?? null
   };
 }
 

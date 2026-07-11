@@ -71,6 +71,7 @@ import {
   recordSectorCombatResult,
   recordMissionObjectiveOutcome,
   recordMissionOperationBoundary,
+  recordBoardingOperationOutcome,
   recordFactionCampaignEvent,
   recordCrewRosterEvent,
   recordRunSessionTimelineEvent,
@@ -137,12 +138,13 @@ import type { ScenarioLabId } from '../game/ScenarioLab';
 import {
   RunSnapshotCoordinator,
   createRunSnapshotSummary,
-  type RunSnapshotV4
+  type RunSnapshotV5
 } from '../game/RunSnapshot';
 import { getOperationalInfluence } from '../game/OperationalMap';
 import {
   createCarrierInfluence
 } from '../game/CarrierCommand';
+import { getBoardingOperationForNode } from '../game/BoardingOperation';
 
 export class GameApp {
   private readonly canvas: HTMLCanvasElement;
@@ -165,7 +167,7 @@ export class GameApp {
   private lastRunResult: CombatRunResult | null = null;
   private lastSaveUpdate: SaveUpdateResult | null = null;
   private summarySaved = false;
-  private runSnapshot: RunSnapshotV4 | null = null;
+  private runSnapshot: RunSnapshotV5 | null = null;
   private runSnapshotNotice: string | null = null;
   private snapshotEligible = false;
   private frameStats: FrameStats = {
@@ -460,6 +462,12 @@ export class GameApp {
     }
 
     const sector = getCurrentSector(this.currentRun, this.runSession);
+    const operationNode = stage.nodeId
+      ? this.currentRun.expedition.nodes.find((node) => node.id === stage.nodeId) ?? null
+      : null;
+    const boardingOperation = operationNode
+      ? getBoardingOperationForNode(this.currentRun.boardingCampaign, operationNode)
+      : null;
     const projection = createMissionCombatProjection(
       schedule,
       this.runSession.mission,
@@ -468,7 +476,8 @@ export class GameApp {
         this.runSession.operational,
         this.runSession.currentSectorIndex,
         stage.operationalRole
-      )
+      ),
+      boardingOperation
     );
     let campaignInfluence = getFactionCampaignInfluence(
       this.currentRun.factionCampaign,
@@ -888,7 +897,15 @@ export class GameApp {
       });
     }
 
-    const crewPolicy = schedule.contract?.crewPolicy ?? 'none';
+    const operationNode = completedStage.nodeId
+      ? this.currentRun.expedition.nodes.find((node) => node.id === completedStage.nodeId) ?? null
+      : null;
+    const boardingOperation = operationNode
+      ? getBoardingOperationForNode(this.currentRun.boardingCampaign, operationNode)
+      : null;
+    const crewPolicy = boardingOperation?.integrations.includes('crew')
+      ? 'protectSpecialist'
+      : (schedule.contract?.crewPolicy ?? 'none');
     recordCrewRosterEvent(this.runSession, this.currentRun.crewRoster, {
       id: `${stageId}:crew-mission-outcome`,
       type: 'missionOutcome',
@@ -907,7 +924,7 @@ export class GameApp {
       campaignOutcome !== 'failure'
         ? getRecruitableCrewCandidate(this.currentRun.crewRoster, this.runSession.crewRoster, {
             sectorIndex,
-            crewPolicy: isOptionalStage ? 'none' : crewPolicy,
+            crewPolicy: isOptionalStage && !boardingOperation ? 'none' : crewPolicy,
             factionId: sector.bossFactionId,
             factionSignal: Boolean(campaignInfluence.crewOfferSignal) && isOptionalStage,
             commandHeadroom
@@ -959,15 +976,20 @@ export class GameApp {
     recordMissionObjectiveOutcome(this.runSession, schedule, result);
     recordSectorCombatResult(this.runSession, result, createActEconomyProfile(sector));
     this.lastRunResult = this.runSession.lastCombatResult;
-    const operationNode = completedStage.nodeId
-      ? this.currentRun.expedition.nodes.find((node) => node.id === completedStage.nodeId)
-      : null;
     if (operationNode) {
       recordMissionOperationBoundary(this.runSession, {
         id: `${stageId}:settled`,
         node: operationNode,
         outcome: campaignOutcome,
         checkpoint: operationCheckpoint
+      });
+    }
+    if (boardingOperation) {
+      recordBoardingOperationOutcome(this.currentRun, this.runSession, boardingOperation, {
+        eventId: `${stageId}:boarding-settled`,
+        outcome: campaignOutcome,
+        completionRatio: result.missionObjective?.completionRatio ?? (campaignOutcome === 'success' ? 1 : 0),
+        retreated: result.reason === 'abandoned'
       });
     }
     const nextStage = getMissionStage(
@@ -1051,6 +1073,22 @@ export class GameApp {
   }
 
   private handleMissionFailure(result: CombatRunResult): void {
+    const schedule = this.getCurrentMissionSchedule();
+    const stage = getMissionStage(schedule, this.runSession.mission.currentStageId);
+    const node = stage.nodeId
+      ? this.currentRun.expedition.nodes.find((candidate) => candidate.id === stage.nodeId) ?? null
+      : null;
+    const boardingOperation = node
+      ? getBoardingOperationForNode(this.currentRun.boardingCampaign, node)
+      : null;
+    if (boardingOperation) {
+      recordBoardingOperationOutcome(this.currentRun, this.runSession, boardingOperation, {
+        eventId: `${stage.id}:boarding-failed:${result.reason}`,
+        outcome: 'failure',
+        completionRatio: result.missionObjective?.completionRatio ?? 0,
+        retreated: result.reason === 'abandoned'
+      });
+    }
     if (
       this.runSession.mission.status !== 'failed' &&
       this.runSession.mission.status !== 'completed'
@@ -1113,7 +1151,19 @@ export class GameApp {
       this.runSession.carrier
     );
     const missionOptions = getMissionBranchOptions(schedule, this.runSession.mission).filter(
-      (option) => option.default || carrierInfluence.optionalMissionAccess
+      (option) => {
+        if (option.default) return true;
+        const target = this.currentRun.expedition.nodes.find(
+          (node) => node.id === option.targetNodeId
+        );
+        const boarding = target
+          ? getBoardingOperationForNode(this.currentRun.boardingCampaign, target)
+          : null;
+        return (
+          carrierInfluence.optionalMissionAccess &&
+          (!boarding || carrierInfluence.boardingCapacity > 0)
+        );
+      }
     );
     this.sceneManager.switchTo(
       new OperationalMapScene(
@@ -1665,7 +1715,16 @@ export class GameApp {
           }
         },
         () => {
-          this.handleMissionFailure(gameplayScene.getRunResult('abandoned'));
+          const result = gameplayScene.getRunResult('abandoned');
+          if (gameplayScene.isBoardingOperation()) {
+            this.dispatchCurrentMission({
+              id: `${this.runSession.mission.currentStageId}:resume-retreat:${this.runSession.mission.transitions.length}`,
+              type: 'resume'
+            });
+            this.handleMissionCombatComplete(result);
+          } else {
+            this.handleMissionFailure(result);
+          }
         },
         () => {
           this.showSettings(() => this.showPause(gameplayScene));
@@ -1673,7 +1732,8 @@ export class GameApp {
         () => {
           this.checkpointRun('gameplay', 'Manually suspended operation');
           this.showMainMenu();
-        }
+        },
+        gameplayScene.isBoardingOperation() ? 'retreatBoarding' : 'endRun'
       )
     );
   }
@@ -1736,7 +1796,8 @@ export class GameApp {
         this.runSession.crewRoster,
         this.runSession.timeline,
         this.runSession.frontierDecision,
-        this.runSession.carrier
+        this.runSession.carrier,
+        this.runSession.boarding
       )
     );
   }
@@ -2021,6 +2082,12 @@ export class GameApp {
           `Carrier facilities ${debugState.carrier.facilities.join(' / ')} events ${debugState.carrier.historyCount}`
         ]
       : [];
+    const boardingDebug = debugState.boarding
+      ? [
+          `Boarding ${debugState.boarding.title} ${debugState.boarding.target} rooms ${debugState.boarding.rooms} doors ${debugState.boarding.doors} hazards ${debugState.boarding.hazards} loot ${debugState.boarding.loot}`,
+          `Boarding integrations ${debugState.boarding.integrations.join('/')} extraction ${debugState.boarding.extractionSeconds ?? 'untimed'}`
+        ]
+      : [];
     const scenarioLabDebug = debugState.scenarioLab
       ? [
           `Scenario Lab ${debugState.scenarioLab.activeScenario ?? 'catalog'} ${debugState.scenarioLab.scenarioCount} cases`,
@@ -2083,6 +2150,7 @@ export class GameApp {
       ...crewDebug,
       ...timelineDebug,
       ...carrierDebug,
+      ...boardingDebug,
       ...scenarioLabDebug,
       ...upgradeDebug,
       ...progressionDebug,

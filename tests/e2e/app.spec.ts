@@ -741,7 +741,7 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
   expect(browserErrors).toEqual([]);
 });
 
-test('opens Phase 10 Scenario Lab fixtures under narrow accessible performance settings', async ({
+test('opens voyage Scenario Lab fixtures under narrow accessible performance settings', async ({
   page
 }) => {
   test.setTimeout(90_000);
@@ -764,14 +764,14 @@ test('opens Phase 10 Scenario Lab fixtures under narrow accessible performance s
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('scenario-lab')).toBeVisible();
   await expect(page.getByTestId('scenario-lab-intro')).toContainText('deterministic session');
-  await expect(page.locator('[data-testid^="scenario-lab-lab_"]')).toHaveCount(8);
-  await expect(page.locator('.debug-overlay')).toContainText('Scenario Lab catalog 8 cases');
+  await expect(page.locator('[data-testid^="scenario-lab-lab_"]')).toHaveCount(9);
+  await expect(page.locator('.debug-overlay')).toContainText('Scenario Lab catalog 9 cases');
 
   for (let index = 0; index < 6; index += 1) await page.keyboard.press('Tab');
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('cockpit-hud')).toBeVisible();
   await expect(page.locator('.debug-overlay')).toContainText('Scenario lab:combined');
-  await expect(page.locator('.debug-overlay')).toContainText('Scenario Lab combined 8 cases');
+  await expect(page.locator('.debug-overlay')).toContainText('Scenario Lab combined 9 cases');
   await expect(page.locator('.debug-overlay')).toContainText('Set-piece');
   await expect(page.locator('.debug-overlay')).toContainText('Allies');
   await expect(page.locator('.debug-overlay')).toContainText('Combined proc');
@@ -780,6 +780,14 @@ test('opens Phase 10 Scenario Lab fixtures under narrow accessible performance s
   await page.keyboard.press('B');
   await expect(page.getByTestId('scenario-lab')).toBeVisible();
   for (let index = 0; index < 7; index += 1) await page.keyboard.press('Tab');
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('cockpit-hud')).toHaveAttribute('data-operation-mode', 'boarding');
+  await expect(page.getByTestId('boarding-readout')).toContainText(/rooms .* bulkheads/);
+  await expect(page.locator('.debug-overlay')).toContainText('Boarding');
+
+  await page.keyboard.press('B');
+  await expect(page.getByTestId('scenario-lab')).toBeVisible();
+  for (let index = 0; index < 8; index += 1) await page.keyboard.press('Tab');
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('scenario-timeline')).toBeVisible();
   await expect(page.getByTestId('scenario-timeline-list')).toContainText('decision:fixture');

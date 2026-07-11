@@ -53,6 +53,10 @@ import {
   type FrontierDecisionState
 } from '../game/NullFrontier';
 import { formatCarrierSummary, type CarrierState } from '../game/CarrierCommand';
+import {
+  formatBoardingCampaignSummary,
+  type BoardingCampaignState
+} from '../game/BoardingOperation';
 
 export class RunSummaryScene implements Scene {
   public readonly id = 'run-summary';
@@ -77,7 +81,8 @@ export class RunSummaryScene implements Scene {
     private readonly crewRoster: CrewRosterState | null = null,
     private readonly runTimeline: RunTimelineState | null = null,
     private readonly frontierDecision: FrontierDecisionState | null = null,
-    private readonly carrier: CarrierState | null = null
+    private readonly carrier: CarrierState | null = null,
+    private readonly boarding: BoardingCampaignState | null = null
   ) {}
 
   public enter(): void {
@@ -143,6 +148,12 @@ export class RunSummaryScene implements Scene {
         this.carrier
           ? formatCarrierSummary(this.run.carrierPlan, this.carrier)
           : 'Carrier state not recorded.'
+      ],
+      [
+        'Boarding Incursions',
+        this.boarding
+          ? formatBoardingCampaignSummary(this.run.boardingCampaign, this.boarding)
+          : 'Boarding state not recorded.'
       ],
       [
         'Voyage Ending',

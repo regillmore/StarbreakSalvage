@@ -45,6 +45,7 @@ import {
   type SetPieceComponentKind,
   type SetPieceComponentTemplateId
 } from '../content/setPieces';
+import type { BoardingOperationPlan } from '../game/BoardingOperation';
 
 const BACKGROUND_SEED = 'STARBREAK-SALVAGE-SHELL';
 const DEFAULT_PLAYER_SHIP_APPEARANCE: ShipAppearance = {
@@ -397,6 +398,51 @@ export class CanvasRenderer {
       this.paintSectorLandmarkShape(visible.landmark.kind, landmarkWidth, landmarkHeight);
       context.restore();
     }
+  }
+
+  public paintBoardingInterior(
+    operation: BoardingOperationPlan,
+    distance: number,
+    bounds: CombatBounds = createDefaultCombatBounds()
+  ): void {
+    const context = this.context;
+    const railWidth = Math.max(24, bounds.width * 0.09);
+    const highContrast = this.settings.bulletContrast === 'high';
+    context.save();
+    context.fillStyle = highContrast ? 'rgba(0, 0, 0, 0.82)' : 'rgba(5, 13, 20, 0.72)';
+    context.fillRect(0, 0, railWidth, bounds.height);
+    context.fillRect(bounds.width - railWidth, 0, railWidth, bounds.height);
+    context.strokeStyle = highContrast ? '#ffffff' : '#54d8df';
+    context.lineWidth = highContrast ? 2.5 : 1.4;
+    context.setLineDash([16, 10]);
+    context.beginPath();
+    context.moveTo(railWidth, 0);
+    context.lineTo(railWidth, bounds.height);
+    context.moveTo(bounds.width - railWidth, 0);
+    context.lineTo(bounds.width - railWidth, bounds.height);
+    context.stroke();
+    context.setLineDash([]);
+
+    for (const door of operation.doors) {
+      const y = bounds.height - (door.atDistance - distance) * 0.82;
+      if (y < -32 || y > bounds.height + 32) continue;
+      context.fillStyle = highContrast ? '#000000' : 'rgba(17, 38, 48, 0.9)';
+      context.strokeStyle = highContrast ? '#ffec6e' : '#ff9f43';
+      context.lineWidth = 3;
+      context.fillRect(railWidth, y - 12, bounds.width - railWidth * 2, 24);
+      context.strokeRect(railWidth, y - 12, bounds.width - railWidth * 2, 24);
+      context.fillStyle = context.strokeStyle;
+      context.font = '10px monospace';
+      context.textAlign = 'center';
+      context.fillText(`${door.lock.toUpperCase()} / ${door.integrity}`, bounds.width / 2, y + 3);
+    }
+
+    context.globalAlpha = 0.76;
+    context.fillStyle = highContrast ? '#ffffff' : '#8ff7ff';
+    context.font = '11px monospace';
+    context.textAlign = 'left';
+    context.fillText(`BOARDING: ${operation.title.toUpperCase()}`, railWidth + 8, 18);
+    context.restore();
   }
 
   public paintSectorHazards(

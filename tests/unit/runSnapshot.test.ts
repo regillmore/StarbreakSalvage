@@ -54,7 +54,7 @@ describe('RunSnapshot', () => {
     expect(restored.session).not.toBe(session);
     expect(restored.snapshot.extensions).toEqual({
       carrier: { planId: run.carrierPlan.id },
-      boarding: null,
+      boarding: { planId: run.boardingCampaign.id },
       factionFronts: null,
       fleet: null,
       apex: null
@@ -150,7 +150,7 @@ describe('RunSnapshot', () => {
     expect(storage.getItem(SAVE_STORAGE_KEY)).toBe('permanent-save-sentinel');
   });
 
-  it('retires every pre-carrier snapshot generation safely', () => {
+  it('retires every pre-boarding snapshot generation safely', () => {
     for (const key of LEGACY_RUN_SNAPSHOT_STORAGE_KEYS) {
       const storage = new MemoryStorage();
       storage.setItem(SAVE_STORAGE_KEY, 'permanent-save-sentinel');
