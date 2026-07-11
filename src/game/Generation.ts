@@ -48,6 +48,11 @@ import { createSecondActFinalePlan, type SecondActFinalePlan } from './SecondAct
 import { createSetPiecePlan, type SetPiecePlan } from './SetPiece';
 import { createFactionCampaignPlan, type FactionCampaignPlan } from './FactionCampaign';
 import { createCrewRosterPlan, type CrewRosterPlan } from './CrewCommand';
+import {
+  createNullFrontierCampaignPlan,
+  type FrontierLaw,
+  type NullFrontierCampaignPlan
+} from './NullFrontier';
 import { createLegacyStartingLoadout, type ResolvedShipLoadout } from './ShipLoadout';
 import { resolveRunUpgradeEffects, type RunUpgradeEffects } from './UpgradeEffects';
 import {
@@ -112,6 +117,7 @@ export interface SectorRoute {
   readonly features: SectorFeaturePlan;
   readonly arena: BossArenaPlan | null;
   readonly finale: SecondActFinalePlan | null;
+  readonly frontierLaw: FrontierLaw | null;
   readonly setPiece: SetPiecePlan | null;
   readonly rewardPoolSeed: string;
   readonly shopSeed: string;
@@ -127,6 +133,7 @@ export interface RunSkeleton {
   readonly expedition: ExpeditionGraph;
   readonly factionCampaign: FactionCampaignPlan;
   readonly crewRoster: CrewRosterPlan;
+  readonly frontierCampaign: NullFrontierCampaignPlan;
   readonly contracts: readonly StartingContract[];
   readonly sectors: readonly SectorRoute[];
 }
@@ -217,7 +224,13 @@ export function generateRunSkeleton(
     unlockAccess,
     upgradeEffects
   );
-  const sectorSequence = selectSectorSequence(seed);
+  const saveFingerprint = createRunGenerationSaveFingerprint(unlockedIds, upgradeEffects);
+  const frontierCampaign = createNullFrontierCampaignPlan({
+    seed,
+    saveFingerprint,
+    rng: rootRng.fork('null-frontier')
+  });
+  const sectorSequence = selectSectorSequence(seed, frontierCampaign);
   const acts = createRunActPlan(sectorSequence);
   const actContexts = createActSectorContexts(acts);
   const sectors = sectorSequence.map((sector, index) =>
@@ -227,10 +240,10 @@ export function generateRunSkeleton(
       rootRng.fork(`sector-${index + 1}`),
       unlockAccess,
       upgradeEffects,
-      getGeneratedActContext(actContexts, index)
+      getGeneratedActContext(actContexts, index),
+      frontierCampaign.sectors.find((candidate) => candidate.sectorId === sector.id)?.law ?? null
     )
   );
-  const saveFingerprint = createRunGenerationSaveFingerprint(unlockedIds, upgradeEffects);
   const expedition = createExpeditionGraph({
     seed,
     saveFingerprint,
@@ -259,6 +272,10 @@ export function generateRunSkeleton(
     expedition,
     factionCampaign,
     crewRoster,
+    frontierCampaign: {
+      ...frontierCampaign,
+      standardTargetSeconds: expedition.capacity.baselineTargetSeconds
+    },
     contracts,
     sectors
   };
@@ -273,7 +290,10 @@ export function createRunGenerationSaveFingerprint(
   return `unlocks=${unlocks}|upgrades=${upgrades}`;
 }
 
-function selectSectorSequence(seed: string): readonly SectorDefinition[] {
+function selectSectorSequence(
+  seed: string,
+  frontierCampaign: NullFrontierCampaignPlan
+): readonly SectorDefinition[] {
   const middleSectorIds = seed.includes('LUNAR')
     ? LUNAR_MIDDLE_SECTOR_IDS
     : STANDARD_MIDDLE_SECTOR_IDS;
@@ -281,7 +301,8 @@ function selectSectorSequence(seed: string): readonly SectorDefinition[] {
   return [
     getSectorDefinition(OPENING_SECTOR_ID),
     ...middleSectorIds.map((sectorId) => getSectorDefinition(sectorId)),
-    getSectorDefinition(CORE_SECTOR_ID)
+    getSectorDefinition(CORE_SECTOR_ID),
+    ...frontierCampaign.sectors.map((sector) => getSectorDefinition(sector.sectorId))
   ];
 }
 
@@ -356,7 +377,8 @@ function generateSectorRoute(
   rng: Rng,
   unlockAccess: UnlockAccess,
   upgradeEffects: RunUpgradeEffects,
-  act: ActSectorContext
+  act: ActSectorContext,
+  frontierLaw: FrontierLaw | null
 ): SectorRoute {
   const bossCandidates = filterUnlockedBossCandidates(sector.bossCandidates, unlockAccess);
   const boss = getBossById(rng.choice(bossCandidates));
@@ -425,6 +447,7 @@ function generateSectorRoute(
     features,
     arena,
     finale,
+    frontierLaw,
     setPiece,
     rewardPoolSeed: rng.fork('reward-pool').seedLabel,
     shopSeed: rng.fork('shop').seedLabel
@@ -440,7 +463,7 @@ function generateRouteOptions(
   upgradeEffects: RunUpgradeEffects,
   act: ActSectorContext
 ): RouteOption[] {
-  if (act.actId === 'act_core_descent') {
+  if (act.actId === 'act_core_descent' || act.actId === 'act_null_frontier') {
     return generateActRouteContractOptions(
       rng,
       sectorIndex,
@@ -745,6 +768,16 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
         firstSectorIndex: rival.firstSectorIndex
       }))
     },
+    frontierCampaign: {
+      id: run.frontierCampaign.id,
+      variantId: run.frontierCampaign.variantId,
+      name: run.frontierCampaign.name,
+      finaleGate: run.frontierCampaign.finaleGate,
+      finaleBossId: run.frontierCampaign.finaleBossId,
+      standardTargetSeconds: run.frontierCampaign.standardTargetSeconds,
+      laws: run.frontierCampaign.sectors.map((sector) => [sector.sectorId, sector.law.id]),
+      factionHooks: run.frontierCampaign.sectors.map((sector) => sector.factionHook)
+    },
     ...(run.upgradeEffects.activeUpgradeIds.length > 0
       ? {
           upgrades: {
@@ -841,6 +874,9 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
               environmentalHint: route.environmentalHint ?? null
             }))
           }
+        : {}),
+      ...(sector.frontierLaw
+        ? { frontierLaw: { id: sector.frontierLaw.id, label: sector.frontierLaw.label } }
         : {}),
       background: {
         id: sector.background.id,

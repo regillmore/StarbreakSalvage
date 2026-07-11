@@ -123,7 +123,12 @@ const LANDMARK_CHOICES: Readonly<Record<SectorId, readonly SectorLandmarkKind[]>
   sector_bio_machine_bloom: ['repair_platform', 'beacon_line', 'core_machinery'],
   sector_corporate_kill_grid: ['beacon_line', 'vault_door', 'core_machinery'],
   sector_lunar_surface: ['crater_shadow_band', 'comm_array_flyby', 'surface_relay'],
-  sector_core_wreck: ['core_machinery', 'wreck_silhouette', 'vault_door']
+  sector_core_wreck: ['core_machinery', 'wreck_silhouette', 'vault_door'],
+  sector_nullglass_expanse: ['beacon_line', 'vault_door', 'wreck_silhouette'],
+  sector_gravity_choir: ['beacon_line', 'core_machinery', 'wreck_silhouette'],
+  sector_dead_signal_reef: ['wreck_silhouette', 'beacon_line', 'surface_relay'],
+  sector_parallax_foundry: ['core_machinery', 'repair_platform', 'vault_door'],
+  sector_horizon_scar: ['core_machinery', 'beacon_line', 'wreck_silhouette']
 };
 
 const LANDMARK_LABELS: Readonly<Record<SectorLandmarkKind, string>> = {

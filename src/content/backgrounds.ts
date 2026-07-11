@@ -4,7 +4,12 @@ export type BackgroundId =
   | 'background_bio_machine_bloom'
   | 'background_corporate_kill_grid'
   | 'background_lunar_surface'
-  | 'background_core_wreck';
+  | 'background_core_wreck'
+  | 'background_nullglass_expanse'
+  | 'background_gravity_choir'
+  | 'background_dead_signal_reef'
+  | 'background_parallax_foundry'
+  | 'background_horizon_scar';
 
 export type BackgroundLayerKind =
   | 'deepStars'
@@ -389,6 +394,56 @@ export const BACKGROUNDS: readonly BackgroundDefinition[] = [
         density: 16,
         priority: 3
       }
+    ]
+  },
+  {
+    id: 'background_nullglass_expanse',
+    name: 'Nullglass Expanse',
+    palette: { top: '#02040d', middle: '#10142a', bottom: '#251536', glow: 'rgba(174, 235, 255, 0.18)' },
+    layers: [
+      { id: 'nullglass-pin-stars', kind: 'deepStars', color: '#ecfbff', accentColor: '#b66dff', alpha: 0.62, parallax: 0.08, density: 74, priority: 1 },
+      { id: 'nullglass-refraction-grid', kind: 'killGrid', color: '#48557f', accentColor: '#7cf7ff', alpha: 0.24, parallax: 0.3, density: 24, priority: 1 },
+      { id: 'nullglass-shard-wake', kind: 'debris', color: '#a7e7ff', accentColor: '#ff6bd6', alpha: 0.32, parallax: 0.72, density: 38, priority: 2 }
+    ]
+  },
+  {
+    id: 'background_gravity_choir',
+    name: 'Gravity Choir',
+    palette: { top: '#03030a', middle: '#151024', bottom: '#2b101b', glow: 'rgba(255, 151, 102, 0.15)' },
+    layers: [
+      { id: 'choir-warp-stars', kind: 'deepStars', color: '#fff0d8', accentColor: '#ff8d66', alpha: 0.48, parallax: 0.06, density: 58, priority: 1 },
+      { id: 'choir-mass-rails', kind: 'warningRails', color: '#873f68', accentColor: '#ffd166', alpha: 0.3, parallax: 0.38, density: 20, priority: 2 },
+      { id: 'choir-orbit-dust', kind: 'dust', color: '#ff9c73', accentColor: '#7cf7ff', alpha: 0.3, parallax: 0.82, density: 48, priority: 3 }
+    ]
+  },
+  {
+    id: 'background_dead_signal_reef',
+    name: 'Dead Signal Reef',
+    palette: { top: '#010607', middle: '#071817', bottom: '#102421', glow: 'rgba(82, 255, 195, 0.11)' },
+    layers: [
+      { id: 'reef-star-blackout', kind: 'deepStars', color: '#bfffe8', accentColor: '#56ffbd', alpha: 0.28, parallax: 0.06, density: 36, priority: 1 },
+      { id: 'reef-dead-ticks', kind: 'signalTicks', color: '#387f72', accentColor: '#ff6bd6', alpha: 0.24, parallax: 0.42, density: 30, priority: 2 },
+      { id: 'reef-wreck-corals', kind: 'wreckPlates', color: '#24433f', accentColor: '#7cf7ff', alpha: 0.34, parallax: 0.9, density: 20, priority: 3 }
+    ]
+  },
+  {
+    id: 'background_parallax_foundry',
+    name: 'Parallax Foundry',
+    palette: { top: '#080503', middle: '#21130d', bottom: '#351b0d', glow: 'rgba(255, 190, 91, 0.17)' },
+    layers: [
+      { id: 'foundry-ash-stars', kind: 'deepStars', color: '#ffe7bc', accentColor: '#ffd166', alpha: 0.4, parallax: 0.08, density: 44, priority: 1 },
+      { id: 'foundry-parallax-ribs', kind: 'coreFractures', color: '#69341c', accentColor: '#ff9b54', alpha: 0.34, parallax: 0.34, density: 22, priority: 1 },
+      { id: 'foundry-slag-rain', kind: 'reactorEmbers', color: '#ffb34f', accentColor: '#7cf7ff', alpha: 0.34, parallax: 0.74, density: 46, priority: 3 }
+    ]
+  },
+  {
+    id: 'background_horizon_scar',
+    name: 'Horizon Scar',
+    palette: { top: '#010104', middle: '#100719', bottom: '#240711', glow: 'rgba(255, 75, 145, 0.18)' },
+    layers: [
+      { id: 'scar-last-stars', kind: 'deepStars', color: '#fff5fa', accentColor: '#ff4b91', alpha: 0.34, parallax: 0.04, density: 40, priority: 1 },
+      { id: 'scar-horizon-fractures', kind: 'coreFractures', color: '#5f1740', accentColor: '#ff4b91', alpha: 0.38, parallax: 0.3, density: 30, priority: 2 },
+      { id: 'scar-anchor-shadows', kind: 'wreckShadows', color: '#130713', accentColor: '#7cf7ff', alpha: 0.4, parallax: 0.92, density: 18, priority: 3 }
     ]
   }
 ];

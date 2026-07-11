@@ -84,15 +84,15 @@ describe('validateContent', () => {
     );
 
     expect(ITEMS).toHaveLength(60);
-    expect(ACT_DEFINITIONS).toHaveLength(2);
-    expect(ACT_ROUTE_CONTRACTS.length).toBeGreaterThanOrEqual(7);
+    expect(ACT_DEFINITIONS).toHaveLength(3);
+    expect(ACT_ROUTE_CONTRACTS.length).toBeGreaterThanOrEqual(13);
     expect(FACTIONS).toHaveLength(4);
-    expect(BACKGROUNDS).toHaveLength(6);
+    expect(BACKGROUNDS).toHaveLength(11);
     expect(ENVIRONMENT_OBJECT_DEFINITIONS.length).toBeGreaterThanOrEqual(8);
     expect(EXPEDITION_NODE_PROFILES.length).toBeGreaterThanOrEqual(6);
     expect(MISSION_STAGE_PROFILES.length).toBeGreaterThanOrEqual(8);
     expect(MISSION_OBJECTIVES).toHaveLength(10);
-    expect(MISSION_CONTRACTS).toHaveLength(10);
+    expect(MISSION_CONTRACTS).toHaveLength(15);
     expect(UPGRADES.length).toBeGreaterThanOrEqual(6);
     expect(representedArchetypes).toHaveLength(ITEM_ARCHETYPES.length);
     expect(representedArchetypes.length).toBeGreaterThanOrEqual(6);

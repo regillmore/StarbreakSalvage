@@ -27,7 +27,7 @@ describe('generateRunSkeleton', () => {
     expect(new Set(signatures).size).toBeGreaterThan(1);
   });
 
-  it('creates three starting contracts and a ten-sector baseline route skeleton', () => {
+  it('creates three starting contracts and a fifteen-sector frontier route skeleton', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
 
     expect(run.seed).toBe('STARBREAK-SMOKE');
@@ -53,6 +53,17 @@ describe('generateRunSkeleton', () => {
           'sector_corporate_kill_grid',
           'sector_core_wreck'
         ]
+      ],
+      [
+        'act_null_frontier',
+        'Act III',
+        [
+          'sector_nullglass_expanse',
+          'sector_dead_signal_reef',
+          'sector_parallax_foundry',
+          'sector_gravity_choir',
+          'sector_horizon_scar'
+        ]
       ]
     ]);
     expect(run.contracts).toHaveLength(3);
@@ -67,7 +78,12 @@ describe('generateRunSkeleton', () => {
       'sector_lunar_surface',
       'sector_trade_war_corridor',
       'sector_corporate_kill_grid',
-      'sector_core_wreck'
+      'sector_core_wreck',
+      'sector_nullglass_expanse',
+      'sector_dead_signal_reef',
+      'sector_parallax_foundry',
+      'sector_gravity_choir',
+      'sector_horizon_scar'
     ]);
 
     for (const sector of run.sectors) {
@@ -92,7 +108,7 @@ describe('generateRunSkeleton', () => {
     expect(run.sectors[9]?.objective.bossSpawnAtSeconds).toBe(5.55);
   });
 
-  it('summarizes a deterministic two-act plan with five sectors per act', () => {
+  it('summarizes a deterministic three-act plan with five sectors per act', () => {
     const first = summarizeRunSkeleton(generateRunSkeleton('ACT2-GATE-SMOKE'));
     const second = summarizeRunSkeleton(generateRunSkeleton('ACT2-GATE-SMOKE'));
 
@@ -112,6 +128,13 @@ describe('generateRunSkeleton', () => {
             sectorRange: [6, 10],
             rewardTier: 'escalated',
             pressureTier: 'elevated',
+            transition: 'frontierChoice'
+          }),
+          expect.objectContaining({
+            id: 'act_null_frontier',
+            sectorRange: [11, 15],
+            rewardTier: 'escalated',
+            pressureTier: 'elevated',
             transition: 'victory'
           })
         ]
@@ -122,7 +145,7 @@ describe('generateRunSkeleton', () => {
   it('can route a deterministic lunar surface sector into the middle lane', () => {
     const run = generateRunSkeleton('LUNAR-SURFACE-LANE');
 
-    expect(run.sectors.map((sector) => sector.sectorId)).toEqual([
+    expect(run.sectors.slice(0, 10).map((sector) => sector.sectorId)).toEqual([
       'sector_outer_debris_field',
       'sector_trade_war_corridor',
       'sector_lunar_surface',

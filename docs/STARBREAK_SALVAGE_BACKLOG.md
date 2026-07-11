@@ -1850,7 +1850,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 103.
+- Implemented in work order 103. The shared voyage now contains a deterministic five-sector Act III with three coherent campaign variants, five environmental laws, five mission contracts, six route contracts, faction/engineering hooks, five backgrounds, and three frontier bosses. The Act II finale resolves into an accessible complete-extraction or state-carrying breach choice; the selected outcome is idempotent, timeline-visible, snapshot-v3-safe, and summary/save-aware. Standard fifteen-sector capacity is 1,689 seconds (28.15 minutes), while every optional lane projects 2,199 seconds (36.65 minutes).
 
 ### BI2 - Mobile salvage carrier
 

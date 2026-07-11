@@ -53,6 +53,23 @@ describe('BossArena', () => {
           "releaseDistance": 3574,
           "sectorId": "sector_core_wreck",
         },
+        null,
+        null,
+        null,
+        {
+          "approachSpeed": 74.24,
+          "approachStartDistance": 3601,
+          "lockDistance": 3831,
+          "releaseDistance": 4191,
+          "sectorId": "sector_gravity_choir",
+        },
+        {
+          "approachSpeed": 74.24,
+          "approachStartDistance": 3906,
+          "lockDistance": 4136,
+          "releaseDistance": 4496,
+          "sectorId": "sector_horizon_scar",
+        },
       ]
     `);
   });

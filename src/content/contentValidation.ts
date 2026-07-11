@@ -1451,9 +1451,9 @@ function validateActDefinitions(
       errors.push(`${owner} transition must have a label`);
     }
 
-    if (act.transition.kind === 'interActJunction') {
+    if (act.transition.kind === 'interActJunction' || act.transition.kind === 'frontierChoice') {
       if (!act.transition.nextActId) {
-        errors.push(`${owner} inter-act transition must name nextActId`);
+        errors.push(`${owner} ${act.transition.kind} transition must name nextActId`);
       } else if (act.transition.nextActId === act.id) {
         errors.push(`${owner} transition cannot target itself`);
       } else if (

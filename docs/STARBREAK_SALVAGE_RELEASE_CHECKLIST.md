@@ -1,12 +1,12 @@
 # Starbreak Salvage Release Checklist
 
-Release candidate: Phase 11 multi-operation voyage workspace
+Release candidate: Phase 11 Null Frontier voyage workspace
 
 Date: 2026-07-11
 
 ## Milestone Status
 
-Phases 1-10 and work order 101 are deployed historical foundations. Work order 102 makes the current ten-sector expedition a live two-to-four-operation-per-sector voyage with a public operational map, bounded settlement ledger, later-node consequences, and snapshot v2 map checkpoints.
+Phases 1-10 and work orders 101-102 are deployed historical foundations. Work order 103 adds a deterministic five-sector Null Frontier, complete Act II extraction or state-carrying breach choice, and snapshot v3 frontier persistence while retaining the live two-to-four-operation map and bounded settlement contracts.
 
 The deployed completionist measurement is approximately 12 minutes with every optional path taken. That doubles the roughly six-minute Phase 9 baseline and reaches the lower edge of Phase 10's 12-20 minute structural target through mission stages, decisions, foundry work, set pieces, factions/rivals, and crew—not global slowdown or durability inflation.
 
@@ -82,8 +82,9 @@ Local Windows note: Playwright requires escalation because Chromium lives under 
 - Twelve minutes is a successful structural floor, not the final desired voyage length. Phase 11 targets 20-30 minute standard and 30-45 minute completionist capacity with legitimate earlier extraction.
 - The main JavaScript bundle is 657.78 kB minified (177.71 kB gzip), and several integration modules are large: `CombatState`, `CanvasRenderer`, `GameApp`, `GameplayScene`, and content validation. These are scaling warnings, not Phase 10 ship blockers.
 - Work order 102 raises the initial bundle baseline to 678.74 kB minified/183.34 kB gzip and CSS to 26.76 kB while retaining the three Scenario Lab chunks. Further splitting remains required rather than complete.
-- Snapshot v2 deliberately restores active combat at the safe operation-entry checkpoint; settled operational maps restore exactly, but live bullets, actor positions, partially damaged targets, audio, and renderer state are not serialized.
-- The 24.3-minute required and 31.6-minute all-optional figures are structural graph projections, not deployed stopwatch results. Full-run fatigue, economy, difficulty, and actual timing need post-deployment playtests.
+- Work order 103 raises the initial bundle baseline to 704.95 kB minified/189.45 kB gzip with CSS unchanged at 26.76 kB. The 26.21 kB minified increase is measured and the existing split warning remains open.
+- Snapshot v3 deliberately restores active combat at the safe operation-entry checkpoint; settled operational maps and the frontier decision restore exactly, but live bullets, actor positions, partially damaged targets, audio, and renderer state are not serialized. Pre-frontier v1/v2 snapshots retire safely.
+- The 28.15-minute standard and 36.65-minute all-optional figures are structural graph projections, not deployed stopwatch results. Full-run fatigue, economy, difficulty, and actual timing need post-deployment playtests.
 - Browser storage eviction/quota, multi-tab last-writer behavior, and long real-device restore latency remain manual risks. Snapshot size is capped at 512 KiB and current automated fixtures remain below it.
 
 ## Release Commands

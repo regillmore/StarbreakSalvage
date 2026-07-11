@@ -13,7 +13,11 @@ import type {
 } from './SectorFeatures';
 import type { SectorScrollPlan } from './ScrollState';
 
-export type SectorConditionSource = RouteKind | 'challenge_debt_ceiling' | 'unlock_bloom_dossier';
+export type SectorConditionSource =
+  | RouteKind
+  | 'challenge_debt_ceiling'
+  | 'unlock_bloom_dossier'
+  | 'frontierLaw';
 
 export interface SectorConditionModifier {
   readonly id: string;
@@ -178,7 +182,8 @@ export function createSectorConditionPlan(
 
   const modifiers = [
     ...createRouteConditionModifiers(options),
-    ...createMetaConditionModifiers(options)
+    ...createMetaConditionModifiers(options),
+    ...createFrontierLawModifiers(options)
   ];
 
   return {
@@ -205,6 +210,35 @@ export function createSectorConditionPlan(
       clamp(product(modifiers.map((modifier) => modifier.bossApproachMultiplier)), 0.78, 1.24)
     )
   };
+}
+
+function createFrontierLawModifiers(
+  options: SectorConditionPlanOptions
+): SectorConditionModifier[] {
+  const law = options.run.sectors[options.sectorIndex]?.frontierLaw;
+  if (!law) return [];
+
+  return [
+    {
+      id: `frontier-law:${options.sectorIndex}:${law.id}`,
+      targetSectorIndex: options.sectorIndex,
+      sourceSectorIndex: options.sectorIndex,
+      source: 'frontierLaw',
+      label: law.label,
+      summary: law.summary,
+      scrollSpeedMultiplier: law.scrollSpeedMultiplier,
+      lengthMultiplier: law.lengthMultiplier,
+      hazardDensityDelta: law.hazardDensityDelta,
+      landmarkKind: law.id === 'law_thermal_inversion' ? 'core_machinery' : 'beacon_line',
+      hazardKind:
+        law.hazardDensityDelta > 0
+          ? law.id === 'law_vector_debt'
+            ? 'crush_gate'
+            : 'salvage_storm'
+          : null,
+      bossApproachMultiplier: law.bossApproachMultiplier
+    }
+  ];
 }
 
 export function applySectorConditionsToScroll(
@@ -327,7 +361,12 @@ export function formatSectorConditionTimeline(
   run: Pick<RunSkeleton, 'seed' | 'unlockedIds' | 'sectors'>,
   routeOutcomes: readonly AppliedRouteOutcome[]
 ): string {
+  const lastReachedSectorIndex = routeOutcomes.reduce(
+    (maximum, outcome) => Math.max(maximum, outcome.sectorIndex + 1),
+    0
+  );
   const entries = run.sectors
+    .slice(0, lastReachedSectorIndex + 1)
     .map((_sector, sectorIndex) =>
       formatSectorConditionSummary(
         createSectorConditionPlan({

@@ -139,7 +139,12 @@ const ALL_SECTOR_IDS: readonly SectorId[] = [
   'sector_bio_machine_bloom',
   'sector_corporate_kill_grid',
   'sector_lunar_surface',
-  'sector_core_wreck'
+  'sector_core_wreck',
+  'sector_nullglass_expanse',
+  'sector_gravity_choir',
+  'sector_dead_signal_reef',
+  'sector_parallax_foundry',
+  'sector_horizon_scar'
 ];
 
 export const HAZARD_ZONE_CHOICES: Readonly<Record<SectorId, readonly HazardZoneId[]>> = {
@@ -148,7 +153,12 @@ export const HAZARD_ZONE_CHOICES: Readonly<Record<SectorId, readonly HazardZoneI
   sector_bio_machine_bloom: ['salvage_storm', 'debris_lane', 'mine_belt'],
   sector_corporate_kill_grid: ['warning_beam', 'crush_gate', 'mine_belt'],
   sector_lunar_surface: ['dust_plume', 'mining_laser', 'surface_defense_arc'],
-  sector_core_wreck: ['crush_gate', 'warning_beam', 'salvage_storm']
+  sector_core_wreck: ['crush_gate', 'warning_beam', 'salvage_storm'],
+  sector_nullglass_expanse: ['warning_beam', 'salvage_storm', 'mine_belt'],
+  sector_gravity_choir: ['crush_gate', 'warning_beam', 'mine_belt'],
+  sector_dead_signal_reef: ['debris_lane', 'mine_belt', 'salvage_storm'],
+  sector_parallax_foundry: ['mining_laser', 'salvage_storm', 'crush_gate'],
+  sector_horizon_scar: ['crush_gate', 'warning_beam', 'salvage_storm']
 };
 
 export const HAZARD_ZONE_PACING_CHOICES: Readonly<Record<SectorId, readonly HazardZoneId[]>> = {
@@ -157,7 +167,12 @@ export const HAZARD_ZONE_PACING_CHOICES: Readonly<Record<SectorId, readonly Haza
   sector_bio_machine_bloom: ['salvage_storm', 'mine_belt'],
   sector_corporate_kill_grid: ['warning_beam', 'crush_gate'],
   sector_lunar_surface: ['dust_plume', 'mining_laser', 'surface_defense_arc'],
-  sector_core_wreck: ['crush_gate', 'warning_beam']
+  sector_core_wreck: ['crush_gate', 'warning_beam'],
+  sector_nullglass_expanse: ['warning_beam', 'salvage_storm'],
+  sector_gravity_choir: ['crush_gate', 'warning_beam'],
+  sector_dead_signal_reef: ['debris_lane', 'mine_belt'],
+  sector_parallax_foundry: ['mining_laser', 'salvage_storm'],
+  sector_horizon_scar: ['crush_gate', 'warning_beam']
 };
 
 export const DEFAULT_HAZARD_ZONE_PACING_CHOICES: readonly HazardZoneId[] = [

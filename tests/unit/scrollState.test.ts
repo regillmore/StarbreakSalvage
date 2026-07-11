@@ -81,6 +81,36 @@ describe('ScrollState', () => {
           "sectorId": "sector_core_wreck",
           "startOffset": 90870,
         },
+        {
+          "baseSpeed": 119,
+          "length": 3240,
+          "sectorId": "sector_nullglass_expanse",
+          "startOffset": 100284,
+        },
+        {
+          "baseSpeed": 128,
+          "length": 3444,
+          "sectorId": "sector_dead_signal_reef",
+          "startOffset": 110009,
+        },
+        {
+          "baseSpeed": 126,
+          "length": 3714,
+          "sectorId": "sector_parallax_foundry",
+          "startOffset": 120460,
+        },
+        {
+          "baseSpeed": 128,
+          "length": 4191,
+          "sectorId": "sector_gravity_choir",
+          "startOffset": 130785,
+        },
+        {
+          "baseSpeed": 128,
+          "length": 4496,
+          "sectorId": "sector_horizon_scar",
+          "startOffset": 140488,
+        },
       ]
     `);
   });

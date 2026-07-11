@@ -96,7 +96,9 @@ export function createExpeditionGraph(options: {
         ? 'expedition_profile_operation_escalated'
         : 'expedition_profile_operation_standard';
     const gateTransitionPolicy: ExpeditionTransitionPolicy = isFinale
-      ? 'victory'
+      ? act.transition.kind === 'victory'
+        ? 'victory'
+        : 'carryState'
       : isActExit && act.transition.kind === 'interActJunction'
         ? 'interActJunction'
         : getExpeditionNodeProfile(gateProfileId).transitionPolicy;
@@ -635,7 +637,7 @@ function createNode(options: {
     actId: options.actId,
     kind: profile.nodeKind,
     pressureBand: profile.pressureBand,
-    duration: profile.duration,
+    duration: scaleDuration(profile.duration),
     entryRule: options.entryRule ?? profile.entryRule,
     completionRule: profile.completionRule,
     transitionPolicy: options.transitionPolicy ?? profile.transitionPolicy,
@@ -649,6 +651,15 @@ function createNode(options: {
       options.intelConsequence
     ),
     content: options.content
+  };
+}
+
+function scaleDuration(duration: ExpeditionDurationBand): ExpeditionDurationBand {
+  const scale = 0.75;
+  return {
+    minSeconds: Math.round(duration.minSeconds * scale),
+    targetSeconds: Math.round(duration.targetSeconds * scale),
+    maxSeconds: Math.round(duration.maxSeconds * scale)
   };
 }
 

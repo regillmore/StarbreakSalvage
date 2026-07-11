@@ -5,7 +5,10 @@ export type BossId =
   | 'boss_bloom_engine'
   | 'boss_unsold_missiles_carrier'
   | 'boss_warranty_void_seraph'
-  | 'boss_core_wreck';
+  | 'boss_core_wreck'
+  | 'boss_prism_regent'
+  | 'boss_mass_cantor'
+  | 'boss_horizon_leviathan';
 
 export type BossPatternId = 'auditFan' | 'missileCurtain' | 'sporeSpiral';
 
@@ -204,6 +207,52 @@ export const BOSSES: readonly BossDefinition[] = [
         patternSequence: ['sporeSpiral', 'missileCurtain', 'auditFan'],
         warningLabel: 'CORE UNSEALED'
       }
+    ]
+  },
+  {
+    id: 'boss_prism_regent',
+    name: 'Prism Regent',
+    factionId: 'faction_void_corsairs',
+    patternId: 'auditFan',
+    maxHull: 25,
+    radius: 52,
+    telegraphSeconds: 0.66,
+    attackCadenceSeconds: 1.4,
+    warningLabel: 'REFRACTION FAN',
+    phases: [
+      { label: 'Single Image', startsAtHullRatio: 1, attackCadenceMultiplier: 1, telegraphMultiplier: 1, projectileBudgetMultiplier: 1, patternSequence: ['auditFan'], warningLabel: 'REFRACTION FAN' },
+      { label: 'Broken Crown', startsAtHullRatio: 0.48, attackCadenceMultiplier: 0.84, telegraphMultiplier: 1.08, projectileBudgetMultiplier: 1.14, patternSequence: ['auditFan', 'sporeSpiral'], warningLabel: 'BROKEN CROWN' }
+    ]
+  },
+  {
+    id: 'boss_mass_cantor',
+    name: 'Mass Cantor',
+    factionId: 'faction_corporate_ledger',
+    patternId: 'missileCurtain',
+    maxHull: 27,
+    radius: 56,
+    telegraphSeconds: 0.74,
+    attackCadenceSeconds: 1.6,
+    warningLabel: 'TIDAL VERSE',
+    phases: [
+      { label: 'Low Canticle', startsAtHullRatio: 1, attackCadenceMultiplier: 1, telegraphMultiplier: 1, projectileBudgetMultiplier: 1, patternSequence: ['missileCurtain'], warningLabel: 'TIDAL VERSE' },
+      { label: 'Compression Hymn', startsAtHullRatio: 0.58, attackCadenceMultiplier: 0.86, telegraphMultiplier: 1.1, projectileBudgetMultiplier: 1.16, patternSequence: ['missileCurtain', 'auditFan'], warningLabel: 'COMPRESSION HYMN' }
+    ]
+  },
+  {
+    id: 'boss_horizon_leviathan',
+    name: 'Horizon Leviathan',
+    factionId: 'faction_scrap_court',
+    patternId: 'sporeSpiral',
+    maxHull: 34,
+    radius: 62,
+    telegraphSeconds: 0.72,
+    attackCadenceSeconds: 1.42,
+    warningLabel: 'EVENT HORIZON',
+    phases: [
+      { label: 'Anchor Wake', startsAtHullRatio: 1, attackCadenceMultiplier: 1, telegraphMultiplier: 1, projectileBudgetMultiplier: 1, patternSequence: ['sporeSpiral'], warningLabel: 'ANCHOR WAKE' },
+      { label: 'Dark Meridian', startsAtHullRatio: 0.66, attackCadenceMultiplier: 0.88, telegraphMultiplier: 1.08, projectileBudgetMultiplier: 1.14, patternSequence: ['sporeSpiral', 'missileCurtain'], warningLabel: 'DARK MERIDIAN' },
+      { label: 'Last Light', startsAtHullRatio: 0.3, attackCadenceMultiplier: 0.78, telegraphMultiplier: 1.12, projectileBudgetMultiplier: 1.18, patternSequence: ['auditFan', 'sporeSpiral', 'missileCurtain'], warningLabel: 'LAST LIGHT' }
     ]
   }
 ];

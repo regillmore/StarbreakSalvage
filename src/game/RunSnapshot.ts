@@ -14,9 +14,10 @@ import type { RunSessionState } from './RunSession';
 import { validateRunTimelineState } from './RunTimeline';
 import { validateOperationalProgressState } from './OperationalMap';
 
-export const RUN_SNAPSHOT_SCHEMA_VERSION = 2;
-export const RUN_SNAPSHOT_STORAGE_KEY = 'starbreak.run.v2';
-export const LEGACY_RUN_SNAPSHOT_STORAGE_KEY = 'starbreak.run.v1';
+export const RUN_SNAPSHOT_SCHEMA_VERSION = 3;
+export const RUN_SNAPSHOT_STORAGE_KEY = 'starbreak.run.v3';
+export const LEGACY_RUN_SNAPSHOT_STORAGE_KEYS = ['starbreak.run.v2', 'starbreak.run.v1'] as const;
+export const LEGACY_RUN_SNAPSHOT_STORAGE_KEY = LEGACY_RUN_SNAPSHOT_STORAGE_KEYS[1];
 export const RUN_SNAPSHOT_MAX_BYTES = 512 * 1024;
 
 export type RunSnapshotResumeTarget = 'sectorTransition' | 'gameplay' | 'operationalMap';
@@ -27,7 +28,7 @@ export interface RunSnapshotCheckpoint {
   readonly sequence: number;
 }
 
-export interface RunSnapshotExtensionsV2 {
+export interface RunSnapshotExtensionsV3 {
   readonly carrier: null;
   readonly boarding: null;
   readonly factionFronts: null;
@@ -35,8 +36,8 @@ export interface RunSnapshotExtensionsV2 {
   readonly apex: null;
 }
 
-export interface RunSnapshotV2 {
-  readonly version: 2;
+export interface RunSnapshotV3 {
+  readonly version: 3;
   readonly plan: {
     readonly seed: string;
     readonly graphId: string;
@@ -47,18 +48,18 @@ export interface RunSnapshotV2 {
   };
   readonly checkpoint: RunSnapshotCheckpoint;
   readonly session: RunSessionState;
-  readonly extensions: RunSnapshotExtensionsV2;
+  readonly extensions: RunSnapshotExtensionsV3;
 }
 
 export interface RestoredRunSnapshot {
-  readonly snapshot: RunSnapshotV2;
+  readonly snapshot: RunSnapshotV3;
   readonly run: RunSkeleton;
   readonly contract: StartingContract;
   readonly session: RunSessionState;
 }
 
 export interface RunSnapshotLoadResult {
-  readonly snapshot: RunSnapshotV2 | null;
+  readonly snapshot: RunSnapshotV3 | null;
   readonly repaired: boolean;
   readonly error: string | null;
 }
@@ -87,7 +88,7 @@ export class RunSnapshotCoordinator {
     readonly session: RunSessionState;
     readonly target: RunSnapshotResumeTarget;
     readonly label: string;
-  }): RunSnapshotV2 {
+  }): RunSnapshotV3 {
     const snapshot = createRunSnapshot({
       ...options,
       sequence: options.session.timeline.entries.length
@@ -97,7 +98,7 @@ export class RunSnapshotCoordinator {
     return snapshot;
   }
 
-  public restore(snapshot: RunSnapshotV2): RestoredRunSnapshot {
+  public restore(snapshot: RunSnapshotV3): RestoredRunSnapshot {
     return restoreRunSnapshot(snapshot);
   }
 
@@ -113,12 +114,12 @@ export function createRunSnapshot(options: {
   readonly target: RunSnapshotResumeTarget;
   readonly label: string;
   readonly sequence?: number;
-}): RunSnapshotV2 {
+}): RunSnapshotV3 {
   const generationFingerprint = createRunGenerationSaveFingerprint(
     options.run.unlockedIds,
     options.run.upgradeEffects
   );
-  const snapshot: RunSnapshotV2 = {
+  const snapshot: RunSnapshotV3 = {
     version: RUN_SNAPSHOT_SCHEMA_VERSION,
     plan: {
       seed: options.run.seed,
@@ -145,7 +146,7 @@ export function createRunSnapshot(options: {
   return importRunSnapshot(exportRunSnapshot(snapshot));
 }
 
-export function restoreRunSnapshot(snapshot: RunSnapshotV2): RestoredRunSnapshot {
+export function restoreRunSnapshot(snapshot: RunSnapshotV3): RestoredRunSnapshot {
   const run = generateRunSkeleton(snapshot.plan.seed, {
     unlockedIds: snapshot.plan.unlockedIds,
     purchasedUpgradeIds: snapshot.plan.purchasedUpgradeIds
@@ -172,7 +173,7 @@ export function restoreRunSnapshot(snapshot: RunSnapshotV2): RestoredRunSnapshot
   };
 }
 
-export function createRunSnapshotSummary(snapshot: RunSnapshotV2): RunSnapshotSummary {
+export function createRunSnapshotSummary(snapshot: RunSnapshotV3): RunSnapshotSummary {
   const restored = restoreRunSnapshot(snapshot);
   const sector = restored.run.sectors[restored.session.currentSectorIndex]!;
   return {
@@ -190,12 +191,13 @@ export function createRunSnapshotSummary(snapshot: RunSnapshotV2): RunSnapshotSu
 export function loadRunSnapshot(storage: StorageLike): RunSnapshotLoadResult {
   const raw = storage.getItem(RUN_SNAPSHOT_STORAGE_KEY);
   if (!raw) {
-    if (storage.getItem(LEGACY_RUN_SNAPSHOT_STORAGE_KEY)) {
-      storage.removeItem(LEGACY_RUN_SNAPSHOT_STORAGE_KEY);
+    const legacyKey = LEGACY_RUN_SNAPSHOT_STORAGE_KEYS.find((key) => storage.getItem(key));
+    if (legacyKey) {
+      for (const key of LEGACY_RUN_SNAPSHOT_STORAGE_KEYS) storage.removeItem(key);
       return {
         snapshot: null,
         repaired: true,
-        error: 'A pre-operational-map expedition snapshot was retired safely.'
+        error: 'A pre-Null-Frontier expedition snapshot was retired safely.'
       };
     }
     return { snapshot: null, repaired: false, error: null };
@@ -214,16 +216,16 @@ export function loadRunSnapshot(storage: StorageLike): RunSnapshotLoadResult {
   }
 }
 
-export function writeRunSnapshot(storage: StorageLike, snapshot: RunSnapshotV2): void {
+export function writeRunSnapshot(storage: StorageLike, snapshot: RunSnapshotV3): void {
   storage.setItem(RUN_SNAPSHOT_STORAGE_KEY, exportRunSnapshot(snapshot));
 }
 
 export function clearRunSnapshot(storage: StorageLike): void {
   storage.removeItem(RUN_SNAPSHOT_STORAGE_KEY);
-  storage.removeItem(LEGACY_RUN_SNAPSHOT_STORAGE_KEY);
+  for (const key of LEGACY_RUN_SNAPSHOT_STORAGE_KEYS) storage.removeItem(key);
 }
 
-export function exportRunSnapshot(snapshot: RunSnapshotV2): string {
+export function exportRunSnapshot(snapshot: RunSnapshotV3): string {
   const serialized = JSON.stringify(snapshot);
   const byteLength = new TextEncoder().encode(serialized).byteLength;
   if (byteLength > RUN_SNAPSHOT_MAX_BYTES) {
@@ -232,7 +234,7 @@ export function exportRunSnapshot(snapshot: RunSnapshotV2): string {
   return serialized;
 }
 
-export function importRunSnapshot(serialized: string): RunSnapshotV2 {
+export function importRunSnapshot(serialized: string): RunSnapshotV3 {
   if (new TextEncoder().encode(serialized).byteLength > RUN_SNAPSHOT_MAX_BYTES) {
     throw new Error(`Run snapshot exceeds ${RUN_SNAPSHOT_MAX_BYTES} bytes.`);
   }
@@ -269,7 +271,7 @@ export function importRunSnapshot(serialized: string): RunSnapshotV2 {
       throw new Error(`Run snapshot v1 extension ${key} must be null.`);
     }
   }
-  return parsed as unknown as RunSnapshotV2;
+  return parsed as unknown as RunSnapshotV3;
 }
 
 function validateSnapshotSession(
@@ -296,6 +298,17 @@ function validateSnapshotSession(
     !Array.isArray(session.objectiveHistory)
   ) {
     throw new Error('Run snapshot collection state is invalid.');
+  }
+  if (
+    !isRecord(session.frontierDecision) ||
+    (session.frontierDecision.decision !== 'unresolved' &&
+      session.frontierDecision.decision !== 'extract' &&
+      session.frontierDecision.decision !== 'breach') ||
+    !isNonNegativeInteger(session.frontierDecision.actTwoSectorIndex) ||
+    !Number.isFinite(session.frontierDecision.creditsAwarded) ||
+    !Number.isFinite(session.frontierDecision.salvageAwarded)
+  ) {
+    throw new Error('Run snapshot frontier decision state is invalid.');
   }
   try {
     for (const instance of session.itemInstances) getItemById(instance.itemId);

@@ -1,6 +1,6 @@
 import type { SectorId } from './sectors';
 
-export type ActId = 'act_outer_rim' | 'act_core_descent';
+export type ActId = 'act_outer_rim' | 'act_core_descent' | 'act_null_frontier';
 
 export type ActRouteKind = 'shop' | 'elite' | 'vault' | 'repair' | 'glitch' | 'factionAmbush';
 
@@ -10,7 +10,7 @@ export type ActPressureTier = 'baseline' | 'elevated';
 
 export type ActBossGateKind = 'checkpoint' | 'finale';
 
-export type ActTransitionKind = 'interActJunction' | 'victory';
+export type ActTransitionKind = 'interActJunction' | 'frontierChoice' | 'victory';
 
 export interface ActSectorBudget {
   readonly plannedSectors: number;
@@ -68,6 +68,7 @@ export const ACT_BOSS_GATE_KINDS: readonly ActBossGateKind[] = ['checkpoint', 'f
 
 export const ACT_TRANSITION_KINDS: readonly ActTransitionKind[] = [
   'interActJunction',
+  'frontierChoice',
   'victory'
 ];
 
@@ -132,8 +133,44 @@ export const ACT_DEFINITIONS: readonly ActDefinition[] = [
       required: true
     },
     transition: {
+      kind: 'frontierChoice',
+      label: 'extract or breach',
+      nextActId: 'act_null_frontier'
+    }
+  },
+  {
+    id: 'act_null_frontier',
+    order: 3,
+    label: 'Null Frontier',
+    shortLabel: 'Act III',
+    summary: 'A generated frontier campaign where physical laws become route commitments.',
+    sectorBudget: {
+      plannedSectors: 5,
+      minSectors: 5,
+      maxSectors: 5
+    },
+    preferredSectorIds: [
+      'sector_nullglass_expanse',
+      'sector_gravity_choir',
+      'sector_dead_signal_reef',
+      'sector_parallax_foundry',
+      'sector_horizon_scar'
+    ],
+    routeGrammar: {
+      allowedKinds: ACT_ROUTE_KINDS,
+      guaranteedKinds: [],
+      summary: 'Frontier laws, engineering gambits, and faction claims reshape every route.'
+    },
+    rewardTier: 'escalated',
+    pressureTier: 'elevated',
+    bossGate: {
+      kind: 'finale',
+      label: 'frontier anchor',
+      required: true
+    },
+    transition: {
       kind: 'victory',
-      label: 'final salvage uplink'
+      label: 'null horizon secured'
     }
   }
 ];

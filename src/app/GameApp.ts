@@ -39,6 +39,7 @@ import {
 } from '../game/Foundry';
 import {
   createRunActSaveContext,
+  getFrontierChoiceHandoff,
   getInterActTransitionHandoff,
   type RunActPlan
 } from '../game/ActPlan';
@@ -55,6 +56,7 @@ import {
   addItemToSession,
   aggregateCombatRunResults,
   advanceSector,
+  applyFrontierDecision,
   applyInterActChoice,
   applyRouteOutcome,
   createRunSession,
@@ -100,6 +102,7 @@ import { InputSystem, type InputAction } from '../systems/InputSystem';
 import { ContractSelectScene } from '../ui/ContractSelectScene';
 import { GameplayScene } from '../ui/GameplayScene';
 import { InterActJunctionScene } from '../ui/InterActJunctionScene';
+import { FrontierGateScene } from '../ui/FrontierGateScene';
 import { MainMenuScene } from '../ui/MainMenuScene';
 import { OperationalMapScene } from '../ui/OperationalMapScene';
 import { PauseScene } from '../ui/PauseScene';
@@ -132,7 +135,7 @@ import type { ScenarioLabId } from '../game/ScenarioLab';
 import {
   RunSnapshotCoordinator,
   createRunSnapshotSummary,
-  type RunSnapshotV2
+  type RunSnapshotV3
 } from '../game/RunSnapshot';
 import { getOperationalInfluence } from '../game/OperationalMap';
 
@@ -157,7 +160,7 @@ export class GameApp {
   private lastRunResult: CombatRunResult | null = null;
   private lastSaveUpdate: SaveUpdateResult | null = null;
   private summarySaved = false;
-  private runSnapshot: RunSnapshotV2 | null = null;
+  private runSnapshot: RunSnapshotV3 | null = null;
   private runSnapshotNotice: string | null = null;
   private snapshotEligible = false;
   private frameStats: FrameStats = {
@@ -558,6 +561,9 @@ export class GameApp {
         return true;
       case 'debugFinaleSmoke':
         this.showDebugFinaleSmoke();
+        return true;
+      case 'debugFrontierGate':
+        this.showDebugFrontierGate();
         return true;
       case 'debugTwoActSummary':
         this.showDebugTwoActSummary();
@@ -1325,6 +1331,15 @@ export class GameApp {
 
     const previousSectorIndex = this.runSession.currentSectorIndex;
 
+    const frontierHandoff = getFrontierChoiceHandoff(
+      this.currentRun.acts,
+      previousSectorIndex
+    );
+    if (frontierHandoff && this.runSession.frontierDecision.decision === 'unresolved') {
+      this.showFrontierGate(frontierHandoff.sourceAct, frontierHandoff.targetAct);
+      return;
+    }
+
     if (!advanceSector(this.currentRun, this.runSession)) {
       const victory = this.lastRunResult
         ? { ...this.lastRunResult, reason: 'victory' as const }
@@ -1345,6 +1360,57 @@ export class GameApp {
     }
 
     this.showSectorTransition();
+  }
+
+  private showDebugFrontierGate(): void {
+    this.resetDebugRunState();
+    const sourceAct = this.currentRun.acts.find((act) => act.id === 'act_core_descent');
+    const targetAct = this.currentRun.acts.find((act) => act.id === 'act_null_frontier');
+    if (!sourceAct || !targetAct) return;
+
+    this.runSession.currentSectorIndex = sourceAct.endSectorIndex;
+    resetMissionForCurrentSector(this.currentRun, this.runSession);
+    this.runSession.routeHistory = createDebugRouteHistoryThroughSector(
+      this.currentRun,
+      sourceAct.endSectorIndex + 1
+    );
+    this.lastRunResult = {
+      ...createTwoActDebugSummaryResult(this.currentRun),
+      reason: 'sectorComplete'
+    };
+    this.showFrontierGate(sourceAct, targetAct);
+  }
+
+  private showFrontierGate(sourceAct: RunActPlan, targetAct: RunActPlan): void {
+    this.sceneManager.switchTo(
+      new FrontierGateScene(
+        this.uiRoot,
+        this.currentRun,
+        this.runSession,
+        this.selectedContract,
+        sourceAct,
+        targetAct,
+        () => {
+          applyFrontierDecision(this.runSession, 'extract');
+          const victory = this.lastRunResult
+            ? { ...this.lastRunResult, reason: 'victory' as const }
+            : undefined;
+          this.showRunSummary(victory);
+        },
+        () => {
+          applyFrontierDecision(this.runSession, 'breach');
+          if (!advanceSector(this.currentRun, this.runSession)) {
+            this.showRunSummary(
+              this.lastRunResult
+                ? { ...this.lastRunResult, reason: 'victory' as const }
+                : undefined
+            );
+            return;
+          }
+          this.showSectorTransition();
+        }
+      )
+    );
   }
 
   private showFoundryAfterReward(route: RouteOption): void {
@@ -1563,7 +1629,8 @@ export class GameApp {
         formatMissionObjectiveHistory(this.runSession.objectiveHistory),
         this.runSession.factionCampaign,
         this.runSession.crewRoster,
-        this.runSession.timeline
+        this.runSession.timeline,
+        this.runSession.frontierDecision
       )
     );
   }
@@ -1586,11 +1653,16 @@ export class GameApp {
       this.currentRun,
       this.runSession.currentSectorIndex,
       this.runSession.routeHistory.length,
-      result.reason
+      result.reason,
+      this.runSession.frontierDecision.decision === 'extract'
+        ? this.runSession.frontierDecision.actTwoSectorIndex + 1
+        : this.currentRun.sectors.length
     );
     const actSaveContext = createRunActSaveContext(this.currentRun.acts, sectorsCleared);
     const sector = this.currentRun.sectors[this.runSession.currentSectorIndex];
     const finale = sector?.finale ?? null;
+    const frontierVictory =
+      result.reason === 'victory' && this.runSession.frontierDecision.decision === 'breach';
     const expedition = createExpeditionPathReadModel(
       this.currentRun.expedition,
       this.runSession.expedition
@@ -1608,9 +1680,13 @@ export class GameApp {
       actSectorIndex: actSaveContext.actSectorIndex,
       actSectorCount: actSaveContext.actSectorCount,
       actsCompleted: actSaveContext.actsCompleted,
-      finaleVariantId: finale?.variantId ?? null,
-      finaleVariantName: finale?.variantName ?? null,
-      finaleCleared: result.reason === 'victory' && finale !== null,
+      finaleVariantId: frontierVictory
+        ? this.currentRun.frontierCampaign.variantId
+        : (finale?.variantId ?? null),
+      finaleVariantName: frontierVictory
+        ? this.currentRun.frontierCampaign.name
+        : (finale?.variantName ?? null),
+      finaleCleared: result.reason === 'victory' && (finale !== null || frontierVictory),
       expeditionGraphId: expedition.graphId,
       expeditionVisitedNodeIds: expedition.visitedNodeIds,
       expeditionDecisionIds: this.runSession.expedition.decisions.map(

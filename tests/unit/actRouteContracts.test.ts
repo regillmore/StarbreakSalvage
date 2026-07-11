@@ -32,7 +32,7 @@ describe('Act II route contracts', () => {
   it('generates distinct Act II route-card copy without changing Act I generic routes', () => {
     const run = generateRunSkeleton('ACT2-ROUTE-COPY-SMOKE');
     const actOneRoutes = run.sectors.slice(0, 5).flatMap((sector) => sector.routeOptions);
-    const actTwoRoutes = run.sectors.slice(5).map((sector) => ({
+    const actTwoRoutes = run.sectors.slice(5, 10).map((sector) => ({
       sector: sector.sectorId,
       routes: sector.routeOptions.map((route) => ({
         kind: route.kind,

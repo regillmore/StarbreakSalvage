@@ -71,6 +71,11 @@ export interface InterActTransitionHandoff {
   readonly targetAct: RunActPlan;
 }
 
+export interface FrontierChoiceHandoff {
+  readonly sourceAct: RunActPlan;
+  readonly targetAct: RunActPlan;
+}
+
 export function createRunActPlan(
   sectors: readonly SectorDefinition[],
   definitions: readonly ActDefinition[] = ACT_DEFINITIONS
@@ -242,6 +247,19 @@ export function getInterActTransitionHandoff(
     sourceAct: previousAct,
     targetAct: nextAct
   };
+}
+
+export function getFrontierChoiceHandoff(
+  acts: readonly RunActPlan[],
+  currentSectorIndex: number
+): FrontierChoiceHandoff | null {
+  const sourceAct = acts.find(
+    (act) => act.endSectorIndex === currentSectorIndex && act.transition.kind === 'frontierChoice'
+  );
+  const targetAct = sourceAct?.transition.nextActId
+    ? acts.find((act) => act.id === sourceAct.transition.nextActId)
+    : null;
+  return sourceAct && targetAct ? { sourceAct, targetAct } : null;
 }
 
 export function createRunActSaveContext(

@@ -27,7 +27,7 @@ describe('enemy role audit', () => {
       ['class_void_skirmisher', 'scout/phase']
     ]);
     expect(audit.entries.every((entry) => entry.spawnContexts.length > 0)).toBe(true);
-    expect(audit.uniqueMajorWaveLabels).toHaveLength(24);
+    expect(audit.uniqueMajorWaveLabels).toHaveLength(44);
   });
 
   it('records current movement, attack, and durability constraints', () => {

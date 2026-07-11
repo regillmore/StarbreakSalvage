@@ -29,7 +29,7 @@ import {
 } from '../../src/game/RunSession';
 
 describe('objective grammar and mission anthology', () => {
-  it('authors ten deterministic contracts across both acts and all requested verbs', () => {
+  it('authors fifteen deterministic contracts across all acts and requested verbs', () => {
     const first = generateRunSkeleton('OBJECTIVE-ANTHOLOGY-KNOWN-SEED');
     const second = generateRunSkeleton('OBJECTIVE-ANTHOLOGY-KNOWN-SEED');
     const firstSchedule = first.expedition.sectors.map((_, index) => {
@@ -54,7 +54,12 @@ describe('objective grammar and mission anthology', () => {
       ['contract_relay_severance', 'sabotage', 'act_core_descent'],
       ['contract_furnace_exit', 'escape', 'act_core_descent'],
       ['contract_pilgrim_screen', 'escort', 'act_core_descent'],
-      ['contract_dead_center_writ', 'bossApproach', 'act_core_descent']
+      ['contract_dead_center_writ', 'bossApproach', 'act_core_descent'],
+      ['contract_shard_echo_survey', 'scan', 'act_null_frontier'],
+      ['contract_vector_debt', 'escape', 'act_null_frontier'],
+      ['contract_dead_reef_claim', 'sabotage', 'act_null_frontier'],
+      ['contract_foundry_inversion', 'salvage', 'act_null_frontier'],
+      ['contract_last_light_anchor', 'bossApproach', 'act_null_frontier']
     ]);
     expect(new Set(MISSION_OBJECTIVES.map((objective) => objective.verb))).toHaveLength(10);
     expect(

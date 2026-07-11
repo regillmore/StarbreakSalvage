@@ -80,6 +80,8 @@ Exit criteria:
 - Early extraction remains a complete, rewarded outcome with distinct summary copy.
 - Act III content reuses shared generation/combat/save contracts and does not fork a parallel game engine.
 
+Status: implemented by work order 103. Three seed/save-fingerprint-stable campaign variants order five original frontier families and their environmental laws while preserving Horizon Scar as the final anchor. Act III uses the existing expedition graph, mission director, sector conditions, backgrounds, hazards, route/economy, engineering, faction, boss arena, save, summary, timeline, and accessibility contracts. The Act II boundary now offers a complete ten-sector extraction victory or an idempotent state-carrying breach; snapshot v3 persists the choice and safely retires v1/v2. Standard graph capacity is 1,689 seconds (28.15 minutes), with 2,199 seconds (36.65 minutes) when every optional lane is taken.
+
 ### P11.4 - Mobile Salvage Carrier
 
 Work order 104 gives the expedition a run-local home:

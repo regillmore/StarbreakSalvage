@@ -7,7 +7,12 @@ export type SectorId =
   | 'sector_bio_machine_bloom'
   | 'sector_corporate_kill_grid'
   | 'sector_lunar_surface'
-  | 'sector_core_wreck';
+  | 'sector_core_wreck'
+  | 'sector_nullglass_expanse'
+  | 'sector_gravity_choir'
+  | 'sector_dead_signal_reef'
+  | 'sector_parallax_foundry'
+  | 'sector_horizon_scar';
 
 export type SectorObjectiveKind = 'clearWaves' | 'defeatBoss';
 
@@ -157,5 +162,50 @@ export const SECTORS: readonly SectorDefinition[] = [
       spawnsPerWave: 3,
       bossGate: true
     }
+  },
+  {
+    id: 'sector_nullglass_expanse',
+    name: 'Nullglass Expanse',
+    role: 'echoing projectiles and brittle salvage',
+    backgroundId: 'background_nullglass_expanse',
+    bossCandidates: ['boss_prism_regent', 'boss_warranty_void_seraph'],
+    majorWavePool: ['mirror_shard_fan', 'prism_debt_lane', 'glasswake_intercept', 'echo_mine_choir'],
+    objective: { kind: 'clearWaves', label: 'Cross the nullglass wake', waveCount: 2, spawnsPerWave: 2, bossGate: false }
+  },
+  {
+    id: 'sector_gravity_choir',
+    name: 'Gravity Choir',
+    role: 'vector shear and compression lanes',
+    backgroundId: 'background_gravity_choir',
+    bossCandidates: ['boss_mass_cantor', 'boss_prism_regent'],
+    majorWavePool: ['mass_canticle', 'tidal_pincer', 'orbit_knuckle', 'compression_procession'],
+    objective: { kind: 'defeatBoss', label: 'Silence the mass cantor', waveCount: 2, spawnsPerWave: 2, bossGate: true }
+  },
+  {
+    id: 'sector_dead_signal_reef',
+    name: 'Dead Signal Reef',
+    role: 'sensor silence and ambush silhouettes',
+    backgroundId: 'background_dead_signal_reef',
+    bossCandidates: ['boss_prism_regent', 'boss_auditor_drone_xl'],
+    majorWavePool: ['silent_beacon_trap', 'ghost_transponder_pack', 'reef_shadow_dive', 'blackout_barrage'],
+    objective: { kind: 'clearWaves', label: 'Relight the dead reef', waveCount: 3, spawnsPerWave: 2, bossGate: false }
+  },
+  {
+    id: 'sector_parallax_foundry',
+    name: 'Parallax Foundry',
+    role: 'mobile engineering windows and thermal inversions',
+    backgroundId: 'background_parallax_foundry',
+    bossCandidates: ['boss_mass_cantor', 'boss_bloom_engine'],
+    majorWavePool: ['forge_slag_front', 'parallax_assembly', 'inversion_rail', 'hot_swap_drones'],
+    objective: { kind: 'clearWaves', label: 'Seize the moving foundry', waveCount: 3, spawnsPerWave: 2, bossGate: false }
+  },
+  {
+    id: 'sector_horizon_scar',
+    name: 'Horizon Scar',
+    role: 'frontier finale and horizon collapse',
+    backgroundId: 'background_horizon_scar',
+    bossCandidates: ['boss_horizon_leviathan'],
+    majorWavePool: ['eventide_wall', 'anchor_breakers', 'horizon_ransom', 'last_light_curtain'],
+    objective: { kind: 'defeatBoss', label: 'Anchor the Null Frontier', waveCount: 3, spawnsPerWave: 3, bossGate: true }
   }
 ];

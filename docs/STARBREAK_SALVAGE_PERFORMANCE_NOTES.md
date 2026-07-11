@@ -328,3 +328,11 @@ Work order 102 increases structural duration by creating more bounded combat ins
 The generated ten-sector graph projects 1458 required-route seconds and 1898 all-optional seconds. These are authored duration bands, not deployed stopwatch measurements; full-run fatigue, allocation behavior, and actual duration remain manual evidence after deployment. Snapshot size remains capped at 512 KiB and now includes bounded operational history.
 
 Work order 102 raises initial JavaScript from 663.24 to 678.74 kB minified (179.38 to 183.34 kB gzip) and CSS from 25.92 to 26.76 kB. The three Scenario Lab chunks remain approximately 1.52, 2.89, and 5.39 kB minified. No warning limit changed; further `GameApp`, combat, renderer, validation, and low-frequency UI extraction remains planned.
+
+## Phase 11 Null Frontier budgets
+
+Work order 103 extends the same bounded graph from ten to fifteen sectors: 75 required nodes, 30 optional nodes, and three act gates. Node duration estimates are scaled to 75% of the work order 102 envelopes, so the larger campaign projects 1,689 standard seconds (28.15 minutes) and 2,199 all-optional seconds (36.65 minutes). This is an authored structural estimate, not a frame-speed reduction: fixed-step simulation, player/enemy speeds, projectile caps, boss hull rules, and operation cleanup remain unchanged.
+
+The five frontier backgrounds use three existing primitive layer kinds apiece and add no bitmap assets. Environmental laws fold into the existing sector-condition plan once per sector, route and mission content remains data-only, and the three new bosses reuse the existing bounded phase/pattern families. Snapshot v3 adds one compact frontier decision record while retaining the 512 KiB cap. Deployed stopwatch timing, sustained allocation, and frontier palette readability remain manual evidence after release.
+
+The work order 103 production build emits 704.95 kB minified/189.45 kB gzip initial JavaScript and 26.76 kB CSS. The three lazy Scenario Lab chunks remain 1.52, 2.89, and 5.39 kB minified. This is a 26.21 kB minified/6.11 kB gzip initial-JavaScript increase over work order 102. No size-warning threshold changed; `NullFrontier`, low-frequency frontier UI, and additional `GameApp` orchestration are candidates for later lazy extraction.

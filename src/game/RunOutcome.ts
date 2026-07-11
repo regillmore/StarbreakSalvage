@@ -20,10 +20,11 @@ export function getSaveRecordSectorCount(
   run: Pick<RunSkeleton, 'sectors'>,
   currentSectorIndex: number,
   routeHistoryLength: number,
-  reason: CombatEndReason
+  reason: CombatEndReason,
+  completedVictorySectors: number = run.sectors.length
 ): number {
   if (reason === 'victory') {
-    return run.sectors.length;
+    return Math.min(run.sectors.length, Math.max(0, completedVictorySectors));
   }
 
   return Math.max(0, currentSectorIndex, routeHistoryLength);

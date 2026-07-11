@@ -47,6 +47,11 @@ import { createRunSummaryProgressModel } from './RunSummaryProgress';
 import { formatFactionCampaignSummary, type FactionCampaignState } from '../game/FactionCampaign';
 import { formatCrewRosterSummary, type CrewRosterState } from '../game/CrewCommand';
 import { formatRunTimeline, type RunTimelineState } from '../game/RunTimeline';
+import {
+  formatFrontierCampaign,
+  formatFrontierOutcome,
+  type FrontierDecisionState
+} from '../game/NullFrontier';
 
 export class RunSummaryScene implements Scene {
   public readonly id = 'run-summary';
@@ -69,7 +74,8 @@ export class RunSummaryScene implements Scene {
     private readonly objectiveHistory: string | null = null,
     private readonly factionCampaign: FactionCampaignState | null = null,
     private readonly crewRoster: CrewRosterState | null = null,
-    private readonly runTimeline: RunTimelineState | null = null
+    private readonly runTimeline: RunTimelineState | null = null,
+    private readonly frontierDecision: FrontierDecisionState | null = null
   ) {}
 
   public enter(): void {
@@ -108,14 +114,49 @@ export class RunSummaryScene implements Scene {
       ['Power Grid', this.contract.loadout.summary.powerGrid],
       ['Frame Systems', this.contract.loadout.summary.frameStats],
       ['Ship Theme', formatContractThemeSummary(this.contract)],
-      ['Reached', getReachedSectorName(this.run, this.routeHistory, this.result)],
-      ['Act Progress', formatActProgressSummary(this.run, this.routeHistory, this.result)],
+      [
+        'Reached',
+        getReachedSectorName(
+          this.run,
+          this.routeHistory,
+          this.result,
+          this.frontierDecision
+        )
+      ],
+      [
+        'Act Progress',
+        formatActProgressSummary(
+          this.run,
+          this.routeHistory,
+          this.result,
+          this.frontierDecision
+        )
+      ],
       ['Outcome', getOutcomeLabel(this.result)],
       ['Win/Loss', getOutcomeDetail(this.result)],
       ['Finale', formatFinaleOutcomeSummary(this.run, this.result)],
+      ['Frontier Campaign', formatFrontierCampaign(this.run.frontierCampaign)],
+      [
+        'Voyage Ending',
+        this.frontierDecision
+          ? formatFrontierOutcome(
+              this.run.frontierCampaign,
+              this.frontierDecision,
+              this.result?.reason
+            )
+          : 'Frontier decision not recorded.'
+      ],
       ['Survived', `${Math.floor(this.result?.survivedSeconds ?? 0)}s`],
       ['Distance', formatDistanceSummary(this.result)],
-      ['Sectors Cleared', `${getSectorsCleared(this.run, this.routeHistory, this.result)}`],
+      [
+        'Sectors Cleared',
+        `${getSectorsCleared(
+          this.run,
+          this.routeHistory,
+          this.result,
+          this.frontierDecision
+        )}`
+      ],
       ['Destroyed', `${this.result?.enemiesDestroyed ?? 0}`],
       ['Bosses', `${this.result?.bossesDefeated ?? 0}`],
       [
@@ -236,7 +277,7 @@ export class RunSummaryScene implements Scene {
   public getDebugState(): SceneDebugState {
     const actContext = createRunActSaveContext(
       this.run.acts,
-      getSectorsCleared(this.run, this.routeHistory, this.result)
+      getSectorsCleared(this.run, this.routeHistory, this.result, this.frontierDecision)
     );
     const act = this.run.acts.find((candidate) => candidate.id === actContext.actId);
 
@@ -255,7 +296,12 @@ export class RunSummaryScene implements Scene {
               actSectorCount: actContext.actSectorCount ?? act.sectorCount,
               runSectorIndex: Math.min(
                 this.run.sectors.length,
-                getSectorsCleared(this.run, this.routeHistory, this.result) + 1
+                getSectorsCleared(
+                  this.run,
+                  this.routeHistory,
+                  this.result,
+                  this.frontierDecision
+                ) + 1
               ),
               routeGrammar: act.routeGrammar,
               rewardTier: act.rewardTier,
@@ -654,20 +700,32 @@ export function formatUnlockReasons(saveUpdate: SaveUpdateResult | null): string
 function getReachedSectorName(
   run: RunSkeleton,
   routeHistory: readonly RouteHistoryEntry[],
-  result: CombatRunResult | null
+  result: CombatRunResult | null,
+  frontierDecision: FrontierDecisionState | null = null
 ): string {
-  const index = Math.min(getSectorsCleared(run, routeHistory, result), run.sectors.length - 1);
+  const sectorsCleared = getSectorsCleared(run, routeHistory, result, frontierDecision);
+  const index = Math.min(
+    frontierDecision?.decision === 'extract' ? Math.max(0, sectorsCleared - 1) : sectorsCleared,
+    run.sectors.length - 1
+  );
   return run.sectors[index]?.sectorName ?? 'Outer Debris Field';
 }
 
 function formatActProgressSummary(
   run: RunSkeleton,
   routeHistory: readonly RouteHistoryEntry[],
-  result: CombatRunResult | null
+  result: CombatRunResult | null,
+  frontierDecision: FrontierDecisionState | null = null
 ): string {
+  if (result?.reason === 'victory' && frontierDecision?.decision === 'extract') {
+    const act = run.acts.find((candidate) => candidate.id === 'act_core_descent');
+    if (act) {
+      return `${act.shortLabel} ${act.label} ${act.sectorCount}/${act.sectorCount} | ${act.index}/${run.acts.length} acts secured`;
+    }
+  }
   const actContext = createRunActSaveContext(
     run.acts,
-    getSectorsCleared(run, routeHistory, result)
+    getSectorsCleared(run, routeHistory, result, frontierDecision)
   );
 
   if (!actContext.actId || !actContext.actName || !actContext.actShortLabel) {
@@ -682,9 +740,13 @@ function formatActProgressSummary(
 function getSectorsCleared(
   run: RunSkeleton,
   routeHistory: readonly RouteHistoryEntry[],
-  result: CombatRunResult | null
+  result: CombatRunResult | null,
+  frontierDecision: FrontierDecisionState | null = null
 ): number {
   if (result?.reason === 'victory') {
+    if (frontierDecision?.decision === 'extract') {
+      return Math.min(run.sectors.length, frontierDecision.actTwoSectorIndex + 1);
+    }
     return run.sectors.length;
   }
 

@@ -11,7 +11,13 @@ export type ActRouteContractId =
   | 'act2_field_suture'
   | 'act2_seed_shear'
   | 'act2_faction_heist'
-  | 'act2_bloom_graft_cache';
+  | 'act2_bloom_graft_cache'
+  | 'act3_lawwright_exchange'
+  | 'act3_anchor_hunt'
+  | 'act3_impossible_vault'
+  | 'act3_mobile_drydock'
+  | 'act3_parallax_cut'
+  | 'act3_claim_war';
 
 export type ActRouteTag =
   | 'deepMarket'
@@ -25,7 +31,9 @@ export type ActRouteTag =
   | 'core'
   | 'economy'
   | 'hazard'
-  | 'pressure';
+  | 'pressure'
+  | 'frontier'
+  | 'engineering';
 
 export interface ActRouteContractDefinition {
   readonly id: ActRouteContractId;
@@ -61,7 +69,17 @@ export const ACT_ROUTE_TAGS: readonly ActRouteTag[] = [
   'core',
   'economy',
   'hazard',
-  'pressure'
+  'pressure',
+  'frontier',
+  'engineering'
+];
+
+const ACT_III_SECTOR_IDS: readonly SectorId[] = [
+  'sector_nullglass_expanse',
+  'sector_gravity_choir',
+  'sector_dead_signal_reef',
+  'sector_parallax_foundry',
+  'sector_horizon_scar'
 ];
 
 const ACT_II_NON_OPENING_SECTOR_IDS: readonly SectorId[] = [
@@ -224,6 +242,48 @@ export const ACT_ROUTE_CONTRACTS: readonly ActRouteContractDefinition[] = [
     requiredUnlockIds: ['unlock_faction_bloom_hive'],
     weight: 8,
     riskOffset: 0
+  },
+  {
+    id: 'act3_lawwright_exchange', actId: 'act_null_frontier', kind: 'shop', label: 'Lawwright Exchange',
+    routeCardCopy: 'trade for modules proven under the current frontier law', environmentalPressureHint: 'the exchange stabilizes one hazard window',
+    rewardTierHint: 'escalated stock with engineering-tag bias', pressureHint: 'low combat pressure, expensive certainty', tags: ['frontier', 'engineering', 'economy'],
+    sectorFit: { allowedSectorIds: ACT_III_SECTOR_IDS, preferredSectorIds: ['sector_parallax_foundry'] }, factionFit: ['faction_corporate_ledger'],
+    backgroundHooks: ['background_parallax_foundry'], objectiveFamilies: ['clearWaves', 'defeatBoss'], requiredUnlockIds: [], weight: 6, riskOffset: -1
+  },
+  {
+    id: 'act3_anchor_hunt', actId: 'act_null_frontier', kind: 'elite', label: 'Anchor Hunt',
+    routeCardCopy: 'hunt a law-proof command hull for frontier-grade salvage', environmentalPressureHint: 'the local law intensifies around elite anchors',
+    rewardTierHint: 'boss-grade salvage and stronger component quality', pressureHint: 'critical combat pressure without added hull inflation', tags: ['frontier', 'bossApproach', 'pressure'],
+    sectorFit: { allowedSectorIds: ACT_III_SECTOR_IDS, preferredSectorIds: ['sector_gravity_choir', 'sector_horizon_scar'] }, factionFit: ['faction_scrap_court', 'faction_void_corsairs'],
+    backgroundHooks: ['background_gravity_choir', 'background_horizon_scar'], objectiveFamilies: ['clearWaves', 'defeatBoss'], requiredUnlockIds: [], weight: 7, riskOffset: 1
+  },
+  {
+    id: 'act3_impossible_vault', actId: 'act_null_frontier', kind: 'vault', label: 'Impossible Vault',
+    routeCardCopy: 'open a cache whose lock obeys a different physical law', environmentalPressureHint: 'curse exposure arrives through mirrored threat lanes',
+    rewardTierHint: 'frontier relic pool plus an engineering component', pressureHint: 'high build variance and law-driven hazards', tags: ['frontier', 'relic', 'hazard'],
+    sectorFit: { allowedSectorIds: ACT_III_SECTOR_IDS, preferredSectorIds: ['sector_nullglass_expanse', 'sector_dead_signal_reef'] }, factionFit: ['faction_void_corsairs', 'faction_bloom_hive'],
+    backgroundHooks: ['background_nullglass_expanse', 'background_dead_signal_reef'], objectiveFamilies: ['clearWaves', 'defeatBoss'], requiredUnlockIds: [], weight: 6, riskOffset: 1
+  },
+  {
+    id: 'act3_mobile_drydock', actId: 'act_null_frontier', kind: 'repair', label: 'Mobile Drydock',
+    routeCardCopy: 'brace the hull and hot-swap one frontier component', environmentalPressureHint: 'a protected machinery wake suppresses one hazard',
+    rewardTierHint: 'repair plus engineering salvage', pressureHint: 'low immediate pressure with a narrower reward ceiling', tags: ['frontier', 'repair', 'engineering'],
+    sectorFit: { allowedSectorIds: ACT_III_SECTOR_IDS, preferredSectorIds: ['sector_parallax_foundry', 'sector_dead_signal_reef'] }, factionFit: ['faction_scrap_court'],
+    backgroundHooks: ['background_parallax_foundry', 'background_dead_signal_reef'], objectiveFamilies: ['clearWaves'], requiredUnlockIds: [], weight: 5, riskOffset: -1
+  },
+  {
+    id: 'act3_parallax_cut', actId: 'act_null_frontier', kind: 'glitch', label: 'Parallax Cut',
+    routeCardCopy: 'splice two frontier readings into a volatile reward route', environmentalPressureHint: 'the sector law changes cadence without hiding telegraphs',
+    rewardTierHint: 'extra choice with phase, heat, and curse bias', pressureHint: 'high variance pressure and a shortened escape window', tags: ['frontier', 'seedShear', 'hazard'],
+    sectorFit: { allowedSectorIds: ACT_III_SECTOR_IDS, preferredSectorIds: ['sector_nullglass_expanse', 'sector_horizon_scar'] }, factionFit: ['faction_void_corsairs'],
+    backgroundHooks: ['background_nullglass_expanse', 'background_horizon_scar'], objectiveFamilies: ['clearWaves', 'defeatBoss'], requiredUnlockIds: [], weight: 6, riskOffset: 1
+  },
+  {
+    id: 'act3_claim_war', actId: 'act_null_frontier', kind: 'factionAmbush', label: 'Claim War',
+    routeCardCopy: 'choose which faction owns the survey claim and fight the loser', environmentalPressureHint: 'faction crossfire follows the active frontier law',
+    rewardTierHint: 'focused faction cache and campaign influence', pressureHint: 'high combat pressure with a persistent faction consequence', tags: ['frontier', 'faction', 'pressure'],
+    sectorFit: { allowedSectorIds: ACT_III_SECTOR_IDS, preferredSectorIds: ACT_III_SECTOR_IDS }, factionFit: ['faction_scrap_court', 'faction_corporate_ledger', 'faction_bloom_hive', 'faction_void_corsairs'],
+    backgroundHooks: ['background_nullglass_expanse', 'background_gravity_choir', 'background_dead_signal_reef', 'background_parallax_foundry', 'background_horizon_scar'], objectiveFamilies: ['clearWaves', 'defeatBoss'], requiredUnlockIds: [], weight: 8, riskOffset: 1
   }
 ];
 

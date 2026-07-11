@@ -687,6 +687,14 @@ seed + permanent save fingerprint
 - Boss arenas, reusable set pieces, and finales are projected only into the required gate operation. Advance, detour, and pursuit projections reuse the same sector/combat contracts with bounded scale and clear combat-world disposal between scene instances.
 - Graph capacity is now 70 nodes and 20 decisions: 1458 required-route target seconds (24.3 minutes) and 1898 all-optional target seconds (31.6 minutes). The initial bundle is 678.74 kB minified/183.34 kB gzip and CSS is 26.76 kB; the measured warning remains open.
 
+### Work order 103 implementation
+
+- `src/game/NullFrontier.ts` is the deterministic campaign/read-model boundary. Seed plus generation save fingerprint selects one of three campaign grammars, orders five sector laws, records faction and engineering hooks, names the finale gate, and owns the idempotent extraction/breach decision record.
+- `ACT_DEFINITIONS` now models Act II's `frontierChoice` separately from the final `victory` transition. The Act II boss remains a finale encounter, but its graph exit carries state; only the Act III Horizon Scar gate is terminal. `FrontierGateScene` is a presentation-only accessible choice surface.
+- Five new sector/background records, six Act III route contracts, five mission contracts, five hazard/landmark fits, and three bosses extend existing registries. Frontier laws enter `SectorConditions`; no Act III-specific combat engine or renderer path exists.
+- Run sessions and the bounded timeline store the frontier decision. Snapshot schema/storage v3 validates it and retires v1/v2 independently of permanent save v5. Early extraction saves ten cleared sectors; frontier victory saves all fifteen and identifies the generated campaign in finale metadata.
+- Graph nodes retain their schema-v2 topology but use 75% duration bands. The complete standard projection is 1,689 seconds (28.15 minutes), and every detour/pursuit projects 2,199 seconds (36.65 minutes), with simulation speed and durability unchanged.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

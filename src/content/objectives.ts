@@ -443,6 +443,31 @@ export const MISSION_CONTRACTS: readonly MissionContractDefinition[] = [
     'none',
     'The command wake collapses into an extraction corridor.',
     'The final contract combines support clearance and boss salvage.'
+  ),
+  contract(
+    'contract_shard_echo_survey', 'Shard Echo Survey', 'Map repeated threat lanes without losing the original signal.',
+    'act_null_frontier', 'objective_threat_scan', 'objective_field_salvage', 'afterPartial', 'hostileInterdiction', 'recordCandidate',
+    'A lawwright isolates the true signal inside the echo.', 'Scanning and close recovery expose the frontier law.'
+  ),
+  contract(
+    'contract_vector_debt', 'Vector Debt', 'Break a gravity choir before its compression reaches the gate.',
+    'act_null_frontier', 'objective_pressure_escape', 'objective_perimeter_defense', 'afterPartial', 'sectorOwner', 'protectSpecialist',
+    'The crew settles vector debt inside a brief neutral orbit.', 'Travel, defense, and hull preservation matter more than repetition.'
+  ),
+  contract(
+    'contract_dead_reef_claim', 'Dead Reef Claim', 'Relight a silent claim while rival salvage crews close in.',
+    'act_null_frontier', 'objective_relay_sabotage', 'objective_lifeboat_rescue', 'afterSuccess', 'neutralRecovery', 'recordCandidate',
+    'Recovered transponders establish a frontier claim.', 'Relay targets lead into a choice of rescue or direct advance.'
+  ),
+  contract(
+    'contract_foundry_inversion', 'Foundry Inversion', 'Board the moving production wake and recover law-proof components.',
+    'act_null_frontier', 'objective_field_salvage', 'objective_convoy_escort', 'afterPartial', 'sectorOwner', 'protectSpecialist',
+    'The foundry opens a mobile engineering envelope.', 'Component recovery creates a meaningful foundry opportunity.'
+  ),
+  contract(
+    'contract_last_light_anchor', 'Last Light Anchor', 'Hold the horizon long enough to destroy its frontier anchor.',
+    'act_null_frontier', 'objective_boss_approach', 'objective_breach_assault', 'afterSuccess', 'hostileInterdiction', 'none',
+    'The secured anchor turns the scar into a stable extraction line.', 'Support clearance and the Horizon Leviathan form the final gate.'
   )
 ];
 

@@ -83,6 +83,12 @@ import {
   type OperationalProgressState
 } from './OperationalMap';
 import type { ExpeditionEncounterNode } from './ExpeditionTypes';
+import {
+  createFrontierDecisionState,
+  resolveFrontierDecision,
+  type FrontierDecision,
+  type FrontierDecisionState
+} from './NullFrontier';
 
 export interface RouteHistoryEntry {
   readonly sectorIndex: number;
@@ -114,6 +120,7 @@ export interface RunSessionState {
   routeHistory: RouteHistoryEntry[];
   routeOutcomes: AppliedRouteOutcome[];
   interActChoices: InterActChoiceRecord[];
+  frontierDecision: FrontierDecisionState;
   shopRerollsBySector: Record<number, number>;
   lastCombatResult: CombatRunResult | null;
   objectiveHistory: MissionObjectiveOutcomeRecord[];
@@ -146,6 +153,9 @@ export function createRunSession(
     missionSchedule,
     mission
   );
+  const actTwoSectorIndex =
+    run.acts.find((act) => act.id === 'act_core_descent')?.endSectorIndex ??
+    Math.max(0, run.sectors.length - 1);
 
   return {
     currentSectorIndex: 0,
@@ -164,6 +174,7 @@ export function createRunSession(
     routeHistory: [],
     routeOutcomes: [],
     interActChoices: [],
+    frontierDecision: createFrontierDecisionState(actTwoSectorIndex),
     shopRerollsBySector: {},
     lastCombatResult: null,
     objectiveHistory: [],
@@ -179,6 +190,28 @@ export function createRunSession(
       detailId: run.expedition.id
     })
   };
+}
+
+export function applyFrontierDecision(
+  session: RunSessionState,
+  decision: Exclude<FrontierDecision, 'unresolved'>
+): FrontierDecisionState {
+  const previous = session.frontierDecision;
+  const next = resolveFrontierDecision(previous, decision);
+  if (next === previous) return previous;
+  session.frontierDecision = next;
+  session.credits += next.creditsAwarded;
+  session.salvage += next.salvageAwarded;
+  recordRunSessionTimelineEvent(session, {
+    id: `frontier-decision:${decision}`,
+    category: 'run',
+    kind: decision,
+    sectorIndex: previous.actTwoSectorIndex,
+    value: next.salvageAwarded,
+    subjectId: 'act_null_frontier',
+    detailId: `${next.creditsAwarded}:${next.salvageAwarded}`
+  });
+  return next;
 }
 
 export function recordMissionOperationBoundary(

@@ -146,7 +146,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
     /ASSAULT|hostiles|fortification/i
   );
   await expect(page.getByTestId('expedition-readout')).toContainText(
-    'Expedition Outer Debris Field Operation | nodes 2/70'
+    'Expedition Outer Debris Field Operation | nodes 2/105'
   );
   await expect(page.getByTestId('hint-readout')).toContainText('Hint');
   await expect(page.getByTestId('verb-readout')).toContainText('Special');
@@ -156,13 +156,13 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.locator('.debug-overlay')).toContainText('Theme redline/Debt Runner');
   await expect(page.locator('.debug-overlay')).toContainText('HUD standard');
   await expect(page.locator('.debug-overlay')).toContainText(
-    'Expedition expedition_s01_operation 2/70 decisions 0'
+    'Expedition expedition_s01_operation 2/105 decisions 0'
   );
   await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
   await expect(page.locator('.debug-overlay')).toContainText(
     'Contract contract_breach_levy | Objective assault/objective_breach_assault'
   );
-  await expect(page.locator('.debug-overlay')).toContainText('Expedition capacity 24.3-31.6m');
+  await expect(page.locator('.debug-overlay')).toContainText('Expedition capacity 28.1-36.6m');
   await expect(page.locator('.debug-overlay')).toContainText(
     /Viewport \d+x\d+ \w+ @[0-9.]+ DPR [0-9.]+/
   );
@@ -680,12 +680,27 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
 
   await page.keyboard.press('Y');
   await expect(page.getByRole('heading', { name: 'Debug Run Ended' })).toBeVisible();
-  await expect(page.getByText('Act II Core Descent 5/5 | 1/2 acts secured')).toBeVisible();
+  await expect(page.getByText('Act II Core Descent 5/5 | 1/3 acts secured')).toBeVisible();
   await expect(
     page.getByText(/Debug: .* smoke path ended before official resolution/)
   ).toBeVisible();
   await expect(page.getByText(/Act II 4\/5 S9 .* \[/)).toBeVisible();
   await expect(page.getByText(/Junction: [+-]?\d+c\/[+-]?\d+kg/)).toBeVisible();
+
+  await page.keyboard.press('G');
+  await expect(page.getByRole('heading', { name: 'The Frontier Is Optional' })).toBeVisible();
+  await expect(page.getByText(/Glass Meridian|Black Current|Silent Crown/)).toBeVisible();
+  await page.getByTestId('frontier-choice-breach').click();
+  await expect(page.getByText(/Act III Null Frontier/)).toBeVisible();
+
+  await page.keyboard.press('G');
+  await page.getByTestId('frontier-choice-extract').click();
+  await expect(page.getByRole('heading', { name: 'Victory Confirmed' })).toBeVisible();
+  await expect(page.getByText(/Core Extraction: complete victory/)).toBeVisible();
+  await expect(
+    page.getByText('Sectors Cleared', { exact: true }).locator('xpath=following-sibling::dd[1]')
+  ).toHaveText('10');
+  await expect(page.getByText('Act II Core Descent 5/5 | 2/3 acts secured')).toBeVisible();
 
   await page.keyboard.press('M');
   await expect(page.getByTestId('mission-objective-preview')).toContainText('SABOTAGE');
