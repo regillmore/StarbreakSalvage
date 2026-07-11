@@ -132,7 +132,7 @@ export function getMissionObjectiveProgress(
   const completionRatio =
     requiredClauseCount === 0 ? 1 : completedRequiredClauses / requiredClauseCount;
   const allSpawnsIssued = state.nextSpawnIndex >= state.spawnSchedule.length;
-  const supportFieldClear = state.enemies.length === 0;
+  const supportFieldClear = state.enemies.every((enemy) => enemy.countsForObjective === false);
   const preBossResolved = allSpawnsIssued && supportFieldClear;
   const needsBoss = plan.clauses.some((clause) => clause.metric === 'bossDefeats');
   const bossResolved = !needsBoss || (state.stats.bossesDefeated > 0 && state.boss === null);

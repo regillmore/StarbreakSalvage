@@ -691,6 +691,15 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
   await page.keyboard.press('N');
   await expect(page.getByTestId('objective-readout')).toContainText('SABOTAGE');
 
+  await page.keyboard.press('R');
+  await expect(page.getByTestId('mission-briefing')).toBeVisible();
+  await expect(page.getByTestId('faction-campaign-brief')).toContainText('Faction campaign:');
+  await expect(page.getByTestId('faction-campaign-brief')).toContainText('RIVAL');
+  await expect(page.locator('.debug-overlay')).toContainText('Campaign rivals');
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('objective-readout')).toContainText('Rival');
+  await expect(page.locator('.debug-overlay')).toContainText('Active rival');
+
   expect(browserErrors).toEqual([]);
 });
 

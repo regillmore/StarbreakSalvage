@@ -427,6 +427,43 @@ describe('WaveDirector', () => {
           "schemaVersion": 1,
           "sectorCount": 10,
         },
+        "factionCampaign": {
+          "id": "campaign:STARBREAK-SMOKE:10cqree",
+          "rivals": [
+            {
+              "archetypeId": "rival_toll_marshal",
+              "factionId": "faction_scrap_court",
+              "firstSectorIndex": 1,
+              "id": "rival:faction_scrap_court:rival_toll_marshal",
+              "name": "Claimant Morrowplate",
+              "shipName": "Closed Account",
+            },
+            {
+              "archetypeId": "rival_convoy_warden",
+              "factionId": "faction_corporate_ledger",
+              "firstSectorIndex": 2,
+              "id": "rival:faction_corporate_ledger:rival_convoy_warden",
+              "name": "Executor Vale-7",
+              "shipName": "Procession Nail",
+            },
+            {
+              "archetypeId": "rival_spore_cantor",
+              "factionId": "faction_bloom_hive",
+              "firstSectorIndex": 3,
+              "id": "rival:faction_bloom_hive:rival_spore_cantor",
+              "name": "Gardener Root After Rain",
+              "shipName": "Green Refrain",
+            },
+            {
+              "archetypeId": "rival_phase_reaver",
+              "factionId": "faction_void_corsairs",
+              "firstSectorIndex": 4,
+              "id": "rival:faction_void_corsairs:rival_phase_reaver",
+              "name": "Ransomer Irix No-Moon",
+              "shipName": "Ransom Wake",
+            },
+          ],
+        },
         "sectors": [
           {
             "act": {
@@ -1439,7 +1476,9 @@ function makeProgressState(
       setPiecesCompleted: 0,
       setPieceRewardsDropped: 0,
       setPieceProjectilesFired: 0,
-      setPieceReinforcementsSpawned: 0
+      setPieceReinforcementsSpawned: 0,
+      rivalsEscaped: 0,
+      rivalsDestroyed: 0
     }
   };
 }

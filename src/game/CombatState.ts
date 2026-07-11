@@ -16,7 +16,7 @@ import { FACTIONS, getFactionById, type FactionId } from '../content/factions';
 import { getEnemyFormationById, type EnemyFormationId } from '../content/enemyFormations';
 import { getEnemyVariantById, type EnemyVariantId } from '../content/enemyVariants';
 import type { ItemTag } from '../content/items';
-import { getSetPieceById } from '../content/setPieces';
+import type { RivalTactic } from '../content/factionCampaigns';
 import type { ShipStats, WeaponId } from '../content/ships';
 import { getWeaponById, type WeaponDefinition } from '../content/weapons';
 import { clamp, type Vector2 } from '../core/math';
@@ -149,6 +149,13 @@ export interface EnemyState {
   readonly formationLabel?: string | null;
   readonly formationMemberIndex?: number | null;
   readonly formationMemberCount?: number | null;
+  readonly countsForObjective?: boolean;
+  readonly rivalId?: string | null;
+  readonly rivalName?: string | null;
+  readonly rivalTitle?: string | null;
+  readonly rivalShipName?: string | null;
+  readonly rivalTactic?: RivalTactic | null;
+  readonly rivalRetreatAtHullRatio?: number;
   x: number;
   y: number;
   readonly radius: number;
@@ -282,6 +289,17 @@ export interface CombatStats {
   readonly setPieceRewardsDropped: number;
   readonly setPieceProjectilesFired: number;
   readonly setPieceReinforcementsSpawned: number;
+  readonly rivalsEscaped: number;
+  readonly rivalsDestroyed: number;
+}
+
+export interface RivalCombatState {
+  readonly rivalId: string;
+  readonly name: string;
+  readonly title: string;
+  readonly shipName: string;
+  readonly tactic: RivalTactic;
+  outcome: 'engaged' | 'escaped' | 'destroyed';
 }
 
 export interface CombatState {
@@ -301,6 +319,7 @@ export interface CombatState {
   projectiles: ProjectileState[];
   enemies: EnemyState[];
   boss: BossState | null;
+  rivalEncounter: RivalCombatState | null;
   telegraphs: TelegraphState[];
   pickups: PickupState[];
   environmentObjects: EnvironmentObjectState[];
@@ -345,6 +364,13 @@ export interface EnemySpawn {
   readonly formationLabel?: string | null;
   readonly formationMemberIndex?: number | null;
   readonly formationMemberCount?: number | null;
+  readonly countsForObjective?: boolean;
+  readonly rivalId?: string | null;
+  readonly rivalName?: string | null;
+  readonly rivalTitle?: string | null;
+  readonly rivalShipName?: string | null;
+  readonly rivalTactic?: RivalTactic | null;
+  readonly rivalRetreatAtHullRatio?: number;
 }
 
 export interface CombatRunResult {
@@ -371,6 +397,14 @@ export interface CombatRunResult {
     readonly destroyedComponents: number;
     readonly totalComponents: number;
     readonly stagesCompleted: number;
+  };
+  readonly rivalEncounter?: {
+    readonly rivalId: string;
+    readonly name: string;
+    readonly title: string;
+    readonly shipName: string;
+    readonly tactic: RivalTactic;
+    readonly outcome: 'escaped' | 'destroyed';
   };
 }
 
@@ -453,6 +487,7 @@ export interface CombatStateOptions {
   readonly sectorId?: string;
   readonly environmentObjectPlan?: EnvironmentObjectPlacementPlan | null;
   readonly setPiecePlan?: SetPiecePlan | null;
+  readonly setPieceOwnerFactionId?: FactionId;
   readonly looseCurrencyPlan?: LooseCurrencyPlan | null;
   readonly engineering?: EngineeringCombatProfile | null;
 }
@@ -510,10 +545,11 @@ export function createCombatState(
     projectiles: [],
     enemies: [],
     boss: null,
+    rivalEncounter: null,
     telegraphs: [],
     pickups: [],
     environmentObjects: [],
-    setPiece: createSetPieceState(options.setPiecePlan ?? null),
+    setPiece: createSetPieceState(options.setPiecePlan ?? null, options.setPieceOwnerFactionId),
     effects: [],
     grazedProjectileIds: new Set<number>(),
     formationRewardsClaimed: new Set<string>(),
@@ -558,7 +594,9 @@ export function createCombatState(
       setPiecesCompleted: 0,
       setPieceRewardsDropped: 0,
       setPieceProjectilesFired: 0,
-      setPieceReinforcementsSpawned: 0
+      setPieceReinforcementsSpawned: 0,
+      rivalsEscaped: 0,
+      rivalsDestroyed: 0
     },
     ended: false
   };
@@ -1459,6 +1497,21 @@ export function createCombatRunResult(
             stagesCompleted: state.stats.setPieceStagesCompleted
           }
         }
+      : {}),
+    ...(state.rivalEncounter
+      ? {
+          rivalEncounter: {
+            rivalId: state.rivalEncounter.rivalId,
+            name: state.rivalEncounter.name,
+            title: state.rivalEncounter.title,
+            shipName: state.rivalEncounter.shipName,
+            tactic: state.rivalEncounter.tactic,
+            outcome:
+              state.rivalEncounter.outcome === 'destroyed'
+                ? ('destroyed' as const)
+                : ('escaped' as const)
+          }
+        }
       : {})
   };
 }
@@ -1649,7 +1702,6 @@ function fireSetPieceTurret(state: CombatState, componentId: string): void {
     return;
   }
 
-  const definition = getSetPieceById(setPiece.plan.definitionId);
   const y = getSetPieceComponentScreenY(state.scrollDistance, component);
   const dx = state.player.x - component.x;
   const dy = state.player.y - y;
@@ -1668,7 +1720,7 @@ function fireSetPieceTurret(state: CombatState, componentId: string): void {
     ttl: 4,
     tags: ['plasma'],
     procDepth: 0,
-    factionId: definition.factionId,
+    factionId: setPiece.ownerFactionId,
     setPieceSourceId: setPiece.plan.id
   });
   component.subsystemCooldownSeconds = 1.3 + (component.x % 5) * 0.04;
@@ -1701,13 +1753,20 @@ function launchSetPieceReinforcements(
     const maxHull = spawn.hull + state.enemyHullBonus;
     state.enemies.push({
       id: getNextEntityId(state),
-      factionId: spawn.factionId,
+      factionId: setPiece.ownerFactionId,
       variantId: null,
       formationId: spawn.formationId ?? null,
       formationInstanceId: spawn.formationInstanceId ?? null,
       formationLabel: spawn.formationLabel ?? null,
       formationMemberIndex: spawn.formationMemberIndex ?? null,
       formationMemberCount: spawn.formationMemberCount ?? null,
+      countsForObjective: spawn.countsForObjective ?? true,
+      rivalId: spawn.rivalId ?? null,
+      rivalName: spawn.rivalName ?? null,
+      rivalTitle: spawn.rivalTitle ?? null,
+      rivalShipName: spawn.rivalShipName ?? null,
+      rivalTactic: spawn.rivalTactic ?? null,
+      rivalRetreatAtHullRatio: spawn.rivalRetreatAtHullRatio ?? 0,
       x,
       y: -24,
       radius: 17,
@@ -2731,6 +2790,13 @@ function spawnDueEnemies(state: CombatState, bounds: CombatBounds): void {
       formationLabel: spawn.formationLabel ?? null,
       formationMemberIndex: spawn.formationMemberIndex ?? null,
       formationMemberCount: spawn.formationMemberCount ?? null,
+      countsForObjective: spawn.countsForObjective ?? true,
+      rivalId: spawn.rivalId ?? null,
+      rivalName: spawn.rivalName ?? null,
+      rivalTitle: spawn.rivalTitle ?? null,
+      rivalShipName: spawn.rivalShipName ?? null,
+      rivalTactic: spawn.rivalTactic ?? null,
+      rivalRetreatAtHullRatio: spawn.rivalRetreatAtHullRatio ?? 0,
       x,
       y: -24,
       radius: 17 * (variant?.radiusScale ?? 1),
@@ -2744,6 +2810,22 @@ function spawnDueEnemies(state: CombatState, bounds: CombatBounds): void {
         spawn.fireDelay * state.enemyFireDelayMultiplier * (variant?.fireDelayMultiplier ?? 1)
       )
     });
+    if (
+      spawn.rivalId &&
+      spawn.rivalName &&
+      spawn.rivalTitle &&
+      spawn.rivalShipName &&
+      spawn.rivalTactic
+    ) {
+      state.rivalEncounter = {
+        rivalId: spawn.rivalId,
+        name: spawn.rivalName,
+        title: spawn.rivalTitle,
+        shipName: spawn.rivalShipName,
+        tactic: spawn.rivalTactic,
+        outcome: 'engaged'
+      };
+    }
     state.nextSpawnIndex += 1;
   }
 }
@@ -3249,7 +3331,24 @@ function damageEnemyWithProjectile(
   const overkillDamage = Math.max(0, projectile.damage - enemy.hull);
   enemy.hull = applyDamage(enemy.hull, projectile.damage).hull;
 
+  if (
+    enemy.rivalId &&
+    (enemy.rivalRetreatAtHullRatio ?? 0) > 0 &&
+    enemy.hull / Math.max(1, enemy.maxHull) <= (enemy.rivalRetreatAtHullRatio ?? 0)
+  ) {
+    recordRivalEscape(state, enemy, enemyIdsToRemove);
+    return;
+  }
+
   if (enemy.hull > 0) {
+    return;
+  }
+
+  if (enemy.rivalId) {
+    recordEnemyDefeat(state, enemy, enemyIdsToRemove, {
+      dropPickups: false,
+      grantSpecialCharge: false
+    });
     return;
   }
 
@@ -3774,6 +3873,17 @@ function recordEnemyDefeat(
 
   enemyIdsToRemove.add(enemy.id);
 
+  if (enemy.rivalId) {
+    if (state.rivalEncounter?.rivalId === enemy.rivalId) {
+      state.rivalEncounter.outcome = 'destroyed';
+    }
+    state.stats = {
+      ...state.stats,
+      rivalsDestroyed: state.stats.rivalsDestroyed + 1
+    };
+    return true;
+  }
+
   if (options.dropPickups ?? true) {
     spawnEnemyDefeatPickups(
       state,
@@ -3805,10 +3915,32 @@ function recordEnemyEscape(
   if (enemyIdsToRemove.has(enemy.id)) {
     return false;
   }
+  if (enemy.rivalId) {
+    return recordRivalEscape(state, enemy, enemyIdsToRemove);
+  }
   enemyIdsToRemove.add(enemy.id);
   state.stats = {
     ...state.stats,
     enemiesEscaped: state.stats.enemiesEscaped + 1
+  };
+  return true;
+}
+
+function recordRivalEscape(
+  state: CombatState,
+  enemy: EnemyState,
+  enemyIdsToRemove: Set<number>
+): boolean {
+  if (enemyIdsToRemove.has(enemy.id)) {
+    return false;
+  }
+  enemyIdsToRemove.add(enemy.id);
+  if (enemy.rivalId && state.rivalEncounter?.rivalId === enemy.rivalId) {
+    state.rivalEncounter.outcome = 'escaped';
+  }
+  state.stats = {
+    ...state.stats,
+    rivalsEscaped: state.stats.rivalsEscaped + 1
   };
   return true;
 }

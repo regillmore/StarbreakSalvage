@@ -12,6 +12,7 @@ import {
 } from '../content/setPieces';
 import { ENEMY_FORMATION_IDS } from '../content/enemyFormations';
 import { FACTIONS } from '../content/factions';
+import type { FactionId } from '../content/factions';
 import { clamp } from '../core/math';
 import { COMBAT_ARENA_HEIGHT, COMBAT_ARENA_WIDTH } from './CombatGeometry';
 import type { BossArenaPlan } from './BossArena';
@@ -76,6 +77,7 @@ export interface SetPieceRuntimeEvent {
 
 export interface SetPieceState {
   readonly plan: SetPiecePlan;
+  readonly ownerFactionId: FactionId;
   readonly components: SetPieceComponentState[];
   currentStageIndex: number;
   completedStageIds: string[];
@@ -144,7 +146,10 @@ export function createSetPiecePlan(options: {
   };
 }
 
-export function createSetPieceState(plan: SetPiecePlan | null): SetPieceState | null {
+export function createSetPieceState(
+  plan: SetPiecePlan | null,
+  ownerFactionId?: FactionId
+): SetPieceState | null {
   if (!plan) {
     return null;
   }
@@ -185,6 +190,7 @@ export function createSetPieceState(plan: SetPiecePlan | null): SetPieceState | 
 
   return {
     plan,
+    ownerFactionId: ownerFactionId ?? definition.factionId,
     components,
     currentStageIndex: 0,
     completedStageIds: [],

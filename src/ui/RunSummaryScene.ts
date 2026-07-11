@@ -44,6 +44,7 @@ import {
 import { appendItemCardContent } from './ItemCard';
 import { createItemCardViewModel } from './ItemCardViewModel';
 import { createRunSummaryProgressModel } from './RunSummaryProgress';
+import { formatFactionCampaignSummary, type FactionCampaignState } from '../game/FactionCampaign';
 
 export class RunSummaryScene implements Scene {
   public readonly id = 'run-summary';
@@ -63,7 +64,8 @@ export class RunSummaryScene implements Scene {
     private readonly saveUpdate: SaveUpdateResult | null,
     private readonly onBackToMenu: () => void,
     private readonly missionTimeline: string | null = null,
-    private readonly objectiveHistory: string | null = null
+    private readonly objectiveHistory: string | null = null,
+    private readonly factionCampaign: FactionCampaignState | null = null
   ) {}
 
   public enter(): void {
@@ -128,6 +130,12 @@ export class RunSummaryScene implements Scene {
       ['Expedition Path', expedition.summary],
       ['Mission Timeline', this.missionTimeline ?? 'Legacy single-stage run'],
       ['Objective History', this.objectiveHistory ?? 'No objective outcomes recorded.'],
+      [
+        'Faction Campaign',
+        this.factionCampaign
+          ? formatFactionCampaignSummary(this.run.factionCampaign, this.factionCampaign)
+          : 'No run-local faction campaign recorded.'
+      ],
       ['Expedition Capacity', formatExpeditionCapacity(this.run.expedition.capacity)],
       ['Inter-Act Refit', formatInterActHistory(this.interActChoices)],
       [

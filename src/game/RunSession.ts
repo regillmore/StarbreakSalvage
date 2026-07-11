@@ -51,6 +51,14 @@ import type {
   RouteRewardModifier,
   RouteShopModifier
 } from './RouteEvents';
+import {
+  applyFactionCampaignEvent,
+  createFactionCampaignState,
+  type FactionCampaignEvent,
+  type FactionCampaignEventResult,
+  type FactionCampaignPlan,
+  type FactionCampaignState
+} from './FactionCampaign';
 
 export interface RouteHistoryEntry {
   readonly sectorIndex: number;
@@ -85,6 +93,7 @@ export interface RunSessionState {
   lastCombatResult: CombatRunResult | null;
   objectiveHistory: MissionObjectiveOutcomeRecord[];
   engineering: EngineeringState;
+  factionCampaign: FactionCampaignState;
 }
 
 export interface MissionObjectiveOutcomeRecord extends MissionObjectiveResultSnapshot {
@@ -130,7 +139,8 @@ export function createRunSession(
     shopRerollsBySector: {},
     lastCombatResult: null,
     objectiveHistory: [],
-    engineering: createEngineeringState(contract.loadout)
+    engineering: createEngineeringState(contract.loadout),
+    factionCampaign: createFactionCampaignState(run.factionCampaign)
   };
 }
 
@@ -230,7 +240,8 @@ export function applyRouteOutcome(
   session: RunSessionState,
   sector: SectorRoute,
   route: RouteOption,
-  outcome: AppliedRouteOutcome
+  outcome: AppliedRouteOutcome,
+  factionCampaignPlan?: FactionCampaignPlan
 ): void {
   const adjustedOutcome = applyRouteChosenHooks(session, sector, route, outcome);
 
@@ -245,6 +256,56 @@ export function applyRouteOutcome(
     session.relicsRecovered + adjustedOutcome.effects.relicDelta
   );
   session.routeOutcomes = [...session.routeOutcomes, adjustedOutcome];
+
+  if (factionCampaignPlan) {
+    recordRouteCampaignConsequence(session, factionCampaignPlan, sector, route, adjustedOutcome.id);
+  }
+}
+
+export function recordFactionCampaignEvent(
+  session: RunSessionState,
+  plan: FactionCampaignPlan,
+  event: FactionCampaignEvent
+): FactionCampaignEventResult {
+  const result = applyFactionCampaignEvent(plan, session.factionCampaign, event);
+  session.factionCampaign = result.state;
+
+  if (result.disposition === 'applied') {
+    session.credits += result.reward.credits;
+    session.salvage += result.reward.salvage;
+  }
+
+  return result;
+}
+
+function recordRouteCampaignConsequence(
+  session: RunSessionState,
+  plan: FactionCampaignPlan,
+  sector: SectorRoute,
+  route: RouteOption,
+  outcomeId: string
+): void {
+  if (route.kind === 'shop' || route.kind === 'repair') {
+    recordFactionCampaignEvent(session, plan, {
+      id: `${outcomeId}:campaign-aid`,
+      type: 'aid',
+      sectorIndex: Math.max(0, sector.index - 1),
+      factionId: sector.bossFactionId,
+      amount: 1,
+      reason: route.kind === 'shop' ? 'market permit honored' : 'repair crew protected'
+    });
+    return;
+  }
+
+  if (route.kind === 'factionAmbush' || route.kind === 'vault') {
+    recordFactionCampaignEvent(session, plan, {
+      id: `${outcomeId}:campaign-theft`,
+      type: 'assetStolen',
+      sectorIndex: Math.max(0, sector.index - 1),
+      factionId: sector.bossFactionId,
+      value: route.kind === 'factionAmbush' ? 2 : 1
+    });
+  }
 }
 
 function applyRouteChosenHooks(

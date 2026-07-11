@@ -170,7 +170,7 @@ export function getObjectiveProgress(
     Math.floor(cappedSupportKills / plan.objective.spawnsPerWave)
   );
   const allSpawnsIssued = state.nextSpawnIndex >= plan.spawnSchedule.length;
-  const supportFieldClear = state.enemies.length === 0;
+  const supportFieldClear = state.enemies.every((enemy) => enemy.countsForObjective === false);
   const bossFieldClear = state.boss === null;
   const supportComplete =
     cappedSupportKills >= plan.objective.requiredEnemyKills && allSpawnsIssued && supportFieldClear;

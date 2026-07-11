@@ -24,7 +24,8 @@ export class MissionBranchScene implements Scene {
     private readonly options: readonly ExpeditionBranchOption[],
     private readonly credits: number,
     private readonly salvage: number,
-    private readonly onSelect: (option: ExpeditionBranchOption) => void
+    private readonly onSelect: (option: ExpeditionBranchOption) => void,
+    private readonly rivalDecisionCopy: string | null = null
   ) {}
 
   public enter(): void {
@@ -55,7 +56,7 @@ export class MissionBranchScene implements Scene {
       hasOptional
         ? 'Extract now or carry the current hull and build into an optional pressure lane.'
         : 'The optional pressure lane is unavailable; bank the outcome and extract.'
-    }`;
+    }${this.rivalDecisionCopy ? ` ${this.rivalDecisionCopy}` : ''}`;
 
     const grid = document.createElement('div');
     grid.className = 'route-grid';
@@ -79,8 +80,12 @@ export class MissionBranchScene implements Scene {
       const meta = document.createElement('span');
       meta.className = 'choice-meta';
       meta.textContent = option.default
-        ? 'Direct extraction'
-        : 'Optional encounter | state carries';
+        ? this.rivalDecisionCopy
+          ? 'Direct extraction | rival escapes'
+          : 'Direct extraction'
+        : this.rivalDecisionCopy
+          ? 'Optional pursuit | capture attempt'
+          : 'Optional encounter | state carries';
 
       button.append(label, meta, body);
       grid.append(button);

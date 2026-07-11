@@ -11,6 +11,10 @@ import {
 import { getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import { selectMissionContract } from '../game/MissionDirector';
 import { getMissionObjective } from '../content/objectives';
+import {
+  createFactionCampaignDebugState,
+  getFactionCampaignInfluence
+} from '../game/FactionCampaign';
 import type { InputAction } from '../systems/InputSystem';
 import {
   applyContractScreenTheme,
@@ -55,6 +59,11 @@ export class RouteScene implements Scene {
     routeGrid.className = 'route-grid';
     const interActEffects = getInterActEffectsForSector(this.session, sector);
     const latestObjective = this.session.objectiveHistory.at(-1);
+    const campaign = getFactionCampaignInfluence(
+      this.run.factionCampaign,
+      this.session.factionCampaign,
+      sector
+    );
     const nextSectorIndex = this.session.currentSectorIndex + 1;
     const nextContract = this.run.expedition.sectors[nextSectorIndex]
       ? selectMissionContract(this.run.expedition, nextSectorIndex)
@@ -112,6 +121,15 @@ export class RouteScene implements Scene {
           ? `Next mission: ${nextContract.title} / ${nextObjective.hudVerb}. ${nextContract.routePreview}`
           : `Final extraction. ${latestObjective?.summary ?? 'Mission ledger ready to close.'}`;
 
+      const campaignIntel = document.createElement('span');
+      campaignIntel.className = 'choice-body route-contract-hint';
+      campaignIntel.dataset.testid = `route-${route.kind}-campaign-preview`;
+      campaignIntel.textContent = `Campaign: ${campaign.routePreview}${
+        campaign.rival
+          ? ` Rival ${campaign.rival.name} may recur aboard ${campaign.rival.shipName}.`
+          : ''
+      }${campaign.crewOfferSignal ? ` Crew lead: ${campaign.crewOfferSignal}` : ''}`;
+
       routeButton.append(
         name,
         risk,
@@ -120,7 +138,8 @@ export class RouteScene implements Scene {
         ...(route.rewardTierHint ? [reward] : []),
         ...(route.environmentalHint ? [environment] : []),
         ...(intelHint ? [intel] : []),
-        missionPreview
+        missionPreview,
+        campaignIntel
       );
       routeGrid.append(routeButton);
       this.routeButtons.push(routeButton);
@@ -157,12 +176,22 @@ export class RouteScene implements Scene {
 
   public getDebugState(): SceneDebugState {
     const sector = getCurrentSector(this.run, this.session);
+    const influence = getFactionCampaignInfluence(
+      this.run.factionCampaign,
+      this.session.factionCampaign,
+      sector
+    );
 
     return {
       seed: this.run.seed,
       entityCount: 0,
       act: createActDebugState(sector.act),
       contractTheme: createContractThemeDebugState(this.contract),
+      factionCampaign: createFactionCampaignDebugState(
+        this.run.factionCampaign,
+        this.session.factionCampaign,
+        influence
+      ),
       upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects)
     };
   }

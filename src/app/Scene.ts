@@ -9,6 +9,7 @@ import type { ContractThemeDebugState } from '../ui/ContractTheme';
 import type { MissionDebugState } from '../game/MissionDirector';
 import type { ShipLoadoutDebugState } from '../game/ShipLoadout';
 import type { EngineeringDebugState } from '../game/Foundry';
+import type { FactionCampaignDebugState } from '../game/FactionCampaign';
 
 export interface SceneDebugState {
   readonly seed: string;
@@ -76,6 +77,7 @@ export interface SceneDebugState {
     readonly safeLaneLabel: string;
     readonly bossLockActive: boolean;
   };
+  readonly factionCampaign?: FactionCampaignDebugState;
   readonly actPressure?: ActPressureDebugState;
   readonly finale?: SecondActFinaleDebugState;
   readonly upgradeEffects?: readonly string[];

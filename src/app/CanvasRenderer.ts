@@ -98,6 +98,9 @@ export interface EnemyRenderState {
   readonly radius: number;
   readonly hull: number;
   readonly maxHull: number;
+  readonly rivalName?: string | null;
+  readonly rivalTitle?: string | null;
+  readonly rivalShipName?: string | null;
 }
 
 export interface BossRenderState {
@@ -1063,6 +1066,21 @@ export class CanvasRenderer {
     context.fillRect(-enemy.radius, enemy.radius + 6, enemy.radius * 2, 4);
     context.fillStyle = faction.palette.trim;
     context.fillRect(-enemy.radius, enemy.radius + 6, enemy.radius * 2 * healthRatio, 4);
+
+    if (enemy.rivalName) {
+      context.globalAlpha = 1;
+      context.fillStyle = this.settings.bulletContrast === 'high' ? '#ffffff' : '#ffef5f';
+      context.strokeStyle = '#03050d';
+      context.lineWidth = 3;
+      context.font = `bold ${this.settings.performanceMode ? 8 : 9}px ui-monospace, monospace`;
+      context.textAlign = 'center';
+      context.textBaseline = 'bottom';
+      const label = this.settings.performanceMode
+        ? `RIVAL ${enemy.rivalName}`
+        : `RIVAL ${enemy.rivalName} | ${enemy.rivalShipName ?? enemy.rivalTitle ?? ''}`;
+      context.strokeText(label, 0, -enemy.radius - 10);
+      context.fillText(label, 0, -enemy.radius - 10);
+    }
 
     context.restore();
   }

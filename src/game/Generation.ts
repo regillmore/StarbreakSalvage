@@ -46,6 +46,7 @@ import {
 import { createSectorObjectivePlan, type SectorObjectivePlan } from './SectorObjectives';
 import { createSecondActFinalePlan, type SecondActFinalePlan } from './SecondActFinale';
 import { createSetPiecePlan, type SetPiecePlan } from './SetPiece';
+import { createFactionCampaignPlan, type FactionCampaignPlan } from './FactionCampaign';
 import { createLegacyStartingLoadout, type ResolvedShipLoadout } from './ShipLoadout';
 import { resolveRunUpgradeEffects, type RunUpgradeEffects } from './UpgradeEffects';
 import {
@@ -123,6 +124,7 @@ export interface RunSkeleton {
   readonly seedSurvey: string | null;
   readonly acts: readonly RunActPlan[];
   readonly expedition: ExpeditionGraph;
+  readonly factionCampaign: FactionCampaignPlan;
   readonly contracts: readonly StartingContract[];
   readonly sectors: readonly SectorRoute[];
 }
@@ -234,6 +236,11 @@ export function generateRunSkeleton(
     sectors,
     rng: rootRng.fork('expedition-graph')
   });
+  const factionCampaign = createFactionCampaignPlan({
+    seed,
+    saveFingerprint,
+    sectorCount: sectors.length
+  });
 
   return {
     seed,
@@ -243,6 +250,7 @@ export function generateRunSkeleton(
     seedSurvey: createSeedSurveyText(upgradeEffects, sectors),
     acts,
     expedition,
+    factionCampaign,
     contracts,
     sectors
   };
@@ -717,6 +725,17 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
         transition: gate.transitionKind
       })),
       capacity: run.expedition.capacity
+    },
+    factionCampaign: {
+      id: run.factionCampaign.id,
+      rivals: run.factionCampaign.rivals.map((rival) => ({
+        id: rival.id,
+        factionId: rival.factionId,
+        archetypeId: rival.archetypeId,
+        name: rival.name,
+        shipName: rival.shipName,
+        firstSectorIndex: rival.firstSectorIndex
+      }))
     },
     ...(run.upgradeEffects.activeUpgradeIds.length > 0
       ? {

@@ -29,6 +29,7 @@ import {
   type CombatState
 } from '../game/CombatState';
 import type { BossId } from '../content/bosses';
+import { getFactionById } from '../content/factions';
 import type { SectorId } from '../content/sectors';
 import { getEnvironmentObjectsForSector } from '../content/environmentObjects';
 import type { ShipStats } from '../content/ships';
@@ -149,6 +150,12 @@ import {
   isSetPieceBossLockReleased
 } from '../game/SetPiece';
 import {
+  createFactionCampaignDebugState,
+  createRivalEnemySpawn,
+  type FactionCampaignInfluence,
+  type FactionCampaignState
+} from '../game/FactionCampaign';
+import {
   createCombatFeedbackSnapshot,
   diffCombatFeedback,
   type CombatFeedbackCue
@@ -252,7 +259,9 @@ export class GameplayScene implements Scene {
     private readonly onPause: (scene: GameplayScene) => void,
     private readonly onGameOver: (result: CombatRunResult) => void,
     private readonly onSectorComplete: (result: CombatRunResult) => void,
-    private readonly missionContext: GameplayMissionContext | null = null
+    private readonly missionContext: GameplayMissionContext | null = null,
+    private readonly campaignInfluence: FactionCampaignInfluence | null = null,
+    private readonly campaignState: FactionCampaignState | null = null
   ) {
     this.positionReadout = document.createElement('p');
     this.positionReadout.className = 'sr-only';
@@ -857,6 +866,13 @@ export class GameplayScene implements Scene {
       enemyRoles,
       environmentStress,
       setPiece: setPiece ?? undefined,
+      factionCampaign: this.campaignState
+        ? createFactionCampaignDebugState(
+            this.run.factionCampaign,
+            this.campaignState,
+            this.campaignInfluence
+          )
+        : undefined,
       actPressure: createActPressureDebugState({
         model: this.getActPressureModel(),
         enemyRoles,
@@ -1044,6 +1060,23 @@ export class GameplayScene implements Scene {
     const engineering = createEngineeringCombatProfile(this.engineeringState);
 
     const setPiecePlan = this.getCurrentSector().setPiece;
+    const rivalSpawn = this.campaignInfluence
+      ? createRivalEnemySpawn(
+          this.campaignInfluence,
+          this.sectorIndex,
+          this.getCurrentScrollPlan().length
+        )
+      : null;
+    const influencedSpawnSchedule = wavePlan.spawnSchedule.map((spawn, index) =>
+      this.campaignInfluence && index % 3 === 0
+        ? { ...spawn, factionId: this.campaignInfluence.enemyFactionId }
+        : spawn
+    );
+    const spawnSchedule = [...influencedSpawnSchedule, ...(rivalSpawn ? [rivalSpawn] : [])].sort(
+      (left, right) =>
+        (left.atDistance ?? Number.POSITIVE_INFINITY) -
+          (right.atDistance ?? Number.POSITIVE_INFINITY) || left.atSeconds - right.atSeconds
+    );
     this.combatState ??= createCombatState(this.getCombatBounds(), this.getCombatSeed(), {
       weaponId: engineering.weaponId,
       shipStats: this.shipStats,
@@ -1052,7 +1085,7 @@ export class GameplayScene implements Scene {
       items: this.itemLoadout,
       bossId: this.getCurrentSector().bossId,
       bossSpawnAtSeconds: this.getCurrentArenaPlan() ? null : wavePlan.bossSpawnAtSeconds,
-      spawnSchedule: wavePlan.spawnSchedule,
+      spawnSchedule,
       enemyHullBonus: this.getEnemyHullBonus(),
       enemyFireDelayMultiplier: this.getEnemyFireDelayMultiplier(),
       bossHullBonus: this.getBossHullBonus(),
@@ -1061,6 +1094,7 @@ export class GameplayScene implements Scene {
       sectorId: this.getCurrentSector().sectorId,
       environmentObjectPlan: this.getEnvironmentObjectPlan(),
       setPiecePlan,
+      setPieceOwnerFactionId: this.campaignInfluence?.setPieceOwnerFactionId,
       looseCurrencyPlan: this.getLooseCurrencyPlan()
     });
     return this.combatState;
@@ -1378,8 +1412,11 @@ export class GameplayScene implements Scene {
     const setPiece = getSetPieceReadModel(state.setPiece);
     this.objectiveReadout.textContent = [
       getObjectiveProgress(this.getWavePlan(), state).readout,
+      this.campaignInfluence?.rival
+        ? `Rival ${this.campaignInfluence.rival.name} | ${this.campaignInfluence.rival.shipName} | appearance ${this.campaignInfluence.rival.appearance}`
+        : null,
       setPiece
-        ? `${setPiece.name}: ${setPiece.stageLabel} | target ${setPiece.targetLabel} | ${setPiece.destroyedComponents}/${setPiece.totalComponents}`
+        ? `${setPiece.name} (${getFactionById(state.setPiece?.ownerFactionId ?? this.getCurrentSector().bossFactionId).name}): ${setPiece.stageLabel} | target ${setPiece.targetLabel} | ${setPiece.destroyedComponents}/${setPiece.totalComponents}`
         : null
     ]
       .filter((part): part is string => Boolean(part))
@@ -1387,7 +1424,7 @@ export class GameplayScene implements Scene {
     this.verbReadout.textContent = this.getVerbReadout(state);
     this.weaponReadout.textContent = this.getWeaponReadout(state);
     this.syncMeters(state);
-    this.combatReadout.textContent = `Destroyed ${state.stats.enemiesDestroyed} | Shots ${state.stats.shotsFired} | Hooks ${state.stats.itemTriggers}`;
+    this.combatReadout.textContent = `Destroyed ${state.stats.enemiesDestroyed} | Rivals ${state.stats.rivalsDestroyed}D/${state.stats.rivalsEscaped}E | Shots ${state.stats.shotsFired} | Hooks ${state.stats.itemTriggers}`;
     this.bossReadout.textContent = state.boss
       ? `${formatSecondActFinaleBossName(
           this.getCurrentSector().finale,
@@ -1396,6 +1433,9 @@ export class GameplayScene implements Scene {
       : `Boss ${this.getCurrentBossName()}`;
     this.warningReadout.textContent =
       state.telegraphs[0]?.label ??
+      (state.rivalEncounter?.outcome === 'engaged'
+        ? `RIVAL ${state.rivalEncounter.name} | ${state.rivalEncounter.title} | ${state.rivalEncounter.tactic}`
+        : null) ??
       this.getActiveHazards()[0]?.hazard.label ??
       (setPiece && setPiece.active
         ? `${setPiece.stageLabel}; safe ${setPiece.safeLaneLabel}`

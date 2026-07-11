@@ -25,6 +25,10 @@ import {
 } from './ContractTheme';
 import { appendItemCardContent } from './ItemCard';
 import { createItemCardViewModel } from './ItemCardViewModel';
+import {
+  createFactionCampaignDebugState,
+  getFactionCampaignInfluence
+} from '../game/FactionCampaign';
 
 export class ShopScene implements Scene {
   public readonly id = 'shop';
@@ -46,17 +50,24 @@ export class ShopScene implements Scene {
     const shopModifiers = getShopModifiersForSector(this.session, sector.index);
     const interActEffects = getInterActEffectsForSector(this.session, sector);
     const upgradeReadout = getMarketDecoderReadout(this.run.upgradeEffects);
+    const campaign = getFactionCampaignInfluence(
+      this.run.factionCampaign,
+      this.session.factionCampaign,
+      sector
+    );
     const priceDiscount =
       shopModifiers.reduce((total, modifier) => total + modifier.discount, 0) +
       interActEffects.shopDiscount +
-      this.run.upgradeEffects.shopDiscount;
+      this.run.upgradeEffects.shopDiscount +
+      campaign.shopDiscount;
     const stockBonus =
       shopModifiers.reduce((total, modifier) => total + modifier.stockBonus, 0) +
       this.run.upgradeEffects.shopStockBonus;
     const shopBiasTags = [
       ...shopModifiers.flatMap((modifier) => modifier.biasTags),
       ...interActEffects.rewardBiasTags,
-      ...this.run.upgradeEffects.shopBiasTags
+      ...this.run.upgradeEffects.shopBiasTags,
+      ...campaign.shopBiasTags
     ];
     const engineering = createEngineeringCombatProfile(this.session.engineering);
     const inventory = generateShopInventory({
@@ -94,7 +105,8 @@ export class ShopScene implements Scene {
       `${sector.sectorName} Market`,
       `Credits ${this.session.credits}`,
       priceDiscount > 0 ? `Permit -${priceDiscount} prices` : null,
-      actEconomyReadout
+      actEconomyReadout,
+      `${campaign.responseLabel} ${campaign.shopDiscount >= 0 ? 'permit' : 'warrant'} ${campaign.shopDiscount >= 0 ? '-' : '+'}${Math.abs(campaign.shopDiscount)}`
     ]
       .filter(Boolean)
       .join(' | ');
@@ -179,10 +191,21 @@ export class ShopScene implements Scene {
   }
 
   public getDebugState(): SceneDebugState {
+    const sector = getCurrentSector(this.run, this.session);
+    const influence = getFactionCampaignInfluence(
+      this.run.factionCampaign,
+      this.session.factionCampaign,
+      sector
+    );
     return {
       seed: this.run.seed,
       entityCount: 0,
       contractTheme: createContractThemeDebugState(this.contract),
+      factionCampaign: createFactionCampaignDebugState(
+        this.run.factionCampaign,
+        this.session.factionCampaign,
+        influence
+      ),
       upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects)
     };
   }

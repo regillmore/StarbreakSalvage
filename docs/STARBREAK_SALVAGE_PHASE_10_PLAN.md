@@ -4,7 +4,7 @@
 
 Phase 9 is complete as a local second-act playtest candidate. A seeded run can cross ten sectors in two acts, stop at a deterministic midpoint refit, carry its build and economy into Act II, and resolve through a second-act finale. Full checks, 11 Chromium smoke tests, and production preview asset-path smoke pass.
 
-Work orders 091-096 now provide the expedition graph, multi-stage missions and objective anthology, modular shipcraft, salvage engineering, and the first physical set-piece layer. Sectors 1, 7, and 10 host a capital ship, station, and wreck convoy assembled from shared subsystem templates; faction campaigns, rivals, crew, and the Scenario Lab remain ahead.
+Work orders 091-097 now provide the expedition graph, multi-stage missions and objective anthology, modular shipcraft, salvage engineering, physical set pieces, and the first living-faction layer. Sectors 1, 7, and 10 host a capital ship, station, and wreck convoy assembled from shared subsystem templates. Four run-local faction policies and four seeded recurring captains now react through later combat, missions, routes, shops, crew-offer signals, set-piece ownership, and finale pressure; crew and the Scenario Lab remain ahead.
 
 The resulting run currently takes about six minutes in a normal local playthrough. That is useful diagnostic evidence: adding a second act expanded the route model, but it did not yet create enough lived experience inside each sector. Phase 10 should add consequential play and decisions instead of stretching timers, inflating hull, or simply adding a third act.
 
@@ -121,6 +121,8 @@ Exit criteria:
 - Identical seeds and decision histories reproduce faction state, rival identity, adaptations, appearances, and outcomes.
 - Responses are legible in route previews, mission briefings, combat callouts, debug state, and summaries.
 - Rival retreat/capture/destruction paths cannot corrupt objective or reward accounting.
+
+Status: implemented by work order 097. `src/content/factionCampaigns.ts` provides four response policies and five reusable rival archetypes. `src/game/FactionCampaign.ts` creates four unique seed-plus-save rival plans and keeps generated identity separate from an idempotent, bounded decision/outcome fold. Aid, theft, mercy, contracts, mission results, encounters, retreats, captures, and destruction drive faction ledgers, injuries, ordered adaptations, grudges, recurrence, terminal rewards, and finale eligibility. The resulting influence changes enemy composition and pressure, shop pricing and bias, route/mission/branch copy, crew-offer signals, set-piece ownership, and finale combat. Rival actors are non-required objective participants, first-appearance retreat and terminal outcomes use centralized combat accounting, and one-shot event/reward guards prevent duplicate progression. HUD/briefing/route/shop/summary/debug surfaces plus the `R` recurrence fixture make the campaign inspectable.
 
 ### P10.7 - Crew, Wingmates, And Distress Contracts
 

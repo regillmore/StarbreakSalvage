@@ -820,6 +820,9 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
 
 .transition-panel {
   width: min(90vw, 620px);
+  max-height: min(92vh, 840px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .junction-panel {

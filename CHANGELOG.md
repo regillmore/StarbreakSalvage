@@ -69,6 +69,8 @@
 - Added deterministic Act II finale variants that tune final boss hull and arena approach through the existing boss path, expose finale state in HUD/debug/summary/save records, preserve boss-release hazard fairness, unlock the Core Descent music flag on victory, and add an `F` debug shortcut for final-boss smoke.
 - Added Act II debug smoke shortcuts for the inter-act junction, first Act II sector entry, finale, and two-act summary, with route-tag and live objective-state telemetry in the debug overlay.
 - Added the Phase 10 expedition foundation: deterministic seed-plus-save graphs with stable act/sector/mission-leg/node/branch/gate ids, validated duration/pressure/reward/content contracts, separate session decision/progress state, cockpit/summary/debug read models, 16.0-19.7 minutes of structural target capacity, and v4-to-v5 save migration.
+- Added run-local faction campaigns with four distinct response policies and four unique seed-plus-save rival captains selected from five recurring archetypes. Bounded decision history now turns aid, theft, mercy, contracts, mission outcomes, rival retreats, capture, and destruction into later combat pressure, route/mission/shop copy and rules, crew-offer signals, set-piece ownership, terminal rewards, and possible finale intervention.
+- Added objective-safe rival combat with authored first-encounter retreat thresholds, visible injuries/upgrades/grudges, non-color canvas/HUD identity, one-shot terminal accounting, summary/debug read models, and a public `R` recurrence fixture.
 
 ### Testing
 

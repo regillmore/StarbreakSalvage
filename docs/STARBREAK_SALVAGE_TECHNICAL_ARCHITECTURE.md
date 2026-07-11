@@ -567,6 +567,14 @@ Work order 096 implementation:
 - Crew definitions should remain content; recruited crew and wingmates should be small runtime records referencing definitions plus trust, injury, command, and mission state.
 - Ally AI must use bounded target queries and explicit command state. Damage attribution and objective policy should share the existing centralized defeat/accounting paths.
 
+Work order 097 implementation:
+
+- `src/content/factionCampaigns.ts` owns four response policies, five reusable rival archetypes, faction-specific name parts, recurrence contracts, ordered upgrades, terminal rewards, item biases, and non-color combat cues. `RunSkeleton.factionCampaign` generates four unique rival plans once from seed plus save fingerprint without moving existing generation streams.
+- `src/game/FactionCampaign.ts` separates that immutable plan from `RunSession.factionCampaign`. A pure event fold rejects campaign mismatches, ignores duplicate ids, bounds visible history to 64 entries and processed ids to 128, and updates faction ledgers plus rival encounter/outcome state without frame-time RNG.
+- A campaign influence read model is the only downstream integration surface. Gameplay, route, transition, mission branch, shop, set-piece ownership, crew-offer copy, summary, and debug consumers do not reimplement faction arithmetic.
+- Rivals enter `CombatState` as ordinary faction actors with explicit rival metadata and `countsForObjective: false`. First-appearance direct damage can produce a retreat; later destruction and cleanup produce one rival outcome, no ordinary kill/pickup credit, and no required field-clear blocker. Campaign event ids make capture/destruction rewards one-shot and finale eligibility derives only from folded outcomes.
+- `R` builds a deterministic public recurrence fixture for browser/debug inspection. Campaign state remains run-local, so save schema v5 does not require migration; a future suspend/resume feature must serialize plan plus compact decision history together.
+
 ### Run timeline and Scenario Lab
 
 - Emit compact timeline events for node/stage transitions, branch choices, economy, engineering, faction/rival/crew outcomes, bosses, and run end. Store ids and small payloads; resolve player-facing copy later.

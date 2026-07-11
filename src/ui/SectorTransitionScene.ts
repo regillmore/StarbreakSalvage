@@ -33,6 +33,10 @@ import {
   createContractThemeStrip,
   getContractThemeOptions
 } from './ContractTheme';
+import {
+  createFactionCampaignDebugState,
+  getFactionCampaignInfluence
+} from '../game/FactionCampaign';
 
 export class SectorTransitionScene implements Scene {
   public readonly id = 'sector-transition';
@@ -64,6 +68,11 @@ export class SectorTransitionScene implements Scene {
       scroll: routeConditionedScroll
     });
     const scroll = applySectorPacingToScroll(routeConditionedScroll, pacing);
+    const campaign = getFactionCampaignInfluence(
+      this.run.factionCampaign,
+      this.session.factionCampaign,
+      sector
+    );
     const shell = document.createElement('main');
     shell.className = 'scene-panel transition-panel';
     shell.dataset.testid = 'mission-briefing';
@@ -115,6 +124,22 @@ export class SectorTransitionScene implements Scene {
     waveLine.className = 'transition-copy';
     waveLine.textContent = sector.majorWaves.join(' | ');
 
+    const campaignLine = document.createElement('p');
+    campaignLine.className = 'transition-copy';
+    campaignLine.dataset.testid = 'faction-campaign-brief';
+    campaignLine.textContent = [
+      `Faction campaign: ${campaign.missionBrief}`,
+      `Response ${campaign.responseLabel} | Aid ${campaign.aid} | Hostility ${campaign.hostility} | Territory ${campaign.territoryPressure}`,
+      campaign.rival
+        ? `RIVAL ${campaign.rival.name} | ${campaign.rival.title} | ${campaign.rival.shipName} | ${campaign.rival.tactic}`
+        : null,
+      campaign.crewOfferSignal ? `Crew lead: ${campaign.crewOfferSignal}` : null,
+      sector.setPiece ? `Set-piece owner projection: ${campaign.factionName}` : null,
+      campaign.finaleIntervention ? 'Finale intervention risk active.' : null
+    ]
+      .filter((part): part is string => Boolean(part))
+      .join(' | ');
+
     const enterButton = document.createElement('button');
     enterButton.className = 'primary-button';
     enterButton.type = 'button';
@@ -129,6 +154,7 @@ export class SectorTransitionScene implements Scene {
       objectiveLine,
       conditionLine,
       waveLine,
+      campaignLine,
       enterButton
     );
     this.uiRoot.replaceChildren(shell);
@@ -170,6 +196,11 @@ export class SectorTransitionScene implements Scene {
       contractTheme: createContractThemeDebugState(this.contract),
       upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects),
       mission: this.missionDebug ?? undefined,
+      factionCampaign: createFactionCampaignDebugState(
+        this.run.factionCampaign,
+        this.session.factionCampaign,
+        getFactionCampaignInfluence(this.run.factionCampaign, this.session.factionCampaign, sector)
+      ),
       progression: {
         runCredits: this.session.credits,
         runSalvage: this.session.salvage

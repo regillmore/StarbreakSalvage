@@ -61,6 +61,7 @@ import {
   incrementShopRerollCount,
   recordSectorCombatResult,
   recordMissionObjectiveOutcome,
+  recordFactionCampaignEvent,
   recordExpeditionBranchDecision,
   resetMissionForCurrentSector,
   spendCredits,
@@ -106,6 +107,13 @@ import type { ItemId } from '../content/items';
 import type { UpgradeId } from '../content/upgrades';
 import { UpgradeBayScene } from '../ui/UpgradeBayScene';
 import { FoundryScene } from '../ui/FoundryScene';
+import {
+  createDebugFactionCampaignState,
+  createFactionCampaignCombatModifier,
+  getCapturableRivalForSector,
+  getEngagedRivalForSector,
+  getFactionCampaignInfluence
+} from '../game/FactionCampaign';
 
 export class GameApp {
   private readonly canvas: HTMLCanvasElement;
@@ -327,6 +335,34 @@ export class GameApp {
       this.runSession.mission,
       getCurrentSector(this.currentRun, this.runSession)
     );
+    const sector = getCurrentSector(this.currentRun, this.runSession);
+    let campaignInfluence = getFactionCampaignInfluence(
+      this.currentRun.factionCampaign,
+      this.runSession.factionCampaign,
+      sector
+    );
+    if (
+      stage.id !== schedule.optionalStageId &&
+      campaignInfluence.rival &&
+      campaignInfluence.rival.status !== 'engaged'
+    ) {
+      recordFactionCampaignEvent(this.runSession, this.currentRun.factionCampaign, {
+        id: `${stage.id}:rival-encounter:${campaignInfluence.rival.id}`,
+        type: 'rivalEncounter',
+        sectorIndex: this.runSession.currentSectorIndex,
+        factionId: campaignInfluence.rival.factionId,
+        rivalId: campaignInfluence.rival.id
+      });
+      campaignInfluence = getFactionCampaignInfluence(
+        this.currentRun.factionCampaign,
+        this.runSession.factionCampaign,
+        sector
+      );
+    }
+    const campaignModifier = createFactionCampaignCombatModifier(
+      campaignInfluence,
+      this.runSession.currentSectorIndex
+    );
 
     return new GameplayScene(
       this.uiRoot,
@@ -335,7 +371,10 @@ export class GameApp {
       this.selectedContract,
       getEffectiveShipStats(this.selectedContract, this.runSession),
       this.runSession.engineering,
-      getCombatModifiersForSector(this.runSession, this.runSession.currentSectorIndex),
+      [
+        ...getCombatModifiersForSector(this.runSession, this.runSession.currentSectorIndex),
+        campaignModifier
+      ],
       createSectorConditionPlan({
         run: this.currentRun,
         sectorIndex: this.runSession.currentSectorIndex,
@@ -363,7 +402,9 @@ export class GameApp {
         projection,
         readModel: missionReadModel,
         debugState: createMissionDebugState(schedule, this.runSession.mission)
-      }
+      },
+      campaignInfluence,
+      this.runSession.factionCampaign
     );
   }
 
@@ -391,6 +432,9 @@ export class GameApp {
       case 'debugMissionOptional':
         this.showDebugMissionOptional();
         return true;
+      case 'debugRivalCampaign':
+        this.showDebugRivalCampaign();
+        return true;
       default:
         return false;
     }
@@ -401,6 +445,18 @@ export class GameApp {
     this.lastRunResult = null;
     this.lastSaveUpdate = null;
     this.summarySaved = false;
+  }
+
+  private showDebugRivalCampaign(): void {
+    this.resetDebugRunState();
+    this.runSession.factionCampaign = createDebugFactionCampaignState(
+      this.currentRun.factionCampaign
+    );
+    this.runSession.currentSectorIndex = Math.min(2, this.currentRun.sectors.length - 1);
+    resetMissionForCurrentSector(this.currentRun, this.runSession);
+    this.runSession.credits = Math.max(this.runSession.credits, 30);
+    this.runSession.salvage = Math.max(this.runSession.salvage, 6);
+    this.showSectorTransition();
   }
 
   private showDebugActTwoJunction(): void {
@@ -577,6 +633,74 @@ export class GameApp {
   private handleMissionCombatComplete(result: CombatRunResult): void {
     const stageId = this.runSession.mission.currentStageId;
     const schedule = this.getCurrentMissionSchedule();
+    const sector = getCurrentSector(this.currentRun, this.runSession);
+    const sectorIndex = this.runSession.currentSectorIndex;
+    const isOptionalStage = stageId === schedule.optionalStageId;
+    const objectiveOutcome = result.missionObjective?.outcome;
+    const campaignOutcome =
+      objectiveOutcome === 'failure'
+        ? 'failure'
+        : objectiveOutcome === 'partialSuccess'
+          ? 'partialSuccess'
+          : 'success';
+
+    if (!isOptionalStage && schedule.contract) {
+      recordFactionCampaignEvent(this.runSession, this.currentRun.factionCampaign, {
+        id: `${stageId}:campaign-contract`,
+        type: 'contractCompleted',
+        sectorIndex,
+        factionId: sector.bossFactionId,
+        contractId: schedule.contract.id
+      });
+      recordFactionCampaignEvent(this.runSession, this.currentRun.factionCampaign, {
+        id: `${stageId}:campaign-outcome`,
+        type: 'missionOutcome',
+        sectorIndex,
+        factionId: sector.bossFactionId,
+        contractId: schedule.contract.id,
+        outcome: campaignOutcome
+      });
+    }
+
+    const combatRival = result.rivalEncounter;
+    const unresolvedRival = getEngagedRivalForSector(
+      this.currentRun.factionCampaign,
+      this.runSession.factionCampaign,
+      sectorIndex
+    );
+    if (combatRival || unresolvedRival) {
+      const rivalId = combatRival?.rivalId ?? unresolvedRival!.id;
+      recordFactionCampaignEvent(this.runSession, this.currentRun.factionCampaign, {
+        id: `${stageId}:rival-outcome:${rivalId}`,
+        type: 'rivalOutcome',
+        sectorIndex,
+        factionId: combatRival?.rivalId
+          ? (this.currentRun.factionCampaign.rivals.find(
+              (candidate) => candidate.id === combatRival.rivalId
+            )?.factionId ?? sector.bossFactionId)
+          : unresolvedRival!.factionId,
+        rivalId,
+        outcome: combatRival?.outcome ?? 'escaped'
+      });
+    }
+
+    if (isOptionalStage && campaignOutcome === 'success') {
+      const capturable = getCapturableRivalForSector(
+        this.currentRun.factionCampaign,
+        this.runSession.factionCampaign,
+        sectorIndex
+      );
+      if (capturable) {
+        recordFactionCampaignEvent(this.runSession, this.currentRun.factionCampaign, {
+          id: `${stageId}:rival-captured:${capturable.id}`,
+          type: 'rivalOutcome',
+          sectorIndex,
+          factionId: capturable.factionId,
+          rivalId: capturable.id,
+          outcome: 'captured'
+        });
+      }
+    }
     const transition = this.dispatchCurrentMission({
       id: `${stageId}:combat-complete`,
       type: 'completeCombat',
@@ -596,7 +720,6 @@ export class GameApp {
 
     this.lastRunResult = result;
     recordMissionObjectiveOutcome(this.runSession, schedule, result);
-    const sector = getCurrentSector(this.currentRun, this.runSession);
     recordSectorCombatResult(this.runSession, result, createActEconomyProfile(sector));
     const nextStage = getMissionStage(
       this.getCurrentMissionSchedule(),
@@ -665,6 +788,11 @@ export class GameApp {
 
   private showMissionBranch(): void {
     const schedule = this.getCurrentMissionSchedule();
+    const capturableRival = getCapturableRivalForSector(
+      this.currentRun.factionCampaign,
+      this.runSession.factionCampaign,
+      this.runSession.currentSectorIndex
+    );
     this.sceneManager.switchTo(
       new MissionBranchScene(
         this.uiRoot,
@@ -686,6 +814,16 @@ export class GameApp {
             return;
           }
 
+          if (capturableRival && option.default) {
+            recordFactionCampaignEvent(this.runSession, this.currentRun.factionCampaign, {
+              id: `${schedule.branch.id}:${option.id}:spared:${capturableRival.id}`,
+              type: 'targetSpared',
+              sectorIndex: this.runSession.currentSectorIndex,
+              factionId: capturableRival.factionId,
+              rivalId: capturableRival.id
+            });
+          }
+
           recordExpeditionBranchDecision(
             this.currentRun,
             this.runSession,
@@ -698,7 +836,10 @@ export class GameApp {
           } else {
             this.showMissionRelief();
           }
-        }
+        },
+        capturableRival
+          ? `Rival option: extract and let ${capturableRival.name} recur, or pursue the optional lane to capture ${capturableRival.shipName}.`
+          : null
       )
     );
   }
@@ -751,7 +892,7 @@ export class GameApp {
       availableCredits: this.runSession.credits
     });
 
-    applyRouteOutcome(this.runSession, sector, route, outcome);
+    applyRouteOutcome(this.runSession, sector, route, outcome, this.currentRun.factionCampaign);
 
     if (route.kind === 'shop') {
       this.showShop(route);
@@ -1044,7 +1185,8 @@ export class GameApp {
           this.showMainMenu();
         },
         formatMissionTimeline(schedule, this.runSession.mission),
-        formatMissionObjectiveHistory(this.runSession.objectiveHistory)
+        formatMissionObjectiveHistory(this.runSession.objectiveHistory),
+        this.runSession.factionCampaign
       )
     );
   }
@@ -1300,6 +1442,15 @@ export class GameApp {
           `Set-piece ${debugState.setPiece.name} ${debugState.setPiece.beat} ${debugState.setPiece.destroyedComponents}/${debugState.setPiece.totalComponents} target ${debugState.setPiece.targetLabel} lane ${debugState.setPiece.safeLaneLabel}${debugState.setPiece.bossLockActive ? ' BOSS-LOCK' : ''}`
         ]
       : [];
+    const factionCampaignDebug = debugState.factionCampaign
+      ? [
+          `Campaign ${debugState.factionCampaign.influence} events ${debugState.factionCampaign.historyCount}`,
+          `Campaign rivals ${debugState.factionCampaign.rivals.join(' / ')}`,
+          ...(debugState.factionCampaign.activeRival
+            ? [`Active rival ${debugState.factionCampaign.activeRival}`]
+            : [])
+        ]
+      : [];
     const upgradeDebug =
       debugState.upgradeEffects && debugState.upgradeEffects.length > 0
         ? [`Upgrades ${debugState.upgradeEffects.join(', ')}`]
@@ -1351,6 +1502,7 @@ export class GameApp {
       ...engineeringDebug,
       ...combinedProcDebug,
       ...setPieceDebug,
+      ...factionCampaignDebug,
       ...upgradeDebug,
       ...progressionDebug,
       ...actDebug,

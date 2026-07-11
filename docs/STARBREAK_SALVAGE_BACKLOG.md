@@ -1772,7 +1772,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 097.
+- Implemented in work order 097. Four data-backed faction response policies and five rival archetypes produce four unique seed-plus-save captains per run. A bounded, idempotent campaign event fold tracks aid, hostility, stolen assets, spared targets, contracts, territory pressure, mission outcomes, rival injuries/upgrades/grudges, and escape/capture/destruction. Those records alter later briefings, routes, enemy composition and pressure, shops, crew-offer signals, set-piece ownership, and finale intervention. Rival combat shares centralized accounting but remains optional to required objectives; terminal rewards are one-shot, public debug state includes a deterministic `R` recurrence fixture, and known-seed decision histories reproduce all later influence.
 
 ### BF3 - Crew and wingmates
 
