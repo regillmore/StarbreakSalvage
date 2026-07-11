@@ -31,7 +31,12 @@ import {
   type RunSkeleton,
   type StartingContract
 } from '../game/Generation';
-import { acquireComponent, generateComponentSalvage } from '../game/Foundry';
+import {
+  acquireComponent,
+  createEngineeringCombatProfile,
+  generateComponentSalvage,
+  resolveEngineeringSnapshot
+} from '../game/Foundry';
 import {
   createRunActSaveContext,
   getInterActTransitionHandoff,
@@ -62,6 +67,7 @@ import {
   recordSectorCombatResult,
   recordMissionObjectiveOutcome,
   recordFactionCampaignEvent,
+  recordCrewRosterEvent,
   recordExpeditionBranchDecision,
   resetMissionForCurrentSector,
   spendCredits,
@@ -114,6 +120,12 @@ import {
   getEngagedRivalForSector,
   getFactionCampaignInfluence
 } from '../game/FactionCampaign';
+import {
+  createCrewCombatProfile,
+  createDebugCrewRosterState,
+  getCrewFoundryAssist,
+  getRecruitableCrewCandidate
+} from '../game/CrewCommand';
 
 export class GameApp {
   private readonly canvas: HTMLCanvasElement;
@@ -363,6 +375,14 @@ export class GameApp {
       campaignInfluence,
       this.runSession.currentSectorIndex
     );
+    const resolvedLoadout =
+      resolveEngineeringSnapshot(this.runSession.engineering.committed).loadout ??
+      this.selectedContract.loadout;
+    const crewProfile = createCrewCombatProfile(
+      this.currentRun.crewRoster,
+      this.runSession.crewRoster,
+      resolvedLoadout
+    );
 
     return new GameplayScene(
       this.uiRoot,
@@ -404,7 +424,8 @@ export class GameApp {
         debugState: createMissionDebugState(schedule, this.runSession.mission)
       },
       campaignInfluence,
-      this.runSession.factionCampaign
+      this.runSession.factionCampaign,
+      crewProfile
     );
   }
 
@@ -435,6 +456,9 @@ export class GameApp {
       case 'debugRivalCampaign':
         this.showDebugRivalCampaign();
         return true;
+      case 'debugCrewWing':
+        this.showDebugCrewWing();
+        return true;
       default:
         return false;
     }
@@ -456,6 +480,16 @@ export class GameApp {
     resetMissionForCurrentSector(this.currentRun, this.runSession);
     this.runSession.credits = Math.max(this.runSession.credits, 30);
     this.runSession.salvage = Math.max(this.runSession.salvage, 6);
+    this.showSectorTransition();
+  }
+
+  private showDebugCrewWing(): void {
+    this.resetDebugRunState();
+    this.runSession.crewRoster = createDebugCrewRosterState(this.currentRun.crewRoster);
+    this.runSession.currentSectorIndex = Math.min(3, this.currentRun.sectors.length - 1);
+    resetMissionForCurrentSector(this.currentRun, this.runSession);
+    this.runSession.credits = Math.max(this.runSession.credits, 30);
+    this.runSession.salvage = Math.max(this.runSession.salvage, 8);
     this.showSectorTransition();
   }
 
@@ -701,6 +735,70 @@ export class GameApp {
         });
       }
     }
+
+    for (const member of result.crew?.members ?? []) {
+      recordCrewRosterEvent(this.runSession, this.currentRun.crewRoster, {
+        id: `${stageId}:crew-combat:${member.candidateId}`,
+        type: 'combatOutcome',
+        sectorIndex,
+        candidateId: member.candidateId,
+        injured: member.injured,
+        retreated: member.retreated,
+        enemiesDefeated: member.enemiesDefeated,
+        salvageRecovered: member.salvageRecovered
+      });
+    }
+
+    const crewPolicy = schedule.contract?.crewPolicy ?? 'none';
+    recordCrewRosterEvent(this.runSession, this.currentRun.crewRoster, {
+      id: `${stageId}:crew-mission-outcome`,
+      type: 'missionOutcome',
+      sectorIndex,
+      outcome: campaignOutcome,
+      crewPolicy
+    });
+    const campaignInfluence = getFactionCampaignInfluence(
+      this.currentRun.factionCampaign,
+      this.runSession.factionCampaign,
+      sector
+    );
+    const commandHeadroom = createEngineeringCombatProfile(this.runSession.engineering).resources
+      .commandHeadroom;
+    const candidate =
+      campaignOutcome !== 'failure'
+        ? getRecruitableCrewCandidate(this.currentRun.crewRoster, this.runSession.crewRoster, {
+            sectorIndex,
+            crewPolicy: isOptionalStage ? 'none' : crewPolicy,
+            factionId: sector.bossFactionId,
+            factionSignal: Boolean(campaignInfluence.crewOfferSignal) && isOptionalStage,
+            commandHeadroom
+          })
+        : null;
+    if (candidate) {
+      const recruitment = recordCrewRosterEvent(this.runSession, this.currentRun.crewRoster, {
+        id: `${stageId}:crew-recruit:${candidate.id}`,
+        type: 'recruit',
+        sectorIndex,
+        candidateId: candidate.id,
+        commandHeadroom,
+        source:
+          crewPolicy === 'protectSpecialist'
+            ? 'protected specialist transfer'
+            : crewPolicy === 'recordCandidate'
+              ? 'distress rescue manifest'
+              : 'trusted faction distress channel'
+      });
+      if (recruitment.disposition === 'applied') {
+        recordFactionCampaignEvent(this.runSession, this.currentRun.factionCampaign, {
+          id: `${stageId}:crew-faction-aid:${candidate.id}`,
+          type: 'aid',
+          sectorIndex,
+          factionId: candidate.factionId,
+          amount: 1,
+          reason: `rescued ${candidate.callsign}`
+        });
+      }
+    }
     const transition = this.dispatchCurrentMission({
       id: `${stageId}:combat-complete`,
       type: 'completeCombat',
@@ -788,10 +886,28 @@ export class GameApp {
 
   private showMissionBranch(): void {
     const schedule = this.getCurrentMissionSchedule();
+    const sector = getCurrentSector(this.currentRun, this.runSession);
     const capturableRival = getCapturableRivalForSector(
       this.currentRun.factionCampaign,
       this.runSession.factionCampaign,
       this.runSession.currentSectorIndex
+    );
+    const campaign = getFactionCampaignInfluence(
+      this.currentRun.factionCampaign,
+      this.runSession.factionCampaign,
+      sector
+    );
+    const crewCandidate = getRecruitableCrewCandidate(
+      this.currentRun.crewRoster,
+      this.runSession.crewRoster,
+      {
+        sectorIndex: this.runSession.currentSectorIndex,
+        crewPolicy: 'none',
+        factionId: sector.bossFactionId,
+        factionSignal: Boolean(campaign.crewOfferSignal),
+        commandHeadroom: createEngineeringCombatProfile(this.runSession.engineering).resources
+          .commandHeadroom
+      }
     );
     this.sceneManager.switchTo(
       new MissionBranchScene(
@@ -837,9 +953,16 @@ export class GameApp {
             this.showMissionRelief();
           }
         },
-        capturableRival
-          ? `Rival option: extract and let ${capturableRival.name} recur, or pursue the optional lane to capture ${capturableRival.shipName}.`
-          : null
+        [
+          capturableRival
+            ? `Rival option: extract and let ${capturableRival.name} recur, or pursue the optional lane to capture ${capturableRival.shipName}.`
+            : null,
+          crewCandidate
+            ? `Distress option: the optional lane can recover ${crewCandidate.callsign} and ${crewCandidate.wingName}.`
+            : null
+        ]
+          .filter((copy): copy is string => Boolean(copy))
+          .join(' ') || null
       )
     );
   }
@@ -1036,6 +1159,7 @@ export class GameApp {
       state: this.runSession.engineering
     });
     this.runSession.engineering = acquireComponent(this.runSession.engineering, component);
+    const crewAssist = getCrewFoundryAssist(this.currentRun.crewRoster, this.runSession.crewRoster);
     this.sceneManager.switchTo(
       new FoundryScene(
         this.uiRoot,
@@ -1045,9 +1169,18 @@ export class GameApp {
         sector.index,
         (engineering, salvageGained) => {
           this.runSession.engineering = engineering;
-          this.runSession.salvage += salvageGained;
+          this.runSession.salvage += salvageGained + (crewAssist?.salvageBonus ?? 0);
+          if (crewAssist) {
+            recordCrewRosterEvent(this.runSession, this.currentRun.crewRoster, {
+              id: `foundry-assist:${sector.index}:${crewAssist.candidateId}`,
+              type: 'foundryAssist',
+              sectorIndex: this.runSession.currentSectorIndex,
+              candidateId: crewAssist.candidateId
+            });
+          }
           this.advanceAfterReward();
-        }
+        },
+        crewAssist?.label ?? null
       )
     );
   }
@@ -1186,7 +1319,8 @@ export class GameApp {
         },
         formatMissionTimeline(schedule, this.runSession.mission),
         formatMissionObjectiveHistory(this.runSession.objectiveHistory),
-        this.runSession.factionCampaign
+        this.runSession.factionCampaign,
+        this.runSession.crewRoster
       )
     );
   }
@@ -1451,6 +1585,12 @@ export class GameApp {
             : [])
         ]
       : [];
+    const crewDebug = debugState.crew
+      ? [
+          `Crew ${debugState.crew.activeCommand} cd ${debugState.crew.commandCooldown.toFixed(2)} issued ${debugState.crew.issuedCommands}`,
+          `Allies ${debugState.crew.allies.join(' / ') || 'none'}`
+        ]
+      : [];
     const upgradeDebug =
       debugState.upgradeEffects && debugState.upgradeEffects.length > 0
         ? [`Upgrades ${debugState.upgradeEffects.join(', ')}`]
@@ -1503,6 +1643,7 @@ export class GameApp {
       ...combinedProcDebug,
       ...setPieceDebug,
       ...factionCampaignDebug,
+      ...crewDebug,
       ...upgradeDebug,
       ...progressionDebug,
       ...actDebug,

@@ -71,6 +71,8 @@
 - Added the Phase 10 expedition foundation: deterministic seed-plus-save graphs with stable act/sector/mission-leg/node/branch/gate ids, validated duration/pressure/reward/content contracts, separate session decision/progress state, cockpit/summary/debug read models, 16.0-19.7 minutes of structural target capacity, and v4-to-v5 save migration.
 - Added run-local faction campaigns with four distinct response policies and four unique seed-plus-save rival captains selected from five recurring archetypes. Bounded decision history now turns aid, theft, mercy, contracts, mission outcomes, rival retreats, capture, and destruction into later combat pressure, route/mission/shop copy and rules, crew-offer signals, set-piece ownership, terminal rewards, and possible finale intervention.
 - Added objective-safe rival combat with authored first-encounter retreat thresholds, visible injuries/upgrades/grudges, non-color canvas/HUD identity, one-shot terminal accounting, summary/debug read models, and a public `R` recurrence fixture.
+- Added deterministic run-local crew rosters with five original tactical roles, mission/faction consequence recruitment, frame/module command-headroom limits, trust, injury, recovery, departure, foundry assistance, and finale-aware summaries.
+- Added bounded wingmate combat and five remappable commands: focus fire, projectile screening, salvage recovery, regroup repair, and disengagement. Ally damage and pickups use centralized objective/reward accounting, while non-color canvas labels, HUD/pointer controls, accessibility treatment, debug budgets, and the public `T` crew fixture keep the system inspectable.
 
 ### Testing
 

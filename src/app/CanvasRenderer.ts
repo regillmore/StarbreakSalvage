@@ -103,6 +103,22 @@ export interface EnemyRenderState {
   readonly rivalShipName?: string | null;
 }
 
+export interface AllyRenderState {
+  readonly callsign: string;
+  readonly role: string;
+  readonly cue: {
+    readonly glyph: string;
+    readonly color: string;
+    readonly highContrastGlyph: string;
+  };
+  readonly x: number;
+  readonly y: number;
+  readonly radius: number;
+  readonly hull: number;
+  readonly maxHull: number;
+  readonly status: 'active' | 'injured' | 'retreated';
+}
+
 export interface BossRenderState {
   readonly bossId: BossId;
   readonly factionId: FactionId;
@@ -117,7 +133,7 @@ export interface ProjectileRenderState {
   readonly x: number;
   readonly y: number;
   readonly radius: number;
-  readonly owner: 'player' | 'enemy';
+  readonly owner: 'player' | 'ally' | 'enemy';
   readonly factionId?: FactionId;
 }
 
@@ -1085,6 +1101,46 @@ export class CanvasRenderer {
     context.restore();
   }
 
+  public paintAlly(ally: AllyRenderState): void {
+    if (ally.status !== 'active') return;
+    const context = this.context;
+    const highContrast = this.settings.bulletContrast === 'high';
+    const healthRatio = clamp(ally.hull / Math.max(1, ally.maxHull), 0, 1);
+    context.save();
+    context.translate(ally.x, ally.y);
+    context.fillStyle = highContrast ? '#050712' : ally.cue.color;
+    context.strokeStyle = highContrast ? '#ffffff' : '#dffcff';
+    context.lineWidth = 2;
+    context.beginPath();
+    context.moveTo(0, -ally.radius);
+    context.lineTo(ally.radius * 0.82, ally.radius * 0.72);
+    context.lineTo(0, ally.radius * 0.38);
+    context.lineTo(-ally.radius * 0.82, ally.radius * 0.72);
+    context.closePath();
+    context.fill();
+    context.stroke();
+    context.fillStyle = highContrast ? '#ffffff' : '#03050d';
+    context.font = 'bold 8px ui-monospace, monospace';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText(highContrast ? ally.cue.highContrastGlyph : ally.cue.glyph, 0, 1);
+    context.fillStyle = '#050712';
+    context.fillRect(-ally.radius, ally.radius + 5, ally.radius * 2, 3);
+    context.fillStyle = highContrast ? '#ffffff' : ally.cue.color;
+    context.fillRect(-ally.radius, ally.radius + 5, ally.radius * 2 * healthRatio, 3);
+    context.fillStyle = highContrast ? '#ffffff' : ally.cue.color;
+    context.strokeStyle = '#03050d';
+    context.lineWidth = 3;
+    context.font = `bold ${this.settings.performanceMode ? 7 : 8}px ui-monospace, monospace`;
+    context.textBaseline = 'bottom';
+    const label = this.settings.performanceMode
+      ? `ALLY ${ally.callsign}`
+      : `ALLY ${ally.callsign} | ${ally.role}`;
+    context.strokeText(label, 0, -ally.radius - 7);
+    context.fillText(label, 0, -ally.radius - 7);
+    context.restore();
+  }
+
   private paintEnemyFormationCue(
     enemy: EnemyRenderState,
     cue: { readonly label: string; readonly stroke: string }
@@ -1279,6 +1335,9 @@ export class CanvasRenderer {
     if (projectile.owner === 'player') {
       context.fillStyle = this.settings.bulletContrast === 'high' ? '#ffffff' : '#7cf7ff';
       context.shadowColor = this.settings.bulletContrast === 'high' ? '#ffffff' : '#7cf7ff';
+    } else if (projectile.owner === 'ally') {
+      context.fillStyle = this.settings.bulletContrast === 'high' ? '#ffffff' : '#8dff9a';
+      context.shadowColor = this.settings.bulletContrast === 'high' ? '#ffffff' : '#8dff9a';
     } else {
       const faction = projectile.factionId ? getFactionById(projectile.factionId) : null;
       context.fillStyle =

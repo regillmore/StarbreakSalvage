@@ -47,6 +47,7 @@ import { createSectorObjectivePlan, type SectorObjectivePlan } from './SectorObj
 import { createSecondActFinalePlan, type SecondActFinalePlan } from './SecondActFinale';
 import { createSetPiecePlan, type SetPiecePlan } from './SetPiece';
 import { createFactionCampaignPlan, type FactionCampaignPlan } from './FactionCampaign';
+import { createCrewRosterPlan, type CrewRosterPlan } from './CrewCommand';
 import { createLegacyStartingLoadout, type ResolvedShipLoadout } from './ShipLoadout';
 import { resolveRunUpgradeEffects, type RunUpgradeEffects } from './UpgradeEffects';
 import {
@@ -125,6 +126,7 @@ export interface RunSkeleton {
   readonly acts: readonly RunActPlan[];
   readonly expedition: ExpeditionGraph;
   readonly factionCampaign: FactionCampaignPlan;
+  readonly crewRoster: CrewRosterPlan;
   readonly contracts: readonly StartingContract[];
   readonly sectors: readonly SectorRoute[];
 }
@@ -241,6 +243,11 @@ export function generateRunSkeleton(
     saveFingerprint,
     sectorCount: sectors.length
   });
+  const crewRoster = createCrewRosterPlan({
+    seed,
+    saveFingerprint,
+    sectorCount: sectors.length
+  });
 
   return {
     seed,
@@ -251,6 +258,7 @@ export function generateRunSkeleton(
     acts,
     expedition,
     factionCampaign,
+    crewRoster,
     contracts,
     sectors
   };

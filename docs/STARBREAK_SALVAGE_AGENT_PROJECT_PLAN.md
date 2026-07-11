@@ -821,7 +821,7 @@ Exit criteria:
 - Large physical targets, faction/rival response, and ally outcomes materially change mission play and later expedition state.
 - Objective/reward accounting and fixed-world accessibility remain reliable.
 
-Status: planned for work orders 096-098.
+Status: implemented through work orders 096-098 with three multi-part set pieces, deterministic faction/rival campaigns, and consequence-recruited crew/wingmates with bounded commands and objective-safe accounting.
 
 ### P10.5 - Expedition Playtest Candidate
 

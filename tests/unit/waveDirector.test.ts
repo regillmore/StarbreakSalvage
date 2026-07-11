@@ -1478,7 +1478,14 @@ function makeProgressState(
       setPieceProjectilesFired: 0,
       setPieceReinforcementsSpawned: 0,
       rivalsEscaped: 0,
-      rivalsDestroyed: 0
+      rivalsDestroyed: 0,
+      alliesDeployed: 0,
+      allyProjectilesFired: 0,
+      allyEnemiesDestroyed: 0,
+      allyProjectilesScreened: 0,
+      allySalvageCollected: 0,
+      allyInjuries: 0,
+      allyRetreats: 0
     }
   };
 }

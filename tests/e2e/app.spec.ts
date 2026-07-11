@@ -700,6 +700,16 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
   await expect(page.getByTestId('objective-readout')).toContainText('Rival');
   await expect(page.locator('.debug-overlay')).toContainText('Active rival');
 
+  await page.keyboard.press('T');
+  await expect(page.getByTestId('mission-briefing')).toBeVisible();
+  await expect(page.getByTestId('crew-brief')).toContainText('Crew manifest:');
+  await expect(page.getByTestId('crew-brief')).toContainText(':active:');
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('crew-command-readout')).toContainText(/Wing [1-3] active/);
+  await page.getByTestId('crew-command-screen').click();
+  await expect(page.getByTestId('crew-command-readout')).toContainText('SCREEN');
+  await expect(page.locator('.debug-overlay')).toContainText('Crew screen');
+
   expect(browserErrors).toEqual([]);
 });
 

@@ -17,6 +17,7 @@ import { getEnemyFormationById, type EnemyFormationId } from '../content/enemyFo
 import { getEnemyVariantById, type EnemyVariantId } from '../content/enemyVariants';
 import type { ItemTag } from '../content/items';
 import type { RivalTactic } from '../content/factionCampaigns';
+import type { CrewCommand } from '../content/crew';
 import type { ShipStats, WeaponId } from '../content/ships';
 import { getWeaponById, type WeaponDefinition } from '../content/weapons';
 import { clamp, type Vector2 } from '../core/math';
@@ -53,6 +54,7 @@ import {
 } from './LooseCurrency';
 import { getItemNames, type ItemInstance } from './Rewards';
 import type { MissionObjectiveResultSnapshot } from './ObjectiveDirector';
+import type { CrewCombatProfile } from './CrewCommand';
 import {
   createSetPieceReinforcementSpawns,
   createSetPieceState,
@@ -69,7 +71,7 @@ import {
   type SetPieceState
 } from './SetPiece';
 
-export type ProjectileOwner = 'player' | 'enemy';
+export type ProjectileOwner = 'player' | 'ally' | 'enemy';
 export type PickupKind = 'credit' | 'salvage';
 export type CombatEndReason = 'destroyed' | 'abandoned' | 'debug' | 'sectorComplete' | 'victory';
 export type TelegraphKind = 'fan' | 'lane' | 'ring';
@@ -138,6 +140,42 @@ export interface ProjectileState {
   readonly environmentDamageSource?: EnvironmentObjectDamageSource;
   readonly factionId?: FactionId;
   readonly setPieceSourceId?: string;
+  readonly allyId?: string;
+}
+
+export interface AllyState {
+  readonly candidateId: string;
+  readonly name: string;
+  readonly callsign: string;
+  readonly role: string;
+  readonly trait: string;
+  readonly preferredCommand: CrewCommand;
+  readonly cue: {
+    readonly glyph: string;
+    readonly color: string;
+    readonly highContrastGlyph: string;
+  };
+  x: number;
+  y: number;
+  readonly radius: number;
+  hull: number;
+  readonly maxHull: number;
+  readonly moveSpeed: number;
+  readonly fireCooldownSeconds: number;
+  readonly projectileDamage: number;
+  fireCooldown: number;
+  screenCooldown: number;
+  status: 'active' | 'injured' | 'retreated';
+  enemiesDefeated: number;
+  salvageRecovered: number;
+  readonly fitLabel: string;
+}
+
+export interface CrewCommandState {
+  active: CrewCommand;
+  cooldownSeconds: number;
+  issuedCount: number;
+  rejectedCount: number;
 }
 
 export interface EnemyState {
@@ -291,6 +329,13 @@ export interface CombatStats {
   readonly setPieceReinforcementsSpawned: number;
   readonly rivalsEscaped: number;
   readonly rivalsDestroyed: number;
+  readonly alliesDeployed: number;
+  readonly allyProjectilesFired: number;
+  readonly allyEnemiesDestroyed: number;
+  readonly allyProjectilesScreened: number;
+  readonly allySalvageCollected: number;
+  readonly allyInjuries: number;
+  readonly allyRetreats: number;
 }
 
 export interface RivalCombatState {
@@ -320,6 +365,8 @@ export interface CombatState {
   enemies: EnemyState[];
   boss: BossState | null;
   rivalEncounter: RivalCombatState | null;
+  allies: AllyState[];
+  crewCommand: CrewCommandState;
   telegraphs: TelegraphState[];
   pickups: PickupState[];
   environmentObjects: EnvironmentObjectState[];
@@ -406,16 +453,29 @@ export interface CombatRunResult {
     readonly tactic: RivalTactic;
     readonly outcome: 'escaped' | 'destroyed';
   };
+  readonly crew?: {
+    readonly command: CrewCommand;
+    readonly issuedCommands: number;
+    readonly members: readonly {
+      readonly candidateId: string;
+      readonly injured: boolean;
+      readonly retreated: boolean;
+      readonly enemiesDefeated: number;
+      readonly salvageRecovered: number;
+    }[];
+  };
 }
 
 export interface CombatEntityCounts {
   readonly total: number;
   readonly player: number;
   readonly enemies: number;
+  readonly allies?: number;
   readonly boss: number;
   readonly projectiles: number;
   readonly playerProjectiles: number;
   readonly enemyProjectiles: number;
+  readonly allyProjectiles?: number;
   readonly pickups: number;
   readonly looseCurrencyPickups: number;
   readonly looseCurrencyValue: number;
@@ -490,6 +550,7 @@ export interface CombatStateOptions {
   readonly setPieceOwnerFactionId?: FactionId;
   readonly looseCurrencyPlan?: LooseCurrencyPlan | null;
   readonly engineering?: EngineeringCombatProfile | null;
+  readonly crew?: CrewCombatProfile | null;
 }
 
 export function createCombatState(
@@ -546,6 +607,35 @@ export function createCombatState(
     enemies: [],
     boss: null,
     rivalEncounter: null,
+    allies: (options.crew?.members ?? []).map((member, index) => ({
+      candidateId: member.candidateId,
+      name: member.name,
+      callsign: member.callsign,
+      role: member.role,
+      trait: member.trait,
+      preferredCommand: member.preferredCommand,
+      cue: member.cue,
+      x: bounds.width / 2 + (index - ((options.crew?.members.length ?? 1) - 1) / 2) * 54,
+      y: bounds.height * 0.86,
+      radius: 13,
+      hull: member.maxHull,
+      maxHull: member.maxHull,
+      moveSpeed: member.moveSpeed,
+      fireCooldownSeconds: member.fireCooldownSeconds,
+      projectileDamage: member.projectileDamage,
+      fireCooldown: index * 0.12,
+      screenCooldown: index * 0.08,
+      status: 'active',
+      enemiesDefeated: 0,
+      salvageRecovered: 0,
+      fitLabel: member.fitLabel
+    })),
+    crewCommand: {
+      active: 'focus',
+      cooldownSeconds: 0,
+      issuedCount: 0,
+      rejectedCount: 0
+    },
     telegraphs: [],
     pickups: [],
     environmentObjects: [],
@@ -596,7 +686,14 @@ export function createCombatState(
       setPieceProjectilesFired: 0,
       setPieceReinforcementsSpawned: 0,
       rivalsEscaped: 0,
-      rivalsDestroyed: 0
+      rivalsDestroyed: 0,
+      alliesDeployed: options.crew?.members.length ?? 0,
+      allyProjectilesFired: 0,
+      allyEnemiesDestroyed: 0,
+      allyProjectilesScreened: 0,
+      allySalvageCollected: 0,
+      allyInjuries: 0,
+      allyRetreats: 0
     },
     ended: false
   };
@@ -635,6 +732,7 @@ export function updateCombatState(
   spawnDueEnemies(state, bounds);
   spawnDueBoss(state, bounds);
   updateEnemies(state, safeDt, bounds);
+  updateAllies(state, safeDt, bounds);
   updateBoss(state, safeDt, bounds);
   updateProjectiles(state, safeDt, bounds);
   updateTelegraphs(state, safeDt);
@@ -665,6 +763,22 @@ export function forceCombatEnd(
   state.ended = true;
   state.player.hull = reason === 'destroyed' ? 0 : state.player.hull;
   return createCombatRunResult(state, reason);
+}
+
+export function issueCrewCommand(state: CombatState, command: CrewCommand): boolean {
+  if (
+    state.ended ||
+    state.allies.every((ally) => ally.status !== 'active') ||
+    state.crewCommand.cooldownSeconds > 0
+  ) {
+    state.crewCommand.rejectedCount += 1;
+    return false;
+  }
+
+  state.crewCommand.active = command;
+  state.crewCommand.cooldownSeconds = 0.35;
+  state.crewCommand.issuedCount += 1;
+  return true;
 }
 
 export function getActiveEnvironmentObjects(state: CombatState): EnvironmentObjectState[] {
@@ -1393,11 +1507,14 @@ export function prepareDebugLongScrollScenario(state: CombatState, scrollDistanc
 
 export function getCombatEntityCounts(state: CombatState): CombatEntityCounts {
   let playerProjectiles = 0;
+  let allyProjectiles = 0;
   let destructibles = 0;
 
   for (const projectile of state.projectiles) {
     if (projectile.owner === 'player') {
       playerProjectiles += 1;
+    } else if (projectile.owner === 'ally') {
+      allyProjectiles += 1;
     }
   }
 
@@ -1412,7 +1529,7 @@ export function getCombatEntityCounts(state: CombatState): CombatEntityCounts {
   }
 
   const obstacles = environmentObjects.length - destructibles;
-  const enemyProjectiles = state.projectiles.length - playerProjectiles;
+  const enemyProjectiles = state.projectiles.length - playerProjectiles - allyProjectiles;
   const setPieceProjectiles = state.projectiles.filter(
     (projectile) => projectile.setPieceSourceId !== undefined
   ).length;
@@ -1424,6 +1541,7 @@ export function getCombatEntityCounts(state: CombatState): CombatEntityCounts {
       1 +
       boss +
       state.enemies.length +
+      state.allies.length +
       state.projectiles.length +
       state.pickups.length +
       state.telegraphs.length +
@@ -1432,10 +1550,12 @@ export function getCombatEntityCounts(state: CombatState): CombatEntityCounts {
       setPieceComponents.length,
     player: 1,
     enemies: state.enemies.length,
+    ...(state.allies.length > 0 ? { allies: state.allies.length } : {}),
     boss,
     projectiles: state.projectiles.length,
     playerProjectiles,
     enemyProjectiles,
+    ...(allyProjectiles > 0 ? { allyProjectiles } : {}),
     pickups: state.pickups.length,
     looseCurrencyPickups: looseCurrency.activePickups,
     looseCurrencyValue: looseCurrency.activeValue,
@@ -1495,6 +1615,21 @@ export function createCombatRunResult(
             destroyedComponents: state.stats.setPieceComponentsDestroyed,
             totalComponents: state.setPiece.components.length,
             stagesCompleted: state.stats.setPieceStagesCompleted
+          }
+        }
+      : {}),
+    ...(state.allies.length > 0
+      ? {
+          crew: {
+            command: state.crewCommand.active,
+            issuedCommands: state.crewCommand.issuedCount,
+            members: state.allies.map((ally) => ({
+              candidateId: ally.candidateId,
+              injured: ally.status === 'injured',
+              retreated: ally.status === 'retreated',
+              enemiesDefeated: ally.enemiesDefeated,
+              salvageRecovered: ally.salvageRecovered
+            }))
           }
         }
       : {}),
@@ -2859,6 +2994,163 @@ function updateEnemies(state: CombatState, dt: number, bounds: CombatBounds): vo
   }
 }
 
+function updateAllies(state: CombatState, dt: number, bounds: CombatBounds): void {
+  state.crewCommand.cooldownSeconds = Math.max(0, state.crewCommand.cooldownSeconds - dt);
+  const command = state.crewCommand.active;
+  const activeAllies = state.allies.filter((ally) => ally.status === 'active');
+
+  for (let index = 0; index < activeAllies.length; index += 1) {
+    const ally = activeAllies[index]!;
+    ally.fireCooldown = Math.max(0, ally.fireCooldown - dt);
+    ally.screenCooldown = Math.max(0, ally.screenCooldown - dt);
+
+    if (command === 'disengage') {
+      ally.y += ally.moveSpeed * 1.3 * dt;
+      if (ally.y > bounds.height + ally.radius) {
+        ally.status = 'retreated';
+        state.stats = {
+          ...state.stats,
+          allyRetreats: state.stats.allyRetreats + 1
+        };
+      }
+      continue;
+    }
+
+    const desired = getAllyDesiredPosition(state, ally, index, activeAllies.length, bounds);
+    moveAllyToward(ally, desired, dt, bounds);
+
+    if (command === 'screen') {
+      screenProjectileForAlly(state, ally);
+      continue;
+    }
+
+    if (command === 'salvage') {
+      collectPickupForAlly(state, ally);
+      continue;
+    }
+
+    if (command === 'regroup') {
+      if (ally.screenCooldown <= 0 && ally.hull < ally.maxHull) {
+        ally.hull += 1;
+        ally.screenCooldown = ally.preferredCommand === 'regroup' ? 1.4 : 2.2;
+      }
+      continue;
+    }
+
+    fireAllyAtTarget(state, ally);
+  }
+}
+
+function getAllyDesiredPosition(
+  state: CombatState,
+  ally: AllyState,
+  index: number,
+  count: number,
+  bounds: CombatBounds
+): Vector2 {
+  if (state.crewCommand.active === 'salvage') {
+    const pickup = state.pickups.slice(0, 24).reduce<PickupState | null>((nearest, candidate) => {
+      if (!nearest) return candidate;
+      return getDistanceSquared(candidate, ally) < getDistanceSquared(nearest, ally)
+        ? candidate
+        : nearest;
+    }, null);
+    if (pickup) return pickup;
+  }
+  const spacing = state.crewCommand.active === 'regroup' ? 30 : 58;
+  const yOffset = state.crewCommand.active === 'screen' ? -78 : 38;
+  return {
+    x: clamp(
+      state.player.x + (index - (count - 1) / 2) * spacing,
+      bounds.padding,
+      bounds.width - bounds.padding
+    ),
+    y: clamp(state.player.y + yOffset, bounds.padding, bounds.height - bounds.padding)
+  };
+}
+
+function moveAllyToward(ally: AllyState, target: Vector2, dt: number, bounds: CombatBounds): void {
+  const dx = target.x - ally.x;
+  const dy = target.y - ally.y;
+  const distance = Math.hypot(dx, dy);
+  if (distance <= 0.5) return;
+  const step = Math.min(distance, ally.moveSpeed * dt);
+  ally.x = clamp(ally.x + (dx / distance) * step, bounds.padding, bounds.width - bounds.padding);
+  ally.y = clamp(ally.y + (dy / distance) * step, bounds.padding, bounds.height - bounds.padding);
+}
+
+function screenProjectileForAlly(state: CombatState, ally: AllyState): void {
+  if (ally.screenCooldown > 0) return;
+  const radius = ally.preferredCommand === 'screen' ? 92 : 66;
+  const projectile = state.projectiles
+    .slice(0, 32)
+    .find(
+      (candidate) =>
+        candidate.owner === 'enemy' && getDistanceSquared(candidate, ally) <= radius * radius
+    );
+  if (!projectile) return;
+  state.projectiles = state.projectiles.filter((candidate) => candidate.id !== projectile.id);
+  ally.screenCooldown = ally.preferredCommand === 'screen' ? 0.32 : 0.55;
+  state.stats = {
+    ...state.stats,
+    enemyProjectilesCancelled: state.stats.enemyProjectilesCancelled + 1,
+    allyProjectilesScreened: state.stats.allyProjectilesScreened + 1
+  };
+}
+
+function collectPickupForAlly(state: CombatState, ally: AllyState): void {
+  const range = ally.preferredCommand === 'salvage' ? 38 : 26;
+  const pickup = state.pickups
+    .slice(0, 24)
+    .find((candidate) => getDistanceSquared(candidate, ally) <= range * range);
+  if (!pickup) return;
+  state.pickups = state.pickups.filter((candidate) => candidate.id !== pickup.id);
+  if (pickup.kind === 'credit') state.player.credits += pickup.value;
+  else state.player.salvage += pickup.value;
+  ally.salvageRecovered += pickup.value;
+  state.stats = {
+    ...state.stats,
+    pickupsCollected: state.stats.pickupsCollected + 1,
+    looseCurrencyCollected: state.stats.looseCurrencyCollected + pickup.value,
+    allySalvageCollected: state.stats.allySalvageCollected + pickup.value
+  };
+}
+
+function fireAllyAtTarget(state: CombatState, ally: AllyState): void {
+  if (ally.fireCooldown > 0) return;
+  const target =
+    state.enemies.slice(0, 24).reduce<EnemyState | null>((nearest, candidate) => {
+      if (!nearest) return candidate;
+      return getDistanceSquared(candidate, ally) < getDistanceSquared(nearest, ally)
+        ? candidate
+        : nearest;
+    }, null) ?? state.boss;
+  if (!target) return;
+  const dx = target.x - ally.x;
+  const dy = target.y - ally.y;
+  const distance = Math.max(1, Math.hypot(dx, dy));
+  state.projectiles.push({
+    id: getNextEntityId(state),
+    owner: 'ally',
+    allyId: ally.candidateId,
+    x: ally.x,
+    y: ally.y - ally.radius,
+    vx: (dx / distance) * 430,
+    vy: (dy / distance) * 430,
+    radius: 3.5,
+    damage: ally.projectileDamage,
+    ttl: 2.2,
+    tags: ['drone'],
+    procDepth: 0,
+    environmentDamageSource: 'weapon'
+  });
+  ally.fireCooldown = ally.fireCooldownSeconds * (ally.preferredCommand === 'focus' ? 0.72 : 1);
+  state.stats = {
+    ...state.stats,
+    allyProjectilesFired: state.stats.allyProjectilesFired + 1
+  };
+}
+
 function updateEnemyAttack(
   state: CombatState,
   enemy: EnemyState,
@@ -3175,6 +3467,20 @@ function resolveCombatCollisions(state: CombatState): void {
   const pickupIdsToRemove = new Set<number>();
 
   for (const projectile of state.projectiles) {
+    if (projectile.owner === 'ally') {
+      for (const enemy of state.enemies) {
+        if (enemyIdsToRemove.has(enemy.id) || !circlesOverlap(projectile, enemy)) continue;
+        damageEnemyWithAllyProjectile(state, enemy, projectile, enemyIdsToRemove);
+        projectileIdsToRemove.add(projectile.id);
+        break;
+      }
+      const boss = state.boss;
+      if (boss && !projectileIdsToRemove.has(projectile.id) && circlesOverlap(projectile, boss)) {
+        damageBossWithAllyProjectile(state, boss, projectile);
+        projectileIdsToRemove.add(projectile.id);
+      }
+    }
+
     if (projectile.owner === 'player') {
       for (const enemy of state.enemies) {
         if (enemyIdsToRemove.has(enemy.id) || !circlesOverlap(projectile, enemy)) {
@@ -3255,9 +3561,17 @@ function resolveCombatCollisions(state: CombatState): void {
       }
     }
 
-    if (projectile.owner === 'enemy' && circlesOverlap(projectile, state.player)) {
-      projectileIdsToRemove.add(projectile.id);
-      damagePlayer(state, projectile.damage);
+    if (projectile.owner === 'enemy') {
+      const ally = state.allies.find(
+        (candidate) => candidate.status === 'active' && circlesOverlap(projectile, candidate)
+      );
+      if (ally) {
+        projectileIdsToRemove.add(projectile.id);
+        damageAlly(state, ally, projectile.damage);
+      } else if (circlesOverlap(projectile, state.player)) {
+        projectileIdsToRemove.add(projectile.id);
+        damagePlayer(state, projectile.damage);
+      }
     }
   }
 
@@ -3369,6 +3683,21 @@ function damageEnemyWithProjectile(
   applyKillSideEffects(state, enemy, killPayload, enemyIdsToRemove);
 }
 
+function damageEnemyWithAllyProjectile(
+  state: CombatState,
+  enemy: EnemyState,
+  projectile: ProjectileState,
+  enemyIdsToRemove: Set<number>
+): void {
+  enemy.hull = applyDamage(enemy.hull, projectile.damage).hull;
+  if (enemy.hull > 0) return;
+  recordEnemyDefeat(state, enemy, enemyIdsToRemove, {
+    dropPickups: !enemy.rivalId,
+    grantSpecialCharge: false
+  });
+  if (!enemy.rivalId) recordAllyDefeat(state, projectile.allyId);
+}
+
 function damageBossWithProjectile(
   state: CombatState,
   boss: BossState,
@@ -3400,6 +3729,51 @@ function damageBossWithProjectile(
     itemTriggers: state.stats.itemTriggers + Number(killPayload.bonusSalvage > 0)
   };
   gainSpecialCharge(state, SPECIAL_CHARGE_PER_BOSS);
+}
+
+function damageBossWithAllyProjectile(
+  state: CombatState,
+  boss: BossState,
+  projectile: ProjectileState
+): void {
+  boss.hull = applyDamage(boss.hull, projectile.damage).hull;
+  if (boss.hull > 0) {
+    refreshBossPhase(state, boss);
+    return;
+  }
+  spawnBossDefeatPickups(state, boss, 0);
+  state.boss = null;
+  state.telegraphs = [];
+  state.stats = {
+    ...state.stats,
+    enemiesDestroyed: state.stats.enemiesDestroyed + 1,
+    bossesDefeated: state.stats.bossesDefeated + 1,
+    allyEnemiesDestroyed: state.stats.allyEnemiesDestroyed + 1
+  };
+  const ally = state.allies.find((candidate) => candidate.candidateId === projectile.allyId);
+  if (ally) ally.enemiesDefeated += 1;
+  gainSpecialCharge(state, SPECIAL_CHARGE_PER_BOSS);
+}
+
+function damageAlly(state: CombatState, ally: AllyState, damage: number): void {
+  ally.hull = applyDamage(ally.hull, Math.max(1, damage)).hull;
+  if (ally.hull > 0 || ally.status !== 'active') return;
+  ally.status = 'injured';
+  state.stats = {
+    ...state.stats,
+    allyInjuries: state.stats.allyInjuries + 1
+  };
+}
+
+function recordAllyDefeat(state: CombatState, allyId: string | undefined): void {
+  if (!allyId) return;
+  const ally = state.allies.find((candidate) => candidate.candidateId === allyId);
+  if (!ally) return;
+  ally.enemiesDefeated += 1;
+  state.stats = {
+    ...state.stats,
+    allyEnemiesDestroyed: state.stats.allyEnemiesDestroyed + 1
+  };
 }
 
 function gainSpecialCharge(state: CombatState, amount: number): void {

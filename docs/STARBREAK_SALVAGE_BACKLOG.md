@@ -1784,7 +1784,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 098.
+- Implemented in work order 098. Five data-backed crew roles generate deterministic seed-plus-save candidates acquired through rescue/specialist outcomes or trusted faction distress branches, never a free roster menu. Run-local state tracks command capacity, trust, missions, defeats, salvage, injuries, two-sector recovery, disengagement, foundry assists, and departures. Up to three fitted allies use bounded target and pickup scans plus centralized combat/objective accounting under remappable focus, screen, salvage, regroup, and disengage commands. HUD, pointer controls, non-color rendering, briefings, routes, foundry copy, summaries, debug state, and the public `T` fixture expose the system across accessibility modes.
 
 ## Epic BG - Phase 10 release and QA
 

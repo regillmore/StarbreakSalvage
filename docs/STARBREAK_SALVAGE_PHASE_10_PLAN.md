@@ -4,7 +4,7 @@
 
 Phase 9 is complete as a local second-act playtest candidate. A seeded run can cross ten sectors in two acts, stop at a deterministic midpoint refit, carry its build and economy into Act II, and resolve through a second-act finale. Full checks, 11 Chromium smoke tests, and production preview asset-path smoke pass.
 
-Work orders 091-097 now provide the expedition graph, multi-stage missions and objective anthology, modular shipcraft, salvage engineering, physical set pieces, and the first living-faction layer. Sectors 1, 7, and 10 host a capital ship, station, and wreck convoy assembled from shared subsystem templates. Four run-local faction policies and four seeded recurring captains now react through later combat, missions, routes, shops, crew-offer signals, set-piece ownership, and finale pressure; crew and the Scenario Lab remain ahead.
+Work orders 091-098 now provide the expedition graph, multi-stage missions and objective anthology, modular shipcraft, salvage engineering, physical set pieces, run-local faction campaigns and rivals, plus recruitable crew and wingmates. Sectors 1, 7, and 10 host a capital ship, station, and wreck convoy assembled from shared subsystem templates. Four faction policies, four seeded recurring captains, and five deterministic crew roles now react through combat, missions, routes, shops, foundry operations, set-piece ownership, and finale outcomes; the Scenario Lab and release hardening remain ahead.
 
 The resulting run currently takes about six minutes in a normal local playthrough. That is useful diagnostic evidence: adding a second act expanded the route model, but it did not yet create enough lived experience inside each sector. Phase 10 should add consequential play and decisions instead of stretching timers, inflating hull, or simply adding a third act.
 
@@ -137,6 +137,8 @@ Exit criteria:
 - Ally movement, targeting, damage attribution, retreat, recovery, and command cooldowns are bounded and objective-safe.
 - Crew expands build and mission options without becoming required permanent raw power.
 - Accessibility settings provide readable ally/enemy identity, command state, and non-color-only status cues.
+
+Status: implemented by work order 098. `src/content/crew.ts` defines five roles spanning pursuit fire, projectile screening, salvage recovery, regroup repair, and disciplined disengagement. `src/game/CrewCommand.ts` separates immutable seed-plus-save candidate plans from bounded run-local roster history, using mission crew policies, faction distress trust, and resolved loadout command headroom as recruitment gates. Combat deploys at most three fitted allies; target, projectile, and pickup queries are capped, ally attacks share defeat/objective accounting without item-hook duplication, and injury/disengage outcomes remain separate from player damage and enemy escape. Trust, missions, injury, two-sector recovery, departure, foundry assistance, rewards, and finale summaries persist through the run. Focus, screen, salvage, regroup, and disengage are individually remappable and have pointer buttons, HUD/debug readouts, high-contrast glyphs, compact narrow treatment, and the public `T` fixture.
 
 ### P10.8 - Expedition Scenario Lab And Release Candidate
 

@@ -18,10 +18,12 @@ export interface SceneDebugState {
     readonly total: number;
     readonly player: number;
     readonly enemies: number;
+    readonly allies?: number;
     readonly boss: number;
     readonly projectiles: number;
     readonly playerProjectiles: number;
     readonly enemyProjectiles: number;
+    readonly allyProjectiles?: number;
     readonly pickups: number;
     readonly looseCurrencyPickups: number;
     readonly looseCurrencyValue: number;
@@ -78,6 +80,12 @@ export interface SceneDebugState {
     readonly bossLockActive: boolean;
   };
   readonly factionCampaign?: FactionCampaignDebugState;
+  readonly crew?: {
+    readonly activeCommand: string;
+    readonly commandCooldown: number;
+    readonly issuedCommands: number;
+    readonly allies: readonly string[];
+  };
   readonly actPressure?: ActPressureDebugState;
   readonly finale?: SecondActFinaleDebugState;
   readonly upgradeEffects?: readonly string[];

@@ -575,6 +575,15 @@ Work order 097 implementation:
 - Rivals enter `CombatState` as ordinary faction actors with explicit rival metadata and `countsForObjective: false`. First-appearance direct damage can produce a retreat; later destruction and cleanup produce one rival outcome, no ordinary kill/pickup credit, and no required field-clear blocker. Campaign event ids make capture/destruction rewards one-shot and finale eligibility derives only from folded outcomes.
 - `R` builds a deterministic public recurrence fixture for browser/debug inspection. Campaign state remains run-local, so save schema v5 does not require migration; a future suspend/resume feature must serialize plan plus compact decision history together.
 
+Work order 098 implementation:
+
+- `src/content/crew.ts` owns five role definitions, command specialties, command costs, frame/module fit tags, mission acquisition policies, combat budgets, faction affinities, and non-color cues. `RunSkeleton.crewRoster` generates immutable candidate identity from the same seed plus save fingerprint boundary as the expedition and rival plans.
+- `src/game/CrewCommand.ts` keeps generated candidates separate from `RunSession.crewRoster`. Its idempotent event fold bounds display history to 64 and processed ids to 128 while tracking recruitment, trust, mission outcomes, defeats, salvage, injury, two-sector recovery, disengagement, foundry assistance, and departure.
+- Recruitment consumes existing `recordCandidate` / `protectSpecialist` mission policies or a trusted faction distress signal after a successful optional consequence. Resolved foundry loadouts supply command headroom; injured crew continue occupying capacity, and combat deployment is capped at three fitted allies.
+- `CombatState` owns the short-lived ally actors and command runtime. Focus queries at most 24 enemies, screen examines at most 32 hostile projectiles, salvage examines at most 24 pickups, and every command has an explicit cooldown. Ally projectiles have their own owner/attribution id and share centralized enemy, boss, pickup, objective, and result accounting without dispatching player item hooks.
+- Enemy shots can injure an ally before reaching the player; regroup repairs only ally hull, and disengage produces a crew retreat rather than an enemy escape or injury. Combat results fold back into the roster only at the mission boundary.
+- Five settings-backed input actions and pointer buttons issue focus, screen, salvage, regroup, and disengage. Canvas glyphs/labels, HUD state, briefings, routes, foundry copy, summaries, debug budgets, and the public `T` fixture consume public crew read models. Crew remains run-local, so save schema v5 is unchanged.
+
 ### Run timeline and Scenario Lab
 
 - Emit compact timeline events for node/stage transitions, branch choices, economy, engineering, faction/rival/crew outcomes, bosses, and run end. Store ids and small payloads; resolve player-facing copy later.

@@ -42,7 +42,8 @@ export class FoundryScene implements Scene {
     private readonly contract: StartingContract,
     engineering: EngineeringState,
     private readonly sectorIndex: number,
-    private readonly onComplete: (state: EngineeringState, salvageGained: number) => void
+    private readonly onComplete: (state: EngineeringState, salvageGained: number) => void,
+    private readonly crewAssist: string | null = null
   ) {
     this.state = engineering;
   }
@@ -72,8 +73,7 @@ export class FoundryScene implements Scene {
     const boundary = document.createElement('p');
     boundary.className = 'foundry-boundary';
     boundary.dataset.testid = 'foundry-boundary';
-    boundary.textContent =
-      'Planning bay: install, remove, reroute, fuse, overclock, or scrap. Undo restores the last commit; only Commit & Continue changes the flight ship.';
+    boundary.textContent = `Planning bay: install, remove, reroute, fuse, overclock, or scrap. Undo restores the last commit; only Commit & Continue changes the flight ship.${this.crewAssist ? ` Crew assist: ${this.crewAssist}` : ''}`;
 
     const grid = document.createElement('p');
     grid.className = `foundry-grid-readout ${resolution.valid ? '' : 'foundry-grid-invalid'}`;

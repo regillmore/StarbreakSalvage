@@ -17,6 +17,11 @@ export const REMAPPABLE_ACTIONS = [
   'fire',
   'special',
   'bomb',
+  'crewFocus',
+  'crewScreen',
+  'crewSalvage',
+  'crewRegroup',
+  'crewDisengage',
   'pause',
   'confirm',
   'back'
@@ -60,6 +65,11 @@ export function createDefaultSettings(): GameSettings {
       fire: ' ',
       special: 'Shift',
       bomb: 'X',
+      crewFocus: 'L',
+      crewScreen: 'C',
+      crewSalvage: 'V',
+      crewRegroup: 'O',
+      crewDisengage: 'Z',
       pause: 'P',
       confirm: 'Enter',
       back: 'Escape'

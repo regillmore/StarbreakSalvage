@@ -17,6 +17,11 @@ const ACTION_LABELS: Record<RemappableAction, string> = {
   fire: 'Fire',
   special: 'Special',
   bomb: 'Bomb',
+  crewFocus: 'Wing Focus',
+  crewScreen: 'Wing Screen',
+  crewSalvage: 'Wing Salvage',
+  crewRegroup: 'Wing Regroup',
+  crewDisengage: 'Wing Disengage',
   pause: 'Pause',
   confirm: 'Confirm',
   back: 'Back'

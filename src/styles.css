@@ -1258,6 +1258,44 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
   gap: 0.42rem;
 }
 
+.crew-command-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  pointer-events: auto;
+}
+
+.crew-command-bar[hidden] {
+  display: none;
+}
+
+.crew-command-button {
+  min-height: 1.65rem;
+  padding: 0.2rem 0.42rem;
+  border: 1px solid color-mix(in srgb, var(--hud-primary) 48%, transparent);
+  border-radius: 4px;
+  color: #f8fbff;
+  background: rgba(4, 6, 18, 0.82);
+  font:
+    800 0.64rem/1.1 'Cascadia Mono',
+    Consolas,
+    monospace;
+  letter-spacing: 0.03em;
+}
+
+.crew-command-button:hover,
+.crew-command-button:focus-visible {
+  border-color: var(--hud-engine);
+  outline: 2px solid var(--hud-engine);
+  outline-offset: 1px;
+}
+
+html[data-bullet-contrast='high'] .crew-command-button {
+  border-color: #ffffff;
+  color: #ffffff;
+  background: #02040a;
+}
+
 .hud-pill {
   flex: 0 1 auto;
   min-width: clamp(4rem, 12vw, 7.5rem);
@@ -1601,6 +1639,16 @@ html[data-bullet-contrast='high'] .hud-meter-track {
 
   .hud-readout-strip {
     gap: 0.28rem;
+  }
+
+  .crew-command-bar {
+    gap: 0.18rem;
+  }
+
+  .crew-command-button {
+    min-height: 1.35rem;
+    padding: 0.14rem 0.28rem;
+    font-size: 0.53rem;
   }
 
   .hud-pill {

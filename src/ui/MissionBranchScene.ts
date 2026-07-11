@@ -81,10 +81,10 @@ export class MissionBranchScene implements Scene {
       meta.className = 'choice-meta';
       meta.textContent = option.default
         ? this.rivalDecisionCopy
-          ? 'Direct extraction | rival escapes'
+          ? 'Direct extraction | optional consequence declined'
           : 'Direct extraction'
         : this.rivalDecisionCopy
-          ? 'Optional pursuit | capture attempt'
+          ? 'Optional pursuit | consequence attempt'
           : 'Optional encounter | state carries';
 
       button.append(label, meta, body);

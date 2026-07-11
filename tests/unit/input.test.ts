@@ -34,6 +34,12 @@ describe('input helpers', () => {
     expect(primaryActionForKey('H')).toBe('debugEnvironmentStress');
     expect(primaryActionForKey('U')).toBe('debugSetPiece');
     expect(primaryActionForKey('R')).toBe('debugRivalCampaign');
+    expect(primaryActionForKey('T')).toBe('debugCrewWing');
+    expect(primaryActionForKey('L')).toBe('crewFocus');
+    expect(primaryActionForKey('C')).toBe('crewScreen');
+    expect(primaryActionForKey('V')).toBe('crewSalvage');
+    expect(primaryActionForKey('O')).toBe('crewRegroup');
+    expect(primaryActionForKey('Z')).toBe('crewDisengage');
     expect(primaryActionForKey('7')).toBe('debugDestroyPlayer');
     expect(primaryActionForKey('8')).toBe('debugSectorComplete');
     expect(primaryActionForKey('9')).toBe('debugLongScroll');

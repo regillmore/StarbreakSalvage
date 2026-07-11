@@ -59,6 +59,15 @@ import {
   type FactionCampaignPlan,
   type FactionCampaignState
 } from './FactionCampaign';
+import {
+  applyCrewRosterEvent,
+  createCrewRosterState,
+  recoverEligibleCrew,
+  type CrewEventResult,
+  type CrewRosterEvent,
+  type CrewRosterPlan,
+  type CrewRosterState
+} from './CrewCommand';
 
 export interface RouteHistoryEntry {
   readonly sectorIndex: number;
@@ -94,6 +103,7 @@ export interface RunSessionState {
   objectiveHistory: MissionObjectiveOutcomeRecord[];
   engineering: EngineeringState;
   factionCampaign: FactionCampaignState;
+  crewRoster: CrewRosterState;
 }
 
 export interface MissionObjectiveOutcomeRecord extends MissionObjectiveResultSnapshot {
@@ -140,7 +150,8 @@ export function createRunSession(
     lastCombatResult: null,
     objectiveHistory: [],
     engineering: createEngineeringState(contract.loadout),
-    factionCampaign: createFactionCampaignState(run.factionCampaign)
+    factionCampaign: createFactionCampaignState(run.factionCampaign),
+    crewRoster: createCrewRosterState(run.crewRoster)
   };
 }
 
@@ -275,6 +286,16 @@ export function recordFactionCampaignEvent(
     session.salvage += result.reward.salvage;
   }
 
+  return result;
+}
+
+export function recordCrewRosterEvent(
+  session: RunSessionState,
+  plan: CrewRosterPlan,
+  event: CrewRosterEvent
+): CrewEventResult {
+  const result = applyCrewRosterEvent(plan, session.crewRoster, event);
+  session.crewRoster = result.state;
   return result;
 }
 
@@ -509,6 +530,11 @@ export function advanceSector(run: RunSkeleton, session: RunSessionState): boole
     return false;
   }
 
+  session.crewRoster = recoverEligibleCrew(
+    run.crewRoster,
+    session.crewRoster,
+    session.currentSectorIndex
+  );
   resetMissionForCurrentSector(run, session);
   return true;
 }

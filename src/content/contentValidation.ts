@@ -142,6 +142,7 @@ import { COMBAT_ARENA_PADDING, COMBAT_ARENA_WIDTH } from '../game/CombatGeometry
 import { validateShipLoadout } from '../game/ShipLoadout';
 import { validateSetPieceContent } from '../game/SetPiece';
 import { validateFactionCampaignContent } from '../game/FactionCampaign';
+import { validateCrewContent } from '../game/CrewCommand';
 import {
   ITEM_FAMILY_GATES,
   ITEM_UNLOCKS,
@@ -374,6 +375,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   });
   errors.push(...validateSetPieceContent(setPieces).errors);
   errors.push(...validateFactionCampaignContent());
+  errors.push(...validateCrewContent());
 
   if (items.length < 30) {
     errors.push('Content must define at least 30 items');

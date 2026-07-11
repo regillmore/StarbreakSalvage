@@ -37,6 +37,7 @@ import {
   createFactionCampaignDebugState,
   getFactionCampaignInfluence
 } from '../game/FactionCampaign';
+import { createCrewDebugState } from '../game/CrewCommand';
 
 export class SectorTransitionScene implements Scene {
   public readonly id = 'sector-transition';
@@ -140,6 +141,15 @@ export class SectorTransitionScene implements Scene {
       .filter((part): part is string => Boolean(part))
       .join(' | ');
 
+    const crew = createCrewDebugState(this.run.crewRoster, this.session.crewRoster);
+    const crewLine = document.createElement('p');
+    crewLine.className = 'transition-copy';
+    crewLine.dataset.testid = 'crew-brief';
+    crewLine.textContent =
+      crew.roster.length > 0
+        ? `Crew manifest: ${crew.roster.join(' | ')} | Commands FOCUS [L], SCREEN [C], SALVAGE [V], REGROUP [O], DISENGAGE [Z].`
+        : 'Crew manifest: no wingmates. Rescue and specialist contracts can add run-local allies.';
+
     const enterButton = document.createElement('button');
     enterButton.className = 'primary-button';
     enterButton.type = 'button';
@@ -155,6 +165,7 @@ export class SectorTransitionScene implements Scene {
       conditionLine,
       waveLine,
       campaignLine,
+      crewLine,
       enterButton
     );
     this.uiRoot.replaceChildren(shell);
@@ -201,6 +212,12 @@ export class SectorTransitionScene implements Scene {
         this.session.factionCampaign,
         getFactionCampaignInfluence(this.run.factionCampaign, this.session.factionCampaign, sector)
       ),
+      crew: {
+        activeCommand: 'briefing',
+        commandCooldown: 0,
+        issuedCommands: 0,
+        allies: createCrewDebugState(this.run.crewRoster, this.session.crewRoster).roster
+      },
       progression: {
         runCredits: this.session.credits,
         runSalvage: this.session.salvage

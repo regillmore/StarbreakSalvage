@@ -23,11 +23,14 @@ import {
   prepareDebugLongScrollScenario,
   spawnDebugDenseCombatScenario,
   spawnBoss,
+  issueCrewCommand,
   updateCombatState,
   type CombatBounds,
   type CombatRunResult,
   type CombatState
 } from '../game/CombatState';
+import { CREW_COMMANDS, type CrewCommand } from '../content/crew';
+import type { CrewCombatProfile } from '../game/CrewCommand';
 import type { BossId } from '../content/bosses';
 import { getFactionById } from '../content/factions';
 import type { SectorId } from '../content/sectors';
@@ -224,6 +227,7 @@ export class GameplayScene implements Scene {
   private readonly warningReadout: HTMLParagraphElement;
   private readonly itemReadout: HTMLParagraphElement;
   private readonly hintReadout: HTMLParagraphElement;
+  private readonly commandReadout: HTMLParagraphElement;
   private readonly exitToast: HTMLParagraphElement;
   private readonly destructionToast: HTMLParagraphElement;
   private readonly hullMeter: HudMeterElements;
@@ -261,7 +265,8 @@ export class GameplayScene implements Scene {
     private readonly onSectorComplete: (result: CombatRunResult) => void,
     private readonly missionContext: GameplayMissionContext | null = null,
     private readonly campaignInfluence: FactionCampaignInfluence | null = null,
-    private readonly campaignState: FactionCampaignState | null = null
+    private readonly campaignState: FactionCampaignState | null = null,
+    private readonly crewProfile: CrewCombatProfile | null = null
   ) {
     this.positionReadout = document.createElement('p');
     this.positionReadout.className = 'sr-only';
@@ -310,6 +315,11 @@ export class GameplayScene implements Scene {
     this.hintReadout = document.createElement('p');
     this.hintReadout.className = 'hud-pill hud-pill-wide';
     this.hintReadout.dataset.testid = 'hint-readout';
+
+    this.commandReadout = document.createElement('p');
+    this.commandReadout.className = 'hud-pill hud-pill-wide hud-pill-system';
+    this.commandReadout.dataset.testid = 'crew-command-readout';
+    this.commandReadout.setAttribute('aria-live', 'polite');
 
     this.exitToast = document.createElement('p');
     this.exitToast.className = 'sector-exit-toast';
@@ -402,6 +412,7 @@ export class GameplayScene implements Scene {
       this.economyReadout,
       this.objectiveReadout,
       this.hintReadout,
+      this.commandReadout,
       this.verbReadout,
       this.weaponReadout,
       this.combatReadout,
@@ -412,7 +423,23 @@ export class GameplayScene implements Scene {
       contract
     );
     chrome.append(themeReadout, meterStrip);
-    hud.append(chrome, readoutStrip, this.positionReadout);
+    const commandBar = ownerDocument.createElement('div');
+    commandBar.className = 'crew-command-bar';
+    commandBar.setAttribute('aria-label', 'Wingmate commands');
+    if ((this.crewProfile?.members.length ?? 0) === 0) commandBar.hidden = true;
+    for (const command of CREW_COMMANDS) {
+      const button = ownerDocument.createElement('button');
+      button.type = 'button';
+      button.className = 'crew-command-button';
+      button.dataset.testid = `crew-command-${command}`;
+      button.textContent = formatCrewCommandButton(command);
+      button.addEventListener('click', () => {
+        issueCrewCommand(this.getCombatState(), command);
+        this.syncReadouts();
+      });
+      commandBar.append(button);
+    }
+    hud.append(chrome, commandBar, readoutStrip, this.positionReadout);
     this.uiRoot.replaceChildren(hud, this.exitToast, this.destructionToast);
     this.syncExitSequenceUi();
     this.syncPlayerDestructionUi();
@@ -562,6 +589,10 @@ export class GameplayScene implements Scene {
       renderer.paintCombatEffect(effect);
     }
 
+    for (const ally of state.allies) {
+      renderer.paintAlly(ally);
+    }
+
     for (const enemy of state.enemies) {
       renderer.paintEnemy(enemy);
     }
@@ -633,6 +664,12 @@ export class GameplayScene implements Scene {
 
     if (action === 'bomb') {
       this.queuedBomb = true;
+    }
+
+    const crewCommand = getCrewCommandForAction(action);
+    if (crewCommand) {
+      issueCrewCommand(this.getCombatState(), crewCommand);
+      this.syncReadouts();
     }
 
     if (action === 'pause' || action === 'back') {
@@ -873,6 +910,14 @@ export class GameplayScene implements Scene {
             this.campaignInfluence
           )
         : undefined,
+      crew: {
+        activeCommand: combatState.crewCommand.active,
+        commandCooldown: combatState.crewCommand.cooldownSeconds,
+        issuedCommands: combatState.crewCommand.issuedCount,
+        allies: combatState.allies.map(
+          (ally) => `${ally.callsign}:${ally.status}:H${ally.hull}/${ally.maxHull}:${ally.fitLabel}`
+        )
+      },
       actPressure: createActPressureDebugState({
         model: this.getActPressureModel(),
         enemyRoles,
@@ -1095,7 +1140,8 @@ export class GameplayScene implements Scene {
       environmentObjectPlan: this.getEnvironmentObjectPlan(),
       setPiecePlan,
       setPieceOwnerFactionId: this.campaignInfluence?.setPieceOwnerFactionId,
-      looseCurrencyPlan: this.getLooseCurrencyPlan()
+      looseCurrencyPlan: this.getLooseCurrencyPlan(),
+      crew: this.crewProfile
     });
     return this.combatState;
   }
@@ -1425,6 +1471,12 @@ export class GameplayScene implements Scene {
     this.weaponReadout.textContent = this.getWeaponReadout(state);
     this.syncMeters(state);
     this.combatReadout.textContent = `Destroyed ${state.stats.enemiesDestroyed} | Rivals ${state.stats.rivalsDestroyed}D/${state.stats.rivalsEscaped}E | Shots ${state.stats.shotsFired} | Hooks ${state.stats.itemTriggers}`;
+    const activeAllies = state.allies.filter((ally) => ally.status === 'active');
+    const injuredAllies = state.allies.filter((ally) => ally.status === 'injured');
+    this.commandReadout.textContent =
+      state.allies.length > 0
+        ? `Wing ${activeAllies.length} active/${injuredAllies.length} injured | ${state.crewCommand.active.toUpperCase()} | cooldown ${state.crewCommand.cooldownSeconds.toFixed(1)}s | ${state.stats.allyEnemiesDestroyed} defeats/${state.stats.allySalvageCollected} salvage`
+        : 'Wing offline | Distress recruitment required';
     this.bossReadout.textContent = state.boss
       ? `${formatSecondActFinaleBossName(
           this.getCurrentSector().finale,
@@ -1757,6 +1809,37 @@ function clearExitPressure(state: CombatState): void {
   state.telegraphs = [];
   state.boss = null;
   state.nextSpawnIndex = state.spawnSchedule.length;
+}
+
+function getCrewCommandForAction(action: InputAction): CrewCommand | null {
+  switch (action) {
+    case 'crewFocus':
+      return 'focus';
+    case 'crewScreen':
+      return 'screen';
+    case 'crewSalvage':
+      return 'salvage';
+    case 'crewRegroup':
+      return 'regroup';
+    case 'crewDisengage':
+      return 'disengage';
+    default:
+      return null;
+  }
+}
+
+function formatCrewCommandButton(command: CrewCommand): string {
+  const key =
+    command === 'focus'
+      ? 'L'
+      : command === 'screen'
+        ? 'C'
+        : command === 'salvage'
+          ? 'V'
+          : command === 'regroup'
+            ? 'O'
+            : 'Z';
+  return `${command.toUpperCase()} [${key}]`;
 }
 
 function createHudMeterElement(

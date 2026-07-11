@@ -1660,7 +1660,9 @@ Acceptance criteria:
 - Crew expands variety without becoming mandatory permanent raw power.
 - Allies remain readable and controllable with keyboard, pointer, high contrast, reduced motion, and narrow viewports.
 
-Status: planned.
+Status: implemented. `src/content/crew.ts` defines five original roles with distinct focus, screen, salvage, regroup, and disengage specialties, command costs, frame/module fits, mission acquisition policies, combat budgets, traits, faction affinities, and non-color cues. `src/game/CrewCommand.ts` generates deterministic seed-plus-save candidates and folds bounded, idempotent recruitment, mission, combat, injury, two-sector recovery, departure, and foundry-assist outcomes into run-local state. Rescue/specialist mission policies and trusted faction distress channels recruit only after successful consequences and only within resolved frame/module command headroom. Up to three fitted wingmates reuse centralized combat actors, projectiles, pickups, defeat accounting, and objective metrics under bounded target/projectile/pickup scans; injuries intercept damage without harming the player, disengagement remains distinct from injury/enemy escape, and results flow back into trust, recovery, summaries, and finale outcomes. All five commands are remappable and also exposed as pointer buttons, with HUD/debug state, narrow layouts, high-contrast glyphs, reduced-motion-safe rendering, mission/route/briefing copy, foundry bonuses, and a public `T` crew fixture. Validation and deterministic tests cover identities, acquisition capacity, fit/deployment caps, trust/departure, injury/recovery, history bounds, targeting, damage attribution, screening, salvage, command cooldowns, retreat, and objective safety.
+
+Verification: `npm run check` passes with 77 test files and 456 tests; all 11 Chromium smoke paths pass locally. The production build remains green with a 640.46 kB main-chunk warning reserved for work-order-099 profiling/code-splitting review.
 
 ## Work order 099 - Expedition Scenario Lab, accessibility, and performance hardening
 

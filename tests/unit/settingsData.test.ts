@@ -93,6 +93,14 @@ describe('settingsData', () => {
     expect(actionsForKey('X', bindings)).not.toContain('bomb');
   });
 
+  it('keeps every wing command remappable', () => {
+    const settings = updateKeyBinding(createDefaultSettings(), 'crewFocus', '[');
+    const bindings = settingsToKeyBindingMap(settings);
+
+    expect(actionsForKey('[', bindings)).toEqual(['crewFocus']);
+    expect(actionsForKey('L', bindings)).not.toContain('crewFocus');
+  });
+
   it('writes settings through storage', () => {
     const storage = new MemoryStorage();
     const settings = { ...createDefaultSettings(), muted: true };

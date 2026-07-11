@@ -16,6 +16,7 @@ import {
   getFactionCampaignInfluence
 } from '../game/FactionCampaign';
 import type { InputAction } from '../systems/InputSystem';
+import { createCrewDebugState } from '../game/CrewCommand';
 import {
   applyContractScreenTheme,
   createContractScreenThemeModel,
@@ -64,6 +65,7 @@ export class RouteScene implements Scene {
       this.session.factionCampaign,
       sector
     );
+    const crew = createCrewDebugState(this.run.crewRoster, this.session.crewRoster);
     const nextSectorIndex = this.session.currentSectorIndex + 1;
     const nextContract = this.run.expedition.sectors[nextSectorIndex]
       ? selectMissionContract(this.run.expedition, nextSectorIndex)
@@ -128,7 +130,9 @@ export class RouteScene implements Scene {
         campaign.rival
           ? ` Rival ${campaign.rival.name} may recur aboard ${campaign.rival.shipName}.`
           : ''
-      }${campaign.crewOfferSignal ? ` Crew lead: ${campaign.crewOfferSignal}` : ''}`;
+      }${campaign.crewOfferSignal ? ` Crew lead: ${campaign.crewOfferSignal}` : ''}${
+        crew.roster.length > 0 ? ` Wing: ${crew.roster.join(' / ')}.` : ''
+      }`;
 
       routeButton.append(
         name,
