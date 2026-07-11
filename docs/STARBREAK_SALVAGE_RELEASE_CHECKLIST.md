@@ -1,12 +1,12 @@
 # Starbreak Salvage Release Checklist
 
-Release candidate: Phase 10 expedition-depth and shipcraft playtest candidate
+Release candidate: Phase 10 expedition-depth candidate; Phase 11 resumable-voyage workspace
 
 Date: 2026-07-11
 
 ## Milestone Status
 
-Phases 1-9 are deployed historical foundations. Work orders 091-099 are deployed and confirmed. Work order 100 closes Phase 10 locally with release auditing, repeatable preview-path tooling, refreshed project guidance, explicit manual risks, and the Phase 11 roadmap.
+Phases 1-10 are deployed historical foundations. Work order 101 starts Phase 11 locally with a separately versioned suspended-run snapshot, safe resume UI, public endurance tooling, and measured debug code splitting.
 
 The deployed completionist measurement is approximately 12 minutes with every optional path taken. That doubles the roughly six-minute Phase 9 baseline and reaches the lower edge of Phase 10's 12-20 minute structural target through mission stages, decisions, foundry work, set pieces, factions/rivals, and crew—not global slowdown or durability inflation.
 
@@ -16,9 +16,9 @@ The deployed completionist measurement is approximately 12 minutes with every op
 | ------------------------------ | ------ | ----------------------------------------------------------------------------------- |
 | TypeScript                     | Pass   | `npm run check`                                                                     |
 | ESLint                         | Pass   | `npm run check`                                                                     |
-| Unit/deterministic/integration | Pass   | 79 files, 463 tests                                                                 |
+| Unit/deterministic/integration | Pass   | 81 files, 470 tests                                                                 |
 | Production build               | Pass   | Vite emits `dist/` under `/StarbreakSalvage/`                                       |
-| Playwright Chromium            | Pass   | 12 smoke paths, including narrow/accessibility/performance Scenario Lab coverage    |
+| Playwright Chromium            | Pass   | 13 smoke paths, including Scenario Lab and keyboard suspend/reload/resume coverage  |
 | Production preview paths       | Pass   | `npm run test:preview` checks the Pages base plus emitted hashed JavaScript and CSS |
 | Combined release command       | Pass   | `npm run verify:release` runs checks, Chromium, and preview smoke                   |
 
@@ -43,6 +43,17 @@ Local Windows note: Playwright requires escalation because Chromium lives under 
 | Performance                | Pass with warning     | Combined stress caps and debug counts are explicit. Functional Chromium smoke passes. The 657.78 kB minified main bundle still exceeds Vite's 500 kB warning threshold; sustained frame-time/allocation profiling and code splitting remain Phase 11 work. |
 | Browser/Pages load         | Pass locally          | Vite base path and Pages workflow are correct; the repeatable preview smoke verifies base and hashed assets. Public deployment confirmation remains a user/deployment step.                                                                                |
 
+## Phase 11 Foundation Audit
+
+| Area                  | Status            | Evidence and boundary                                                                                                                                                   |
+| --------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Snapshot separation   | Pass              | Permanent progression remains `starbreak.save.v5`; suspended runs use independently repaired `starbreak.run.v1`.                                                        |
+| Deterministic restore | Pass              | Restore regenerates and validates seed/fingerprint/graph/contract plus mission, engineering, items/economy, faction/rival, crew, and timeline state before scene entry. |
+| Safe checkpoint UX    | Pass              | Briefing and operation-entry writes are automatic; pause can suspend explicitly; main-menu resume/discard works by keyboard and pointer and explains operation restart. |
+| Corruption recovery   | Pass              | Malformed, unsupported, oversized, or identity-drifted snapshots remove only the suspended record. Unit coverage pins permanent-save isolation.                         |
+| Endurance boundary    | Pass              | Public harness repeats all eight Phase 10 Scenario Lab setups plus the finale through deterministic snapshot round trips and reports bounded state.                     |
+| Loading boundary      | Pass with warning | Three debug-only chunks total 9.80 kB minified. Core snapshot support raises initial JavaScript to 663.24 kB; the existing warning remains active.                      |
+
 ## Manual Browser And Device Matrix
 
 | Target                     | Status                   | Required focus                                                                                                                   |
@@ -65,6 +76,9 @@ Local Windows note: Playwright requires escalation because Chromium lives under 
 - Modular frames, items, evolved weapons, crew, factions, and set pieces create combinatorial builds that cannot be exhaustively balanced by current automated fixtures.
 - Twelve minutes is a successful structural floor, not the final desired voyage length. Phase 11 targets 20-30 minute standard and 30-45 minute completionist capacity with legitimate earlier extraction.
 - The main JavaScript bundle is 657.78 kB minified (177.71 kB gzip), and several integration modules are large: `CombatState`, `CanvasRenderer`, `GameApp`, `GameplayScene`, and content validation. These are scaling warnings, not Phase 10 ship blockers.
+- Work order 101 raises the initial bundle baseline to 663.24 kB minified/179.38 kB gzip while moving 9.80 kB of Scenario Lab code behind lazy chunks. Further splitting remains required rather than complete.
+- Snapshot v1 deliberately restores active combat at the safe operation-entry checkpoint; live bullets, actor positions, partially damaged targets, audio, and renderer state are not serialized.
+- Browser storage eviction/quota, multi-tab last-writer behavior, and long real-device restore latency remain manual risks. Snapshot size is capped at 512 KiB and current automated fixtures remain below it.
 
 ## Release Commands
 

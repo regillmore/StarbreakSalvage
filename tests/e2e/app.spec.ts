@@ -879,6 +879,50 @@ test('supports keyboard-only start, pause, end-run, and summary flow', async ({ 
   expect(browserErrors).toEqual([]);
 });
 
+test('suspends, reloads, resumes, and clears a versioned expedition snapshot', async ({ page }) => {
+  const browserErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') browserErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => browserErrors.push(error.message));
+
+  await page.goto('./?debug=1&seed=VOYAGE-SNAPSHOT-ROUNDTRIP');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('mission-briefing')).toBeVisible();
+  await page.keyboard.press('Enter');
+  await expectGameplaySector(page, 'Outer Debris Field');
+
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('heading', { name: 'Paused' })).toBeVisible();
+  await page.getByTestId('suspend-expedition').click();
+  await expect(page.getByRole('heading', { name: 'Starbreak Salvage' })).toBeVisible();
+  await expect(page.getByTestId('run-snapshot-summary')).toContainText(
+    'Manually suspended operation'
+  );
+  await expect(page.getByTestId('run-snapshot-panel')).toContainText(
+    'restarts the current operation'
+  );
+
+  await page.reload();
+  await expect(page.getByTestId('run-snapshot-panel')).toBeVisible();
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await expect(page.getByTestId('resume-expedition')).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expectGameplaySector(page, 'Outer Debris Field');
+  await expect(page.locator('.debug-overlay')).toContainText('Scene gameplay');
+
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'End Run' }).click();
+  await expect(page.getByRole('heading', { name: 'Contract Suspended' })).toBeVisible();
+  await page.getByRole('button', { name: 'Back to Menu' }).click();
+  await expect(page.getByTestId('run-snapshot-panel')).toHaveCount(0);
+
+  expect(browserErrors).toEqual([]);
+});
+
 test('supports pointer-guided movement and primary-button fire during gameplay', async ({
   page
 }) => {

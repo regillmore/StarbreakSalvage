@@ -11,7 +11,8 @@ export class PauseScene implements Scene {
     private readonly gameplayScene: GameplayScene,
     private readonly onResume: (scene: GameplayScene) => void,
     private readonly onEndRun: () => void,
-    private readonly onOpenSettings: () => void
+    private readonly onOpenSettings: () => void,
+    private readonly onSuspendRun: () => void
   ) {}
 
   public enter(): void {
@@ -47,7 +48,15 @@ export class PauseScene implements Scene {
     settingsButton.textContent = 'Settings';
     settingsButton.addEventListener('click', this.onOpenSettings);
 
-    controls.append(resumeButton, settingsButton, endButton);
+    const suspendButton = document.createElement('button');
+    suspendButton.className = 'secondary-button';
+    suspendButton.type = 'button';
+    suspendButton.dataset.testid = 'suspend-expedition';
+    suspendButton.textContent = 'Suspend & Main Menu';
+    suspendButton.title = 'Save the run and restart this operation from its safe checkpoint later.';
+    suspendButton.addEventListener('click', this.onSuspendRun);
+
+    controls.append(resumeButton, settingsButton, endButton, suspendButton);
     shell.append(title, status, controls);
     this.uiRoot.replaceChildren(shell);
     resumeButton.focus();

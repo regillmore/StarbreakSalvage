@@ -48,6 +48,8 @@ Exit criteria:
 - Long-run cleanup/replay tests can cross every current Phase 10 boundary repeatedly.
 - New phase systems have a defined integration boundary that does not add another orchestration block directly to `GameApp` or the combat hot loop.
 
+Status: implemented by work order 101. `RunSnapshot` owns a 512 KiB-capped v1 record separate from permanent save v5, regenerates and verifies plan/graph/contract identity before restore, validates mission, engineering, faction/rival, crew, item, economy, and bounded timeline state, removes corrupt or unsupported records without touching progression, and reserves null carrier/boarding/front/fleet/apex slots. `RunSnapshotCoordinator` is the app-facing checkpoint/restore/clear seam. Safe briefing and operation-entry checkpoints are automatic; pause exposes explicit suspend, and the main menu exposes keyboard/pointer resume or discard with clear operation-restart copy. `ExpeditionEndurance` deterministically repeats all eight public Scenario Lab boundaries plus the finale checkpoint through snapshot regeneration for up to 32 cycles. Scenario Lab setup and timeline UI now load as three debug-only chunks totaling 9.80 kB minified. The initial bundle is 663.24 kB because snapshot/resume is core functionality; deeper extraction remains Phase 11 architecture work rather than a hidden warning.
+
 ### P11.2 - True Multi-Operation Sectors
 
 Work order 102 makes expedition topology executable:

@@ -219,6 +219,13 @@ Phase 11 makes long-run state resumable and expands campaign topology. Add cover
 - three or more apex hunt replays with persistent damage, branching outcomes, multi-part finale safety, and divergent endings;
 - Playwright Scenario Lab paths for suspend/resume, operational map, frontier, carrier, boarding, fronts, crew arcs, fleet, and apex states under accessibility/performance settings.
 
+Current Phase 11 coverage:
+
+- Work order 101 adds snapshot round-trip equality, regenerated plan/graph/contract identity, suspended mission state, permanent-save isolation, corrupt/unsupported recovery, invalid mission and reserved-extension rejection, byte caps, storage lifecycle, and summary coverage.
+- `ExpeditionEndurance` runs every current Scenario Lab definition plus a final-sector checkpoint through repeated snapshot create/export/restore cycles, checking deterministic reports, pending-foundry cleanup, 512 KiB snapshot limits, 96-entry timeline, 64-entry faction/crew histories, and set-piece/item/engineering presence.
+- The thirteenth Chromium path starts a run, enters combat, explicitly suspends, reloads the page, resumes by keyboard, verifies operation restart, ends the run, and proves the snapshot clears. The prior keyboard pause/end-run path remains green.
+- Production build smoke covers the initial JavaScript/CSS and all three lazy Scenario Lab chunks through emitted HTML/module loading; manual storage quota, browser eviction, multi-tab contention, and long real-device restore timing remain open.
+
 ## Known seed tests
 
 - `STARBREAK-SMOKE` — stable forgiving smoke path.
@@ -308,7 +315,7 @@ Phase 10 should add these seed/save/decision fixtures:
 
 Phase 11 should add these seed/save/snapshot fixtures:
 
-- `VOYAGE-SNAPSHOT-ROUNDTRIP` - suspend/resume at every Phase 10 boundary with permanent-save isolation.
+- `VOYAGE-SNAPSHOT-ROUNDTRIP` - suspend/resume at every Phase 10 boundary with permanent-save isolation; implemented by work order 101 unit and Chromium coverage.
 - `MULTI-OPERATION-LADDER` - required/optional/relief/pursuit/retreat itinerary replay and cleanup.
 - `NULL-FRONTIER-BREACH` - Act II extraction versus Act III entry and coherent frontier campaign selection.
 - `CARRIER-DAMAGE-CONTROL` - facility, post, cargo, heat, debt, damage, and travel-posture state.

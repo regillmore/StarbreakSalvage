@@ -1824,7 +1824,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 101.
+- Implemented in work order 101. A separate `starbreak.run.v1` snapshot stores regenerated-plan identity, contract, safe target, complete Phase 10 session state, and reserved null carrier/boarding/front/fleet/apex extensions under a 512 KiB cap. Restore validates graph/fingerprint, mission stage, engineering, items/economy, faction/rivals, crew, and timeline before scene entry; corrupt/unsupported snapshots are removed without touching permanent save v5. Automatic briefing/operation checkpoints, explicit pause suspend, keyboard/pointer main-menu resume/discard, and run-end/new-contract/reset cleanup are live. The public endurance harness repeats eight Scenario Lab boundaries plus the finale across snapshot regeneration and reports snapshot/history/build/set-piece budgets. Scenario Lab code emits as three lazy chunks totaling 9.80 kB; the core bundle is 663.24 kB with snapshot functionality included, so further domain extraction and code splitting remain active architecture work rather than a warning-limit exception.
 
 ### BH2 - True multi-operation sectors
 

@@ -668,6 +668,15 @@ seed + permanent save fingerprint
       -> summary + local snapshot/save writers
 ```
 
+### Work order 101 implementation
+
+- `src/game/RunSnapshot.ts` is the first resumable-run boundary. Snapshot v1 is a JSON-only envelope capped at 512 KiB with seed, generation fingerprint, graph id, contract id, stored unlock/upgrade generation context, safe resume target, full `RunSessionState`, and reserved null extension slots. Permanent save v5 remains independent.
+- Restore regenerates `RunSkeleton` rather than storing content copies, then verifies generation fingerprint, graph, contract, current sector/mission schedule/stage/status, expedition nodes/decisions, committed engineering legality, item references, nonnegative economy/distance, faction/rival and crew plan identity, bounded processed/history ids, and timeline caps. A failure clears only `starbreak.run.v1`.
+- `RunSnapshotCoordinator` is the storage/orchestration adapter consumed by `GameApp`. Automatic writes happen only at briefing and operation-entry boundaries; manual pause suspend writes the already-suspended mission state. Active combat entities are intentionally absent, so resume restarts the current operation from its mission checkpoint rather than pretending to preserve bullet positions.
+- `src/game/ExpeditionEndurance.ts` consumes generated runs, declarative Scenario Lab setups, snapshot create/export/restore, and the final-sector mission checkpoint without browser or private app state. Every round trip reports snapshot size and bounded engineering/faction/crew/timeline/item/set-piece state, making boundary accumulation testable before Phase 11 adds domains.
+- Main-menu and pause scenes remain presentation-only: they receive a snapshot summary and callbacks, while regeneration, validation, storage, and repair live outside the DOM. Explicitly focused main-menu buttons now own keyboard confirm, preserving native resume/discard/settings/archive intent.
+- Scenario Lab, Scenario Timeline, and declarative Scenario setup are loaded through dynamic `import()`. The build emits 1.52 kB, 2.89 kB, and 5.39 kB minified lazy chunks. The initial bundle is 663.24 kB minified/179.38 kB gzip after adding core snapshot support, up 5.46 kB from work order 100; warning thresholds remain unchanged.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

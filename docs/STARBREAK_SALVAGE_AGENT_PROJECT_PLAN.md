@@ -852,6 +852,8 @@ Exit criteria:
 - Suspend/resume deterministically preserves every Phase 10 run-local system.
 - Corrupt snapshots fail safely and endurance fixtures cross current boundaries repeatedly.
 
+Status: implemented by work order 101. Permanent save v5 and suspended run v1 are separate storage records. Safe briefing/gameplay checkpoints regenerate and validate immutable run identity before restoring complete Phase 10 session state; corruption removes only the suspended record. Main-menu/pause UI, public endurance fixtures, deterministic restore/bounds tests, keyboard Chromium reload/resume coverage, and three lazy Scenario Lab chunks establish the first orchestration and loading seams.
+
 ### P11.2 - Executable Voyage Topology
 
 Scope:

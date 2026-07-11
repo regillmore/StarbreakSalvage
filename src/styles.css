@@ -347,6 +347,27 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   width: min(94vw, 1040px);
 }
 
+.run-snapshot-panel {
+  display: grid;
+  width: min(92vw, 620px);
+  gap: 0.45rem;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid rgba(255, 209, 102, 0.48);
+  border-left: 4px solid #ffd166;
+  border-radius: 8px;
+  text-align: left;
+  background: rgba(10, 14, 34, 0.82);
+}
+
+.run-snapshot-panel h2,
+.run-snapshot-panel p {
+  margin: 0;
+}
+
+.run-snapshot-notice {
+  max-width: 620px;
+}
+
 .scenario-lab-panel {
   max-height: min(94vh, 900px);
   overflow: auto;

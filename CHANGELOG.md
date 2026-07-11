@@ -4,6 +4,7 @@
 
 ### Gameplay and UX
 
+- Added a separately versioned suspended-expedition snapshot with generated-plan/graph/contract identity, safe briefing or operation-entry targets, complete Phase 10 run-session state, reserved Phase 11 extension slots, corruption recovery, a main-menu resume/discard panel, and a pause-menu suspend action. Resuming active combat deliberately restarts the operation from its safe entry checkpoint.
 - Added a debug-only eight-card Expedition Scenario Lab for generated nodes, optional missions, foundry/loadout state, set pieces, recurring rivals, crew command, combined Phase 10 pressure, and timeline audit through public run/session/read models. The `B` shortcut and main-menu button remain local, use no telemetry, and yield to explicitly remapped gameplay controls.
 - Added a deterministic run-local timeline for node/stage transitions, choices, duration, economy, engineering, faction, rival, crew, boss, and run-end/failure events, capped at 96 display entries and 192 processed ids with summary and debug readouts and no save-schema change.
 - Added three reusable multi-part set-piece contracts: the Hecaton Ledger Ark capital ship, Bloom Spindle Exchange station, and Court Wreck-Train Crown convoy hulk. Their shield emitters, armor, turrets, hangars, engines, couplers, and weak points use dependency-gated targeting, exterior/interior/destruction stages, fixed 640x720 safe lanes, capped subsystem pressure, deterministic loose-currency rewards, objective accounting, and a finale boss lock, with a public `U` debug jump and accessibility-aware rendering.
@@ -78,6 +79,8 @@
 
 ### Testing
 
+- Added run-snapshot round-trip, plan/contract/mission/extension drift, corruption/permanent-save isolation, byte-cap, storage, and suspended-state tests plus a public deterministic endurance harness that repeats all eight Scenario Lab boundaries and the finale checkpoint across regenerated snapshot restores.
+- Added keyboard Chromium coverage for suspend, reload, resume, operation restart, and snapshot cleanup while preserving the existing keyboard-only pause/end-run path.
 - Added a cross-platform `npm run test:preview` smoke that serves `dist`, verifies the `/StarbreakSalvage/` base and emitted hashed JavaScript/CSS, runs in CI, and joins checks plus Chromium under `npm run verify:release`.
 - Closed the Phase 10 release audit with 79 test files/463 tests, all 12 Chromium paths, repeatable preview evidence, a measured approximately 12-minute deployed all-optional run, and explicit manual browser/device/performance/balance/content/art/audio/narrative risks.
 - Added Scenario Lab definition/setup and timeline fold/bounds tests plus a narrow keyboard-only Chromium path covering high contrast, reduced motion, performance mode, combined set-piece/crew/item/environment pressure, timeline audit, and foundry access.
@@ -153,6 +156,7 @@
 
 ### Planning
 
+- Started Phase 11 with work order 101's snapshot/coordinator/endurance boundary and measured Scenario Lab code split; true multi-operation sectors remain work order 102.
 - Completed Phase 10 as the first expedition-depth and shipcraft playtest candidate and added the Phase 11 deep-voyage roadmap plus work orders 101-110 for resumable snapshots/endurance tooling, true multi-operation sectors, the Null Frontier third act, a mobile carrier, boarding incursions, dynamic faction fronts, crew arcs, fleetcraft, apex hunts, and release hardening.
 - Concluded Phase 1 in planning docs and added the Phase 2 roadmap/work orders for complete-run depth, player verbs, content expansion, unlock gating, and playtest hardening.
 - Concluded Phase 2 in planning docs and added the Phase 3 roadmap/work orders for vertical scrolling, procedural sector backgrounds, distance objectives, scroll-synced encounters, hazards, boss arenas, and scrolling playtest hardening.

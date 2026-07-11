@@ -3,6 +3,7 @@ import type { Scene, SceneDebugState } from '../app/Scene';
 import type { getSaveSummary } from '../core/saveData';
 import { KNOWN_SEED_LABELS, previewSeedEntry } from '../game/SeedEntry';
 import type { InputAction } from '../systems/InputSystem';
+import type { RunSnapshotSummary } from '../game/RunSnapshot';
 
 type SaveSummary = ReturnType<typeof getSaveSummary>;
 
@@ -18,7 +19,11 @@ export class MainMenuScene implements Scene {
     private readonly onOpenArchive: () => void,
     private readonly onOpenUpgradeBay: () => void,
     private readonly onOpenSettings: () => void,
-    private readonly onOpenScenarioLab: (() => void) | null = null
+    private readonly onOpenScenarioLab: (() => void) | null = null,
+    private readonly resumeSummary: RunSnapshotSummary | null = null,
+    private readonly onResumeRun: (() => void) | null = null,
+    private readonly onDiscardRun: (() => void) | null = null,
+    private readonly snapshotNotice: string | null = null
   ) {}
 
   public enter(): void {
@@ -119,14 +124,23 @@ export class MainMenuScene implements Scene {
     scenarioLabButton.hidden = this.onOpenScenarioLab === null;
     scenarioLabButton.addEventListener('click', () => this.onOpenScenarioLab?.());
 
+    const resumePanel = this.createResumePanel();
+    const snapshotNotice = document.createElement('p');
+    snapshotNotice.className = 'seed-status run-snapshot-notice';
+    snapshotNotice.dataset.testid = 'run-snapshot-notice';
+    snapshotNotice.hidden = this.snapshotNotice === null;
+    snapshotNotice.textContent = this.snapshotNotice ?? '';
+
     shell.append(
       title,
       tagline,
       seedForm,
+      ...(resumePanel ? [resumePanel] : []),
       archiveButton,
       upgradeBayButton,
       settingsButton,
       scenarioLabButton,
+      snapshotNotice,
       status
     );
     this.uiRoot.replaceChildren(shell);
@@ -141,6 +155,11 @@ export class MainMenuScene implements Scene {
 
   public handleAction(action: InputAction): void {
     if (action === 'confirm') {
+      const activeElement = this.uiRoot.ownerDocument.activeElement;
+      if (activeElement instanceof HTMLButtonElement && this.uiRoot.contains(activeElement)) {
+        activeElement.click();
+        return;
+      }
       this.onStartRun(this.seedInputElement?.value ?? this.seedInput);
     }
   }
@@ -154,5 +173,42 @@ export class MainMenuScene implements Scene {
         purchasedUpgrades: this.saveSummary.upgradeCount
       }
     };
+  }
+
+  private createResumePanel(): HTMLElement | null {
+    if (!this.resumeSummary || !this.onResumeRun || !this.onDiscardRun) return null;
+    const panel = document.createElement('section');
+    panel.className = 'run-snapshot-panel';
+    panel.dataset.testid = 'run-snapshot-panel';
+    panel.setAttribute('aria-labelledby', 'run-snapshot-title');
+    const title = document.createElement('h2');
+    title.id = 'run-snapshot-title';
+    title.textContent = 'Suspended Expedition';
+    const summary = document.createElement('p');
+    summary.dataset.testid = 'run-snapshot-summary';
+    summary.textContent = `${this.resumeSummary.contractName} | ${this.resumeSummary.actLabel} S${this.resumeSummary.sectorNumber} ${this.resumeSummary.sectorName} | ${this.resumeSummary.checkpointLabel} | ${(this.resumeSummary.bytes / 1024).toFixed(1)} KiB | Seed ${this.resumeSummary.seed}`;
+    const boundary = document.createElement('p');
+    boundary.className = 'choice-meta';
+    boundary.textContent =
+      this.resumeSummary.target === 'gameplay'
+        ? 'Resume restarts the current operation from its safe entry checkpoint.'
+        : 'Resume returns to the saved mission briefing checkpoint.';
+    const actions = document.createElement('div');
+    actions.className = 'button-row';
+    const resume = document.createElement('button');
+    resume.type = 'button';
+    resume.className = 'primary-button';
+    resume.dataset.testid = 'resume-expedition';
+    resume.textContent = 'Resume Expedition';
+    resume.addEventListener('click', this.onResumeRun);
+    const discard = document.createElement('button');
+    discard.type = 'button';
+    discard.className = 'secondary-button';
+    discard.dataset.testid = 'discard-expedition';
+    discard.textContent = 'Discard Snapshot';
+    discard.addEventListener('click', this.onDiscardRun);
+    actions.append(resume, discard);
+    panel.append(title, summary, boundary, actions);
+    return panel;
   }
 }

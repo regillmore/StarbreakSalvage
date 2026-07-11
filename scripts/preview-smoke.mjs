@@ -36,8 +36,12 @@ try {
   }
 
   console.log(`INDEX 200 ${basePath}`);
-  for (const assetPath of assetPaths) {
-    const assetUrl = new URL(assetPath, origin);
+  const pendingAssets = assetPaths.map((assetPath) => new URL(assetPath, origin));
+  const checkedAssets = new Set();
+  while (pendingAssets.length > 0) {
+    const assetUrl = pendingAssets.shift();
+    if (!assetUrl || checkedAssets.has(assetUrl.href)) continue;
+    checkedAssets.add(assetUrl.href);
     if (!assetUrl.pathname.startsWith(basePath)) {
       throw new Error(`Asset escaped the GitHub Pages base path: ${assetUrl.pathname}`);
     }
@@ -46,6 +50,12 @@ try {
       throw new Error(`Asset returned ${response.status}: ${assetUrl.pathname}`);
     }
     console.log(`ASSET ${response.status} ${assetUrl.pathname}`);
+    if (assetUrl.pathname.endsWith('.js')) {
+      const source = await response.text();
+      for (const match of source.matchAll(/import\(["'`]([^"'`]+\.js)["'`]\)/g)) {
+        pendingAssets.push(new URL(match[1], assetUrl));
+      }
+    }
   }
 } finally {
   preview.kill();

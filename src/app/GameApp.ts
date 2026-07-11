@@ -114,8 +114,6 @@ import type { ItemId } from '../content/items';
 import type { UpgradeId } from '../content/upgrades';
 import { UpgradeBayScene } from '../ui/UpgradeBayScene';
 import { FoundryScene } from '../ui/FoundryScene';
-import { ScenarioLabScene } from '../ui/ScenarioLabScene';
-import { ScenarioTimelineScene } from '../ui/ScenarioTimelineScene';
 import {
   createDebugFactionCampaignState,
   createFactionCampaignCombatModifier,
@@ -129,7 +127,12 @@ import {
   getCrewFoundryAssist,
   getRecruitableCrewCandidate
 } from '../game/CrewCommand';
-import { createScenarioLabLaunch, type ScenarioLabId } from '../game/ScenarioLab';
+import type { ScenarioLabId } from '../game/ScenarioLab';
+import {
+  RunSnapshotCoordinator,
+  createRunSnapshotSummary,
+  type RunSnapshotV1
+} from '../game/RunSnapshot';
 
 export class GameApp {
   private readonly canvas: HTMLCanvasElement;
@@ -141,6 +144,7 @@ export class GameApp {
   private readonly sceneManager = new SceneManager();
   private readonly loop: Loop;
   private readonly debugEnabled: boolean;
+  private readonly runSnapshotCoordinator: RunSnapshotCoordinator;
   private seedEntryInput: string;
   private currentSeedLabel: string;
   private currentRun: RunSkeleton;
@@ -151,6 +155,9 @@ export class GameApp {
   private lastRunResult: CombatRunResult | null = null;
   private lastSaveUpdate: SaveUpdateResult | null = null;
   private summarySaved = false;
+  private runSnapshot: RunSnapshotV1 | null = null;
+  private runSnapshotNotice: string | null = null;
+  private snapshotEligible = false;
   private frameStats: FrameStats = {
     fps: 0,
     steps: 0,
@@ -179,6 +186,12 @@ export class GameApp {
     this.seedEntryInput = initialSeed.source === 'random' ? initialSeed.seed : initialSeedInput;
     this.currentSeedLabel = initialSeed.seed;
     this.saveData = loadOrRepairSave(window);
+    this.runSnapshotCoordinator = new RunSnapshotCoordinator(window.localStorage);
+    const snapshotLoad = this.runSnapshotCoordinator.load();
+    this.runSnapshot = snapshotLoad.snapshot;
+    this.runSnapshotNotice = snapshotLoad.repaired
+      ? `Suspended expedition was invalid and removed. Permanent progression is safe. ${snapshotLoad.error ?? ''}`.trim()
+      : null;
     this.currentRun = this.createRunSkeleton();
     this.selectedContract = getFirstContract(this.currentRun);
     this.runSession = createRunSession(this.currentRun, this.selectedContract, {
@@ -253,25 +266,34 @@ export class GameApp {
         () => {
           this.showSettings(() => this.showMainMenu());
         },
-        this.debugEnabled ? () => this.showScenarioLab() : null
+        this.debugEnabled ? () => void this.showScenarioLab() : null,
+        this.runSnapshot ? createRunSnapshotSummary(this.runSnapshot) : null,
+        this.runSnapshot ? () => this.resumeRunSnapshot() : null,
+        this.runSnapshot ? () => this.discardRunSnapshot() : null,
+        this.runSnapshotNotice
       )
     );
   }
 
-  private showScenarioLab(): void {
+  private async showScenarioLab(): Promise<void> {
     this.resetDebugRunState();
+    const { ScenarioLabScene } = await import('../ui/ScenarioLabScene');
     this.sceneManager.switchTo(
       new ScenarioLabScene(
         this.uiRoot,
         this.currentRun,
         this.selectedContract,
-        (id) => this.launchScenarioLab(id),
+        (id) => void this.launchScenarioLab(id),
         () => this.showMainMenu()
       )
     );
   }
 
-  private launchScenarioLab(id: ScenarioLabId): void {
+  private async launchScenarioLab(id: ScenarioLabId): Promise<void> {
+    const [{ createScenarioLabLaunch }, { ScenarioTimelineScene }] = await Promise.all([
+      import('../game/ScenarioLab'),
+      import('../ui/ScenarioTimelineScene')
+    ]);
     const launch = createScenarioLabLaunch({
       run: this.currentRun,
       contract: this.selectedContract,
@@ -294,7 +316,7 @@ export class GameApp {
           launch.definition,
           launch.readout,
           launch.session.timeline,
-          () => this.showScenarioLab()
+          () => void this.showScenarioLab()
         )
       );
       return;
@@ -317,7 +339,7 @@ export class GameApp {
               value: salvageGained,
               subjectId: engineering.committed.frameId
             });
-            this.showScenarioLab();
+            void this.showScenarioLab();
           },
           'Scenario Lab fixture; changes remain local to this disposable run.'
         )
@@ -358,6 +380,10 @@ export class GameApp {
         (serialized) => this.importSave(serialized),
         () => {
           this.saveData = resetSaveData(window.localStorage);
+          this.runSnapshotCoordinator.clear();
+          this.runSnapshot = null;
+          this.snapshotEligible = false;
+          this.runSnapshotNotice = 'Permanent progression and suspended expedition reset.';
           this.refreshRunForCurrentSave();
         },
         () => {
@@ -388,6 +414,10 @@ export class GameApp {
         this.uiRoot,
         this.currentRun,
         (contract) => {
+          this.runSnapshotCoordinator.clear();
+          this.runSnapshot = null;
+          this.runSnapshotNotice = null;
+          this.snapshotEligible = true;
           this.selectedContract = contract;
           this.runSession = createRunSession(this.currentRun, contract, {
             unlockedIds: this.saveData.unlockedIds
@@ -406,7 +436,7 @@ export class GameApp {
 
   private showGameplay(existingScene?: GameplayScene): void {
     const gameplayScene = existingScene ?? this.createGameplayScene();
-
+    this.checkpointRun('gameplay', 'Operation entry checkpoint');
     this.sceneManager.switchTo(gameplayScene);
   }
 
@@ -538,7 +568,7 @@ export class GameApp {
         this.showDebugCrewWing();
         return true;
       case 'debugScenarioLab':
-        this.showScenarioLab();
+        void this.showScenarioLab();
         return true;
       default:
         return false;
@@ -546,6 +576,7 @@ export class GameApp {
   }
 
   private resetDebugRunState(): void {
+    this.snapshotEligible = false;
     this.refreshRunForCurrentSave();
     this.lastRunResult = null;
     this.lastSaveUpdate = null;
@@ -1318,6 +1349,10 @@ export class GameApp {
 
   private showSectorTransition(): void {
     const schedule = this.getCurrentMissionSchedule();
+    this.checkpointRun(
+      'sectorTransition',
+      `Sector ${this.runSession.currentSectorIndex + 1} briefing`
+    );
     this.sceneManager.switchTo(
       new SectorTransitionScene(
         this.uiRoot,
@@ -1372,6 +1407,10 @@ export class GameApp {
         },
         () => {
           this.showSettings(() => this.showPause(gameplayScene));
+        },
+        () => {
+          this.checkpointRun('gameplay', 'Manually suspended operation');
+          this.showMainMenu();
         }
       )
     );
@@ -1396,6 +1435,9 @@ export class GameApp {
   }
 
   private showRunSummary(result?: CombatRunResult): void {
+    this.runSnapshotCoordinator.clear();
+    this.runSnapshot = null;
+    this.snapshotEligible = false;
     this.lastRunResult = result ?? this.lastRunResult;
     if (this.lastRunResult) {
       recordRunSessionTimelineEvent(this.runSession, {
@@ -1800,6 +1842,73 @@ export class GameApp {
     this.runSession = createRunSession(this.currentRun, this.selectedContract, {
       unlockedIds: this.saveData.unlockedIds
     });
+  }
+
+  private checkpointRun(target: 'sectorTransition' | 'gameplay', label: string): void {
+    if (!this.snapshotEligible) return;
+    try {
+      this.runSnapshot = this.runSnapshotCoordinator.checkpoint({
+        run: this.currentRun,
+        contract: this.selectedContract,
+        session: this.runSession,
+        target,
+        label
+      });
+      this.runSnapshotNotice = null;
+    } catch (error) {
+      this.runSnapshotNotice =
+        error instanceof Error
+          ? `Run checkpoint failed: ${error.message}`
+          : 'Run checkpoint failed.';
+    }
+  }
+
+  private resumeRunSnapshot(): void {
+    if (!this.runSnapshot) return;
+    try {
+      const restored = this.runSnapshotCoordinator.restore(this.runSnapshot);
+      this.currentSeedLabel = restored.run.seed;
+      this.seedEntryInput = restored.run.seed;
+      this.currentRun = restored.run;
+      this.selectedContract = restored.contract;
+      this.runSession = restored.session;
+      this.lastRunResult = null;
+      this.lastSaveUpdate = null;
+      this.summarySaved = false;
+      this.snapshotEligible = true;
+      this.runSnapshotNotice = null;
+      if (restored.snapshot.checkpoint.target === 'gameplay') {
+        if (this.runSession.mission.status === 'suspended') {
+          const result = this.dispatchCurrentMission({
+            id: `${this.runSession.mission.currentStageId}:snapshot-resume:${this.runSession.mission.transitions.length}`,
+            type: 'resume'
+          });
+          if (result.disposition !== 'advanced') {
+            throw new Error(result.reason ?? 'Suspended mission could not resume.');
+          }
+        }
+        this.showGameplay();
+        return;
+      }
+      this.showSectorTransition();
+    } catch (error) {
+      this.runSnapshotCoordinator.clear();
+      this.runSnapshot = null;
+      this.snapshotEligible = false;
+      this.runSnapshotNotice =
+        error instanceof Error
+          ? `Suspended expedition could not resume and was removed: ${error.message}`
+          : 'Suspended expedition could not resume and was removed.';
+      this.showMainMenu();
+    }
+  }
+
+  private discardRunSnapshot(): void {
+    this.runSnapshotCoordinator.clear();
+    this.runSnapshot = null;
+    this.snapshotEligible = false;
+    this.runSnapshotNotice = 'Suspended expedition discarded. Permanent progression was unchanged.';
+    this.showMainMenu();
   }
 }
 

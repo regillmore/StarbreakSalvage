@@ -194,6 +194,10 @@ Phase 10 closeout: work order 100 finds no severe performance blocker in automat
 - Measure dynamic-import changes by emitted initial bytes, gzip bytes, request count, and startup smoke. Do not increase Vite's warning threshold to claim improvement.
 - Reduced motion/performance may simplify carrier, frontier, boarding, fleet, and apex presentation but must not change geometry, target selection, snapshot state, or campaign outcomes.
 
+Work order 101 baseline: snapshot JSON is capped at 512 KiB, written only at safe briefing/operation/manual-suspend boundaries, and validated through regenerated plan identity rather than every frame. The public endurance harness supports 1-32 cycles; each cycle restores eight Scenario Lab boundaries plus the finale and reports snapshot bytes, timeline/faction/crew/engineering history, item count, set-piece component count, and pending engineering actions. Snapshot state contains no canvas, audio, DOM, callback, or live combat-entity data. Resume from gameplay therefore restarts the current operation at its safe checkpoint.
+
+The first measured split moves Scenario Timeline (1.52 kB minified/0.69 kB gzip), Scenario Lab UI (2.89/1.24 kB), and Scenario setup (5.39/2.21 kB) behind debug-only dynamic imports: 9.80 kB minified total. Core snapshot/resume adds more than that split removes from startup, so the initial JavaScript is 663.24 kB minified/179.38 kB gzip versus 657.78/177.71 kB at work order 100. This +5.46 kB/+1.67 kB change is accepted as core functionality, not optimization success. The Vite warning remains active; work order 102 and later extraction should keep measuring initial bytes, lazy bytes, request count, snapshot size, and restore cost.
+
 ## Debug and Playtest Scenarios
 
 Enable debug tools with `?debug=1` on a local, preview, or Pages URL.
