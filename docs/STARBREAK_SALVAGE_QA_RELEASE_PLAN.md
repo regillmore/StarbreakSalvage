@@ -190,7 +190,7 @@ Phase 10 expands each route sector into a deterministic expedition graph with mu
 - Scenario Lab and bounded run-timeline tests that use public setup/read models, remain local-only, and cannot grow save records without limit;
 - Chromium smoke for representative expedition, foundry, set-piece, rival, and crew paths under narrow, keyboard-only, high-contrast, reduced-motion, and performance settings while every earlier smoke path remains green.
 
-The measured roughly six-minute Phase 9 baseline should be tracked as evidence, not fixed by sleeps or global slowdown. Phase 10 tests should report generated encounter capacity and eventual full-run duration, while qualitative balance remains a later playtest concern.
+The measured roughly six-minute Phase 9 baseline should be tracked as evidence, not fixed by sleeps or global slowdown. The deployed Phase 10 all-optional path now measures about 12 minutes, proving that executable stages and decisions reached the target floor. Qualitative balance and repeated-run content variety remain later playtest concerns.
 
 Current Phase 10 coverage:
 
@@ -200,6 +200,24 @@ Current Phase 10 coverage:
 - Work order 096 adds validation and unit coverage for three assemblies, shared template reuse, known sector/anchor selection, dependency order, one-shot stage/completion rewards, boss-lock release, fixed safe-lane geometry, viewport/settings parity, bomb/special/hazard damage, contact pushout, capped turret fire, cancellable hangar formation launches, objective accounting, and summary/debug read models. The main Chromium path verifies the Hecaton contract readout, public `U` jump, safe-lane telemetry, and fixed 640x720 world while all 11 existing smoke paths remain green.
 - Work order 097 adds content validation and known-seed/save fixtures for four distinct response policies, four unique generated captains selected from five archetypes, deterministic identity, decision replay, bounded history, escape/injury/adaptation/recurrence, capture/destruction terminal state, and one-shot rewards. Objective-safety coverage proves a live rival does not hold a required field clear and terminal rival handling cannot grant ordinary kill/pickup credit. Unit integration verifies combat, shop, route, crew-offer, set-piece, briefing, summary, debug, and finale influence; the main Chromium path uses the public `R` fixture to verify a returning rival under the normal scene flow.
 - Work order 098 adds validation and seed-plus-save fixtures for five distinct crew roles, acquisition policy and command-capacity rejection, loadout fit/deployment caps, trust/departure, injury/two-sector recovery, foundry assistance, and bounded event history. Combat tests cover deterministic focus targeting, ally defeat attribution through required objective metrics, projectile screening, centralized pickup/salvage credit, command cooldown rejection, damage interception/injury, and disengagement without enemy-escape corruption. Input/settings tests pin all five remappable commands; Chromium uses the public `T` fixture to verify briefing identity, combat HUD, pointer command controls, and debug state while preserving existing paths.
+- Work order 099 adds deterministic Scenario Lab definition/setup coverage, a bounded 96-entry/192-id timeline fold, remap-safe debug access, and a 390x700 keyboard-only high-contrast/reduced-motion/performance Chromium path through combined set-piece, ally, item/module, environment, timeline, and foundry state.
+- Work order 100 closes the automated Phase 10 gate with 79 passing test files/463 tests, all 12 Chromium paths, and a repeatable `npm run test:preview` command that verifies the GitHub Pages base plus emitted hashed assets. Manual non-Chromium, real-device, sustained performance, full-run balance, and combinatorial-build validation remain open.
+
+## Phase 11 QA focus
+
+Phase 11 makes long-run state resumable and expands campaign topology. Add coverage at the new persistence and orchestration seams:
+
+- versioned snapshot round trips, corruption recovery, schema migration, permanent-save separation, and restore at every mission/carrier/boarding/front/crew/fleet/apex boundary;
+- endurance replays that repeatedly enter/exit combat, optional operations, foundry, set pieces, carrier, boarding, pause, save/restore, extraction, and frontier finales while asserting bounded actors, hooks, histories, and rewards;
+- multi-operation itinerary snapshots and decision replay across required, optional, relief, pursuit, retreat, extraction, and frontier nodes;
+- Act III campaign variation, early extraction completeness, frontier reachability, duration capacity, and shared-engine compatibility;
+- carrier facilities, crew posts, cargo/damage/debt/heat, travel posture, and concise keyboard/pointer staging tests;
+- deterministic boarding room graphs, doors, hazards, objectives, custody, retreat/extraction, simultaneous events, and cleanup;
+- faction-front movement, node creation/closure, map ownership, support, prices, rival/crew/carrier influence, and ending gates;
+- eight or more crew-arc decision histories covering bonds, conflict, promotion, rescue, departure, and mutiny;
+- fleetcraft construction, assignment, loss/recovery, bounded targeting/projectiles/effects, objective attribution, and combined stress;
+- three or more apex hunt replays with persistent damage, branching outcomes, multi-part finale safety, and divergent endings;
+- Playwright Scenario Lab paths for suspend/resume, operational map, frontier, carrier, boarding, fronts, crew arcs, fleet, and apex states under accessibility/performance settings.
 
 ## Known seed tests
 
@@ -288,6 +306,19 @@ Phase 10 should add these seed/save/decision fixtures:
 - `DISTRESS-WING-SMOKE` - crew rescue, recruitment, command, injury, retreat, and summary outcome path.
 - `EXPEDITION-COMBINED-STRESS` - Scenario Lab fixture for mission actors, set-piece parts, ally AI, item/module procs, hazards, projectiles, and bounded timeline instrumentation.
 
+Phase 11 should add these seed/save/snapshot fixtures:
+
+- `VOYAGE-SNAPSHOT-ROUNDTRIP` - suspend/resume at every Phase 10 boundary with permanent-save isolation.
+- `MULTI-OPERATION-LADDER` - required/optional/relief/pursuit/retreat itinerary replay and cleanup.
+- `NULL-FRONTIER-BREACH` - Act II extraction versus Act III entry and coherent frontier campaign selection.
+- `CARRIER-DAMAGE-CONTROL` - facility, post, cargo, heat, debt, damage, and travel-posture state.
+- `DERELICT-BOARDING-GRID` - deterministic rooms, doors, hazards, loot custody, and timed extraction.
+- `FACTION-FRONT-CASCADE` - decision sequence that moves territory and opens/closes later nodes.
+- `CREW-BOND-MUTINY` - multi-act paired arc with promotion, conflict, loyalty, and departure outcomes.
+- `FLEETCRAFT-COMBINED-STRESS` - player, three allies, support craft, set piece, hazards, and shared proc/projectile budgets.
+- `APEX-HUNT-PERSISTENCE` - multi-node threat damage, escape, boarding sabotage, and divergent finale replay.
+- `VOYAGE-ENDURANCE-45` - completionist snapshot/replay harness targeting 30-45 minutes of structural capacity.
+
 ## Content validation checklist
 
 Phase 2 should extend this checklist as systems become real. In addition to the existing entries, content validation should cover ship stat ranges, objective references, wave references, implemented hook coverage, and unlock-gated pools for fresh and progressed saves. Phase 3 should extend it again for sector length ranges, scroll-speed modifiers, background-plan references, landmark references, hazard references, and distance marker ordering. Phase 4 should extend it again for ship appearance references, HUD theme keys, preview assets/primitives, and input/display settings defaults. Phase 5 should extend it again for upgrade definitions, upgrade prerequisites, upgrade effect references, icon categories, lunar sector references, lunar feature references, and destruction cue metadata. Phase 6 should extend it again for item family/source metadata, implementation status, unlock/discovery gates, source-weighted pools, synergy cluster references, and item card presentation data. Phase 7 should extend it again for enemy role metadata, movement/attack family references, variant eligibility, formation definitions, and longer-sector pacing references. Phase 8 should extend it again for richer hazard-zone definitions, destructible/obstacle definitions, loose currency scatter rules, safe-lane placement constraints, environmental stress budgets, and pickup economy caps. Phase 9 should extend it again for act definitions, inter-act junction choices, act route pools, Act II objective families, boss/finale references, and act-aware reward/economy pools. Phase 10 should extend it for expedition node references, mission transitions and cleanup policies, ship frame/module compatibility, foundry recipes and affixes, set-piece component graphs, faction/rival response rules, crew/command contracts, Scenario Lab fixtures, and bounded timeline events.
@@ -354,6 +385,8 @@ Phase 9 performance checks should include total two-act run length, act-transiti
 
 Phase 10 performance checks should include expedition graph/mission schedule generation time, sustained full-run duration, mission-transition cleanup, active set-piece part and collision-shape counts, ally AI/command cost, module/item combined proc budgets, foundry/loadout DOM density, faction/rival state size, bounded timeline size, and Scenario Lab combined stress. Longer expeditions must keep active-field caps bounded rather than accumulating actors or event history across completed nodes.
 
+Phase 11 performance checks should add snapshot size/latency, restore allocation, endurance cleanup, multi-operation map DOM cost, frontier asset/bundle splitting, carrier/boarding scene density, faction-front fold cost, crew-arc history bounds, combined ally/fleet target scans, apex geometry/projectiles, and 30-45 minute sustained frame/memory behavior. The current 657.78 kB main bundle and large integration modules must be measured rather than hidden by a warning-limit change.
+
 - [x] FPS overlay available behind debug flag.
 - [x] Projectile count visible in debug mode.
 - [ ] Particle count visible in debug mode.
@@ -379,7 +412,7 @@ Phase 10 performance checks should include expedition graph/mission schedule gen
 - [ ] Normal combat stays near 60 FPS on dev machine.
 - [x] Heavy combat debug scene documented.
 - [x] Long-scroll debug scene documented.
-- [ ] Screen shake and particles respect reduced motion/performance settings.
+- [x] Screen shake and particles respect reduced motion/performance settings in automated rendering/settings coverage.
 
 ## Accessibility checklist
 
@@ -396,16 +429,16 @@ Phase 9 accessibility checks should also cover inter-act junction focus and copy
 Phase 10 accessibility checks should also cover mission briefings and branch focus, modular loadout/foundry comparisons, non-color-only power/heat/compatibility warnings, set-piece subsystem identity, rival and wingmate identity, remappable ally commands, reduced-motion stage transitions/destruction, high-contrast bullets over large actors, narrow expedition history, and Scenario Lab keyboard-only operation.
 
 - [x] Keyboard-only menu navigation.
-- [ ] Remappable controls.
+- [x] Remappable controls.
 - [x] Pause always available during gameplay.
-- [ ] Mute option.
-- [ ] Volume sliders.
+- [x] Mute option.
+- [x] Volume slider.
 - [x] Reduced motion.
-- [ ] Screen shake strength.
+- [x] Screen shake strength.
 - [x] Bullet contrast option.
 - [ ] Flash reduction.
-- [ ] No essential information conveyed by color alone.
-- [ ] Distance/objective text remains readable over moving backgrounds.
+- [x] Current essential combat, objective, faction, rival, crew, and engineering states have text/glyph cues in addition to color.
+- [x] Distance/objective text remains present and readable in narrow/high-contrast automated smoke.
 - [x] Reduced motion simplifies scrolling effects without hiding gameplay state.
 - [x] Themed HUD and ship previews preserve text contrast in automated smoke coverage.
 - [x] Mouse controls do not trap or steal menu focus.
@@ -424,6 +457,7 @@ Phase 10 accessibility checks should also cover mission briefings and branch foc
 - [x] Save migration tested.
 - [x] Seed sharing works.
 - [x] Known severe bugs documented or fixed.
+- [x] `npm run test:preview` verifies the Pages base and hashed assets.
 
 ## Release notes template
 

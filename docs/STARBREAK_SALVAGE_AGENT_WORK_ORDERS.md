@@ -1698,7 +1698,183 @@ Acceptance criteria:
 - Release docs distinguish structural run-depth success from unfinished balance, content volume, art, audio, and narrative polish.
 - Phase 10 can be declared complete or explicitly deferred with documented blockers.
 
-Status: planned.
+Status: implemented. The audit found no severe Phase 10 release blocker across expedition determinism, guarded mission transitions, modular compatibility, foundry commit/evolution ordering, set-piece objective/reward safety, faction/rival recurrence, bounded ally behavior, v5 save migration, timeline/summary state, Scenario Lab access, accessibility, browser load, or GitHub Pages paths. The deployed all-optional run measures about 12 minutes, doubling the Phase 9 baseline and reaching the lower structural target through live stages and decisions. Release docs now distinguish that success from unfinished balance, repeated-run content volume, art/audio depth, narrative polish, ally-AI feel, combinatorial builds, and manual browser/device profiling. A cross-platform `test:preview` command serves `dist` and validates the Pages base plus emitted hashed assets; CI runs it, `verify:release` composes the complete gate, and `AGENTS.md` records the new workflow and large-module extraction guidance. No production gameplay code required a blocker fix. The 657.78 kB main bundle and large combat/app/render/validation modules are explicit work-order-101 architecture targets rather than warning-limit exceptions.
+
+Verification: `npm run verify:release` passes with 79 test files and 463 tests, all 12 Playwright Chromium paths, a 657.78 kB minified/177.71 kB gzip production JavaScript bundle, and HTTP 200 for `/StarbreakSalvage/` plus both emitted hashed JavaScript/CSS assets. Phase 10 is complete as a local expedition-depth and shipcraft playtest candidate. Work order 100 deployment confirmation, non-Chromium/real-device checks, deployed Pages verification, sustained profiling, and broader human balance/readability/fatigue testing remain external or manual follow-ups.
+
+## Phase 11 work orders
+
+Phase 11 begins from the deployed approximately 12-minute all-optional Phase 10 expedition. Work orders 101-110 target a resumable 20-30 minute standard voyage and 30-45 minute completionist capacity through true multi-operation topology, a frontier act, carrier staging, boarding, living faction/crew state, fleetcraft, and apex campaigns while preserving an earlier extraction. The first order establishes architecture and endurance seams before new phase-sized systems land.
+
+## Work order 101 - Expedition kernel, suspend/resume, and endurance tooling
+
+Goal: make substantially longer campaigns safe to build, save, replay, and maintain.
+
+Prompt:
+
+> Establish the Phase 11 expedition kernel before adding more content. Extract phase-sized routing/setup responsibilities from `GameApp`, `GameplayScene`, `CombatState`, `CanvasRenderer`, and monolithic validation paths into explicit domain coordinators or focused modules where the dependency boundary is clear. Add a separately versioned resumable-run snapshot containing generated-plan identity, decisions, checkpoints, build/economy, mission, carrier-ready extension points, faction/rival, crew, and bounded timeline state without mixing it into permanent progression data. Add safe suspend/resume, corruption/version recovery, deterministic restore tests, and a public replay/endurance harness that can cross mission, foundry, set-piece, faction, crew, finale, save/restore, and cleanup boundaries repeatedly. Lazy-load debug or low-frequency scenes where practical and report measured bundle changes; do not silence size warnings cosmetically. Run checks.
+
+Acceptance criteria:
+
+- Snapshot restore reproduces graph, decisions, loadout, economy, missions, faction/rival, crew, and timeline state deterministically.
+- Corrupt or incompatible snapshots fail safely without damaging permanent save data.
+- Endurance fixtures can repeat every Phase 10 boundary without leaked actors, hooks, histories, or duplicate rewards.
+- Phase 11 domain systems have explicit integration seams and do not add another phase-sized orchestration block to existing large modules.
+
+Status: planned for Phase 11.
+
+## Work order 102 - True multi-operation sectors and operational map
+
+Goal: make the expedition graph an actively navigated sequence rather than mostly projected capacity.
+
+Prompt:
+
+> Execute two to four generated operations per sector through a public operational map: required gates, optional detours, relief/staging nodes, pursuit nodes, and retreat or extraction exits. Extend expedition and mission contracts with explicit world checkpoints, cleanup, resource/build carry, time/pressure/reward estimates, faction/crew/ship risks, and later-node consequences. Make choices alter future operations rather than only add rewards. Preserve same-seed plus snapshot/decision replay, objective safety, pause/resume, failure/partial-success handling, keyboard/pointer accessibility, narrow layouts, summaries, timeline, debug fixtures, and compatibility with existing ten-sector runs. Run checks.
+
+Acceptance criteria:
+
+- Multiple operations per sector are live and deterministic from explicit plan plus decision history.
+- Optional nodes change later structure, pressure, ownership, support, or objectives.
+- Cleanup and checkpoint rules prevent invisible retained work, soft locks, and duplicate payouts.
+- Operational-map previews communicate time, danger, reward, and consequence without revealing exact rolls.
+
+Status: planned for Phase 11.
+
+## Work order 103 - Null Frontier third act and extraction choice
+
+Goal: extend the voyage into a new region while preserving a legitimate shorter ending.
+
+Prompt:
+
+> Add a five-sector Act III called the Null Frontier with several coherent generated campaign variants, new original sector families, backgrounds, environmental laws, routes, mission pools, faction hooks, reward/engineering opportunities, bosses, and finale gates. Turn the existing Act II finale into an explicit choice between cashing out through a complete extraction ending or breaching the frontier for a standard longer campaign. Reuse shared generation, mission, combat, save, timeline, summary, and accessibility contracts instead of forking an Act III engine. Target a measured 20-30 minute standard frontier victory through new play and decisions, not repeated schedules or inflated durability. Run checks.
+
+Acceptance criteria:
+
+- Act III adds five mechanically and visually distinct sector families through shared contracts.
+- Same seed plus save/snapshot/decisions reproduces the chosen frontier campaign.
+- Act II extraction is a complete rewarded ending, while frontier entry carries the existing run forward.
+- Measured standard frontier runs enter the 20-30 minute structural band without global slowdown.
+
+Status: planned for Phase 11.
+
+## Work order 104 - Mobile salvage carrier and command deck
+
+Goal: give a long expedition a run-local home, staging layer, and strategic build.
+
+Prompt:
+
+> Add a recoverable or contracted mobile salvage carrier with limited facility slots for foundry, medbay, intelligence, hangar, vault, reactor, and faction liaison functions. Let players repair, replace, reroute, and upgrade facilities; assign crew to posts; store bounded cargo; choose travel posture; and respond to carrier damage, heat, debt, pursuit, or access restrictions. Carrier state must alter later mission options, shipcraft, crew recovery, faction/front behavior, support craft, boarding, rewards, and summaries through explicit run-local events and read models. Keep staging concise, accessible, deterministic, snapshot-safe, and free of permanent raw-power grants. Run checks.
+
+Acceptance criteria:
+
+- Carrier facilities and assignments create distinct expedition strategies and later-node consequences.
+- Damage, debt, heat, cargo, and access have readable tradeoffs rather than maintenance busywork.
+- Carrier state survives suspend/resume and remains separate from permanent progression.
+- Command-deck UI is keyboard/pointer usable under narrow, high-contrast, and reduced-motion settings.
+
+Status: planned for Phase 11.
+
+## Work order 105 - Boarding and derelict incursions
+
+Goal: add a close-quarters operation family that changes rhythm and creates new consequence space.
+
+Prompt:
+
+> Add deterministic boarding incursions for capital ships, stations, wrecks, and derelicts using bounded room/corridor chains with breach, secure, rescue, sabotage, salvage, escort, and timed extraction objectives. Translate the current ship's weapons, modules, crew, bombs, specials, hazards, items, and collision/accounting contracts into interior-scale tools without creating an unrelated combat engine. Add doors, bulkheads, subsystem rooms, hazards, loot custody, retreat, partial success, and cleanup policies. Connect at least four boarding contracts to carrier facilities, crew arcs, faction fronts, foundry recipes, rivals, and apex hunts. Add Scenario Lab and deterministic tests. Run checks.
+
+Acceptance criteria:
+
+- Boarding is mechanically distinct but retains familiar controls, accounting, and build identity.
+- Room plans, objectives, hazards, loot, and extraction reproduce from explicit state.
+- Retreat, death, pause/resume, simultaneous outcomes, and cleanup cannot strand or duplicate a run.
+- Four or more boarding contracts produce consequences outside the incursion itself.
+
+Status: planned for Phase 11.
+
+## Work order 106 - Dynamic faction fronts and territory war
+
+Goal: make faction history reshape the navigable world during a run.
+
+Prompt:
+
+> Add deterministic run-local faction fronts covering territory, blockades, convoys, distress lanes, markets, contested set pieces, and carrier access. Fold aid, theft, contracts, spared targets, rival outcomes, boarding results, crew ties, and carrier allegiance into explicit front movement. Let fronts create, transform, or close later operation nodes and change ownership, prices, hazards, reinforcements, recruits, support, and ending conditions. Give every faction alliance, hostility, and opportunist routes with non-color map cues, readable forecasts, bounded history, snapshot safety, summaries, timeline events, and public debug fixtures. Run checks.
+
+Acceptance criteria:
+
+- Same decisions deterministically reproduce the same front movement and available nodes.
+- Fronts change play space and mission structure, not only numbers or prose.
+- Every faction supports meaningfully distinct alliance, hostility, and opportunist strategies.
+- Rival, crew, carrier, set-piece, shop, and finale consumers share one public influence model.
+
+Status: planned for Phase 11.
+
+## Work order 107 - Crew bonds, promotions, and specialist arcs
+
+Goal: turn the crew roster into an evolving campaign cast.
+
+Prompt:
+
+> Expand run-local crew with bonds, conflicts, fears, ambitions, promotions, paired abilities, loyalty missions, rescue/departure/mutiny paths, and specialist command posts. Generate deterministic identities and multi-node arc plans, then evolve them only through explicit mission, carrier, boarding, faction, rival, injury, module, and command outcomes. Add at least eight branching crew arcs spanning multiple acts. Relationships should unlock choices, risks, tactics, and complications rather than unconditional stat stacking. Integrate snapshot/resume, summaries, timeline, accessible roster/choice UI, bounded ally logic, Scenario Lab, and deterministic tests. Run checks.
+
+Acceptance criteria:
+
+- Eight or more multi-node crew arcs produce distinct tactical and campaign consequences.
+- Bonds/conflicts change options and paired behavior without mandatory permanent power.
+- Injury, promotion, departure, mutiny, rescue, and command succession resolve deterministically and safely.
+- Summary/timeline surfaces explain each known crew member's fate and major relationships.
+
+Status: planned for Phase 11.
+
+## Work order 108 - Fleetcraft and deployable support ships
+
+Goal: expand shipcraft into a small, fragile expedition fleet.
+
+Prompt:
+
+> Let players salvage frames and modules into bounded interceptors, screen drones, salvage skiffs, shield tenders, boarding pods, and other support craft. Add deterministic construction/refit/loss/recovery state, crew or automation assignments, launch doctrines, carrier hangar limits, mission/route uses, and command integration. Reuse shared target-query, projectile, effect, collision, objective, item/module-proc, and ally budgets; do not create unbounded fleet AI. Connect support craft to boarding, faction fronts, crew arcs, engineering, apex hunts, summaries, snapshots, accessibility, and combined Scenario Lab stress. Run checks.
+
+Acceptance criteria:
+
+- At least five support roles create distinct combat and itinerary options.
+- Fleet construction, loss, repair, and recovery matter within the run without permanent raw-power escalation.
+- Player, crew, fleet, set-piece, projectile, and proc pressure share explicit combined caps.
+- Fleet commands and identity remain readable with keyboard, pointer, narrow, high-contrast, reduced-motion, and performance modes.
+
+Status: planned for Phase 11.
+
+## Work order 109 - Apex hunts and divergent campaign endings
+
+Goal: create multi-sector adversaries and conclusions that remember the whole voyage.
+
+Prompt:
+
+> Generate roaming apex threats with traces, lieutenants, wounded subsystems, migrations, ambushes, and escape routes spanning multiple operation nodes. Add at least three structurally distinct hunts whose later encounters consume prior damage, boarding sabotage, faction fronts, rivals, crew arcs, carrier facilities, support craft, and frontier decisions. Support destruction, capture, containment, bargain, and evacuation endings where appropriate. Preserve centralized objective/reward accounting, boss-arena hazard fairness, deterministic replay/snapshot state, bounded geometry/projectiles/effects, original presentation, summaries, unlock-for-variety rewards, and Scenario Lab fixtures. Run checks.
+
+Acceptance criteria:
+
+- Three or more apex campaigns have distinct pursuit structures and multi-part finales.
+- Prior damage and decisions visibly persist without duplicate rewards or objective soft locks.
+- Multiple endings resolve explicit campaign state and expand future variety rather than only stats.
+- Apex combined pressure stays within documented and debug-visible budgets.
+
+Status: planned for Phase 11.
+
+## Work order 110 - Voyage Scenario Lab and Phase 11 release hardening
+
+Goal: ship the first resumable deep-voyage playtest candidate.
+
+Prompt:
+
+> Audit Phase 11 for expedition replay, run snapshot/save-v6 migration, suspend/resume recovery, multi-operation cleanup, frontier generation, extraction/frontier outcomes, carrier state, boarding, faction fronts, crew arcs, fleetcraft, apex hunts, divergent endings, summaries/timeline, accessibility, performance, browser load, GitHub Pages paths, and release docs. Fix blockers only. Expand Scenario Lab and endurance fixtures so public debug/browser paths can reach every system without a full voyage. Measure fresh/progressed standard, early-extraction, and completionist run lengths locally. Update all active plans, backlog, work orders, README, changelog, QA, release, performance, architecture, and known-risk docs. Run `npm run verify:release` with escalation for Chromium where needed.
+
+Acceptance criteria:
+
+- Full checks, all Chromium smoke, and production preview asset-path smoke pass or blockers are explicit.
+- A suspended run resumes and completes through at least one frontier ending.
+- Debug/browser smoke reaches every Phase 11 system through public models.
+- Release evidence distinguishes structural voyage depth from unfinished balance, content, art/audio, narrative, manual browser/device, fatigue, and combinatorial-fleet risks.
+
+Status: planned for Phase 11.
 
 ## Review subagent prompt
 

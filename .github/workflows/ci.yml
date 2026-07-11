@@ -25,6 +25,9 @@ jobs:
       - name: Run project checks
         run: npm run check
 
+      - name: Smoke production preview paths
+        run: npm run test:preview
+
   e2e:
     name: Playwright Smoke
     runs-on: ubuntu-latest

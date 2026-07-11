@@ -1810,4 +1810,132 @@ Acceptance:
 
 Status:
 
-- Planned for work order 100.
+- Implemented in work order 100. The Phase 10 audit found no severe release blocker; the deployed all-optional run measures about 12 minutes and demonstrates real mission/decision depth at the target floor. `npm run verify:release` passes with 79 files/463 tests, all 12 Chromium paths, and repeatable HTTP 200 production-preview checks for the Pages base and emitted hashed assets. Release, QA, performance, architecture, README, changelog, project, Phase 10, and work-order docs now distinguish structural success from unfinished balance, content volume, art/audio, narrative, ally-AI feel, combinatorial builds, manual browsers/devices, and sustained profiling. Preview smoke is scripted and runs in CI; bundle/module scale moves into work order 101 rather than being hidden. Phase 10 is complete as a local expedition-depth and shipcraft playtest candidate.
+
+## Epic BH - Phase 11 expedition kernel and topology
+
+### BH1 - Resumable expedition kernel
+
+Acceptance:
+
+- Versioned run snapshots preserve deterministic plan identity, decisions, checkpoints, build/economy, mission, faction/rival, crew, and bounded timeline state separately from permanent progression.
+- Corrupt/incompatible snapshots recover safely and endurance fixtures repeatedly cross every Phase 10 boundary without leaks or duplicate rewards.
+- Large orchestration modules gain explicit domain seams, and measured code splitting improves low-frequency/debug loading where practical.
+
+Status:
+
+- Planned for work order 101.
+
+### BH2 - True multi-operation sectors
+
+Acceptance:
+
+- Sectors execute two to four required/optional/relief/pursuit/retreat operations through a navigable public map.
+- Decisions alter future structure and reproduce from seed plus snapshot/decision state.
+- World carry and cleanup contracts prevent soft locks, invisible retained work, and duplicate payouts.
+
+Status:
+
+- Planned for work order 102.
+
+## Epic BI - Phase 11 frontier and staging
+
+### BI1 - Null Frontier Act III
+
+Acceptance:
+
+- Five new frontier sector families, campaign variants, missions, routes, environments, and bosses extend standard runs to a measured 20-30 minute structural band.
+- The Act II boundary offers a complete extraction outcome or deterministic frontier breach.
+- Act III reuses shared engine, snapshot, save, summary, timeline, and accessibility contracts.
+
+Status:
+
+- Planned for work order 103.
+
+### BI2 - Mobile salvage carrier
+
+Acceptance:
+
+- Run-local facilities, damage, debt, heat, cargo, crew posts, and travel posture change later missions, shipcraft, recovery, faction access, and support options.
+- Carrier staging is concise, accessible, deterministic, and snapshot-safe.
+- Carrier growth expands run variety rather than permanent raw power.
+
+Status:
+
+- Planned for work order 104.
+
+### BI3 - Boarding and derelict incursions
+
+Acceptance:
+
+- Deterministic interior room/corridor operations support breach, secure, rescue, sabotage, salvage, escort, and extraction verbs.
+- Existing build identity, controls, collision, objective, reward, and cleanup contracts translate into the new scale.
+- Four or more boarding contracts connect to carrier, crew, factions, foundry, rivals, or apex hunts.
+
+Status:
+
+- Planned for work order 105.
+
+## Epic BJ - Phase 11 living campaign
+
+### BJ1 - Dynamic faction fronts
+
+Acceptance:
+
+- Territory, blockades, convoys, markets, distress lanes, and contested assets move deterministically from explicit outcomes.
+- Fronts create, transform, or close later nodes and change play space, ownership, support, prices, and endings.
+- Every faction supports readable alliance, hostility, and opportunist strategies.
+
+Status:
+
+- Planned for work order 106.
+
+### BJ2 - Crew bonds and specialist arcs
+
+Acceptance:
+
+- Eight or more multi-node crew arcs cover bonds, conflicts, fears, ambitions, promotions, loyalty, rescue, departure, and mutiny.
+- Relationships create options and complications rather than unconditional stat growth.
+- Crew fate and major relationships remain deterministic, resumable, accessible, and summary-readable.
+
+Status:
+
+- Planned for work order 107.
+
+### BJ3 - Fleetcraft and deployable support
+
+Acceptance:
+
+- Five or more support-craft roles add combat and itinerary options through carrier/crew/engineering integration.
+- Construction, command, loss, repair, and recovery stay run-local and deterministic.
+- Player, ally, fleet, set-piece, projectile, effect, and proc pressure share explicit combined budgets.
+
+Status:
+
+- Planned for work order 108.
+
+## Epic BK - Phase 11 apex campaign and release
+
+### BK1 - Apex hunts and divergent endings
+
+Acceptance:
+
+- Three or more roaming apex campaigns span multiple nodes with persistent damage, traces, lieutenants, migrations, and escape routes.
+- Carrier, boarding, fronts, rivals, crew, fleet, and frontier decisions alter later confrontations.
+- Destruction, capture, containment, bargain, or evacuation endings resolve explicit state and unlock variety.
+
+Status:
+
+- Planned for work order 109.
+
+### BK2 - Voyage release candidate
+
+Acceptance:
+
+- Suspend/resume, save v6 migration, multi-operation cleanup, frontier/carrier/boarding/front/crew/fleet/apex systems, and divergent endings pass release audit.
+- Scenario Lab and endurance fixtures reach every Phase 11 system through public models.
+- `npm run verify:release`, measured run-length evidence, production paths, and explicit manual risks close the phase.
+
+Status:
+
+- Planned for work order 110.

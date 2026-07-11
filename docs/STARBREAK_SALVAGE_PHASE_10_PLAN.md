@@ -4,9 +4,9 @@
 
 Phase 9 is complete as a local second-act playtest candidate. A seeded run can cross ten sectors in two acts, stop at a deterministic midpoint refit, carry its build and economy into Act II, and resolve through a second-act finale. Full checks, 11 Chromium smoke tests, and production preview asset-path smoke pass.
 
-Work orders 091-099 now provide the expedition graph, multi-stage missions and objective anthology, modular shipcraft, salvage engineering, physical set pieces, run-local faction campaigns and rivals, recruitable crew and wingmates, plus an eight-card debug-only Scenario Lab and bounded local run timeline. Sectors 1, 7, and 10 host a capital ship, station, and wreck convoy assembled from shared subsystem templates. Four faction policies, four seeded recurring captains, and five deterministic crew roles now react through combat, missions, routes, shops, foundry operations, set-piece ownership, and finale outcomes. Public setup/read models can reach every Phase 10 system without a full expedition; final release hardening remains ahead.
+Work orders 091-100 complete the expedition graph, multi-stage missions and objective anthology, modular shipcraft, salvage engineering, physical set pieces, run-local faction campaigns and rivals, recruitable crew and wingmates, eight-card debug-only Scenario Lab, bounded local run timeline, and release-hardening/tooling pass. Sectors 1, 7, and 10 host a capital ship, station, and wreck convoy assembled from shared subsystem templates. Four faction policies, four seeded recurring captains, and five deterministic crew roles react through combat, missions, routes, shops, foundry operations, set-piece ownership, and finale outcomes. Public setup/read models reach every Phase 10 system without a full expedition.
 
-The resulting run currently takes about six minutes in a normal local playthrough. That is useful diagnostic evidence: adding a second act expanded the route model, but it did not yet create enough lived experience inside each sector. Phase 10 should add consequential play and decisions instead of stretching timers, inflating hull, or simply adding a third act.
+The Phase 9 baseline took about six minutes. After Phase 10 deployment, an all-optional-path run measures about 12 minutes. That reaches the lower edge of the 12-20 minute structural target through executable stages, consequences, engineering, set pieces, rivals, and crew rather than stretched timers or inflated hull. It remains a floor, not a final balance/content claim.
 
 ## Phase 10 Product Goal
 
@@ -154,7 +154,7 @@ Exit criteria:
 - Debug/browser smoke can reach every new system without playing a full expedition.
 - Manual non-Chromium, real-device, run-length, balance, readability, and content-volume gaps are explicit.
 
-Status: Scenario Lab, bounded timeline, combined debug budgets, and narrow keyboard-only accessible Chromium coverage were implemented by work order 099. `npm run check` passes with 79 files/463 tests, all 12 Chromium paths pass, and production preview asset paths return HTTP 200. Work order 100 still owns final release audit, manual-risk documentation, and closeout; the 657.78 kB main chunk remains a profiling/code-splitting warning.
+Status: completed by work orders 099-100. `npm run verify:release` passes with 79 files/463 tests, all 12 Chromium paths, and repeatable production preview base/asset checks. The release audit finds no severe Phase 10 blocker. Manual non-Chromium/real-device checks, sustained profiling, balance, content volume, art/audio depth, narrative polish, ally-AI feel, and combinatorial builds remain explicit risks. The 657.78 kB main chunk and large integration modules become Phase 11 architecture work rather than hidden warnings.
 
 ## Recommended Work Order Sequence
 
@@ -195,3 +195,5 @@ The exact file split may change after repository audit. The dependency rule matt
 ## Phase 10 Definition Of Done
 
 Phase 10 is done when a fresh or progressed save can generate a deterministic two-act expedition with multi-stage mission branches, transform a contract through modular salvage engineering, encounter at least one large multi-part set piece, produce run-specific faction/rival and crew consequences, resolve through the existing victory/defeat/abandon paths, and explain the expedition through debug state and a run timeline. The additional play time must come primarily from new play and decisions, not delay or inflated durability.
+
+Closeout: achieved by work order 100. The deployed all-optional path measures about 12 minutes, the full automated release command and public preview-path smoke pass, and no severe blocker remains. Phase 10 is a structural playtest candidate—not a declaration of final balance, repeated-run content volume, authored art/audio, narrative depth, cross-browser/device parity, or long-session performance. Phase 11 continues from those explicit boundaries in `docs/STARBREAK_SALVAGE_PHASE_11_PLAN.md`.

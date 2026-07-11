@@ -26,7 +26,7 @@ The target experience: quick runs, crisp movement, readable bullet chaos, random
 
 ## Repository commands
 
-Until the scaffold exists, agents should create these scripts in `package.json`:
+Use these repository scripts:
 
 ```bash
 npm run dev       # start local Vite dev server
@@ -34,12 +34,14 @@ npm run build     # production build into dist/
 npm run preview   # locally serve dist/
 npm run test      # Vitest unit/integration tests
 npm run test:e2e  # Playwright smoke tests
+npm run test:preview # serve dist and verify Pages base/hashed assets
 npm run lint      # ESLint
 npm run format    # Prettier write
 npm run check     # typecheck + lint + test + build
+npm run verify:release # check + Playwright + production preview smoke
 ```
 
-After modifying code, run the narrowest relevant tests first, then `npm run check` before declaring the task complete. If Playwright browsers are not installed in a local environment, say so and run every other check.
+After modifying code, run the narrowest relevant tests first, then `npm run check` before declaring the task complete. Release closeouts should run `npm run verify:release`. If Playwright browsers are not installed in a local environment, say so and run every other check.
 
 Local Codex note: `npm run test:e2e` will need escalation on Windows because Playwright launches Chromium from `%LOCALAPPDATA%\ms-playwright`, which the sandbox cannot read by default. E2E will report a missing `chromium_headless_shell` executable even after install, so run the E2E command with escalation for AppData visibility.
 
@@ -55,6 +57,7 @@ Local Codex note: `npm run test:e2e` will need escalation on Windows because Pla
 - Separate systems: input, simulation, collision, rendering, audio, UI, save, content validation, and generation.
 - Prefer small modules with explicit exports. Avoid barrel files if they obscure dependency direction.
 - Name files and symbols for behavior, not implementation fashion.
+- Prefer extracting domain reducers, plans, read models, and debug fixtures from `GameApp`, `GameplayScene`, `CombatState`, `CanvasRenderer`, and `contentValidation` before adding another phase-sized responsibility to those large integration modules.
 
 ## Determinism contract
 

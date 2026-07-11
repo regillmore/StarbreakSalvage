@@ -41,9 +41,11 @@ Phase 8 is complete as of validated work order 080. It added environmental press
 
 Phase 9 is complete as of validated work order 090. It expanded the loop into a deterministic second act with an explicit act model, inter-act junction, Act II route/sector pool, Act II pacing/objective variants, act-aware combat/environment pressure, economy tuning, second-act bosses/finale, public debug smoke, full checks, and production preview evidence.
 
-Phase 10 begins from that second-act candidate and the measured roughly six-minute baseline run. Its goal is expedition depth and shipcraft: multi-stage mission graphs, modular frames, salvage engineering, capital-ship/station set pieces, run-local faction rivals, crew/wingmates, and a Scenario Lab. The structural target is roughly 12-20 minutes earned through play and decisions rather than slowdown or durability inflation.
+Phase 10 is complete as of work order 100. It turned the roughly six-minute Phase 9 baseline into a measured approximately 12-minute all-optional expedition through executable multi-stage missions, modular frames, salvage engineering, capital-ship/station set pieces, run-local faction rivals, crew/wingmates, a bounded timeline, and a public-model Scenario Lab. The target floor was reached through play and decisions rather than slowdown or durability inflation.
 
-See `docs/STARBREAK_SALVAGE_PHASE_10_PLAN.md` for the active Phase 10 roadmap. `docs/STARBREAK_SALVAGE_PHASE_9_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_8_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_7_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_6_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_5_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_4_PLAN.md`, `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`, and `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md` remain historical records for concluded phases.
+Phase 11 begins from that milestone and aims for a resumable 20-30 minute standard voyage, 30-45 minute completionist capacity, and a legitimate shorter extraction. Its major systems are a resumable expedition kernel, true multi-operation sectors, the Null Frontier third act, a mobile carrier, boarding incursions, dynamic faction fronts, crew arcs, fleetcraft, and roaming apex hunts.
+
+See `docs/STARBREAK_SALVAGE_PHASE_11_PLAN.md` for the active roadmap. Phase 2 through Phase 10 plan files remain historical records for concluded phases.
 
 ## Milestones
 
@@ -781,7 +783,7 @@ Exit criteria:
 - Same seed plus save state reproduces the graph, and the same decision history reproduces the visited path.
 - Existing ten-sector runs and older save/summary records normalize safely.
 
-Status: implemented by work order 091. The run skeleton now carries a deterministic expedition graph generated from seed plus effective save state, while the session owns separate decision and visited-path records. Current ten-sector play projects through 30 required compatibility nodes; ten optional branch nodes expand the target plan from about 16.0 to 19.7 minutes without changing combat speed. Graph/content validation, known-seed snapshots, v4-to-v5 save migration, and HUD/summary/debug read models are in place for the work order 092 runtime handoff.
+Status: implemented by work order 091 and made executable by work orders 092-093. The run skeleton carries a deterministic expedition graph generated from seed plus effective save state, while the session owns separate decision and visited-path records. Thirty required nodes and ten optional branch nodes preserve about 16.0-19.7 minutes of authored capacity without changing combat speed; the deployed all-optional live path now measures about 12 minutes. Graph/content validation, known-seed snapshots, v4-to-v5 save migration, guarded mission transitions, and HUD/summary/debug read models are in place.
 
 ### P10.2 - Multi-Stage Mission Runtime And Anthology
 
@@ -795,7 +797,7 @@ Exit criteria:
 - Mission stages cannot skip, duplicate, or soft-lock under frame catchup, simultaneous events, death, pause, abandon, or boss gates.
 - Added run length comes from active play and decisions instead of delay.
 
-Status: planned for work orders 092-093.
+Status: implemented by work orders 092-093 with guarded mission transitions and ten objective families spanning required and optional stages.
 
 ### P10.3 - Modular Shipcraft
 
@@ -808,7 +810,7 @@ Exit criteria:
 - Multiple legal frame/loadout identities exist and invalid combinations fail validation.
 - Same acquired components and engineering choices reproduce the same final ship.
 
-Status: planned for work orders 094-095.
+Status: implemented by work orders 094-095 with eight frames, 21 modules, deterministic component salvage, a reversible foundry, and bounded weapon evolution.
 
 ### P10.4 - Living Expedition Set Pieces
 
@@ -834,7 +836,68 @@ Exit criteria:
 - Full checks and browser/preview smoke pass.
 - A fresh-save expedition can traverse multi-stage missions, transform its ship, encounter a set piece, and resolve with faction/rival or crew consequences.
 
-Status: planned for work orders 099-100.
+Status: completed by work orders 099-100. The Scenario Lab, bounded timeline, release audit, full automated checks, Chromium smoke, repeatable production-preview asset smoke, and explicit manual risks are in place. The deployed all-optional run measures about 12 minutes.
+
+## Phase 11 milestones
+
+### P11.1 - Resumable Expedition Kernel
+
+Scope:
+
+- Extract explicit orchestration seams, add versioned run snapshots, and build public replay/endurance tooling.
+- Measure and improve low-frequency/debug code splitting without hiding bundle warnings.
+
+Exit criteria:
+
+- Suspend/resume deterministically preserves every Phase 10 run-local system.
+- Corrupt snapshots fail safely and endurance fixtures cross current boundaries repeatedly.
+
+### P11.2 - Executable Voyage Topology
+
+Scope:
+
+- Execute true multi-operation sector itineraries.
+- Add a five-sector Null Frontier third act with an Act II extraction choice.
+
+Exit criteria:
+
+- Standard frontier victories support 20-30 minutes of meaningful structural play.
+- Short extraction and longer frontier outcomes are both complete and deterministic.
+
+### P11.3 - Carrier And Boarding Layer
+
+Scope:
+
+- Add a mobile salvage carrier with facilities, crew posts, damage, cargo, and travel posture.
+- Add deterministic boarding/derelict room-chain operations using translated existing build and combat contracts.
+
+Exit criteria:
+
+- Staging and boarding create consequences across shipcraft, crew, factions, routes, and objectives.
+- Both systems are concise, accessible, cleanup-safe, and resumable.
+
+### P11.4 - Living Campaign And Fleet
+
+Scope:
+
+- Add dynamic faction fronts, multi-node crew relationship arcs, and bounded deployable support craft.
+
+Exit criteria:
+
+- The navigable world changes from explicit campaign outcomes.
+- Crew/fleet growth expands tactical and itinerary variety without permanent raw-power escalation.
+
+### P11.5 - Apex Voyage Playtest Candidate
+
+Scope:
+
+- Add roaming multi-sector apex hunts and divergent endings.
+- Expand Scenario Lab/endurance coverage and close save v6, accessibility, performance, browser, Pages, and release risks.
+
+Exit criteria:
+
+- A run can suspend, resume, and resolve through a frontier ending.
+- `npm run verify:release` passes and measured extraction/standard/completionist durations are documented.
 
 ## Dependency map
 
@@ -890,6 +953,11 @@ M0 scaffold
                                                                                                 -> P10.3 modular shipcraft
                                                                                                   -> P10.4 living expedition set pieces
                                                                                                     -> P10.5 expedition playtest candidate
+                                                                                                      -> P11.1 resumable expedition kernel
+                                                                                                        -> P11.2 executable voyage topology
+                                                                                                          -> P11.3 carrier and boarding layer
+                                                                                                            -> P11.4 living campaign and fleet
+                                                                                                              -> P11.5 apex voyage playtest candidate
 ```
 
 Parallelizable:
@@ -917,6 +985,7 @@ High-conflict areas:
 - Expedition graph and mission-stage state shared by generation, combat, routes, summaries, saves, and debug tools.
 - Ship frame/module/loadout resolution shared by contracts, combat, foundry UI, items, HUD, save migration, and summaries.
 - Set-piece component state, faction/rival event history, crew/ally state, and bounded run timeline records.
+- Resumable run snapshots, expedition orchestration, carrier/boarding/front/crew/fleet/apex state, and permanent save migration.
 
 ## First five PRs
 

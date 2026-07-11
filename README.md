@@ -4,7 +4,9 @@
 
 This repository is in the early playable release-candidate stage. It currently ships a Vite + TypeScript app with a canvas renderer, fixed-step loop, input manager, scene manager, deterministic contract and sector generation, deterministic sector scroll plans, procedural parallax sector backgrounds, scroll-synced directed waves, distance-based sector objectives, deterministic sector landmarks and hazards, richer hazard-zone behavior plus director scheduling, first-pass destructible/obstacle content schema and fixed-world placement helpers, deterministic loose-currency scatter lanes with pickup caps and debug counters, first-pass boss arenas with scroll locks and fair post-boss hazard release, route-conditioned sector modifiers, settings-aware velocity cues, explicit viewport scaling with a fixed 640x720 gameplay arena, passive mouse/touch controls, data-driven contract ship appearance and selection previews, a contract-themed cockpit HUD, Phase 4 accessibility hardening, first-pass ship damage/readiness/overheat/destruction cues, quiet contract-theme propagation across non-combat run screens, granular debug performance counters, expanded viewport/input/HUD/debug/progression smoke, a data-backed Phase 5 upgrade catalog, Upgrade Bay, upgrade-influenced seeded run generation, run-end scrap/upgrade progress feedback, sector-exit beacon/toast feedback, and a deterministic Lunar Surface sector with lunar-specific landmarks, hazards, and encounter pacing for banked scrap, a 60-item Phase 6 catalog with expanded hook behavior, source-weighted reward/shop/vault acquisition, unlock-gated item families, discovery records, build identity, shared item-card presentation, and item-stress instrumentation, a combat MVP, route/reward/shop screens, four-faction boss alpha content, role-specific movement/attack behavior, seeded upgraded variants, deterministic squad formations with route/faction bias and clear-bonus salvage, route-conditioned longer-sector pacing arcs with relief windows and formation clusters, enemy-rich debug smoke for role/variant/formation/readability budgets, an environmental stress debug smoke path for hazards, objects, and loose currency, scroll-world destructible/obstacle and loose-loot presentation, a final-sector victory path, save/unlock progression, in-menu seed entry, settings, procedural audio/VFX feedback, unit tests, Playwright smoke coverage, CI, and GitHub Pages deployment wiring. Phase 7 is complete as a first-pass enemy-behavior playtest candidate; Phase 8 is complete as a first-pass environmental systems playtest candidate. Phase 9 is complete as a local second-act playtest candidate with a validated deterministic two-act, ten-sector run schema, playable inter-act refit, Act II route/pacing/pressure/economy contracts, deterministic second-act finales, public Act II debug smoke, full automated checks, and production preview asset-path evidence.
 
-The measured Phase 9 baseline run is roughly six minutes. Phase 10 is now underway around expedition depth and shipcraft: work orders 091-099 add a deterministic seed-plus-save expedition graph, multi-stage mission state machine and objective anthology, modular frames and hardpoints, a run-local salvage foundry with weapon evolution, three reusable capital-ship/station/wreck-convoy set pieces, run-local faction campaigns with recurring rival captains, recruitable crew/wingmates, and a debug-only local Scenario Lab. The Hecaton Ledger Ark, Bloom Spindle Exchange, and Court Wreck-Train Crown use dependency-gated subsystems, fixed-world safe lanes, bounded turret/hangar pressure, staged rewards, objective hooks, and a finale boss lock; debug runs can jump to the current assembly with `U`. Faction aid, theft, mercy, contracts, mission outcomes, and rival escape/capture/destruction change later content. Rescue/specialist outcomes and trusted distress branches can now recruit five distinct ally roles governed by loadout command headroom, trust, injury/recovery, and remappable focus/screen/salvage/regroup/disengage orders. Debug runs can stage returning rivals with `R`, a crew wing with `T`, or eight public-model Phase 10 fixtures with `B`. A bounded run-local timeline records generated and decision events without telemetry or save-schema growth. Work order 100 remains for Phase 10 release hardening.
+Phase 10 is complete as the first expedition-depth and shipcraft playtest candidate. It adds a deterministic seed-plus-save expedition graph, executable multi-stage missions and optional consequences, modular frames and hardpoints, a run-local salvage foundry with weapon evolution, three reusable capital-ship/station/wreck-convoy set pieces, faction campaigns with recurring rival captains, recruitable crew/wingmates, a bounded local timeline, and an eight-card public-model Scenario Lab. The deployed all-optional route now takes about 12 minutes, double the roughly six-minute Phase 9 baseline, with the added time coming from play and decisions rather than slowdown or durability inflation.
+
+Phase 11 is now planned as a resumable deep-space voyage. Work orders 101-110 target true multi-operation sectors, a five-sector Null Frontier third act with earlier extraction, a mobile salvage carrier, boarding incursions, dynamic faction fronts, multi-node crew arcs, deployable support craft, roaming apex hunts, and divergent endings. The structural target is roughly 20-30 minutes for a standard frontier victory and 30-45 for a completionist route while preserving a legitimate shorter cash-out.
 
 ## Local Development
 
@@ -21,9 +23,11 @@ npm run build     # typecheck and build dist/
 npm run preview   # serve the production build locally
 npm run test      # run Vitest unit tests
 npm run test:e2e  # run Playwright smoke tests
+npm run test:preview # verify the production Pages base and hashed assets
 npm run lint      # run ESLint
 npm run format    # format files with Prettier
 npm run check     # typecheck, lint, test, and build
+npm run verify:release # run check, Chromium smoke, and preview smoke
 ```
 
 The Vite base path is configured for GitHub Pages at `/StarbreakSalvage/`.
@@ -63,7 +67,7 @@ Projectile budget notes live in `docs/STARBREAK_SALVAGE_PERFORMANCE_NOTES.md`.
 
 Release checklist status lives in `docs/STARBREAK_SALVAGE_RELEASE_CHECKLIST.md`.
 
-Phase 2 planning lives in `docs/STARBREAK_SALVAGE_PHASE_2_PLAN.md`. Phase 3 planning lives in `docs/STARBREAK_SALVAGE_PHASE_3_PLAN.md`. Phase 4 planning lives in `docs/STARBREAK_SALVAGE_PHASE_4_PLAN.md`. Phase 5 planning lives in `docs/STARBREAK_SALVAGE_PHASE_5_PLAN.md`. Phase 6 planning lives in `docs/STARBREAK_SALVAGE_PHASE_6_PLAN.md`. Phase 7 planning and closeout live in `docs/STARBREAK_SALVAGE_PHASE_7_PLAN.md`. Phase 8 planning lives in `docs/STARBREAK_SALVAGE_PHASE_8_PLAN.md`. Phase 9 planning and closeout live in `docs/STARBREAK_SALVAGE_PHASE_9_PLAN.md`. Active Phase 10 planning lives in `docs/STARBREAK_SALVAGE_PHASE_10_PLAN.md`; work orders 091-100 are tracked in `docs/STARBREAK_SALVAGE_AGENT_WORK_ORDERS.md`.
+Active Phase 11 planning lives in `docs/STARBREAK_SALVAGE_PHASE_11_PLAN.md`; Phase 2 through Phase 10 plan files remain historical milestone records. Work orders 091-110 are tracked in `docs/STARBREAK_SALVAGE_AGENT_WORK_ORDERS.md`.
 
 ## Project Vision
 
@@ -90,6 +94,7 @@ The core project direction lives in:
 - `docs/STARBREAK_SALVAGE_PHASE_8_PLAN.md`
 - `docs/STARBREAK_SALVAGE_PHASE_9_PLAN.md`
 - `docs/STARBREAK_SALVAGE_PHASE_10_PLAN.md`
+- `docs/STARBREAK_SALVAGE_PHASE_11_PLAN.md`
 - `docs/STARBREAK_SALVAGE_ITEM_CATALOG_AUDIT.md`
 - `docs/STARBREAK_SALVAGE_ENEMY_ROLE_AUDIT.md`
 - `docs/STARBREAK_SALVAGE_GAME_DESIGN_SEED.md`

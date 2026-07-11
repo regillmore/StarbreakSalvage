@@ -78,6 +78,8 @@
 
 ### Testing
 
+- Added a cross-platform `npm run test:preview` smoke that serves `dist`, verifies the `/StarbreakSalvage/` base and emitted hashed JavaScript/CSS, runs in CI, and joins checks plus Chromium under `npm run verify:release`.
+- Closed the Phase 10 release audit with 79 test files/463 tests, all 12 Chromium paths, repeatable preview evidence, a measured approximately 12-minute deployed all-optional run, and explicit manual browser/device/performance/balance/content/art/audio/narrative risks.
 - Added Scenario Lab definition/setup and timeline fold/bounds tests plus a narrow keyboard-only Chromium path covering high contrast, reduced motion, performance mode, combined set-piece/crew/item/environment pressure, timeline audit, and foundry access.
 - Added expedition graph/content validation, known-seed snapshots, fresh/progressed save-state variation, deterministic decision replay, compatibility progress, capacity, broken-reference, save-migration, HUD/debug, and no-`Math.random()` coverage.
 - Verified work order 091 with 67 passing test files/389 tests, all 11 Playwright Chromium paths, and production preview asset-path smoke under `/StarbreakSalvage/`.
@@ -151,6 +153,7 @@
 
 ### Planning
 
+- Completed Phase 10 as the first expedition-depth and shipcraft playtest candidate and added the Phase 11 deep-voyage roadmap plus work orders 101-110 for resumable snapshots/endurance tooling, true multi-operation sectors, the Null Frontier third act, a mobile carrier, boarding incursions, dynamic faction fronts, crew arcs, fleetcraft, apex hunts, and release hardening.
 - Concluded Phase 1 in planning docs and added the Phase 2 roadmap/work orders for complete-run depth, player verbs, content expansion, unlock gating, and playtest hardening.
 - Concluded Phase 2 in planning docs and added the Phase 3 roadmap/work orders for vertical scrolling, procedural sector backgrounds, distance objectives, scroll-synced encounters, hazards, boss arenas, and scrolling playtest hardening.
 - Concluded Phase 3 in planning docs and added the Phase 4 roadmap/work orders for resolution parity, mouse controls, contract ship identity, ship previews, graphical HUD polish, and display/input release hardening.

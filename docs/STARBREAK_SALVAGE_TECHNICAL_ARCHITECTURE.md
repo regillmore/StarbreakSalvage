@@ -536,7 +536,7 @@ Work order 091 audit and implementation:
 - Current gameplay explicitly enters one operation node per sector and marks required ingress/operation/gate nodes during the existing reward advance. It does not execute optional nodes or multiple stages yet; that is the work order 092 handoff.
 - Public read models feed the cockpit sector strip, run summary, and DOM debug overlay. Debug index jumps synchronize compatibility progress without accessing graph internals from browser tests.
 - Save schema v5 stores graph id, visited node ids, decision ids, and target duration on the last-run summary. The loader checks `starbreak.save.v5`, migrates deployed v4 data from `starbreak.save.v4`, and normalizes older summaries to null/empty expedition fields.
-- The generated baseline has 30 required nodes targeting 962 seconds (about 16.0 minutes). Ten optional nodes raise authored target capacity to 1182 seconds (about 19.7 minutes). These are content budgets, not a claim that work order 091 changed the current roughly six-minute live run.
+- The generated baseline has 30 required nodes targeting 962 seconds (about 16.0 minutes). Ten optional nodes raise authored target capacity to 1182 seconds (about 19.7 minutes). Phase 10 subsequently made the stages executable; the deployed all-optional path measures about 12 minutes, so authored capacity remains deliberately higher than current active-play duration.
 
 ### Modular ship and engineering state
 
@@ -613,6 +613,60 @@ src/game/RunTimeline.ts
 ```
 
 The exact split should follow the work order 091 repository audit. Dependency direction is the constraint: content must not import scenes; generation must not call the DOM; runtime systems must not own presentation; UI/debug/save surfaces consume public read models.
+
+## Phase 11 architecture priorities
+
+Phase 10 closed without a severe correctness blocker, but repository scale is now an architectural constraint: `CombatState.ts` is about 4,000 lines, `contentValidation.ts` about 3,000, `CanvasRenderer.ts` about 2,000, `GameApp.ts` about 1,800, and `GameplayScene.ts` about 1,700. The production main bundle is 657.78 kB minified (177.71 kB gzip). These are not reasons for speculative rewrites; they are reasons to establish seams before another phase-sized feature set.
+
+### Resumable run boundary
+
+- Permanent progression save and resumable run snapshot must be separate versioned records with independent corruption recovery.
+- The snapshot owns stable generated-plan identity, explicit decisions, current checkpoints, compact run-local domain state, and bounded histories. It must not store canvas/DOM/audio state, derived render models, callbacks, or mutable content copies.
+- Resume regenerates immutable plans from seed plus save fingerprint, validates their identity, folds decisions/checkpoints, and rejects incompatible state before entering a scene.
+- Snapshot writes occur at explicit safe boundaries such as staging, branch commit, mission checkpoint, foundry commit, carrier commit, and pause—not every simulation frame.
+
+### Expedition coordinator
+
+- A coordinator should translate generated itinerary nodes into mission, boarding, carrier, faction-front, crew-arc, fleet, and apex domain commands.
+- Domain reducers emit typed results and public read models. They do not import `GameApp`, scenes, canvas, Web Audio, storage, or browser globals.
+- `GameApp` remains the composition root, but phase logic belongs in coordinators/services rather than additional private scene-routing blocks.
+- `GameplayScene` adapts input/render/UI to a combat session; it should not become authoritative campaign state.
+
+### Combat and renderer seams
+
+- Extract cohesive combat domains only when behavior and tests move together: actor spawning, projectile resolution, ally/fleet commands, set-piece interaction, pickups/economy, objective accounting, and debug fixtures are candidate seams.
+- Keep one central accounting contract for damage, defeat, escape, objective credit, rewards, and item/module hooks even if implementation moves to smaller modules.
+- Renderer extraction should follow stable draw-model boundaries (background, actors, projectiles, set pieces, feedback, previews) without duplicating gameplay transforms.
+- No refactor may change seeded generation streams, fixed-step ordering, fixed 640x720 collision geometry, or existing debug shortcut behavior without an explicit migration/test reason.
+
+### Replay and endurance harness
+
+- The harness consumes public generated plans, snapshots, coordinators, and typed domain events. Browser tests must not gain private-object access.
+- It should fast-forward decisions and safe transitions, not fake derived state or bypass reducers.
+- Every long-run fixture reports actor/projectile/effect/hook/history counts at boundaries so cleanup regressions are attributable.
+- Restore/replay equality is required for generated content and decision outcomes, not bit-perfect bullet positions across browsers.
+
+### Loading and bundle strategy
+
+- Measure module/chunk output before and after changes. Do not raise `chunkSizeWarningLimit` to declare success.
+- Debug-only Scenario Lab, archive, large summary/history, carrier, and other low-frequency DOM surfaces are candidates for dynamic import once scene switching supports asynchronous factories safely.
+- Core combat must remain immediately playable after the static site loads; avoid fragmented micro-chunks that increase request overhead without meaningful byte or startup improvement.
+- `npm run test:preview` is the authoritative local check for the GitHub Pages base and emitted hashed asset paths.
+
+### Phase 11 state flow
+
+```text
+seed + permanent save fingerprint
+  -> immutable campaign plan
+  -> versioned resumable snapshot + decision log
+  -> expedition coordinator
+      -> mission / boarding / carrier / front / crew / fleet / apex reducers
+      -> existing combat-session adapter
+  -> public read models
+      -> gameplay and DOM scenes
+      -> replay/endurance/Scenario Lab
+      -> summary + local snapshot/save writers
+```
 
 ## GitHub Pages notes
 
