@@ -69,7 +69,7 @@ describe('Null Frontier', () => {
     });
     const restored = restoreRunSnapshot(snapshot);
 
-    expect(snapshot.version).toBe(5);
+    expect(snapshot.version).toBe(6);
     expect(restored.run.frontierCampaign).toEqual(run.frontierCampaign);
     expect(restored.session.frontierDecision.decision).toBe('breach');
     expect(restored.session.currentSectorIndex).toBe(10);

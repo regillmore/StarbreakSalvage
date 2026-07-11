@@ -1818,7 +1818,13 @@ Acceptance criteria:
 - Every faction supports meaningfully distinct alliance, hostility, and opportunist strategies.
 - Rival, crew, carrier, set-piece, shop, and finale consumers share one public influence model.
 
-Status: planned for Phase 11.
+Status: implemented. `src/content/factionFronts.ts` defines twelve original strategies: alliance, hostility, and opportunist routes for the Scrap Court, Corporate Ledger, Bloom Hive, and Void Corsairs, covering territory, blockades, convoys, distress lanes, markets, contested set pieces, and carrier access with explicit non-color map cues. `src/game/FactionFront.ts` generates one seed/save-stable front per sector, owns bounded allegiance/influence/front/history state, moves only later sectors from explicit events, and derives one public influence model for node policy, ownership, pricing, hazards, reinforcements, support, crew, carrier, set-piece, and ending consumers.
+
+Aid, asset theft, contracts, spared targets, rival outcomes, boarding results, crew recruitment/assistance, and carrier commands now enter that reducer through `RunSession` events. A front can create, transform, or close its sector's reserve detour/pursuit node; the operational map and action cards show readable forecasts and directives, while live option filtering changes the mission path. Combat uses front ownership, shared faction modifiers, added non-objective reinforcement spawns, support pressure relief, and front hazard/landmark conditions. Shops, routes, transitions, crew offers, carrier access, set-piece ownership, finale pressure, permanent run-record ending names, run summaries, and debug readouts consume the same influence.
+
+Snapshot/storage v6 validates front plan identity, allegiance, sector influence, node strategy, moved-front history, and bounds while retiring v1-v5 independently of permanent save v5. Scenario Lab adds a tenth public dynamic-front fixture; endurance reports front-history maxima.
+
+Verification: `npm run verify:release` passes with 86 Vitest files and 505 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the GitHub Pages preview asset smoke. Chromium reaches the tenth Scenario Lab front fixture through public setup and verifies ownership/reinforcement HUD state plus ending debug posture at 390x700 under high-contrast, reduced-motion, performance settings. The build emits 761.48 kB minified/205.58 kB gzip initial JavaScript, unchanged 26.76 kB CSS, a 6.29 kB lazy Scenario Lab setup chunk, and the existing lazy catalog/timeline/command-deck boundaries. The 16.84 kB minified core increase is measured; the existing bundle warning remains open for later state and orchestration splitting.
 
 ## Work order 107 - Crew bonds, promotions, and specialist arcs
 

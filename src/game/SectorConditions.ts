@@ -12,12 +12,14 @@ import type {
   SectorLandmarkPlan
 } from './SectorFeatures';
 import type { SectorScrollPlan } from './ScrollState';
+import type { FactionFrontInfluence } from './FactionFront';
 
 export type SectorConditionSource =
   | RouteKind
   | 'challenge_debt_ceiling'
   | 'unlock_bloom_dossier'
-  | 'frontierLaw';
+  | 'frontierLaw'
+  | 'factionFront';
 
 export interface SectorConditionModifier {
   readonly id: string;
@@ -50,6 +52,7 @@ export interface SectorConditionPlanOptions {
   readonly run: Pick<RunSkeleton, 'seed' | 'unlockedIds' | 'sectors'>;
   readonly sectorIndex: number;
   readonly routeOutcomes?: readonly AppliedRouteOutcome[];
+  readonly factionFront?: FactionFrontInfluence | null;
 }
 
 const ROUTE_CONDITION_CONFIGS: Readonly<
@@ -183,7 +186,8 @@ export function createSectorConditionPlan(
   const modifiers = [
     ...createRouteConditionModifiers(options),
     ...createMetaConditionModifiers(options),
-    ...createFrontierLawModifiers(options)
+    ...createFrontierLawModifiers(options),
+    ...createFactionFrontModifiers(options)
   ];
 
   return {
@@ -210,6 +214,41 @@ export function createSectorConditionPlan(
       clamp(product(modifiers.map((modifier) => modifier.bossApproachMultiplier)), 0.78, 1.24)
     )
   };
+}
+
+function createFactionFrontModifiers(
+  options: SectorConditionPlanOptions
+): SectorConditionModifier[] {
+  const front = options.factionFront;
+  if (!front || front.hazardDensityDelta === 0) return [];
+  return [
+    {
+      id: `faction-front:${front.frontId}:${front.stance}`,
+      targetSectorIndex: options.sectorIndex,
+      sourceSectorIndex: options.sectorIndex,
+      source: 'factionFront',
+      label: `${front.mapCue} ${front.strategyLabel}`,
+      summary: front.forecast,
+      scrollSpeedMultiplier: front.stance === 'hostility' ? 1.04 : 0.98,
+      lengthMultiplier: front.stance === 'hostility' ? 1.03 : 1,
+      hazardDensityDelta: front.hazardDensityDelta,
+      landmarkKind:
+        front.kind === 'market'
+          ? 'convoy_shadow'
+          : front.kind === 'contestedSetPiece'
+            ? 'core_machinery'
+            : 'beacon_line',
+      hazardKind:
+        front.hazardDensityDelta > 0
+          ? front.ownerFactionId === 'faction_bloom_hive'
+            ? 'salvage_storm'
+            : front.ownerFactionId === 'faction_void_corsairs'
+              ? 'warning_beam'
+              : 'mine_belt'
+          : null,
+      bossApproachMultiplier: front.stance === 'hostility' ? 0.94 : 1.04
+    }
+  ];
 }
 
 function createFrontierLawModifiers(

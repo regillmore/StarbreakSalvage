@@ -63,7 +63,8 @@ export class RouteScene implements Scene {
     const campaign = getFactionCampaignInfluence(
       this.run.factionCampaign,
       this.session.factionCampaign,
-      sector
+      sector,
+      { plan: this.run.factionFronts, state: this.session.factionFronts }
     );
     const crew = createCrewDebugState(this.run.crewRoster, this.session.crewRoster);
     const nextSectorIndex = this.session.currentSectorIndex + 1;
@@ -183,7 +184,8 @@ export class RouteScene implements Scene {
     const influence = getFactionCampaignInfluence(
       this.run.factionCampaign,
       this.session.factionCampaign,
-      sector
+      sector,
+      { plan: this.run.factionFronts, state: this.session.factionFronts }
     );
 
     return {

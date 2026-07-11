@@ -64,6 +64,10 @@ describe('ScenarioLab', () => {
       )
     ).toBe(true);
 
+    const fronts = launch('lab_faction_fronts');
+    expect(fronts.session.factionFronts.history).toHaveLength(4);
+    expect(fronts.readout.frontEvents).toBe(4);
+
     const timeline = launch('lab_timeline_audit').session.timeline;
     expect(new Set(timeline.entries.map((entry) => entry.category))).toEqual(
       new Set([

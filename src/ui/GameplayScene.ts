@@ -176,6 +176,7 @@ import {
   createBoardingTranslatedLoadout,
   type BoardingOperationPlan
 } from '../game/BoardingOperation';
+import { createFactionFrontDebugState, type FactionFrontState } from '../game/FactionFront';
 
 const DEBUG_BOSS_SHORTCUTS: Partial<Record<InputAction, BossId>> = {
   debugBossOne: 'boss_auditor_drone_xl',
@@ -275,7 +276,8 @@ export class GameplayScene implements Scene {
     private readonly campaignInfluence: FactionCampaignInfluence | null = null,
     private readonly campaignState: FactionCampaignState | null = null,
     private readonly crewProfile: CrewCombatProfile | null = null,
-    private readonly runTimeline: RunTimelineState | null = null
+    private readonly runTimeline: RunTimelineState | null = null,
+    private readonly factionFrontState: FactionFrontState | null = null
   ) {
     this.positionReadout = document.createElement('p');
     this.positionReadout.className = 'sr-only';
@@ -990,6 +992,13 @@ export class GameplayScene implements Scene {
             this.campaignInfluence
           )
         : undefined,
+      factionFronts: this.factionFrontState
+        ? createFactionFrontDebugState(
+            this.run.factionFronts,
+            this.factionFrontState,
+            this.sectorIndex
+          )
+        : undefined,
       crew: {
         activeCommand: combatState.crewCommand.active,
         commandCooldown: combatState.crewCommand.cooldownSeconds,
@@ -1001,7 +1010,7 @@ export class GameplayScene implements Scene {
       runTimeline: this.runTimeline ? createRunTimelineDebugState(this.runTimeline) : undefined,
       scenarioLab: this.scenarioLabPreset
         ? {
-            scenarioCount: 9,
+            scenarioCount: 10,
             activeScenario: this.scenarioLabPreset,
             systems: [
               'mission actors',
@@ -1212,7 +1221,26 @@ export class GameplayScene implements Scene {
         ? { ...spawn, factionId: this.campaignInfluence.enemyFactionId }
         : spawn
     );
-    const spawnSchedule = [...influencedSpawnSchedule, ...(rivalSpawn ? [rivalSpawn] : [])].sort(
+    const frontReinforcements = influencedSpawnSchedule
+      .filter((spawn) => spawn.rivalId === null || spawn.rivalId === undefined)
+      .slice(0, this.campaignInfluence?.frontReinforcementCount ?? 0)
+      .map((spawn, index) => ({
+        ...spawn,
+        atSeconds: spawn.atSeconds + 2.5 + index,
+        atDistance:
+          spawn.atDistance === null || spawn.atDistance === undefined
+            ? spawn.atDistance
+            : Math.min(this.getCurrentScrollPlan().length - 80, spawn.atDistance + 110 + index * 70),
+        waveLabel: `${this.campaignInfluence?.front?.mapCue ?? '[FRONT]'} reinforcement`,
+        factionId: this.campaignInfluence?.front?.ownerFactionId ?? spawn.factionId,
+        formationInstanceId: `front-reinforcement:${this.sectorIndex}:${index}`,
+        countsForObjective: false
+      }));
+    const spawnSchedule = [
+      ...influencedSpawnSchedule,
+      ...frontReinforcements,
+      ...(rivalSpawn ? [rivalSpawn] : [])
+    ].sort(
       (left, right) =>
         (left.atDistance ?? Number.POSITIVE_INFINITY) -
           (right.atDistance ?? Number.POSITIVE_INFINITY) || left.atSeconds - right.atSeconds
@@ -1562,6 +1590,9 @@ export class GameplayScene implements Scene {
       this.campaignInfluence?.rival
         ? `Rival ${this.campaignInfluence.rival.name} | ${this.campaignInfluence.rival.shipName} | appearance ${this.campaignInfluence.rival.appearance}`
         : null,
+      this.campaignInfluence?.front
+        ? `${this.campaignInfluence.front.mapCue} ${this.campaignInfluence.front.strategyLabel} | owner ${this.campaignInfluence.front.ownerFactionName} | ${this.campaignInfluence.front.stance} | reinforcements ${this.campaignInfluence.frontReinforcementCount} / support ${this.campaignInfluence.frontSupportCount}`
+        : null,
       setPiece
         ? `${setPiece.name} (${getFactionById(state.setPiece?.ownerFactionId ?? this.getCurrentSector().bossFactionId).name}): ${setPiece.stageLabel} | target ${setPiece.targetLabel} | ${setPiece.destroyedComponents}/${setPiece.totalComponents}`
         : null
@@ -1593,6 +1624,7 @@ export class GameplayScene implements Scene {
       (setPiece && setPiece.active
         ? `${setPiece.stageLabel}; safe ${setPiece.safeLaneLabel}`
         : null) ??
+      this.campaignInfluence?.frontForecast ??
       formatBossArenaReadout(this.bossArenaUpdate.phase) ??
       'Warning clear';
     this.itemReadout.textContent = this.getBuildReadout(state);

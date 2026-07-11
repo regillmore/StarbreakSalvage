@@ -57,6 +57,7 @@ import {
   formatBoardingCampaignSummary,
   type BoardingCampaignState
 } from '../game/BoardingOperation';
+import { formatFactionFrontSummary, type FactionFrontState } from '../game/FactionFront';
 
 export class RunSummaryScene implements Scene {
   public readonly id = 'run-summary';
@@ -82,7 +83,8 @@ export class RunSummaryScene implements Scene {
     private readonly runTimeline: RunTimelineState | null = null,
     private readonly frontierDecision: FrontierDecisionState | null = null,
     private readonly carrier: CarrierState | null = null,
-    private readonly boarding: BoardingCampaignState | null = null
+    private readonly boarding: BoardingCampaignState | null = null,
+    private readonly factionFronts: FactionFrontState | null = null
   ) {}
 
   public enter(): void {
@@ -154,6 +156,12 @@ export class RunSummaryScene implements Scene {
         this.boarding
           ? formatBoardingCampaignSummary(this.run.boardingCampaign, this.boarding)
           : 'Boarding state not recorded.'
+      ],
+      [
+        'Faction Fronts',
+        this.factionFronts
+          ? formatFactionFrontSummary(this.run.factionFronts, this.factionFronts)
+          : 'Faction front state not recorded.'
       ],
       [
         'Voyage Ending',

@@ -54,10 +54,12 @@ export class ShopScene implements Scene {
     const campaign = getFactionCampaignInfluence(
       this.run.factionCampaign,
       this.session.factionCampaign,
-      sector
+      sector,
+      { plan: this.run.factionFronts, state: this.session.factionFronts }
     );
     const carrier = createCarrierInfluence(this.run.carrierPlan, this.session.carrier);
-    const carrierAccess = carrier.factionAccess[sector.bossFactionId];
+    const carrierAccess =
+      carrier.factionAccess[campaign.factionId] && campaign.frontCarrierAccess;
     const priceDiscount =
       shopModifiers.reduce((total, modifier) => total + modifier.discount, 0) +
       interActEffects.shopDiscount +
@@ -112,6 +114,9 @@ export class ShopScene implements Scene {
       priceDiscount > 0 ? `Permit -${priceDiscount} prices` : null,
       actEconomyReadout,
       `${campaign.responseLabel} ${campaign.shopDiscount >= 0 ? 'permit' : 'warrant'} ${campaign.shopDiscount >= 0 ? '-' : '+'}${Math.abs(campaign.shopDiscount)}`,
+      campaign.front
+        ? `${campaign.front.mapCue} ${campaign.front.strategyLabel} ${campaign.front.stance}`
+        : null,
       carrierAccess
         ? `${this.run.carrierPlan.name} access -${carrier.shopDiscount}`
         : `${this.run.carrierPlan.name} access restricted +3`
@@ -203,7 +208,8 @@ export class ShopScene implements Scene {
     const influence = getFactionCampaignInfluence(
       this.run.factionCampaign,
       this.session.factionCampaign,
-      sector
+      sector,
+      { plan: this.run.factionFronts, state: this.session.factionFronts }
     );
     return {
       seed: this.run.seed,

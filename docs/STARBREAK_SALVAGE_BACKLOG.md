@@ -1888,7 +1888,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 106.
+- Implemented in work order 106. Every run receives one deterministic front per sector and all four factions expose distinct alliance, hostility, and opportunist strategies. Explicit aid, theft, contract, mercy, rival, boarding, crew, and carrier events move later fronts through bounded state. Fronts create, transform, or close reserve nodes and feed shared ownership, market, hazard, reinforcement, support, recruit, carrier-access, set-piece, finale, and ending influence. Snapshot v6, summaries/timeline/debug forecasts, endurance budgets, and a tenth accessible Scenario Lab fixture are live.
 
 ### BJ2 - Crew bonds and specialist arcs
 

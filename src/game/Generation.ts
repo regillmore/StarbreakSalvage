@@ -58,6 +58,7 @@ import {
   createBoardingCampaignPlan,
   type BoardingCampaignPlan
 } from './BoardingOperation';
+import { createFactionFrontPlan, type FactionFrontPlan } from './FactionFront';
 import { createLegacyStartingLoadout, type ResolvedShipLoadout } from './ShipLoadout';
 import { resolveRunUpgradeEffects, type RunUpgradeEffects } from './UpgradeEffects';
 import {
@@ -141,6 +142,7 @@ export interface RunSkeleton {
   readonly frontierCampaign: NullFrontierCampaignPlan;
   readonly carrierPlan: CarrierPlan;
   readonly boardingCampaign: BoardingCampaignPlan;
+  readonly factionFronts: FactionFrontPlan;
   readonly contracts: readonly StartingContract[];
   readonly sectors: readonly SectorRoute[];
 }
@@ -261,6 +263,11 @@ export function generateRunSkeleton(
     saveFingerprint,
     sectors
   });
+  const factionFronts = createFactionFrontPlan({
+    seed,
+    saveFingerprint,
+    sectorCount: sectors.length
+  });
   const expedition = createExpeditionGraph({
     seed,
     saveFingerprint,
@@ -296,6 +303,7 @@ export function generateRunSkeleton(
     },
     carrierPlan,
     boardingCampaign,
+    factionFronts,
     contracts,
     sectors
   };

@@ -15,6 +15,12 @@ import { createRng } from '../core/rng';
 import type { EnemySpawn } from './CombatState';
 import type { SectorRoute } from './Generation';
 import type { RouteCombatModifier } from './RouteEvents';
+import {
+  createFactionFrontInfluence,
+  type FactionFrontInfluence,
+  type FactionFrontPlan,
+  type FactionFrontState
+} from './FactionFront';
 
 export type RivalStatus = 'planned' | 'engaged' | 'escaped' | 'captured' | 'destroyed';
 export type RivalCombatOutcome = 'escaped' | 'captured' | 'destroyed';
@@ -147,6 +153,13 @@ export interface FactionCampaignInfluence {
   readonly setPieceOwnerFactionId: FactionId;
   readonly finaleIntervention: boolean;
   readonly rival: RivalPresenceReadModel | null;
+  readonly front: FactionFrontInfluence | null;
+  readonly frontCarrierAccess: boolean;
+  readonly frontReinforcementCount: number;
+  readonly frontSupportCount: number;
+  readonly frontHazardDensityDelta: number;
+  readonly frontEndingWeight: number;
+  readonly frontForecast: string | null;
 }
 
 export interface FactionCampaignDebugState {
@@ -363,11 +376,15 @@ export function foldFactionCampaignEvents(
 export function getFactionCampaignInfluence(
   plan: FactionCampaignPlan,
   state: FactionCampaignState,
-  sector: Pick<SectorRoute, 'index' | 'bossFactionId' | 'objective' | 'setPiece'>
+  sector: Pick<SectorRoute, 'index' | 'bossFactionId' | 'objective' | 'setPiece'>,
+  frontContext?: { readonly plan: FactionFrontPlan; readonly state: FactionFrontState }
 ): FactionCampaignInfluence {
   const sectorIndex = Math.max(0, sector.index - 1);
+  const front = frontContext
+    ? createFactionFrontInfluence(frontContext.plan, frontContext.state, sectorIndex)
+    : null;
   const rival = getRivalForSector(plan, state, sectorIndex);
-  const factionId = rival?.factionId ?? sector.bossFactionId;
+  const factionId = rival?.factionId ?? front?.ownerFactionId ?? sector.bossFactionId;
   const ledger = state.ledgers[factionId];
   const faction = getFactionById(factionId);
   const policy = getFactionResponsePolicy(factionId);
@@ -382,7 +399,7 @@ export function getFactionCampaignInfluence(
     sector.objective.bossRequired && rivalState && rivalState.appearances > 0
   );
   const crewOfferSignal =
-    ledger.aid >= policy.crewOfferThreshold
+    front?.crewAccess || ledger.aid >= policy.crewOfferThreshold
       ? `${faction.name} distress channel trusts this run (${ledger.aid} aid).`
       : null;
 
@@ -394,23 +411,40 @@ export function getFactionCampaignInfluence(
     hostility: ledger.hostility,
     territoryPressure: ledger.territoryPressure,
     enemyFactionId: factionId,
-    enemyHullBonus: clamp(hostilityPressure + territoryPressure + (rival ? 1 : 0), 0, 5),
-    enemyFireDelayMultiplier: clamp(1 - ledger.hostility * 0.018 - (rival ? 0.04 : 0), 0.78, 1),
-    bossHullBonus: finaleIntervention ? Math.min(4, 1 + (rivalState?.upgrades.length ?? 0)) : 0,
+    enemyHullBonus: clamp(
+      hostilityPressure + territoryPressure + (rival ? 1 : 0) + (front?.reinforcementCount ?? 0),
+      0,
+      7
+    ),
+    enemyFireDelayMultiplier: clamp(
+      1 - ledger.hostility * 0.018 - (rival ? 0.04 : 0) + (front?.supportCount ?? 0) * 0.025,
+      0.78,
+      1.08
+    ),
+    bossHullBonus:
+      (finaleIntervention ? Math.min(4, 1 + (rivalState?.upgrades.length ?? 0)) : 0) +
+      Math.max(0, -(front?.endingWeight ?? 0)),
     shopDiscount: clamp(
       Math.floor((ledger.aid * policy.aidShopWeight) / 4) - Math.floor(ledger.hostility / 3),
       -3,
       3
-    ),
+    ) + (front?.priceDelta ?? 0),
     shopBiasTags: getFactionCampaignBiasTags(factionId),
-    routePreview: `${policy.routeCopy} Aid ${ledger.aid}; hostility ${ledger.hostility}; territory ${ledger.territoryPressure}.`,
+    routePreview: `${policy.routeCopy} Aid ${ledger.aid}; hostility ${ledger.hostility}; territory ${ledger.territoryPressure}.${front ? ` ${front.mapCue} ${front.strategyLabel}: ${front.forecast}` : ''}`,
     missionBrief: rival
       ? `${rival.name}, ${rival.title}, is flying ${rival.shipName} with ${rival.tactic} tactics.`
       : `${policy.label}: ${policy.summary}`,
     crewOfferSignal,
-    setPieceOwnerFactionId: rival?.factionId ?? factionId,
-    finaleIntervention,
-    rival
+    setPieceOwnerFactionId: rival?.factionId ?? front?.ownerFactionId ?? factionId,
+    finaleIntervention: finaleIntervention || Boolean(front && front.endingWeight < 0),
+    rival,
+    front,
+    frontCarrierAccess: front?.carrierAccess ?? true,
+    frontReinforcementCount: front?.reinforcementCount ?? 0,
+    frontSupportCount: front?.supportCount ?? 0,
+    frontHazardDensityDelta: front?.hazardDensityDelta ?? 0,
+    frontEndingWeight: front?.endingWeight ?? 0,
+    frontForecast: front?.forecast ?? null
   };
 }
 
@@ -552,7 +586,7 @@ export function createFactionCampaignDebugState(
       ? `${influence.rival.name}/${influence.rival.shipName}/${influence.rival.status}`
       : null,
     influence: influence
-      ? `${influence.factionName} A${influence.aid} H${influence.hostility} T${influence.territoryPressure} combat+${influence.enemyHullBonus} shop${influence.shopDiscount >= 0 ? '-' : '+'}${Math.abs(influence.shopDiscount)}`
+      ? `${influence.factionName} A${influence.aid} H${influence.hostility} T${influence.territoryPressure} combat+${influence.enemyHullBonus} shop${influence.shopDiscount >= 0 ? '-' : '+'}${Math.abs(influence.shopDiscount)}${influence.front ? ` front ${influence.front.mapCue}/${influence.front.stance}/${influence.front.nodePolicy}` : ''}`
       : 'no sector influence'
   };
 }

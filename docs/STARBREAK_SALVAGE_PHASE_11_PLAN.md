@@ -128,6 +128,8 @@ Exit criteria:
 - Every faction supports at least one alliance, hostility, and opportunist route with readable tradeoffs.
 - Front state changes play space and mission structure, not only numeric modifiers or prose.
 
+Status: implemented by work order 106. Seed/save-stable plans place a front in every sector, and a bounded reducer folds aid, theft, contracts, spared targets, rival outcomes, boarding, crew ties, and carrier commands into later-sector movement only. All four factions have data-driven alliance/hostility/opportunist strategies with text/glyph cues. The resulting public influence creates, transforms, or closes reserve detour/pursuit nodes and drives ownership, hazards, reinforcements, support, markets, carrier access, recruits, set pieces, finale pressure, and coalition/siege/fractured ending posture. Snapshot/storage v6, summary/timeline/debug surfaces, endurance budgets, and the tenth Scenario Lab fixture preserve and expose the campaign.
+
 ### P11.7 - Crew Bonds And Specialist Arcs
 
 Work order 107 evolves crew into a campaign cast:

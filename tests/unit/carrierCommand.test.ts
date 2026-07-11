@@ -118,7 +118,7 @@ describe('CarrierCommand', () => {
     expect(replay).toBe(transit);
   });
 
-  it('carries carrier state through sector transit and snapshot v5 restore', () => {
+  it('carries carrier state through sector transit and snapshot v6 restore', () => {
     const run = generateRunSkeleton('CARRIER-SNAPSHOT');
     const contract = run.contracts[0]!;
     const session = createRunSession(run, contract);
@@ -134,7 +134,7 @@ describe('CarrierCommand', () => {
     expect(advanceSector(run, session)).toBe(true);
     const snapshot = createRunSnapshot({ run, contract, session, target: 'sectorTransition', label: 'Carrier transit' });
     const restored = restoreRunSnapshot(snapshot);
-    expect(snapshot.version).toBe(5);
+    expect(snapshot.version).toBe(6);
     expect(snapshot.extensions.carrier.planId).toBe(run.carrierPlan.id);
     expect(restored.session.carrier).toEqual(session.carrier);
     expect(restored.run.carrierPlan).toEqual(run.carrierPlan);

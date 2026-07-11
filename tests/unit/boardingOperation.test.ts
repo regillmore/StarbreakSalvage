@@ -150,7 +150,7 @@ describe('BoardingOperation', () => {
     expect(session.boarding.unlockedHooks).toContain(`apex:${apexOperation.contractId}`);
   });
 
-  it('round-trips boarding custody and hooks through snapshot v5', () => {
+  it('round-trips boarding custody and hooks through snapshot v6', () => {
     const run = generateRunSkeleton('BOARDING-SNAPSHOT');
     const contract = run.contracts[0]!;
     const session = createRunSession(run, contract);
@@ -169,7 +169,7 @@ describe('BoardingOperation', () => {
       label: 'Boarding custody'
     });
     const restored = restoreRunSnapshot(snapshot);
-    expect(snapshot.version).toBe(5);
+    expect(snapshot.version).toBe(6);
     expect(snapshot.extensions.boarding.planId).toBe(run.boardingCampaign.id);
     expect(restored.session.boarding).toEqual(session.boarding);
   });

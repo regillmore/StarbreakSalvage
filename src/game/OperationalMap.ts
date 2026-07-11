@@ -6,6 +6,7 @@ import type {
   ExpeditionRiskBand
 } from './ExpeditionTypes';
 import type { MissionCheckpoint, MissionOperationalInfluence } from './MissionDirector';
+import type { FactionFrontInfluence } from './FactionFront';
 
 export type OperationalOutcome = 'success' | 'partialSuccess' | 'failure';
 
@@ -43,12 +44,14 @@ export interface OperationalMapNodeReadModel {
   readonly label: string;
   readonly role: ExpeditionOperationalRole;
   readonly optional: boolean;
-  readonly status: 'completed' | 'current' | 'available' | 'planned' | 'bypassed';
+  readonly status: 'completed' | 'current' | 'available' | 'planned' | 'bypassed' | 'closed';
   readonly timeEstimate: string;
   readonly danger: ExpeditionRiskBand;
   readonly reward: string;
   readonly consequence: string;
   readonly risks: string;
+  readonly frontDirective: 'created' | 'transformed' | 'closed' | null;
+  readonly frontForecast: string | null;
 }
 
 export interface OperationalMapReadModel {
@@ -159,6 +162,7 @@ export function createOperationalMapReadModel(options: {
   readonly expedition: ExpeditionProgressState;
   readonly operational: OperationalProgressState;
   readonly currentNodeId: string | null;
+  readonly factionFront?: FactionFrontInfluence | null;
 }): OperationalMapReadModel {
   const sector = options.graph.sectors[options.sectorIndex];
   if (!sector) {
@@ -174,11 +178,15 @@ export function createOperationalMapReadModel(options: {
   const nodes = sector.nodeIds.map((nodeId): OperationalMapNodeReadModel => {
     const node = getNode(options.graph, nodeId);
     const bypassed = node.optional && isOptionalNodeBypassed(options.graph, node, decisions);
+    const frontApplies =
+      node.optional && node.operationalRole === options.factionFront?.reserveRole;
     const status =
       node.id === options.currentNodeId
         ? 'current'
         : completedNodeIds.has(node.id)
           ? 'completed'
+          : frontApplies && options.factionFront?.nodePolicy === 'close'
+            ? 'closed'
           : bypassed
             ? 'bypassed'
             : isNodeAvailable(options.graph, node.id, completedNodeIds, decisions)
@@ -186,7 +194,10 @@ export function createOperationalMapReadModel(options: {
               : 'planned';
     return {
       id: node.id,
-      label: node.label,
+      label:
+        frontApplies && options.factionFront
+          ? `${options.factionFront.mapCue} ${options.factionFront.strategyLabel}`
+          : node.label,
       role: node.operationalRole,
       optional: node.optional,
       status,
@@ -196,7 +207,17 @@ export function createOperationalMapReadModel(options: {
       danger: node.intel.danger,
       reward: node.intel.reward,
       consequence: node.intel.consequence,
-      risks: `Faction ${node.intel.factionRisk} | Crew ${node.intel.crewRisk} | Ship ${node.intel.shipRisk}`
+      risks: `Faction ${node.intel.factionRisk} | Crew ${node.intel.crewRisk} | Ship ${node.intel.shipRisk}`,
+      frontDirective: frontApplies
+        ? options.factionFront?.nodePolicy === 'create'
+          ? 'created'
+          : options.factionFront?.nodePolicy === 'transform'
+            ? 'transformed'
+            : 'closed'
+        : null,
+      frontForecast: frontApplies
+        ? `${options.factionFront?.mapCue} ${options.factionFront?.strategyLabel}: ${options.factionFront?.forecast}`
+        : null
     };
   });
   const completedOperations = nodes.filter(
@@ -208,7 +229,7 @@ export function createOperationalMapReadModel(options: {
     operationRange: '2 required / up to 4 with detour and pursuit',
     completedOperations,
     nodes,
-    summary: `${sector.sectorName} | ${completedOperations} operations settled | 2-4 operation itinerary`
+    summary: `${sector.sectorName} | ${completedOperations} operations settled | 2-4 operation itinerary${options.factionFront ? ` | ${options.factionFront.mapCue} ${options.factionFront.ownerFactionName} ${options.factionFront.stance}` : ''}`
   };
 }
 

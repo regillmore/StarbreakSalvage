@@ -109,6 +109,15 @@ import {
   type BoardingOperationPlan,
   type BoardingSettlementResult
 } from './BoardingOperation';
+import {
+  applyFactionFrontEvent,
+  createFactionFrontInfluence,
+  createFactionFrontState,
+  type FactionFrontEvent,
+  type FactionFrontEventResult,
+  type FactionFrontPlan,
+  type FactionFrontState
+} from './FactionFront';
 
 export interface RouteHistoryEntry {
   readonly sectorIndex: number;
@@ -143,6 +152,7 @@ export interface RunSessionState {
   frontierDecision: FrontierDecisionState;
   carrier: CarrierState;
   boarding: BoardingCampaignState;
+  factionFronts: FactionFrontState;
   shopRerollsBySector: Record<number, number>;
   lastCombatResult: CombatRunResult | null;
   objectiveHistory: MissionObjectiveOutcomeRecord[];
@@ -199,6 +209,7 @@ export function createRunSession(
     frontierDecision: createFrontierDecisionState(actTwoSectorIndex),
     carrier: createCarrierState(run.carrierPlan),
     boarding: createBoardingCampaignState(run.boardingCampaign),
+    factionFronts: createFactionFrontState(run.factionFronts),
     shopRerollsBySector: {},
     lastCombatResult: null,
     objectiveHistory: [],
@@ -260,6 +271,19 @@ export function applyCarrierCommand(
     value: result.salvageCost,
     subjectId: run.carrierPlan.carrierId,
     detailId: result.label
+  });
+  recordFactionFrontEvent(session, run.factionFronts, {
+    id: `${eventId}:front`,
+    source: 'carrier',
+    sectorIndex: session.currentSectorIndex,
+    factionId: run.carrierPlan.liaisonFactionId,
+    amount:
+      command.kind === 'setPosture' && command.posture === 'assault'
+        ? -1
+        : command.kind === 'jettisonCargo'
+          ? -1
+          : 1,
+    reason: `carrier ${command.kind} under ${session.carrier.posture} posture`
   });
   return result;
 }
@@ -397,13 +421,26 @@ export function recordBoardingOperationOutcome(
   if (operation.integrations.includes('faction')) {
     const sector = run.sectors[operation.sectorIndex];
     if (sector) {
+      const frontFactionId = createFactionFrontInfluence(
+        run.factionFronts,
+        session.factionFronts,
+        operation.sectorIndex
+      ).ownerFactionId;
       recordFactionCampaignEvent(session, run.factionCampaign, {
         id: `${options.eventId}:faction`,
         type: 'missionOutcome',
         sectorIndex: operation.sectorIndex,
-        factionId: sector.bossFactionId,
+        factionId: frontFactionId,
         contractId: operation.contractId,
         outcome: options.outcome
+      }, run.factionFronts);
+      recordFactionFrontEvent(session, run.factionFronts, {
+        id: `${options.eventId}:boarding-front`,
+        source: 'boarding',
+        sectorIndex: operation.sectorIndex,
+      factionId: sector.bossFactionId,
+        amount: options.outcome === 'failure' ? 1 : options.outcome === 'success' ? -3 : -1,
+        reason: `${operation.title} ${options.outcome}`
       });
     }
   }
@@ -420,7 +457,7 @@ export function recordBoardingOperationOutcome(
         sectorIndex: operation.sectorIndex,
         factionId: rival.factionId,
         rivalId: rival.id
-      });
+      }, run.factionFronts);
       recordFactionCampaignEvent(session, run.factionCampaign, {
         id: `${options.eventId}:rival-capture:${rival.id}`,
         type: 'rivalOutcome',
@@ -428,7 +465,7 @@ export function recordBoardingOperationOutcome(
         factionId: rival.factionId,
         rivalId: rival.id,
         outcome: 'captured'
-      });
+      }, run.factionFronts);
     }
   }
 
@@ -591,7 +628,8 @@ export function applyRouteOutcome(
   sector: SectorRoute,
   route: RouteOption,
   outcome: AppliedRouteOutcome,
-  factionCampaignPlan?: FactionCampaignPlan
+  factionCampaignPlan?: FactionCampaignPlan,
+  factionFrontPlan?: FactionFrontPlan
 ): void {
   const adjustedOutcome = applyRouteChosenHooks(session, sector, route, outcome);
 
@@ -626,14 +664,22 @@ export function applyRouteOutcome(
   });
 
   if (factionCampaignPlan) {
-    recordRouteCampaignConsequence(session, factionCampaignPlan, sector, route, adjustedOutcome.id);
+    recordRouteCampaignConsequence(
+      session,
+      factionCampaignPlan,
+      sector,
+      route,
+      adjustedOutcome.id,
+      factionFrontPlan
+    );
   }
 }
 
 export function recordFactionCampaignEvent(
   session: RunSessionState,
   plan: FactionCampaignPlan,
-  event: FactionCampaignEvent
+  event: FactionCampaignEvent,
+  factionFrontPlan?: FactionFrontPlan
 ): FactionCampaignEventResult {
   const result = applyFactionCampaignEvent(plan, session.factionCampaign, event);
   session.factionCampaign = result.state;
@@ -651,6 +697,10 @@ export function recordFactionCampaignEvent(
       subjectId: event.factionId,
       detailId: 'rivalId' in event ? (event.rivalId ?? null) : null
     });
+    if (factionFrontPlan) {
+      const frontEvent = mapCampaignEventToFrontEvent(event);
+      if (frontEvent) recordFactionFrontEvent(session, factionFrontPlan, frontEvent);
+    }
   }
 
   return result;
@@ -659,7 +709,8 @@ export function recordFactionCampaignEvent(
 export function recordCrewRosterEvent(
   session: RunSessionState,
   plan: CrewRosterPlan,
-  event: CrewRosterEvent
+  event: CrewRosterEvent,
+  factionFrontPlan?: FactionFrontPlan
 ): CrewEventResult {
   const result = applyCrewRosterEvent(plan, session.crewRoster, event);
   session.crewRoster = result.state;
@@ -671,6 +722,40 @@ export function recordCrewRosterEvent(
       sectorIndex: event.sectorIndex,
       subjectId: 'candidateId' in event ? event.candidateId : null,
       detailId: event.type === 'missionOutcome' ? event.outcome : null
+    });
+    if (factionFrontPlan && 'candidateId' in event && (event.type === 'recruit' || event.type === 'foundryAssist')) {
+      const candidate = plan.candidates.find((entry) => entry.id === event.candidateId);
+      if (candidate) {
+        recordFactionFrontEvent(session, factionFrontPlan, {
+          id: `${event.id}:crew-front`,
+          source: 'crew',
+          sectorIndex: event.sectorIndex,
+          factionId: candidate.factionId,
+          amount: 1,
+          reason: `${event.type} tie with ${candidate.callsign}`
+        });
+      }
+    }
+  }
+  return result;
+}
+
+export function recordFactionFrontEvent(
+  session: RunSessionState,
+  plan: FactionFrontPlan,
+  event: FactionFrontEvent
+): FactionFrontEventResult {
+  const result = applyFactionFrontEvent(plan, session.factionFronts, event);
+  session.factionFronts = result.state;
+  if (result.disposition === 'applied') {
+    recordRunSessionTimelineEvent(session, {
+      id: `timeline:${event.id}`,
+      category: 'faction',
+      kind: `front:${event.source}`,
+      sectorIndex: event.sectorIndex,
+      value: result.movedFrontIds.length,
+      subjectId: event.factionId,
+      detailId: result.movedFrontIds.join('|') || null
     });
   }
   return result;
@@ -688,7 +773,8 @@ function recordRouteCampaignConsequence(
   plan: FactionCampaignPlan,
   sector: SectorRoute,
   route: RouteOption,
-  outcomeId: string
+  outcomeId: string,
+  factionFrontPlan?: FactionFrontPlan
 ): void {
   if (route.kind === 'shop' || route.kind === 'repair') {
     recordFactionCampaignEvent(session, plan, {
@@ -698,7 +784,7 @@ function recordRouteCampaignConsequence(
       factionId: sector.bossFactionId,
       amount: 1,
       reason: route.kind === 'shop' ? 'market permit honored' : 'repair crew protected'
-    });
+    }, factionFrontPlan);
     return;
   }
 
@@ -709,8 +795,48 @@ function recordRouteCampaignConsequence(
       sectorIndex: Math.max(0, sector.index - 1),
       factionId: sector.bossFactionId,
       value: route.kind === 'factionAmbush' ? 2 : 1
-    });
+    }, factionFrontPlan);
   }
+}
+
+function mapCampaignEventToFrontEvent(event: FactionCampaignEvent): FactionFrontEvent | null {
+  if (event.type === 'rivalEncounter') return null;
+  const source =
+    event.type === 'aid'
+      ? 'aid'
+      : event.type === 'assetStolen'
+        ? 'theft'
+        : event.type === 'targetSpared'
+          ? 'sparedTarget'
+          : event.type === 'rivalOutcome'
+            ? 'rival'
+            : 'contract';
+  const amount =
+    event.type === 'aid'
+      ? Math.max(1, event.amount)
+      : event.type === 'assetStolen'
+        ? -Math.max(1, event.value)
+        : event.type === 'targetSpared'
+          ? 2
+          : event.type === 'missionOutcome'
+            ? event.outcome === 'failure'
+              ? 1
+              : event.outcome === 'success'
+                ? -2
+                : -1
+            : event.type === 'rivalOutcome'
+              ? event.outcome === 'escaped'
+                ? -1
+                : -3
+              : 1;
+  return {
+    id: `${event.id}:front-fold`,
+    source,
+    sectorIndex: event.sectorIndex,
+    factionId: event.factionId,
+    amount,
+    reason: event.type
+  };
 }
 
 function applyRouteChosenHooks(

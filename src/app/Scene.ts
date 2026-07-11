@@ -12,6 +12,7 @@ import type { EngineeringDebugState } from '../game/Foundry';
 import type { FactionCampaignDebugState } from '../game/FactionCampaign';
 import type { RunTimelineDebugState } from '../game/RunTimeline';
 import type { CarrierDebugState } from '../game/CarrierCommand';
+import type { FactionFrontDebugState } from '../game/FactionFront';
 
 export interface SceneDebugState {
   readonly seed: string;
@@ -101,6 +102,7 @@ export interface SceneDebugState {
     readonly extractionSeconds: number | null;
     readonly integrations: readonly string[];
   };
+  readonly factionFronts?: FactionFrontDebugState;
   readonly scenarioLab?: {
     readonly scenarioCount: number;
     readonly activeScenario: string | null;

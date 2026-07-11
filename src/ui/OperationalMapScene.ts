@@ -21,6 +21,7 @@ import {
   createContractThemeStrip,
   getContractThemeOptions
 } from './ContractTheme';
+import type { FactionFrontInfluence } from '../game/FactionFront';
 
 export class OperationalMapScene implements Scene {
   public readonly id = 'operational-map';
@@ -41,7 +42,8 @@ export class OperationalMapScene implements Scene {
     private readonly salvage: number,
     private readonly onSelect: (option: ExpeditionBranchOption) => void,
     private readonly onContinue: () => void,
-    private readonly consequenceCopy: string | null = null
+    private readonly consequenceCopy: string | null = null,
+    private readonly factionFront: FactionFrontInfluence | null = null
   ) {}
 
   public enter(): void {
@@ -51,7 +53,8 @@ export class OperationalMapScene implements Scene {
       sectorIndex: this.schedule.sectorIndex,
       expedition: this.expedition,
       operational: this.operational,
-      currentNodeId: currentStage.nodeId
+      currentNodeId: currentStage.nodeId,
+      factionFront: this.factionFront
     });
     const choosing = this.options.length > 0;
     const shell = document.createElement('main');
@@ -94,7 +97,12 @@ export class OperationalMapScene implements Scene {
       meta.textContent = `${node.status} | ${node.timeEstimate} | danger ${node.danger} | ${node.reward}`;
       const consequence = document.createElement('span');
       consequence.textContent = `${node.consequence} ${node.risks}`;
-      card.append(heading, meta, consequence);
+      const front = document.createElement('span');
+      front.textContent = node.frontForecast
+        ? `${node.frontDirective?.toUpperCase()}: ${node.frontForecast}`
+        : '';
+      front.hidden = node.frontForecast === null;
+      card.append(heading, meta, consequence, front);
       itinerary.append(card);
     }
 

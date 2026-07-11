@@ -78,7 +78,8 @@ export class SectorTransitionScene implements Scene {
     const campaign = getFactionCampaignInfluence(
       this.run.factionCampaign,
       this.session.factionCampaign,
-      sector
+      sector,
+      { plan: this.run.factionFronts, state: this.session.factionFronts }
     );
     const shell = document.createElement('main');
     shell.className = 'scene-panel transition-panel';
@@ -237,7 +238,12 @@ export class SectorTransitionScene implements Scene {
       factionCampaign: createFactionCampaignDebugState(
         this.run.factionCampaign,
         this.session.factionCampaign,
-        getFactionCampaignInfluence(this.run.factionCampaign, this.session.factionCampaign, sector)
+        getFactionCampaignInfluence(
+          this.run.factionCampaign,
+          this.session.factionCampaign,
+          sector,
+          { plan: this.run.factionFronts, state: this.session.factionFronts }
+        )
       ),
       crew: {
         activeCommand: 'briefing',

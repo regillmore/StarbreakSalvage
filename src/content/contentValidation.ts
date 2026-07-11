@@ -36,6 +36,11 @@ import {
 } from './engineering';
 import { FACTIONS, type FactionDefinition } from './factions';
 import {
+  FACTION_FRONT_STANCES,
+  FACTION_FRONT_STRATEGIES,
+  type FactionFrontStrategyDefinition
+} from './factionFronts';
+import {
   ENEMY_FORMATIONS,
   ENEMY_FORMATION_BREAK_CONDITIONS,
   ENEMY_FORMATION_CLEANUP_POLICIES,
@@ -204,6 +209,7 @@ export interface ContentValidationInput {
   readonly missionObjectives?: readonly MissionObjectiveDefinition[];
   readonly missionContracts?: readonly MissionContractDefinition[];
   readonly factions?: readonly FactionDefinition[];
+  readonly factionFrontStrategies?: readonly FactionFrontStrategyDefinition[];
   readonly hazardZones?: readonly HazardZoneDefinition[];
   readonly items?: readonly ItemDefinition[];
   readonly itemHookImplementations?: ItemHookImplementationRegistry;
@@ -241,6 +247,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const missionObjectives = input.missionObjectives ?? MISSION_OBJECTIVES;
   const missionContracts = input.missionContracts ?? MISSION_CONTRACTS;
   const factions = input.factions ?? FACTIONS;
+  const factionFrontStrategies = input.factionFrontStrategies ?? FACTION_FRONT_STRATEGIES;
   const hazardZones = input.hazardZones ?? HAZARD_ZONE_DEFINITIONS;
   const items = input.items ?? ITEMS;
   const itemHookImplementations = createItemHookImplementationRegistry(
@@ -260,6 +267,16 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const weapons = input.weapons ?? WEAPONS;
   const weaponEvolutionRecipes = input.weaponEvolutionRecipes ?? WEAPON_EVOLUTION_RECIPES;
   const errors: string[] = [];
+  for (const faction of factions) {
+    for (const stance of FACTION_FRONT_STANCES) {
+      const matches = factionFrontStrategies.filter(
+        (strategy) => strategy.factionId === faction.id && strategy.stance === stance
+      );
+      if (matches.length !== 1) {
+        errors.push(`Faction ${faction.id} must define one ${stance} front strategy`);
+      }
+    }
+  }
   const achievementIds = new Set<string>();
   const backgroundIds = new Set<string>();
   const bossIds = new Set<string>();

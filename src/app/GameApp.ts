@@ -138,13 +138,19 @@ import type { ScenarioLabId } from '../game/ScenarioLab';
 import {
   RunSnapshotCoordinator,
   createRunSnapshotSummary,
-  type RunSnapshotV5
+  type RunSnapshotV6
 } from '../game/RunSnapshot';
 import { getOperationalInfluence } from '../game/OperationalMap';
 import {
   createCarrierInfluence
 } from '../game/CarrierCommand';
 import { getBoardingOperationForNode } from '../game/BoardingOperation';
+import {
+  createFactionFrontCampaignReadModel,
+  createFactionFrontInfluence,
+  isFactionFrontNodeAvailable,
+  projectFactionFrontBranchOptions
+} from '../game/FactionFront';
 
 export class GameApp {
   private readonly canvas: HTMLCanvasElement;
@@ -167,7 +173,7 @@ export class GameApp {
   private lastRunResult: CombatRunResult | null = null;
   private lastSaveUpdate: SaveUpdateResult | null = null;
   private summarySaved = false;
-  private runSnapshot: RunSnapshotV5 | null = null;
+  private runSnapshot: RunSnapshotV6 | null = null;
   private runSnapshotNotice: string | null = null;
   private snapshotEligible = false;
   private frameStats: FrameStats = {
@@ -482,7 +488,8 @@ export class GameApp {
     let campaignInfluence = getFactionCampaignInfluence(
       this.currentRun.factionCampaign,
       this.runSession.factionCampaign,
-      sector
+      sector,
+      { plan: this.currentRun.factionFronts, state: this.runSession.factionFronts }
     );
     if (
       !stage.optional &&
@@ -495,11 +502,12 @@ export class GameApp {
         sectorIndex: this.runSession.currentSectorIndex,
         factionId: campaignInfluence.rival.factionId,
         rivalId: campaignInfluence.rival.id
-      });
+      }, this.currentRun.factionFronts);
       campaignInfluence = getFactionCampaignInfluence(
         this.currentRun.factionCampaign,
         this.runSession.factionCampaign,
-        sector
+        sector,
+        { plan: this.currentRun.factionFronts, state: this.runSession.factionFronts }
       );
     }
     const campaignModifier = createFactionCampaignCombatModifier(
@@ -534,7 +542,8 @@ export class GameApp {
       createSectorConditionPlan({
         run: this.currentRun,
         sectorIndex: this.runSession.currentSectorIndex,
-        routeOutcomes: this.runSession.routeOutcomes
+        routeOutcomes: this.runSession.routeOutcomes,
+        factionFront: campaignInfluence.front
       }),
       this.runSession.currentSectorIndex,
       this.runSession.expedition,
@@ -562,7 +571,8 @@ export class GameApp {
       campaignInfluence,
       this.runSession.factionCampaign,
       crewProfile,
-      this.runSession.timeline
+      this.runSession.timeline,
+      this.runSession.factionFronts
     );
   }
 
@@ -817,6 +827,11 @@ export class GameApp {
     const completedStage = getMissionStage(schedule, stageId);
     const sector = getCurrentSector(this.currentRun, this.runSession);
     const sectorIndex = this.runSession.currentSectorIndex;
+    const encounterFactionId = createFactionFrontInfluence(
+      this.currentRun.factionFronts,
+      this.runSession.factionFronts,
+      sectorIndex
+    ).ownerFactionId;
     const isOptionalStage = completedStage.optional;
     const objectiveOutcome = result.missionObjective?.outcome;
     const campaignOutcome =
@@ -831,17 +846,17 @@ export class GameApp {
         id: `${stageId}:campaign-contract`,
         type: 'contractCompleted',
         sectorIndex,
-        factionId: sector.bossFactionId,
+        factionId: encounterFactionId,
         contractId: schedule.contract.id
-      });
+      }, this.currentRun.factionFronts);
       recordFactionCampaignEvent(this.runSession, this.currentRun.factionCampaign, {
         id: `${stageId}:campaign-outcome`,
         type: 'missionOutcome',
         sectorIndex,
-        factionId: sector.bossFactionId,
+        factionId: encounterFactionId,
         contractId: schedule.contract.id,
         outcome: campaignOutcome
-      });
+      }, this.currentRun.factionFronts);
     }
 
     const combatRival = result.rivalEncounter;
@@ -859,11 +874,11 @@ export class GameApp {
         factionId: combatRival?.rivalId
           ? (this.currentRun.factionCampaign.rivals.find(
               (candidate) => candidate.id === combatRival.rivalId
-            )?.factionId ?? sector.bossFactionId)
+            )?.factionId ?? encounterFactionId)
           : unresolvedRival!.factionId,
         rivalId,
         outcome: combatRival?.outcome ?? 'escaped'
-      });
+      }, this.currentRun.factionFronts);
     }
 
     if (isOptionalStage && campaignOutcome === 'success') {
@@ -880,7 +895,7 @@ export class GameApp {
           factionId: capturable.factionId,
           rivalId: capturable.id,
           outcome: 'captured'
-        });
+        }, this.currentRun.factionFronts);
       }
     }
 
@@ -894,7 +909,7 @@ export class GameApp {
         retreated: member.retreated,
         enemiesDefeated: member.enemiesDefeated,
         salvageRecovered: member.salvageRecovered
-      });
+      }, this.currentRun.factionFronts);
     }
 
     const operationNode = completedStage.nodeId
@@ -912,11 +927,12 @@ export class GameApp {
       sectorIndex,
       outcome: campaignOutcome,
       crewPolicy
-    });
+    }, this.currentRun.factionFronts);
     const campaignInfluence = getFactionCampaignInfluence(
       this.currentRun.factionCampaign,
       this.runSession.factionCampaign,
-      sector
+      sector,
+      { plan: this.currentRun.factionFronts, state: this.runSession.factionFronts }
     );
     const commandHeadroom = createEngineeringCombatProfile(this.runSession.engineering).resources
       .commandHeadroom;
@@ -925,7 +941,7 @@ export class GameApp {
         ? getRecruitableCrewCandidate(this.currentRun.crewRoster, this.runSession.crewRoster, {
             sectorIndex,
             crewPolicy: isOptionalStage && !boardingOperation ? 'none' : crewPolicy,
-            factionId: sector.bossFactionId,
+            factionId: encounterFactionId,
             factionSignal: Boolean(campaignInfluence.crewOfferSignal) && isOptionalStage,
             commandHeadroom
           })
@@ -943,7 +959,7 @@ export class GameApp {
             : crewPolicy === 'recordCandidate'
               ? 'distress rescue manifest'
               : 'trusted faction distress channel'
-      });
+      }, this.currentRun.factionFronts);
       if (recruitment.disposition === 'applied') {
         recordFactionCampaignEvent(this.runSession, this.currentRun.factionCampaign, {
           id: `${stageId}:crew-faction-aid:${candidate.id}`,
@@ -952,7 +968,7 @@ export class GameApp {
           factionId: candidate.factionId,
           amount: 1,
           reason: `rescued ${candidate.callsign}`
-        });
+        }, this.currentRun.factionFronts);
       }
     }
     const operationCheckpoint = {
@@ -1132,7 +1148,8 @@ export class GameApp {
     const campaign = getFactionCampaignInfluence(
       this.currentRun.factionCampaign,
       this.runSession.factionCampaign,
-      sector
+      sector,
+      { plan: this.currentRun.factionFronts, state: this.runSession.factionFronts }
     );
     const crewCandidate = getRecruitableCrewCandidate(
       this.currentRun.crewRoster,
@@ -1150,7 +1167,12 @@ export class GameApp {
       this.currentRun.carrierPlan,
       this.runSession.carrier
     );
-    const missionOptions = getMissionBranchOptions(schedule, this.runSession.mission).filter(
+    const frontInfluence = createFactionFrontInfluence(
+      this.currentRun.factionFronts,
+      this.runSession.factionFronts,
+      this.runSession.currentSectorIndex
+    );
+    const availableMissionOptions = getMissionBranchOptions(schedule, this.runSession.mission).filter(
       (option) => {
         if (option.default) return true;
         const target = this.currentRun.expedition.nodes.find(
@@ -1161,9 +1183,15 @@ export class GameApp {
           : null;
         return (
           carrierInfluence.optionalMissionAccess &&
-          (!boarding || carrierInfluence.boardingCapacity > 0)
+          (!boarding || carrierInfluence.boardingCapacity > 0) &&
+          (!target || isFactionFrontNodeAvailable(frontInfluence, target))
         );
       }
+    );
+    const missionOptions = projectFactionFrontBranchOptions(
+      availableMissionOptions,
+      this.currentRun.expedition.nodes,
+      frontInfluence
     );
     this.sceneManager.switchTo(
       new OperationalMapScene(
@@ -1197,7 +1225,7 @@ export class GameApp {
               sectorIndex: this.runSession.currentSectorIndex,
               factionId: capturableRival.factionId,
               rivalId: capturableRival.id
-            });
+            }, this.currentRun.factionFronts);
           }
 
           recordExpeditionBranchDecision(
@@ -1228,7 +1256,8 @@ export class GameApp {
             : `${this.currentRun.carrierPlan.name}: optional operation access restricted by carrier hull, heat, or debt.`
         ]
           .filter((copy): copy is string => Boolean(copy))
-          .join(' ') || null
+          .join(' ') || null,
+        frontInfluence
       )
     );
     this.checkpointRun('operationalMap', `${branchStage.label} checkpoint`);
@@ -1270,7 +1299,12 @@ export class GameApp {
             }
           }
         },
-        'Combat world cleanup is settled; no actors, projectiles, hooks, or pending payouts cross this checkpoint.'
+        'Combat world cleanup is settled; no actors, projectiles, hooks, or pending payouts cross this checkpoint.',
+        createFactionFrontInfluence(
+          this.currentRun.factionFronts,
+          this.runSession.factionFronts,
+          this.runSession.currentSectorIndex
+        )
       )
     );
     this.checkpointRun(
@@ -1343,7 +1377,14 @@ export class GameApp {
       availableCredits: this.runSession.credits
     });
 
-    applyRouteOutcome(this.runSession, sector, route, outcome, this.currentRun.factionCampaign);
+    applyRouteOutcome(
+      this.runSession,
+      sector,
+      route,
+      outcome,
+      this.currentRun.factionCampaign,
+      this.currentRun.factionFronts
+    );
 
     if (route.kind === 'shop') {
       this.showShop(route);
@@ -1606,7 +1647,7 @@ export class GameApp {
               type: 'foundryAssist',
               sectorIndex: this.runSession.currentSectorIndex,
               candidateId: crewAssist.candidateId
-            });
+            }, this.currentRun.factionFronts);
           }
           recordRunSessionTimelineEvent(this.runSession, {
             id: `engineering-commit:${sector.index}:${engineering.history.length}`,
@@ -1797,7 +1838,8 @@ export class GameApp {
         this.runSession.timeline,
         this.runSession.frontierDecision,
         this.runSession.carrier,
-        this.runSession.boarding
+        this.runSession.boarding,
+        this.runSession.factionFronts
       )
     );
   }
@@ -1834,6 +1876,10 @@ export class GameApp {
       this.currentRun.expedition,
       this.runSession.expedition
     );
+    const frontEnding = createFactionFrontCampaignReadModel(
+      this.currentRun.factionFronts,
+      this.runSession.factionFronts
+    );
 
     return {
       seed: this.currentRun.seed,
@@ -1851,8 +1897,10 @@ export class GameApp {
         ? this.currentRun.frontierCampaign.variantId
         : (finale?.variantId ?? null),
       finaleVariantName: frontierVictory
-        ? this.currentRun.frontierCampaign.name
-        : (finale?.variantName ?? null),
+        ? `${this.currentRun.frontierCampaign.name} / ${frontEnding.endingLabel}`
+        : finale?.variantName
+          ? `${finale.variantName} / ${frontEnding.endingLabel}`
+          : frontEnding.endingLabel,
       finaleCleared: result.reason === 'victory' && (finale !== null || frontierVictory),
       expeditionGraphId: expedition.graphId,
       expeditionVisitedNodeIds: expedition.visitedNodeIds,
@@ -2088,6 +2136,13 @@ export class GameApp {
           `Boarding integrations ${debugState.boarding.integrations.join('/')} extraction ${debugState.boarding.extractionSeconds ?? 'untimed'}`
         ]
       : [];
+    const factionFrontDebug = debugState.factionFronts
+      ? [
+          `Front ${debugState.factionFronts.current ?? 'no current front'} events ${debugState.factionFronts.historyCount}`,
+          `Front allegiance ${debugState.factionFronts.allegiance.join(' / ')}`,
+          `Front ending ${debugState.factionFronts.ending}`
+        ]
+      : [];
     const scenarioLabDebug = debugState.scenarioLab
       ? [
           `Scenario Lab ${debugState.scenarioLab.activeScenario ?? 'catalog'} ${debugState.scenarioLab.scenarioCount} cases`,
@@ -2151,6 +2206,7 @@ export class GameApp {
       ...timelineDebug,
       ...carrierDebug,
       ...boardingDebug,
+      ...factionFrontDebug,
       ...scenarioLabDebug,
       ...upgradeDebug,
       ...progressionDebug,

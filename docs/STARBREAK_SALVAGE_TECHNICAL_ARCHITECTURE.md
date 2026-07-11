@@ -711,6 +711,14 @@ seed + permanent save fingerprint
 - `RunSession.recordBoardingOperationOutcome` is the orchestration seam for carrier custody, foundry component acquisition, faction events, rival capture, timeline entries, and forward-compatible crew/apex signals. The reducer is idempotent and caps history at 64 entries/128 ids.
 - Snapshot schema/storage v5 adds boarding plan identity plus validated session state, retires v1-v4 independently of permanent save v5, and preserves operation-entry restart semantics. Run summaries and the ninth Scenario Lab fixture consume public read models.
 
+### Work order 106 implementation
+
+- `src/content/factionFronts.ts` owns twelve strategy records: three stances for each faction with node, price, hazard, reinforcement, support, crew, carrier, and ending policies. Text glyphs and labels are semantic non-color cues.
+- `src/game/FactionFront.ts` owns immutable sector-front plans and bounded run-local allegiance, influence, sector, processed-id, and history state. Its reducer consumes explicit events only, affects sectors one-to-four positions ahead, is idempotent, and caps display history at 64 entries/128 ids.
+- `FactionFrontInfluence` is the shared read model. The expedition graph remains immutable schema v2; `GameApp` and `OperationalMap` project reserve detour/pursuit nodes as created, transformed, or closed at choice time. This changes executable path availability without rewriting saved graph identity.
+- `getFactionCampaignInfluence` composes front ownership with existing ledger/rival state. Combat, sector conditions, shops, routes, transitions, crew recruitment, carrier access, set-piece ownership, finale pressure, summaries, and run-record ending names consume that composed model. Reinforcement clones are bounded, do not count for required objectives, and retain existing actor/projectile budgets.
+- `RunSession` is the event-orchestration seam for faction, route, boarding, crew, and carrier sources. Snapshot schema/storage v6 validates front plan/state/history and retires v1-v5 independently of permanent save v5. The tenth Scenario Lab fixture and endurance harness use public front setup/debug models.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

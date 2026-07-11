@@ -1,5 +1,6 @@
 import { createDebugCrewRosterState } from './CrewCommand';
 import type { UnlockId } from '../content/unlocks';
+import { createDebugFactionFrontState } from './FactionFront';
 import { createDebugFactionCampaignState } from './FactionCampaign';
 import { createFoundryDebugFixture } from './Foundry';
 import { createItemStormLoadout } from './ItemStress';
@@ -23,11 +24,12 @@ export const SCENARIO_LAB_IDS = [
   'lab_crew_command',
   'lab_combined_pressure',
   'lab_boarding_incursion',
+  'lab_faction_fronts',
   'lab_timeline_audit'
 ] as const;
 export type ScenarioLabId = (typeof SCENARIO_LAB_IDS)[number];
 export type ScenarioLabTarget = 'transition' | 'gameplay' | 'foundry' | 'timeline';
-export type ScenarioLabGameplayPreset = 'none' | 'setPiece' | 'rival' | 'crew' | 'combined' | 'boarding';
+export type ScenarioLabGameplayPreset = 'none' | 'setPiece' | 'rival' | 'crew' | 'combined' | 'boarding' | 'front';
 
 export interface ScenarioLabDefinition {
   readonly id: ScenarioLabId;
@@ -61,6 +63,7 @@ export interface ScenarioLabSetupReadModel {
   readonly factionEvents: number;
   readonly crewEvents: number;
   readonly timelineEvents: number;
+  readonly frontEvents: number;
   readonly summary: string;
 }
 
@@ -144,6 +147,16 @@ export const SCENARIO_LAB_DEFINITIONS: readonly ScenarioLabDefinition[] = [
     { optionalMission: true, crewFixture: true, engineeringFixture: true }
   ),
   scenario(
+    'lab_faction_fronts',
+    'Dynamic Faction Fronts',
+    'Launch a moved territory front with transformed ownership, hazards, reinforcements, support, and ending posture.',
+    ['faction-fronts', 'nodes', 'ownership', 'markets', 'reinforcements', 'endings'],
+    3,
+    'gameplay',
+    'front',
+    { factionFixture: true, crewFixture: true }
+  ),
+  scenario(
     'lab_timeline_audit',
     'Run Timeline Audit',
     'Inspect deterministic node, decision, economy, engineering, faction, rival, crew, boss, duration, and run events.',
@@ -183,6 +196,9 @@ export function createScenarioLabLaunch(options: {
   session.salvage = 12;
   if (definition.factionFixture) {
     session.factionCampaign = createDebugFactionCampaignState(options.run.factionCampaign);
+  }
+  if (definition.id === 'lab_faction_fronts') {
+    session.factionFronts = createDebugFactionFrontState(options.run.factionFronts);
   }
   if (definition.crewFixture) {
     session.crewRoster = createDebugCrewRosterState(options.run.crewRoster);
@@ -257,6 +273,7 @@ export function createScenarioLabSetupReadModel(
     factionEvents: session.factionCampaign.history.length,
     crewEvents: session.crewRoster.history.length,
     timelineEvents: session.timeline.entries.length,
+    frontEvents: session.factionFronts.history.length,
     summary: `${definition.title} | ${definition.systems.join('+')} | ${definition.pressureBudget}`
   };
 }
