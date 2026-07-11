@@ -75,6 +75,11 @@ describe('ScenarioLab', () => {
       true
     );
 
+    const fleet = launch('lab_fleetcraft');
+    expect(fleet.readout.target).toBe('fleetBay');
+    expect(fleet.readout.fleetEvents).toBeGreaterThan(0);
+    expect(fleet.session.fleet.craft.filter((craft) => craft.status === 'ready')).toHaveLength(2);
+
     const timeline = launch('lab_timeline_audit').session.timeline;
     expect(new Set(timeline.entries.map((entry) => entry.category))).toEqual(
       new Set([

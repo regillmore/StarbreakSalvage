@@ -735,7 +735,7 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
   await expect(page.getByTestId('crew-brief')).toContainText('Crew manifest:');
   await expect(page.getByTestId('crew-brief')).toContainText(':active:');
   await page.keyboard.press('Enter');
-  await expect(page.getByTestId('crew-command-readout')).toContainText(/Wing [1-3] active/);
+  await expect(page.getByTestId('crew-command-readout')).toContainText(/Wing C[1-3]\/F[0-2] active/);
   await page.getByTestId('crew-command-screen').click();
   await expect(page.getByTestId('crew-command-readout')).toContainText('SCREEN');
   await expect(page.locator('.debug-overlay')).toContainText('Crew screen');
@@ -766,14 +766,14 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('scenario-lab')).toBeVisible();
   await expect(page.getByTestId('scenario-lab-intro')).toContainText('deterministic session');
-  await expect(page.locator('[data-testid^="scenario-lab-lab_"]')).toHaveCount(11);
-  await expect(page.locator('.debug-overlay')).toContainText('Scenario Lab catalog 11 cases');
+  await expect(page.locator('[data-testid^="scenario-lab-lab_"]')).toHaveCount(12);
+  await expect(page.locator('.debug-overlay')).toContainText('Scenario Lab catalog 12 cases');
 
   for (let index = 0; index < 6; index += 1) await page.keyboard.press('Tab');
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('cockpit-hud')).toBeVisible();
   await expect(page.locator('.debug-overlay')).toContainText('Scenario lab:combined');
-  await expect(page.locator('.debug-overlay')).toContainText('Scenario Lab combined 11 cases');
+  await expect(page.locator('.debug-overlay')).toContainText('Scenario Lab combined 12 cases');
   await expect(page.locator('.debug-overlay')).toContainText('Set-piece');
   await expect(page.locator('.debug-overlay')).toContainText('Allies');
   await expect(page.locator('.debug-overlay')).toContainText('Combined proc');
@@ -807,6 +807,17 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('scenario-lab')).toBeVisible();
   for (let index = 0; index < 10; index += 1) await page.keyboard.press('Tab');
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('fleet-bay')).toBeVisible();
+  await expect(page.getByTestId('fleet-roster')).toContainText(/ready|damaged/);
+  await expect(page.getByTestId('fleet-capacity')).toContainText('four crew-plus-fleet allies');
+  await expect(page.locator('.debug-overlay')).toContainText('Fleet budget');
+  await page.locator('[data-testid^="fleet-doctrine-"]').first().click();
+  await expect(page.getByTestId('fleet-bay')).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('scenario-lab')).toBeVisible();
+  for (let index = 0; index < 11; index += 1) await page.keyboard.press('Tab');
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('scenario-timeline')).toBeVisible();
   await expect(page.getByTestId('scenario-timeline-list')).toContainText('decision:fixture');

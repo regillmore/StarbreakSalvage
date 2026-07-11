@@ -727,6 +727,14 @@ seed + permanent save fingerprint
 - Combat receives a precomputed influence map when the existing crew profile is built. Promotions trade one command slot for hull or damage, bonds trade one hull for paired cadence, and hardened conflict excludes one partner. Existing three-ally and shared projectile/query budgets remain unchanged.
 - `CrewQuartersScene` is a lazy presentation boundary reached from briefings. It consumes roster and arc read models, uses native buttons and semantic text, and owns no mutations beyond callbacks. Snapshot schema/storage v7 validates arc identity/state and retires v1-v6; summaries, timeline, Scenario Lab, and endurance consume the same public state.
 
+### Work order 108 implementation
+
+- `src/content/supportCraft.ts` owns six support-role records with construction/repair costs, combat envelopes, default command/doctrine, itinerary use, and non-color cues. `src/game/Fleetcraft.ts` owns immutable seed/save-stable identities plus bounded construction, assignment, doctrine, refit, combat settlement, loss/recovery, influence, validation, summary, and debug state.
+- `RunSession.applyFleetCommand` is the resource/orchestration seam. It consumes uninstalled engineering components and matching carrier manifests, spends run salvage, enforces hangar/foundry and mutually exclusive crew-post constraints, emits timeline/front events, and translates build/refit/command/injury consequences into existing crew arcs and roster events.
+- `CombatState` still owns one `AllyState[]`. Fleet profiles are appended after crew profiles and defensively sliced to four combined allies; both sources obey the existing five commands, bounded queries, projectile/collision/damage/objective/reward paths, and one 20-shot ally ceiling. Result projection separates crew candidates from craft ids so their authoritative reducers settle independently.
+- Fleet influence is a plain read model consumed by boarding access/rewards, optional-operation salvage, pursuit control, carrier transit protection, recovery costs, faction fronts, summaries, debug, and future apex consumers. Damaged or lost craft provide no influence until repaired.
+- `FleetBayScene` is lazy, presentation-only, and reachable from briefings and command-deck staging. Snapshot schema/storage v8 validates fleet identity/state and retires v1-v7; the twelfth Scenario Lab fixture and endurance harness consume public setup/debug models.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

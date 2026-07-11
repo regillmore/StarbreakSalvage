@@ -686,6 +686,22 @@ export function getCargoComponents(snapshot: EngineeringSnapshot): FoundryCompon
   return snapshot.components.filter((component) => !installed.has(component.id));
 }
 
+export function consumeCargoComponent(state: EngineeringState, componentId: string): EngineeringState {
+  const installed = new Set(state.committed.mounts.map((mount) => mount.componentId));
+  if (installed.has(componentId) || !state.committed.components.some((component) => component.id === componentId)) {
+    return state;
+  }
+  const remove = (snapshot: EngineeringSnapshot): EngineeringSnapshot => ({
+    ...snapshot,
+    components: snapshot.components.filter((component) => component.id !== componentId)
+  });
+  return {
+    ...state,
+    committed: remove(state.committed),
+    draft: remove(state.draft)
+  };
+}
+
 export function getInstalledComponent(
   snapshot: EngineeringSnapshot,
   hardpointId: string

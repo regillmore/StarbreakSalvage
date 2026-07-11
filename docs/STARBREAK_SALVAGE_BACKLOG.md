@@ -1912,7 +1912,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 108.
+- Implemented in work order 108. Six deterministic support roles cover pursuit, projectile screening, salvage recovery, formation repair, boarding insertion, and damaged-craft recovery. Construction/refit consumes engineering cargo and salvage inside carrier hangar limits; crew assignment trades a wingmate for improved craft response, and craft persist through ready, damaged, lost, recovered, and repaired states. Five doctrines reuse the existing formation commands and a shared four-ally/20-projectile combat ceiling. Fleet influence reaches boarding, optional operations, carrier transit, fronts, crew arcs, summaries, snapshot v8, and the twelfth accessible Scenario Lab fixture.
 
 ## Epic BK - Phase 11 apex campaign and release
 

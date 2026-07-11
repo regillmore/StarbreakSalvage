@@ -893,7 +893,7 @@ Exit criteria:
 - The navigable world changes from explicit campaign outcomes.
 - Crew/fleet growth expands tactical and itinerary variety without permanent raw-power escalation.
 
-Status: faction-front scope is implemented by work order 106, and crew-relationship scope is implemented by work order 107. Every future sector can move among alliance, hostility, and opportunist control from explicit voyage events; ten deterministic crew arcs now turn mission, carrier, boarding, faction, rival, injury, module, command, and rescue outcomes into risk-bearing relationship, promotion, departure, mutiny, rescue, paired-tactic, and succession decisions. Fleetcraft remains assigned to work order 108.
+Status: faction-front, crew-relationship, and fleetcraft scope is implemented by work orders 106-108. Every future sector can move among alliance, hostility, and opportunist control; ten deterministic crew arcs turn explicit voyage outcomes into relationship and fate decisions; six carrier-limited support roles now extend engineering, crew, boarding, itinerary, and combat choices under shared ally/projectile budgets. Apex campaigns remain assigned to work order 109.
 
 ### P11.5 - Apex Voyage Playtest Candidate
 

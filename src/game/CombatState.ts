@@ -56,6 +56,11 @@ import { getItemNames, type ItemInstance } from './Rewards';
 import type { MissionObjectiveResultSnapshot } from './ObjectiveDirector';
 import type { CrewCombatProfile } from './CrewCommand';
 import {
+  MAX_COMBINED_ALLIES,
+  MAX_COMBINED_ALLY_PROJECTILES,
+  type FleetCombatProfile
+} from './Fleetcraft';
+import {
   createSetPieceReinforcementSpawns,
   createSetPieceState,
   damageSetPieceComponent,
@@ -144,6 +149,7 @@ export interface ProjectileState {
 }
 
 export interface AllyState {
+  readonly source: 'crew' | 'fleet';
   readonly candidateId: string;
   readonly name: string;
   readonly callsign: string;
@@ -464,6 +470,18 @@ export interface CombatRunResult {
       readonly salvageRecovered: number;
     }[];
   };
+  readonly fleet?: {
+    readonly doctrine: string;
+    readonly issuedCommands: number;
+    readonly craft: readonly {
+      readonly craftId: string;
+      readonly lost: boolean;
+      readonly retreated: boolean;
+      readonly remainingHull: number;
+      readonly enemiesDefeated: number;
+      readonly salvageRecovered: number;
+    }[];
+  };
 }
 
 export interface CombatEntityCounts {
@@ -551,6 +569,7 @@ export interface CombatStateOptions {
   readonly looseCurrencyPlan?: LooseCurrencyPlan | null;
   readonly engineering?: EngineeringCombatProfile | null;
   readonly crew?: CrewCombatProfile | null;
+  readonly fleet?: FleetCombatProfile | null;
 }
 
 export function createCombatState(
@@ -607,28 +626,59 @@ export function createCombatState(
     enemies: [],
     boss: null,
     rivalEncounter: null,
-    allies: (options.crew?.members ?? []).map((member, index) => ({
-      candidateId: member.candidateId,
-      name: member.name,
-      callsign: member.callsign,
-      role: member.role,
-      trait: member.trait,
-      preferredCommand: member.preferredCommand,
-      cue: member.cue,
-      x: bounds.width / 2 + (index - ((options.crew?.members.length ?? 1) - 1) / 2) * 54,
+    allies: [
+      ...(options.crew?.members ?? []).map((member) => ({
+        source: 'crew' as const,
+        candidateId: member.candidateId,
+        name: member.name,
+        callsign: member.callsign,
+        role: member.role,
+        trait: member.trait,
+        preferredCommand: member.preferredCommand,
+        cue: member.cue,
+        radius: 13,
+        hull: member.maxHull,
+        maxHull: member.maxHull,
+        moveSpeed: member.moveSpeed,
+        fireCooldownSeconds: member.fireCooldownSeconds,
+        projectileDamage: member.projectileDamage,
+        fitLabel: member.fitLabel
+      })),
+      ...(options.fleet?.members ?? []).map((member) => ({
+        source: 'fleet' as const,
+        candidateId: member.craftId,
+        name: member.callsign,
+        callsign: member.callsign,
+        role: member.role,
+        trait: member.trait,
+        preferredCommand: member.preferredCommand,
+        cue: member.cue,
+        radius: 11,
+        hull: member.maxHull,
+        maxHull: member.maxHull,
+        moveSpeed: member.moveSpeed,
+        fireCooldownSeconds: member.fireCooldownSeconds,
+        projectileDamage: member.projectileDamage,
+        fitLabel: member.fitLabel
+      }))
+    ].slice(0, MAX_COMBINED_ALLIES).map((member, index) => ({
+      ...member,
+      x:
+        bounds.width / 2 +
+        (index -
+          (Math.min(
+            MAX_COMBINED_ALLIES,
+            (options.crew?.members.length ?? 0) + (options.fleet?.members.length ?? 0)
+          ) -
+            1) /
+            2) *
+          54,
       y: bounds.height * 0.86,
-      radius: 13,
-      hull: member.maxHull,
-      maxHull: member.maxHull,
-      moveSpeed: member.moveSpeed,
-      fireCooldownSeconds: member.fireCooldownSeconds,
-      projectileDamage: member.projectileDamage,
       fireCooldown: index * 0.12,
       screenCooldown: index * 0.08,
       status: 'active',
       enemiesDefeated: 0,
-      salvageRecovered: 0,
-      fitLabel: member.fitLabel
+      salvageRecovered: 0
     })),
     crewCommand: {
       active: 'focus',
@@ -687,7 +737,10 @@ export function createCombatState(
       setPieceReinforcementsSpawned: 0,
       rivalsEscaped: 0,
       rivalsDestroyed: 0,
-      alliesDeployed: options.crew?.members.length ?? 0,
+      alliesDeployed: Math.min(
+        MAX_COMBINED_ALLIES,
+        (options.crew?.members.length ?? 0) + (options.fleet?.members.length ?? 0)
+      ),
       allyProjectilesFired: 0,
       allyEnemiesDestroyed: 0,
       allyProjectilesScreened: 0,
@@ -1635,15 +1688,34 @@ export function createCombatRunResult(
           }
         }
       : {}),
-    ...(state.allies.length > 0
+    ...(state.allies.some((ally) => ally.source === 'crew')
       ? {
           crew: {
             command: state.crewCommand.active,
             issuedCommands: state.crewCommand.issuedCount,
-            members: state.allies.map((ally) => ({
+            members: state.allies.filter((ally) => ally.source === 'crew').map((ally) => ({
               candidateId: ally.candidateId,
               injured: ally.status === 'injured',
               retreated: ally.status === 'retreated',
+              enemiesDefeated: ally.enemiesDefeated,
+              salvageRecovered: ally.salvageRecovered
+            }))
+          }
+        }
+      : {}),
+    ...(state.allies.some((ally) => ally.source === 'fleet')
+      ? {
+          fleet: {
+            doctrine: state.allies
+              .filter((ally) => ally.source === 'fleet')
+              .map((ally) => ally.preferredCommand)
+              .join('+'),
+            issuedCommands: state.crewCommand.issuedCount,
+            craft: state.allies.filter((ally) => ally.source === 'fleet').map((ally) => ({
+              craftId: ally.candidateId,
+              lost: ally.status === 'injured',
+              retreated: ally.status === 'retreated',
+              remainingHull: Math.max(0, ally.hull),
               enemiesDefeated: ally.enemiesDefeated,
               salvageRecovered: ally.salvageRecovered
             }))
@@ -3135,6 +3207,7 @@ function collectPickupForAlly(state: CombatState, ally: AllyState): void {
 
 function fireAllyAtTarget(state: CombatState, ally: AllyState): void {
   if (ally.fireCooldown > 0) return;
+  if (state.projectiles.filter((projectile) => projectile.owner === 'ally').length >= MAX_COMBINED_ALLY_PROJECTILES) return;
   const target =
     state.enemies.slice(0, 24).reduce<EnemyState | null>((nearest, candidate) => {
       if (!nearest) return candidate;

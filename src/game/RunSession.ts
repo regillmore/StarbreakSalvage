@@ -11,9 +11,11 @@ import {
 import { applyCombinedHooks } from './CombinedHooks';
 import {
   acquireComponent,
+  consumeCargoComponent,
   createEngineeringCombatProfile,
   createEngineeringState,
   generateComponentSalvage,
+  getCargoComponents,
   type EngineeringState
 } from './Foundry';
 import type {
@@ -128,6 +130,16 @@ import {
   type CrewArcEventResult,
   type CrewArcState
 } from './CrewArc';
+import {
+  applyFleetCommand as reduceFleetCommand,
+  createFleetInfluence,
+  createFleetState,
+  recordFleetCombatOutcomes as reduceFleetCombatOutcomes,
+  type FleetCommand,
+  type FleetCommandResult,
+  type FleetCombatOutcome,
+  type FleetState
+} from './Fleetcraft';
 
 export interface RouteHistoryEntry {
   readonly sectorIndex: number;
@@ -170,6 +182,7 @@ export interface RunSessionState {
   factionCampaign: FactionCampaignState;
   crewRoster: CrewRosterState;
   crewArcs: CrewArcState;
+  fleet: FleetState;
   timeline: RunTimelineState;
 }
 
@@ -228,6 +241,7 @@ export function createRunSession(
     factionCampaign: createFactionCampaignState(run.factionCampaign),
     crewRoster: createCrewRosterState(run.crewRoster),
     crewArcs: createCrewArcState(run.crewArcs, run.crewRoster),
+    fleet: createFleetState(run.fleet),
     timeline: recordRunTimelineEvent(createRunTimeline(), {
       id: `run-start:${run.seed}:${contract.id}`,
       category: 'run',
@@ -252,7 +266,10 @@ export function applyCarrierCommand(
     const alreadyAssigned = session.carrier.facilities.some(
       (facility) => facility.assignedCrewId === command.candidateId
     );
-    if (member?.status !== 'active' || alreadyAssigned) {
+    const assignedToFleet = createFleetInfluence(run.fleet, session.fleet).assignedCrewIds.includes(
+      command.candidateId
+    );
+    if (member?.status !== 'active' || alreadyAssigned || assignedToFleet) {
       return {
         state: session.carrier,
         disposition: 'rejected',
@@ -311,6 +328,165 @@ export function applyCarrierCommand(
     reason: `carrier ${command.kind} under ${session.carrier.posture} posture`
   });
   return result;
+}
+
+export function applyFleetCommand(
+  run: RunSkeleton,
+  session: RunSessionState,
+  command: FleetCommand,
+  eventId = `fleet-command:${session.currentSectorIndex}:${session.fleet.history.length}`
+): FleetCommandResult {
+  if (
+    command.kind === 'assign' &&
+    command.candidateId !== null &&
+    session.carrier.facilities.some(
+      (facility) => facility.assignedCrewId === command.candidateId
+    )
+  ) {
+    return {
+      state: session.fleet,
+      disposition: 'rejected',
+      label: 'Crew member is already assigned to a carrier post',
+      salvageCost: 0,
+      consumedComponentId: null
+    };
+  }
+  const carrierInfluence = createCarrierInfluence(run.carrierPlan, session.carrier);
+  const cargoComponentIds = getCargoComponents(session.engineering.committed).map(
+    (component) => component.id
+  );
+  const foundryAvailable = session.carrier.facilities.some(
+    (facility) =>
+      facility.type === 'foundry' && facility.powered && facility.condition === 'operational'
+  );
+  const result = reduceFleetCommand({
+    plan: run.fleet,
+    state: session.fleet,
+    command,
+    eventId,
+    sectorIndex: session.currentSectorIndex,
+    salvage: session.salvage,
+    cargoComponentIds,
+    berthCapacity: carrierInfluence.supportCapacity,
+    foundryAvailable,
+    crewState: session.crewRoster
+  });
+  if (result.disposition !== 'applied') return result;
+  session.fleet = result.state;
+  session.salvage -= result.salvageCost;
+  if (result.consumedComponentId) {
+    session.engineering = consumeCargoComponent(
+      session.engineering,
+      result.consumedComponentId
+    );
+    session.carrier = {
+      ...session.carrier,
+      cargo: session.carrier.cargo.filter((cargo) => cargo.id !== result.consumedComponentId)
+    };
+  }
+  recordRunSessionTimelineEvent(session, {
+    id: `timeline:${eventId}`,
+    category: 'engineering',
+    kind: `fleet:${command.kind}`,
+    sectorIndex: session.currentSectorIndex,
+    value: result.salvageCost,
+    subjectId: command.craftId,
+    detailId: result.label
+  });
+  const front = createFactionFrontInfluence(
+    run.factionFronts,
+    session.factionFronts,
+    session.currentSectorIndex
+  );
+  recordFactionFrontEvent(session, run.factionFronts, {
+    id: `${eventId}:front`,
+    source: 'fleet',
+    sectorIndex: session.currentSectorIndex,
+    factionId: front.ownerFactionId,
+    amount: command.kind === 'recover' ? -1 : 1,
+    reason: result.label
+  });
+  recordCrewArcEvent(run, session, {
+    id: `${eventId}:crew-arc`,
+    source: command.kind === 'construct' || command.kind === 'refit' ? 'module' : 'command',
+    sectorIndex: session.currentSectorIndex,
+    candidateIds:
+      command.kind === 'assign' && command.candidateId ? [command.candidateId] : [],
+    positive: command.kind !== 'recover',
+    detail: result.label
+  });
+  return result;
+}
+
+export function recordFleetCombatOutcomes(
+  run: RunSkeleton,
+  session: RunSessionState,
+  outcomes: readonly FleetCombatOutcome[],
+  eventId: string
+): FleetState {
+  const previous = session.fleet;
+  session.fleet = reduceFleetCombatOutcomes({
+    plan: run.fleet,
+    state: session.fleet,
+    outcomes,
+    eventId,
+    sectorIndex: session.currentSectorIndex
+  });
+  if (session.fleet !== previous) {
+    const losses = outcomes.filter((outcome) => outcome.lost).length;
+    for (const outcome of outcomes.filter((entry) => entry.lost)) {
+      const assignedCrewId = previous.craft.find(
+        (craft) => craft.craftId === outcome.craftId
+      )?.assignedCrewId;
+      if (!assignedCrewId) continue;
+      recordCrewRosterEvent(
+        session,
+        run.crewRoster,
+        {
+          id: `${eventId}:crew-loss:${assignedCrewId}`,
+          type: 'combatOutcome',
+          sectorIndex: session.currentSectorIndex,
+          candidateId: assignedCrewId,
+          injured: true,
+          retreated: false,
+          enemiesDefeated: outcome.enemiesDefeated,
+          salvageRecovered: outcome.salvageRecovered
+        },
+        run.factionFronts
+      );
+      recordCrewArcEvent(run, session, {
+        id: `${eventId}:crew-arc-loss:${assignedCrewId}`,
+        source: 'injury',
+        sectorIndex: session.currentSectorIndex,
+        candidateIds: [assignedCrewId],
+        positive: false,
+        detail: `${outcome.craftId} lost with assigned pilot`
+      });
+    }
+    recordRunSessionTimelineEvent(session, {
+      id: `timeline:${eventId}`,
+      category: 'crew',
+      kind: 'fleet:combatOutcome',
+      sectorIndex: session.currentSectorIndex,
+      value: losses,
+      subjectId: outcomes[0]?.craftId ?? null,
+      detailId: `${outcomes.length} deployed/${losses} lost`
+    });
+    const front = createFactionFrontInfluence(
+      run.factionFronts,
+      session.factionFronts,
+      session.currentSectorIndex
+    );
+    recordFactionFrontEvent(session, run.factionFronts, {
+      id: `${eventId}:front`,
+      source: 'fleet',
+      sectorIndex: session.currentSectorIndex,
+      factionId: front.ownerFactionId,
+      amount: losses > 0 ? -losses : Math.min(2, outcomes.length),
+      reason: `${outcomes.length} support craft deployed, ${losses} lost`
+    });
+  }
+  return session.fleet;
 }
 
 export function stowCarrierCargo(
@@ -401,6 +577,20 @@ export function recordBoardingOperationOutcome(
   });
   if (settlement.disposition !== 'applied') return settlement;
   session.boarding = settlement.state;
+  const fleetInfluence = createFleetInfluence(run.fleet, session.fleet);
+  if (options.outcome !== 'failure' && fleetInfluence.boardingAssist > 0) {
+    const boardingFleetBonus = Math.min(2, fleetInfluence.boardingAssist);
+    session.salvage += boardingFleetBonus;
+    recordRunSessionTimelineEvent(session, {
+      id: `${options.eventId}:fleet-boarding`,
+      category: 'economy',
+      kind: 'fleet:boardingAssist',
+      sectorIndex: operation.sectorIndex,
+      value: boardingFleetBonus,
+      subjectId: operation.id,
+      detailId: `${fleetInfluence.boardingAssist} boarding support`
+    });
+  }
 
   for (const loot of settlement.stowedLoot) {
     stowCarrierCargo(run, session, {
@@ -1207,6 +1397,14 @@ export function advanceSector(run: RunSkeleton, session: RunSessionState): boole
     return false;
   }
 
+  const fleetInfluence = createFleetInfluence(run.fleet, session.fleet);
+  if (fleetInfluence.carrierProtection > 0) {
+    session.carrier = {
+      ...session.carrier,
+      heat: Math.max(0, session.carrier.heat - 1),
+      pursuit: Math.max(0, session.carrier.pursuit - 1)
+    };
+  }
   session.carrier = resolveCarrierTransit(
     run.carrierPlan,
     session.carrier,

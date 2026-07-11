@@ -160,6 +160,8 @@ Exit criteria:
 - Fleet loss and recovery matter inside the run without producing mandatory permanent power.
 - Combined player/crew/fleet/set-piece pressure stays bounded and Scenario-Lab reproducible.
 
+Status: implemented by work order 108. Six seed/save-stable support craft are built and refit from run-local engineering cargo within powered carrier hangar berths. Craft can be automated or crew-piloted, switch among five doctrines, deploy through the existing ally engine, take persistent damage, be lost with pilot injury, and require foundry recovery plus repair. Interceptor, screen, salvage, tender, boarding, and repair roles expose distinct combat and itinerary influence. Crew and fleet share a hard four-ally/20-projectile ceiling, existing bounded queries, objective accounting, collision, feedback, and command UI. Snapshot/storage v8, lazy Fleet Bay, summaries/timeline/debug state, endurance bounds, and a twelfth Scenario Lab fixture preserve and expose the system.
+
 ### P11.9 - Apex Hunts And Divergent Endings
 
 Work order 109 adds campaign-scale adversaries:
@@ -179,7 +181,7 @@ Exit criteria:
 Work order 110 closes the phase:
 
 - expand Scenario Lab for snapshots, multi-operation itineraries, frontier sectors, carrier states, boarding, faction fronts, crew arcs, fleetcraft, apex hunts, and combined endurance;
-- harden run-snapshot v7 retirement/recovery and permanent-save v5 migration, plus accessibility, performance, browser load, GitHub Pages paths, and release documentation;
+- harden run-snapshot v8 retirement/recovery and permanent-save v5 migration, plus accessibility, performance, browser load, GitHub Pages paths, and release documentation;
 - measure fresh/progressed, standard/extraction/completionist run lengths locally and document manual gaps.
 
 Exit criteria:

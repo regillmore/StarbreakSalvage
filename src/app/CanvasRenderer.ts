@@ -105,6 +105,7 @@ export interface EnemyRenderState {
 }
 
 export interface AllyRenderState {
+  readonly source?: 'crew' | 'fleet';
   readonly callsign: string;
   readonly role: string;
   readonly cue: {
@@ -1179,9 +1180,10 @@ export class CanvasRenderer {
     context.lineWidth = 3;
     context.font = `bold ${this.settings.performanceMode ? 7 : 8}px ui-monospace, monospace`;
     context.textBaseline = 'bottom';
+    const identity = ally.source === 'fleet' ? 'FLEET' : 'ALLY';
     const label = this.settings.performanceMode
-      ? `ALLY ${ally.callsign}`
-      : `ALLY ${ally.callsign} | ${ally.role}`;
+      ? `${identity} ${ally.callsign}`
+      : `${identity} ${ally.callsign} | ${ally.role}`;
     context.strokeText(label, 0, -ally.radius - 7);
     context.fillText(label, 0, -ally.radius - 7);
     context.restore();

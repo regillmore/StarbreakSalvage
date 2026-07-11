@@ -35,7 +35,8 @@ export class CommandDeckScene implements Scene {
     private readonly credits: number,
     private readonly salvage: number,
     private readonly onCommand: (option: CarrierCommandOption) => void,
-    private readonly onContinue: () => void
+    private readonly onContinue: () => void,
+    private readonly onOpenFleetBay: (() => void) | null = null
   ) {}
 
   public enter(): void {
@@ -115,6 +116,14 @@ export class CommandDeckScene implements Scene {
     continueButton.textContent = options.length > 0 ? 'Hold Course Without Changes' : 'Launch Gate Operation';
     continueButton.addEventListener('click', this.onContinue);
     this.buttons.push(continueButton);
+    const fleetButton = document.createElement('button');
+    fleetButton.className = 'secondary-button';
+    fleetButton.type = 'button';
+    fleetButton.dataset.testid = 'open-fleet-bay';
+    fleetButton.textContent = 'Open Fleet Bay';
+    fleetButton.hidden = this.onOpenFleetBay === null;
+    fleetButton.addEventListener('click', () => this.onOpenFleetBay?.());
+    if (this.onOpenFleetBay) this.buttons.push(fleetButton);
 
     shell.append(
       eyebrow,
@@ -123,6 +132,7 @@ export class CommandDeckScene implements Scene {
       summary,
       facilities,
       actions,
+      fleetButton,
       continueButton
     );
     this.uiRoot.replaceChildren(shell);

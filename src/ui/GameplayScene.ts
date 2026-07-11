@@ -32,6 +32,11 @@ import {
 } from '../game/CombatState';
 import { CREW_COMMANDS, type CrewCommand } from '../content/crew';
 import type { CrewCombatProfile } from '../game/CrewCommand';
+import {
+  createFleetDebugState,
+  type FleetCombatProfile,
+  type FleetState
+} from '../game/Fleetcraft';
 import { createRunTimelineDebugState, type RunTimelineState } from '../game/RunTimeline';
 import type { ScenarioLabGameplayPreset } from '../game/ScenarioLab';
 import type { BossId } from '../content/bosses';
@@ -277,7 +282,9 @@ export class GameplayScene implements Scene {
     private readonly campaignState: FactionCampaignState | null = null,
     private readonly crewProfile: CrewCombatProfile | null = null,
     private readonly runTimeline: RunTimelineState | null = null,
-    private readonly factionFrontState: FactionFrontState | null = null
+    private readonly factionFrontState: FactionFrontState | null = null,
+    private readonly fleetProfile: FleetCombatProfile | null = null,
+    private readonly fleetState: FleetState | null = null
   ) {
     this.positionReadout = document.createElement('p');
     this.positionReadout.className = 'sr-only';
@@ -1007,10 +1014,18 @@ export class GameplayScene implements Scene {
           (ally) => `${ally.callsign}:${ally.status}:H${ally.hull}/${ally.maxHull}:${ally.fitLabel}`
         )
       },
+      fleet:
+        this.fleetState && this.fleetProfile
+          ? createFleetDebugState(
+              this.run.fleet,
+              this.fleetState,
+              combatState.allies.filter((ally) => ally.source === 'fleet').length
+            )
+          : undefined,
       runTimeline: this.runTimeline ? createRunTimelineDebugState(this.runTimeline) : undefined,
       scenarioLab: this.scenarioLabPreset
         ? {
-            scenarioCount: 11,
+            scenarioCount: 12,
             activeScenario: this.scenarioLabPreset,
             systems: [
               'mission actors',
@@ -1267,7 +1282,8 @@ export class GameplayScene implements Scene {
       setPiecePlan,
       setPieceOwnerFactionId: this.campaignInfluence?.setPieceOwnerFactionId,
       looseCurrencyPlan: this.getLooseCurrencyPlan(),
-      crew: this.crewProfile
+      crew: this.crewProfile,
+      fleet: this.fleetProfile
     });
     return this.combatState;
   }
@@ -1608,10 +1624,12 @@ export class GameplayScene implements Scene {
     this.combatReadout.textContent = `Destroyed ${state.stats.enemiesDestroyed} | Rivals ${state.stats.rivalsDestroyed}D/${state.stats.rivalsEscaped}E | Shots ${state.stats.shotsFired} | Hooks ${state.stats.itemTriggers}`;
     const activeAllies = state.allies.filter((ally) => ally.status === 'active');
     const injuredAllies = state.allies.filter((ally) => ally.status === 'injured');
+    const activeCrew = activeAllies.filter((ally) => ally.source === 'crew').length;
+    const activeFleet = activeAllies.filter((ally) => ally.source === 'fleet').length;
     this.commandReadout.textContent =
       state.allies.length > 0
-        ? `Wing ${activeAllies.length} active/${injuredAllies.length} injured | ${state.crewCommand.active.toUpperCase()} | cooldown ${state.crewCommand.cooldownSeconds.toFixed(1)}s | ${state.stats.allyEnemiesDestroyed} defeats/${state.stats.allySalvageCollected} salvage`
-        : 'Wing offline | Distress recruitment required';
+        ? `Wing C${activeCrew}/F${activeFleet} active/${injuredAllies.length} disabled | ${state.crewCommand.active.toUpperCase()} | cooldown ${state.crewCommand.cooldownSeconds.toFixed(1)}s | ${state.stats.allyEnemiesDestroyed} defeats/${state.stats.allySalvageCollected} salvage`
+        : 'Wing offline | Recruit crew or construct support craft';
     this.bossReadout.textContent = state.boss
       ? `${formatSecondActFinaleBossName(
           this.getCurrentSector().finale,

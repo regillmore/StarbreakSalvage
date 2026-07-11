@@ -57,6 +57,7 @@ import {
   aggregateCombatRunResults,
   advanceSector,
   applyCarrierCommand,
+  applyFleetCommand,
   applyFrontierDecision,
   applyInterActChoice,
   applyRouteOutcome,
@@ -75,6 +76,7 @@ import {
   recordFactionCampaignEvent,
   recordCrewRosterEvent,
   recordCrewArcEvent,
+  recordFleetCombatOutcomes,
   chooseCrewArcOption,
   recordRunSessionTimelineEvent,
   recordExpeditionBranchDecision,
@@ -137,11 +139,16 @@ import {
   getRecruitableCrewCandidate
 } from '../game/CrewCommand';
 import { createCrewArcCombatInfluence } from '../game/CrewArc';
+import {
+  MAX_COMBINED_ALLIES,
+  createFleetCombatProfile,
+  createFleetInfluence
+} from '../game/Fleetcraft';
 import type { ScenarioLabId } from '../game/ScenarioLab';
 import {
   RunSnapshotCoordinator,
   createRunSnapshotSummary,
-  type RunSnapshotV7
+  type RunSnapshotV8
 } from '../game/RunSnapshot';
 import { getOperationalInfluence } from '../game/OperationalMap';
 import { createCarrierInfluence } from '../game/CarrierCommand';
@@ -174,7 +181,7 @@ export class GameApp {
   private lastRunResult: CombatRunResult | null = null;
   private lastSaveUpdate: SaveUpdateResult | null = null;
   private summarySaved = false;
-  private runSnapshot: RunSnapshotV7 | null = null;
+  private runSnapshot: RunSnapshotV8 | null = null;
   private runSnapshotNotice: string | null = null;
   private snapshotEligible = false;
   private frameStats: FrameStats = {
@@ -342,6 +349,10 @@ export class GameApp {
     }
     if (launch.definition.target === 'crewQuarters') {
       void this.showCrewQuarters(() => void this.showScenarioLab());
+      return;
+    }
+    if (launch.definition.target === 'fleetBay') {
+      void this.showFleetBay(() => void this.showScenarioLab());
       return;
     }
     if (launch.definition.target === 'foundry') {
@@ -527,14 +538,19 @@ export class GameApp {
     const resolvedLoadout =
       resolveEngineeringSnapshot(this.runSession.engineering.committed).loadout ??
       this.selectedContract.loadout;
+    const fleetInfluence = createFleetInfluence(this.currentRun.fleet, this.runSession.fleet);
+    const fleetAssignedCrewIds = fleetInfluence.assignedCrewIds;
     const crewProfile = createCrewCombatProfile(
       this.currentRun.crewRoster,
       this.runSession.crewRoster,
       resolvedLoadout,
       {
-        excludedCandidateIds: this.runSession.carrier.facilities
-          .map((facility) => facility.assignedCrewId)
-          .filter((candidateId): candidateId is string => candidateId !== null),
+        excludedCandidateIds: [
+          ...this.runSession.carrier.facilities
+            .map((facility) => facility.assignedCrewId)
+            .filter((candidateId): candidateId is string => candidateId !== null),
+          ...fleetAssignedCrewIds
+        ],
         arcInfluence: createCrewArcCombatInfluence(
           this.currentRun.crewArcs,
           this.runSession.crewArcs,
@@ -542,6 +558,16 @@ export class GameApp {
         )
       }
     );
+    const carrierInfluence = createCarrierInfluence(
+      this.currentRun.carrierPlan,
+      this.runSession.carrier
+    );
+    const fleetProfile = createFleetCombatProfile({
+      plan: this.currentRun.fleet,
+      state: this.runSession.fleet,
+      berthCapacity: carrierInfluence.supportCapacity,
+      allySlotsAvailable: MAX_COMBINED_ALLIES - crewProfile.members.length
+    });
 
     return new GameplayScene(
       this.uiRoot,
@@ -587,7 +613,9 @@ export class GameApp {
       this.runSession.factionCampaign,
       crewProfile,
       this.runSession.timeline,
-      this.runSession.factionFronts
+      this.runSession.factionFronts,
+      fleetProfile,
+      this.runSession.fleet
     );
   }
 
@@ -961,6 +989,14 @@ export class GameApp {
         });
       }
     }
+    if (result.fleet && result.fleet.craft.length > 0) {
+      recordFleetCombatOutcomes(
+        this.currentRun,
+        this.runSession,
+        result.fleet.craft,
+        `${stageId}:fleet-combat`
+      );
+    }
 
     const operationNode = completedStage.nodeId
       ? (this.currentRun.expedition.nodes.find((node) => node.id === completedStage.nodeId) ?? null)
@@ -1105,12 +1141,39 @@ export class GameApp {
     recordSectorCombatResult(this.runSession, result, createActEconomyProfile(sector));
     this.lastRunResult = this.runSession.lastCombatResult;
     if (operationNode) {
-      recordMissionOperationBoundary(this.runSession, {
+      const boundary = recordMissionOperationBoundary(this.runSession, {
         id: `${stageId}:settled`,
         node: operationNode,
         outcome: campaignOutcome,
         checkpoint: operationCheckpoint
       });
+      const fleetInfluence = createFleetInfluence(
+        this.currentRun.fleet,
+        this.runSession.fleet
+      );
+      const fleetSalvage =
+        boundary.disposition === 'applied' &&
+        operationNode.optional &&
+        campaignOutcome !== 'failure'
+          ? Math.min(
+              3,
+              fleetInfluence.optionalSalvageBonus +
+                Number(operationNode.operationalRole === 'pursuit') *
+                  fleetInfluence.pursuitControl
+            )
+          : 0;
+      if (fleetSalvage > 0) {
+        this.runSession.salvage += fleetSalvage;
+        recordRunSessionTimelineEvent(this.runSession, {
+          id: `${stageId}:fleet-itinerary`,
+          category: 'economy',
+          kind: 'fleet:itinerary',
+          sectorIndex,
+          value: fleetSalvage,
+          subjectId: operationNode.id,
+          detailId: `${fleetInfluence.optionalSalvageBonus} skiff/${fleetInfluence.pursuitControl} pursuit`
+        });
+      }
     }
     if (boardingOperation) {
       recordBoardingOperationOutcome(this.currentRun, this.runSession, boardingOperation, {
@@ -1281,6 +1344,7 @@ export class GameApp {
       this.currentRun.carrierPlan,
       this.runSession.carrier
     );
+    const fleetInfluence = createFleetInfluence(this.currentRun.fleet, this.runSession.fleet);
     const frontInfluence = createFactionFrontInfluence(
       this.currentRun.factionFronts,
       this.runSession.factionFronts,
@@ -1299,7 +1363,7 @@ export class GameApp {
         : null;
       return (
         carrierInfluence.optionalMissionAccess &&
-        (!boarding || carrierInfluence.boardingCapacity > 0) &&
+        (!boarding || carrierInfluence.boardingCapacity + fleetInfluence.boardingAssist > 0) &&
         (!target || isFactionFrontNodeAvailable(frontInfluence, target))
       );
     });
@@ -1465,12 +1529,41 @@ export class GameApp {
           );
           if (result.disposition === 'applied') void this.showCommandDeck(schedule);
         },
-        continueRelief
+        continueRelief,
+        () => void this.showFleetBay(() => void this.showCommandDeck(schedule))
       )
     );
     this.checkpointRun(
       'operationalMap',
       `${this.currentRun.carrierPlan.name} command deck checkpoint`
+    );
+  }
+
+  private async showFleetBay(onBack: () => void): Promise<void> {
+    const { FleetBayScene } = await import('../ui/FleetBayScene');
+    this.sceneManager.switchTo(
+      new FleetBayScene(
+        this.uiRoot,
+        this.currentRun.fleet,
+        this.runSession.fleet,
+        this.currentRun.carrierPlan,
+        this.runSession.carrier,
+        this.runSession.crewRoster,
+        this.runSession.engineering,
+        this.selectedContract,
+        this.runSession.currentSectorIndex,
+        this.runSession.salvage,
+        (option) => {
+          const result = applyFleetCommand(
+            this.currentRun,
+            this.runSession,
+            option.command,
+            `fleet-command:${this.runSession.currentSectorIndex}:${option.id}`
+          );
+          if (result.disposition === 'applied') void this.showFleetBay(onBack);
+        },
+        onBack
+      )
     );
   }
 
@@ -1857,7 +1950,8 @@ export class GameApp {
         },
         createMissionReadModel(schedule, this.runSession.mission),
         createMissionDebugState(schedule, this.runSession.mission),
-        () => void this.showCrewQuarters()
+        () => void this.showCrewQuarters(),
+        () => void this.showFleetBay(() => this.showSectorTransition())
       )
     );
   }
@@ -1988,7 +2082,8 @@ export class GameApp {
         this.runSession.carrier,
         this.runSession.boarding,
         this.runSession.factionFronts,
-        this.runSession.crewArcs
+        this.runSession.crewArcs,
+        this.runSession.fleet
       )
     );
   }
@@ -2299,6 +2394,13 @@ export class GameApp {
           `Crew fates ${debugState.crewArcs.fates.join(' / ') || 'none'}`
         ]
       : [];
+    const fleetDebug = debugState.fleet
+      ? [
+          `Fleet ready ${debugState.fleet.ready} damaged ${debugState.fleet.damaged} lost ${debugState.fleet.lost} deployed ${debugState.fleet.deployed} events ${debugState.fleet.historyCount}`,
+          `Fleet budget ${debugState.fleet.budget}`,
+          `Fleet craft ${debugState.fleet.craft.join(' / ') || 'none'}`
+        ]
+      : [];
     const scenarioLabDebug = debugState.scenarioLab
       ? [
           `Scenario Lab ${debugState.scenarioLab.activeScenario ?? 'catalog'} ${debugState.scenarioLab.scenarioCount} cases`,
@@ -2364,6 +2466,7 @@ export class GameApp {
       ...boardingDebug,
       ...factionFrontDebug,
       ...crewArcDebug,
+      ...fleetDebug,
       ...scenarioLabDebug,
       ...upgradeDebug,
       ...progressionDebug,

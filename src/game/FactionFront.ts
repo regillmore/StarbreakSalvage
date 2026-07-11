@@ -20,7 +20,8 @@ export type FactionFrontEventSource =
   | 'rival'
   | 'boarding'
   | 'crew'
-  | 'carrier';
+  | 'carrier'
+  | 'fleet';
 
 export interface FactionFrontSectorPlan {
   readonly id: string;

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added six deterministic support-craft roles: interceptor, screen drone, salvage skiff, shield tender, boarding pod, and repair tug, each with distinct combat and itinerary uses.
+- Added run-local carrier-berth construction from engineering cargo, overdrive/reinforced refits, crew or automation assignment, five launch doctrines, combat damage/loss, foundry recovery, repair, boarding and optional-operation support, carrier protection, faction-front movement, and crew-arc/pilot consequences.
+- Fleet and crew now share the existing ally actor, formation command, targeting, projectile, collision, objective, and feedback paths under explicit four-ally and 20-ally-projectile caps. Added accessible lazy Fleet Bay UI, snapshot/storage v8, summaries/timeline/debug state, endurance coverage, deterministic tests, and a twelfth Scenario Lab fixture.
+
 - Added ten deterministic multi-node crew arcs covering bonds, conflicts, fears, ambitions, loyalty, promotions, paired abilities, specialist posts, rescue, departure, mutiny, and command succession.
 - Mission, carrier, boarding, faction, rival, injury, module, command, and rescue outcomes now advance bounded run-local arc state. Explicit Crew Quarters choices change trust, relationships, ranks, paired tactics, availability, and fates; promoted allies consume extra command capacity, paired fire trades durability for cadence, and severe conflict can break a wing pairing.
 - Added accessible Crew Quarters roster/choice UI, crew-arc timeline and summary readouts, snapshot/storage v7 persistence with safe v1-v6 retirement, endurance bounds, deterministic tests, and an eleventh public Scenario Lab fixture.

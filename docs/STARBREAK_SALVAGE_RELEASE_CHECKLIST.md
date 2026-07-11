@@ -1,12 +1,12 @@
 # Starbreak Salvage Release Checklist
 
-Release candidate: Phase 11 evolving-crew voyage workspace
+Release candidate: Phase 11 fleetcraft voyage workspace
 
 Date: 2026-07-11
 
 ## Milestone Status
 
-Phases 1-10 and work orders 101-106 are deployed historical foundations. Work order 107 adds ten deterministic multi-node crew arcs, explicit relationship and fate choices, bounded rank/paired/conflict combat tradeoffs, an eleventh Scenario Lab fixture, and snapshot v7 persistence while retaining the live multi-operation, frontier, carrier, boarding, and faction-front contracts.
+Phases 1-10 and work orders 101-107 are deployed historical foundations. Work order 108 adds six deterministic support-craft roles, carrier/engineering construction and refit, crew/automation assignments, five doctrines, persistent damage/loss/recovery, shared combat budgets, a twelfth Scenario Lab fixture, and snapshot v8 persistence while retaining the live multi-operation, frontier, carrier, boarding, front, and crew-arc contracts.
 
 The deployed completionist measurement is approximately 12 minutes with every optional path taken. That doubles the roughly six-minute Phase 9 baseline and reaches the lower edge of Phase 10's 12-20 minute structural target through mission stages, decisions, foundry work, set pieces, factions/rivals, and crew—not global slowdown or durability inflation.
 
@@ -16,7 +16,7 @@ The deployed completionist measurement is approximately 12 minutes with every op
 | ------------------------------ | ------ | ----------------------------------------------------------------------------------- |
 | TypeScript                     | Pass   | `npm run check`                                                                     |
 | ESLint                         | Pass   | `npm run check`                                                                     |
-| Unit/deterministic/integration | Pass   | 87 files, 512 tests                                                                 |
+| Unit/deterministic/integration | Pass   | 88 files, 518 tests                                                                 |
 | Production build               | Pass   | Vite emits `dist/` under `/StarbreakSalvage/`                                       |
 | Playwright Chromium            | Pass   | 13 smoke paths, including Scenario Lab and keyboard suspend/reload/resume coverage  |
 | Production preview paths       | Pass   | `npm run test:preview` checks the Pages base plus emitted hashed JavaScript and CSS |
@@ -38,7 +38,7 @@ Local Windows note: Playwright requires escalation because Chromium lives under 
 | Crew/ally behavior         | Pass                  | Up to three allies use bounded enemy/projectile/pickup queries; commands, injury, recovery, disengagement, damage attribution, objective safety, trust, and departure have deterministic coverage.                                                         |
 | Save migration             | Pass                  | Version-5 permanent data migration, repair, import/export, and last-run normalization are tested. Run-local engineering/faction/crew/timeline state is deliberately not a suspend snapshot in Phase 10.                                                    |
 | Timeline and summaries     | Pass                  | Timeline keeps 96 display entries and 192 processed ids, uses explicit durations, remains local/save-safe, and appears in debug and summaries.                                                                                                             |
-| Scenario Lab               | Pass                  | Eleven declarative public-model fixtures reach every Phase 10 domain plus carrier, boarding, dynamic fronts, and crew arcs without private app-state mutation or a full run.                                                                                |
+| Scenario Lab               | Pass                  | Twelve declarative public-model fixtures reach every Phase 10 domain plus carrier, boarding, fronts, crew arcs, and fleetcraft without private app-state mutation or a full run.                                                                            |
 | Accessibility              | Pass with manual gaps | Automated smoke covers keyboard-only flow, 390x700, high contrast, reduced motion, performance mode, pointer controls, remapping precedence, and non-color readouts. Real devices and non-Chromium remain manual.                                          |
 | Performance                | Pass with warning     | Combined stress caps and debug counts are explicit. Functional Chromium smoke passes. The 657.78 kB minified main bundle still exceeds Vite's 500 kB warning threshold; sustained frame-time/allocation profiling and code splitting remain Phase 11 work. |
 | Browser/Pages load         | Pass locally          | Vite base path and Pages workflow are correct; the repeatable preview smoke verifies base and hashed assets. Public deployment confirmation remains a user/deployment step.                                                                                |
@@ -47,12 +47,12 @@ Local Windows note: Playwright requires escalation because Chromium lives under 
 
 | Area                  | Status            | Evidence and boundary                                                                                                                                                   |
 | --------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Snapshot separation   | Pass              | Permanent progression remains `starbreak.save.v5`; suspended runs use independently repaired `starbreak.run.v7`, and legacy v1-v6 records retire safely.                  |
+| Snapshot separation   | Pass              | Permanent progression remains `starbreak.save.v5`; suspended runs use independently repaired `starbreak.run.v8`, and legacy v1-v7 records retire safely.                  |
 | Deterministic restore | Pass              | Restore regenerates and validates seed/fingerprint/graph/contract plus mission, engineering, items/economy, faction/rival, crew, and timeline state before scene entry. |
 | Safe checkpoint UX    | Pass              | Briefing, operation-entry, and settled-map writes are automatic; main-menu resume/discard works by keyboard and pointer and explains the exact boundary.                 |
 | Corruption recovery   | Pass              | Malformed, unsupported, oversized, or identity-drifted snapshots remove only the suspended record. Unit coverage pins permanent-save isolation.                         |
-| Endurance boundary    | Pass              | Public harness repeats all eleven Scenario Lab setups plus the finale through deterministic snapshot round trips and reports bounded state, including 96 arc entries.   |
-| Loading boundary      | Pass with warning | Crew Quarters is a 3.67 kB lazy chunk. Initial JavaScript is 783.95 kB minified/212.03 kB gzip; the existing warning remains active.                                    |
+| Endurance boundary    | Pass              | Public harness repeats all twelve Scenario Lab setups plus the finale through deterministic snapshot round trips and reports bounded fleet and crew state.                |
+| Loading boundary      | Pass with warning | Fleet Bay is a 3.68 kB lazy chunk. Initial JavaScript is 806.07 kB minified/217.60 kB gzip; the existing warning remains active.                                        |
 | Executable topology   | Pass              | Graph v2 supplies 70 nodes, 20 decisions, two required and two optional operation roles per sector, with deterministic same-seed replay.                              |
 | Operational cleanup   | Pass              | A 64-record idempotent ledger settles checkpoints and payouts once and asserts zero retained actors, projectiles, or hooks at each boundary.                         |
 | Consequence carry     | Pass              | Detour support reduces current gate pressure; pursuit outcomes raise the next advance and survive snapshot/decision replay.                                         |

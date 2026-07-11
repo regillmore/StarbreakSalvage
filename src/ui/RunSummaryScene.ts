@@ -59,6 +59,7 @@ import {
 } from '../game/BoardingOperation';
 import { formatFactionFrontSummary, type FactionFrontState } from '../game/FactionFront';
 import { formatCrewArcSummary, type CrewArcState } from '../game/CrewArc';
+import { formatFleetSummary, type FleetState } from '../game/Fleetcraft';
 
 export class RunSummaryScene implements Scene {
   public readonly id = 'run-summary';
@@ -86,7 +87,8 @@ export class RunSummaryScene implements Scene {
     private readonly carrier: CarrierState | null = null,
     private readonly boarding: BoardingCampaignState | null = null,
     private readonly factionFronts: FactionFrontState | null = null,
-    private readonly crewArcs: CrewArcState | null = null
+    private readonly crewArcs: CrewArcState | null = null,
+    private readonly fleet: FleetState | null = null
   ) {}
 
   public enter(): void {
@@ -206,6 +208,12 @@ export class RunSummaryScene implements Scene {
         this.crewArcs
           ? formatCrewArcSummary(this.run.crewArcs, this.crewArcs, this.run.crewRoster)
           : 'No relationship arcs recorded.'
+      ],
+      [
+        'Support Fleet',
+        this.fleet
+          ? formatFleetSummary(this.run.fleet, this.fleet)
+          : 'No run-local support fleet recorded.'
       ],
       [
         'Run Timeline',

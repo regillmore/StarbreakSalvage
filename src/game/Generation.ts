@@ -49,6 +49,7 @@ import { createSetPiecePlan, type SetPiecePlan } from './SetPiece';
 import { createFactionCampaignPlan, type FactionCampaignPlan } from './FactionCampaign';
 import { createCrewRosterPlan, type CrewRosterPlan } from './CrewCommand';
 import { createCrewArcPlan, type CrewArcPlan } from './CrewArc';
+import { createFleetPlan, type FleetPlan } from './Fleetcraft';
 import {
   createNullFrontierCampaignPlan,
   type FrontierLaw,
@@ -138,6 +139,7 @@ export interface RunSkeleton {
   readonly factionCampaign: FactionCampaignPlan;
   readonly crewRoster: CrewRosterPlan;
   readonly crewArcs: CrewArcPlan;
+  readonly fleet: FleetPlan;
   readonly frontierCampaign: NullFrontierCampaignPlan;
   readonly carrierPlan: CarrierPlan;
   readonly boardingCampaign: BoardingCampaignPlan;
@@ -291,6 +293,7 @@ export function generateRunSkeleton(
     sectorCount: sectors.length,
     crewRoster
   });
+  const fleet = createFleetPlan({ seed, saveFingerprint });
 
   return {
     seed,
@@ -303,6 +306,7 @@ export function generateRunSkeleton(
     factionCampaign,
     crewRoster,
     crewArcs,
+    fleet,
     frontierCampaign: {
       ...frontierCampaign,
       standardTargetSeconds: expedition.capacity.baselineTargetSeconds

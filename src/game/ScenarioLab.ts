@@ -1,5 +1,6 @@
 import { createDebugCrewRosterState } from './CrewCommand';
 import { createDebugCrewArcState } from './CrewArc';
+import { createDebugFleetState } from './Fleetcraft';
 import type { UnlockId } from '../content/unlocks';
 import { createDebugFactionFrontState } from './FactionFront';
 import { createDebugFactionCampaignState } from './FactionCampaign';
@@ -27,10 +28,17 @@ export const SCENARIO_LAB_IDS = [
   'lab_boarding_incursion',
   'lab_faction_fronts',
   'lab_crew_arcs',
+  'lab_fleetcraft',
   'lab_timeline_audit'
 ] as const;
 export type ScenarioLabId = (typeof SCENARIO_LAB_IDS)[number];
-export type ScenarioLabTarget = 'transition' | 'gameplay' | 'foundry' | 'crewQuarters' | 'timeline';
+export type ScenarioLabTarget =
+  | 'transition'
+  | 'gameplay'
+  | 'foundry'
+  | 'crewQuarters'
+  | 'fleetBay'
+  | 'timeline';
 export type ScenarioLabGameplayPreset =
   'none' | 'setPiece' | 'rival' | 'crew' | 'combined' | 'boarding' | 'front';
 
@@ -45,6 +53,7 @@ export interface ScenarioLabDefinition {
   readonly factionFixture: boolean;
   readonly crewFixture: boolean;
   readonly engineeringFixture: boolean;
+  readonly fleetFixture: boolean;
   readonly gameplayPreset: ScenarioLabGameplayPreset;
   readonly pressureBudget: string;
   readonly accessibilityCheck: string;
@@ -68,6 +77,7 @@ export interface ScenarioLabSetupReadModel {
   readonly timelineEvents: number;
   readonly frontEvents: number;
   readonly arcEvents: number;
+  readonly fleetEvents: number;
   readonly summary: string;
 }
 
@@ -132,13 +142,18 @@ export const SCENARIO_LAB_DEFINITIONS: readonly ScenarioLabDefinition[] = [
   ),
   scenario(
     'lab_combined_pressure',
-    'Combined Phase 10 Pressure',
-    'Stress a set piece, evolved loadout, faction state, crew, formations, projectiles, objects, pickups, and hooks together.',
-    ['set-piece', 'engineering', 'faction', 'rival', 'crew', 'items', 'environment'],
+    'Combined Voyage Pressure',
+    'Stress a set piece, evolved loadout, faction state, crew, fleetcraft, formations, projectiles, objects, pickups, and hooks together.',
+    ['set-piece', 'engineering', 'faction', 'rival', 'crew', 'fleetcraft', 'items', 'environment'],
     6,
     'gameplay',
     'combined',
-    { factionFixture: true, crewFixture: true, engineeringFixture: true }
+    {
+      factionFixture: true,
+      crewFixture: true,
+      engineeringFixture: true,
+      fleetFixture: true
+    }
   ),
   scenario(
     'lab_boarding_incursion',
@@ -169,6 +184,16 @@ export const SCENARIO_LAB_DEFINITIONS: readonly ScenarioLabDefinition[] = [
     'crewQuarters',
     'none',
     { factionFixture: true, crewFixture: true }
+  ),
+  scenario(
+    'lab_fleetcraft',
+    'Fleetcraft Hangar',
+    'Inspect constructed, damaged, crewed, automated, and doctrine-bound support craft under shared ally budgets.',
+    ['fleetcraft', 'hangar', 'engineering', 'crew', 'doctrines', 'shared-budgets'],
+    7,
+    'fleetBay',
+    'none',
+    { crewFixture: true, engineeringFixture: true, fleetFixture: true }
   ),
   scenario(
     'lab_timeline_audit',
@@ -227,6 +252,23 @@ export function createScenarioLabLaunch(options: {
       seed: `${options.run.seed}:${definition.id}`,
       sectorIndex: session.currentSectorIndex
     });
+  }
+  if (definition.fleetFixture) {
+    session.fleet = createDebugFleetState(options.run.fleet);
+    session.carrier = {
+      ...session.carrier,
+      facilities: session.carrier.facilities.map((facility, index) =>
+        index === 0
+          ? {
+              ...facility,
+              type: 'hangar' as const,
+              level: 2,
+              condition: 'operational' as const,
+              powered: true
+            }
+          : facility
+      )
+    };
   }
   if (definition.id === 'lab_combined_pressure') {
     session.itemInstances = [...createItemStormLoadout()];
@@ -294,6 +336,7 @@ export function createScenarioLabSetupReadModel(
     timelineEvents: session.timeline.entries.length,
     frontEvents: session.factionFronts.history.length,
     arcEvents: session.crewArcs.history.length,
+    fleetEvents: session.fleet.history.length,
     summary: `${definition.title} | ${definition.systems.join('+')} | ${definition.pressureBudget}`
   };
 }
@@ -367,6 +410,7 @@ function scenario(
     Pick<
       ScenarioLabDefinition,
       'optionalMission' | 'factionFixture' | 'crewFixture' | 'engineeringFixture'
+      | 'fleetFixture'
     >
   > = {}
 ): ScenarioLabDefinition {
@@ -382,6 +426,7 @@ function scenario(
     factionFixture: flags.factionFixture ?? false,
     crewFixture: flags.crewFixture ?? false,
     engineeringFixture: flags.engineeringFixture ?? false,
+    fleetFixture: flags.fleetFixture ?? false,
     pressureBudget:
       target === 'gameplay' ? 'actors/projectiles/geometry bounded' : 'static DOM/read-model setup',
     accessibilityCheck: 'keyboard, pointer, narrow, high contrast, reduced motion, performance mode'

@@ -57,7 +57,7 @@ describe('RunSnapshot', () => {
       boarding: { planId: run.boardingCampaign.id },
       factionFronts: { planId: run.factionFronts.id },
       crewArcs: { planId: run.crewArcs.id },
-      fleet: null,
+      fleet: { planId: run.fleet.id },
       apex: null
     });
     expect(createRunSnapshotSummary(snapshot)).toMatchObject({
@@ -151,7 +151,7 @@ describe('RunSnapshot', () => {
     expect(storage.getItem(SAVE_STORAGE_KEY)).toBe('permanent-save-sentinel');
   });
 
-  it('retires every pre-crew-arc snapshot generation safely', () => {
+  it('retires every pre-fleetcraft snapshot generation safely', () => {
     for (const key of LEGACY_RUN_SNAPSHOT_STORAGE_KEYS) {
       const storage = new MemoryStorage();
       storage.setItem(SAVE_STORAGE_KEY, 'permanent-save-sentinel');

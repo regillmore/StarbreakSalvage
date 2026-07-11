@@ -155,6 +155,7 @@ import { validateSetPieceContent } from '../game/SetPiece';
 import { validateFactionCampaignContent } from '../game/FactionCampaign';
 import { validateCrewContent } from '../game/CrewCommand';
 import { validateCrewArcContent } from '../game/CrewArc';
+import { validateFleetContent } from '../game/Fleetcraft';
 import {
   ITEM_FAMILY_GATES,
   ITEM_UNLOCKS,
@@ -411,6 +412,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   errors.push(...validateFactionCampaignContent());
   errors.push(...validateCrewContent());
   errors.push(...validateCrewArcContent());
+  errors.push(...validateFleetContent());
 
   if (items.length < 30) {
     errors.push('Content must define at least 30 items');

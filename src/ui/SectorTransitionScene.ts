@@ -45,6 +45,7 @@ import {
 } from '../game/FactionCampaign';
 import { createCrewDebugState } from '../game/CrewCommand';
 import { createCrewArcDebugState, createCrewArcRosterReadModel } from '../game/CrewArc';
+import { createFleetDebugState, formatFleetSummary } from '../game/Fleetcraft';
 
 export class SectorTransitionScene implements Scene {
   public readonly id = 'sector-transition';
@@ -57,7 +58,8 @@ export class SectorTransitionScene implements Scene {
     private readonly onEnterSector: () => void,
     private readonly mission: MissionReadModel | null = null,
     private readonly missionDebug: MissionDebugState | null = null,
-    private readonly onOpenCrewQuarters: (() => void) | null = null
+    private readonly onOpenCrewQuarters: (() => void) | null = null,
+    private readonly onOpenFleetBay: (() => void) | null = null
   ) {}
 
   public enter(): void {
@@ -166,6 +168,10 @@ export class SectorTransitionScene implements Scene {
       this.session.crewArcs,
       this.run.crewRoster
     ).summary;
+    const fleetLine = document.createElement('p');
+    fleetLine.className = 'transition-copy';
+    fleetLine.dataset.testid = 'fleet-brief';
+    fleetLine.textContent = `Fleet: ${formatFleetSummary(this.run.fleet, this.session.fleet)}`;
 
     const schedule = createMissionSchedule(this.run.expedition, this.session.currentSectorIndex);
     const currentStage = getMissionStage(schedule, this.session.mission.currentStageId);
@@ -199,6 +205,13 @@ export class SectorTransitionScene implements Scene {
     crewButton.textContent = 'Crew Quarters';
     crewButton.hidden = this.onOpenCrewQuarters === null;
     crewButton.addEventListener('click', () => this.onOpenCrewQuarters?.());
+    const fleetButton = document.createElement('button');
+    fleetButton.className = 'secondary-button';
+    fleetButton.type = 'button';
+    fleetButton.dataset.testid = 'open-fleet-bay';
+    fleetButton.textContent = 'Fleet Bay';
+    fleetButton.hidden = this.onOpenFleetBay === null;
+    fleetButton.addEventListener('click', () => this.onOpenFleetBay?.());
 
     shell.append(
       eyebrow,
@@ -211,8 +224,10 @@ export class SectorTransitionScene implements Scene {
       campaignLine,
       crewLine,
       arcLine,
+      fleetLine,
       operationalLine,
       crewButton,
+      fleetButton,
       enterButton
     );
     this.uiRoot.replaceChildren(shell);
@@ -277,6 +292,7 @@ export class SectorTransitionScene implements Scene {
         this.session.crewArcs,
         this.run.crewRoster
       ),
+      fleet: createFleetDebugState(this.run.fleet, this.session.fleet),
       progression: {
         runCredits: this.session.credits,
         runSalvage: this.session.salvage

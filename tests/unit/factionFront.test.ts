@@ -250,7 +250,7 @@ describe('FactionFront', () => {
       label: 'Moved faction front'
     });
     const restored = restoreRunSnapshot(snapshot);
-    expect(snapshot.version).toBe(7);
+    expect(snapshot.version).toBe(8);
     expect(snapshot.extensions.factionFronts.planId).toBe(run.factionFronts.id);
     expect(restored.session.factionFronts).toEqual(session.factionFronts);
   });
