@@ -114,6 +114,7 @@ export interface RunSaveRecord {
   readonly salvageRecovered: number;
   readonly itemTriggers: number;
   readonly itemIds?: readonly ItemId[];
+  readonly bonusUnlockIds?: readonly UnlockId[];
 }
 
 export interface SaveUpdateResult {
@@ -357,6 +358,13 @@ export function applyRunRecordToSave(current: SaveData, record: RunSaveRecord): 
       unlockedIds.add(unlockId);
       newUnlockIds.push(unlockId);
     }
+  }
+
+  for (const unlockId of new Set(record.bonusUnlockIds ?? [])) {
+    getUnlockById(unlockId);
+    if (unlockedIds.has(unlockId)) continue;
+    unlockedIds.add(unlockId);
+    newUnlockIds.push(unlockId);
   }
 
   return {

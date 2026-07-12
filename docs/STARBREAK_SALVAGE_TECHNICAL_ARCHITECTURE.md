@@ -735,6 +735,13 @@ seed + permanent save fingerprint
 - Fleet influence is a plain read model consumed by boarding access/rewards, optional-operation salvage, pursuit control, carrier transit protection, recovery costs, faction fronts, summaries, debug, and future apex consumers. Damaged or lost craft provide no influence until repaired.
 - `FleetBayScene` is lazy, presentation-only, and reachable from briefings and command-deck staging. Snapshot schema/storage v8 validates fleet identity/state and retires v1-v7; the twelfth Scenario Lab fixture and endurance harness consume public setup/debug models.
 
+### Apex campaign boundary
+
+- `content/apexThreats.ts` owns three original threat identities, pursuit structures, supported dispositions, subsystem vocabulary, and variety-unlock rewards; `content/bosses.ts` owns their bounded three-phase combat definitions.
+- `game/ApexHunt.ts` owns immutable four-contact plans, bounded idempotent campaign state, encounter/sabotage/escape/resolution events, finale projections, validation, summaries, and debug fixtures. It is the only module that converts voyage history into boss hull, escort, hazard, escape-risk, and ending-option values.
+- `GameplayScene` receives a precomputed encounter/profile and reuses the central wave objective, boss actor, arena, projectile/effect, collision, feedback, and reward paths. It does not mutate apex campaign state; `GameApp` settles public reducer events at operation boundaries and pauses a neutralized finale for an explicit lazy `ApexDossierScene` disposition.
+- Snapshot schema/storage v9 validates apex plan/state and retires v1-v8. Permanent save v5 receives only validated music, practice, or challenge unlock ids after a run summary; those flags are excluded from run-generation fingerprints because they do not alter generated voyage content.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

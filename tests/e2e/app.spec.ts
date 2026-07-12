@@ -766,14 +766,14 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('scenario-lab')).toBeVisible();
   await expect(page.getByTestId('scenario-lab-intro')).toContainText('deterministic session');
-  await expect(page.locator('[data-testid^="scenario-lab-lab_"]')).toHaveCount(12);
-  await expect(page.locator('.debug-overlay')).toContainText('Scenario Lab catalog 12 cases');
+  await expect(page.locator('[data-testid^="scenario-lab-lab_"]')).toHaveCount(13);
+  await expect(page.locator('.debug-overlay')).toContainText('Scenario Lab catalog 13 cases');
 
   for (let index = 0; index < 6; index += 1) await page.keyboard.press('Tab');
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('cockpit-hud')).toBeVisible();
   await expect(page.locator('.debug-overlay')).toContainText('Scenario lab:combined');
-  await expect(page.locator('.debug-overlay')).toContainText('Scenario Lab combined 12 cases');
+  await expect(page.locator('.debug-overlay')).toContainText('Scenario Lab combined 13 cases');
   await expect(page.locator('.debug-overlay')).toContainText('Set-piece');
   await expect(page.locator('.debug-overlay')).toContainText('Allies');
   await expect(page.locator('.debug-overlay')).toContainText('Combined proc');
@@ -818,6 +818,15 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('scenario-lab')).toBeVisible();
   for (let index = 0; index < 11; index += 1) await page.keyboard.press('Tab');
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('apex-dossier')).toBeVisible();
+  await expect(page.getByTestId('apex-threats')).toContainText(/wounded|awaitingResolution/);
+  await expect(page.getByTestId('apex-budget')).toContainText('shared boss/projectile/effect caps');
+  await expect(page.locator('.debug-overlay')).toContainText('Apex budget');
+
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('scenario-lab')).toBeVisible();
+  for (let index = 0; index < 12; index += 1) await page.keyboard.press('Tab');
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('scenario-timeline')).toBeVisible();
   await expect(page.getByTestId('scenario-timeline-list')).toContainText('decision:fixture');

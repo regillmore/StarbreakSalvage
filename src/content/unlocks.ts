@@ -11,7 +11,10 @@ export type UnlockId =
   | 'unlock_boss_auditor_drill'
   | 'unlock_faction_bloom_hive'
   | 'unlock_music_outer_debris'
-  | 'unlock_music_core_descent';
+  | 'unlock_music_core_descent'
+  | 'unlock_music_apex_procession'
+  | 'unlock_boss_apex_practice'
+  | 'unlock_challenge_apex_migration';
 
 export interface UnlockDefinition {
   readonly id: UnlockId;
@@ -110,6 +113,30 @@ export const UNLOCKS: readonly UnlockDefinition[] = [
     summary: 'a future procedural music layer for final-sector pressure',
     effect: 'Marks the Core Descent finale music layer as available.',
     grants: ['Music Flag: Core Descent Mix']
+  },
+  {
+    id: 'unlock_music_apex_procession',
+    kind: 'music',
+    name: 'Procession Signal Layer',
+    summary: 'a future procedural signal layer recovered from the Grave Choir',
+    effect: 'Adds the Procession signal layer to future voyage music variation.',
+    grants: ['Music Flag: Procession Signal Layer']
+  },
+  {
+    id: 'unlock_boss_apex_practice',
+    kind: 'bossPractice',
+    name: 'Apex Containment Drills',
+    summary: 'practice files for multi-stage apex confrontations',
+    effect: 'Adds apex confrontation variants to future practice selections.',
+    grants: ['Boss Practice: Apex Containment Drills']
+  },
+  {
+    id: 'unlock_challenge_apex_migration',
+    kind: 'challenge',
+    name: 'Migration Alarm',
+    summary: 'a future challenge seed with open apex escape routes',
+    effect: 'Marks challenge seed MIGRATION-ALARM as available.',
+    grants: ['Challenge Seed: Migration Alarm']
   }
 ];
 

@@ -26,6 +26,7 @@ export interface ExpeditionEnduranceBoundaryReport {
   readonly crewHistory: number;
   readonly crewArcHistory: number;
   readonly fleetHistory: number;
+  readonly apexHistory: number;
   readonly carrierHistory: number;
   readonly carrierCargo: number;
   readonly timelineEntries: number;
@@ -45,6 +46,7 @@ export interface ExpeditionEnduranceReport {
   readonly maxCrewHistory: number;
   readonly maxCrewArcHistory: number;
   readonly maxFleetHistory: number;
+  readonly maxApexHistory: number;
   readonly maxCarrierHistory: number;
   readonly maxCarrierCargo: number;
   readonly maxEngineeringHistory: number;
@@ -106,6 +108,7 @@ export function runExpeditionEnduranceHarness(options: {
     maxCrewHistory: Math.max(...boundaries.map((boundary) => boundary.crewHistory)),
     maxCrewArcHistory: Math.max(...boundaries.map((boundary) => boundary.crewArcHistory)),
     maxFleetHistory: Math.max(...boundaries.map((boundary) => boundary.fleetHistory)),
+    maxApexHistory: Math.max(...boundaries.map((boundary) => boundary.apexHistory)),
     maxCarrierHistory: Math.max(...boundaries.map((boundary) => boundary.carrierHistory)),
     maxCarrierCargo: Math.max(...boundaries.map((boundary) => boundary.carrierCargo)),
     maxEngineeringHistory: Math.max(...boundaries.map((boundary) => boundary.engineeringHistory)),
@@ -148,6 +151,7 @@ function roundTripBoundary(options: {
     crewHistory: restored.session.crewRoster.history.length,
     crewArcHistory: restored.session.crewArcs.history.length,
     fleetHistory: restored.session.fleet.history.length,
+    apexHistory: restored.session.apexHunts.history.length,
     carrierHistory: restored.session.carrier.history.length,
     carrierCargo: restored.session.carrier.cargo.length,
     timelineEntries: restored.session.timeline.entries.length,

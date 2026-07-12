@@ -60,6 +60,7 @@ import {
 import { formatFactionFrontSummary, type FactionFrontState } from '../game/FactionFront';
 import { formatCrewArcSummary, type CrewArcState } from '../game/CrewArc';
 import { formatFleetSummary, type FleetState } from '../game/Fleetcraft';
+import { formatApexSummary, type ApexHuntState } from '../game/ApexHunt';
 
 export class RunSummaryScene implements Scene {
   public readonly id = 'run-summary';
@@ -88,7 +89,8 @@ export class RunSummaryScene implements Scene {
     private readonly boarding: BoardingCampaignState | null = null,
     private readonly factionFronts: FactionFrontState | null = null,
     private readonly crewArcs: CrewArcState | null = null,
-    private readonly fleet: FleetState | null = null
+    private readonly fleet: FleetState | null = null,
+    private readonly apexHunts: ApexHuntState | null = null
   ) {}
 
   public enter(): void {
@@ -150,6 +152,12 @@ export class RunSummaryScene implements Scene {
         this.boarding
           ? formatBoardingCampaignSummary(this.run.boardingCampaign, this.boarding)
           : 'Boarding state not recorded.'
+      ],
+      [
+        'Apex Hunts',
+        this.apexHunts
+          ? formatApexSummary(this.run.apexHunts, this.apexHunts)
+          : 'Apex state not recorded.'
       ],
       [
         'Faction Fronts',

@@ -20,6 +20,7 @@ describe('ExpeditionEndurance', () => {
     expect(first.boundaries.some((boundary) => boundary.crewHistory === 3)).toBe(true);
     expect(first.boundaries.some((boundary) => boundary.crewArcHistory > 2)).toBe(true);
     expect(first.boundaries.some((boundary) => boundary.fleetHistory > 0)).toBe(true);
+    expect(first.boundaries.some((boundary) => boundary.apexHistory > 3)).toBe(true);
     expect(first.boundaries.some((boundary) => boundary.factionHistory > 3)).toBe(true);
     expect(first.boundaries.some((boundary) => boundary.factionFrontHistory > 3)).toBe(true);
     expect(first.boundaries.some((boundary) => boundary.itemCount > 20)).toBe(true);
@@ -34,6 +35,7 @@ describe('ExpeditionEndurance', () => {
     expect(report.maxCrewHistory).toBeLessThanOrEqual(64);
     expect(report.maxCrewArcHistory).toBeLessThanOrEqual(96);
     expect(report.maxFleetHistory).toBeLessThanOrEqual(64);
+    expect(report.maxApexHistory).toBeLessThanOrEqual(64);
     expect(report.maxCarrierHistory).toBeLessThanOrEqual(64);
     expect(report.maxCarrierCargo).toBeLessThanOrEqual(16);
     expect(report.maxEngineeringHistory).toBeLessThanOrEqual(3);

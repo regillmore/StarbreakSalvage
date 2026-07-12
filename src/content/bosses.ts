@@ -8,7 +8,10 @@ export type BossId =
   | 'boss_core_wreck'
   | 'boss_prism_regent'
   | 'boss_mass_cantor'
-  | 'boss_horizon_leviathan';
+  | 'boss_horizon_leviathan'
+  | 'boss_grave_choir'
+  | 'boss_crownless_engine'
+  | 'boss_pale_convoy';
 
 export type BossPatternId = 'auditFan' | 'missileCurtain' | 'sporeSpiral';
 
@@ -253,6 +256,54 @@ export const BOSSES: readonly BossDefinition[] = [
       { label: 'Anchor Wake', startsAtHullRatio: 1, attackCadenceMultiplier: 1, telegraphMultiplier: 1, projectileBudgetMultiplier: 1, patternSequence: ['sporeSpiral'], warningLabel: 'ANCHOR WAKE' },
       { label: 'Dark Meridian', startsAtHullRatio: 0.66, attackCadenceMultiplier: 0.88, telegraphMultiplier: 1.08, projectileBudgetMultiplier: 1.14, patternSequence: ['sporeSpiral', 'missileCurtain'], warningLabel: 'DARK MERIDIAN' },
       { label: 'Last Light', startsAtHullRatio: 0.3, attackCadenceMultiplier: 0.78, telegraphMultiplier: 1.12, projectileBudgetMultiplier: 1.18, patternSequence: ['auditFan', 'sporeSpiral', 'missileCurtain'], warningLabel: 'LAST LIGHT' }
+    ]
+  },
+  {
+    id: 'boss_grave_choir',
+    name: 'Grave Choir Procession',
+    factionId: 'faction_bloom_hive',
+    patternId: 'sporeSpiral',
+    maxHull: 32,
+    radius: 60,
+    telegraphSeconds: 0.76,
+    attackCadenceSeconds: 1.46,
+    warningLabel: 'DEAD SIGNAL CHORUS',
+    phases: [
+      { label: 'Procession Vanes', startsAtHullRatio: 1, attackCadenceMultiplier: 1, telegraphMultiplier: 1, projectileBudgetMultiplier: 1, patternSequence: ['sporeSpiral'], warningLabel: 'PROCESSION WAKE' },
+      { label: 'Reliquary Chorus', startsAtHullRatio: 0.67, attackCadenceMultiplier: 0.88, telegraphMultiplier: 1.08, projectileBudgetMultiplier: 1.12, patternSequence: ['sporeSpiral', 'auditFan'], warningLabel: 'RELIQUARY CHORUS' },
+      { label: 'Mnemonic Sepulcher', startsAtHullRatio: 0.3, attackCadenceMultiplier: 0.78, telegraphMultiplier: 1.14, projectileBudgetMultiplier: 1.18, patternSequence: ['missileCurtain', 'sporeSpiral', 'auditFan'], warningLabel: 'MEMORY BURIAL' }
+    ]
+  },
+  {
+    id: 'boss_crownless_engine',
+    name: 'Crownless Engine',
+    factionId: 'faction_scrap_court',
+    patternId: 'missileCurtain',
+    maxHull: 36,
+    radius: 64,
+    telegraphSeconds: 0.7,
+    attackCadenceSeconds: 1.5,
+    warningLabel: 'THRONE FOUNDRY',
+    phases: [
+      { label: 'Pilgrim Drives', startsAtHullRatio: 1, attackCadenceMultiplier: 1, telegraphMultiplier: 1, projectileBudgetMultiplier: 1, patternSequence: ['missileCurtain'], warningLabel: 'PILGRIM SALVO' },
+      { label: 'Claimant Mantle', startsAtHullRatio: 0.7, attackCadenceMultiplier: 0.87, telegraphMultiplier: 1.06, projectileBudgetMultiplier: 1.14, patternSequence: ['missileCurtain', 'auditFan'], warningLabel: 'CLAIMANT MANTLE' },
+      { label: 'Empty Throne Reactor', startsAtHullRatio: 0.34, attackCadenceMultiplier: 0.76, telegraphMultiplier: 1.12, projectileBudgetMultiplier: 1.2, patternSequence: ['auditFan', 'missileCurtain', 'sporeSpiral'], warningLabel: 'EMPTY THRONE' }
+    ]
+  },
+  {
+    id: 'boss_pale_convoy',
+    name: 'Pale Convoy Oracle',
+    factionId: 'faction_corporate_ledger',
+    patternId: 'auditFan',
+    maxHull: 34,
+    radius: 62,
+    telegraphSeconds: 0.68,
+    attackCadenceSeconds: 1.38,
+    warningLabel: 'EVACUATION DECREE',
+    phases: [
+      { label: 'Exodus Rails', startsAtHullRatio: 1, attackCadenceMultiplier: 1, telegraphMultiplier: 1, projectileBudgetMultiplier: 1, patternSequence: ['auditFan'], warningLabel: 'EXODUS LANE' },
+      { label: 'Passenger Coffer', startsAtHullRatio: 0.64, attackCadenceMultiplier: 0.86, telegraphMultiplier: 1.08, projectileBudgetMultiplier: 1.12, patternSequence: ['auditFan', 'missileCurtain'], warningLabel: 'PASSENGER LOCK' },
+      { label: 'Destination Oracle', startsAtHullRatio: 0.28, attackCadenceMultiplier: 0.77, telegraphMultiplier: 1.12, projectileBudgetMultiplier: 1.18, patternSequence: ['sporeSpiral', 'auditFan', 'missileCurtain'], warningLabel: 'FALSE DESTINATION' }
     ]
   }
 ];

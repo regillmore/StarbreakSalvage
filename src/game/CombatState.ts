@@ -589,7 +589,7 @@ export function createCombatState(
     bossSpawnAtSeconds: options.bossSpawnAtSeconds ?? null,
     enemyHullBonus: Math.max(0, Math.floor(options.enemyHullBonus ?? 0)),
     enemyFireDelayMultiplier: clamp(options.enemyFireDelayMultiplier ?? 1, 0.5, 1.5),
-    bossHullBonus: Math.max(0, Math.floor(options.bossHullBonus ?? 0)),
+    bossHullBonus: Math.floor(options.bossHullBonus ?? 0),
     sectorLength: sanitizeSectorLength(options.sectorLength),
     timeSeconds: 0,
     scrollDistance: 0,
@@ -929,7 +929,7 @@ export function spawnBoss(
     state.nextSpawnIndex = state.spawnSchedule.length;
   }
 
-  const maxHull = bossDefinition.maxHull + state.bossHullBonus;
+  const maxHull = Math.max(1, bossDefinition.maxHull + state.bossHullBonus);
   const initialPhase = getBossPhaseForHull(bossDefinition, maxHull, maxHull).phase;
   const boss: BossState = {
     id: getNextEntityId(state),

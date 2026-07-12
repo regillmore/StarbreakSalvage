@@ -46,6 +46,10 @@ import {
 import { createCrewDebugState } from '../game/CrewCommand';
 import { createCrewArcDebugState, createCrewArcRosterReadModel } from '../game/CrewArc';
 import { createFleetDebugState, formatFleetSummary } from '../game/Fleetcraft';
+import {
+  createApexCampaignReadModel,
+  createApexDebugState
+} from '../game/ApexHunt';
 
 export class SectorTransitionScene implements Scene {
   public readonly id = 'sector-transition';
@@ -59,7 +63,8 @@ export class SectorTransitionScene implements Scene {
     private readonly mission: MissionReadModel | null = null,
     private readonly missionDebug: MissionDebugState | null = null,
     private readonly onOpenCrewQuarters: (() => void) | null = null,
-    private readonly onOpenFleetBay: (() => void) | null = null
+    private readonly onOpenFleetBay: (() => void) | null = null,
+    private readonly onOpenApexDossier: (() => void) | null = null
   ) {}
 
   public enter(): void {
@@ -172,6 +177,14 @@ export class SectorTransitionScene implements Scene {
     fleetLine.className = 'transition-copy';
     fleetLine.dataset.testid = 'fleet-brief';
     fleetLine.textContent = `Fleet: ${formatFleetSummary(this.run.fleet, this.session.fleet)}`;
+    const apexLine = document.createElement('p');
+    apexLine.className = 'transition-copy';
+    apexLine.dataset.testid = 'apex-brief';
+    apexLine.textContent = `Apex: ${createApexCampaignReadModel(
+      this.run.apexHunts,
+      this.session.apexHunts,
+      this.session.currentSectorIndex
+    ).summary}`;
 
     const schedule = createMissionSchedule(this.run.expedition, this.session.currentSectorIndex);
     const currentStage = getMissionStage(schedule, this.session.mission.currentStageId);
@@ -212,6 +225,13 @@ export class SectorTransitionScene implements Scene {
     fleetButton.textContent = 'Fleet Bay';
     fleetButton.hidden = this.onOpenFleetBay === null;
     fleetButton.addEventListener('click', () => this.onOpenFleetBay?.());
+    const apexButton = document.createElement('button');
+    apexButton.className = 'secondary-button';
+    apexButton.type = 'button';
+    apexButton.dataset.testid = 'open-apex-dossier';
+    apexButton.textContent = 'Apex Dossier';
+    apexButton.hidden = this.onOpenApexDossier === null;
+    apexButton.addEventListener('click', () => this.onOpenApexDossier?.());
 
     shell.append(
       eyebrow,
@@ -225,9 +245,11 @@ export class SectorTransitionScene implements Scene {
       crewLine,
       arcLine,
       fleetLine,
+      apexLine,
       operationalLine,
       crewButton,
       fleetButton,
+      apexButton,
       enterButton
     );
     this.uiRoot.replaceChildren(shell);
@@ -293,6 +315,7 @@ export class SectorTransitionScene implements Scene {
         this.run.crewRoster
       ),
       fleet: createFleetDebugState(this.run.fleet, this.session.fleet),
+      apex: createApexDebugState(this.run.apexHunts, this.session.apexHunts),
       progression: {
         runCredits: this.session.credits,
         runSalvage: this.session.salvage

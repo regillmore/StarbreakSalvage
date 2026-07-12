@@ -50,6 +50,7 @@ import { createFactionCampaignPlan, type FactionCampaignPlan } from './FactionCa
 import { createCrewRosterPlan, type CrewRosterPlan } from './CrewCommand';
 import { createCrewArcPlan, type CrewArcPlan } from './CrewArc';
 import { createFleetPlan, type FleetPlan } from './Fleetcraft';
+import { createApexHuntPlan, type ApexHuntPlan } from './ApexHunt';
 import {
   createNullFrontierCampaignPlan,
   type FrontierLaw,
@@ -140,6 +141,7 @@ export interface RunSkeleton {
   readonly crewRoster: CrewRosterPlan;
   readonly crewArcs: CrewArcPlan;
   readonly fleet: FleetPlan;
+  readonly apexHunts: ApexHuntPlan;
   readonly frontierCampaign: NullFrontierCampaignPlan;
   readonly carrierPlan: CarrierPlan;
   readonly boardingCampaign: BoardingCampaignPlan;
@@ -294,6 +296,11 @@ export function generateRunSkeleton(
     crewRoster
   });
   const fleet = createFleetPlan({ seed, saveFingerprint });
+  const apexHunts = createApexHuntPlan({
+    seed,
+    saveFingerprint,
+    sectorCount: sectors.length
+  });
 
   return {
     seed,
@@ -307,6 +314,7 @@ export function generateRunSkeleton(
     crewRoster,
     crewArcs,
     fleet,
+    apexHunts,
     frontierCampaign: {
       ...frontierCampaign,
       standardTargetSeconds: expedition.capacity.baselineTargetSeconds
@@ -323,7 +331,15 @@ export function createRunGenerationSaveFingerprint(
   unlockedIds: readonly UnlockId[],
   upgradeEffects: Pick<RunUpgradeEffects, 'activeUpgradeIds'>
 ): string {
-  const unlocks = [...unlockedIds].sort().join(',') || 'fresh';
+  const nonGenerationUnlocks = new Set<UnlockId>([
+    'unlock_music_apex_procession',
+    'unlock_boss_apex_practice',
+    'unlock_challenge_apex_migration'
+  ]);
+  const unlocks = unlockedIds
+    .filter((unlockId) => !nonGenerationUnlocks.has(unlockId))
+    .sort()
+    .join(',') || 'fresh';
   const upgrades = [...upgradeEffects.activeUpgradeIds].sort().join(',') || 'none';
   return `unlocks=${unlocks}|upgrades=${upgrades}`;
 }

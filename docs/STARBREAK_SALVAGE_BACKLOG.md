@@ -1926,7 +1926,7 @@ Acceptance:
 
 Status:
 
-- Planned for work order 109.
+- Implemented in work order 109. Three deterministic four-contact campaigns use trace-chain, siege-break, and migration-net structures. Persistent integrity, subsystem wounds, traces, lieutenants, migrations, escape routes, boarding sabotage, and missed-finale escapes alter bounded boss profiles and remain visible in the dossier/HUD/debug state. Faction fronts, resolved rivals, crew bonds/officers, carrier facilities, support craft, and frontier choices gate destruction, capture, containment, bargain, and evacuation dispositions. Three original apex bosses reuse centralized combat budgets and objectives; snapshot v9, summaries/timeline, three variety unlocks, endurance bounds, and a thirteenth accessible Scenario Lab fixture are live.
 
 ### BK2 - Voyage release candidate
 

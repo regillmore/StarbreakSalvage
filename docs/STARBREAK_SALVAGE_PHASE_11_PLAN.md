@@ -176,6 +176,8 @@ Exit criteria:
 - Prior damage and decisions visibly carry into later encounters without breaking objective accounting.
 - Endings resolve deterministic campaign state and widen future variety rather than only granting raw power.
 
+Status: implemented by work order 109. Grave Choir Procession, Crownless Engine, and Pale Convoy Oracle each occupy a distinct four-contact pursuit. Explicit outcomes persist integrity, three damaged subsystems, traces, lieutenants, sabotage, migrations, escape routes, finale disposition, and missed-hunt escape without replaying rewards. Finale profiles fold fronts, rivals, crew arcs, carrier, fleetcraft, and frontier state into capped hull/escort/hazard pressure and five conditional ending verbs. Snapshot v9, lazy Apex Dossier, summaries/timeline/debug/endurance state, three variety unlocks, and the thirteenth Scenario Lab fixture preserve and expose the campaigns.
+
 ### P11.10 - Voyage Scenario Lab And Release Candidate
 
 Work order 110 closes the phase:

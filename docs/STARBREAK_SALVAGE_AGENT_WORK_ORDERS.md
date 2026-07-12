@@ -1887,7 +1887,11 @@ Acceptance criteria:
 - Multiple endings resolve explicit campaign state and expand future variety rather than only stats.
 - Apex combined pressure stays within documented and debug-visible budgets.
 
-Status: planned for Phase 11.
+Status: implemented. Three seed/save-stable apex campaigns use distinct trace-chain, siege-break, and migration-net itineraries with four contacts apiece. Trace, ambush, lieutenant, boarding-sabotage, migration, escape-route, subsystem, integrity, neutralization, resolution, and missed-finale escape state lives in a bounded idempotent reducer. Later profiles consume faction-front posture, resolved rivals, crew bonds/officers, carrier support/boarding, fleet readiness/boarding, and the frontier decision to alter hull, escorts, hazards, escape risk, and available dispositions. Grave Choir Procession, Crownless Engine, and Pale Convoy Oracle reuse the centralized boss objective, phase, projectile, effect, collision, reward, and arena paths; prior damage can reduce boss hull but never below one.
+
+Destruction, capture, containment, bargain, and evacuation appear across threat-specific explicit choices. Resolutions award music, practice, or challenge variety flags through permanent save v5 rather than raw stats. Snapshot/storage v9 validates apex plan/state and safely retires v1-v8; summaries, timeline, accessible lazy Apex Dossier, briefing/HUD/debug readouts, endurance bounds, and the thirteenth Scenario Lab fixture expose the whole campaign.
+
+Verification: `npm run verify:release` passes with 89 Vitest files and 528 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the GitHub Pages preview asset smoke. Chromium reaches the thirteenth Scenario Lab Apex Dossier fixture under 390x700 high-contrast, reduced-motion, performance, and keyboard-only settings, verifies persistent threat state and shared budgets, and returns safely to the catalog. The production build emits 827.37 kB minified/223.30 kB gzip initial JavaScript, unchanged 26.76 kB CSS, a 2.57/1.07 kB lazy Apex Dossier, and a 7.81/3.03 kB Scenario Lab setup chunk. The 21.30 kB minified core increase is measured; the existing warning remains open for the Phase 11 release audit rather than being hidden.
 
 ## Work order 110 - Voyage Scenario Lab and Phase 11 release hardening
 

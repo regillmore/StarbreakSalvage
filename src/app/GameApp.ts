@@ -77,6 +77,7 @@ import {
   recordCrewRosterEvent,
   recordCrewArcEvent,
   recordFleetCombatOutcomes,
+  recordApexHuntEvent,
   chooseCrewArcOption,
   recordRunSessionTimelineEvent,
   recordExpeditionBranchDecision,
@@ -148,7 +149,7 @@ import type { ScenarioLabId } from '../game/ScenarioLab';
 import {
   RunSnapshotCoordinator,
   createRunSnapshotSummary,
-  type RunSnapshotV8
+  type RunSnapshotV9
 } from '../game/RunSnapshot';
 import { getOperationalInfluence } from '../game/OperationalMap';
 import { createCarrierInfluence } from '../game/CarrierCommand';
@@ -159,6 +160,14 @@ import {
   isFactionFrontNodeAvailable,
   projectFactionFrontBranchOptions
 } from '../game/FactionFront';
+import {
+  createApexFinaleProfile,
+  getApexEncounterForNode,
+  getResolvedApexUnlockIds,
+  type ApexFinaleContext,
+  type ApexFinaleProfile
+} from '../game/ApexHunt';
+import type { ApexOutcome } from '../content/apexThreats';
 
 export class GameApp {
   private readonly canvas: HTMLCanvasElement;
@@ -181,7 +190,7 @@ export class GameApp {
   private lastRunResult: CombatRunResult | null = null;
   private lastSaveUpdate: SaveUpdateResult | null = null;
   private summarySaved = false;
-  private runSnapshot: RunSnapshotV8 | null = null;
+  private runSnapshot: RunSnapshotV9 | null = null;
   private runSnapshotNotice: string | null = null;
   private snapshotEligible = false;
   private frameStats: FrameStats = {
@@ -355,6 +364,21 @@ export class GameApp {
       void this.showFleetBay(() => void this.showScenarioLab());
       return;
     }
+    if (launch.definition.target === 'apexDossier') {
+      const awaiting = launch.session.apexHunts.threats.find(
+        (threat) => threat.status === 'awaitingResolution'
+      );
+      const profile = awaiting
+        ? createApexFinaleProfile({
+            plan: this.currentRun.apexHunts,
+            state: launch.session.apexHunts,
+            threatId: awaiting.threatId,
+            context: this.createApexFinaleContext()
+          })
+        : null;
+      void this.showApexDossier(profile, null, () => void this.showScenarioLab());
+      return;
+    }
     if (launch.definition.target === 'foundry') {
       this.sceneManager.switchTo(
         new FoundryScene(
@@ -490,6 +514,23 @@ export class GameApp {
     const boardingOperation = operationNode
       ? getBoardingOperationForNode(this.currentRun.boardingCampaign, operationNode)
       : null;
+    const apexEncounter = operationNode
+      ? getApexEncounterForNode(this.currentRun.apexHunts, operationNode)
+      : null;
+    const apexThreat = apexEncounter
+      ? this.runSession.apexHunts.threats.find(
+          (threat) => threat.threatId === apexEncounter.threatId
+        )
+      : null;
+    const apexProfile =
+      apexEncounter && apexThreat?.status !== 'resolved' && apexThreat?.status !== 'escaped'
+        ? createApexFinaleProfile({
+            plan: this.currentRun.apexHunts,
+            state: this.runSession.apexHunts,
+            threatId: apexEncounter.threatId,
+            context: this.createApexFinaleContext()
+          })
+        : null;
     const projection = createMissionCombatProjection(
       schedule,
       this.runSession.mission,
@@ -615,7 +656,10 @@ export class GameApp {
       this.runSession.timeline,
       this.runSession.factionFronts,
       fleetProfile,
-      this.runSession.fleet
+      this.runSession.fleet,
+      apexEncounter,
+      apexProfile,
+      this.runSession.apexHunts
     );
   }
 
@@ -883,6 +927,50 @@ export class GameApp {
         : objectiveOutcome === 'partialSuccess'
           ? 'partialSuccess'
           : 'success';
+    const operationNode = completedStage.nodeId
+      ? (this.currentRun.expedition.nodes.find((node) => node.id === completedStage.nodeId) ?? null)
+      : null;
+    const apexEncounter = operationNode
+      ? getApexEncounterForNode(this.currentRun.apexHunts, operationNode)
+      : null;
+    if (apexEncounter?.stage === 'finale' && result.bossesDefeated > 0) {
+      const apexThreat = this.runSession.apexHunts.threats.find(
+        (threat) => threat.threatId === apexEncounter.threatId
+      );
+      if (apexThreat?.status !== 'awaitingResolution' && apexThreat?.status !== 'resolved') {
+        recordApexHuntEvent(this.currentRun, this.runSession, {
+          id: `${stageId}:apex-finale`,
+          type: 'encounterOutcome',
+          threatId: apexEncounter.threatId,
+          encounterId: apexEncounter.id,
+          stage: apexEncounter.stage,
+          sectorIndex,
+          outcome: campaignOutcome
+        });
+      }
+      const updatedThreat = this.runSession.apexHunts.threats.find(
+        (threat) => threat.threatId === apexEncounter.threatId
+      );
+      if (updatedThreat?.status === 'awaitingResolution') {
+        const profile = createApexFinaleProfile({
+          plan: this.currentRun.apexHunts,
+          state: this.runSession.apexHunts,
+          threatId: apexEncounter.threatId,
+          context: this.createApexFinaleContext()
+        });
+        void this.showApexDossier(profile, (outcome) => {
+          recordApexHuntEvent(this.currentRun, this.runSession, {
+            id: `${stageId}:apex-resolution:${outcome}`,
+            type: 'resolve',
+            threatId: apexEncounter.threatId,
+            sectorIndex,
+            outcome
+          });
+          this.handleMissionCombatComplete(result);
+        });
+        return;
+      }
+    }
 
     if (completedStage.operationalRole === 'gate' && schedule.contract) {
       recordFactionCampaignEvent(
@@ -998,9 +1086,6 @@ export class GameApp {
       );
     }
 
-    const operationNode = completedStage.nodeId
-      ? (this.currentRun.expedition.nodes.find((node) => node.id === completedStage.nodeId) ?? null)
-      : null;
     const boardingOperation = operationNode
       ? getBoardingOperationForNode(this.currentRun.boardingCampaign, operationNode)
       : null;
@@ -1175,6 +1260,17 @@ export class GameApp {
         });
       }
     }
+    if (apexEncounter?.stage !== 'finale' && apexEncounter) {
+      recordApexHuntEvent(this.currentRun, this.runSession, {
+        id: `${stageId}:apex-${apexEncounter.stage}`,
+        type: 'encounterOutcome',
+        threatId: apexEncounter.threatId,
+        encounterId: apexEncounter.id,
+        stage: apexEncounter.stage,
+        sectorIndex,
+        outcome: campaignOutcome
+      });
+    }
     if (boardingOperation) {
       recordBoardingOperationOutcome(this.currentRun, this.runSession, boardingOperation, {
         eventId: `${stageId}:boarding-settled`,
@@ -1274,6 +1370,20 @@ export class GameApp {
     const boardingOperation = node
       ? getBoardingOperationForNode(this.currentRun.boardingCampaign, node)
       : null;
+    const apexEncounter = node
+      ? getApexEncounterForNode(this.currentRun.apexHunts, node)
+      : null;
+    if (apexEncounter) {
+      recordApexHuntEvent(this.currentRun, this.runSession, {
+        id: `${stage.id}:apex-failed:${result.reason}`,
+        type: 'encounterOutcome',
+        threatId: apexEncounter.threatId,
+        encounterId: apexEncounter.id,
+        stage: apexEncounter.stage,
+        sectorIndex: this.runSession.currentSectorIndex,
+        outcome: 'failure'
+      });
+    }
     if (boardingOperation) {
       recordBoardingOperationOutcome(this.currentRun, this.runSession, boardingOperation, {
         eventId: `${stage.id}:boarding-failed:${result.reason}`,
@@ -1951,7 +2061,8 @@ export class GameApp {
         createMissionReadModel(schedule, this.runSession.mission),
         createMissionDebugState(schedule, this.runSession.mission),
         () => void this.showCrewQuarters(),
-        () => void this.showFleetBay(() => this.showSectorTransition())
+        () => void this.showFleetBay(() => this.showSectorTransition()),
+        () => void this.showApexDossier()
       )
     );
   }
@@ -1975,6 +2086,52 @@ export class GameApp {
         onBack
       )
     );
+  }
+
+  private async showApexDossier(
+    profile: ApexFinaleProfile | null = null,
+    onResolve: ((outcome: ApexOutcome) => void) | null = null,
+    onBack: () => void = () => this.showSectorTransition()
+  ): Promise<void> {
+    const { ApexDossierScene } = await import('../ui/ApexDossierScene');
+    this.sceneManager.switchTo(
+      new ApexDossierScene(
+        this.uiRoot,
+        this.currentRun.apexHunts,
+        this.runSession.apexHunts,
+        this.runSession.currentSectorIndex,
+        profile,
+        onResolve,
+        onBack
+      )
+    );
+  }
+
+  private createApexFinaleContext(): ApexFinaleContext {
+    const fronts = createFactionFrontCampaignReadModel(
+      this.currentRun.factionFronts,
+      this.runSession.factionFronts
+    );
+    const carrier = createCarrierInfluence(this.currentRun.carrierPlan, this.runSession.carrier);
+    const fleet = createFleetInfluence(this.currentRun.fleet, this.runSession.fleet);
+    return {
+      alliedFronts: fronts.alliedCount,
+      hostileFronts: fronts.hostileCount,
+      resolvedRivals: this.runSession.factionCampaign.rivals.filter(
+        (rival) => rival.status === 'captured' || rival.status === 'destroyed'
+      ).length,
+      crewBonds: this.runSession.crewArcs.relationships.filter(
+        (relationship) => relationship.bond >= 2
+      ).length,
+      crewOfficers: Object.values(this.runSession.crewArcs.ranks).filter(
+        (rank) => rank === 'officer'
+      ).length,
+      carrierSupport: carrier.supportCapacity,
+      boardingCapacity: carrier.boardingCapacity,
+      fleetSupport: fleet.readyCraft + fleet.pursuitControl,
+      fleetBoardingAssist: fleet.boardingAssist,
+      frontierDecision: this.runSession.frontierDecision.decision
+    };
   }
 
   private showPause(gameplayScene: GameplayScene): void {
@@ -2083,7 +2240,8 @@ export class GameApp {
         this.runSession.boarding,
         this.runSession.factionFronts,
         this.runSession.crewArcs,
-        this.runSession.fleet
+        this.runSession.fleet,
+        this.runSession.apexHunts
       )
     );
   }
@@ -2161,7 +2319,11 @@ export class GameApp {
       creditsRecovered: Math.max(result.credits, this.runSession.credits),
       salvageRecovered: Math.max(result.salvage, this.runSession.salvage),
       itemTriggers: result.itemTriggers,
-      itemIds: this.runSession.itemInstances.map((item) => item.itemId)
+      itemIds: this.runSession.itemInstances.map((item) => item.itemId),
+      bonusUnlockIds: getResolvedApexUnlockIds(
+        this.currentRun.apexHunts,
+        this.runSession.apexHunts
+      )
     };
   }
 
@@ -2401,6 +2563,13 @@ export class GameApp {
           `Fleet craft ${debugState.fleet.craft.join(' / ') || 'none'}`
         ]
       : [];
+    const apexDebug = debugState.apex
+      ? [
+          `Apex active ${debugState.apex.active} resolved ${debugState.apex.resolved} awaiting ${debugState.apex.awaiting} events ${debugState.apex.historyCount}`,
+          `Apex budget ${debugState.apex.budget}`,
+          `Apex threats ${debugState.apex.threats.join(' / ')}`
+        ]
+      : [];
     const scenarioLabDebug = debugState.scenarioLab
       ? [
           `Scenario Lab ${debugState.scenarioLab.activeScenario ?? 'catalog'} ${debugState.scenarioLab.scenarioCount} cases`,
@@ -2467,6 +2636,7 @@ export class GameApp {
       ...factionFrontDebug,
       ...crewArcDebug,
       ...fleetDebug,
+      ...apexDebug,
       ...scenarioLabDebug,
       ...upgradeDebug,
       ...progressionDebug,

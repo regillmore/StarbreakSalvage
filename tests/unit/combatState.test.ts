@@ -407,6 +407,22 @@ describe('CombatState', () => {
     expect(state.pickups.length).toBeGreaterThan(0);
   });
 
+  it('applies persistent negative boss hull deltas without allowing zero hull', () => {
+    const baseline = createCombatState(bounds, 'APEX-HULL-BASE', { skipEnemyWaves: true });
+    const wounded = createCombatState(bounds, 'APEX-HULL-WOUNDED', {
+      skipEnemyWaves: true,
+      bossHullBonus: -6
+    });
+    const minimum = createCombatState(bounds, 'APEX-HULL-MIN', {
+      skipEnemyWaves: true,
+      bossHullBonus: -999
+    });
+    expect(spawnBoss(wounded, 'boss_grave_choir', bounds).maxHull).toBe(
+      spawnBoss(baseline, 'boss_grave_choir', bounds).maxHull - 6
+    );
+    expect(spawnBoss(minimum, 'boss_grave_choir', bounds).maxHull).toBe(1);
+  });
+
   it('creates a capped deterministic dense debug scenario', () => {
     const first = createCombatState(bounds, 'DENSE-DEBUG-TEST', {
       skipEnemyWaves: true

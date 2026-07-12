@@ -6,7 +6,7 @@ Date: 2026-07-11
 
 ## Milestone Status
 
-Phases 1-10 and work orders 101-107 are deployed historical foundations. Work order 108 adds six deterministic support-craft roles, carrier/engineering construction and refit, crew/automation assignments, five doctrines, persistent damage/loss/recovery, shared combat budgets, a twelfth Scenario Lab fixture, and snapshot v8 persistence while retaining the live multi-operation, frontier, carrier, boarding, front, and crew-arc contracts.
+Phases 1-10 and work orders 101-108 are deployed historical foundations. Work order 109 adds three deterministic four-contact apex hunts, persistent wounds/migrations/escape state, five cross-voyage ending verbs, three original bosses, variety unlocks, a thirteenth Scenario Lab fixture, and snapshot v9 persistence while retaining the live multi-operation, frontier, carrier, boarding, front, crew-arc, and fleet contracts.
 
 The deployed completionist measurement is approximately 12 minutes with every optional path taken. That doubles the roughly six-minute Phase 9 baseline and reaches the lower edge of Phase 10's 12-20 minute structural target through mission stages, decisions, foundry work, set pieces, factions/rivals, and crew—not global slowdown or durability inflation.
 
@@ -47,11 +47,11 @@ Local Windows note: Playwright requires escalation because Chromium lives under 
 
 | Area                  | Status            | Evidence and boundary                                                                                                                                                   |
 | --------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Snapshot separation   | Pass              | Permanent progression remains `starbreak.save.v5`; suspended runs use independently repaired `starbreak.run.v8`, and legacy v1-v7 records retire safely.                  |
+| Snapshot separation   | Pass              | Permanent progression remains `starbreak.save.v5`; suspended runs use independently repaired `starbreak.run.v9`, and legacy v1-v8 records retire safely.                  |
 | Deterministic restore | Pass              | Restore regenerates and validates seed/fingerprint/graph/contract plus mission, engineering, items/economy, faction/rival, crew, and timeline state before scene entry. |
 | Safe checkpoint UX    | Pass              | Briefing, operation-entry, and settled-map writes are automatic; main-menu resume/discard works by keyboard and pointer and explains the exact boundary.                 |
 | Corruption recovery   | Pass              | Malformed, unsupported, oversized, or identity-drifted snapshots remove only the suspended record. Unit coverage pins permanent-save isolation.                         |
-| Endurance boundary    | Pass              | Public harness repeats all twelve Scenario Lab setups plus the finale through deterministic snapshot round trips and reports bounded fleet and crew state.                |
+| Endurance boundary    | Pass              | Public harness repeats all thirteen Scenario Lab setups plus the finale through deterministic snapshot round trips and reports bounded apex, fleet, and crew state.                |
 | Loading boundary      | Pass with warning | Fleet Bay is a 3.68 kB lazy chunk. Initial JavaScript is 806.07 kB minified/217.60 kB gzip; the existing warning remains active.                                        |
 | Executable topology   | Pass              | Graph v2 supplies 70 nodes, 20 decisions, two required and two optional operation roles per sector, with deterministic same-seed replay.                              |
 | Operational cleanup   | Pass              | A 64-record idempotent ledger settles checkpoints and payouts once and asserts zero retained actors, projectiles, or hooks at each boundary.                         |

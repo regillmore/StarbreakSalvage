@@ -182,7 +182,7 @@ describe('BoardingOperation', () => {
       label: 'Boarding custody'
     });
     const restored = restoreRunSnapshot(snapshot);
-    expect(snapshot.version).toBe(8);
+    expect(snapshot.version).toBe(9);
     expect(snapshot.extensions.boarding.planId).toBe(run.boardingCampaign.id);
     expect(restored.session.boarding).toEqual(session.boarding);
   });

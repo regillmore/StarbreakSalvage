@@ -80,6 +80,13 @@ describe('ScenarioLab', () => {
     expect(fleet.readout.fleetEvents).toBeGreaterThan(0);
     expect(fleet.session.fleet.craft.filter((craft) => craft.status === 'ready')).toHaveLength(2);
 
+    const apex = launch('lab_apex_hunts');
+    expect(apex.readout.target).toBe('apexDossier');
+    expect(apex.readout.apexEvents).toBeGreaterThan(3);
+    expect(
+      apex.session.apexHunts.threats.some((threat) => threat.status === 'awaitingResolution')
+    ).toBe(true);
+
     const timeline = launch('lab_timeline_audit').session.timeline;
     expect(new Set(timeline.entries.map((entry) => entry.category))).toEqual(
       new Set([

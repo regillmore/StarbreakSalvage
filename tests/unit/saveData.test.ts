@@ -337,7 +337,8 @@ describe('saveData', () => {
       enemiesDestroyed: 1,
       creditsRecovered: 16,
       salvageRecovered: 2,
-      itemTriggers: 2
+      itemTriggers: 2,
+      bonusUnlockIds: ['unlock_music_apex_procession', 'unlock_music_apex_procession']
     });
 
     expect(update.salvageEarned).toBe(2);
@@ -361,6 +362,8 @@ describe('saveData', () => {
     expect(update.newUnlockIds).toContain('unlock_item_executive_override');
     expect(update.newUnlockIds).toContain('unlock_challenge_debt_ceiling');
     expect(update.newUnlockIds).toContain('unlock_music_outer_debris');
+    expect(update.newUnlockIds).toContain('unlock_music_apex_procession');
+    expect(update.newUnlockIds.filter((id) => id === 'unlock_music_apex_procession')).toHaveLength(1);
   });
 
   it('evaluates upgrade affordability and purchases with banked scrap', () => {

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added three deterministic multi-sector apex hunts: Grave Choir Procession, Crownless Engine, and Pale Convoy Oracle, using distinct trace-chain, siege-break, and migration-net structures with persistent subsystem damage, lieutenants, migrations, escape routes, boarding sabotage, and missed-finale escapes.
+- Apex finales consume faction fronts, rivals, crew relationships/ranks, carrier facilities, support craft, and frontier decisions. Threat-specific destruction, capture, containment, bargain, and evacuation choices resolve explicit campaign state and grant music, practice, or challenge variety flags instead of stat power.
+- Added centralized bounded apex boss integration, accessible lazy Apex Dossier, briefing/HUD/summary/timeline/debug/endurance coverage, run snapshot/storage v9 with safe v1-v8 retirement, and a thirteenth Scenario Lab fixture.
+
 - Added six deterministic support-craft roles: interceptor, screen drone, salvage skiff, shield tender, boarding pod, and repair tug, each with distinct combat and itinerary uses.
 - Added run-local carrier-berth construction from engineering cargo, overdrive/reinforced refits, crew or automation assignment, five launch doctrines, combat damage/loss, foundry recovery, repair, boarding and optional-operation support, carrier protection, faction-front movement, and crew-arc/pilot consequences.
 - Fleet and crew now share the existing ally actor, formation command, targeting, projectile, collision, objective, and feedback paths under explicit four-ally and 20-ally-projectile caps. Added accessible lazy Fleet Bay UI, snapshot/storage v8, summaries/timeline/debug state, endurance coverage, deterministic tests, and a twelfth Scenario Lab fixture.

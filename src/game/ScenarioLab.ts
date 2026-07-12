@@ -1,6 +1,7 @@
 import { createDebugCrewRosterState } from './CrewCommand';
 import { createDebugCrewArcState } from './CrewArc';
 import { createDebugFleetState } from './Fleetcraft';
+import { createDebugApexHuntState } from './ApexHunt';
 import type { UnlockId } from '../content/unlocks';
 import { createDebugFactionFrontState } from './FactionFront';
 import { createDebugFactionCampaignState } from './FactionCampaign';
@@ -29,6 +30,7 @@ export const SCENARIO_LAB_IDS = [
   'lab_faction_fronts',
   'lab_crew_arcs',
   'lab_fleetcraft',
+  'lab_apex_hunts',
   'lab_timeline_audit'
 ] as const;
 export type ScenarioLabId = (typeof SCENARIO_LAB_IDS)[number];
@@ -38,6 +40,7 @@ export type ScenarioLabTarget =
   | 'foundry'
   | 'crewQuarters'
   | 'fleetBay'
+  | 'apexDossier'
   | 'timeline';
 export type ScenarioLabGameplayPreset =
   'none' | 'setPiece' | 'rival' | 'crew' | 'combined' | 'boarding' | 'front';
@@ -54,6 +57,7 @@ export interface ScenarioLabDefinition {
   readonly crewFixture: boolean;
   readonly engineeringFixture: boolean;
   readonly fleetFixture: boolean;
+  readonly apexFixture: boolean;
   readonly gameplayPreset: ScenarioLabGameplayPreset;
   readonly pressureBudget: string;
   readonly accessibilityCheck: string;
@@ -78,6 +82,7 @@ export interface ScenarioLabSetupReadModel {
   readonly frontEvents: number;
   readonly arcEvents: number;
   readonly fleetEvents: number;
+  readonly apexEvents: number;
   readonly summary: string;
 }
 
@@ -196,6 +201,16 @@ export const SCENARIO_LAB_DEFINITIONS: readonly ScenarioLabDefinition[] = [
     { crewFixture: true, engineeringFixture: true, fleetFixture: true }
   ),
   scenario(
+    'lab_apex_hunts',
+    'Roaming Apex Hunts',
+    'Inspect three multi-sector threat chains, persistent subsystem wounds, migration pressure, ending requirements, and shared combat budgets.',
+    ['apex', 'bosses', 'persistence', 'endings', 'unlocks', 'shared-budgets'],
+    7,
+    'apexDossier',
+    'none',
+    { factionFixture: true, crewFixture: true, fleetFixture: true, apexFixture: true }
+  ),
+  scenario(
     'lab_timeline_audit',
     'Run Timeline Audit',
     'Inspect deterministic node, decision, economy, engineering, faction, rival, crew, boss, duration, and run events.',
@@ -236,7 +251,7 @@ export function createScenarioLabLaunch(options: {
   if (definition.factionFixture) {
     session.factionCampaign = createDebugFactionCampaignState(options.run.factionCampaign);
   }
-  if (definition.id === 'lab_faction_fronts') {
+  if (definition.id === 'lab_faction_fronts' || definition.apexFixture) {
     session.factionFronts = createDebugFactionFrontState(options.run.factionFronts);
   }
   if (definition.crewFixture) {
@@ -269,6 +284,9 @@ export function createScenarioLabLaunch(options: {
           : facility
       )
     };
+  }
+  if (definition.apexFixture) {
+    session.apexHunts = createDebugApexHuntState(options.run.apexHunts);
   }
   if (definition.id === 'lab_combined_pressure') {
     session.itemInstances = [...createItemStormLoadout()];
@@ -337,6 +355,7 @@ export function createScenarioLabSetupReadModel(
     frontEvents: session.factionFronts.history.length,
     arcEvents: session.crewArcs.history.length,
     fleetEvents: session.fleet.history.length,
+    apexEvents: session.apexHunts.history.length,
     summary: `${definition.title} | ${definition.systems.join('+')} | ${definition.pressureBudget}`
   };
 }
@@ -410,7 +429,7 @@ function scenario(
     Pick<
       ScenarioLabDefinition,
       'optionalMission' | 'factionFixture' | 'crewFixture' | 'engineeringFixture'
-      | 'fleetFixture'
+      | 'fleetFixture' | 'apexFixture'
     >
   > = {}
 ): ScenarioLabDefinition {
@@ -427,6 +446,7 @@ function scenario(
     crewFixture: flags.crewFixture ?? false,
     engineeringFixture: flags.engineeringFixture ?? false,
     fleetFixture: flags.fleetFixture ?? false,
+    apexFixture: flags.apexFixture ?? false,
     pressureBudget:
       target === 'gameplay' ? 'actors/projectiles/geometry bounded' : 'static DOM/read-model setup',
     accessibilityCheck: 'keyboard, pointer, narrow, high contrast, reduced motion, performance mode'

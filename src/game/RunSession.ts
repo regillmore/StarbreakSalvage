@@ -140,6 +140,13 @@ import {
   type FleetCombatOutcome,
   type FleetState
 } from './Fleetcraft';
+import {
+  applyApexHuntEvent,
+  createApexHuntState,
+  type ApexHuntEvent,
+  type ApexHuntEventResult,
+  type ApexHuntState
+} from './ApexHunt';
 
 export interface RouteHistoryEntry {
   readonly sectorIndex: number;
@@ -183,6 +190,7 @@ export interface RunSessionState {
   crewRoster: CrewRosterState;
   crewArcs: CrewArcState;
   fleet: FleetState;
+  apexHunts: ApexHuntState;
   timeline: RunTimelineState;
 }
 
@@ -242,6 +250,7 @@ export function createRunSession(
     crewRoster: createCrewRosterState(run.crewRoster),
     crewArcs: createCrewArcState(run.crewArcs, run.crewRoster),
     fleet: createFleetState(run.fleet),
+    apexHunts: createApexHuntState(run.apexHunts),
     timeline: recordRunTimelineEvent(createRunTimeline(), {
       id: `run-start:${run.seed}:${contract.id}`,
       category: 'run',
@@ -489,6 +498,26 @@ export function recordFleetCombatOutcomes(
   return session.fleet;
 }
 
+export function recordApexHuntEvent(
+  run: RunSkeleton,
+  session: RunSessionState,
+  event: ApexHuntEvent
+): ApexHuntEventResult {
+  const result = applyApexHuntEvent(run.apexHunts, session.apexHunts, event);
+  if (result.disposition === 'applied') {
+    session.apexHunts = result.state;
+    recordRunSessionTimelineEvent(session, {
+      id: `timeline:${event.id}`,
+      category: event.type === 'resolve' ? 'decision' : 'boss',
+      kind: `apex:${event.type}`,
+      sectorIndex: event.sectorIndex,
+      subjectId: event.threatId,
+      detailId: result.label
+    });
+  }
+  return result;
+}
+
 export function stowCarrierCargo(
   run: RunSkeleton,
   session: RunSessionState,
@@ -601,6 +630,24 @@ export function recordBoardingOperationOutcome(
       value: loot.value,
       sectorIndex: operation.sectorIndex
     });
+  }
+
+  if (operation.integrations.includes('apex') && options.outcome !== 'failure') {
+    const activeThreat = run.apexHunts.threats.find((threat) => {
+      const state = session.apexHunts.threats.find(
+        (candidate) => candidate.threatId === threat.definitionId
+      );
+      return state?.status !== 'resolved' && state?.status !== 'escaped';
+    });
+    if (activeThreat) {
+      recordApexHuntEvent(run, session, {
+        id: `${options.eventId}:apex-sabotage`,
+        type: 'boardingSabotage',
+        threatId: activeThreat.definitionId,
+        sectorIndex: operation.sectorIndex,
+        amount: options.outcome === 'success' ? 2 : 1
+      });
+    }
   }
 
   if (operation.integrations.includes('foundry') && options.outcome !== 'failure') {
@@ -1393,6 +1440,27 @@ export function incrementShopRerollCount(session: RunSessionState, sectorIndex: 
 
 export function advanceSector(run: RunSkeleton, session: RunSessionState): boolean {
   session.currentSectorIndex += 1;
+  for (const threat of run.apexHunts.threats) {
+    const finale = threat.encounters.find((encounter) => encounter.stage === 'finale');
+    const state = session.apexHunts.threats.find(
+      (candidate) => candidate.threatId === threat.definitionId
+    );
+    if (
+      finale &&
+      finale.sectorIndex < session.currentSectorIndex &&
+      state &&
+      state.status !== 'resolved' &&
+      state.status !== 'escaped' &&
+      !state.encountersCompleted.includes(finale.id)
+    ) {
+      recordApexHuntEvent(run, session, {
+        id: `apex-escape:${threat.definitionId}:s${session.currentSectorIndex}`,
+        type: 'escape',
+        threatId: threat.definitionId,
+        sectorIndex: session.currentSectorIndex
+      });
+    }
+  }
   if (isRunComplete(run, session)) {
     return false;
   }

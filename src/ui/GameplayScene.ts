@@ -182,6 +182,12 @@ import {
   type BoardingOperationPlan
 } from '../game/BoardingOperation';
 import { createFactionFrontDebugState, type FactionFrontState } from '../game/FactionFront';
+import {
+  createApexDebugState,
+  type ApexEncounterPlan,
+  type ApexFinaleProfile,
+  type ApexHuntState
+} from '../game/ApexHunt';
 
 const DEBUG_BOSS_SHORTCUTS: Partial<Record<InputAction, BossId>> = {
   debugBossOne: 'boss_auditor_drone_xl',
@@ -284,7 +290,10 @@ export class GameplayScene implements Scene {
     private readonly runTimeline: RunTimelineState | null = null,
     private readonly factionFrontState: FactionFrontState | null = null,
     private readonly fleetProfile: FleetCombatProfile | null = null,
-    private readonly fleetState: FleetState | null = null
+    private readonly fleetState: FleetState | null = null,
+    private readonly apexEncounter: ApexEncounterPlan | null = null,
+    private readonly apexProfile: ApexFinaleProfile | null = null,
+    private readonly apexState: ApexHuntState | null = null
   ) {
     this.positionReadout = document.createElement('p');
     this.positionReadout.className = 'sr-only';
@@ -441,6 +450,15 @@ export class GameplayScene implements Scene {
       boarding.hidden = true;
     }
 
+    const apex = ownerDocument.createElement('p');
+    apex.className = 'hud-pill hud-pill-wide hud-pill-system';
+    apex.dataset.testid = 'apex-readout';
+    if (this.apexEncounter && this.apexProfile) {
+      apex.textContent = `${this.apexProfile.mapCue} ${this.apexProfile.bossName} ${this.apexEncounter.stage.toUpperCase()} | ${this.apexProfile.integrityReadout} | ${this.apexProfile.subsystemReadout} | ${this.apexProfile.budget}`;
+    } else {
+      apex.hidden = true;
+    }
+
     const readoutStrip = ownerDocument.createElement('div');
     readoutStrip.className = 'hud-readout-strip';
     readoutStrip.append(
@@ -459,6 +477,7 @@ export class GameplayScene implements Scene {
       this.itemReadout,
       loadout,
       boarding,
+      apex,
       contract
     );
     chrome.append(themeReadout, meterStrip);
@@ -513,7 +532,7 @@ export class GameplayScene implements Scene {
     const feedbackBefore = createCombatFeedbackSnapshot(state);
 
     if (arenaAfterScroll.shouldSpawnBoss) {
-      spawnBoss(state, this.getCurrentSector().bossId, this.getCombatBounds(), {
+      spawnBoss(state, this.getCombatBossId(), this.getCombatBounds(), {
         clearField: true
       });
     }
@@ -1022,10 +1041,13 @@ export class GameplayScene implements Scene {
               combatState.allies.filter((ally) => ally.source === 'fleet').length
             )
           : undefined,
+      apex: this.apexState
+        ? createApexDebugState(this.run.apexHunts, this.apexState)
+        : undefined,
       runTimeline: this.runTimeline ? createRunTimelineDebugState(this.runTimeline) : undefined,
       scenarioLab: this.scenarioLabPreset
         ? {
-            scenarioCount: 12,
+            scenarioCount: 13,
             activeScenario: this.scenarioLabPreset,
             systems: [
               'mission actors',
@@ -1254,9 +1276,20 @@ export class GameplayScene implements Scene {
         formationInstanceId: `front-reinforcement:${this.sectorIndex}:${index}`,
         countsForObjective: false
       }));
+    const apexReinforcements = influencedSpawnSchedule
+      .slice(0, this.apexProfile?.reinforcementCount ?? 0)
+      .map((spawn, index) => ({
+        ...spawn,
+        atSeconds: spawn.atSeconds + 4 + index * 1.5,
+        atDistance: null,
+        waveLabel: `${this.apexProfile?.mapCue ?? '[APEX]'} migration escort`,
+        formationInstanceId: `apex-reinforcement:${this.sectorIndex}:${index}`,
+        countsForObjective: false
+      }));
     const spawnSchedule = [
       ...influencedSpawnSchedule,
       ...frontReinforcements,
+      ...apexReinforcements,
       ...(rivalSpawn ? [rivalSpawn] : [])
     ].sort(
       (left, right) =>
@@ -1269,7 +1302,7 @@ export class GameplayScene implements Scene {
       engineering,
       startingHull: this.missionContext?.projection.startingHull,
       items: this.itemLoadout,
-      bossId: this.getCurrentSector().bossId,
+      bossId: this.getCombatBossId(),
       bossSpawnAtSeconds: this.getCurrentArenaPlan() ? null : wavePlan.bossSpawnAtSeconds,
       spawnSchedule,
       enemyHullBonus: this.getEnemyHullBonus(),
@@ -1399,9 +1432,18 @@ export class GameplayScene implements Scene {
       sectorPacing
     );
 
+    const apexFinale = this.apexEncounter?.stage === 'finale' && this.apexProfile;
     this.wavePlan = createWaveDirectorPlan({
       seed: this.getCombatSeed(),
-      objective: sector.objective,
+      objective: apexFinale
+        ? {
+            ...sector.objective,
+            kind: 'defeatBoss',
+            label: `Neutralize ${this.apexProfile!.bossName}`,
+            bossRequired: true,
+            bossSpawnAtSeconds: Math.min(14, 4 + sector.objective.requiredWaves * 1.35)
+          }
+        : sector.objective,
       majorWaves: sector.majorWaves,
       preferredFactionId: sector.bossFactionId,
       availableFactionIds: this.run.availableFactionIds,
@@ -1416,7 +1458,7 @@ export class GameplayScene implements Scene {
       eliteEncounter: this.hasEnemyVariantElitePressure(),
       formationClusterWaves: sectorPacing.formationClusterWaveIndexes,
       actPressure: this.getActPressureModel(),
-      missionObjective: this.missionContext?.projection.missionObjective
+      missionObjective: apexFinale ? null : this.missionContext?.projection.missionObjective
     });
 
     return this.wavePlan;
@@ -1715,8 +1757,17 @@ export class GameplayScene implements Scene {
   }
 
   private getCurrentBossName(): string {
+    if (this.apexEncounter?.stage === 'finale' && this.apexProfile) {
+      return this.apexProfile.bossName;
+    }
     const sector = this.run.sectors[this.sectorIndex];
     return sector ? formatSecondActFinaleBossName(sector.finale, sector.bossName) : 'unassigned';
+  }
+
+  private getCombatBossId(): BossId {
+    return this.apexEncounter?.stage === 'finale' && this.apexProfile
+      ? this.apexProfile.bossId
+      : this.getCurrentSector().bossId;
   }
 
   private getVerbReadout(state: CombatState): string {
@@ -1853,16 +1904,22 @@ export class GameplayScene implements Scene {
   }
 
   private getEnemyFireDelayMultiplier(): number {
-    return this.combatModifiers.reduce(
+    const routeMultiplier = this.combatModifiers.reduce(
       (multiplier, modifier) => multiplier * modifier.enemyFireDelayMultiplier,
       1
     );
+    const apexPressureMultiplier = Math.max(
+      0.88,
+      1 - (this.apexProfile?.hazardPressure ?? 0) * 0.06
+    );
+    return routeMultiplier * apexPressureMultiplier;
   }
 
   private getBossHullBonus(): number {
     return (
       this.combatModifiers.reduce((total, modifier) => total + modifier.bossHullBonus, 0) +
-      (this.getCurrentSector().finale?.bossHullBonus ?? 0)
+      (this.getCurrentSector().finale?.bossHullBonus ?? 0) +
+      (this.apexEncounter?.stage === 'finale' ? (this.apexProfile?.bossHullDelta ?? 0) : 0)
     );
   }
 
