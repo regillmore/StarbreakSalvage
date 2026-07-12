@@ -139,6 +139,15 @@ import {
   type SectorExitSequenceState
 } from '../game/SectorExitSequence';
 import {
+  applySectorCooldownToScroll,
+  createSectorCooldownPlan,
+  createSectorCooldownState,
+  getSectorCooldownPresentation,
+  prepareSectorCooldownCombatState,
+  type SectorCooldownPlan,
+  type SectorCooldownState
+} from '../game/SectorCooldown';
+import {
   advancePlayerDestructionSequence,
   createPlayerDestructionSequence,
   getPlayerDestructionPresentation,
@@ -224,6 +233,7 @@ export class GameplayScene implements Scene {
   private environmentObjectPlan: EnvironmentObjectPlacementPlan | null = null;
   private looseCurrencyPlan: LooseCurrencyPlan | null = null;
   private conditionedScroll: SectorScrollPlan | null = null;
+  private sectorCooldownPlan: SectorCooldownPlan | null = null;
   private conditionedFeatures: SectorFeaturePlan | null = null;
   private conditionedArena: BossArenaPlan | null | undefined;
   private bossArenaState: BossArenaState | null = null;
@@ -255,6 +265,7 @@ export class GameplayScene implements Scene {
   private readonly heatMeter: HudMeterElements;
   private exitSequence: SectorExitSequenceState | null = null;
   private exitSequenceResult: CombatRunResult | null = null;
+  private sectorCooldown: SectorCooldownState | null = null;
   private destructionSequence: PlayerDestructionSequenceState | null = null;
   private destructionSequenceResult: CombatRunResult | null = null;
   private bossHazardReleaseDistance: number | null = null;
@@ -558,7 +569,7 @@ export class GameplayScene implements Scene {
 
     this.updateBossArena(scrollState.distance, state);
 
-    if (!result && this.bossArenaUpdate.phase !== 'locked') {
+    if (!result && !this.sectorCooldown && this.bossArenaUpdate.phase !== 'locked') {
       const hazardFeedbackBefore = createCombatFeedbackSnapshot(state);
       const collisions = resolveSectorHazardCollisions(
         state,
@@ -592,6 +603,16 @@ export class GameplayScene implements Scene {
       return;
     }
 
+    if (this.sectorCooldown) {
+      const cooldown = getSectorCooldownPresentation(this.sectorCooldown, scrollState.distance);
+
+      if (cooldown.complete) {
+        this.startSectorExitSequence(this.sectorCooldown.reason);
+      }
+
+      return;
+    }
+
     const progress = getObjectiveProgress(this.getWavePlan(), state);
     const setPieceComplete = !state.setPiece || state.setPiece.completed;
     const completionReason = setPieceComplete
@@ -601,7 +622,7 @@ export class GameplayScene implements Scene {
 
     if (!this.sectorCompleted && completionReason) {
       this.sectorCompleted = true;
-      this.startSectorExitSequence(completionReason);
+      this.startSectorCooldown(completionReason);
     }
   }
 
@@ -767,6 +788,7 @@ export class GameplayScene implements Scene {
       spawnBoss(state, debugBossId, this.getCombatBounds(), { clearField: true });
       this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
       this.sectorCompleted = false;
+      this.sectorCooldown = null;
       this.debugScenario = 'boss-shortcut';
       this.syncReadouts();
     }
@@ -777,6 +799,7 @@ export class GameplayScene implements Scene {
       spawnDebugDenseCombatScenario(state, this.getCombatBounds());
       this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
       this.sectorCompleted = false;
+      this.sectorCooldown = null;
       this.debugScenario = 'dense-combat';
       this.syncReadouts();
     }
@@ -787,6 +810,7 @@ export class GameplayScene implements Scene {
       prepareDebugItemStormScenario(state, this.getCombatBounds(), createItemStormLoadout());
       this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
       this.sectorCompleted = false;
+      this.sectorCooldown = null;
       this.debugScenario = 'item-storm';
       this.syncReadouts();
     }
@@ -797,6 +821,7 @@ export class GameplayScene implements Scene {
       prepareDebugEnemyRichScenario(state, this.getCombatBounds());
       this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
       this.sectorCompleted = false;
+      this.sectorCooldown = null;
       this.debugScenario = 'enemy-rich';
       this.syncReadouts();
     }
@@ -816,6 +841,7 @@ export class GameplayScene implements Scene {
       this.updateBossArena(scroll.distance, state);
       this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
       this.sectorCompleted = false;
+      this.sectorCooldown = null;
       this.debugScenario = 'environment-stress';
       this.syncReadouts();
     }
@@ -831,6 +857,7 @@ export class GameplayScene implements Scene {
       this.updateBossArena(scroll.distance, state);
       this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
       this.sectorCompleted = false;
+      this.sectorCooldown = null;
       this.debugScenario = 'long-scroll';
       this.syncReadouts();
     }
@@ -845,6 +872,7 @@ export class GameplayScene implements Scene {
         state.scrollDistance = scroll.distance;
         this.updateBossArena(scroll.distance, state);
         this.sectorCompleted = false;
+        this.sectorCooldown = null;
         this.debugScenario = `set-piece:${state.setPiece?.plan.definitionId ?? 'none'}`;
         this.syncReadouts();
       }
@@ -878,6 +906,7 @@ export class GameplayScene implements Scene {
     }
 
     this.sectorCompleted = false;
+    this.sectorCooldown = null;
     this.debugScenario = `lab:${preset}`;
     this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
     this.syncReadouts();
@@ -918,6 +947,7 @@ export class GameplayScene implements Scene {
     });
     this.bossHazardReleaseDistance = null;
     this.sectorCompleted = false;
+    this.sectorCooldown = null;
     this.debugScenario = `finale-smoke:${finale.variantId}`;
     this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
     this.syncReadouts();
@@ -957,6 +987,11 @@ export class GameplayScene implements Scene {
       exitSequence: this.exitSequence
         ? `${this.exitSequence.reason} ${Math.round(
             getSectorExitPresentation(this.exitSequence).progress * 100
+          )}%`
+        : undefined,
+      sectorCooldown: this.sectorCooldown
+        ? `${Math.round(
+            getSectorCooldownPresentation(this.sectorCooldown, scroll.distance).progress * 100
           )}%`
         : undefined,
       destructionSequence: this.destructionSequence
@@ -1103,6 +1138,7 @@ export class GameplayScene implements Scene {
     const state = this.getCombatState();
     const scroll = this.getScrollState();
 
+    this.sectorCooldown = null;
     state.scrollDistance = scroll.distance;
     clearExitPressure(state);
     this.exitSequence = createSectorExitSequence({
@@ -1116,6 +1152,25 @@ export class GameplayScene implements Scene {
     this.exitSequenceResult = this.withWorldOffset(forceCombatEnd(state, reason));
     this.emitFeedback(['sectorClear']);
     this.syncExitSequenceUi();
+    this.syncReadouts();
+  }
+
+  private startSectorCooldown(reason: SectorExitSequenceReason): void {
+    if (this.sectorCooldown || this.exitSequenceResult) {
+      return;
+    }
+
+    const cooldown = createSectorCooldownState(this.getSectorCooldownPlan(), reason);
+
+    if (!cooldown) {
+      this.startSectorExitSequence(reason);
+      return;
+    }
+
+    const state = this.getCombatState();
+    state.scrollDistance = this.getScrollState().distance;
+    prepareSectorCooldownCombatState(state);
+    this.sectorCooldown = cooldown;
     this.syncReadouts();
   }
 
@@ -1465,8 +1520,20 @@ export class GameplayScene implements Scene {
   }
 
   private getScrollState(): ScrollState {
-    this.scrollState ??= createScrollState(this.getCurrentScrollPlan());
+    this.scrollState ??= createScrollState(
+      applySectorCooldownToScroll(this.getCurrentScrollPlan(), this.getSectorCooldownPlan())
+    );
     return this.scrollState;
+  }
+
+  private getSectorCooldownPlan(): SectorCooldownPlan {
+    this.sectorCooldownPlan ??= createSectorCooldownPlan({
+      scroll: this.getCurrentScrollPlan(),
+      sectorIndex: this.sectorIndex,
+      sectorCount: this.run.sectors.length,
+      operationMode: this.missionContext?.projection.operationMode ?? 'flight'
+    });
+    return this.sectorCooldownPlan;
   }
 
   private getBossArenaState(): BossArenaState {
@@ -1621,6 +1688,9 @@ export class GameplayScene implements Scene {
 
   private syncReadouts(): void {
     const state = this.getCombatState();
+    const cooldownPresentation = this.sectorCooldown
+      ? getSectorCooldownPresentation(this.sectorCooldown, this.getScrollState().distance)
+      : null;
     const exitPresentation = this.exitSequence
       ? getSectorExitPresentation(this.exitSequence)
       : null;
@@ -1692,6 +1762,12 @@ export class GameplayScene implements Scene {
       'Warning clear';
     this.itemReadout.textContent = this.getBuildReadout(state);
     this.hintReadout.textContent = this.getOnboardingHint(state);
+
+    if (cooldownPresentation) {
+      this.objectiveReadout.textContent = cooldownPresentation.readout;
+      this.warningReadout.textContent = cooldownPresentation.warning;
+      this.hintReadout.textContent = cooldownPresentation.hint;
+    }
 
     if (exitPresentation) {
       this.objectiveReadout.textContent = `${exitPresentation.title} | ${Math.round(
@@ -1987,7 +2063,7 @@ export class GameplayScene implements Scene {
   private getActiveHazards(
     distance = this.getScrollState().distance
   ): readonly ActiveSectorHazard[] {
-    if (this.bossArenaUpdate.phase === 'locked') {
+    if (this.sectorCooldown || this.bossArenaUpdate.phase === 'locked') {
       return [];
     }
 

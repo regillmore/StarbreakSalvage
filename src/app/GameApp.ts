@@ -2524,6 +2524,9 @@ export class GameApp {
         ? [`Arena ${debugState.arenaPhase}`]
         : [];
     const exitDebug = debugState.exitSequence ? [`Exit ${debugState.exitSequence}`] : [];
+    const cooldownDebug = debugState.sectorCooldown
+      ? [`Recovery coast ${debugState.sectorCooldown}`]
+      : [];
     const destructionDebug = debugState.destructionSequence
       ? [`Destruction ${debugState.destructionSequence}`]
       : [];
@@ -2664,6 +2667,7 @@ export class GameApp {
       ...scrollDebug,
       ...arenaDebug,
       ...exitDebug,
+      ...cooldownDebug,
       ...destructionDebug,
       ...scenarioDebug,
       ...itemDebug,

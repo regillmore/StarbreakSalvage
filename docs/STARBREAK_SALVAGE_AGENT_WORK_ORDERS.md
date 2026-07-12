@@ -1914,6 +1914,25 @@ The local deterministic duration audit reports 28.15 minutes for both fresh and 
 
 Verification: `npm run verify:release` passes with 90 Vitest files and 530 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. The build emits 828.55 kB minified/223.52 kB gzip initial JavaScript and unchanged 26.76 kB CSS. The lazy release audit emits 1.78 kB logic plus 1.92 kB UI, and Scenario Lab setup emits 9.54 kB. No warning threshold changed.
 
+## Work order 111 - Peaceful sector recovery coast
+
+Goal: give ordinary sector endings enough quiet space to collect drops and reset visual pressure before route handoff.
+
+Prompt:
+
+> Add a brief peaceful cooldown distance at the conclusion of each typical sector, allowing the player to collect drops and letting hazards clear before the existing exit sequence triggers. Keep it deterministic and distance-based. Do not move authored combat, objective, wave, boss, landmark, hazard, environment, or loose-currency schedules into the recovery lane. Preserve player movement and pickup collection while retiring hostile pressure and future spawns. Boarding, debug completion, and final-victory handoffs must retain safe specialized behavior. Add readable HUD/debug state and focused tests. Run checks.
+
+Acceptance criteria:
+
+- Every standard non-final flight sector gains a bounded deterministic coast after its authored combat endpoint.
+- Existing pickups remain collectible while enemies, bosses, projectiles, telegraphs, hazards, obstacles, pending enemy spawns, and late planned currency cannot enter the coast.
+- The exit sequence starts only after the coast distance completes, with no objective or transition soft lock.
+- Boarding operations, final victory, reduced-motion behavior, and the forced-completion debug shortcut remain safe.
+
+Status: implemented. `src/game/SectorCooldown.ts` defines one fixed 180-unit recovery lane, keeps the authored combat endpoint separate from the extended traversal exit, gates eligibility to non-final flight sectors, owns bounded distance/presentation math, and centralizes cleanup. `GameplayScene` continues fixed-step scroll and normal player/pickup simulation through that lane while removing hostile actors, bullets, telegraphs, future spawns, late planned loose currency, and world obstacles; sector hazards are hidden and collision-disabled. Existing pickups are deliberately preserved. The HUD reports recovery distance, clear pressure, and remaining exit distance, while debug state exposes coast progress. Boarding operations, final victory, and the `8` forced-completion shortcut bypass the coast and retain their current exit behavior.
+
+Verification: `npm run verify:release` passes with 91 Vitest files and 534 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. Focused cooldown, scroll, and exit-sequence coverage passes 14 tests. The production build emits 831.20 kB minified/224.11 kB gzip initial JavaScript and unchanged 26.76 kB CSS. The 2.65 kB minified/0.59 kB gzip increase is measured; the existing chunk warning remains open and no threshold changed.
+
 ## Review subagent prompt
 
 Use after a feature PR:
