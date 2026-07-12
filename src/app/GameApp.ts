@@ -24,6 +24,7 @@ import {
   writeSettingsData,
   type GameSettings
 } from '../core/settingsData';
+import { DEFAULT_SEED } from '../core/rng';
 import {
   createRunGenerationSaveFingerprint,
   generateRunSkeleton,
@@ -220,9 +221,9 @@ export class GameApp {
     this.audio.setSettings(this.settingsData);
     this.input = new InputSystem(window, settingsToKeyBindingMap(this.settingsData));
     const initialSeedInput = getInitialSeed(window) ?? '';
-    const initialSeed = resolveSeedEntry(initialSeedInput);
-    this.seedEntryInput = initialSeed.source === 'random' ? initialSeed.seed : initialSeedInput;
-    this.currentSeedLabel = initialSeed.seed;
+    const initialSeed = initialSeedInput.trim() ? resolveSeedEntry(initialSeedInput) : null;
+    this.seedEntryInput = initialSeed?.source === 'random' ? '' : initialSeedInput;
+    this.currentSeedLabel = initialSeed?.seed ?? DEFAULT_SEED;
     this.saveData = loadOrRepairSave(window);
     this.runSnapshotCoordinator = new RunSnapshotCoordinator(window.localStorage);
     const snapshotLoad = this.runSnapshotCoordinator.load();
@@ -468,7 +469,7 @@ export class GameApp {
 
   private startRunFromMenu(seedInput: string): void {
     const seed = resolveSeedEntry(seedInput);
-    this.seedEntryInput = seed.source === 'random' ? seed.seed : seedInput;
+    this.seedEntryInput = seed.source === 'random' ? '' : seedInput;
     this.currentSeedLabel = seed.seed;
     this.showContractSelect();
   }

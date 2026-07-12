@@ -4,8 +4,11 @@ import { DEFAULT_SEED } from '../../src/core/rng';
 import { previewSeedEntry, resolveSeedEntry } from '../../src/game/SeedEntry';
 
 describe('seed entry resolution', () => {
-  it('treats blank and default as the smoke seed', () => {
-    expect(resolveSeedEntry('').seed).toBe(DEFAULT_SEED);
+  it('treats blank as random while keeping default as an explicit reference route', () => {
+    expect(resolveSeedEntry('', () => 'fresh route 9')).toMatchObject({
+      seed: 'FRESH-ROUTE-9',
+      source: 'random'
+    });
     expect(resolveSeedEntry('default')).toMatchObject({
       seed: DEFAULT_SEED,
       source: 'default'
@@ -27,6 +30,10 @@ describe('seed entry resolution', () => {
   });
 
   it('previews random without consuming a random seed', () => {
+    expect(previewSeedEntry('')).toMatchObject({
+      seed: 'RANDOM',
+      source: 'random'
+    });
     expect(previewSeedEntry('random')).toMatchObject({
       seed: 'RANDOM',
       source: 'random'

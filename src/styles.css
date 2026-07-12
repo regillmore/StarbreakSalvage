@@ -72,20 +72,64 @@ button {
   position: relative;
   display: grid;
   align-self: center;
-  width: min(92vw, 820px);
+  width: min(94vw, 1120px);
+  max-height: 94vh;
   justify-self: center;
-  justify-items: start;
-  gap: 1rem;
-  padding: clamp(1rem, 5vw, 3rem);
+  gap: clamp(0.8rem, 2vw, 1.35rem);
+  padding: clamp(1rem, 3vw, 2.25rem);
+  overflow: auto;
+  border: 1px solid rgba(124, 247, 255, 0.3);
+  border-radius: 2px;
+  background:
+    linear-gradient(115deg, rgba(5, 9, 24, 0.97) 0 48%, rgba(7, 18, 32, 0.88) 72%, rgba(8, 5, 20, 0.94)),
+    rgba(4, 6, 18, 0.94);
+  box-shadow:
+    0 32px 100px rgba(0, 0, 0, 0.62),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
   text-shadow: 0 2px 24px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+  scrollbar-color: rgba(124, 247, 255, 0.45) rgba(4, 6, 18, 0.4);
 }
 
 .title-shell::before {
   position: absolute;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
+  pointer-events: none;
   content: '';
-  background: linear-gradient(90deg, rgba(4, 6, 18, 0.82), rgba(4, 6, 18, 0));
+  background:
+    repeating-linear-gradient(0deg, transparent 0 5px, rgba(124, 247, 255, 0.025) 6px),
+    linear-gradient(90deg, rgba(255, 107, 214, 0.08), transparent 28%, transparent 72%, rgba(124, 247, 255, 0.07));
+}
+
+.title-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.title-masthead {
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(20rem, 0.98fr);
+  align-items: center;
+  gap: clamp(1.2rem, 4vw, 3.5rem);
+  min-height: min(48vh, 28rem);
+}
+
+.title-copy {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.title-eyebrow,
+.title-build-mark {
+  margin: 0;
+  color: #ffd166;
+  font:
+    800 0.72rem/1.4 'Cascadia Mono',
+    Consolas,
+    monospace;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 .title-shell h1,
@@ -98,9 +142,27 @@ button {
 }
 
 .title-shell h1 {
-  max-width: 12ch;
-  font-size: clamp(3rem, 8vw, 7.5rem);
-  line-height: 0.9;
+  font-size: clamp(3.1rem, 7.5vw, 6.9rem);
+  line-height: 0.78;
+}
+
+.title-logo span {
+  display: block;
+}
+
+.title-logo span:first-child {
+  color: #f8fbff;
+  letter-spacing: -0.07em;
+}
+
+.title-logo span:last-child {
+  margin-top: 0.16em;
+  color: #7cf7ff;
+  font-size: 0.64em;
+  letter-spacing: 0.22em;
+  text-shadow:
+    0 0 22px rgba(124, 247, 255, 0.38),
+    0 2px 24px rgba(0, 0, 0, 0.8);
 }
 
 .scene-panel h1 {
@@ -109,11 +171,182 @@ button {
 }
 
 .tagline {
-  max-width: 42rem;
+  max-width: 34rem;
   margin: 0;
-  color: #c6f7ff;
-  font-size: clamp(1rem, 2.5vw, 1.5rem);
+  color: #f8fbff;
+  font-size: clamp(1.05rem, 2.1vw, 1.48rem);
+  font-weight: 760;
+  line-height: 1.32;
+}
+
+.title-doctrine {
+  max-width: 36rem;
+  margin: 0;
+  color: #9eb8c8;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.title-art {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  justify-items: center;
+  filter: drop-shadow(0 28px 34px rgba(0, 0, 0, 0.46));
+}
+
+.title-art svg {
+  display: block;
+  width: min(100%, 31rem);
+  max-height: 25rem;
+  overflow: visible;
+}
+
+.title-art figcaption {
+  display: grid;
+  width: min(90%, 24rem);
+  gap: 0.18rem;
+  padding: 0.55rem 0.75rem;
+  border-top: 1px solid rgba(255, 209, 102, 0.68);
+  color: #a8c8d6;
+  font:
+    700 0.66rem/1.35 'Cascadia Mono',
+    Consolas,
+    monospace;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.title-art figcaption strong {
+  color: #ffef5f;
+}
+
+.title-art-ship {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: title-ship-drift 5.8s ease-in-out infinite;
+}
+
+.title-art-scan {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: title-scan-turn 18s linear infinite;
+}
+
+.title-art-wreckage {
+  animation: title-wreckage-pulse 4.2s ease-in-out infinite alternate;
+}
+
+.title-launch-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem 1.25rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(255, 209, 102, 0.5);
+  border-left: 4px solid #ffd166;
+  background: linear-gradient(90deg, rgba(255, 209, 102, 0.1), rgba(4, 6, 18, 0.42));
+}
+
+.title-launch-panel h2 {
+  margin: 0 0 0.28rem;
+  color: #f8fbff;
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title-launch-panel p {
+  max-width: 50rem;
+  margin: 0;
+  color: #a8c8d6;
+  font-size: 0.82rem;
   line-height: 1.45;
+}
+
+.title-start-button {
+  min-width: min(19rem, 100%);
+  min-height: 3.8rem;
+}
+
+.title-launch-status {
+  grid-column: 1 / -1;
+  min-height: 1.2rem;
+  color: #7cf7ff !important;
+  font:
+    750 0.7rem/1.4 'Cascadia Mono',
+    Consolas,
+    monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.title-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.title-service-button {
+  min-height: 2.55rem;
+  min-width: 0;
+  padding: 0.45rem 0.82rem;
+  font-size: 0.72rem;
+}
+
+.seed-options {
+  border-top: 1px solid rgba(124, 247, 255, 0.18);
+  color: #9eb8c8;
+}
+
+.seed-options summary {
+  width: fit-content;
+  padding: 0.65rem 0;
+  cursor: pointer;
+  font:
+    760 0.72rem/1.4 'Cascadia Mono',
+    Consolas,
+    monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.seed-options summary:hover,
+.seed-options summary:focus-visible {
+  color: #7cf7ff;
+}
+
+.title-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 1.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(124, 247, 255, 0.18);
+}
+
+.title-build-mark {
+  color: #6f8795;
+  font-size: 0.62rem;
+}
+
+.title-resume-panel {
+  margin: 0;
+}
+
+.title-shell[data-launching='true'] .title-masthead,
+.title-shell[data-launching='true'] .title-navigation,
+.title-shell[data-launching='true'] .seed-options,
+.title-shell[data-launching='true'] .title-footer {
+  opacity: 0.34;
+  transition: opacity 280ms ease;
+}
+
+.title-shell[data-launching='true'] .title-art-ship {
+  animation: title-ship-launch 560ms cubic-bezier(0.25, 0.7, 0.2, 1) forwards;
 }
 
 .boot-status,
@@ -139,9 +372,9 @@ button {
 
 .seed-form {
   display: grid;
-  width: min(100%, 42rem);
+  width: min(100%, 46rem);
   gap: 0.5rem;
-  margin-top: 0.25rem;
+  padding: 0.35rem 0 0.8rem;
 }
 
 .seed-label,
@@ -159,7 +392,7 @@ button {
 
 .seed-status {
   min-height: 1.2rem;
-  color: #c6f7ff;
+  color: #8da9b8;
 }
 
 .seed-entry-row {
@@ -182,6 +415,45 @@ button {
     0.9rem/1.4 'Cascadia Mono',
     'Consolas',
     monospace;
+}
+
+.seed-launch-button {
+  min-width: 11rem;
+}
+
+@keyframes title-ship-drift {
+  0%,
+  100% {
+    translate: 0 -3px;
+  }
+
+  50% {
+    translate: 0 7px;
+  }
+}
+
+@keyframes title-scan-turn {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@keyframes title-wreckage-pulse {
+  from {
+    opacity: 0.58;
+  }
+
+  to {
+    opacity: 0.94;
+  }
+}
+
+@keyframes title-ship-launch {
+  to {
+    translate: 0 -210px;
+    scale: 0.62;
+    opacity: 0;
+  }
 }
 
 .seed-entry-input:focus-visible {
@@ -1494,6 +1766,30 @@ html[data-reduced-motion='true'] .sector-exit-toast {
   transition: none;
 }
 
+html[data-reduced-motion='true'] .title-art-ship,
+html[data-reduced-motion='true'] .title-art-scan,
+html[data-reduced-motion='true'] .title-art-wreckage,
+html[data-performance-mode='true'] .title-art-ship,
+html[data-performance-mode='true'] .title-art-scan,
+html[data-performance-mode='true'] .title-art-wreckage {
+  animation: none;
+}
+
+html[data-reduced-motion='true'] .title-shell[data-launching='true'] .title-art-ship {
+  opacity: 0.45;
+  translate: none;
+  scale: none;
+}
+
+html[data-bullet-contrast='high'] .title-shell {
+  border-color: rgba(248, 251, 255, 0.72);
+}
+
+html[data-bullet-contrast='high'] .title-launch-panel,
+html[data-bullet-contrast='high'] .seed-options {
+  border-color: rgba(248, 251, 255, 0.62);
+}
+
 html[data-reduced-motion='true'] .cockpit-hud::before,
 html[data-performance-mode='true'] .cockpit-hud::before {
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--hud-trim) 14%, transparent) inset;
@@ -1667,6 +1963,27 @@ html[data-bullet-contrast='high'] .hud-meter-track {
 }
 
 @media (max-width: 760px) {
+  .title-shell {
+    width: min(96vw, 42rem);
+  }
+
+  .title-masthead {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+  }
+
+  .title-art svg {
+    max-height: 14rem;
+  }
+
+  .title-launch-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .title-launch-status {
+    grid-column: 1;
+  }
+
   .contract-list,
   .route-grid,
   .reward-grid,
@@ -1706,12 +2023,38 @@ html[data-bullet-contrast='high'] .hud-meter-track {
 
 @media (max-width: 520px) {
   .title-shell {
-    align-self: end;
-    padding-bottom: 4rem;
+    align-self: center;
+    max-height: 96vh;
+    padding: 0.9rem;
   }
 
   .title-shell h1 {
-    font-size: clamp(2.6rem, 16vw, 4.5rem);
+    font-size: clamp(2.6rem, 15vw, 4.2rem);
+  }
+
+  .title-masthead {
+    min-height: auto;
+  }
+
+  .title-art {
+    display: none;
+  }
+
+  .title-navigation {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .title-service-button {
+    width: 100%;
+  }
+
+  .title-footer {
+    display: grid;
+  }
+
+  .seed-entry-row {
+    display: grid;
   }
 
   .primary-button,

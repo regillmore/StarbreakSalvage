@@ -2012,6 +2012,28 @@ Status: implemented. `proximity_mine` extends the environment-object catalog wit
 
 Verification: `npm run verify:release` passes with 92 Vitest files and 552 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. The focused content/placement/runtime/hazard/environment/combat pass covers 8 files and 117 tests. Regression proves deterministic 4-6-mine cluster materialization, fixed-world bounds, invalid proximity-schema rejection, removal of legacy rectangle damage, ordinary-fire resistance, explosion arming, enemy damage, and two-mine delayed fuse chaining. The production build emits 840.21 kB minified/226.51 kB gzip initial JavaScript and unchanged 26.76 kB CSS. The existing chunk warning remains open and no threshold changed.
 
+## Work order 116 - Random-first title and launch reimagining
+
+Goal: make the first screen sell the fantasy and make a fresh unknown expedition the natural default.
+
+Prompt:
+
+> Reimagine the title-screen layout and art, including the tagline and run-start sequence. Lead with original Starbreak Salvage identity, readable code-native art, and one unmistakable new-expedition action. A normal blank launch should generate a random seed at launch; manual seed entry should become a quieter optional control while explicit shared/challenge codes and seed URLs remain deterministic. Preserve resume, archive, upgrade, settings, debug, keyboard, narrow viewport, high contrast, reduced motion, offline/static hosting, and contract-selection behavior. Add an accessible bounded launch handoff and focused tests. Run checks.
+
+Acceptance criteria:
+
+- The title screen has a materially new responsive composition, original art, tagline, supporting fantasy copy, service navigation, progression footer, and clear launch hierarchy.
+- With no explicit code, the initially focused primary action launches a newly generated random expedition and returning from that run does not silently reuse its generated code.
+- Shared/challenge code entry is collapsed and secondary by default; a supplied URL code remains visible, focused through the primary seeded action, and deterministic.
+- The contract-channel handoff prevents duplicate launch, announces its state, clears timers on exit, and uses a shortened non-moving reduced-motion path.
+- Keyboard, pointer, resume, settings, high contrast, performance mode, narrow layouts, offline assets, and existing contract/run flows remain compatible.
+
+Status: implemented. `MainMenuScene` now uses a two-column salvage-transmission masthead with an original inline SVG cutter, shattered ring, wreckage, scanner, and recovery caption; the tagline is “Break the blockade. Build the impossible. Bring home what survives.” A bordered launch directive, compact hangar-service navigation, progression/network footer, and responsive single-column/narrow variants replace the former vertical form stack. Ambient ship, scanner, and wreckage animation is CSS-only and disabled by reduced-motion/performance settings. Launch disables duplicate controls, announces three short contract-channel states, and hands off after 560 ms, or one static 80 ms beat under reduced motion.
+
+Blank and `RANDOM` input now resolve through the injectable random-seed factory; `DEFAULT` remains the explicit STARBREAK-SMOKE reference route. The primary button says `Start Random Expedition` for ordinary visits and `Start Seeded Expedition` when a URL or retained manual code is present. Manual codes live inside `Use a specific expedition code`, retain datalist/status support, and can launch directly. `GameApp` no longer consumes a random seed merely by opening the menu and clears title input after a random launch, while generated run identity, summaries, share URLs, deterministic generation, and snapshots remain unchanged.
+
+Verification: `npm run verify:release` passes with 92 Vitest files and 552 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. Focused coverage includes five seed-resolution cases plus targeted title/run-flow Chromium journeys for random launch, manual code launch, explicit URL launch, launch-state announcement, keyboard focus, Scenario Lab navigation, suspended-run resume, reduced motion, high contrast, performance mode, and narrow layout. The production build emits 846.20 kB minified/228.90 kB gzip initial JavaScript and 31.74 kB CSS/7.15 kB gzip. The existing chunk warning remains open and no threshold changed. Direct screenshot inspection was attempted through the in-app browser control surface, but no browser target was available in this session; Chromium responsive/accessibility automation is the available local visual evidence.
+
 ## Review subagent prompt
 
 Use after a feature PR:

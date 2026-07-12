@@ -65,6 +65,11 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.goto('./?debug=1');
 
   await expect(page.getByRole('heading', { name: 'Starbreak Salvage' })).toBeVisible();
+  await expect(
+    page.getByRole('img', { name: /salvage cutter descending through a shattered orbital ring/i })
+  ).toBeVisible();
+  await expect(page.getByText('Break the blockade. Build the impossible.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Start Random Expedition' })).toBeFocused();
   await expect(page.getByRole('img', { name: 'Starbreak Salvage playfield' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Settings' }).click();
@@ -78,9 +83,14 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByRole('checkbox', { name: 'Mute' })).toBeChecked();
   await page.getByRole('button', { name: 'Back', exact: true }).click();
 
+  await page.locator('summary').filter({ hasText: 'specific expedition code' }).click();
   await page.getByTestId('seed-entry').fill('starbreak smoke');
   await expect(page.getByTestId('seed-status')).toContainText('STARBREAK-SMOKE');
   await page.keyboard.press('Enter');
+  await expect(page.locator('.title-shell')).toHaveAttribute('data-launching', 'true');
+  await expect(page.getByTestId('launch-status')).toContainText(
+    /Authenticating|Triangulating|Contract board/
+  );
 
   await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
   await expect(page.getByTestId('contract-ship-preview')).toHaveCount(3);
@@ -434,8 +444,9 @@ test('opens the Upgrade Bay and purchases an upgrade from banked scrap', async (
   await expect(page.getByTestId('boot-status')).toContainText('Bank 4 kg');
   await expect(page.getByTestId('boot-status')).toContainText('Upgrades 1');
 
-  await page.getByRole('button', { name: 'Start Run' }).click();
+  await page.getByRole('button', { name: 'Start Random Expedition' }).click();
   await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
+  await expect(page.getByText(/Contract Board \| Seed RANDOM-/)).toBeVisible();
   await expect(page.getByTestId('contract-upgrade-intel')).toContainText('Contract Survey Rig');
   await expect(page.locator('.contract-survey-note').first()).toContainText('Survey:');
 
@@ -765,7 +776,9 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
   await expect(page.locator('html')).toHaveAttribute('data-bullet-contrast', 'high');
   await expect(page.locator('html')).toHaveAttribute('data-performance-mode', 'true');
 
-  for (let index = 0; index < 5; index += 1) await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: 'Start Seeded Expedition' })).toBeFocused();
+  for (let index = 0; index < 4; index += 1) await page.keyboard.press('Tab');
+  await expect(page.getByTestId('open-scenario-lab')).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('scenario-lab')).toBeVisible();
   await expect(page.getByTestId('scenario-lab-intro')).toContainText('deterministic session');
@@ -950,9 +963,7 @@ test('supports keyboard-only start, pause, end-run, and summary flow', async ({ 
 
   await page.goto('./?debug=1&seed=STARBREAK-SMOKE');
 
-  await expect(page.getByTestId('seed-entry')).toBeFocused();
-  await page.keyboard.press('Tab');
-  await expect(page.getByRole('button', { name: 'Start Run' })).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Start Seeded Expedition' })).toBeFocused();
 
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
@@ -1018,8 +1029,8 @@ test('suspends, reloads, resumes, and clears a versioned expedition snapshot', a
 
   await page.reload();
   await expect(page.getByTestId('run-snapshot-panel')).toBeVisible();
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Tab');
+  await page.keyboard.press('Shift+Tab');
+  await page.keyboard.press('Shift+Tab');
   await expect(page.getByTestId('resume-expedition')).toBeFocused();
   await page.keyboard.press('Enter');
   await expectGameplaySector(page, 'Outer Debris Field');

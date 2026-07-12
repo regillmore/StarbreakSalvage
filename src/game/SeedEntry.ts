@@ -21,16 +21,16 @@ export type RandomSeedFactory = () => string;
 export function previewSeedEntry(input: string | null | undefined): SeedEntryResolution {
   const normalized = parseSeedLabel(input, DEFAULT_SEED);
 
-  if (isDefaultSeedRequest(input)) {
-    return createSeedResolution(DEFAULT_SEED, 'default');
-  }
-
-  if (normalized === 'RANDOM') {
+  if (isRandomSeedRequest(input)) {
     return {
       seed: 'RANDOM',
       source: 'random',
-      status: 'Seed RANDOM | random on launch'
+      status: 'New expedition | random route on launch'
     };
+  }
+
+  if (isDefaultSeedRequest(input)) {
+    return createSeedResolution(DEFAULT_SEED, 'default');
   }
 
   return createSeedResolution(normalized, isKnownSeedLabel(normalized) ? 'known' : 'custom');
@@ -42,12 +42,12 @@ export function resolveSeedEntry(
 ): SeedEntryResolution {
   const normalized = parseSeedLabel(input, DEFAULT_SEED);
 
-  if (isDefaultSeedRequest(input)) {
-    return createSeedResolution(DEFAULT_SEED, 'default');
+  if (isRandomSeedRequest(input)) {
+    return createSeedResolution(parseSeedLabel(randomSeedFactory(), DEFAULT_SEED), 'random');
   }
 
-  if (normalized === 'RANDOM') {
-    return createSeedResolution(parseSeedLabel(randomSeedFactory(), DEFAULT_SEED), 'random');
+  if (isDefaultSeedRequest(input)) {
+    return createSeedResolution(DEFAULT_SEED, 'default');
   }
 
   return createSeedResolution(normalized, isKnownSeedLabel(normalized) ? 'known' : 'custom');
@@ -72,7 +72,12 @@ export function createRandomSeed(): string {
 
 function isDefaultSeedRequest(input: string | null | undefined): boolean {
   const trimmed = input?.trim() ?? '';
-  return trimmed.length === 0 || parseSeedLabel(trimmed, DEFAULT_SEED) === 'DEFAULT';
+  return parseSeedLabel(trimmed, DEFAULT_SEED) === 'DEFAULT';
+}
+
+function isRandomSeedRequest(input: string | null | undefined): boolean {
+  const trimmed = input?.trim() ?? '';
+  return trimmed.length === 0 || parseSeedLabel(trimmed, DEFAULT_SEED) === 'RANDOM';
 }
 
 function isKnownSeedLabel(seed: string): seed is KnownSeedLabel {
@@ -83,22 +88,22 @@ function createSeedResolution(seed: string, source: SeedEntrySource): SeedEntryR
   return {
     seed,
     source,
-    status: `Seed ${seed} | ${formatSeedSource(source)}`
+    status: `Expedition ${seed} | ${formatSeedSource(source)}`
   };
 }
 
 function formatSeedSource(source: SeedEntrySource): string {
   if (source === 'default') {
-    return 'default contract board';
+    return 'reference route';
   }
 
   if (source === 'known') {
-    return 'known reference seed';
+    return 'known reference route';
   }
 
   if (source === 'random') {
-    return 'randomized label';
+    return 'randomized route';
   }
 
-  return 'custom label';
+  return 'custom route code';
 }

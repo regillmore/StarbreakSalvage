@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Reimagined the title screen around an original shattered-ring salvage-cutter illustration, the new “Break the blockade. Build the impossible. Bring home what survives.” tagline, a stronger random-expedition call to action, compact hangar services, and an accessible contract-channel launch sequence. Blank launch input now produces a fresh random route; shared/challenge expedition codes remain available through a collapsed secondary control and explicit seed URLs still launch deterministically.
+
 - Reworked mine-belt hazards into deterministic clusters of 4-6 discrete world-anchored proximity mines. Mines are individually destructible, resist ordinary fire, arm quickly from explosions, show fixed-step proximity/damage/chain fuses, damage players and enemies on detonation, and pass shorter telegraphed fuses through bounded nearby-mine chains; the former lane-wide mine damage rectangle is removed.
 
 - Fixed the STARBREAK-SMOKE Act II finale gate soft lock by rebuilding boss-arena and set-piece coordinates from each mission-projected objective and scroll plan. Required gate operations can no longer inherit full-sector lock distances beyond their shortened live endpoint; a seed-specific regression reaches the projected Wreck-Train lock and verifies the boss spawn request.
