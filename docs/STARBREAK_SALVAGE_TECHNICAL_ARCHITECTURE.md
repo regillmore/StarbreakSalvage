@@ -753,6 +753,13 @@ seed + permanent save fingerprint
 - `ExpeditionEndurance.runFrontierResumeAudit` restores one production snapshot into both frontier decisions. Browser smoke separately proves the presentation/orchestration path from suspended combat through settled-map restore to extraction victory and snapshot cleanup.
 - `VoyageReleaseAuditScene` and its calculation module are lazy debug-only chunks. They add no production gameplay responsibility to the fixed-step loop. Phase 11 closes with `GameApp`, `GameplayScene`, `CombatState`, snapshot validation, summary content, and content validation still named as next-phase extraction targets rather than silently increasing the Vite warning threshold.
 
+### Work order 117 sector-departure boundary
+
+- `src/game/SectorExitSequence.ts` is a pure, elapsed-time presentation read model. It owns ignition, boost, camera-clear, and transition phases plus the departing ship pose and accessibility announcement; it does not mutate combat, scroll, route, reward, or run state.
+- `GameplayScene` freezes the already-settled sector camera, supplies the live player's position and contract appearance, fades the persistent HUD, and continues using the established route, boarding, cooldown, debug, and final-victory handoff callbacks when the bounded sequence completes.
+- `CanvasRenderer` paints the existing contract-specific player ship at the read-model pose, scales its existing exhaust, adds at most a small fixed set of speed streaks, and closes a restrained dark aperture only after the ship approaches camera clear. The former beacon/corridor metaphor and visible percentage overlay are removed; phase copy remains screen-reader-only and percentage state remains debug-only.
+- Reduced motion shortens the same semantic sequence, disables speed streaks, and caps exhaust scale without bypassing the ship departure or changing handoff results. No seed, combat, save, snapshot, or content schema changes are involved.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

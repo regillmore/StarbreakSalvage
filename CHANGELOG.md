@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Replaced the abstract sector-exit beacon, vector corridor, and visible progress overlay with a ship-led departure. The player's actual contract craft now centers, ignites an enlarged exhaust plume, accelerates beyond the top of the frozen combat camera, and hands off through a restrained closing-aperture transition; reduced motion removes speed streaks while preserving a short readable launch.
+
 - Reimagined the title screen around an original shattered-ring salvage-cutter illustration, the new “Break the blockade. Build the impossible. Bring home what survives.” tagline, a stronger random-expedition call to action, compact hangar services, and an accessible contract-channel launch sequence. Blank launch input now produces a fresh random route; shared/challenge expedition codes remain available through a collapsed secondary control and explicit seed URLs still launch deterministically.
 
 - Reworked mine-belt hazards into deterministic clusters of 4-6 discrete world-anchored proximity mines. Mines are individually destructible, resist ordinary fire, arm quickly from explosions, show fixed-step proximity/damage/chain fuses, damage players and enemies on detonation, and pass shorter telegraphed fuses through bounded nearby-mine chains; the former lane-wide mine damage rectangle is removed.

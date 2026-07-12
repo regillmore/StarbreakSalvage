@@ -1,7 +1,7 @@
 import type { CombatEndReason } from './CombatState';
 
 export type SectorExitSequenceReason = Extract<CombatEndReason, 'sectorComplete' | 'victory'>;
-export type SectorExitMotion = 'corridor' | 'static';
+export type SectorExitPhase = 'ignition' | 'boost' | 'clear' | 'transition';
 
 export interface SectorExitSequenceOptions {
   readonly sectorName: string;
@@ -9,6 +9,8 @@ export interface SectorExitSequenceOptions {
   readonly sectorCount: number;
   readonly reason: SectorExitSequenceReason;
   readonly reducedMotion: boolean;
+  readonly playerX?: number;
+  readonly playerY?: number;
   readonly debugFast?: boolean;
 }
 
@@ -20,24 +22,36 @@ export interface SectorExitSequenceState {
   readonly reducedMotion: boolean;
   readonly debugFast: boolean;
   readonly finalSector: boolean;
+  readonly originX: number;
+  readonly originY: number;
   readonly durationSeconds: number;
   elapsedSeconds: number;
 }
 
 export interface SectorExitPresentation {
+  readonly phase: SectorExitPhase;
   readonly title: string;
-  readonly toast: string;
+  readonly announcement: string;
   readonly hint: string;
   readonly progress: number;
-  readonly motion: SectorExitMotion;
-  readonly beaconAlpha: number;
-  readonly corridorAlpha: number;
-  readonly pulseScale: number;
+  readonly shipX: number;
+  readonly shipY: number;
+  readonly shipScale: number;
+  readonly shipAlpha: number;
+  readonly thrust: number;
+  readonly exhaustScale: number;
+  readonly speedLineAlpha: number;
+  readonly transitionAlpha: number;
 }
 
-const NORMAL_EXIT_SECONDS = 1.15;
-const REDUCED_MOTION_EXIT_SECONDS = 0.72;
-const DEBUG_EXIT_SECONDS = 0.55;
+const NORMAL_EXIT_SECONDS = 1.72;
+const REDUCED_MOTION_EXIT_SECONDS = 0.96;
+const DEBUG_EXIT_SECONDS = 0.6;
+const COMBAT_CENTER_X = 320;
+const DEFAULT_PLAYER_Y = 562;
+const IGNITION_END = 0.22;
+const BOOST_END = 0.74;
+const TRANSITION_START = 0.7;
 
 export function createSectorExitSequence(
   options: SectorExitSequenceOptions
@@ -59,6 +73,8 @@ export function createSectorExitSequence(
     reducedMotion: options.reducedMotion,
     debugFast,
     finalSector: options.reason === 'victory' || sectorIndex >= sectorCount - 1,
+    originX: sanitizeCoordinate(options.playerX, COMBAT_CENTER_X),
+    originY: sanitizeCoordinate(options.playerY, DEFAULT_PLAYER_Y),
     durationSeconds,
     elapsedSeconds: 0
   };
@@ -79,23 +95,43 @@ export function getSectorExitPresentation(
   state: SectorExitSequenceState
 ): SectorExitPresentation {
   const progress = getSectorExitProgress(state);
-  const percent = Math.round(progress * 100);
-  const motion: SectorExitMotion = state.reducedMotion ? 'static' : 'corridor';
-  const title = state.finalSector ? 'Final exit beacon locked' : 'Sector exit beacon locked';
-  const routeText = state.finalSector ? 'summary uplink' : 'route telemetry';
+  const phase = getSectorExitPhase(progress);
+  const ignitionProgress = smoothStep(clamp01(progress / IGNITION_END));
+  const boostProgress = smoothStep(
+    clamp01((progress - IGNITION_END) / (BOOST_END - IGNITION_END))
+  );
+  const transitionProgress = smoothStep(
+    clamp01((progress - TRANSITION_START) / (1 - TRANSITION_START))
+  );
+  const launchDistance = state.originY + 168;
+  const shipY =
+    progress <= IGNITION_END
+      ? state.originY - ignitionProgress * 18
+      : state.originY - 18 - launchDistance * boostProgress * boostProgress;
+  const shipAlpha = roundExitValue(1 - clamp01((progress - BOOST_END) / 0.12));
+  const finalTarget = state.finalSector ? 'run summary' : 'route selection';
 
   return {
-    title,
-    toast: `${state.sectorName} clear | ${routeText} ${percent}%`,
-    hint: state.finalSector
-      ? 'Hint final corridor secured; preparing run summary.'
-      : 'Hint sector exit secured; plotting route choices.',
+    phase,
+    title: phase === 'ignition' ? 'Departure burn armed' : 'Departure burn committed',
+    announcement: formatDepartureAnnouncement(state, phase),
+    hint:
+      phase === 'transition'
+        ? `Ship clear; opening ${finalTarget}.`
+        : 'Camera holding sector position while the ship accelerates beyond visual range.',
     progress,
-    motion,
-    beaconAlpha: roundExitValue(0.5 + progress * 0.38),
-    corridorAlpha: motion === 'static' ? 0 : roundExitValue(0.16 + progress * 0.24),
-    pulseScale:
-      motion === 'static' ? 1 : roundExitValue(0.94 + Math.sin(progress * Math.PI) * 0.08)
+    shipX: roundExitValue(lerp(state.originX, COMBAT_CENTER_X, ignitionProgress)),
+    shipY: roundExitValue(shipY),
+    shipScale: roundExitValue(1 - boostProgress * 0.14),
+    shipAlpha,
+    thrust: roundExitValue(0.45 + ignitionProgress * 0.55),
+    exhaustScale: roundExitValue(
+      state.reducedMotion ? 1.35 : 1 + ignitionProgress * 0.9 + boostProgress * 2.4
+    ),
+    speedLineAlpha: state.reducedMotion
+      ? 0
+      : roundExitValue(Math.sin(boostProgress * Math.PI) * 0.48),
+    transitionAlpha: roundExitValue(transitionProgress)
   };
 }
 
@@ -105,6 +141,49 @@ export function getSectorExitProgress(state: SectorExitSequenceState): number {
   }
 
   return roundExitValue(Math.min(1, Math.max(0, state.elapsedSeconds / state.durationSeconds)));
+}
+
+function getSectorExitPhase(progress: number): SectorExitPhase {
+  if (progress < IGNITION_END) return 'ignition';
+  if (progress < BOOST_END) return 'boost';
+  if (progress < 0.88) return 'clear';
+  return 'transition';
+}
+
+function formatDepartureAnnouncement(
+  state: SectorExitSequenceState,
+  phase: SectorExitPhase
+): string {
+  if (phase === 'ignition') {
+    return `${state.sectorName} clear. Main thrusters igniting.`;
+  }
+
+  if (phase === 'boost') {
+    return `${state.sectorName} clear. Ship accelerating out of sector.`;
+  }
+
+  if (phase === 'clear') {
+    return 'Ship clear of local camera range.';
+  }
+
+  return state.finalSector ? 'Opening run summary.' : 'Opening route selection.';
+}
+
+function sanitizeCoordinate(value: number | undefined, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
+
+function clamp01(value: number): number {
+  return Math.min(1, Math.max(0, value));
+}
+
+function lerp(start: number, end: number, progress: number): number {
+  return start + (end - start) * progress;
+}
+
+function smoothStep(value: number): number {
+  const progress = clamp01(value);
+  return progress * progress * (3 - 2 * progress);
 }
 
 function roundExitValue(value: number): number {

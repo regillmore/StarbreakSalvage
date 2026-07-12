@@ -1521,6 +1521,19 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
   --hud-glow-mix: 34%;
 }
 
+.game-hud[data-exit-state='active'] {
+  opacity: 0;
+  translate: 0 -0.7rem;
+  transition:
+    opacity 220ms ease,
+    translate 320ms ease;
+}
+
+html[data-reduced-motion='true'] .game-hud[data-exit-state='active'] {
+  translate: none;
+  transition: opacity 80ms linear;
+}
+
 .cockpit-hud::before {
   position: absolute;
   inset: 0.35rem;

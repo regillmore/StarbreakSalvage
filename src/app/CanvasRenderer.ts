@@ -85,6 +85,11 @@ export interface PlayerRenderState {
   readonly weaponHeat?: number;
   readonly weaponOverheatLimit?: number;
   readonly weaponOverheatSeconds?: number;
+  readonly scale?: number;
+  readonly alpha?: number;
+  readonly departureActive?: boolean;
+  readonly departureExhaustScale?: number;
+  readonly departureSpeedLineAlpha?: number;
 }
 
 export interface EnemyRenderState {
@@ -486,67 +491,35 @@ export class CanvasRenderer {
     }
   }
 
-  public paintSectorExitSequence(
+  public paintSectorExitTransition(
     presentation: SectorExitPresentation,
     bounds: CombatBounds = createDefaultCombatBounds()
   ): void {
     const { width, height } = bounds;
     const context = this.context;
-    const centerX = width / 2;
-    const beaconY = Math.max(58, height * 0.13);
-    const gateWidth = width * (0.32 + presentation.progress * 0.24);
-    const beaconHeight = 32 + presentation.progress * 10;
-    const primary = this.settings.bulletContrast === 'high' ? '#ffffff' : '#7cf7ff';
-    const accent = this.settings.bulletContrast === 'high' ? '#ffef5f' : '#ffd166';
+    const alpha = clamp(presentation.transitionAlpha, 0, 1);
 
-    context.save();
-
-    if (presentation.corridorAlpha > 0) {
-      context.globalAlpha = presentation.corridorAlpha;
-      context.strokeStyle = primary;
-      context.lineWidth = 2;
-
-      for (let index = 0; index < 4; index += 1) {
-        const y = height - ((index * 150 + presentation.progress * 190) % (height + 120));
-        const inset = 44 + index * 8;
-
-        context.beginPath();
-        context.moveTo(inset, y);
-        context.lineTo(centerX - gateWidth * 0.52, beaconY + beaconHeight / 2);
-        context.moveTo(width - inset, y);
-        context.lineTo(centerX + gateWidth * 0.52, beaconY + beaconHeight / 2);
-        context.stroke();
-      }
-
-      context.globalAlpha = presentation.corridorAlpha * 0.44;
-      context.fillStyle = primary;
-      context.fillRect(0, 0, Math.max(8, 22 - presentation.progress * 6), height);
-      context.fillRect(width - Math.max(8, 22 - presentation.progress * 6), 0, 22, height);
+    if (alpha <= 0) {
+      return;
     }
 
-    context.translate(centerX, beaconY);
-    context.scale(presentation.pulseScale, presentation.pulseScale);
-    context.globalAlpha = presentation.beaconAlpha;
-    context.fillStyle = 'rgba(4, 6, 18, 0.72)';
-    context.strokeStyle = primary;
-    context.lineWidth = 2;
-    context.beginPath();
-    context.rect(-gateWidth / 2, -beaconHeight / 2, gateWidth, beaconHeight);
-    context.fill();
-    context.stroke();
+    const shutterHeight = height * 0.5 * alpha;
+    const edgeColor = this.settings.bulletContrast === 'high' ? '#ffffff' : '#7cf7ff';
 
-    context.globalAlpha = Math.min(1, presentation.beaconAlpha + 0.1);
-    context.strokeStyle = accent;
-    context.lineWidth = 1.4;
+    context.save();
+    context.globalAlpha = Math.min(0.98, 0.82 + alpha * 0.16);
+    context.fillStyle = '#040612';
+    context.fillRect(0, 0, width, shutterHeight);
+    context.fillRect(0, height - shutterHeight, width, shutterHeight);
+    context.globalAlpha = (1 - alpha) * 0.5;
+    context.strokeStyle = edgeColor;
+    context.lineWidth = 1.5;
     context.beginPath();
-    context.moveTo(-gateWidth * 0.38, 0);
-    context.lineTo(-gateWidth * 0.12, 0);
-    context.moveTo(gateWidth * 0.12, 0);
-    context.lineTo(gateWidth * 0.38, 0);
-    context.moveTo(0, -beaconHeight * 0.32);
-    context.lineTo(0, beaconHeight * 0.32);
+    context.moveTo(0, shutterHeight);
+    context.lineTo(width, shutterHeight);
+    context.moveTo(0, height - shutterHeight);
+    context.lineTo(width, height - shutterHeight);
     context.stroke();
-
     context.restore();
   }
 
@@ -594,6 +567,8 @@ export class CanvasRenderer {
   public paintPlayerShip(player: PlayerRenderState): void {
     const context = this.context;
     const thrust = clamp(player.thrust, 0, 1);
+    const departureExhaustScale = Math.max(1, player.departureExhaustScale ?? 1);
+    const departureSpeedLineAlpha = clamp(player.departureSpeedLineAlpha ?? 0, 0, 1);
     const velocityCues = getVelocityCueState(this.settings);
     const appearance = player.appearance ?? DEFAULT_PLAYER_SHIP_APPEARANCE;
     const cueState = getPlayerShipCueState(
@@ -616,15 +591,34 @@ export class CanvasRenderer {
       },
       this.settings
     );
-    const shipAlpha = cueState.bodyAlpha;
+    const shipAlpha = cueState.bodyAlpha * clamp(player.alpha ?? 1, 0, 1);
 
     context.save();
     context.translate(player.x, player.y);
+    context.scale(Math.max(0.1, player.scale ?? 1), Math.max(0.1, player.scale ?? 1));
 
-    this.paintPlayerReadinessCues(player.radius, cueState);
+    if (departureSpeedLineAlpha > 0) {
+      context.globalAlpha = departureSpeedLineAlpha;
+      context.strokeStyle =
+        this.settings.bulletContrast === 'high' ? '#ffffff' : appearance.engineColor;
+      context.lineWidth = Math.max(1.5, player.radius * 0.09);
+      for (const offset of [-1.7, -0.82, 0, 0.82, 1.7]) {
+        context.beginPath();
+        context.moveTo(offset * player.radius, player.radius * 1.4);
+        context.lineTo(
+          offset * player.radius * 1.18,
+          player.radius * (4.2 + departureExhaustScale * 1.4)
+        );
+        context.stroke();
+      }
+    }
+
+    if (!player.departureActive) {
+      this.paintPlayerReadinessCues(player.radius, cueState);
+    }
 
     if (velocityCues.engineWakeAlpha > 0 && cueState.wakeAlpha > 0) {
-      const wakeLength = cueState.wakeLengthScale;
+      const wakeLength = cueState.wakeLengthScale * departureExhaustScale;
 
       context.globalAlpha = velocityCues.engineWakeAlpha * cueState.wakeAlpha * shipAlpha;
       context.strokeStyle = cueState.wakeColor;
@@ -648,7 +642,10 @@ export class CanvasRenderer {
     context.fillStyle = appearance.engineColor;
     context.beginPath();
     context.moveTo(-player.radius * 0.48, player.radius * 0.68);
-    context.lineTo(0, player.radius * (1.35 + thrust * 0.45));
+    context.lineTo(
+      0,
+      player.radius * (1.35 + thrust * 0.45) * departureExhaustScale
+    );
     context.lineTo(player.radius * 0.48, player.radius * 0.68);
     context.closePath();
     context.fill();
@@ -669,7 +666,9 @@ export class CanvasRenderer {
     this.tracePlayerShipSilhouette(appearance.silhouette, player.radius);
     context.stroke();
 
-    this.paintPlayerDamageCues(appearance.silhouette, player.radius, cueState);
+    if (!player.departureActive) {
+      this.paintPlayerDamageCues(appearance.silhouette, player.radius, cueState);
+    }
 
     context.globalAlpha = shipAlpha * (this.settings.bulletContrast === 'high' ? 0.42 : 0.24);
     context.strokeStyle = cueState.hitRingColor;
@@ -680,7 +679,9 @@ export class CanvasRenderer {
 
     context.globalAlpha = shipAlpha;
     this.paintPlayerWeaponMounts(appearance.weaponMounts, appearance, player.radius);
-    this.paintPlayerWeaponStress(player.radius, cueState);
+    if (!player.departureActive) {
+      this.paintPlayerWeaponStress(player.radius, cueState);
+    }
 
     context.fillStyle =
       this.settings.bulletContrast === 'high' ? '#ffffff' : appearance.cockpitAccent;

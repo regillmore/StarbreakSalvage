@@ -203,9 +203,11 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
 
   await page.keyboard.press('8');
   await expect(page.getByTestId('sector-exit-toast')).toContainText(
-    /Outer Debris Field clear \| route telemetry/
+    /Outer Debris Field clear\. (Main thrusters igniting|Ship accelerating out of sector)/
   );
-  await expect(page.locator('.debug-overlay')).toContainText(/Exit sectorComplete \d+%/);
+  await expect(page.locator('.debug-overlay')).toContainText(
+    /Exit sectorComplete (ignition|boost|clear|transition) \d+%/
+  );
   await expect(page.getByTestId('mission-branch')).toBeVisible();
   await page.getByTestId('mission-branch-optional').click();
   await expect(page.getByTestId('expedition-readout')).toContainText('Black Box Signal');
@@ -1140,7 +1142,9 @@ test('keeps the gameplay HUD and safe frame readable in a narrow viewport', asyn
 
 async function forceCompleteSectorAndEnterNext(page: Page, nextSectorName: string): Promise<void> {
   await page.keyboard.press('8');
-  await expect(page.getByTestId('sector-exit-toast')).toContainText(/clear \| route telemetry/);
+  await expect(page.getByTestId('sector-exit-toast')).toContainText(
+    /clear\. (Main thrusters igniting|Ship accelerating out of sector)/
+  );
   await expect(page.getByTestId('mission-branch')).toBeVisible();
   await page.getByTestId('mission-branch-direct').click();
   await page.getByTestId('command-deck-continue').click();

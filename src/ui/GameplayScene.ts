@@ -272,6 +272,7 @@ export class GameplayScene implements Scene {
   private readonly specialMeter: HudMeterElements;
   private readonly bombMeter: HudMeterElements;
   private readonly heatMeter: HudMeterElements;
+  private hudRoot: HTMLElement | null = null;
   private exitSequence: SectorExitSequenceState | null = null;
   private exitSequenceResult: CombatRunResult | null = null;
   private sectorCooldown: SectorCooldownState | null = null;
@@ -369,7 +370,7 @@ export class GameplayScene implements Scene {
     this.commandReadout.setAttribute('aria-live', 'polite');
 
     this.exitToast = document.createElement('p');
-    this.exitToast.className = 'sector-exit-toast';
+    this.exitToast.className = 'sr-only';
     this.exitToast.dataset.testid = 'sector-exit-toast';
     this.exitToast.dataset.exitState = 'idle';
     this.exitToast.setAttribute('aria-live', 'polite');
@@ -398,6 +399,7 @@ export class GameplayScene implements Scene {
     );
     const hud = document.createElement('section');
     hud.className = 'game-hud cockpit-hud';
+    hud.dataset.exitState = 'idle';
     hud.dataset.testid = 'cockpit-hud';
     hud.dataset.hudTheme = hudTheme.themeKey;
     hud.dataset.hudMode = hudTheme.mode;
@@ -518,6 +520,7 @@ export class GameplayScene implements Scene {
       commandBar.append(button);
     }
     hud.append(chrome, commandBar, readoutStrip, this.positionReadout);
+    this.hudRoot = hud;
     this.uiRoot.replaceChildren(hud, this.exitToast, this.destructionToast);
     this.syncExitSequenceUi();
     this.syncPlayerDestructionUi();
@@ -656,6 +659,9 @@ export class GameplayScene implements Scene {
     const state = this.getCombatState();
     const scroll = this.getScrollState();
     const bounds = this.getCombatBounds();
+    const exitPresentation = this.exitSequence
+      ? getSectorExitPresentation(this.exitSequence)
+      : null;
 
     renderer.paintBackground(scroll.cameraOffset, this.getCurrentSector().background);
     renderer.beginGameplayLayer();
@@ -673,10 +679,6 @@ export class GameplayScene implements Scene {
 
     if (this.bossArenaUpdate.phase !== 'locked') {
       renderer.paintSectorHazards(this.getActiveHazards(scroll.distance), bounds);
-    }
-
-    if (this.exitSequence) {
-      renderer.paintSectorExitSequence(getSectorExitPresentation(this.exitSequence), bounds);
     }
 
     for (const object of getActiveEnvironmentObjects(state)) {
@@ -721,13 +723,15 @@ export class GameplayScene implements Scene {
       renderer.paintPlayerDestruction(getPlayerDestructionPresentation(this.destructionSequence));
     } else {
       renderer.paintPlayerShip({
-        x: state.player.x,
-        y: state.player.y,
+        x: exitPresentation?.shipX ?? state.player.x,
+        y: exitPresentation?.shipY ?? state.player.y,
         radius: state.player.radius,
-        thrust: Math.max(
-          Math.abs(this.getEffectiveMovementAxis(state).x),
-          Math.abs(this.getEffectiveMovementAxis(state).y)
-        ),
+        thrust:
+          exitPresentation?.thrust ??
+          Math.max(
+            Math.abs(this.getEffectiveMovementAxis(state).x),
+            Math.abs(this.getEffectiveMovementAxis(state).y)
+          ),
         appearance: this.contract.shipAppearance,
         invulnerable: state.player.invulnerableSeconds > 0,
         hull: state.player.hull,
@@ -742,8 +746,17 @@ export class GameplayScene implements Scene {
         bombCooldown: state.player.bombCooldown,
         weaponHeat: state.player.weaponHeat,
         weaponOverheatLimit: state.weapon.overheatLimit,
-        weaponOverheatSeconds: state.player.weaponOverheatSeconds
+        weaponOverheatSeconds: state.player.weaponOverheatSeconds,
+        scale: exitPresentation?.shipScale,
+        alpha: exitPresentation?.shipAlpha,
+        departureActive: exitPresentation !== null,
+        departureExhaustScale: exitPresentation?.exhaustScale,
+        departureSpeedLineAlpha: exitPresentation?.speedLineAlpha
       });
+    }
+
+    if (exitPresentation) {
+      renderer.paintSectorExitTransition(exitPresentation, bounds);
     }
     renderer.endGameplayLayer();
     renderer.paintGameplayFrame();
@@ -1011,7 +1024,7 @@ export class GameplayScene implements Scene {
       sectorLength: scroll.length,
       scrollSpeed: scroll.speed,
       exitSequence: this.exitSequence
-        ? `${this.exitSequence.reason} ${Math.round(
+        ? `${this.exitSequence.reason} ${getSectorExitPresentation(this.exitSequence).phase} ${Math.round(
             getSectorExitPresentation(this.exitSequence).progress * 100
           )}%`
         : undefined,
@@ -1173,6 +1186,8 @@ export class GameplayScene implements Scene {
       sectorCount: this.run.sectors.length,
       reason,
       reducedMotion: getHudThemeOptions(this.uiRoot.ownerDocument).reducedMotion,
+      playerX: state.player.x,
+      playerY: state.player.y,
       debugFast: options.debugFast
     });
     this.exitSequenceResult = this.withWorldOffset(forceCombatEnd(state, reason));
@@ -1303,14 +1318,19 @@ export class GameplayScene implements Scene {
       this.exitToast.dataset.exitState = 'idle';
       this.exitToast.setAttribute('aria-hidden', 'true');
       this.exitToast.textContent = '';
+      if (this.hudRoot) {
+        this.hudRoot.dataset.exitState = 'idle';
+      }
       return;
     }
 
     const presentation = getSectorExitPresentation(this.exitSequence);
     this.exitToast.dataset.exitState = 'active';
-    this.exitToast.dataset.exitMotion = presentation.motion;
     this.exitToast.setAttribute('aria-hidden', 'false');
-    this.exitToast.textContent = presentation.toast;
+    this.exitToast.textContent = presentation.announcement;
+    if (this.hudRoot) {
+      this.hudRoot.dataset.exitState = 'active';
+    }
   }
 
   private syncPlayerDestructionUi(): void {
@@ -1814,10 +1834,8 @@ export class GameplayScene implements Scene {
     }
 
     if (exitPresentation) {
-      this.objectiveReadout.textContent = `${exitPresentation.title} | ${Math.round(
-        exitPresentation.progress * 100
-      )}%`;
-      this.warningReadout.textContent = exitPresentation.toast;
+      this.objectiveReadout.textContent = exitPresentation.title;
+      this.warningReadout.textContent = exitPresentation.announcement;
       this.hintReadout.textContent =
         this.exitSequence?.reason === 'victory'
           ? formatSecondActFinaleOutcome(this.getCurrentSector().finale, 'victory')

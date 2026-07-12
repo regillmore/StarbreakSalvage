@@ -2034,6 +2034,25 @@ Blank and `RANDOM` input now resolve through the injectable random-seed factory;
 
 Verification: `npm run verify:release` passes with 92 Vitest files and 552 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. Focused coverage includes five seed-resolution cases plus targeted title/run-flow Chromium journeys for random launch, manual code launch, explicit URL launch, launch-state announcement, keyboard focus, Scenario Lab navigation, suspended-run resume, reduced motion, high contrast, performance mode, and narrow layout. The production build emits 846.20 kB minified/228.90 kB gzip initial JavaScript and 31.74 kB CSS/7.15 kB gzip. The existing chunk warning remains open and no threshold changed. Direct screenshot inspection was attempted through the in-app browser control surface, but no browser target was available in this session; Chromium responsive/accessibility automation is the available local visual evidence.
 
+## Work order 117 - Ship-led sector departure
+
+Goal: make sector completion read as the player's craft committing to the next leg of the voyage.
+
+Prompt:
+
+> Replace the abstract sector-exit vector animation and progress-bar overlay with the player's actual ship igniting its thrusters, accelerating ahead of the stationary sector camera, clearing the top of the viewport, and then handing off through a tasteful menu transition. Preserve the peaceful recovery coast, natural hazard/projectile settlement, ordinary route/reward flow, specialized boarding and final-victory handoffs, deterministic timing, contract-specific ship appearance, accessibility announcements, reduced motion, debug completion, and static-host compatibility. Add focused sequence and Chromium smoke coverage. Run checks.
+
+Acceptance criteria:
+
+- The live contract ship remains visible in the settled sector, recenters, shows a strong thruster ignition, accelerates upward, and clears the top of the fixed combat viewport while the camera stays behind.
+- The former beacon/corridor metaphor and player-visible percentage overlay are removed; the HUD yields to the departure and the next menu appears only after a restrained closing transition.
+- Screen-reader users receive phase announcements without a visual toast, and reduced motion preserves the narrative with a shorter launch, no speed streaks, and bounded exhaust scale.
+- Debug completion remains fast, phase/progress state remains inspectable, and route, reward, boarding, cooldown, and final-summary outcomes are unchanged.
+
+Status: implemented. `SectorExitSequence` now returns a pure four-phase departure presentation from elapsed time and the player's starting position. `GameplayScene` holds the settled combat camera, fades the persistent HUD, and renders the actual contract-specific ship at the presentation pose instead of painting an abstract destination. `CanvasRenderer` enlarges the existing engine wake and flame, adds a bounded set of vertical acceleration streaks, lets the ship clear the viewport, and then closes a dark aperture before the existing completion callback opens the route or summary. The old beacon, corridor, visible toast, and percentage copy are gone; phase announcements remain in an `aria-live` screen-reader region and percentage progress remains debug-only. Normal departure lasts 1.72 seconds, reduced motion lasts 0.96 seconds without streaks, and the debug-fast path remains 0.60 seconds. No generation, gameplay, save, snapshot, or content schema changes are required.
+
+Verification: `npm run verify:release` passes with 92 Vitest files and 552 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. Focused sector-exit and combat coverage passes with 34 tests, while the forced-completion Chromium journey reaches route flow after observing the accessible launch announcement. The production build emits 847.20 kB minified/229.35 kB gzip initial JavaScript and 31.96 kB CSS/7.19 kB gzip. The existing chunk warning remains open and no threshold changed. Direct screenshot inspection was attempted through the in-app browser control surface, but no browser target was available in this session; Chromium automation is the available local visual evidence.
+
 ## Review subagent prompt
 
 Use after a feature PR:
