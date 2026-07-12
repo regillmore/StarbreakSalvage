@@ -91,6 +91,7 @@ export interface ActiveSectorHazard {
 export interface SectorHazardActivationOptions {
   readonly deferOverlappingFromDistance?: number | null;
   readonly allowedHazardIds?: readonly string[];
+  readonly distanceOverrides?: Readonly<Record<string, number>>;
 }
 
 interface SectorHazardActivationWindow {
@@ -200,12 +201,13 @@ export function getActiveSectorHazards(
     }
 
     const window = getHazardActivationWindow(hazard, options.deferOverlappingFromDistance);
+    const hazardDistance = options.distanceOverrides?.[hazard.id] ?? distance;
 
-    if (distance < window.telegraphDistance || distance > window.endDistance) {
+    if (hazardDistance < window.telegraphDistance || hazardDistance > window.endDistance) {
       continue;
     }
 
-    const phase: SectorHazardPhase = distance < window.startDistance ? 'telegraph' : 'active';
+    const phase: SectorHazardPhase = hazardDistance < window.startDistance ? 'telegraph' : 'active';
     const totalSpan = Math.max(1, window.endDistance - window.telegraphDistance);
     const phaseSpan =
       phase === 'telegraph'
@@ -216,8 +218,10 @@ export function getActiveSectorHazards(
     active.push({
       hazard,
       phase,
-      progress: roundFeatureValue(clamp((distance - window.telegraphDistance) / totalSpan, 0, 1)),
-      phaseProgress: roundFeatureValue(clamp((distance - phaseStart) / phaseSpan, 0, 1))
+      progress: roundFeatureValue(
+        clamp((hazardDistance - window.telegraphDistance) / totalSpan, 0, 1)
+      ),
+      phaseProgress: roundFeatureValue(clamp((hazardDistance - phaseStart) / phaseSpan, 0, 1))
     });
   }
 

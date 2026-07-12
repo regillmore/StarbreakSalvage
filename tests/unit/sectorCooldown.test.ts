@@ -47,14 +47,14 @@ describe('SectorCooldown', () => {
     expect(state).not.toBeNull();
     expect(getSectorCooldownPresentation(state!, 1481)).toMatchObject({
       traveledDistance: 81,
-      remainingDistance: 99,
-      progress: 0.45,
+      remainingDistance: 279,
+      progress: 0.23,
       complete: false,
-      readout: 'Recovery coast 81/180u',
+      readout: 'Recovery coast 81/360u',
       warning: 'No new contacts | field settling naturally'
     });
     expect(getSectorCooldownPresentation(state!, 9999)).toMatchObject({
-      traveledDistance: 180,
+      traveledDistance: 360,
       remainingDistance: 0,
       progress: 1,
       complete: true
@@ -102,7 +102,7 @@ describe('SectorCooldown', () => {
     advanceSectorCooldownScroll(scroll, plan, false, 1, authoredScroll.baseSpeed);
     expect(scroll.distance).toBe(plan.combatEndDistance);
 
-    for (let step = 0; step < 20; step += 1) {
+    for (let step = 0; step < 40; step += 1) {
       advanceSectorCooldownScroll(scroll, plan, true, 0.1, authoredScroll.baseSpeed);
     }
 

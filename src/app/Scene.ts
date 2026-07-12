@@ -156,6 +156,7 @@ export interface SceneDebugState {
     readonly objectiveState?: string;
     readonly routeTags?: string;
     readonly hazardZones?: string;
+    readonly hazardRuntime?: string;
   };
   readonly backgroundPrimitives?: number;
   readonly backgroundLayers?: number;

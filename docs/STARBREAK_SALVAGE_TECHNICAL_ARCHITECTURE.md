@@ -300,6 +300,7 @@ src/game/BackgroundPlan.ts
 - Wave and hazard schedules should support distance markers as well as time gates.
 - Spawn logic must process all crossed distance markers in order when frame time catches up.
 - Tests should prove no marker is skipped or duplicated under large fixed-step batches.
+- Work order 112 adds transient per-hazard effective distance for visible gameplay scroll holds. Only hazards that already entered telegraph or active state advance at nominal sector speed; future hazards remain on real distance, zero-time/menu pauses remain frozen, and boss hide-and-defer clears overrides before its fresh release telegraph.
 - Boss arena transitions should be explicit states: travel, approach, arena lock/slow, defeated/exit. Hazards hidden during a locked arena must not become damaging on the release frame; if a distance-tied hazard window overlaps the lock, restart its telegraph lead from the release distance before collision damage can apply.
 
 ### Route-conditioned sector state

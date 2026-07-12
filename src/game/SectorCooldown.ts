@@ -9,7 +9,7 @@ import {
 } from './ScrollState';
 import type { SectorExitSequenceReason } from './SectorExitSequence';
 
-export const SECTOR_COOLDOWN_DISTANCE = 180;
+export const SECTOR_COOLDOWN_DISTANCE = 360;
 
 export interface SectorCooldownPlan {
   readonly enabled: boolean;

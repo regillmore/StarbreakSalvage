@@ -117,6 +117,12 @@ import {
 } from '../game/HazardZoneDirector';
 import { resolveSectorHazardCollisions } from '../game/SectorHazards';
 import {
+  advanceSectorHazardRuntime,
+  createSectorHazardRuntimeState,
+  formatSectorHazardRuntimeDebug,
+  type SectorHazardRuntimeState
+} from '../game/SectorHazardRuntime';
+import {
   getActiveSectorHazards,
   getVisibleSectorLandmarks,
   type ActiveSectorHazard,
@@ -232,6 +238,7 @@ export class GameplayScene implements Scene {
   private sectorPacingPlan: SectorPacingPlan | null = null;
   private actPressureModel: ActPressureModel | null = null;
   private hazardZoneDirectorPlan: HazardZoneDirectorPlan | null = null;
+  private sectorHazardRuntimeState: SectorHazardRuntimeState | null = null;
   private environmentObjectPlan: EnvironmentObjectPlacementPlan | null = null;
   private looseCurrencyPlan: LooseCurrencyPlan | null = null;
   private conditionedScroll: SectorScrollPlan | null = null;
@@ -536,7 +543,7 @@ export class GameplayScene implements Scene {
       !state.setPiece.completed &&
       scrollState.distance >= state.setPiece.plan.anchorDistance
     );
-    advanceSectorCooldownScroll(
+    const scrollAdvance = advanceSectorCooldownScroll(
       scrollState,
       cooldownPlan,
       this.sectorCooldown !== null,
@@ -549,6 +556,14 @@ export class GameplayScene implements Scene {
     );
 
     const arenaAfterScroll = this.updateBossArena(scrollState.distance, state);
+    advanceSectorHazardRuntime(this.getSectorHazardRuntimeState(), this.getCurrentFeatures(), {
+      scrollDistance: scrollState.distance,
+      dt,
+      scrollingPaused: scrollAdvance.delta === 0,
+      nominalScrollSpeed: scrollState.plan.baseSpeed,
+      suspended: arenaAfterScroll.phase === 'locked',
+      activationOptions: this.getSectorHazardActivationOptions(false)
+    });
     const feedbackBefore = createCombatFeedbackSnapshot(state);
 
     if (arenaAfterScroll.shouldSpawnBoss) {
@@ -1133,7 +1148,8 @@ export class GameplayScene implements Scene {
         pacing: sectorPacing.arcKind === 'standard' ? undefined : sectorPacing.debugLabel,
         pacingBeat:
           formatSectorPacingBeatDebug(sectorPacing, scroll.distance, scroll.length) ?? undefined,
-        hazardZones: formatHazardZoneDirectorDebug(hazardZoneDirector)
+        hazardZones: formatHazardZoneDirectorDebug(hazardZoneDirector),
+        hazardRuntime: formatSectorHazardRuntimeDebug(this.getSectorHazardRuntimeState())
       }
     };
   }
@@ -1550,6 +1566,13 @@ export class GameplayScene implements Scene {
       operationMode: this.missionContext?.projection.operationMode ?? 'flight'
     });
     return this.sectorCooldownPlan;
+  }
+
+  private getSectorHazardRuntimeState(): SectorHazardRuntimeState {
+    this.sectorHazardRuntimeState ??= createSectorHazardRuntimeState(
+      this.scrollState?.distance ?? 0
+    );
+    return this.sectorHazardRuntimeState;
   }
 
   private getBossArenaState(): BossArenaState {
@@ -2095,10 +2118,13 @@ export class GameplayScene implements Scene {
     );
   }
 
-  private getSectorHazardActivationOptions(): SectorHazardActivationOptions {
+  private getSectorHazardActivationOptions(includeRuntime = true): SectorHazardActivationOptions {
     return {
       deferOverlappingFromDistance: this.bossHazardReleaseDistance,
-      allowedHazardIds: this.sectorCooldown?.settlingHazardIds
+      allowedHazardIds: this.sectorCooldown?.settlingHazardIds,
+      distanceOverrides: includeRuntime
+        ? this.sectorHazardRuntimeState?.effectiveDistances
+        : undefined
     };
   }
 }

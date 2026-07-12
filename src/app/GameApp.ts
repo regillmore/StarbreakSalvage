@@ -2493,6 +2493,9 @@ export class GameApp {
     const hazardZoneDebug = debugState.sector?.hazardZones
       ? [`Hazards ${debugState.sector.hazardZones}`]
       : [];
+    const hazardRuntimeDebug = debugState.sector?.hazardRuntime
+      ? [`Hazard runtime ${debugState.sector.hazardRuntime}`]
+      : [];
     const viewportDebug =
       debugState.viewport === undefined
         ? []
@@ -2702,6 +2705,7 @@ export class GameApp {
       ...objectiveDebug,
       ...sectorPacingDebug,
       ...hazardZoneDebug,
+      ...hazardRuntimeDebug,
       ...backgroundDebug,
       ...featureDebug,
       ...viewportDebug

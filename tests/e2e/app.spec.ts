@@ -289,6 +289,9 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.locator('.debug-overlay')).toContainText(/Scroll \d+u\/s/);
   await expect(page.locator('.debug-overlay')).toContainText(/Bg \d+p\/4l/);
   await expect(page.locator('.debug-overlay')).toContainText(/Features L\d+\/H\d+/);
+  await expect(page.locator('.debug-overlay')).toContainText(
+    /Hazard runtime tracked \d+ pause [0-9.]+s\/\d+u/
+  );
 
   await page.keyboard.press('9');
   await expect(page.locator('.debug-overlay')).toContainText('Scenario long-scroll');
