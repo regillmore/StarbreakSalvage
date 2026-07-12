@@ -108,11 +108,16 @@ describe('BeamHazard', () => {
       bounds
     );
 
-    expect(atFireStart.startX).toBe(atTelegraphStart.startX);
-    expect(atFireStart.endX).toBe(atTelegraphStart.endX);
-    expect(atFireStart.startY).toBeGreaterThan(atTelegraphStart.startY);
-    expect(atFireStart.endY - atTelegraphStart.endY).toBeCloseTo(170 * 0.55, 3);
-    expect(atFireStart.length).toBe(atTelegraphStart.length);
+    expect(atTelegraphStart).not.toBeNull();
+    expect(atFireStart).not.toBeNull();
+    if (!atTelegraphStart || !atFireStart) {
+      throw new Error('Expected world-anchored beam tracks in arena line of sight.');
+    }
+
+    expectBeamSegmentClippedToArena(atTelegraphStart);
+    expectBeamSegmentClippedToArena(atFireStart);
+    expect(atFireStart.startY).not.toBe(atTelegraphStart.startY);
+    expect(atFireStart.endY).not.toBe(atTelegraphStart.endY);
 
     const whileScrollPaused = getWorldAnchoredBeamTrack(
       {
@@ -124,8 +129,40 @@ describe('BeamHazard', () => {
       },
       bounds
     );
-    expect(whileScrollPaused.startY).toBe(atFireStart.startY);
-    expect(whileScrollPaused.endY).toBe(atFireStart.endY);
+    expect(whileScrollPaused).toEqual(atFireStart);
+
+    const topSpawnedHazard = {
+      ...hazard,
+      beam: {
+        sourceEdge: 'top' as const,
+        sourceOffsetRatio: 0.3,
+        targetEdge: 'bottom' as const,
+        targetOffsetRatio: 0.7
+      }
+    };
+    const topMarkerAtTelegraph = getWorldAnchoredBeamTrack(
+      { hazard: topSpawnedHazard, phase: 'telegraph', progress: 0, phaseProgress: 0 },
+      bounds
+    );
+    const topMarkerAtFire = getWorldAnchoredBeamTrack(
+      {
+        hazard: topSpawnedHazard,
+        phase: 'active',
+        progress: (hazard.startDistance - hazard.telegraphDistance) / 310,
+        phaseProgress: 0
+      },
+      bounds
+    );
+    expect(topMarkerAtTelegraph).not.toBeNull();
+    expect(topMarkerAtFire).not.toBeNull();
+    if (!topMarkerAtTelegraph || !topMarkerAtFire) {
+      throw new Error('Expected top-spawned beam markers to remain on arena edges.');
+    }
+    expectBeamSegmentClippedToArena(topMarkerAtTelegraph);
+    expectBeamSegmentClippedToArena(topMarkerAtFire);
+    expect(topMarkerAtTelegraph.startY).toBe(bounds.padding);
+    expect(topMarkerAtFire.startY).toBe(bounds.padding);
+    expect(topMarkerAtTelegraph.startX).not.toBe(topMarkerAtFire.startX);
   });
 
   it('advances a finite long bolt whose visible body defines collision', () => {
@@ -229,3 +266,28 @@ describe('BeamHazard', () => {
     );
   });
 });
+
+function expectBeamSegmentClippedToArena(segment: {
+  readonly startX: number;
+  readonly startY: number;
+  readonly endX: number;
+  readonly endY: number;
+}): void {
+  const left = bounds.padding;
+  const right = bounds.width - bounds.padding;
+  const top = bounds.padding;
+  const bottom = bounds.height - bounds.padding;
+  const isOnArenaEdge = (x: number, y: number) =>
+    x === left || x === right || y === top || y === bottom;
+
+  expect(segment.startX).toBeGreaterThanOrEqual(left);
+  expect(segment.startX).toBeLessThanOrEqual(right);
+  expect(segment.startY).toBeGreaterThanOrEqual(top);
+  expect(segment.startY).toBeLessThanOrEqual(bottom);
+  expect(segment.endX).toBeGreaterThanOrEqual(left);
+  expect(segment.endX).toBeLessThanOrEqual(right);
+  expect(segment.endY).toBeGreaterThanOrEqual(top);
+  expect(segment.endY).toBeLessThanOrEqual(bottom);
+  expect(isOnArenaEdge(segment.startX, segment.startY)).toBe(true);
+  expect(isOnArenaEdge(segment.endX, segment.endY)).toBe(true);
+}

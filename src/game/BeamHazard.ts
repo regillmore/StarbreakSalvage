@@ -52,7 +52,8 @@ interface ActiveBeamHazard {
 }
 
 export const BEAM_BOLT_LENGTH_RATIO = 0.42;
-export const BEAM_WORLD_SCROLL_SCALE = 0.55;
+export const BEAM_WORLD_OVERSCAN_RATIO = 0.22;
+export const BEAM_WORLD_SCROLL_SCALE = 0.42;
 
 const BEAM_ROUTES: readonly (readonly [BeamHazardEdge, BeamHazardEdge])[] = [
   ['top', 'bottom'],
@@ -114,8 +115,25 @@ export function getBeamHazardSegment(
 export function getWorldAnchoredBeamTrack(
   activeHazard: ActiveBeamHazard,
   bounds: BeamBounds
+): BeamHazardSegment | null {
+  return clipBeamSegmentToArena(getDistantWorldBeamTrack(activeHazard, bounds), bounds);
+}
+
+function getDistantWorldBeamTrack(
+  activeHazard: ActiveBeamHazard,
+  bounds: BeamBounds
 ): BeamHazardSegment {
-  const segment = getBeamHazardSegment(activeHazard.hazard, bounds);
+  const arenaSegment = getBeamHazardSegment(activeHazard.hazard, bounds);
+  const overscan = Math.max(bounds.width, bounds.height) * BEAM_WORLD_OVERSCAN_RATIO;
+  const directionX = Math.cos(arenaSegment.angle);
+  const directionY = Math.sin(arenaSegment.angle);
+  const segment = createBeamSegment(
+    arenaSegment.startX - directionX * overscan,
+    arenaSegment.startY - directionY * overscan,
+    arenaSegment.endX + directionX * overscan,
+    arenaSegment.endY + directionY * overscan,
+    arenaSegment.radius
+  );
   const totalSpan = Math.max(
     1,
     activeHazard.hazard.endDistance - activeHazard.hazard.telegraphDistance
@@ -141,16 +159,23 @@ export function getActiveBeamBoltSegment(
     return null;
   }
 
-  const track = getWorldAnchoredBeamTrack(activeHazard, bounds);
-  const travel = clamp(activeHazard.phaseProgress, 0, 1) * (1 + BEAM_BOLT_LENGTH_RATIO);
-  const headProgress = clamp(travel, 0, 1);
-  const tailProgress = clamp(travel - BEAM_BOLT_LENGTH_RATIO, 0, 1);
+  const arenaSegment = getBeamHazardSegment(activeHazard.hazard, bounds);
+  const worldTrack = getDistantWorldBeamTrack(activeHazard, bounds);
+  const boltLength = arenaSegment.length * BEAM_BOLT_LENGTH_RATIO;
+  const travelDistance = clamp(activeHazard.phaseProgress, 0, 1) * (worldTrack.length + boltLength);
+  const headDistance = clamp(travelDistance, 0, worldTrack.length);
+  const tailDistance = clamp(travelDistance - boltLength, 0, worldTrack.length);
 
-  if (headProgress - tailProgress <= 0.001) {
+  if (headDistance - tailDistance <= 0.001) {
     return null;
   }
 
-  return sliceBeamSegment(track, tailProgress, headProgress);
+  const worldBolt = sliceBeamSegment(
+    worldTrack,
+    tailDistance / worldTrack.length,
+    headDistance / worldTrack.length
+  );
+  return clipBeamSegmentToArena(worldBolt, bounds);
 }
 
 export function formatBeamHazardTrack(geometry: BeamHazardGeometry | undefined): string {
@@ -246,6 +271,52 @@ function translateBeamSegment(
   };
 }
 
+function clipBeamSegmentToArena(
+  segment: BeamHazardSegment,
+  bounds: BeamBounds
+): BeamHazardSegment | null {
+  const dx = segment.endX - segment.startX;
+  const dy = segment.endY - segment.startY;
+  const left = bounds.padding;
+  const right = bounds.width - bounds.padding;
+  const top = bounds.padding;
+  const bottom = bounds.height - bounds.padding;
+  const p = [-dx, dx, -dy, dy];
+  const q = [
+    segment.startX - left,
+    right - segment.startX,
+    segment.startY - top,
+    bottom - segment.startY
+  ];
+  let startProgress = 0;
+  let endProgress = 1;
+
+  for (let index = 0; index < p.length; index += 1) {
+    const direction = p[index] ?? 0;
+    const distance = q[index] ?? 0;
+
+    if (Math.abs(direction) <= 0.000001) {
+      if (distance < 0) return null;
+      continue;
+    }
+
+    const intersection = distance / direction;
+    if (direction < 0) {
+      startProgress = Math.max(startProgress, intersection);
+    } else {
+      endProgress = Math.min(endProgress, intersection);
+    }
+
+    if (startProgress > endProgress) return null;
+  }
+
+  if (endProgress - startProgress <= 0.000001) {
+    return null;
+  }
+
+  return sliceBeamSegment(segment, startProgress, endProgress);
+}
+
 function sliceBeamSegment(
   segment: BeamHazardSegment,
   startProgress: number,
@@ -255,6 +326,16 @@ function sliceBeamSegment(
   const startY = segment.startY + (segment.endY - segment.startY) * startProgress;
   const endX = segment.startX + (segment.endX - segment.startX) * endProgress;
   const endY = segment.startY + (segment.endY - segment.startY) * endProgress;
+  return createBeamSegment(startX, startY, endX, endY, segment.radius);
+}
+
+function createBeamSegment(
+  startX: number,
+  startY: number,
+  endX: number,
+  endY: number,
+  radius: number
+): BeamHazardSegment {
   const dx = endX - startX;
   const dy = endY - startY;
 
@@ -263,7 +344,7 @@ function sliceBeamSegment(
     startY: roundBeamValue(startY),
     endX: roundBeamValue(endX),
     endY: roundBeamValue(endY),
-    radius: segment.radius,
+    radius,
     angle: Math.atan2(dy, dx),
     length: roundBeamValue(Math.sqrt(dx * dx + dy * dy))
   };

@@ -2037,6 +2037,9 @@ export class CanvasRenderer {
     const context = this.context;
     const track = getWorldAnchoredBeamTrack(activeHazard, bounds);
     const bolt = getActiveBeamBoltSegment(activeHazard, bounds);
+    if (!track) {
+      return;
+    }
     const active = activeHazard.phase === 'active';
     const highContrast = this.settings.bulletContrast === 'high';
     const coreColor = highContrast ? '#ffffff' : '#fffbd6';
