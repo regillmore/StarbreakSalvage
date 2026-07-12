@@ -20,6 +20,8 @@ import {
   dispatchMissionEvent,
   recordExpeditionBranchDecision
 } from '../../src/game/RunSession';
+import { createBossArenaState, updateBossArenaState } from '../../src/game/BossArena';
+import { createSetPieceState, isSetPieceBossLockReleased } from '../../src/game/SetPiece';
 
 const CHECKPOINT: MissionCheckpoint = {
   hull: 2,
@@ -141,6 +143,48 @@ describe('MissionDirector', () => {
     });
     expect(getMissionStage(schedule, state.currentStageId).kind).toBe('relief');
     expect(state.checkpoint).toMatchObject({ hull: 1, credits: 37, salvage: 14 });
+  });
+
+  it('reprojects the STARBREAK-SMOKE sector-10 set piece and boss lock inside the gate operation', () => {
+    const run = generateRunSkeleton('STARBREAK-SMOKE');
+    const sectorIndex = 9;
+    const sector = run.sectors[sectorIndex]!;
+    const schedule = createMissionSchedule(run.expedition, sectorIndex);
+    let state = reachBranch(schedule);
+    const directApproach = getMissionBranchOptions(schedule, state).find(
+      (option) => option.default
+    )!;
+
+    state = apply(schedule, state, {
+      id: 'sector-10-approach',
+      type: 'selectBranch',
+      optionId: directApproach.id
+    });
+    state = apply(schedule, state, { id: 'sector-10-staging', type: 'completeRelief' });
+
+    const projection = createMissionCombatProjection(schedule, state, sector);
+    const arena = projection.sector.arena;
+    const setPiece = projection.sector.setPiece;
+
+    expect(sector.sectorId).toBe('sector_core_wreck');
+    expect(sector.setPiece?.anchorDistance).toBeGreaterThan(projection.sector.scroll.length);
+    expect(arena).not.toBeNull();
+    expect(setPiece).not.toBeNull();
+    expect(arena!.lockDistance).toBeLessThan(projection.sector.scroll.length);
+    expect(setPiece!.anchorDistance).toBe(Math.round(arena!.lockDistance));
+
+    const setPieceState = createSetPieceState(setPiece);
+    setPieceState!.completed = true;
+    const arenaState = createBossArenaState(arena);
+    const update = updateBossArenaState(arenaState, {
+      distance: arena!.lockDistance,
+      supportComplete: isSetPieceBossLockReleased(setPieceState),
+      bossActive: false,
+      bossAlreadySpawned: false,
+      bossDefeated: false
+    });
+
+    expect(update).toMatchObject({ phase: 'locked', shouldSpawnBoss: true });
   });
 
   it('rejects out-of-order events and collapses duplicate completion signals', () => {

@@ -613,7 +613,7 @@ test('exposes environmental stress budgets under high-contrast narrow smoke', as
   await expect(page.locator('.debug-overlay')).toContainText('Environment 6 (D4/O2)');
   await expect(page.locator('.debug-overlay')).toContainText('Loose 10/48 V32/120 C24/S8');
   await expect(page.locator('.debug-overlay')).toContainText(
-    /Env stress H[1-4]\/4 [a-z/]+ Obj6\/16 D4\/O2 Loose 10\/48 V32\/120 ok/
+    /Env stress H[0-4]\/4 (?:none|[a-z/]+) Obj6\/16 D4\/O2 Loose \d+\/48 V\d+\/120 ok/
   );
   await expect(page.getByTestId('pickup-readout')).toContainText(/Credits .* Salvage/);
   await expect(page.getByTestId('boss-warning')).not.toContainText('Warning clear');

@@ -31,6 +31,8 @@ import {
   projectSectorForBoarding,
   type BoardingOperationPlan
 } from './BoardingOperation';
+import { createBossArenaPlan } from './BossArena';
+import { createSetPiecePlan } from './SetPiece';
 
 export type MissionScheduleMode = 'expedition' | 'singleStageCompatibility';
 export type MissionStatus = 'active' | 'suspended' | 'failed' | 'completed';
@@ -874,36 +876,53 @@ function projectObjectiveSector(
 
   const isTerminalOperation = stage.operationalRole === 'gate';
   const continuesWorld = stage.carry.scrollWorld === 'continue';
+  const projectedObjective = {
+    ...sector.objective,
+    label: objectiveLabel,
+    requiredWaves,
+    requiredEnemyKills: requiredWaves * sector.objective.spawnsPerWave,
+    bossRequired:
+      isTerminalOperation && world.bossPolicy === 'inherit' && sector.objective.bossRequired,
+    bossSpawnAtSeconds: isTerminalOperation ? sector.objective.bossSpawnAtSeconds : null,
+    variantId: 'standardSweep' as const,
+    variantLabel: objectiveLabel,
+    variantSummary: `${
+      stage.optional ? 'Optional' : 'Required'
+    } deterministic operation carried through the sector itinerary.${
+      influence ? ` ${influence.label}` : ''
+    }`,
+    pressureBand: 'volatile' as const,
+    travelGateRatio: 1
+  };
+  const projectedScroll = {
+    ...sector.scroll,
+    length: scrollLength,
+    startOffset: continuesWorld ? continuedOffset : sector.scroll.startOffset
+  };
+  const projectedArena = isTerminalOperation
+    ? createBossArenaPlan({
+        sectorId: sector.sectorId,
+        objective: projectedObjective,
+        scroll: projectedScroll
+      })
+    : null;
+  const projectedSetPiece = isTerminalOperation
+    ? createSetPiecePlan({
+        sectorIndex: sector.index,
+        scrollLength: projectedScroll.length,
+        bossArena: projectedArena
+      })
+    : null;
+
   return {
     ...sector,
     sectorName: stage.optional ? stage.label : sector.sectorName,
     majorWaves,
-    objective: {
-      ...sector.objective,
-      label: objectiveLabel,
-      requiredWaves,
-      requiredEnemyKills: requiredWaves * sector.objective.spawnsPerWave,
-      bossRequired:
-        isTerminalOperation && world.bossPolicy === 'inherit' && sector.objective.bossRequired,
-      bossSpawnAtSeconds: isTerminalOperation ? sector.objective.bossSpawnAtSeconds : null,
-      variantId: 'standardSweep',
-      variantLabel: objectiveLabel,
-      variantSummary: `${
-        stage.optional ? 'Optional' : 'Required'
-      } deterministic operation carried through the sector itinerary.${
-        influence ? ` ${influence.label}` : ''
-      }`,
-      pressureBand: 'volatile',
-      travelGateRatio: 1
-    },
-    scroll: {
-      ...sector.scroll,
-      length: scrollLength,
-      startOffset: continuesWorld ? continuedOffset : sector.scroll.startOffset
-    },
-    arena: isTerminalOperation ? sector.arena : null,
+    objective: projectedObjective,
+    scroll: projectedScroll,
+    arena: projectedArena,
     finale: isTerminalOperation ? sector.finale : null,
-    setPiece: isTerminalOperation ? sector.setPiece : null
+    setPiece: projectedSetPiece
   };
 }
 

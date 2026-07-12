@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fixed the STARBREAK-SMOKE Act II finale gate soft lock by rebuilding boss-arena and set-piece coordinates from each mission-projected objective and scroll plan. Required gate operations can no longer inherit full-sector lock distances beyond their shortened live endpoint; a seed-specific regression reaches the projected Wreck-Train lock and verifies the boss spawn request.
+
 - Fixed the Furnace Ledger boarding approach soft lock by adding its missing `objective_system_sabotage` definition. All boarding contracts now participate in global content validation for objective existence and verb agreement, and deterministic coverage resolves every generated boarding objective before an approach decision can launch it.
 
 - Added deterministic pause-time hazard progression. Hazards that are already telegraphed or active now continue through their normal phases at nominal sector speed while visible gameplay scrolling is held; future hazards remain distance-gated, pause-menu time remains frozen, and boss hide-and-defer resets runtime overrides before its fresh release telegraph.

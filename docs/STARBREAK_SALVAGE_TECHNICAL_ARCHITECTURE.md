@@ -686,6 +686,7 @@ seed + permanent save fingerprint
 - `src/ui/OperationalMapScene.ts` consumes the graph/session read model and callbacks. Its DOM itinerary and action cards expose approximate time, danger, reward, consequence, and faction/crew/ship risks with native focus, keyboard confirm, pointer activation, narrow wrapping, and non-color status labels.
 - Run snapshot schema/storage v2 adds operational history and a settled `operationalMap` resume target. Restore validates mission branch ids and operational node/cleanup history; a v1 record is removed independently with a clear recovery notice while permanent save v5 remains untouched. Active combat still restarts from its operation-entry checkpoint.
 - Boss arenas, reusable set pieces, and finales are projected only into the required gate operation. Advance, detour, and pursuit projections reuse the same sector/combat contracts with bounded scale and clear combat-world disposal between scene instances.
+- Work order 114 requires coordinate-owning gate plans to be rebuilt after mission scroll projection. Boss arena locks, releases, approaches, and set-piece anchors must derive from the projected objective and scroll length rather than copying full-sector distances that may sit beyond a shortened operation endpoint.
 - Graph capacity is now 70 nodes and 20 decisions: 1458 required-route target seconds (24.3 minutes) and 1898 all-optional target seconds (31.6 minutes). The initial bundle is 678.74 kB minified/183.34 kB gzip and CSS is 26.76 kB; the measured warning remains open.
 
 ### Work order 103 implementation

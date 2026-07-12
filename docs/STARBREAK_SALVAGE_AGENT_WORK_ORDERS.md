@@ -1971,6 +1971,27 @@ Status: implemented. `objective_system_sabotage` is now an authored interior obj
 
 Verification: `npm run verify:release` passes with 92 Vitest files and 544 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. The focused boarding/content/objective/mission pass covers 60 tests. Regression explicitly resolves all six generated boarding objectives and proves missing or verb-mismatched boarding references fail content validation. The production build emits 834.54 kB minified/225.10 kB gzip initial JavaScript and unchanged 26.76 kB CSS. The existing chunk warning remains open and no threshold changed.
 
+## Work order 114 - Projected finale boss-gate soft-lock repair
+
+Goal: ensure shortened required gate operations keep their set piece and boss handoff inside reachable mission distance.
+
+Prompt:
+
+> Fix the STARBREAK-SMOKE Act II 5/5 sector-10 soft lock where scrolling stops at 2359/2718u after enemies clear and the boss never arrives. Reproduce the deterministic mission projection, identify every coordinate-owning gate plan that can retain stale full-sector distances, and rebuild those plans from the projected objective and scroll. Preserve boss-arena approach/lock/release behavior, set-piece identity/dependencies/rewards, finale modifiers, route conditions, pacing, and work order 111 recovery coast. Add a seed-specific regression that reaches the projected lock and proves the boss spawn request can occur. Run checks.
+
+Acceptance criteria:
+
+- STARBREAK-SMOKE sector 10 places the Wreck-Train anchor and boss lock before the projected gate-operation endpoint.
+- Completing the reachable set piece releases the support gate and requests the boss without debug intervention.
+- Every terminal mission projection derives arena and set-piece coordinates from its projected scroll rather than copying full-sector coordinates.
+- Non-terminal, boarding, conditioned, paced, finale, cooldown, and snapshot behavior remain compatible.
+
+Status: implemented. Required gate operations previously scaled live scroll to 65% while copying the generated full-sector `arena` and `setPiece` plans unchanged. STARBREAK-SMOKE therefore stopped at the shortened operation endpoint before either the Wreck-Train anchor or boss lock could be reached. `MissionDirector.projectObjectiveSector` now materializes the projected objective and scroll first, rebuilds the terminal `BossArenaPlan` from those values, and rebuilds the terminal `SetPiecePlan` from the projected arena. Advance, detour, and pursuit operations still project neither plan; boarding still removes both after projection. Finale modifiers, route conditions, and pacing continue through their existing downstream transforms.
+
+The seed-specific regression advances sector 10 through briefing, entry, advance, approach decision, and staging into the required gate. It proves the stale generated anchor would exceed the projected scroll, the rebuilt arena lock is reachable, the Wreck-Train anchor matches that lock, and a completed set piece makes `BossArenaState` request the boss at the lock.
+
+Verification: `npm run verify:release` passes with 92 Vitest files and 545 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. The focused mission/arena/set-piece/cooldown pass covers 33 tests. The environmental Chromium fixture was also hardened so its rolling budget assertion no longer requires a transient hazard phase and the initial pickup population to occupy the same frame; it still verifies the exact injected environment and pickup setup separately. The production build emits 834.64 kB minified/225.16 kB gzip initial JavaScript and unchanged 26.76 kB CSS. The existing chunk warning remains open and no threshold changed.
+
 ## Review subagent prompt
 
 Use after a feature PR:
