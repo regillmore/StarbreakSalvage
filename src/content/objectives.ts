@@ -278,6 +278,23 @@ export const MISSION_OBJECTIVES: readonly MissionObjectiveDefinition[] = [
     failureCopy: 'Relay chain survived the sabotage pass.'
   }),
   objective({
+    id: 'objective_system_sabotage',
+    verb: 'sabotage',
+    label: 'System Sabotage',
+    hudVerb: 'SABOTAGE',
+    summary: 'Disable interior subsystems and carry the sabotage route through extraction.',
+    clauses: [
+      countClause('systems', 'environmentBreaks', 2, 'subsystems disabled'),
+      ratioClause('security', 'enemyDefeatRatio', 0.5, 'security screen removed'),
+      ratioClause('extraction', 'travelRatio', 0.9, 'extraction route crossed')
+    ],
+    cleanupPolicy: 'clearField',
+    world: world(0.82, 0.75, 'destructibles', 5, 'salvage'),
+    successCopy: 'Interior systems disabled and sabotage telemetry reached extraction.',
+    partialSuccessCopy: 'The target systems are damaged, but the sabotage route remains contested.',
+    failureCopy: 'Interior security isolated the sabotage before extraction.'
+  }),
+  objective({
     id: 'objective_pressure_escape',
     verb: 'escape',
     label: 'Pressure Escape',

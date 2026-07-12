@@ -1952,6 +1952,25 @@ Status: implemented. `src/game/SectorHazardRuntime.ts` owns a bounded transient 
 
 Verification: `npm run verify:release` passes with 92 Vitest files and 542 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. Five focused runtime tests cover held telegraph/active/expiry progression, future-hazard exclusion, monotonic resume, zero-time and boss-lock behavior, and coast allowlists; the combined cooldown/feature/hazard/arena pass covers 37 tests. Chromium confirms the public hazard-runtime debug readout. The production build emits 833.84 kB minified/224.96 kB gzip initial JavaScript and unchanged 26.76 kB CSS. The existing chunk warning remains open and no threshold changed.
 
+## Work order 113 - Boarding approach objective soft-lock repair
+
+Goal: remove the unresolved Furnace Ledger objective crash and make the same content-integrity failure impossible to ship silently.
+
+Prompt:
+
+> Fix the between-sector approach decision soft lock caused by `Unknown mission objective: objective_system_sabotage`. Trace the authored producer, add or correct the intended objective without weakening boarding identity, and preserve compatibility with generated plans and suspended runs. Extend content validation so every boarding contract objective exists and agrees with its declared verb. Add deterministic coverage that resolves every generated boarding objective before launch. Run checks.
+
+Acceptance criteria:
+
+- Furnace Ledger can pass from an approach decision into boarding gameplay without throwing.
+- Its sabotage objective is feasible through existing interior destructibles, combat accounting, travel, and extraction paths.
+- Every shipped boarding contract objective reference and verb is validated during normal content checks.
+- Generated plans and run snapshots need no migration, and no approach branch can retain an unknown boarding objective.
+
+Status: implemented. `objective_system_sabotage` is now an authored interior objective with subsystem-destruction, security-screen, and extraction-route clauses plus boarding-appropriate success, partial, failure, cleanup, world, and reward-bias behavior. Furnace Ledger retains its original contract and generated-plan ids, so existing snapshots resolve without migration. `contentValidation` now includes all six boarding contracts and rejects duplicate ids, missing objective references, objective-verb mismatches, empty titles/summaries, and empty objective-kind lists. Boarding regression projects every generated operation and explicitly verifies the Furnace Ledger sabotage plan before an approach boundary can launch it.
+
+Verification: `npm run verify:release` passes with 92 Vitest files and 544 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. The focused boarding/content/objective/mission pass covers 60 tests. Regression explicitly resolves all six generated boarding objectives and proves missing or verb-mismatched boarding references fail content validation. The production build emits 834.54 kB minified/225.10 kB gzip initial JavaScript and unchanged 26.76 kB CSS. The existing chunk warning remains open and no threshold changed.
+
 ## Review subagent prompt
 
 Use after a feature PR:

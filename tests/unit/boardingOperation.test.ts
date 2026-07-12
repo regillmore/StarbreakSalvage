@@ -63,6 +63,26 @@ describe('BoardingOperation', () => {
     expect(translated.bomb).toContain('room-clear');
   });
 
+  it('resolves every generated boarding objective before an approach decision can launch it', () => {
+    const run = generateRunSkeleton('BOARDING-OBJECTIVE-REGISTRY');
+    const objectives = run.boardingCampaign.operations.map((operation) => ({
+      contractId: operation.contractId,
+      objective: createBoardingMissionObjectivePlan(operation, null)
+    }));
+
+    expect(objectives).toHaveLength(BOARDING_CONTRACTS.length);
+    expect(objectives).toContainEqual(
+      expect.objectContaining({
+        contractId: 'boarding_furnace_ledger',
+        objective: expect.objectContaining({
+          objectiveId: 'objective_system_sabotage',
+          verb: 'sabotage',
+          cleanupPolicy: 'clearField'
+        })
+      })
+    );
+  });
+
   it('settles success, partial custody, retreat, and duplicate boundaries with zero retained actors', () => {
     const run = generateRunSkeleton('BOARDING-SETTLEMENT');
     const [successOperation, partialOperation, retreatOperation] = run.boardingCampaign.operations;

@@ -8,6 +8,7 @@ import {
 import { ACT_DEFINITIONS, type ActDefinition } from '../../src/content/acts';
 import { BACKGROUNDS, type BackgroundDefinition } from '../../src/content/backgrounds';
 import { BOSSES, type BossDefinition } from '../../src/content/bosses';
+import { BOARDING_CONTRACTS, type BoardingContractDefinition } from '../../src/content/boarding';
 import { CARRIERS, CARRIER_FACILITIES } from '../../src/content/carriers';
 import { validateContent } from '../../src/content/contentValidation';
 import { ENEMY_FORMATIONS, type EnemyFormationDefinition } from '../../src/content/enemyFormations';
@@ -53,6 +54,7 @@ const baseItem = ITEMS[0] as ItemDefinition;
 const baseBackground = BACKGROUNDS[0] as BackgroundDefinition;
 const baseFaction = FACTIONS[0] as FactionDefinition;
 const baseBoss = BOSSES[0] as BossDefinition;
+const baseBoardingContract = BOARDING_CONTRACTS[0] as BoardingContractDefinition;
 const baseEnemyFormation = ENEMY_FORMATIONS[0] as EnemyFormationDefinition;
 const baseEnemyVariant = ENEMY_VARIANTS[0] as EnemyVariantDefinition;
 const baseEnvironmentObject = ENVIRONMENT_OBJECT_DEFINITIONS[0] as EnvironmentObjectDefinition;
@@ -94,8 +96,9 @@ describe('validateContent', () => {
     expect(ENVIRONMENT_OBJECT_DEFINITIONS.length).toBeGreaterThanOrEqual(8);
     expect(EXPEDITION_NODE_PROFILES.length).toBeGreaterThanOrEqual(6);
     expect(MISSION_STAGE_PROFILES.length).toBeGreaterThanOrEqual(8);
-    expect(MISSION_OBJECTIVES).toHaveLength(10);
+    expect(MISSION_OBJECTIVES).toHaveLength(11);
     expect(MISSION_CONTRACTS).toHaveLength(15);
+    expect(BOARDING_CONTRACTS).toHaveLength(6);
     expect(UPGRADES.length).toBeGreaterThanOrEqual(6);
     expect(representedArchetypes).toHaveLength(ITEM_ARCHETYPES.length);
     expect(representedArchetypes.length).toBeGreaterThanOrEqual(6);
@@ -262,6 +265,36 @@ describe('validateContent', () => {
     expect(errors).toContain('Mission contract contract_invalid has invalid success exit: nowhere');
     expect(errors).toContain(
       'Mission contract contract_invalid reward references invalid tag: invalid-tag'
+    );
+  });
+
+  it('rejects boarding contracts with unresolved or mismatched mission objectives', () => {
+    const missingObjectiveContract = {
+      ...baseBoardingContract,
+      id: 'boarding_missing_objective',
+      objectiveId: 'objective_missing'
+    };
+    const mismatchedVerbContract = {
+      ...baseBoardingContract,
+      id: 'boarding_mismatched_verb',
+      objectiveId: baseMissionObjective.id,
+      objectiveVerb: 'scan'
+    } as BoardingContractDefinition;
+    const errors = validateContent({
+      boardingContracts: [
+        ...BOARDING_CONTRACTS,
+        baseBoardingContract,
+        missingObjectiveContract,
+        mismatchedVerbContract
+      ]
+    });
+
+    expect(errors).toContain(`Duplicate boarding contract id: ${baseBoardingContract.id}`);
+    expect(errors).toContain(
+      'Boarding contract boarding_missing_objective references missing objective: objective_missing'
+    );
+    expect(errors).toContain(
+      `Boarding contract boarding_mismatched_verb objective verb scan does not match ${baseMissionObjective.id}: ${baseMissionObjective.verb}`
     );
   });
 

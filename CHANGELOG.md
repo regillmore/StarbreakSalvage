@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fixed the Furnace Ledger boarding approach soft lock by adding its missing `objective_system_sabotage` definition. All boarding contracts now participate in global content validation for objective existence and verb agreement, and deterministic coverage resolves every generated boarding objective before an approach decision can launch it.
+
 - Added deterministic pause-time hazard progression. Hazards that are already telegraphed or active now continue through their normal phases at nominal sector speed while visible gameplay scrolling is held; future hazards remain distance-gated, pause-menu time remains frozen, and boss hide-and-defer resets runtime overrides before its fresh release telegraph.
 - Finalized the standard non-final flight-sector recovery coast at 360 units. Scroll holds at the authored combat endpoint until every live enemy is resolved, then preserves existing bullets, telegraphs, hazards, objects, loose-currency schedules, pickups, and player control while preventing new enemy or hazard activation through the coast and exit transition. Boarding and final-victory handoffs retain their specialized timing.
 

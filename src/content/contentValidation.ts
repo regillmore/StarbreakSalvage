@@ -14,6 +14,7 @@ import {
   type ActDefinition
 } from './acts';
 import { BACKGROUNDS, BACKGROUND_LAYER_KINDS, type BackgroundDefinition } from './backgrounds';
+import { BOARDING_CONTRACTS, type BoardingContractDefinition } from './boarding';
 import { BOSSES, type BossDefinition } from './bosses';
 import {
   CARRIERS,
@@ -199,6 +200,7 @@ export interface ContentValidationInput {
   readonly achievements?: readonly AchievementDefinition[];
   readonly backgrounds?: readonly BackgroundDefinition[];
   readonly bosses?: readonly BossDefinition[];
+  readonly boardingContracts?: readonly BoardingContractDefinition[];
   readonly carriers?: readonly CarrierDefinition[];
   readonly carrierFacilities?: readonly CarrierFacilityDefinition[];
   readonly enemyFormations?: readonly EnemyFormationDefinition[];
@@ -237,6 +239,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const achievements = input.achievements ?? ACHIEVEMENTS;
   const backgrounds = input.backgrounds ?? BACKGROUNDS;
   const bosses = input.bosses ?? BOSSES;
+  const boardingContracts = input.boardingContracts ?? BOARDING_CONTRACTS;
   const carriers = input.carriers ?? CARRIERS;
   const carrierFacilities = input.carrierFacilities ?? CARRIER_FACILITIES;
   const enemyFormations = input.enemyFormations ?? ENEMY_FORMATIONS;
@@ -409,6 +412,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     acts: canonicalActIds,
     itemTags: tagRegistry
   });
+  validateBoardingContracts(errors, boardingContracts, missionObjectives);
   errors.push(...validateSetPieceContent(setPieces).errors);
   errors.push(...validateFactionCampaignContent());
   errors.push(...validateCrewContent());
@@ -1336,6 +1340,37 @@ function validateMissionContracts(
         if (!registries.itemTags.has(tag))
           errors.push(`${owner} reward references invalid tag: ${tag}`);
       }
+    }
+  }
+}
+
+function validateBoardingContracts(
+  errors: string[],
+  contracts: readonly BoardingContractDefinition[],
+  objectives: readonly MissionObjectiveDefinition[]
+): void {
+  const ids = new Set<string>();
+  const objectivesById = new Map(objectives.map((objective) => [objective.id, objective]));
+
+  for (const contract of contracts) {
+    const owner = `Boarding contract ${contract.id}`;
+    if (ids.has(contract.id)) errors.push(`Duplicate boarding contract id: ${contract.id}`);
+    ids.add(contract.id);
+
+    const objective = objectivesById.get(contract.objectiveId);
+    if (!objective) {
+      errors.push(`${owner} references missing objective: ${contract.objectiveId}`);
+    } else if (objective.verb !== contract.objectiveVerb) {
+      errors.push(
+        `${owner} objective verb ${contract.objectiveVerb} does not match ${objective.id}: ${objective.verb}`
+      );
+    }
+
+    if (!contract.title.trim() || !contract.summary.trim()) {
+      errors.push(`${owner} must define title and summary copy`);
+    }
+    if (contract.objectiveKinds.length === 0) {
+      errors.push(`${owner} must define at least one objective kind`);
     }
   }
 }
