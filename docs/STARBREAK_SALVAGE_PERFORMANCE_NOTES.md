@@ -80,6 +80,10 @@ Work order 119 resequences the existing bounded hazard list once during scene se
 
 The work order 119 release build emits 848.84 kB minified/229.84 kB gzip initial JavaScript and unchanged 31.96 kB CSS/7.19 kB gzip. This is a 1.19 kB minified/0.38 kB gzip initial-JavaScript increase over work order 118. No warning threshold changed; the existing initial-chunk warning remains open.
 
+Work order 120 replaces one beam rectangle with one immutable segment. Actor collision performs one point-to-segment test per live enemy, boss, and active ally while the beam is damaging. World/set-piece damage uses at most 24 continuous expanded boxes and existing per-target hazard cooldowns; combat actors use a transient keyed cooldown map. Rendering is capped at four layered segment strokes, one source emitter, one endpoint reticle, and four track marks. Reduced motion uses two marks, while performance mode removes marks and shadow blur. No particle pool, projectile, beam entity, per-frame RNG, or save field is added.
+
+The work order 120 release build emits 855.47 kB minified/231.89 kB gzip initial JavaScript and unchanged 31.96 kB CSS/7.19 kB gzip. This is a 6.63 kB minified/2.05 kB gzip initial-JavaScript increase over work order 119. No warning threshold changed; the existing initial-chunk warning remains open.
+
 Phase 5 closeout: work order 050 keeps progression/sector-feedback optimization deferred until profiling requires it. `npm run check`, Playwright Chromium smoke, and production preview asset-path smoke passed locally. Manual cross-browser performance/readability checks outside Chromium remain pending.
 
 ## Phase 6 Item Catalog Budget Targets

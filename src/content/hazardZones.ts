@@ -37,7 +37,7 @@ export const HAZARD_ZONE_TELEGRAPH_SHAPES = [
 ] as const;
 export type HazardZoneTelegraphShape = (typeof HAZARD_ZONE_TELEGRAPH_SHAPES)[number];
 
-export const HAZARD_ZONE_DAMAGE_SHAPES = ['verticalBand'] as const;
+export const HAZARD_ZONE_DAMAGE_SHAPES = ['verticalBand', 'beamSegment'] as const;
 export type HazardZoneDamageShape = (typeof HAZARD_ZONE_DAMAGE_SHAPES)[number];
 
 export const HAZARD_ZONE_SAFE_LANE_POLICIES = ['avoidMarkedLane'] as const;
@@ -46,7 +46,7 @@ export type HazardZoneSafeLanePolicy = (typeof HAZARD_ZONE_SAFE_LANE_POLICIES)[n
 export const HAZARD_ZONE_RENDER_LAYERS = ['underBullets'] as const;
 export type HazardZoneRenderLayer = (typeof HAZARD_ZONE_RENDER_LAYERS)[number];
 
-export const HAZARD_ZONE_COLLISION_SHAPES = ['verticalBand'] as const;
+export const HAZARD_ZONE_COLLISION_SHAPES = ['verticalBand', 'beamSegment'] as const;
 export type HazardZoneCollisionShape = (typeof HAZARD_ZONE_COLLISION_SHAPES)[number];
 
 export const HAZARD_ZONE_SETTINGS_VARIANTS = [
@@ -202,27 +202,18 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.5 },
     bossArenaPolicy: 'hideAndDefer',
     readability: createReadability(120, '#8aa4b8', '#f8fbff', 'staticPulse', 'simplifiedPattern'),
-    behavior: createBehavior(
-      'orbitalShadow',
-      'shadow track',
-      'debris shadow',
-      0.32,
-      1,
-      1,
-      1,
-      0.42
-    )
+    behavior: createBehavior('orbitalShadow', 'shadow track', 'debris shadow', 0.32, 1, 1, 1, 0.42)
   },
   {
     id: 'warning_beam',
     family: 'beam',
     label: 'WARNING BEAM',
     debugLabel: 'beam',
-    summary: 'a narrow tax-beacon beam with a long warning lead and bright centerline',
+    summary: 'a directional edge-to-edge beam with a tracked source, endpoint, and brilliant core',
     sectorFit: ALL_SECTOR_IDS,
     factionFit: 'any',
     telegraphShape: 'beamLine',
-    activeDamageShape: 'verticalBand',
+    activeDamageShape: 'beamSegment',
     metrics: {
       sector: { widthRatio: 0.12, activeSpan: 140, telegraphLead: 170 },
       condition: { widthRatio: 0.12, activeSpan: 130, telegraphLead: 170 },
@@ -233,7 +224,14 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     damageCooldownSeconds: 0.35,
     safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.68 },
     bossArenaPolicy: 'hideAndDefer',
-    readability: createReadability(145, '#ffd166', '#ffef5f', 'staticPulse', 'simplifiedPattern'),
+    readability: createReadability(
+      145,
+      '#ffd166',
+      '#ffef5f',
+      'staticPulse',
+      'simplifiedPattern',
+      'beamSegment'
+    ),
     behavior: createBehavior(
       'staticWarningGate',
       'centerline lock',
@@ -362,16 +360,7 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.42 },
     bossArenaPolicy: 'hideAndDefer',
     readability: createReadability(140, '#c8d4e3', '#f8fbff', 'staticPulse', 'simplifiedPattern'),
-    behavior: createBehavior(
-      'dustFront',
-      'dust wake',
-      'sand shear',
-      0.62,
-      0.92,
-      1,
-      1,
-      0.56
-    )
+    behavior: createBehavior('dustFront', 'dust wake', 'sand shear', 0.62, 0.92, 1, 1, 0.56)
   },
   {
     id: 'mining_laser',
@@ -394,16 +383,7 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.7 },
     bossArenaPolicy: 'hideAndDefer',
     readability: createReadability(150, '#ffd166', '#ffef5f', 'staticPulse', 'simplifiedPattern'),
-    behavior: createBehavior(
-      'sweepBeam',
-      'sweep trace',
-      'mining sweep',
-      0.74,
-      1,
-      1,
-      1,
-      0.38
-    )
+    behavior: createBehavior('sweepBeam', 'sweep trace', 'mining sweep', 0.74, 1, 1, 1, 0.38)
   },
   {
     id: 'surface_defense_arc',
@@ -426,16 +406,7 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.5 },
     bossArenaPolicy: 'hideAndDefer',
     readability: createReadability(145, '#7cf7ff', '#f8fbff', 'staticPulse', 'simplifiedPattern'),
-    behavior: createBehavior(
-      'pulseField',
-      'arc charge',
-      'defense pulse',
-      0.42,
-      0.58,
-      3,
-      2,
-      0.58
-    )
+    behavior: createBehavior('pulseField', 'arc charge', 'defense pulse', 0.42, 0.58, 3, 2, 0.58)
   }
 ];
 
@@ -474,11 +445,12 @@ function createReadability(
   normalColor: string,
   highContrastColor: string,
   reducedMotionVariant: HazardZoneSettingsVariant,
-  performanceVariant: HazardZoneSettingsVariant
+  performanceVariant: HazardZoneSettingsVariant,
+  collisionShape: HazardZoneCollisionShape = 'verticalBand'
 ): HazardZoneReadabilityMetadata {
   return {
     renderLayer: 'underBullets',
-    collisionShape: 'verticalBand',
+    collisionShape,
     maxFillAlpha: 0.11,
     maxStrokeAlpha: 0.88,
     minTelegraphLead,

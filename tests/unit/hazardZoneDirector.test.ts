@@ -72,6 +72,9 @@ describe('HazardZoneDirector', () => {
       bossArena: fixture.arena,
       backgroundId: fixture.sector.background.id
     });
+    const beams = plans.flatMap((plan) =>
+      plan.entries.map((entry) => entry.hazard).filter((hazard) => hazard.kind === 'warning_beam')
+    );
 
     expect(plans).toHaveLength(60);
     expect(new Set(plans.map((plan) => plan.sequenceOrdinal)).size).toBe(60);
@@ -79,8 +82,12 @@ describe('HazardZoneDirector', () => {
     expect(summarizeHazardZoneDirectorPlan(repeated)).toEqual(
       summarizeHazardZoneDirectorPlan(plans[0]!)
     );
+    expect(beams.length).toBeGreaterThan(0);
+    expect(beams.every((beam) => beam.beam !== undefined)).toBe(true);
+    expect(new Set(beams.map((beam) => beam.beam?.sourceEdge)).size).toBeGreaterThan(1);
 
     const applied = applyHazardZoneDirectorToFeatures(fixture.pacedFeatures, plans[0]!);
+    expect(validateSectorFeaturePlan(applied, fixture.scroll.length)).toEqual([]);
     expect(applied.hazards.map((hazard) => hazard.xRatio)).toEqual(
       plans[0]!.entries
         .map((entry) => entry.hazard)

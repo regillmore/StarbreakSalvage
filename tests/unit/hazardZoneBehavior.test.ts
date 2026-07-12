@@ -5,7 +5,7 @@ import {
   getHazardZoneDefinition,
   type HazardZoneId
 } from '../../src/content/hazardZones';
-import { createCombatState, type CombatBounds } from '../../src/game/CombatState';
+import { createCombatState, spawnBoss, type CombatBounds } from '../../src/game/CombatState';
 import { resolveSectorHazardCollisions } from '../../src/game/SectorHazards';
 import {
   getActiveSectorHazards,
@@ -122,6 +122,78 @@ describe('HazardZoneBehavior', () => {
     expect(state.player.invulnerableSeconds).toBeGreaterThanOrEqual(
       getHazardZoneDefinition(hazard.kind).damageCooldownSeconds
     );
+  });
+
+  it('lets active beam segments pierce and damage every actor allegiance on cooldown', () => {
+    const state = createCombatState(bounds, 'INDISCRIMINATE-BEAM', {
+      skipEnemyWaves: true
+    });
+    const beamY = state.player.y;
+    state.enemies.push({
+      id: 901,
+      factionId: 'faction_scrap_court',
+      x: 250,
+      y: beamY,
+      radius: 17,
+      hull: 3,
+      maxHull: 3,
+      drift: 0,
+      targetY: beamY,
+      fireCooldown: 10
+    });
+    state.allies = [
+      {
+        source: 'crew',
+        candidateId: 'beam-test-ally',
+        name: 'Beam Test Ally',
+        callsign: 'LUX',
+        role: 'gunner',
+        trait: 'steady',
+        preferredCommand: 'focus',
+        cue: { glyph: 'A', color: '#7cf7ff', highContrastGlyph: 'A' },
+        x: 160,
+        y: beamY,
+        radius: 13,
+        hull: 3,
+        maxHull: 3,
+        moveSpeed: 180,
+        fireCooldownSeconds: 1,
+        projectileDamage: 1,
+        fireCooldown: 0,
+        screenCooldown: 0,
+        status: 'active',
+        enemiesDefeated: 0,
+        salvageRecovered: 0,
+        fitLabel: 'beam fixture'
+      }
+    ];
+    const boss = spawnBoss(state, 'boss_auditor_drone_xl', bounds);
+    boss.x = 430;
+    boss.y = beamY;
+    boss.hull = 5;
+    const hazard = createHazard('warning_beam', {
+      telegraphDistance: 40,
+      startDistance: 190,
+      endDistance: 340,
+      beam: {
+        sourceEdge: 'left',
+        sourceOffsetRatio: beamY / bounds.height,
+        targetEdge: 'right',
+        targetOffsetRatio: beamY / bounds.height
+      }
+    });
+    const plan = createPlan(hazard);
+
+    const first = resolveSectorHazardCollisions(state, plan, 220, bounds);
+    const second = resolveSectorHazardCollisions(state, plan, 230, bounds);
+
+    expect(first.hitHazardIds).toEqual([hazard.id]);
+    expect(second.hitHazardIds).toEqual([]);
+    expect(state.player.hull).toBe(state.player.maxHull - 1);
+    expect(state.enemies[0]?.hull).toBe(2);
+    expect(state.boss?.hull).toBe(4);
+    expect(state.allies[0]?.hull).toBe(2);
+    expect(state.hazardActorCooldowns.size).toBe(3);
   });
 
   it('cleans up active hazard state after the end distance', () => {

@@ -14,8 +14,14 @@ import { clamp } from '../core/math';
 import type { Rng } from '../core/rng';
 import type { CombatBounds } from './CombatState';
 import {
+  createBeamSegmentDamageRects,
+  getBeamHazardSegment,
+  type BeamHazardGeometry
+} from './BeamHazard';
+import {
   getHazardZoneDamageRects,
   getHazardZonePresentationState,
+  isHazardZoneDamageWindowOpen,
   type HazardZonePresentationState
 } from './HazardZoneBehavior';
 import type { SectorScrollPlan } from './ScrollState';
@@ -60,6 +66,7 @@ export interface SectorHazardPlan {
   readonly widthRatio: number;
   readonly damage: number;
   readonly label: string;
+  readonly beam?: BeamHazardGeometry;
 }
 
 export interface SectorFeaturePlan {
@@ -147,6 +154,7 @@ const LANDMARK_LABELS: Readonly<Record<SectorLandmarkKind, string>> = {
 
 const landmarkKindRegistry = new Set<string>(SECTOR_LANDMARK_KINDS);
 const hazardKindRegistry = new Set<string>(SECTOR_HAZARD_KINDS);
+const beamEdgeRegistry = new Set(['top', 'right', 'bottom', 'left']);
 
 export function createSectorFeaturePlan(options: SectorFeaturePlanOptions): SectorFeaturePlan {
   return {
@@ -297,7 +305,18 @@ export function getSectorHazardDamageRects(
   activeHazard: ActiveSectorHazard,
   bounds: CombatBounds
 ): readonly SectorHazardCollisionRect[] {
-  return getHazardZoneDamageRects(activeHazard, getSectorHazardCollisionRect(activeHazard.hazard, bounds));
+  if (activeHazard.hazard.kind === 'warning_beam') {
+    if (!isHazardZoneDamageWindowOpen(activeHazard)) {
+      return [];
+    }
+
+    return createBeamSegmentDamageRects(getBeamHazardSegment(activeHazard.hazard, bounds));
+  }
+
+  return getHazardZoneDamageRects(
+    activeHazard,
+    getSectorHazardCollisionRect(activeHazard.hazard, bounds)
+  );
 }
 
 export function getSectorHazardReadability(
@@ -383,6 +402,38 @@ export function validateSectorFeaturePlan(
     );
     validateRatio(errors, plan.sectorId, hazard.id, 'xRatio', hazard.xRatio);
     validateRatio(errors, plan.sectorId, hazard.id, 'widthRatio', hazard.widthRatio);
+
+    if (hazard.beam) {
+      if (!beamEdgeRegistry.has(hazard.beam.sourceEdge)) {
+        errors.push(
+          `Sector feature plan ${plan.sectorId} hazard ${hazard.id} has invalid beam source edge`
+        );
+      }
+      if (!beamEdgeRegistry.has(hazard.beam.targetEdge)) {
+        errors.push(
+          `Sector feature plan ${plan.sectorId} hazard ${hazard.id} has invalid beam target edge`
+        );
+      }
+      if (hazard.beam.sourceEdge === hazard.beam.targetEdge) {
+        errors.push(
+          `Sector feature plan ${plan.sectorId} hazard ${hazard.id} beam edges must differ`
+        );
+      }
+      validateRatio(
+        errors,
+        plan.sectorId,
+        hazard.id,
+        'beam sourceOffsetRatio',
+        hazard.beam.sourceOffsetRatio
+      );
+      validateRatio(
+        errors,
+        plan.sectorId,
+        hazard.id,
+        'beam targetOffsetRatio',
+        hazard.beam.targetOffsetRatio
+      );
+    }
 
     if (hazard.telegraphDistance >= hazard.startDistance) {
       errors.push(

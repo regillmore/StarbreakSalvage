@@ -27,6 +27,7 @@ import {
 import type { SectorFeaturePlan, SectorHazardKind, SectorHazardPlan } from './SectorFeatures';
 import type { AppliedRouteOutcome } from './RouteEvents';
 import type { SectorScrollPlan } from './ScrollState';
+import { createBeamHazardGeometry, formatBeamHazardTrack } from './BeamHazard';
 import {
   getActPressureHazardRatio,
   shouldScheduleActPressureHazard,
@@ -115,9 +116,7 @@ const HAZARD_SEQUENCE_LANE_SLOT_COUNT = 641;
 const HAZARD_SEQUENCE_ORDINAL_STEP = 173;
 const HAZARD_SEQUENCE_ENTRY_STEP = 97;
 
-const HAZARD_SEQUENCE_ROLE_SLOT: Readonly<
-  Record<ExpeditionOperationalRole, number>
-> = {
+const HAZARD_SEQUENCE_ROLE_SLOT: Readonly<Record<ExpeditionOperationalRole, number>> = {
   ingress: 0,
   advance: 1,
   detour: 2,
@@ -152,10 +151,7 @@ export function createHazardZoneDirectorPlan(
       ? 0
       : Math.max(0, MAX_DIRECTOR_TOTAL_HAZARDS - options.features.hazards.length);
   const existingEntries = options.features.hazards.map((hazard, index) =>
-    createExistingEntry(
-      diversifyExistingHazard(options, hazard, index),
-      options.scroll.length
-    )
+    createExistingEntry(diversifyExistingHazard(options, hazard, index), options.scroll.length)
   );
   const directorEntries = createDirectorEntries(options, maxAdditional);
   const entries = [...existingEntries, ...directorEntries].sort(compareEntries);
@@ -242,7 +238,9 @@ export function consumeHazardZoneScheduleEvents(
 export function formatHazardZoneDirectorDebug(plan: HazardZoneDirectorPlan): string {
   const deferral = plan.bossDeferralCount > 0 ? ` D${plan.bossDeferralCount}` : '';
   const sequence = plan.sequenceOrdinal === null ? '' : ` Q${plan.sequenceOrdinal}`;
-  return `${plan.totalHazardCount} zones +${plan.scheduledHazardCount} P${plan.pressureLevel}/R${plan.reliefWindowCount}${sequence}${deferral}`;
+  const beam = plan.entries.find((entry) => entry.hazard.kind === 'warning_beam')?.hazard.beam;
+  const beamTrack = beam ? ` B[${formatBeamHazardTrack(beam)}]` : '';
+  return `${plan.totalHazardCount} zones +${plan.scheduledHazardCount} P${plan.pressureLevel}/R${plan.reliefWindowCount}${sequence}${beamTrack}${deferral}`;
 }
 
 export function formatHazardZoneDirectorReadout(plan: HazardZoneDirectorPlan): string {
@@ -349,6 +347,7 @@ export function summarizeHazardZoneDirectorPlan(plan: HazardZoneDirectorPlan): u
       startDistance: entry.hazard.startDistance,
       endDistance: entry.hazard.endDistance,
       xRatio: entry.hazard.xRatio,
+      beam: entry.hazard.beam ?? null,
       deferredForBossLock: entry.deferredForBossLock
     }))
   };
@@ -515,7 +514,8 @@ function createDirectorEntry(
     xRatio: getHazardSequenceLaneRatio(options, options.features.hazards.length + index, id),
     widthRatio: metrics.widthRatio,
     damage: definition.damage,
-    label: DIRECTOR_HAZARD_LABELS[kind]
+    label: DIRECTOR_HAZARD_LABELS[kind],
+    ...(kind === 'warning_beam' ? { beam: createOperationBeamGeometry(options, id, index) } : {})
   };
 
   return {
@@ -594,15 +594,42 @@ function diversifyExistingHazard(
   const kind = source === 'sector' ? chooseExistingHazardKind(options, index) : hazard.kind;
   const definition = getHazardZoneDefinition(kind);
   const metrics = getHazardZoneMetrics(kind, 'sector');
+  const { beam: previousBeam, ...baseHazard } = hazard;
+  void previousBeam;
+  const telegraphLead = Math.max(
+    hazard.startDistance - hazard.telegraphDistance,
+    definition.phase.minTelegraphLead
+  );
+  const activeSpan = Math.max(
+    hazard.endDistance - hazard.startDistance,
+    definition.phase.minActiveSpan
+  );
 
   return {
-    ...hazard,
+    ...baseHazard,
     kind,
+    telegraphDistance: roundDirectorValue(Math.max(0, hazard.startDistance - telegraphLead)),
+    endDistance: roundDirectorValue(
+      Math.min(options.scroll.length, hazard.startDistance + activeSpan)
+    ),
     xRatio: getHazardSequenceLaneRatio(options, index, hazard.id),
     widthRatio: metrics.widthRatio,
     damage: definition.damage,
-    label: source === 'sector' ? definition.label : hazard.label
+    label: source === 'sector' ? definition.label : hazard.label,
+    ...(kind === 'warning_beam'
+      ? { beam: createOperationBeamGeometry(options, hazard.id, index) }
+      : {})
   };
+}
+
+function createOperationBeamGeometry(
+  options: HazardZoneDirectorOptions,
+  hazardId: string,
+  entryIndex: number
+) {
+  return createBeamHazardGeometry(
+    `${options.runSeed}:${options.saveStateKey ?? 'fresh'}:${options.sequenceKey ?? 'base'}:${options.sequenceOrdinal ?? options.features.sectorIndex}:${hazardId}:${entryIndex}`
+  );
 }
 
 function chooseExistingHazardKind(
@@ -610,8 +637,7 @@ function chooseExistingHazardKind(
   index: number
 ): SectorHazardKind {
   const choices =
-    HAZARD_ZONE_PACING_CHOICES[options.features.sectorId] ??
-    DEFAULT_HAZARD_ZONE_PACING_CHOICES;
+    HAZARD_ZONE_PACING_CHOICES[options.features.sectorId] ?? DEFAULT_HAZARD_ZONE_PACING_CHOICES;
   const offset =
     stableHash(
       `${options.runSeed}:${options.saveStateKey ?? 'fresh'}:${options.sequenceKey ?? 'base'}:sector-hazards`

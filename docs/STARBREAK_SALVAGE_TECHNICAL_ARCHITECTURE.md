@@ -773,6 +773,14 @@ seed + permanent save fingerprint
 - The lane function is a run-seeded permutation over 641 positions from 0.180 through 0.820. The current fifteen-sector graph uses at most 120 sector/role ordinals and 60 combat-role ordinals, so the first hazard lane makes every current operation sequence collision-free without a mutable run registry or snapshot field.
 - Sequence selection occurs once during `GameplayScene` plan construction. Fixed-step activation, pause-safe runtime progression, collision, mine materialization, boss deferral, recovery-coast allowlists, and rendering continue to consume the resulting ordinary `SectorFeaturePlan`.
 
+### Work order 120 directional beam boundary
+
+- `src/game/BeamHazard.ts` owns seeded source/target edge selection, offset geometry, combat-world endpoint projection, exact circle-to-capsule overlap, bounded world-damage sampling, and accessible direction copy. Renderer and collision consumers receive the same `BeamHazardSegment`; neither reconstructs an independent line.
+- `HazardZoneDirector` materializes beam geometry only after work order 119 finalizes the operation sequence and hazard family. The geometry key includes run seed, save fingerprint, stage identity, sequence ordinal, hazard id, and entry index, so the same operation repeats exactly while other operations vary direction and offsets.
+- `SectorHazards` uses exact segment overlap for player, enemy, boss, and ally circles. At most 24 continuous expanded segment boxes reuse existing environment/set-piece hazard damage paths; all samples pierce rather than terminate on contact.
+- `CombatState.damageCombatActorsByHazard` centralizes allegiance-neutral enemy, boss, and ally damage/defeat handling. A transient per-hazard/per-actor cooldown map advances in fixed time and is discarded with combat state; it is not generated content or snapshot data.
+- `CanvasRenderer` gives warning and active phases dedicated presentation: source aperture/arrow, endpoint reticle, dashed guide, perpendicular tracking marks, layered outer energy, bright core, and optional glow. Reduced motion lowers marker count, performance mode removes glow/markers, and high contrast retains a white core without changing geometry or damage.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

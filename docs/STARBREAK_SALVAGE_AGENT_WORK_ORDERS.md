@@ -2091,6 +2091,26 @@ Status: implemented. Hazard repetition came from mission and bonus projections r
 
 Verification: `npm run verify:release` passes with 92 Vitest files and 554 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. Focused hazard-director, sector-feature, sector-condition, and boarding coverage passes with 34 tests. A run-wide regression materializes all 60 current sector/advance-detour-gate-pursuit combinations, proves all 60 ordinals and fingerprints are distinct, reconstructs one operation identically, and verifies the diversified entries reach the final feature plan. The production build emits 848.84 kB minified/229.84 kB gzip initial JavaScript and unchanged 31.96 kB CSS/7.19 kB gzip. The existing chunk warning remains open and no threshold changed.
 
+## Work order 120 - Directional piercing beam hazards
+
+Goal: turn the abstract warning-beam lane into a readable, spectacular physical beam crossing the combat field.
+
+Prompt:
+
+> Rework the warning-beam hazard to telegraph variable beam source directions and offsets, then render a rich, bright sci-fi beam segment with a trackable start and end. Rendering and collision must share the same deterministic geometry. Active beams should pierce and damage players, enemies, bosses, allies, set pieces, and eligible environment objects indiscriminately. Preserve long warning leads, boss hide/defer behavior, pause-safe expiry, recovery-coast allowlists, work order 119 operation uniqueness, fixed combat-world parity, accessibility settings, and bounded performance. Add focused geometry, schema, collision, cooldown, director, and Chromium coverage. Run checks.
+
+Acceptance criteria:
+
+- Every final warning beam deterministically selects different source/target edges and bounded offsets from its operation identity; source and target edges cannot match.
+- Telegraphs clearly distinguish the emitting endpoint from the terminal reticle and expose direction/offset copy without color alone.
+- The active beam uses a bright layered core and bounded track marks along the exact segment used for player/enemy/boss/ally collision.
+- Beam damage pierces every intersecting allegiance and eligible world target, uses existing defeat/objective paths, and cannot tick every frame through the same target.
+- Reduced motion, performance mode, high contrast, boss locks, hazard holds, coasts, boarding, and deterministic operation replay remain compatible.
+
+Status: implemented. `BeamHazard` defines twelve edge-to-edge route families, deterministic 14-86% endpoint offsets, combat-world segment projection, circle/capsule overlap, direction copy, and at most 24 continuous world-damage boxes. `HazardZoneDirector` attaches geometry after the operation-specific hazard sequence is chosen, removes stale beam metadata when a hazard changes family, and includes endpoints in deterministic summaries. Warning beams now declare `beamSegment` damage and collision metadata. `CanvasRenderer` bypasses the former filled vertical rectangle and paints a dedicated dashed telegraph, directional source aperture, endpoint reticle, track marks, layered energy body, luminous colored shell, and white core from the shared segment. `SectorHazards` uses exact segment collision for the player and calls the new allegiance-neutral combat damage path for every intersecting enemy, boss, and active ally; environment objects and set-piece components reuse their bounded hazard-damage/cooldown paths. HUD warning and hint copy announce source edge, source offset, target edge, target offset, and tracking/firing phase. No beam projectile/entity, runtime RNG, generation fingerprint, save, or snapshot migration is introduced.
+
+Verification: `npm run verify:release` passes with 93 Vitest files and 559 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. Focused beam geometry, behavior, hazard director, feature validation, combat, and content-validation coverage passes with 104 tests. Coverage pins deterministic directional variety, distinct edges, endpoint/circle parity, bounded continuous world samples, invalid endpoint rejection, final-plan geometry, active player/enemy/boss/ally damage, and cooldown suppression. The Trade War Corridor environmental-stress Chromium journey exposes deterministic source-to-target debug geometry and exercises the beam renderer without a browser error; three focused repetitions pass before the complete suite. The production build emits 855.47 kB minified/231.89 kB gzip initial JavaScript and unchanged 31.96 kB CSS/7.19 kB gzip. The existing chunk warning remains open and no threshold changed. Direct visual inspection was attempted through the in-app browser control surface, but no browser target was available in this session; automated Chromium is the available local visual evidence.
+
 ## Review subagent prompt
 
 Use after a feature PR:

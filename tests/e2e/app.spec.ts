@@ -477,6 +477,11 @@ test('reaches and instruments the deterministic lunar sector smoke path', async 
 
   await forceCompleteSectorAndEnterNext(page, 'Trade War Corridor');
   await expect(page.locator('.debug-overlay')).toContainText('Sector S2 Trade War Corridor');
+  await page.keyboard.press('H');
+  await expect(page.locator('.debug-overlay')).toContainText('Scenario environment-stress');
+  await expect(page.locator('.debug-overlay')).toContainText(
+    /Hazards .* B\[(TOP|RIGHT|BOTTOM|LEFT) \d+% to (TOP|RIGHT|BOTTOM|LEFT) \d+%\]/
+  );
 
   await forceCompleteSectorAndEnterNext(page, 'Lunar Surface');
   await expectGameplaySector(page, 'Lunar Surface');
@@ -751,7 +756,9 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
   await expect(page.getByTestId('crew-brief')).toContainText('Crew manifest:');
   await expect(page.getByTestId('crew-brief')).toContainText(':active:');
   await page.keyboard.press('Enter');
-  await expect(page.getByTestId('crew-command-readout')).toContainText(/Wing C[1-3]\/F[0-2] active/);
+  await expect(page.getByTestId('crew-command-readout')).toContainText(
+    /Wing C[1-3]\/F[0-2] active/
+  );
   await page.getByTestId('crew-command-screen').click();
   await expect(page.getByTestId('crew-command-readout')).toContainText('SCREEN');
   await expect(page.locator('.debug-overlay')).toContainText('Crew screen');
@@ -861,9 +868,9 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
   );
   await page.getByTestId('frontier-choice-extract').click();
   await expect(page.getByRole('heading', { name: 'Victory Confirmed' })).toBeVisible();
-  expect(
-    await page.evaluate(() => window.localStorage.getItem('starbreak.save.v5'))
-  ).toBe(saveBeforeLabEnding);
+  expect(await page.evaluate(() => window.localStorage.getItem('starbreak.save.v5'))).toBe(
+    saveBeforeLabEnding
+  );
   await page.getByRole('button', { name: 'Back to Menu' }).click();
 
   await page.getByRole('button', { name: 'Scenario Lab [Debug]' }).click();

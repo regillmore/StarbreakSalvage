@@ -2,6 +2,7 @@ import { clamp } from '../core/math';
 import { getHazardZoneDefinition } from '../content/hazardZones';
 import {
   applyPlayerDamage,
+  damageCombatActorsByHazard,
   damageEnvironmentObjectsInRect,
   damageSetPieceComponentsInRect,
   type CombatBounds,
@@ -18,6 +19,7 @@ import {
   type SectorFeaturePlan,
   type SectorHazardPlan
 } from './SectorFeatures';
+import { circleOverlapsBeamSegment, getBeamHazardSegment } from './BeamHazard';
 
 export interface SectorHazardCollisionResult {
   readonly activeHazardIds: readonly string[];
@@ -53,6 +55,18 @@ export function resolveSectorHazardCollisions(
     for (const rect of damageRects) {
       damageEnvironmentObjectsInRect(state, rect, 'hazard', activeHazard.hazard.damage);
       damageSetPieceComponentsInRect(state, rect, 'hazard', activeHazard.hazard.damage);
+    }
+
+    if (activeHazard.hazard.kind === 'warning_beam') {
+      const segment = getBeamHazardSegment(activeHazard.hazard, bounds);
+      const definition = getHazardZoneDefinition(activeHazard.hazard.kind);
+      damageCombatActorsByHazard(
+        state,
+        activeHazard.hazard.id,
+        activeHazard.hazard.damage,
+        definition.damageCooldownSeconds,
+        (target) => circleOverlapsBeamSegment(target, segment)
+      );
     }
 
     if (!playerOverlapsActiveHazard(state.player, activeHazard, bounds)) {
@@ -97,6 +111,14 @@ export function playerOverlapsActiveHazard(
   activeHazard: ActiveSectorHazard,
   bounds: CombatBounds
 ): boolean {
+  if (activeHazard.hazard.kind === 'warning_beam') {
+    if (getSectorHazardDamageRects(activeHazard, bounds).length === 0) {
+      return false;
+    }
+
+    return circleOverlapsBeamSegment(player, getBeamHazardSegment(activeHazard.hazard, bounds));
+  }
+
   return getSectorHazardDamageRects(activeHazard, bounds).some((rect) =>
     playerOverlapsHazardRect(player, rect)
   );

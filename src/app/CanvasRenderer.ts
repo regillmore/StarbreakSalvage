@@ -36,6 +36,7 @@ import {
 import { generateStarfield, type Star, starCountForViewport } from '../core/starfield';
 import { createDefaultCombatBounds } from '../game/CombatGeometry';
 import type { CombatBounds } from '../game/CombatState';
+import { getBeamHazardSegment, type BeamHazardSegment } from '../game/BeamHazard';
 import { getPlayerShipCueState, type PlayerShipCueState } from './ShipCombatCues';
 import { calculateViewportLayout, type ViewportLayout } from './ViewportLayout';
 import type { PlayerDestructionPresentation } from '../game/PlayerDestruction';
@@ -466,7 +467,6 @@ export class CanvasRenderer {
         continue;
       }
 
-      const rect = getSectorHazardCollisionRect(activeHazard.hazard, bounds);
       const style = getSectorHazardVisualState(
         activeHazard,
         this.settings.reducedMotion,
@@ -474,6 +474,13 @@ export class CanvasRenderer {
         this.settings.bulletContrast === 'high'
       );
       const color = this.getSectorHazardColor(activeHazard.hazard.kind);
+
+      if (activeHazard.hazard.kind === 'warning_beam') {
+        this.paintDirectionalBeamHazard(activeHazard, bounds, color, style);
+        continue;
+      }
+
+      const rect = getSectorHazardCollisionRect(activeHazard.hazard, bounds);
 
       context.save();
       context.translate(rect.centerX, height / 2);
@@ -642,10 +649,7 @@ export class CanvasRenderer {
     context.fillStyle = appearance.engineColor;
     context.beginPath();
     context.moveTo(-player.radius * 0.48, player.radius * 0.68);
-    context.lineTo(
-      0,
-      player.radius * (1.35 + thrust * 0.45) * departureExhaustScale
-    );
+    context.lineTo(0, player.radius * (1.35 + thrust * 0.45) * departureExhaustScale);
     context.lineTo(player.radius * 0.48, player.radius * 0.68);
     context.closePath();
     context.fill();
@@ -2018,6 +2022,132 @@ export class CanvasRenderer {
       context.lineTo(rect.right, y + rect.width * 0.52);
       context.stroke();
     }
+  }
+
+  private paintDirectionalBeamHazard(
+    activeHazard: ActiveSectorHazard,
+    bounds: CombatBounds,
+    color: string,
+    style: SectorHazardVisualState
+  ): void {
+    const context = this.context;
+    const segment = getBeamHazardSegment(activeHazard.hazard, bounds);
+    const active = activeHazard.phase === 'active';
+    const highContrast = this.settings.bulletContrast === 'high';
+    const coreColor = highContrast ? '#ffffff' : '#fffbd6';
+
+    context.save();
+    context.lineCap = 'round';
+    context.lineJoin = 'round';
+
+    if (active) {
+      context.globalCompositeOperation = highContrast ? 'source-over' : 'lighter';
+      context.shadowColor = color;
+      context.shadowBlur = this.settings.performanceMode ? 0 : 18;
+      this.strokeBeamSegment(segment, color, segment.radius * 3.2, style.fillAlpha * 0.62);
+      this.strokeBeamSegment(segment, color, segment.radius * 1.85, style.strokeAlpha * 0.78);
+      this.strokeBeamSegment(
+        segment,
+        coreColor,
+        Math.max(3, segment.radius * 0.58),
+        highContrast ? 1 : 0.96
+      );
+      this.strokeBeamSegment(segment, '#ffffff', Math.max(1.2, segment.radius * 0.18), 1);
+    } else {
+      context.setLineDash([12, 10]);
+      this.strokeBeamSegment(segment, color, Math.max(2, style.lineWidth), style.strokeAlpha);
+      context.setLineDash([]);
+      this.strokeBeamSegment(segment, coreColor, 1, 0.26 + activeHazard.phaseProgress * 0.34);
+    }
+
+    this.paintBeamSourceEmitter(segment, color, coreColor, active, style);
+    this.paintBeamEndpoint(segment, color, coreColor, active, style);
+
+    if (!this.settings.performanceMode) {
+      const markerCount = this.settings.reducedMotion ? 2 : 4;
+      for (let index = 1; index <= markerCount; index += 1) {
+        const progress = index / (markerCount + 1);
+        const x = segment.startX + (segment.endX - segment.startX) * progress;
+        const y = segment.startY + (segment.endY - segment.startY) * progress;
+        const normalX = -Math.sin(segment.angle);
+        const normalY = Math.cos(segment.angle);
+        const halfWidth = active ? segment.radius * 1.18 : 7;
+        context.globalAlpha = active ? 0.52 : 0.34;
+        context.strokeStyle = active ? coreColor : color;
+        context.lineWidth = active ? 1.4 : 1;
+        context.beginPath();
+        context.moveTo(x - normalX * halfWidth, y - normalY * halfWidth);
+        context.lineTo(x + normalX * halfWidth, y + normalY * halfWidth);
+        context.stroke();
+      }
+    }
+
+    context.restore();
+  }
+
+  private strokeBeamSegment(
+    segment: BeamHazardSegment,
+    color: string,
+    lineWidth: number,
+    alpha: number
+  ): void {
+    const context = this.context;
+    context.strokeStyle = color;
+    context.lineWidth = lineWidth;
+    context.globalAlpha = clamp(alpha, 0, 1);
+    context.beginPath();
+    context.moveTo(segment.startX, segment.startY);
+    context.lineTo(segment.endX, segment.endY);
+    context.stroke();
+  }
+
+  private paintBeamSourceEmitter(
+    segment: BeamHazardSegment,
+    color: string,
+    coreColor: string,
+    active: boolean,
+    style: SectorHazardVisualState
+  ): void {
+    const context = this.context;
+    context.save();
+    context.translate(segment.startX, segment.startY);
+    context.rotate(segment.angle);
+    context.globalAlpha = active ? 0.96 : style.strokeAlpha;
+    context.strokeStyle = coreColor;
+    context.fillStyle = color;
+    context.lineWidth = active ? 2.4 : 1.7;
+    context.beginPath();
+    context.arc(0, 0, active ? 15 : 12, -Math.PI * 0.62, Math.PI * 0.62);
+    context.stroke();
+    context.beginPath();
+    context.moveTo(5, -9);
+    context.lineTo(20, 0);
+    context.lineTo(5, 9);
+    context.closePath();
+    if (active) context.fill();
+    context.stroke();
+    context.restore();
+  }
+
+  private paintBeamEndpoint(
+    segment: BeamHazardSegment,
+    color: string,
+    coreColor: string,
+    active: boolean,
+    style: SectorHazardVisualState
+  ): void {
+    const context = this.context;
+    const radius = active ? 12 : 9;
+    context.globalAlpha = active ? 0.86 : style.strokeAlpha * 0.82;
+    context.strokeStyle = active ? coreColor : color;
+    context.lineWidth = active ? 2 : 1.4;
+    context.beginPath();
+    context.arc(segment.endX, segment.endY, radius, 0, Math.PI * 2);
+    context.moveTo(segment.endX - radius - 6, segment.endY);
+    context.lineTo(segment.endX + radius + 6, segment.endY);
+    context.moveTo(segment.endX, segment.endY - radius - 6);
+    context.lineTo(segment.endX, segment.endY + radius + 6);
+    context.stroke();
   }
 
   private getSectorHazardColor(kind: ActiveSectorHazard['hazard']['kind']): string {

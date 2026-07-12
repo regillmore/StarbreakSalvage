@@ -207,6 +207,7 @@ import {
   type ApexFinaleProfile,
   type ApexHuntState
 } from '../game/ApexHunt';
+import { formatBeamHazardTrack } from '../game/BeamHazard';
 
 const DEBUG_BOSS_SHORTCUTS: Partial<Record<InputAction, BossId>> = {
   debugBossOne: 'boss_auditor_drone_xl',
@@ -871,13 +872,19 @@ export class GameplayScene implements Scene {
       const state = this.getCombatState();
       const feedbackBefore = createCombatFeedbackSnapshot(state);
       const scroll = this.getScrollState();
+      const features = this.getCurrentFeatures();
       const targetDistance = getDebugEnvironmentStressDistance(
-        this.getCurrentFeatures(),
-        scroll.plan.length
+        features,
+        this.getCurrentScrollPlan().length
       );
 
       setScrollDistance(scroll, Math.max(scroll.distance, targetDistance), scroll.plan.baseSpeed);
       state.scrollDistance = scroll.distance;
+      const debugBeam = features.hazards.find((hazard) => hazard.kind === 'warning_beam');
+      if (debugBeam) {
+        this.getSectorHazardRuntimeState().effectiveDistances[debugBeam.id] =
+          debugBeam.startDistance + 18;
+      }
       prepareDebugEnvironmentStressScenario(state, this.getCombatBounds());
       this.updateBossArena(scroll.distance, state);
       this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
@@ -1117,9 +1124,7 @@ export class GameplayScene implements Scene {
               combatState.allies.filter((ally) => ally.source === 'fleet').length
             )
           : undefined,
-      apex: this.apexState
-        ? createApexDebugState(this.run.apexHunts, this.apexState)
-        : undefined,
+      apex: this.apexState ? createApexDebugState(this.run.apexHunts, this.apexState) : undefined,
       runTimeline: this.runTimeline ? createRunTimelineDebugState(this.runTimeline) : undefined,
       scenarioLab: this.scenarioLabPreset
         ? {
@@ -1824,7 +1829,7 @@ export class GameplayScene implements Scene {
       (state.rivalEncounter?.outcome === 'engaged'
         ? `RIVAL ${state.rivalEncounter.name} | ${state.rivalEncounter.title} | ${state.rivalEncounter.tactic}`
         : null) ??
-      this.getActiveHazards()[0]?.hazard.label ??
+      formatActiveHazardWarning(this.getActiveHazards()[0]) ??
       (setPiece && setPiece.active
         ? `${setPiece.stageLabel}; safe ${setPiece.safeLaneLabel}`
         : null) ??
@@ -2000,9 +2005,13 @@ export class GameplayScene implements Scene {
     const activeHazard = this.getActiveHazards()[0];
 
     if (activeHazard) {
+      const beamTrack =
+        activeHazard.hazard.kind === 'warning_beam'
+          ? ` ${formatBeamHazardTrack(activeHazard.hazard.beam)}.`
+          : '';
       return activeHazard.phase === 'telegraph'
-        ? `Hint ${activeHazard.hazard.label} ahead; shift lanes before it activates.`
-        : `Hint ${activeHazard.hazard.label} active; stay out of the marked lane.`;
+        ? `Hint ${activeHazard.hazard.label} ahead.${beamTrack} Shift clear before it activates.`
+        : `Hint ${activeHazard.hazard.label} active.${beamTrack} Track both endpoints and stay clear.`;
     }
 
     if (state.stats.shotsFired === 0) {
@@ -2158,6 +2167,19 @@ export class GameplayScene implements Scene {
   }
 }
 
+function formatActiveHazardWarning(activeHazard: ActiveSectorHazard | undefined): string | null {
+  if (!activeHazard) {
+    return null;
+  }
+
+  if (activeHazard.hazard.kind !== 'warning_beam') {
+    return activeHazard.hazard.label;
+  }
+
+  const phase = activeHazard.phase === 'active' ? 'FIRING' : 'TRACKING';
+  return `${activeHazard.hazard.label} ${phase} | ${formatBeamHazardTrack(activeHazard.hazard.beam)}`;
+}
+
 function getDebugLongScrollDistance(sectorLength: number): number {
   const length = Math.max(0, sectorLength);
   const lateDistance = length * DEBUG_LONG_SCROLL_RATIO;
@@ -2170,6 +2192,11 @@ function getDebugEnvironmentStressDistance(
   features: SectorFeaturePlan,
   sectorLength: number
 ): number {
+  const beam = features.hazards.find((hazard) => hazard.kind === 'warning_beam');
+  if (beam) {
+    return Math.max(0, Math.min(beam.startDistance + 18, Math.max(0, sectorLength - 220)));
+  }
+
   const candidates = features.hazards
     .flatMap((hazard) => [hazard.telegraphDistance + 18, hazard.startDistance + 18])
     .map((distance) => Math.max(0, Math.min(distance, Math.max(0, sectorLength - 220))));

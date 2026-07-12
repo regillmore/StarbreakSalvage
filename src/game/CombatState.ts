@@ -386,6 +386,7 @@ export interface CombatState {
   effects: CombatEffectState[];
   grazedProjectileIds: Set<number>;
   formationRewardsClaimed: Set<string>;
+  hazardActorCooldowns: Map<string, number>;
   spawnSchedule: readonly EnemySpawn[];
   readonly looseCurrencyPlan: LooseCurrencyPlan | null;
   nextLooseCurrencyIndex: number;
@@ -430,6 +431,20 @@ export interface EnemySpawn {
   readonly rivalShipName?: string | null;
   readonly rivalTactic?: RivalTactic | null;
   readonly rivalRetreatAtHullRatio?: number;
+}
+
+export interface HazardDamageTarget {
+  readonly kind: 'enemy' | 'boss' | 'ally';
+  readonly id: string;
+  readonly x: number;
+  readonly y: number;
+  readonly radius: number;
+}
+
+export interface HazardActorDamageResult {
+  readonly enemyHits: number;
+  readonly bossHits: number;
+  readonly allyHits: number;
 }
 
 export interface CombatRunResult {
@@ -669,25 +684,27 @@ export function createCombatState(
         projectileDamage: member.projectileDamage,
         fitLabel: member.fitLabel
       }))
-    ].slice(0, MAX_COMBINED_ALLIES).map((member, index) => ({
-      ...member,
-      x:
-        bounds.width / 2 +
-        (index -
-          (Math.min(
-            MAX_COMBINED_ALLIES,
-            (options.crew?.members.length ?? 0) + (options.fleet?.members.length ?? 0)
-          ) -
-            1) /
-            2) *
-          54,
-      y: bounds.height * 0.86,
-      fireCooldown: index * 0.12,
-      screenCooldown: index * 0.08,
-      status: 'active',
-      enemiesDefeated: 0,
-      salvageRecovered: 0
-    })),
+    ]
+      .slice(0, MAX_COMBINED_ALLIES)
+      .map((member, index) => ({
+        ...member,
+        x:
+          bounds.width / 2 +
+          (index -
+            (Math.min(
+              MAX_COMBINED_ALLIES,
+              (options.crew?.members.length ?? 0) + (options.fleet?.members.length ?? 0)
+            ) -
+              1) /
+              2) *
+            54,
+        y: bounds.height * 0.86,
+        fireCooldown: index * 0.12,
+        screenCooldown: index * 0.08,
+        status: 'active',
+        enemiesDefeated: 0,
+        salvageRecovered: 0
+      })),
     crewCommand: {
       active: 'focus',
       cooldownSeconds: 0,
@@ -701,6 +718,7 @@ export function createCombatState(
     effects: [],
     grazedProjectileIds: new Set<number>(),
     formationRewardsClaimed: new Set<string>(),
+    hazardActorCooldowns: new Map<string, number>(),
     spawnSchedule:
       options.spawnSchedule ??
       (options.skipEnemyWaves ? [] : createEnemySpawnSchedule(seed, bossDefinition.factionId)),
@@ -788,6 +806,7 @@ export function updateCombatState(
 
   const safeDt = clamp(dt, 0, 0.1);
   state.timeSeconds += safeDt;
+  updateHazardActorCooldowns(state, safeDt);
   state.scrollDistance = Math.max(
     state.scrollDistance,
     input.scrollDistance ?? state.scrollDistance
@@ -919,6 +938,126 @@ export function damageEnvironmentObjectsInRect(
   }
 
   return damaged;
+}
+
+export function damageCombatActorsByHazard(
+  state: CombatState,
+  hazardId: string,
+  damage: number,
+  cooldownSeconds: number,
+  overlaps: (target: HazardDamageTarget) => boolean
+): HazardActorDamageResult {
+  const safeDamage = Math.max(0, damage);
+  const safeCooldown = Math.max(0, cooldownSeconds);
+  const enemyIdsToRemove = new Set<number>();
+  let enemyHits = 0;
+  let bossHits = 0;
+  let allyHits = 0;
+
+  for (const enemy of state.enemies) {
+    const target: HazardDamageTarget = {
+      kind: 'enemy',
+      id: String(enemy.id),
+      x: enemy.x,
+      y: enemy.y,
+      radius: enemy.radius
+    };
+
+    if (!overlaps(target) || !claimHazardActorDamage(state, hazardId, target, safeCooldown)) {
+      continue;
+    }
+
+    enemyHits += 1;
+    enemy.hull = applyDamage(enemy.hull, safeDamage).hull;
+    if (enemy.hull <= 0) {
+      recordEnemyDefeat(state, enemy, enemyIdsToRemove, {
+        grantSpecialCharge: false
+      });
+    }
+  }
+
+  if (enemyIdsToRemove.size > 0) {
+    state.enemies = state.enemies.filter((enemy) => !enemyIdsToRemove.has(enemy.id));
+  }
+
+  const boss = state.boss;
+  if (boss) {
+    const target: HazardDamageTarget = {
+      kind: 'boss',
+      id: String(boss.id),
+      x: boss.x,
+      y: boss.y,
+      radius: boss.radius
+    };
+
+    if (overlaps(target) && claimHazardActorDamage(state, hazardId, target, safeCooldown)) {
+      bossHits += 1;
+      boss.hull = applyDamage(boss.hull, safeDamage).hull;
+      if (boss.hull > 0) {
+        refreshBossPhase(state, boss);
+      } else {
+        spawnBossDefeatPickups(state, boss, 0);
+        state.boss = null;
+        state.telegraphs = [];
+        state.stats = {
+          ...state.stats,
+          enemiesDestroyed: state.stats.enemiesDestroyed + 1,
+          bossesDefeated: state.stats.bossesDefeated + 1
+        };
+        gainSpecialCharge(state, SPECIAL_CHARGE_PER_BOSS);
+      }
+    }
+  }
+
+  for (const ally of state.allies) {
+    if (ally.status !== 'active') {
+      continue;
+    }
+
+    const target: HazardDamageTarget = {
+      kind: 'ally',
+      id: ally.candidateId,
+      x: ally.x,
+      y: ally.y,
+      radius: ally.radius
+    };
+
+    if (!overlaps(target) || !claimHazardActorDamage(state, hazardId, target, safeCooldown)) {
+      continue;
+    }
+
+    allyHits += 1;
+    damageAlly(state, ally, safeDamage);
+  }
+
+  return { enemyHits, bossHits, allyHits };
+}
+
+function claimHazardActorDamage(
+  state: CombatState,
+  hazardId: string,
+  target: Pick<HazardDamageTarget, 'kind' | 'id'>,
+  cooldownSeconds: number
+): boolean {
+  const key = `${hazardId}:${target.kind}:${target.id}`;
+
+  if ((state.hazardActorCooldowns.get(key) ?? 0) > 0) {
+    return false;
+  }
+
+  state.hazardActorCooldowns.set(key, cooldownSeconds);
+  return true;
+}
+
+function updateHazardActorCooldowns(state: CombatState, dt: number): void {
+  for (const [key, seconds] of state.hazardActorCooldowns) {
+    const remaining = Math.max(0, seconds - dt);
+    if (remaining <= 0) {
+      state.hazardActorCooldowns.delete(key);
+    } else {
+      state.hazardActorCooldowns.set(key, remaining);
+    }
+  }
 }
 
 export function spawnBoss(
@@ -1712,13 +1851,15 @@ export function createCombatRunResult(
           crew: {
             command: state.crewCommand.active,
             issuedCommands: state.crewCommand.issuedCount,
-            members: state.allies.filter((ally) => ally.source === 'crew').map((ally) => ({
-              candidateId: ally.candidateId,
-              injured: ally.status === 'injured',
-              retreated: ally.status === 'retreated',
-              enemiesDefeated: ally.enemiesDefeated,
-              salvageRecovered: ally.salvageRecovered
-            }))
+            members: state.allies
+              .filter((ally) => ally.source === 'crew')
+              .map((ally) => ({
+                candidateId: ally.candidateId,
+                injured: ally.status === 'injured',
+                retreated: ally.status === 'retreated',
+                enemiesDefeated: ally.enemiesDefeated,
+                salvageRecovered: ally.salvageRecovered
+              }))
           }
         }
       : {}),
@@ -1730,14 +1871,16 @@ export function createCombatRunResult(
               .map((ally) => ally.preferredCommand)
               .join('+'),
             issuedCommands: state.crewCommand.issuedCount,
-            craft: state.allies.filter((ally) => ally.source === 'fleet').map((ally) => ({
-              craftId: ally.candidateId,
-              lost: ally.status === 'injured',
-              retreated: ally.status === 'retreated',
-              remainingHull: Math.max(0, ally.hull),
-              enemiesDefeated: ally.enemiesDefeated,
-              salvageRecovered: ally.salvageRecovered
-            }))
+            craft: state.allies
+              .filter((ally) => ally.source === 'fleet')
+              .map((ally) => ({
+                craftId: ally.candidateId,
+                lost: ally.status === 'injured',
+                retreated: ally.status === 'retreated',
+                remainingHull: Math.max(0, ally.hull),
+                enemiesDefeated: ally.enemiesDefeated,
+                salvageRecovered: ally.salvageRecovered
+              }))
           }
         }
       : {}),
@@ -3433,7 +3576,11 @@ function collectPickupForAlly(state: CombatState, ally: AllyState): void {
 
 function fireAllyAtTarget(state: CombatState, ally: AllyState): void {
   if (ally.fireCooldown > 0) return;
-  if (state.projectiles.filter((projectile) => projectile.owner === 'ally').length >= MAX_COMBINED_ALLY_PROJECTILES) return;
+  if (
+    state.projectiles.filter((projectile) => projectile.owner === 'ally').length >=
+    MAX_COMBINED_ALLY_PROJECTILES
+  )
+    return;
   const target =
     state.enemies.slice(0, 24).reduce<EnemyState | null>((nearest, candidate) => {
       if (!nearest) return candidate;

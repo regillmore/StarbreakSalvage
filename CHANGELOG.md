@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Rebuilt warning beams as deterministic directional edge-to-edge hazards. Telegraphs now expose a distinct source emitter, endpoint reticle, direction, and offsets; active beams render layered glow, bright core, and track markers from the same segment used by collision. Beams pierce the field and damage players, enemies, bosses, allies, set pieces, and eligible environment objects indiscriminately with bounded per-target cooldowns.
+
 - Eliminated repeated hazard sequences across sectors and bonus operations. Every sector/operation role now receives a unique run-seeded sequence identity that deterministically varies authored hazard families, lanes, and director additions while preserving explicit route hazards, timing bounds, boss deferrals, and exact replay of the same operation.
 
 - Fixed a boss-gate soft lock where post-projection support, faction-front, rival, or apex distance spawns could remain scheduled beyond the live arena lock. The final assembled combat schedule now preserves order while fitting every distance-gated arrival into a bounded pre-lock envelope, so required targets arrive before scrolling pauses and boss release can resolve naturally.
