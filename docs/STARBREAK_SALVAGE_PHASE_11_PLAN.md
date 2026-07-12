@@ -193,6 +193,8 @@ Exit criteria:
 - Debug/browser smoke reaches every Phase 11 system without a full manual voyage.
 - Manual non-Chromium, real-device, long-session fatigue, balance, readability, content-volume, and combinatorial fleet risks are explicit.
 
+Status: implemented by work order 110. Sixteen public Scenario Lab fixtures now reach snapshot recovery, multi-operation topology, frontier endings, carrier staging, boarding, faction fronts, crew arcs, fleetcraft, apex hunts, and combined pressure. Endurance round-trips all fixtures plus the finale and restores one frontier checkpoint into extraction and breach decisions. Chromium proves suspend/reload/resume across combat and settled maps, then reaches Core Extraction victory and clears the run snapshot. The deterministic local structural audit records 28.15 minutes for fresh and progressed standard voyages, 18.50 for Act II extraction, and 36.65 completionist. No severe release blocker was found; manual full-run stopwatch/fatigue, non-Chromium/real-device, balance, content repetition, presentation depth, narrative, ally/fleet feel, and combinatorial build risks remain explicit.
+
 ## Architectural Direction
 
 Phase 11 should introduce explicit boundaries before adding content volume:
@@ -224,8 +226,10 @@ generated campaign plan
 - Boarding can fracture controls and content architecture if it becomes a separate game rather than a translated operation mode.
 - World simulation can overwhelm seeded reproducibility unless every transition consumes explicit state and named RNG forks.
 - Fleet and ally density can multiply target, collision, projectile, and visual costs; shared budgets remain mandatory.
-- The current 657.78 kB main bundle and large integration modules are warnings that Phase 11 cannot keep adding orchestration in place.
+- The current 828.55 kB main bundle and large integration modules remain warnings for the next architecture phase; the release-audit UI and logic are lazy and no warning threshold was raised.
 
 ## Definition Of Done
 
 Phase 11 is done when a fresh or progressed save can start, suspend, resume, and complete a deterministic 20-30 minute standard voyage; execute true multi-operation sectors; choose extraction or enter the Null Frontier; operate a run-local carrier; experience boarding, faction-front, crew-arc, fleetcraft, and apex-hunt consequences; and reach a divergent ending. A completionist path should have 30-45 minutes of meaningful structural capacity without relying on filler, while shorter extraction remains valid.
+
+Phase 11 closeout: the generated topology meets the structural duration bands at 28.15 standard and 36.65 completionist minutes, with 18.50-minute extraction. Automated smoke proves recovery and an ending through debug/public fixture boundaries rather than a real-time full voyage. The deployed full-run stopwatch remains approximately 12 minutes from Phase 10, so a fresh/progressed manual Phase 11 playthrough is still required before claiming real active-play duration or fatigue quality.

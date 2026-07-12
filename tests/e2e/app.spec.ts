@@ -766,14 +766,14 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('scenario-lab')).toBeVisible();
   await expect(page.getByTestId('scenario-lab-intro')).toContainText('deterministic session');
-  await expect(page.locator('[data-testid^="scenario-lab-lab_"]')).toHaveCount(13);
-  await expect(page.locator('.debug-overlay')).toContainText('Scenario Lab catalog 13 cases');
+  await expect(page.locator('[data-testid^="scenario-lab-lab_"]')).toHaveCount(16);
+  await expect(page.locator('.debug-overlay')).toContainText('Scenario Lab catalog 16 cases');
 
   for (let index = 0; index < 6; index += 1) await page.keyboard.press('Tab');
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('cockpit-hud')).toBeVisible();
   await expect(page.locator('.debug-overlay')).toContainText('Scenario lab:combined');
-  await expect(page.locator('.debug-overlay')).toContainText('Scenario Lab combined 13 cases');
+  await expect(page.locator('.debug-overlay')).toContainText('Scenario Lab combined 16 cases');
   await expect(page.locator('.debug-overlay')).toContainText('Set-piece');
   await expect(page.locator('.debug-overlay')).toContainText('Allies');
   await expect(page.locator('.debug-overlay')).toContainText('Combined proc');
@@ -827,6 +827,39 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('scenario-lab')).toBeVisible();
   for (let index = 0; index < 12; index += 1) await page.keyboard.press('Tab');
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('command-deck')).toBeVisible();
+  await expect(page.getByTestId('carrier-risk-readout')).toContainText(/Hull .* Heat .* Debt/);
+  await page.getByTestId('command-deck-continue').click();
+  await expect(page.getByTestId('cockpit-hud')).toBeVisible();
+
+  await page.keyboard.press('B');
+  await expect(page.getByTestId('scenario-lab')).toBeVisible();
+  for (let index = 0; index < 13; index += 1) await page.keyboard.press('Tab');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'The Frontier Is Optional' })).toBeVisible();
+  const saveBeforeLabEnding = await page.evaluate(() =>
+    window.localStorage.getItem('starbreak.save.v5')
+  );
+  await page.getByTestId('frontier-choice-extract').click();
+  await expect(page.getByRole('heading', { name: 'Victory Confirmed' })).toBeVisible();
+  expect(
+    await page.evaluate(() => window.localStorage.getItem('starbreak.save.v5'))
+  ).toBe(saveBeforeLabEnding);
+  await page.getByRole('button', { name: 'Back to Menu' }).click();
+
+  await page.getByRole('button', { name: 'Scenario Lab [Debug]' }).click();
+  await expect(page.getByTestId('scenario-lab')).toBeVisible();
+  for (let index = 0; index < 14; index += 1) await page.keyboard.press('Tab');
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('voyage-release-audit')).toBeVisible();
+  await expect(page.getByTestId('voyage-audit-snapshot')).toContainText('Run snapshot v9');
+  await expect(page.getByTestId('voyage-audit-measurements')).toContainText('completionist');
+  await expect(page.getByTestId('voyage-audit-caveat')).toContainText('not player stopwatch time');
+
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('scenario-lab')).toBeVisible();
+  for (let index = 0; index < 15; index += 1) await page.keyboard.press('Tab');
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('scenario-timeline')).toBeVisible();
   await expect(page.getByTestId('scenario-timeline-list')).toContainText('decision:fixture');
@@ -1002,9 +1035,11 @@ test('suspends, reloads, resumes, and clears a versioned expedition snapshot', a
   await page.getByTestId('command-deck-continue').click();
   await expectGameplaySector(page, 'Outer Debris Field');
 
-  await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: 'End Run' }).click();
-  await expect(page.getByRole('heading', { name: 'Contract Suspended' })).toBeVisible();
+  await page.keyboard.press('G');
+  await expect(page.getByRole('heading', { name: 'The Frontier Is Optional' })).toBeVisible();
+  await page.getByTestId('frontier-choice-extract').click();
+  await expect(page.getByRole('heading', { name: 'Victory Confirmed' })).toBeVisible();
+  await expect(page.getByText(/Core Extraction: complete victory/)).toBeVisible();
   await page.getByRole('button', { name: 'Back to Menu' }).click();
   await expect(page.getByTestId('run-snapshot-panel')).toHaveCount(0);
 

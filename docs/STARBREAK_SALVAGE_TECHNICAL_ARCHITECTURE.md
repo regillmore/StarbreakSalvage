@@ -742,6 +742,13 @@ seed + permanent save fingerprint
 - `GameplayScene` receives a precomputed encounter/profile and reuses the central wave objective, boss actor, arena, projectile/effect, collision, feedback, and reward paths. It does not mutate apex campaign state; `GameApp` settles public reducer events at operation boundaries and pauses a neutralized finale for an explicit lazy `ApexDossierScene` disposition.
 - Snapshot schema/storage v9 validates apex plan/state and retires v1-v8. Permanent save v5 receives only validated music, practice, or challenge unlock ids after a run summary; those flags are excluded from run-generation fingerprints because they do not alter generated voyage content.
 
+### Phase 11 release-audit boundary
+
+- `src/game/VoyageReleaseAudit.ts` is a pure read-model fold over explicitly supplied fresh and progressed `RunSkeleton` values. It measures extraction, standard, and completionist node-duration projections without storage, browser state, telemetry, runtime RNG, or combat simulation and always carries an authored-projection caveat.
+- `ScenarioLab` now owns sixteen declarative fixtures and validates exact coverage for snapshot, multi-operation, frontier, carrier, boarding, faction-front, crew-arc, fleetcraft, and apex systems. The snapshot card uses the production v9 create/export/restore functions; carrier and frontier cards enter existing presentation seams rather than duplicating reducers.
+- `ExpeditionEndurance.runFrontierResumeAudit` restores one production snapshot into both frontier decisions. Browser smoke separately proves the presentation/orchestration path from suspended combat through settled-map restore to extraction victory and snapshot cleanup.
+- `VoyageReleaseAuditScene` and its calculation module are lazy debug-only chunks. They add no production gameplay responsibility to the fixed-step loop. Phase 11 closes with `GameApp`, `GameplayScene`, `CombatState`, snapshot validation, summary content, and content validation still named as next-phase extraction targets rather than silently increasing the Vite warning threshold.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

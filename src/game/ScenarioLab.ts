@@ -17,6 +17,7 @@ import {
   resetMissionForCurrentSector,
   type RunSessionState
 } from './RunSession';
+import { createRunSnapshot, exportRunSnapshot, restoreRunSnapshot } from './RunSnapshot';
 
 export const SCENARIO_LAB_IDS = [
   'lab_expedition_node',
@@ -31,6 +32,9 @@ export const SCENARIO_LAB_IDS = [
   'lab_crew_arcs',
   'lab_fleetcraft',
   'lab_apex_hunts',
+  'lab_carrier_command',
+  'lab_frontier_endings',
+  'lab_snapshot_recovery',
   'lab_timeline_audit'
 ] as const;
 export type ScenarioLabId = (typeof SCENARIO_LAB_IDS)[number];
@@ -41,6 +45,9 @@ export type ScenarioLabTarget =
   | 'crewQuarters'
   | 'fleetBay'
   | 'apexDossier'
+  | 'carrierDeck'
+  | 'frontierGate'
+  | 'releaseAudit'
   | 'timeline';
 export type ScenarioLabGameplayPreset =
   'none' | 'setPiece' | 'rival' | 'crew' | 'combined' | 'boarding' | 'front';
@@ -83,6 +90,7 @@ export interface ScenarioLabSetupReadModel {
   readonly arcEvents: number;
   readonly fleetEvents: number;
   readonly apexEvents: number;
+  readonly snapshotBytes: number;
   readonly summary: string;
 }
 
@@ -211,6 +219,35 @@ export const SCENARIO_LAB_DEFINITIONS: readonly ScenarioLabDefinition[] = [
     { factionFixture: true, crewFixture: true, fleetFixture: true, apexFixture: true }
   ),
   scenario(
+    'lab_carrier_command',
+    'Carrier Command Checkpoint',
+    'Open a staging checkpoint with carrier facilities, crew posts, fleet access, and an independently resumable command decision.',
+    ['carrier', 'snapshot', 'staging', 'facilities', 'fleetcraft'],
+    1,
+    'carrierDeck',
+    'none',
+    { crewFixture: true, engineeringFixture: true, fleetFixture: true }
+  ),
+  scenario(
+    'lab_frontier_endings',
+    'Frontier Ending Gate',
+    'Reach the extraction-or-breach decision with a settled Core Descent history and explicit divergent ending state.',
+    ['frontier', 'extraction', 'divergent-endings', 'summary', 'multi-operation'],
+    9,
+    'frontierGate',
+    'none',
+    { factionFixture: true, crewFixture: true }
+  ),
+  scenario(
+    'lab_snapshot_recovery',
+    'Voyage Release Audit',
+    'Round-trip a real snapshot v9 session and inspect fresh, progressed, extraction, standard, and completionist structural duration evidence.',
+    ['snapshot', 'recovery', 'duration', 'save-v5', 'run-v9', 'endurance'],
+    0,
+    'releaseAudit',
+    'none'
+  ),
+  scenario(
     'lab_timeline_audit',
     'Run Timeline Audit',
     'Inspect deterministic node, decision, economy, engineering, faction, rival, crew, boss, duration, and run events.',
@@ -235,7 +272,7 @@ export function createScenarioLabLaunch(options: {
   readonly unlockedIds?: readonly UnlockId[];
 }): ScenarioLabLaunch {
   const definition = getScenarioLabDefinition(options.scenarioId);
-  const session = createRunSession(options.run, options.contract, {
+  let session = createRunSession(options.run, options.contract, {
     unlockedIds: options.unlockedIds
   });
   const boardingSectorIndex =
@@ -288,6 +325,15 @@ export function createScenarioLabLaunch(options: {
   if (definition.apexFixture) {
     session.apexHunts = createDebugApexHuntState(options.run.apexHunts);
   }
+  if (definition.target === 'carrierDeck') {
+    const schedule = createMissionSchedule(options.run.expedition, session.currentSectorIndex);
+    if (!schedule.reliefStageId) throw new Error('Carrier Scenario Lab fixture requires staging.');
+    session.mission = {
+      ...session.mission,
+      currentStageId: schedule.reliefStageId,
+      visitedStageIds: [schedule.startStageId, schedule.reliefStageId]
+    };
+  }
   if (definition.id === 'lab_combined_pressure') {
     session.itemInstances = [...createItemStormLoadout()];
   }
@@ -329,17 +375,31 @@ export function createScenarioLabLaunch(options: {
     });
   }
 
+  let snapshotBytes = 0;
+  if (definition.id === 'lab_snapshot_recovery') {
+    const snapshot = createRunSnapshot({
+      run: options.run,
+      contract: options.contract,
+      session,
+      target: 'sectorTransition',
+      label: 'Scenario Lab snapshot recovery'
+    });
+    snapshotBytes = new TextEncoder().encode(exportRunSnapshot(snapshot)).byteLength;
+    session = restoreRunSnapshot(snapshot).session;
+  }
+
   return {
     definition,
     session,
-    readout: createScenarioLabSetupReadModel(options.run, session, definition)
+    readout: createScenarioLabSetupReadModel(options.run, session, definition, snapshotBytes)
   };
 }
 
 export function createScenarioLabSetupReadModel(
   run: RunSkeleton,
   session: RunSessionState,
-  definition: ScenarioLabDefinition
+  definition: ScenarioLabDefinition,
+  snapshotBytes = 0
 ): ScenarioLabSetupReadModel {
   const sector = run.sectors[session.currentSectorIndex]!;
   return {
@@ -356,6 +416,7 @@ export function createScenarioLabSetupReadModel(
     arcEvents: session.crewArcs.history.length,
     fleetEvents: session.fleet.history.length,
     apexEvents: session.apexHunts.history.length,
+    snapshotBytes,
     summary: `${definition.title} | ${definition.systems.join('+')} | ${definition.pressureBudget}`
   };
 }
@@ -378,6 +439,21 @@ export function validateScenarioLabDefinitions(
   }
   for (const id of SCENARIO_LAB_IDS) {
     if (!ids.has(id)) errors.push(`Scenario Lab is missing ${id}.`);
+  }
+  const requiredSystems = [
+    'snapshot',
+    'multi-operation',
+    'frontier',
+    'carrier',
+    'boarding',
+    'faction-fronts',
+    'crew-arcs',
+    'fleetcraft',
+    'apex'
+  ];
+  const systems = new Set(definitions.flatMap((definition) => definition.systems));
+  for (const system of requiredSystems) {
+    if (!systems.has(system)) errors.push(`Scenario Lab is missing Phase 11 system ${system}.`);
   }
   return errors;
 }

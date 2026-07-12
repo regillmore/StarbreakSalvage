@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { SCENARIO_LAB_IDS } from '../../src/game/ScenarioLab';
-import { runExpeditionEnduranceHarness } from '../../src/game/ExpeditionEndurance';
+import {
+  runExpeditionEnduranceHarness,
+  runFrontierResumeAudit
+} from '../../src/game/ExpeditionEndurance';
 import { RUN_SNAPSHOT_MAX_BYTES } from '../../src/game/RunSnapshot';
 
 describe('ExpeditionEndurance', () => {
@@ -39,5 +42,15 @@ describe('ExpeditionEndurance', () => {
     expect(report.maxCarrierHistory).toBeLessThanOrEqual(64);
     expect(report.maxCarrierCargo).toBeLessThanOrEqual(16);
     expect(report.maxEngineeringHistory).toBeLessThanOrEqual(3);
+  });
+
+  it('restores one frontier checkpoint into both explicit ending paths', () => {
+    const first = runFrontierResumeAudit();
+    const second = runFrontierResumeAudit();
+    expect(first).toEqual(second);
+    expect(first.snapshotBytes).toBeLessThan(RUN_SNAPSHOT_MAX_BYTES);
+    expect(first.extract).toMatchObject({ decision: 'extract', endingReady: true });
+    expect(first.breach).toMatchObject({ decision: 'breach', endingReady: true });
+    expect(first.breach.sectorIndex).toBe(first.sourceSectorIndex + 1);
   });
 });

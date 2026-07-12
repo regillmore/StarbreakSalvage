@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Closed Phase 11 as the first resumable deep-voyage release candidate after auditing snapshot v9 recovery/retirement, permanent-save v5 migration, multi-operation cleanup, frontier endings, carrier, boarding, faction fronts, crew arcs, fleetcraft, apex hunts, summaries, accessibility automation, browser load, and Pages paths with no severe blocker found.
+- Expanded Scenario Lab from thirteen to sixteen public fixtures with dedicated carrier-command, frontier-ending, and snapshot/duration-audit cards. Endurance now round-trips every fixture plus the finale and restores one frontier checkpoint into both extraction and breach state.
+- Added a deterministic local duration audit: fresh and progressed standard graphs project 28.15 minutes, Act II extraction 18.50 minutes, and completionist graphs 36.65 minutes. The audit labels these as structural projections rather than stopwatch or fatigue evidence.
+- Chromium snapshot smoke now suspends, reloads, resumes combat and a settled operational map, then reaches Core Extraction victory and confirms suspended-run cleanup.
+- Fixed disposable Scenario Lab endings so they cannot write achievements, unlocks, salvage, or run summaries into permanent save v5.
+
 - Added three deterministic multi-sector apex hunts: Grave Choir Procession, Crownless Engine, and Pale Convoy Oracle, using distinct trace-chain, siege-break, and migration-net structures with persistent subsystem damage, lieutenants, migrations, escape routes, boarding sabotage, and missed-finale escapes.
 - Apex finales consume faction fronts, rivals, crew relationships/ranks, carrier facilities, support craft, and frontier decisions. Threat-specific destruction, capture, containment, bargain, and evacuation choices resolve explicit campaign state and grant music, practice, or challenge variety flags instead of stat power.
 - Added centralized bounded apex boss integration, accessible lazy Apex Dossier, briefing/HUD/summary/timeline/debug/endurance coverage, run snapshot/storage v9 with safe v1-v8 retirement, and a thirteenth Scenario Lab fixture.

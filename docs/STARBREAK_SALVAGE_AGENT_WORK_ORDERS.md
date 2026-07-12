@@ -1908,7 +1908,11 @@ Acceptance criteria:
 - Debug/browser smoke reaches every Phase 11 system through public models.
 - Release evidence distinguishes structural voyage depth from unfinished balance, content, art/audio, narrative, manual browser/device, fatigue, and combinatorial-fleet risks.
 
-Status: planned for Phase 11.
+Status: implemented. The Phase 11 audit found no severe blocker across deterministic graph replay, snapshot v9 recovery and v1-v8 retirement, permanent-save v5 migration, operation cleanup, Null Frontier generation/endings, carrier/boarding/front/crew/fleet/apex state, summaries/timeline, accessibility automation, browser load, or Pages paths. One debug isolation defect was fixed: a disposable Scenario Lab frontier ending can no longer write permanent progression. Scenario Lab now has sixteen public-model cards: dedicated carrier-command, frontier-ending, and snapshot/duration-audit fixtures close the remaining coverage gaps. `ExpeditionEndurance` round-trips every card plus the finale and separately restores one frontier checkpoint into both extraction and breach state. Chromium now suspends, reloads, resumes combat and a settled operational map, then reaches Core Extraction victory and verifies snapshot cleanup.
+
+The local deterministic duration audit reports 28.15 minutes for both fresh and fully progressed standard graphs, 18.50 minutes for Act II extraction, and 36.65 minutes for a completionist graph. These are authored node-duration projections, explicitly not active-play stopwatch, balance, fatigue, or frame-time evidence. The deployed approximately 12-minute Phase 10 all-optional run remains the latest real play measurement. Manual Firefox/Safari/real-device, full-voyage fatigue, balance, content repetition, art/audio depth, narrative polish, ally/fleet feel, and combinatorial loadouts remain honest post-phase risks.
+
+Verification: `npm run verify:release` passes with 90 Vitest files and 530 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. The build emits 828.55 kB minified/223.52 kB gzip initial JavaScript and unchanged 26.76 kB CSS. The lazy release audit emits 1.78 kB logic plus 1.92 kB UI, and Scenario Lab setup emits 9.54 kB. No warning threshold changed.
 
 ## Review subagent prompt
 

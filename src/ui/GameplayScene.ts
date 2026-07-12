@@ -1047,7 +1047,7 @@ export class GameplayScene implements Scene {
       runTimeline: this.runTimeline ? createRunTimelineDebugState(this.runTimeline) : undefined,
       scenarioLab: this.scenarioLabPreset
         ? {
-            scenarioCount: 13,
+            scenarioCount: 16,
             activeScenario: this.scenarioLabPreset,
             systems: [
               'mission actors',

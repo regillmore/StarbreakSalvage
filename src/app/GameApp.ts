@@ -124,6 +124,8 @@ import { ShopScene } from '../ui/ShopScene';
 import { UnlockArchiveScene } from '../ui/UnlockArchiveScene';
 import type { ItemId } from '../content/items';
 import type { UpgradeId } from '../content/upgrades';
+import { UPGRADES } from '../content/upgrades';
+import { UNLOCKS } from '../content/unlocks';
 import { UpgradeBayScene } from '../ui/UpgradeBayScene';
 import { FoundryScene } from '../ui/FoundryScene';
 import {
@@ -190,6 +192,7 @@ export class GameApp {
   private lastRunResult: CombatRunResult | null = null;
   private lastSaveUpdate: SaveUpdateResult | null = null;
   private summarySaved = false;
+  private scenarioLabSession = false;
   private runSnapshot: RunSnapshotV9 | null = null;
   private runSnapshotNotice: string | null = null;
   private snapshotEligible = false;
@@ -336,6 +339,7 @@ export class GameApp {
       unlockedIds: this.saveData.unlockedIds
     });
     this.runSession = launch.session;
+    this.scenarioLabSession = true;
     this.lastRunResult = null;
     this.lastSaveUpdate = null;
     this.summarySaved = false;
@@ -377,6 +381,46 @@ export class GameApp {
           })
         : null;
       void this.showApexDossier(profile, null, () => void this.showScenarioLab());
+      return;
+    }
+    if (launch.definition.target === 'carrierDeck') {
+      void this.showCommandDeck(this.getCurrentMissionSchedule());
+      return;
+    }
+    if (launch.definition.target === 'frontierGate') {
+      const sourceAct = this.currentRun.acts.find((act) => act.id === 'act_core_descent');
+      const targetAct = this.currentRun.acts.find((act) => act.id === 'act_null_frontier');
+      if (!sourceAct || !targetAct) throw new Error('Frontier Scenario Lab acts are unavailable.');
+      this.lastRunResult = {
+        ...createTwoActDebugSummaryResult(this.currentRun),
+        reason: 'sectorComplete'
+      };
+      this.showFrontierGate(sourceAct, targetAct);
+      return;
+    }
+    if (launch.definition.target === 'releaseAudit') {
+      const [{ VoyageReleaseAuditScene }, { createVoyageReleaseAudit }] = await Promise.all([
+        import('../ui/VoyageReleaseAuditScene'),
+        import('../game/VoyageReleaseAudit')
+      ]);
+      this.sceneManager.switchTo(
+        new VoyageReleaseAuditScene(
+          this.uiRoot,
+          launch.definition,
+          launch.readout,
+          createVoyageReleaseAudit(
+            generateRunSkeleton(this.currentRun.seed, {
+              unlockedIds: [],
+              purchasedUpgradeIds: []
+            }),
+            generateRunSkeleton(this.currentRun.seed, {
+              unlockedIds: UNLOCKS.map((unlock) => unlock.id),
+              purchasedUpgradeIds: UPGRADES.map((upgrade) => upgrade.id)
+            })
+          ),
+          () => void this.showScenarioLab()
+        )
+      );
       return;
     }
     if (launch.definition.target === 'foundry') {
@@ -709,6 +753,7 @@ export class GameApp {
 
   private resetDebugRunState(): void {
     this.snapshotEligible = false;
+    this.scenarioLabSession = false;
     this.refreshRunForCurrentSave();
     this.lastRunResult = null;
     this.lastSaveUpdate = null;
@@ -1843,7 +1888,7 @@ export class GameApp {
   }
 
   private showDebugFrontierGate(): void {
-    this.resetDebugRunState();
+    if (!this.snapshotEligible) this.resetDebugRunState();
     const sourceAct = this.currentRun.acts.find((act) => act.id === 'act_core_descent');
     const targetAct = this.currentRun.acts.find((act) => act.id === 'act_null_frontier');
     if (!sourceAct || !targetAct) return;
@@ -2249,6 +2294,10 @@ export class GameApp {
   private saveRunSummary(result: CombatRunResult | null): SaveUpdateResult | null {
     if (!result || this.summarySaved) {
       return this.lastSaveUpdate;
+    }
+    if (this.scenarioLabSession) {
+      this.summarySaved = true;
+      return null;
     }
 
     const update = applyRunRecordToSave(this.saveData, this.createSaveRecord(result));
@@ -2663,6 +2712,7 @@ export class GameApp {
   }
 
   private refreshRunForCurrentSave(): void {
+    this.scenarioLabSession = false;
     this.currentRun = this.createRunSkeleton();
     this.selectedContract = getFirstContract(this.currentRun);
     this.runSession = createRunSession(this.currentRun, this.selectedContract, {
@@ -2704,6 +2754,7 @@ export class GameApp {
       this.lastRunResult = null;
       this.lastSaveUpdate = null;
       this.summarySaved = false;
+      this.scenarioLabSession = false;
       this.snapshotEligible = true;
       this.runSnapshotNotice = null;
       if (restored.snapshot.checkpoint.target === 'gameplay') {

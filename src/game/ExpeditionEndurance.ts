@@ -1,6 +1,12 @@
 import { getSetPieceById } from '../content/setPieces';
 import { generateRunSkeleton } from './Generation';
-import { createRunSession, resetMissionForCurrentSector, type RunSessionState } from './RunSession';
+import {
+  advanceSector,
+  applyFrontierDecision,
+  createRunSession,
+  resetMissionForCurrentSector,
+  type RunSessionState
+} from './RunSession';
 import {
   createRunSnapshot,
   exportRunSnapshot,
@@ -53,6 +59,22 @@ export interface ExpeditionEnduranceReport {
   readonly totalRoundTrips: number;
 }
 
+export interface FrontierResumeAuditReport {
+  readonly seed: string;
+  readonly snapshotBytes: number;
+  readonly sourceSectorIndex: number;
+  readonly extract: {
+    readonly decision: 'extract';
+    readonly endingReady: true;
+    readonly sectorIndex: number;
+  };
+  readonly breach: {
+    readonly decision: 'breach';
+    readonly endingReady: true;
+    readonly sectorIndex: number;
+  };
+}
+
 export function runExpeditionEnduranceHarness(options: {
   readonly seed: string;
   readonly cycles?: number;
@@ -74,7 +96,12 @@ export function runExpeditionEnduranceHarness(options: {
         roundTripBoundary({
           cycle,
           boundaryId: definition.id,
-          target: definition.target === 'gameplay' ? 'gameplay' : 'sectorTransition',
+          target:
+            definition.target === 'gameplay'
+              ? 'gameplay'
+              : definition.target === 'carrierDeck'
+                ? 'operationalMap'
+                : 'sectorTransition',
           run,
           contract,
           session: launch.session
@@ -113,6 +140,46 @@ export function runExpeditionEnduranceHarness(options: {
     maxCarrierCargo: Math.max(...boundaries.map((boundary) => boundary.carrierCargo)),
     maxEngineeringHistory: Math.max(...boundaries.map((boundary) => boundary.engineeringHistory)),
     totalRoundTrips: boundaries.length
+  };
+}
+
+export function runFrontierResumeAudit(seed = 'FRONTIER-RESUME-AUDIT'): FrontierResumeAuditReport {
+  const run = generateRunSkeleton(seed);
+  const contract = run.contracts[0];
+  const sourceAct = run.acts.find((act) => act.id === 'act_core_descent');
+  if (!contract || !sourceAct) throw new Error('Frontier resume audit requires a contract and Core Descent.');
+  const session = createRunSession(run, contract);
+  session.currentSectorIndex = sourceAct.endSectorIndex;
+  resetMissionForCurrentSector(run, session);
+  const snapshot = createRunSnapshot({
+    run,
+    contract,
+    session,
+    target: 'sectorTransition',
+    label: 'Frontier decision recovery'
+  });
+  const snapshotBytes = new TextEncoder().encode(exportRunSnapshot(snapshot)).byteLength;
+  const extracted = restoreRunSnapshot(snapshot).session;
+  const extractDecision = applyFrontierDecision(extracted, 'extract');
+  if (extractDecision.decision !== 'extract') throw new Error('Extraction decision did not settle.');
+  const breached = restoreRunSnapshot(snapshot).session;
+  const breachDecision = applyFrontierDecision(breached, 'breach');
+  if (breachDecision.decision !== 'breach') throw new Error('Breach decision did not settle.');
+  if (!advanceSector(run, breached)) throw new Error('Breach decision did not enter the frontier.');
+  return {
+    seed: run.seed,
+    snapshotBytes,
+    sourceSectorIndex: sourceAct.endSectorIndex,
+    extract: {
+      decision: extractDecision.decision,
+      endingReady: true,
+      sectorIndex: extracted.currentSectorIndex
+    },
+    breach: {
+      decision: breachDecision.decision,
+      endingReady: true,
+      sectorIndex: breached.currentSectorIndex
+    }
   };
 }
 

@@ -43,9 +43,9 @@ Phase 9 is complete as of validated work order 090. It expanded the loop into a 
 
 Phase 10 is complete as of work order 100. It turned the roughly six-minute Phase 9 baseline into a measured approximately 12-minute all-optional expedition through executable multi-stage missions, modular frames, salvage engineering, capital-ship/station set pieces, run-local faction rivals, crew/wingmates, a bounded timeline, and a public-model Scenario Lab. The target floor was reached through play and decisions rather than slowdown or durability inflation.
 
-Phase 11 begins from that milestone and aims for a resumable 20-30 minute standard voyage, 30-45 minute completionist capacity, and a legitimate shorter extraction. Work orders 101-106 now provide the resumable expedition kernel, true multi-operation sectors, Null Frontier third act, mobile carrier, deterministic boarding incursions, and dynamic faction fronts. Crew arcs, fleetcraft, roaming apex hunts, and divergent ending hardening remain.
+Phase 11 is complete as of work order 110. It delivers a separately versioned resumable run, executable two-to-four-operation sectors, a five-sector Null Frontier with legitimate early extraction, mobile carrier staging, deterministic boarding incursions, dynamic faction fronts, ten crew arcs, six support craft, three multi-sector apex hunts, and divergent endings. Sixteen public Scenario Lab fixtures plus deterministic endurance/release audits cover every Phase 11 domain. Authored structural projections measure 28.15 minutes for fresh/progressed standard voyages, 18.50 for extraction, and 36.65 completionist; real Phase 11 stopwatch/fatigue evidence remains a manual post-deployment task.
 
-See `docs/STARBREAK_SALVAGE_PHASE_11_PLAN.md` for the active roadmap. Phase 2 through Phase 10 plan files remain historical records for concluded phases.
+See `docs/STARBREAK_SALVAGE_PHASE_11_PLAN.md` for the completed roadmap and closeout evidence. Phase 2 through Phase 10 plan files remain historical records for earlier milestones.
 
 ## Milestones
 

@@ -19,7 +19,17 @@ describe('ScenarioLab', () => {
     const systems = new Set(SCENARIO_LAB_DEFINITIONS.flatMap((definition) => definition.systems));
     expect(systems.size).toBeGreaterThanOrEqual(12);
     expect([...systems]).toEqual(
-      expect.arrayContaining(['expedition', 'foundry', 'set-piece', 'rival', 'crew'])
+      expect.arrayContaining([
+        'expedition',
+        'foundry',
+        'set-piece',
+        'rival',
+        'crew',
+        'snapshot',
+        'frontier',
+        'carrier',
+        'apex'
+      ])
     );
   });
 
@@ -86,6 +96,21 @@ describe('ScenarioLab', () => {
     expect(
       apex.session.apexHunts.threats.some((threat) => threat.status === 'awaitingResolution')
     ).toBe(true);
+
+    const carrier = launch('lab_carrier_command');
+    expect(carrier.readout.target).toBe('carrierDeck');
+    expect(carrier.session.mission.currentStageId).toContain('staging');
+
+    const frontier = launch('lab_frontier_endings');
+    expect(frontier.readout.target).toBe('frontierGate');
+    expect(frontier.session.currentSectorIndex).toBe(
+      run.acts.find((act) => act.id === 'act_core_descent')?.endSectorIndex
+    );
+
+    const snapshot = launch('lab_snapshot_recovery');
+    expect(snapshot.readout.target).toBe('releaseAudit');
+    expect(snapshot.readout.snapshotBytes).toBeGreaterThan(0);
+    expect(snapshot.session.mission.currentStageId).toContain('briefing');
 
     const timeline = launch('lab_timeline_audit').session.timeline;
     expect(new Set(timeline.entries.map((entry) => entry.category))).toEqual(
