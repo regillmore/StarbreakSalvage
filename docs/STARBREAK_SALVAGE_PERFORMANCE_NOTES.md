@@ -72,6 +72,10 @@ Work order 117 replaces work order 045's beacon/corridor and visible toast with 
 
 The work order 117 release build emits 847.20 kB minified/229.35 kB gzip initial JavaScript and 31.96 kB CSS/7.19 kB gzip. This is a 1.00 kB minified/0.45 kB gzip initial-JavaScript increase and 0.22 kB CSS increase over work order 116. No warning threshold changed; the existing initial-chunk warning remains open.
 
+Work order 118 adds one reverse pass and one final sort over the already bounded per-operation spawn schedule during `CombatState` construction. It adds no frame-time scan, actor, projectile, effect, or timer. The 96-unit lead and 12-unit spacing are distance-only schedule constraints; combat pacing after arrival and all existing entity budgets remain unchanged.
+
+The work order 118 release build emits 847.65 kB minified/229.46 kB gzip initial JavaScript and unchanged 31.96 kB CSS/7.19 kB gzip. This is a 0.45 kB minified/0.11 kB gzip initial-JavaScript increase over work order 117. No warning threshold changed; the existing initial-chunk warning remains open.
+
 Phase 5 closeout: work order 050 keeps progression/sector-feedback optimization deferred until profiling requires it. `npm run check`, Playwright Chromium smoke, and production preview asset-path smoke passed locally. Manual cross-browser performance/readability checks outside Chromium remain pending.
 
 ## Phase 6 Item Catalog Budget Targets

@@ -85,6 +85,8 @@ const DISTANCE_WAVE_WINDOW_START_RATIO = 0.12;
 const DISTANCE_WAVE_WINDOW_END_RATIO = 0.58;
 const DISTANCE_SPAWN_SPACING = 40;
 const BOSS_GATE_DISTANCE_LEAD_SECONDS = 0.75;
+const BOSS_GATE_SPAWN_LEAD_DISTANCE = 96;
+const BOSS_GATE_MIN_SPAWN_SPACING = 12;
 const DEFAULT_ENCOUNTER_PACING: SectorEncounterPacingDefinition = {
   waveWindowStartRatio: DISTANCE_WAVE_WINDOW_START_RATIO,
   waveWindowEndRatio: DISTANCE_WAVE_WINDOW_END_RATIO,
@@ -145,6 +147,38 @@ export function createWaveDirectorPlan(options: WaveDirectorOptions): WaveDirect
     encounterPacing: options.pacing ?? null,
     missionObjective: options.missionObjective ?? null
   };
+}
+
+export function fitSpawnScheduleBeforeBossLock(
+  spawnSchedule: readonly EnemySpawn[],
+  lockDistance: number | null
+): EnemySpawn[] {
+  if (lockDistance === null || !Number.isFinite(lockDistance)) {
+    return [...spawnSchedule];
+  }
+
+  const fitted = [...spawnSchedule];
+  let nextDistance = Math.max(0, lockDistance - BOSS_GATE_SPAWN_LEAD_DISTANCE);
+
+  for (let index = fitted.length - 1; index >= 0; index -= 1) {
+    const spawn = fitted[index];
+
+    if (!spawn || spawn.atDistance === null || spawn.atDistance === undefined) {
+      continue;
+    }
+
+    const atDistance = roundDistance(Math.min(Math.max(0, spawn.atDistance), nextDistance));
+    if (atDistance !== spawn.atDistance) {
+      fitted[index] = { ...spawn, atDistance };
+    }
+    nextDistance = Math.max(0, atDistance - BOSS_GATE_MIN_SPAWN_SPACING);
+  }
+
+  return fitted.sort(
+    (left, right) =>
+      (left.atDistance ?? Number.POSITIVE_INFINITY) -
+        (right.atDistance ?? Number.POSITIVE_INFINITY) || left.atSeconds - right.atSeconds
+  );
 }
 
 export function getObjectiveProgress(

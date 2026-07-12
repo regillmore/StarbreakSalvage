@@ -760,6 +760,12 @@ seed + permanent save fingerprint
 - `CanvasRenderer` paints the existing contract-specific player ship at the read-model pose, scales its existing exhaust, adds at most a small fixed set of speed streaks, and closes a restrained dark aperture only after the ship approaches camera clear. The former beacon/corridor metaphor and visible percentage overlay are removed; phase copy remains screen-reader-only and percentage state remains debug-only.
 - Reduced motion shortens the same semantic sequence, disables speed streaks, and caps exhaust scale without bypassing the ship departure or changing handoff results. No seed, combat, save, snapshot, or content schema changes are involved.
 
+### Work order 118 boss-gate schedule invariant
+
+- Mission projection, route conditions, sector pacing, faction fronts, rivals, and apex influence all contribute before `GameplayScene` finalizes a combat spawn schedule. The live boss-arena lock is therefore the authoritative upper distance bound for that final assembled schedule, not an earlier generated or mission-projected length.
+- `WaveDirector.fitSpawnScheduleBeforeBossLock` performs one bounded reverse pass over the assembled schedule. Distance-gated entries preserve ordering and at least 12 units of separation where space permits, with the final arrival no later than 96 units before the live lock; time-gated entries remain unchanged.
+- This is a schedule normalization only. It does not mark targets defeated, clear the field, bypass objective accounting, alter enemy composition, or change boss state. The normal fixed-step spawn, combat, support-clear, and boss-request paths remain authoritative.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

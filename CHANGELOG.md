@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fixed a boss-gate soft lock where post-projection support, faction-front, rival, or apex distance spawns could remain scheduled beyond the live arena lock. The final assembled combat schedule now preserves order while fitting every distance-gated arrival into a bounded pre-lock envelope, so required targets arrive before scrolling pauses and boss release can resolve naturally.
+
 - Replaced the abstract sector-exit beacon, vector corridor, and visible progress overlay with a ship-led departure. The player's actual contract craft now centers, ignites an enlarged exhaust plume, accelerates beyond the top of the frozen combat camera, and hands off through a restrained closing-aperture transition; reduced motion removes speed streaks while preserving a short readable launch.
 
 - Reimagined the title screen around an original shattered-ring salvage-cutter illustration, the new “Break the blockade. Build the impossible. Bring home what survives.” tagline, a stronger random-expedition call to action, compact hangar services, and an accessible contract-channel launch sequence. Blank launch input now produces a fresh random route; shared/challenge expedition codes remain available through a collapsed secondary control and explicit seed URLs still launch deterministically.

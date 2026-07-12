@@ -3,11 +3,33 @@ import { describe, expect, it } from 'vitest';
 import { generateRunSkeleton, summarizeRunSkeleton } from '../../src/game/Generation';
 import {
   createWaveDirectorPlan,
+  fitSpawnScheduleBeforeBossLock,
   getObjectiveProgress,
   type ObjectiveProgressState
 } from '../../src/game/WaveDirector';
+import type { EnemySpawn } from '../../src/game/CombatState';
 
 describe('WaveDirector', () => {
+  it('fits every distance-gated support spawn ahead of the live boss lock', () => {
+    const schedule: EnemySpawn[] = [
+      createTestSpawn(240, 0),
+      createTestSpawn(1_108, 1),
+      createTestSpawn(1_260, 2),
+      createTestSpawn(null, 3)
+    ];
+
+    const fitted = fitSpawnScheduleBeforeBossLock(schedule, 1_116);
+    const distanceSpawns = fitted.filter(
+      (spawn): spawn is EnemySpawn & { readonly atDistance: number } =>
+        spawn.atDistance !== null && spawn.atDistance !== undefined
+    );
+
+    expect(distanceSpawns.map((spawn) => spawn.atDistance)).toEqual([240, 1008, 1020]);
+    expect(distanceSpawns.every((spawn) => spawn.atDistance <= 1_020)).toBe(true);
+    expect(fitted.at(-1)?.atDistance).toBeNull();
+    expect(schedule.map((spawn) => spawn.atDistance)).toEqual([240, 1108, 1260, null]);
+  });
+
   it('builds a deterministic multi-wave opening sector from run data', () => {
     const plan = getPlan('STARBREAK-SMOKE', 0);
 
@@ -2098,6 +2120,20 @@ function getPlan(seed: string, sectorIndex: number) {
     scroll: sector.scroll,
     pacing: sector.encounterPacing
   });
+}
+
+function createTestSpawn(atDistance: number | null, waveIndex: number): EnemySpawn {
+  return {
+    atSeconds: waveIndex,
+    atDistance,
+    waveIndex,
+    waveLabel: `test wave ${waveIndex}`,
+    xRatio: 0.5,
+    targetY: 120,
+    hull: 2,
+    fireDelay: 1,
+    factionId: 'faction_scrap_court'
+  };
 }
 
 function makeProgressState(

@@ -2053,6 +2053,25 @@ Status: implemented. `SectorExitSequence` now returns a pure four-phase departur
 
 Verification: `npm run verify:release` passes with 92 Vitest files and 552 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. Focused sector-exit and combat coverage passes with 34 tests, while the forced-completion Chromium journey reaches route flow after observing the accessible launch announcement. The production build emits 847.20 kB minified/229.35 kB gzip initial JavaScript and 31.96 kB CSS/7.19 kB gzip. The existing chunk warning remains open and no threshold changed. Direct screenshot inspection was attempted through the in-app browser control surface, but no browser target was available in this session; Chromium automation is the available local visual evidence.
 
+## Work order 118 - Live boss-lock spawn-envelope repair
+
+Goal: ensure every target required to release a boss gate can arrive before scrolling locks.
+
+Prompt:
+
+> Fix the Act I sector-four soft lock observed at 1116/1810u, where scrolling is locked, visible enemies are clear, the HUD asks for remaining targets, and the boss never arrives. Audit the full post-projection combat schedule rather than only generated mission coordinates. Preserve enemy composition, objective accounting, faction-front/rival/apex additions, arena approach identity, work order 111 recovery, work order 112 hazard behavior, work order 114 projection repair, and natural player-driven clearing. Add deterministic regression coverage and run checks.
+
+Acceptance criteria:
+
+- No distance-gated support, faction-front, rival, or apex spawn in the final assembled combat schedule can remain beyond the live conditioned/paced/finale arena lock.
+- Schedule fitting preserves deterministic order, keeps a readable arrival lead and bounded spacing, and leaves time-gated entries unchanged.
+- The repair does not force-clear enemies, award kills, bypass set pieces or objectives, or request the boss until the ordinary support field is actually resolved.
+- Boss-gated legacy, mission, finale, debug, cooldown, and campaign-influenced combat paths remain compatible.
+
+Status: implemented. Work order 114 correctly rebuilt the mission-projected arena and set piece, but the complete combat schedule is assembled later from directed waves plus faction-front reinforcements, rivals, and apex escorts. A distance entry could therefore retain a marker beyond the final route-conditioned, paced, or finale-adjusted arena lock. Once the camera reached that lock, the entry could never become due and `supportComplete` could never release the boss. `fitSpawnScheduleBeforeBossLock` now applies the live arena lock to the complete assembled schedule immediately before `CombatState` creation. A bounded reverse pass preserves order, retains at least 12 units of spacing where available, and places the last distance arrival 96 units before the lock. Time-gated entries are untouched. No enemy is cleared or credited by the repair; every fitted target still spawns and must resolve through normal combat.
+
+Verification: `npm run verify:release` passes with 92 Vitest files and 553 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. Focused wave-director, boss-arena, and mission-director coverage passes with 21 tests, including an exact 1116-unit lock regression with support entries originally at 1108u and 1260u. The production build emits 847.65 kB minified/229.46 kB gzip initial JavaScript and unchanged 31.96 kB CSS/7.19 kB gzip. The existing chunk warning remains open and no threshold changed.
+
 ## Review subagent prompt
 
 Use after a feature PR:

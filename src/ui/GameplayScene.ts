@@ -163,6 +163,7 @@ import {
 } from '../game/PlayerDestruction';
 import {
   createWaveDirectorPlan,
+  fitSpawnScheduleBeforeBossLock,
   getObjectiveProgress,
   type WaveDirectorPlan
 } from '../game/WaveDirector';
@@ -1393,15 +1394,18 @@ export class GameplayScene implements Scene {
         formationInstanceId: `apex-reinforcement:${this.sectorIndex}:${index}`,
         countsForObjective: false
       }));
-    const spawnSchedule = [
-      ...influencedSpawnSchedule,
-      ...frontReinforcements,
-      ...apexReinforcements,
-      ...(rivalSpawn ? [rivalSpawn] : [])
-    ].sort(
-      (left, right) =>
-        (left.atDistance ?? Number.POSITIVE_INFINITY) -
-          (right.atDistance ?? Number.POSITIVE_INFINITY) || left.atSeconds - right.atSeconds
+    const spawnSchedule = fitSpawnScheduleBeforeBossLock(
+      [
+        ...influencedSpawnSchedule,
+        ...frontReinforcements,
+        ...apexReinforcements,
+        ...(rivalSpawn ? [rivalSpawn] : [])
+      ].sort(
+        (left, right) =>
+          (left.atDistance ?? Number.POSITIVE_INFINITY) -
+            (right.atDistance ?? Number.POSITIVE_INFINITY) || left.atSeconds - right.atSeconds
+      ),
+      this.getCurrentArenaPlan()?.lockDistance ?? null
     );
     this.combatState ??= createCombatState(this.getCombatBounds(), this.getCombatSeed(), {
       weaponId: engineering.weaponId,
