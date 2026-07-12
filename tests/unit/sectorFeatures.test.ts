@@ -218,6 +218,33 @@ describe('SectorFeatures', () => {
     expect(state.player.hull).toBe(state.player.maxHull - 1);
   });
 
+  it('uses mine belts only as cluster schedules instead of lane-wide damage rectangles', () => {
+    const state = createCombatState(bounds, 'DISCRETE-MINE-COLLISION', {
+      skipEnemyWaves: true
+    });
+    const hazard = {
+      ...getRequiredHazard(),
+      kind: 'mine_belt' as const,
+      telegraphDistance: 80,
+      startDistance: 100,
+      endDistance: 200,
+      xRatio: state.player.x / bounds.width,
+      widthRatio: 0.32
+    };
+
+    const result = resolveSectorHazardCollisions(
+      state,
+      createSingleHazardPlan(hazard),
+      120,
+      bounds
+    );
+
+    expect(result.activeHazardIds).toEqual([hazard.id]);
+    expect(result.damagingHazardIds).toEqual([]);
+    expect(result.hitHazardIds).toEqual([]);
+    expect(state.stats.damageTaken).toBe(0);
+  });
+
   it('defers boss-release hazards that were hidden by the arena lock', () => {
     const state = createCombatState(bounds, 'HAZARD-BOSS-RELEASE', {
       skipEnemyWaves: true

@@ -113,6 +113,10 @@ export function getHazardZoneDamageRects(
 
   const behavior = getHazardZoneDefinition(activeHazard.hazard.kind).behavior;
 
+  if (behavior.kind === 'discreteMineCluster') {
+    return [];
+  }
+
   if (behavior.kind === 'sweepBeam') {
     const sweepWidth = clamp(baseRect.width * 0.42, 18, Math.max(18, baseRect.width));
     const centerX = clamp(
@@ -144,7 +148,7 @@ export function getHazardZoneDamageRects(
     return [createRect(baseRect.left, top, baseRect.right, top + height)];
   }
 
-  if (behavior.kind === 'driftingMineBand' || behavior.kind === 'plasmaCurtain') {
+  if (behavior.kind === 'plasmaCurtain') {
     return createSegmentedRects(activeHazard.hazard.kind, baseRect, behavior.collisionBands);
   }
 
@@ -200,7 +204,7 @@ function getMotionRatio(
   const progress = clamp(phaseProgress, 0, 1);
   const scale = clamp(motionScale, 0, 1);
 
-  if (kind === 'driftingMineBand' || kind === 'dustFront') {
+  if (kind === 'dustFront') {
     return roundBehaviorValue(clamp(0.5 + (progress - 0.5) * scale, 0, 1));
   }
 

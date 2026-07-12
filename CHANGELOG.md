@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Reworked mine-belt hazards into deterministic clusters of 4-6 discrete world-anchored proximity mines. Mines are individually destructible, resist ordinary fire, arm quickly from explosions, show fixed-step proximity/damage/chain fuses, damage players and enemies on detonation, and pass shorter telegraphed fuses through bounded nearby-mine chains; the former lane-wide mine damage rectangle is removed.
+
 - Fixed the STARBREAK-SMOKE Act II finale gate soft lock by rebuilding boss-arena and set-piece coordinates from each mission-projected objective and scroll plan. Required gate operations can no longer inherit full-sector lock distances beyond their shortened live endpoint; a seed-specific regression reaches the projected Wreck-Train lock and verifies the boss spawn request.
 
 - Fixed the Furnace Ledger boarding approach soft lock by adding its missing `objective_system_sabotage` definition. All boarding contracts now participate in global content validation for objective existence and verb agreement, and deterministic coverage resolves every generated boarding objective before an approach decision can launch it.

@@ -65,7 +65,7 @@ export type HazardZoneScheduleSource = (typeof HAZARD_ZONE_SCHEDULE_SOURCES)[num
 export const HAZARD_ZONE_BEHAVIOR_KINDS = [
   'sweepBeam',
   'pulseField',
-  'driftingMineBand',
+  'discreteMineCluster',
   'collapsingColumns',
   'orbitalShadow',
   'plasmaCurtain',
@@ -250,7 +250,7 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     family: 'mine',
     label: 'MINE BELT',
     debugLabel: 'mines',
-    summary: 'a broad mine belt that fills a lane with alternating warning marks',
+    summary: 'a cluster envelope that anchors discrete destructible proximity mines in world space',
     sectorFit: ALL_SECTOR_IDS,
     factionFit: 'any',
     telegraphShape: 'mineStripe',
@@ -267,14 +267,14 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     bossArenaPolicy: 'hideAndDefer',
     readability: createReadability(120, '#ff6bd6', '#f8fbff', 'staticPulse', 'simplifiedPattern'),
     behavior: createBehavior(
-      'driftingMineBand',
-      'mine pips',
-      'armed drift',
-      0.58,
+      'discreteMineCluster',
+      'anchor pings',
+      'proximity fuses',
+      0,
       1,
       1,
-      3,
-      0.62
+      1,
+      0.46
     )
   },
   {

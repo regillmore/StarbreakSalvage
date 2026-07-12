@@ -292,6 +292,9 @@ export interface EnvironmentObjectState {
   readonly maxHull: number;
   hitFlashSeconds: number;
   hazardCooldownSeconds: number;
+  mineFuseSeconds: number | null;
+  mineFuseDurationSeconds: number;
+  mineTriggerSource: 'proximity' | 'damage' | 'chain' | null;
   destroyed: boolean;
 }
 
@@ -327,6 +330,9 @@ export interface CombatStats {
   readonly environmentObjectsDestroyed: number;
   readonly environmentRewardsDropped: number;
   readonly environmentChainReactions: number;
+  readonly proximityMinesTriggered: number;
+  readonly proximityMinesDetonated: number;
+  readonly proximityMineEnemyHits: number;
   readonly setPieceComponentsDestroyed: number;
   readonly setPieceStagesCompleted: number;
   readonly setPiecesCompleted: number;
@@ -507,6 +513,8 @@ export interface CombatEntityCounts {
   readonly environmentObjects: number;
   readonly destructibles: number;
   readonly obstacles: number;
+  readonly proximityMines?: number;
+  readonly armedProximityMines?: number;
   readonly setPieceComponents?: number;
   readonly setPieceTargets?: number;
   readonly setPieceProjectiles?: number;
@@ -729,6 +737,9 @@ export function createCombatState(
       environmentObjectsDestroyed: 0,
       environmentRewardsDropped: 0,
       environmentChainReactions: 0,
+      proximityMinesTriggered: 0,
+      proximityMinesDetonated: 0,
+      proximityMineEnemyHits: 0,
       setPieceComponentsDestroyed: 0,
       setPieceStagesCompleted: 0,
       setPiecesCompleted: 0,
@@ -1579,6 +1590,8 @@ export function getCombatEntityCounts(state: CombatState): CombatEntityCounts {
   let playerProjectiles = 0;
   let allyProjectiles = 0;
   let destructibles = 0;
+  let proximityMines = 0;
+  let armedProximityMines = 0;
 
   for (const projectile of state.projectiles) {
     if (projectile.owner === 'player') {
@@ -1595,6 +1608,11 @@ export function getCombatEntityCounts(state: CombatState): CombatEntityCounts {
   for (const object of environmentObjects) {
     if (object.kind === 'destructible') {
       destructibles += 1;
+    }
+
+    if (object.definitionId === 'proximity_mine') {
+      proximityMines += 1;
+      armedProximityMines += Number(object.mineFuseSeconds !== null);
     }
   }
 
@@ -1639,6 +1657,7 @@ export function getCombatEntityCounts(state: CombatState): CombatEntityCounts {
     environmentObjects: environmentObjects.length,
     destructibles,
     obstacles,
+    ...(proximityMines > 0 ? { proximityMines, armedProximityMines } : {}),
     ...(state.setPiece
       ? {
           setPieceComponents: setPieceComponents.length,
@@ -1843,6 +1862,9 @@ function createEnvironmentObjectStates(
       maxHull: definition.durability.hull,
       hitFlashSeconds: 0,
       hazardCooldownSeconds: 0,
+      mineFuseSeconds: null,
+      mineFuseDurationSeconds: 0,
+      mineTriggerSource: null,
       destroyed: false
     };
   });
@@ -1875,15 +1897,120 @@ function createDebugEnvironmentObjectState(
     maxHull: definition.durability.hull,
     hitFlashSeconds: 0,
     hazardCooldownSeconds: 0,
+    mineFuseSeconds: null,
+    mineFuseDurationSeconds: 0,
+    mineTriggerSource: null,
     destroyed: false
   };
 }
 
 function updateEnvironmentObjects(state: CombatState, dt: number): void {
+  const minesToDetonate: EnvironmentObjectState[] = [];
+
   for (const object of state.environmentObjects) {
     object.hitFlashSeconds = Math.max(0, object.hitFlashSeconds - dt);
     object.hazardCooldownSeconds = Math.max(0, object.hazardCooldownSeconds - dt);
+
+    if (object.definitionId !== 'proximity_mine' || !isEnvironmentObjectActive(state, object)) {
+      continue;
+    }
+
+    if (object.mineFuseSeconds === null && isProximityMineTriggered(state, object)) {
+      armProximityMine(state, object, 'proximity');
+    }
+
+    if (object.mineFuseSeconds !== null) {
+      object.mineFuseSeconds = Math.max(0, object.mineFuseSeconds - dt);
+      if (object.mineFuseSeconds <= 0) {
+        minesToDetonate.push(object);
+      }
+    }
   }
+
+  for (const mine of minesToDetonate) {
+    detonateProximityMine(state, mine);
+  }
+}
+
+function isProximityMineTriggered(state: CombatState, mine: EnvironmentObjectState): boolean {
+  const definition = getEnvironmentObjectById(mine.definitionId);
+  const proximity = definition.proximity;
+
+  if (!proximity) {
+    return false;
+  }
+
+  const y = getEnvironmentObjectScreenY(state, mine);
+  const triggerRadiusSquared = proximity.triggerRadius * proximity.triggerRadius;
+  const actors: readonly Pick<PlayerState, 'x' | 'y'>[] = [
+    state.player,
+    ...state.enemies,
+    ...state.allies.filter((ally) => ally.status === 'active'),
+    ...(state.boss ? [state.boss] : [])
+  ];
+
+  return actors.some((actor) => {
+    const dx = actor.x - mine.x;
+    const dy = actor.y - y;
+    return dx * dx + dy * dy <= triggerRadiusSquared;
+  });
+}
+
+function armProximityMine(
+  state: CombatState,
+  mine: EnvironmentObjectState,
+  source: NonNullable<EnvironmentObjectState['mineTriggerSource']>
+): void {
+  const proximity = getEnvironmentObjectById(mine.definitionId).proximity;
+
+  if (!proximity || mine.destroyed) {
+    return;
+  }
+
+  const fuseSeconds =
+    source === 'chain'
+      ? proximity.chainFuseSeconds
+      : source === 'damage'
+        ? proximity.damagedFuseSeconds
+        : proximity.fuseSeconds;
+
+  if (mine.mineFuseSeconds === null) {
+    mine.mineFuseSeconds = fuseSeconds;
+    mine.mineFuseDurationSeconds = fuseSeconds;
+    mine.mineTriggerSource = source;
+    state.stats = {
+      ...state.stats,
+      proximityMinesTriggered: state.stats.proximityMinesTriggered + 1
+    };
+    return;
+  }
+
+  if (fuseSeconds < mine.mineFuseSeconds) {
+    mine.mineFuseSeconds = fuseSeconds;
+    mine.mineFuseDurationSeconds = fuseSeconds;
+    mine.mineTriggerSource = source;
+  }
+}
+
+function detonateProximityMine(state: CombatState, mine: EnvironmentObjectState): void {
+  if (mine.destroyed || mine.definitionId !== 'proximity_mine') {
+    return;
+  }
+
+  destroyEnvironmentObject(
+    state,
+    mine,
+    getEnvironmentObjectById(mine.definitionId),
+    'chainReaction',
+    {
+      visitedObjectIds: new Set<number>(),
+      chainBudget: createEnvironmentChainBudget()
+    }
+  );
+  state.stats = {
+    ...state.stats,
+    proximityMinesDetonated: state.stats.proximityMinesDetonated + 1
+  };
 }
 
 function updateSetPieceSubsystems(state: CombatState, bounds: CombatBounds): void {
@@ -2065,8 +2192,22 @@ function damageEnvironmentObject(
   object.hull = applyDamage(object.hull, effectiveDamage).hull;
   object.hitFlashSeconds = 0.16;
 
+  if (
+    definition.proximity &&
+    (source === 'bomb' || source === 'special' || source === 'chainReaction')
+  ) {
+    armProximityMine(state, object, source === 'chainReaction' ? 'chain' : 'damage');
+  }
+
   if (object.hull > 0) {
     addEnvironmentEffect(state, 'environmentHit', object, getEnvironmentObjectEffectRadius(object));
+    return true;
+  }
+
+  if (definition.proximity) {
+    object.hull = 0.1;
+    armProximityMine(state, object, source === 'chainReaction' ? 'chain' : 'damage');
+    addEnvironmentEffect(state, 'environmentHit', object, definition.proximity.triggerRadius);
     return true;
   }
 
@@ -2279,6 +2420,10 @@ function triggerEnvironmentChainReaction(
     environmentChainReactions: state.stats.environmentChainReactions + 1
   };
 
+  if (definition.proximity) {
+    applyProximityMineBlast(state, object, definition);
+  }
+
   const maxTargets = Math.max(0, Math.floor(definition.chain.maxTargets));
   const targets = getActiveEnvironmentObjects(state)
     .filter(
@@ -2303,6 +2448,87 @@ function triggerEnvironmentChainReaction(
 
     damageEnvironmentObject(state, target, 'chainReaction', definition.chain.damage, options);
   }
+}
+
+function applyProximityMineBlast(
+  state: CombatState,
+  mine: EnvironmentObjectState,
+  definition: EnvironmentObjectDefinition
+): void {
+  const proximity = definition.proximity;
+
+  if (!proximity) {
+    return;
+  }
+
+  const center = { x: mine.x, y: getEnvironmentObjectScreenY(state, mine) };
+  const radiusSquared = proximity.blastRadius * proximity.blastRadius;
+  const overlapsBlast = (actor: { readonly x: number; readonly y: number }): boolean => {
+    const dx = actor.x - center.x;
+    const dy = actor.y - center.y;
+    return dx * dx + dy * dy <= radiusSquared;
+  };
+
+  if (overlapsBlast(state.player)) {
+    damagePlayer(state, proximity.blastDamage);
+  }
+
+  const enemyIdsToRemove = new Set<number>();
+  let enemyHits = 0;
+
+  for (const enemy of state.enemies) {
+    if (!overlapsBlast(enemy)) {
+      continue;
+    }
+
+    enemyHits += 1;
+    enemy.hull = applyDamage(enemy.hull, proximity.blastDamage).hull;
+    if (enemy.hull <= 0) {
+      recordEnemyDefeat(state, enemy, enemyIdsToRemove);
+    }
+  }
+
+  if (enemyIdsToRemove.size > 0) {
+    state.enemies = state.enemies.filter((enemy) => !enemyIdsToRemove.has(enemy.id));
+  }
+
+  const boss = state.boss;
+  if (boss && overlapsBlast(boss)) {
+    enemyHits += 1;
+    boss.hull = applyDamage(boss.hull, proximity.blastDamage).hull;
+    if (boss.hull > 0) {
+      refreshBossPhase(state, boss);
+    } else {
+      spawnBossDefeatPickups(state, boss, 0);
+      state.boss = null;
+      state.telegraphs = [];
+      state.stats = {
+        ...state.stats,
+        enemiesDestroyed: state.stats.enemiesDestroyed + 1,
+        bossesDefeated: state.stats.bossesDefeated + 1
+      };
+      gainSpecialCharge(state, SPECIAL_CHARGE_PER_BOSS);
+    }
+  }
+
+  for (const ally of state.allies) {
+    if (ally.status === 'active' && overlapsBlast(ally)) {
+      damageAlly(state, ally, proximity.blastDamage);
+    }
+  }
+
+  damageSetPieceComponentsInRadius(
+    state,
+    center.x,
+    center.y,
+    proximity.blastRadius,
+    'hazard',
+    proximity.blastDamage
+  );
+  state.stats = {
+    ...state.stats,
+    proximityMineEnemyHits: state.stats.proximityMineEnemyHits + enemyHits
+  };
 }
 
 function createEnvironmentChainBudget(): EnvironmentChainBudget {

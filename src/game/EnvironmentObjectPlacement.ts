@@ -10,6 +10,7 @@ import { clamp } from '../core/math';
 import type { Rng, WeightedChoice } from '../core/rng';
 import { getActPressureEnvironmentObjectTargetCount, type ActPressureModel } from './ActPressure';
 import { COMBAT_ARENA_HEIGHT, COMBAT_ARENA_PADDING, COMBAT_ARENA_WIDTH } from './CombatGeometry';
+import type { SectorHazardPlan } from './SectorFeatures';
 
 export interface EnvironmentObjectPlacement {
   readonly id: string;
@@ -39,6 +40,8 @@ export interface EnvironmentObjectPlacementPlan {
 }
 
 export interface EnvironmentObjectHazardAvoidance {
+  readonly id?: string;
+  readonly kind?: SectorHazardPlan['kind'];
   readonly telegraphDistance: number;
   readonly startDistance: number;
   readonly endDistance: number;
@@ -89,9 +92,15 @@ const BOSS_LOCK_BUFFER_DISTANCE = 120;
 export function createEnvironmentObjectPlacementPlan(
   options: EnvironmentObjectPlacementOptions
 ): EnvironmentObjectPlacementPlan {
-  const definitions = getEnvironmentObjectsForSector(
+  const availableDefinitions = getEnvironmentObjectsForSector(
     options.sectorId,
     options.definitions ?? ENVIRONMENT_OBJECT_DEFINITIONS
+  );
+  const definitions = availableDefinitions.filter(
+    (definition) => definition.id !== 'proximity_mine'
+  );
+  const mineDefinition = availableDefinitions.find(
+    (definition) => definition.id === 'proximity_mine'
   );
   const baseTargetCount =
     options.targetCount ?? DEFAULT_TARGET_COUNT + (options.sectorIndex >= 3 ? 1 : 0);
@@ -101,7 +110,7 @@ export function createEnvironmentObjectPlacementPlan(
   const objects: EnvironmentObjectPlacement[] = [];
   const perDefinitionCounts = new Map<EnvironmentObjectId, number>();
 
-  if (definitions.length === 0 || options.scrollLength <= 0) {
+  if (options.scrollLength <= 0) {
     return createPlan(options, []);
   }
 
@@ -110,6 +119,10 @@ export function createEnvironmentObjectPlacementPlan(
     attempt < MAX_PLACEMENT_ATTEMPTS && objects.length < targetCount;
     attempt += 1
   ) {
+    if (definitions.length === 0) {
+      break;
+    }
+
     const definition = chooseDefinition(definitions, options.rng);
     const currentCount = perDefinitionCounts.get(definition.id) ?? 0;
 
@@ -127,10 +140,83 @@ export function createEnvironmentObjectPlacementPlan(
     objects.push(placement);
   }
 
-  return createPlan(
-    options,
-    objects.sort((left, right) => left.distance - right.distance || left.x - right.x)
+  const minePlacements = mineDefinition ? createMineClusterPlacements(options, mineDefinition) : [];
+
+  return createPlan(options, [...objects, ...minePlacements].sort(comparePlacements));
+}
+
+function createMineClusterPlacements(
+  options: EnvironmentObjectPlacementOptions,
+  definition: EnvironmentObjectDefinition
+): EnvironmentObjectPlacement[] {
+  const hazards = (options.hazards ?? []).filter((hazard) => hazard.kind === 'mine_belt');
+  const placements: EnvironmentObjectPlacement[] = [];
+  const halfWidth = definition.collision.radius;
+  const minDistance = Math.max(
+    definition.placement.avoidPlayerSpawnDistance + ENVIRONMENT_OBJECT_ACTIVE_LEAD_DISTANCE,
+    halfWidth
   );
+  const maxDistance = options.scrollLength - ENVIRONMENT_OBJECT_EXIT_CLEAR_DISTANCE;
+
+  if (maxDistance < minDistance) {
+    return placements;
+  }
+
+  for (const [clusterIndex, hazard] of hazards.entries()) {
+    const rng = options.rng.fork(`mine-cluster:${hazard.id ?? clusterIndex + 1}`);
+    const count = rng.int(4, 6);
+    const centerX = clamp(hazard.xRatio, 0.12, 0.88) * COMBAT_ARENA_WIDTH;
+    const laneWidth = Math.max(132, hazard.widthRatio * COMBAT_ARENA_WIDTH);
+    const columnOffset = Math.min(54, laneWidth * 0.27);
+    const anchorDistance = clamp(hazard.startDistance, minDistance, maxDistance);
+
+    for (let index = 0; index < count; index += 1) {
+      const column = index % 2 === 0 ? -1 : 1;
+      const row = Math.floor(index / 2);
+      const x = roundPlacementValue(
+        clamp(
+          centerX + column * columnOffset + rng.int(-12, 12),
+          COMBAT_ARENA_PADDING + halfWidth,
+          COMBAT_ARENA_WIDTH - COMBAT_ARENA_PADDING - halfWidth
+        )
+      );
+      const y = roundPlacementValue(
+        clamp(138 + row * 154 + rng.int(-18, 18), 96, COMBAT_ARENA_HEIGHT - 80)
+      );
+      const distance = roundPlacementValue(
+        clamp(anchorDistance + rng.int(-18, 18), minDistance, maxDistance)
+      );
+
+      placements.push({
+        id: `${options.sectorId}_mine_${clusterIndex + 1}_${index + 1}`,
+        definitionId: definition.id,
+        collisionShape: definition.collision.shape,
+        layoutRole: 'lanePressure',
+        distance,
+        x,
+        y,
+        width: definition.collision.width,
+        height: definition.collision.height,
+        radius: definition.collision.radius,
+        safeLaneWidth: getEnvironmentObjectOpenLaneWidth({
+          x,
+          width: definition.collision.width,
+          radius: definition.collision.radius,
+          collisionShape: definition.collision.shape
+        }),
+        debugLabel: definition.debugLabel
+      });
+    }
+  }
+
+  return placements;
+}
+
+function comparePlacements(
+  left: EnvironmentObjectPlacement,
+  right: EnvironmentObjectPlacement
+): number {
+  return left.distance - right.distance || left.x - right.x || left.id.localeCompare(right.id);
 }
 
 export function getEnvironmentObjectFootprintWidth(

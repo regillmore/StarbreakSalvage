@@ -172,6 +172,9 @@ export interface EnvironmentObjectRenderState {
   readonly maxHull: number;
   readonly hitFlashSeconds: number;
   readonly debugLabel: string;
+  readonly mineFuseSeconds: number | null;
+  readonly mineFuseDurationSeconds: number;
+  readonly mineTriggerSource: 'proximity' | 'damage' | 'chain' | null;
 }
 
 export interface SetPieceComponentRenderState {
@@ -454,6 +457,10 @@ export class CanvasRenderer {
     const context = this.context;
 
     for (const activeHazard of activeHazards) {
+      if (activeHazard.hazard.kind === 'mine_belt') {
+        continue;
+      }
+
       const rect = getSectorHazardCollisionRect(activeHazard.hazard, bounds);
       const style = getSectorHazardVisualState(
         activeHazard,
@@ -1439,7 +1446,74 @@ export class CanvasRenderer {
           ? 12
           : 5;
 
-    if (object.collisionShape === 'circle') {
+    if (definition.rendering.cue === 'proximityMine' && definition.proximity) {
+      const armed = object.mineFuseSeconds !== null;
+      const fuseRatio = armed
+        ? clamp(
+            (object.mineFuseSeconds ?? 0) / Math.max(0.01, object.mineFuseDurationSeconds),
+            0,
+            1
+          )
+        : 1;
+
+      context.shadowBlur = 0;
+      context.globalAlpha = highContrast ? 0.76 : armed ? 0.64 : 0.24;
+      context.strokeStyle = armed ? (highContrast ? '#ffffff' : '#ffef5f') : color;
+      context.lineWidth = armed ? 2.8 : 1.4;
+      context.setLineDash(armed ? [8, 6] : [4, 9]);
+      context.beginPath();
+      context.arc(
+        0,
+        0,
+        armed ? definition.proximity.blastRadius : definition.proximity.triggerRadius,
+        0,
+        Math.PI * 2
+      );
+      context.stroke();
+      context.setLineDash([]);
+
+      if (armed) {
+        context.globalAlpha = 1;
+        context.lineWidth = 4;
+        context.beginPath();
+        context.arc(
+          0,
+          0,
+          definition.proximity.blastRadius - 5,
+          -Math.PI / 2,
+          -Math.PI / 2 + Math.PI * 2 * (1 - fuseRatio)
+        );
+        context.stroke();
+      }
+
+      context.globalAlpha = highContrast ? 1 : 0.9;
+      context.fillStyle = armed ? (highContrast ? '#ffef5f' : '#ff8a4c') : color;
+      context.strokeStyle = strokeColor;
+      context.lineWidth = object.hitFlashSeconds > 0 ? 3 : 2.2;
+      context.beginPath();
+      context.arc(0, 0, object.radius, 0, Math.PI * 2);
+      context.fill();
+      context.stroke();
+      for (let index = 0; index < 8; index += 1) {
+        const angle = (Math.PI * 2 * index) / 8;
+        context.beginPath();
+        context.moveTo(
+          Math.cos(angle) * object.radius * 0.72,
+          Math.sin(angle) * object.radius * 0.72
+        );
+        context.lineTo(
+          Math.cos(angle) * object.radius * 1.38,
+          Math.sin(angle) * object.radius * 1.38
+        );
+        context.stroke();
+      }
+
+      context.fillStyle = highContrast ? '#03050d' : '#f8fbff';
+      context.font = 'bold 12px ui-monospace, monospace';
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.fillText(armed ? '!' : 'M', 0, 1);
+    } else if (object.collisionShape === 'circle') {
       context.beginPath();
       context.arc(0, 0, object.radius, 0, Math.PI * 2);
       context.fill();
@@ -1851,28 +1925,6 @@ export class CanvasRenderer {
         context.lineTo(rect.centerX + rect.width * 0.38, y + 16);
         context.moveTo(rect.centerX + rect.width * 0.38, y - 16);
         context.lineTo(rect.centerX - rect.width * 0.38, y + 16);
-        context.stroke();
-      }
-      return;
-    }
-
-    if (style.behaviorKind === 'driftingMineBand') {
-      context.setLineDash([]);
-      const drift = (style.motionRatio - 0.5) * rect.width * 0.44;
-      for (
-        let y = rect.top + 42, index = 0;
-        y < rect.bottom;
-        y += style.patternStride + 34, index += 1
-      ) {
-        const x = rect.centerX + (index % 2 === 0 ? -rect.width * 0.22 : rect.width * 0.22) + drift;
-        context.beginPath();
-        context.arc(x, y, 7, 0, Math.PI * 2);
-        context.stroke();
-        context.beginPath();
-        context.moveTo(x - 12, y);
-        context.lineTo(x + 12, y);
-        context.moveTo(x, y - 12);
-        context.lineTo(x, y + 12);
         context.stroke();
       }
       return;

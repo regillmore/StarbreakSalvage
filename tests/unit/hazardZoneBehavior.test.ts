@@ -60,6 +60,24 @@ describe('HazardZoneBehavior', () => {
     expect(getSectorHazardDamageRects(active, bounds).length).toBe(1);
   });
 
+  it('delegates mine-belt damage to discrete proximity-mine entities', () => {
+    const hazard = createHazard('mine_belt', {
+      telegraphDistance: 80,
+      startDistance: 230,
+      endDistance: 390
+    });
+    const active = getActiveSectorHazards(createPlan(hazard), 260)[0];
+
+    if (!active) {
+      throw new Error('Expected a scheduled mine cluster.');
+    }
+
+    expect(getSectorHazardVisualState(active, false, false, false).behaviorKind).toBe(
+      'discreteMineCluster'
+    );
+    expect(getSectorHazardDamageRects(active, bounds)).toEqual([]);
+  });
+
   it('supports pulsed active windows without changing generated timing', () => {
     const hazard = createHazard('surface_defense_arc', {
       telegraphDistance: 20,

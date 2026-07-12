@@ -1987,6 +1987,64 @@ function validateEnvironmentObjectDefinitions(
       }
     }
 
+    if (object.id === 'proximity_mine' && !object.proximity) {
+      errors.push(`${owner} must define proximity behavior`);
+    }
+
+    if (object.proximity) {
+      validatePositiveNumber(
+        errors,
+        `${owner} proximity`,
+        'triggerRadius',
+        object.proximity.triggerRadius
+      );
+      validatePositiveNumber(
+        errors,
+        `${owner} proximity`,
+        'fuseSeconds',
+        object.proximity.fuseSeconds
+      );
+      validatePositiveNumber(
+        errors,
+        `${owner} proximity`,
+        'damagedFuseSeconds',
+        object.proximity.damagedFuseSeconds
+      );
+      validatePositiveNumber(
+        errors,
+        `${owner} proximity`,
+        'chainFuseSeconds',
+        object.proximity.chainFuseSeconds
+      );
+      validatePositiveNumber(
+        errors,
+        `${owner} proximity`,
+        'blastRadius',
+        object.proximity.blastRadius
+      );
+      validatePositiveNumber(
+        errors,
+        `${owner} proximity`,
+        'blastDamage',
+        object.proximity.blastDamage
+      );
+
+      if (object.id !== 'proximity_mine') {
+        errors.push(`${owner} cannot define proximity behavior`);
+      }
+
+      if (
+        object.proximity.chainFuseSeconds >= object.proximity.damagedFuseSeconds ||
+        object.proximity.damagedFuseSeconds >= object.proximity.fuseSeconds
+      ) {
+        errors.push(`${owner} proximity fuses must order chain, damaged, then proximity timing`);
+      }
+
+      if (object.proximity.triggerRadius >= object.proximity.blastRadius) {
+        errors.push(`${owner} proximity blastRadius must exceed triggerRadius`);
+      }
+    }
+
     validatePositiveNumber(errors, `${owner} placement`, 'weight', object.placement.weight);
     validatePositiveInteger(
       errors,

@@ -38,6 +38,10 @@ export function resolveSectorHazardCollisions(
   const hitHazardIds: string[] = [];
 
   for (const activeHazard of activeHazards) {
+    if (activeHazard.hazard.kind === 'mine_belt') {
+      continue;
+    }
+
     const damageRects = getSectorHazardDamageRects(activeHazard, bounds);
 
     if (damageRects.length === 0) {

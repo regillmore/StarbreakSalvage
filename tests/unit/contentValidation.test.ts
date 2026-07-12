@@ -878,6 +878,43 @@ describe('validateContent', () => {
     expect(errors).toContain('Environment object object_missing accessibility must have a label');
   });
 
+  it('requires ordered, readable proximity behavior for the discrete mine definition', () => {
+    const mine = ENVIRONMENT_OBJECT_DEFINITIONS.find(
+      (definition) => definition.id === 'proximity_mine'
+    );
+
+    if (!mine || !mine.proximity) {
+      throw new Error('Expected the shipped proximity mine definition.');
+    }
+
+    const missing = validateContent({
+      environmentObjects: [{ ...mine, proximity: undefined }]
+    });
+    const unordered = validateContent({
+      environmentObjects: [
+        {
+          ...mine,
+          proximity: {
+            ...mine.proximity,
+            triggerRadius: 120,
+            blastRadius: 100,
+            chainFuseSeconds: 0.7,
+            damagedFuseSeconds: 0.6,
+            fuseSeconds: 0.5
+          }
+        }
+      ]
+    });
+
+    expect(missing).toContain('Environment object proximity_mine must define proximity behavior');
+    expect(unordered).toContain(
+      'Environment object proximity_mine proximity fuses must order chain, damaged, then proximity timing'
+    );
+    expect(unordered).toContain(
+      'Environment object proximity_mine proximity blastRadius must exceed triggerRadius'
+    );
+  });
+
   it('rejects invalid hazard zone definitions', () => {
     const errors = validateContent({
       hazardZones: [

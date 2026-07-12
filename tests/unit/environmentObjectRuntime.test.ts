@@ -154,6 +154,76 @@ describe('environment object runtime', () => {
     );
     expect(playerOverlapsObject(state, state.environmentObjects[0])).toBe(false);
   });
+
+  it('arms on proximity, telegraphs through a fixed-step fuse, and damages enemies', () => {
+    const plan = createPlan([{ definitionId: 'proximity_mine', x: 320, y: 562 }]);
+    const state = createState('MINE-PROXIMITY-SEED', plan);
+    state.enemies.push(createEnemy(390, 562, 2));
+
+    updateCombatState(
+      state,
+      { movement: { x: 0, y: 0 }, fire: false, scrollDistance: 40 },
+      0,
+      bounds
+    );
+
+    const mine = state.environmentObjects[0];
+    expect(mine?.mineTriggerSource).toBe('proximity');
+    expect(mine?.mineFuseSeconds).toBeCloseTo(0.8);
+    expect(state.stats.proximityMinesTriggered).toBe(1);
+
+    state.player.x = 600;
+    advanceCombat(state, 9);
+
+    expect(state.stats.proximityMinesDetonated).toBe(1);
+    expect(state.stats.proximityMineEnemyHits).toBe(1);
+    expect(state.stats.enemiesDestroyed).toBe(1);
+    expect(state.enemies).toHaveLength(0);
+    expect(state.effects.some((effect) => effect.kind === 'chainReaction')).toBe(true);
+  });
+
+  it('arms quickly from explosions while remaining tough against ordinary fire', () => {
+    const plan = createPlan([{ definitionId: 'proximity_mine', x: 320, y: 260 }]);
+    const state = createState('MINE-EXPLOSION-SEED', plan);
+    state.scrollDistance = 40;
+    const mine = state.environmentObjects[0];
+
+    damageEnvironmentObjectsInRadius(state, 320, 260, 4, 'weapon', 1);
+    expect(mine?.hull).toBeGreaterThan(6);
+    expect(mine?.mineFuseSeconds).toBeNull();
+
+    damageEnvironmentObjectsInRadius(state, 320, 260, 4, 'bomb', 1);
+    expect(mine?.mineTriggerSource).toBe('damage');
+    expect(mine?.mineFuseSeconds).toBeCloseTo(0.48);
+  });
+
+  it('chains nearby mines through shorter telegraphed fuses instead of instant removal', () => {
+    const plan = createPlan([
+      { definitionId: 'proximity_mine', x: 300, y: 562 },
+      { definitionId: 'proximity_mine', x: 400, y: 562 }
+    ]);
+    const state = createState('MINE-CHAIN-SEED', plan);
+
+    updateCombatState(
+      state,
+      { movement: { x: 0, y: 0 }, fire: false, scrollDistance: 40 },
+      0,
+      bounds
+    );
+    state.player.x = 600;
+    advanceCombat(state, 9);
+
+    const chainedMine = state.environmentObjects.find((object) => object.x === 400);
+    expect(state.stats.proximityMinesDetonated).toBe(1);
+    expect(chainedMine?.mineTriggerSource).toBe('chain');
+    expect(chainedMine?.mineFuseSeconds).toBeGreaterThan(0);
+    expect(chainedMine?.destroyed).toBe(false);
+
+    advanceCombat(state, 3);
+    expect(state.stats.proximityMinesTriggered).toBe(2);
+    expect(state.stats.proximityMinesDetonated).toBe(2);
+    expect(getActiveEnvironmentObjects(state)).toHaveLength(0);
+  });
 });
 
 function createState(
@@ -271,4 +341,30 @@ function playerOverlapsObject(state: CombatState, object: CombatState['environme
   const dy = state.player.y - nearestY;
 
   return dx * dx + dy * dy <= state.player.radius * state.player.radius;
+}
+
+function advanceCombat(state: CombatState, steps: number): void {
+  for (let index = 0; index < steps; index += 1) {
+    updateCombatState(
+      state,
+      { movement: { x: 0, y: 0 }, fire: false, scrollDistance: 40 },
+      0.1,
+      bounds
+    );
+  }
+}
+
+function createEnemy(x: number, y: number, hull: number): CombatState['enemies'][number] {
+  return {
+    id: 8000,
+    factionId: 'faction_scrap_court',
+    x,
+    y,
+    radius: 16,
+    hull,
+    maxHull: hull,
+    drift: 0,
+    targetY: y,
+    fireCooldown: 10
+  };
 }

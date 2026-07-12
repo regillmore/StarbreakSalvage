@@ -123,6 +123,51 @@ describe('EnvironmentObjectPlacement', () => {
     }
   });
 
+  it('materializes deterministic discrete mine clusters from mine-belt schedules', () => {
+    const options = {
+      sectorId: 'sector_outer_debris_field' as const,
+      sectorIndex: 2,
+      scrollLength: 2200,
+      hazards: [
+        {
+          id: 'test-mine-belt',
+          kind: 'mine_belt' as const,
+          telegraphDistance: 760,
+          startDistance: 900,
+          endDistance: 1060,
+          xRatio: 0.5,
+          widthRatio: 0.32
+        }
+      ]
+    };
+    const first = createEnvironmentObjectPlacementPlan({
+      ...options,
+      rng: createRng('MINE-CLUSTER-SEED'),
+      targetCount: 1
+    });
+    const second = createEnvironmentObjectPlacementPlan({
+      ...options,
+      rng: createRng('MINE-CLUSTER-SEED'),
+      targetCount: 1
+    });
+    const mines = first.objects.filter((object) => object.definitionId === 'proximity_mine');
+
+    expect(first).toEqual(second);
+    expect(validateEnvironmentObjectPlacementPlan(first)).toEqual([]);
+    expect(mines.length).toBeGreaterThanOrEqual(4);
+    expect(mines.length).toBeLessThanOrEqual(6);
+    expect(mines.every((mine) => mine.layoutRole === 'lanePressure')).toBe(true);
+    expect(mines.every((mine) => mine.x >= 218 && mine.x <= 422)).toBe(true);
+    expect(
+      mines.every(
+        (mine) =>
+          mine.distance >= 882 &&
+          mine.distance <= 918 &&
+          mine.distance <= first.scrollLength - ENVIRONMENT_OBJECT_EXIT_CLEAR_DISTANCE
+      )
+    ).toBe(true);
+  });
+
   it('paces obstacle pressure across long sectors without using viewport dimensions', () => {
     const plan = createEnvironmentObjectPlacementPlan({
       sectorId: 'sector_lunar_surface',

@@ -9,7 +9,8 @@ export const ENVIRONMENT_OBJECT_IDS = [
   'surface_pylon',
   'wreck_plate',
   'salvage_cache',
-  'volatile_canister'
+  'volatile_canister',
+  'proximity_mine'
 ] as const;
 export type EnvironmentObjectId = (typeof ENVIRONMENT_OBJECT_IDS)[number];
 
@@ -24,7 +25,8 @@ export const ENVIRONMENT_OBJECT_FAMILIES = [
   'pylon',
   'wreck',
   'cache',
-  'volatile'
+  'volatile',
+  'mine'
 ] as const;
 export type EnvironmentObjectFamily = (typeof ENVIRONMENT_OBJECT_FAMILIES)[number];
 
@@ -73,7 +75,8 @@ export const ENVIRONMENT_OBJECT_RENDER_CUES = [
   'surfacePylon',
   'wreckPlate',
   'salvageCache',
-  'volatileCanister'
+  'volatileCanister',
+  'proximityMine'
 ] as const;
 export type EnvironmentObjectRenderCue = (typeof ENVIRONMENT_OBJECT_RENDER_CUES)[number];
 
@@ -159,6 +162,15 @@ export interface EnvironmentObjectAccessibilityMetadata {
   readonly label: string;
 }
 
+export interface EnvironmentObjectProximityMetadata {
+  readonly triggerRadius: number;
+  readonly fuseSeconds: number;
+  readonly damagedFuseSeconds: number;
+  readonly chainFuseSeconds: number;
+  readonly blastRadius: number;
+  readonly blastDamage: number;
+}
+
 export interface EnvironmentObjectDefinition {
   readonly id: EnvironmentObjectId;
   readonly kind: EnvironmentObjectKind;
@@ -179,6 +191,7 @@ export interface EnvironmentObjectDefinition {
   readonly audioCues: EnvironmentObjectCueMetadata;
   readonly vfxCues: EnvironmentObjectCueMetadata;
   readonly accessibility: EnvironmentObjectAccessibilityMetadata;
+  readonly proximity?: EnvironmentObjectProximityMetadata;
 }
 
 const ALL_SECTOR_IDS: readonly SectorId[] = [
@@ -198,6 +211,20 @@ const SIDE_BANDS: readonly EnvironmentObjectPlacementBand[] = [
 const WIDE_SIDE_BANDS: readonly EnvironmentObjectPlacementBand[] = [
   { minXRatio: 0.12, maxXRatio: 0.24 },
   { minXRatio: 0.76, maxXRatio: 0.88 }
+];
+
+const MINE_SECTOR_IDS: readonly SectorId[] = [
+  'sector_outer_debris_field',
+  'sector_trade_war_corridor',
+  'sector_bio_machine_bloom',
+  'sector_corporate_kill_grid',
+  'sector_nullglass_expanse',
+  'sector_gravity_choir',
+  'sector_dead_signal_reef'
+];
+
+const FULL_WIDTH_BAND: readonly EnvironmentObjectPlacementBand[] = [
+  { minXRatio: 0.1, maxXRatio: 0.9 }
 ];
 
 export const ENVIRONMENT_OBJECT_DEFINITIONS: readonly EnvironmentObjectDefinition[] = [
@@ -396,6 +423,39 @@ export const ENVIRONMENT_OBJECT_DEFINITIONS: readonly EnvironmentObjectDefinitio
     audioCues: createCues('canister-warning', 'canister-hit', 'canister-pop'),
     vfxCues: createCues('canister-pulse', 'canister-spark', 'canister-burst'),
     accessibility: createAccessibility('simplified', 'outlineOnly', 'Volatile canister')
+  },
+  {
+    id: 'proximity_mine',
+    kind: 'destructible',
+    family: 'mine',
+    name: 'Anchor Mine',
+    debugLabel: 'mine',
+    summary: 'a world-anchored proximity charge with a readable fuse and hostile blast radius',
+    sectorFit: MINE_SECTOR_IDS,
+    factionFit: 'any',
+    collision: createCollision('circle', 40, 40, 20, false),
+    durability: { hull: 7, armor: 1 },
+    damageInteraction: createDamageInteraction(
+      true,
+      ['weapon', 'special', 'bomb', 'hazard', 'chainReaction'],
+      0
+    ),
+    objectivePolicy: 'ignore',
+    reward: createReward('none', 0, 0, 0),
+    chain: createChain('blast', 132, 4, 6),
+    placement: createPlacement(1, 24, 0.16, 0.84, 54, 220, FULL_WIDTH_BAND),
+    rendering: createRendering('proximityMine', 'underActors', '#ff6bd6', '#ffef5f', 0.34, 0.94),
+    audioCues: createCues('mine-anchor', 'mine-arm', 'mine-detonate'),
+    vfxCues: createCues('mine-ping', 'mine-countdown', 'mine-blast'),
+    accessibility: createAccessibility('simplified', 'outlineOnly', 'Proximity mine'),
+    proximity: {
+      triggerRadius: 76,
+      fuseSeconds: 0.8,
+      damagedFuseSeconds: 0.48,
+      chainFuseSeconds: 0.24,
+      blastRadius: 104,
+      blastDamage: 3
+    }
   }
 ];
 

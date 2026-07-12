@@ -43,6 +43,8 @@ export interface SceneDebugState {
     readonly environmentObjects: number;
     readonly destructibles: number;
     readonly obstacles: number;
+    readonly proximityMines?: number;
+    readonly armedProximityMines?: number;
     readonly setPieceComponents?: number;
     readonly setPieceTargets?: number;
     readonly setPieceProjectiles?: number;

@@ -1992,6 +1992,26 @@ The seed-specific regression advances sector 10 through briefing, entry, advance
 
 Verification: `npm run verify:release` passes with 92 Vitest files and 545 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. The focused mission/arena/set-piece/cooldown pass covers 33 tests. The environmental Chromium fixture was also hardened so its rolling budget assertion no longer requires a transient hazard phase and the initial pickup population to occupy the same frame; it still verifies the exact injected environment and pickup setup separately. The production build emits 834.64 kB minified/225.16 kB gzip initial JavaScript and unchanged 26.76 kB CSS. The existing chunk warning remains open and no threshold changed.
 
+## Work order 115 - Discrete proximity-mine clusters
+
+Goal: turn mine hazards from abstract lane damage into interactive world-anchored combat actors.
+
+Prompt:
+
+> Rework the mine hazard into spawned clusters of discrete destructible world-anchored proximity mines. Mines should be tough under ordinary fire but vulnerable to explosions. Proximity, damage, and chain triggers must use readable fixed-step detonation telegraphs. Blasts damage the player and hostile actors, interact with existing destructibles and set pieces, and pass a shorter telegraphed fuse to nearby mines rather than removing a chain instantly. Preserve deterministic hazard scheduling, fixed combat-world coordinates, boss suppression/deferral, pause/coast behavior, accessibility settings, collision/render parity, and bounded entity/chain budgets. Remove the former lane-wide mine damage and presentation. Add debug counters, schema validation, and focused deterministic/runtime tests. Run checks.
+
+Acceptance criteria:
+
+- Every final conditioned/director `mine_belt` window deterministically materializes a bounded 4-6-mine cluster inside fixed combat-world and sector-entry/exit limits.
+- Mines are individually destructible and world anchored, resist ordinary fire, arm from proximity or damage, and use shorter fuses for explosive and neighboring-mine triggers.
+- A visible countdown precedes every blast; blasts damage players, enemies, bosses, allies, set pieces, and eligible nearby environment objects through bounded existing combat paths.
+- Nearby mines chain through a new telegraphed fuse, and the legacy mine lane neither renders nor applies rectangle damage.
+- Reduced motion, performance mode, high contrast, scroll holds, recovery coasts, boss deferral, objectives, cleanup, and save-compatible operation restarts remain safe.
+
+Status: implemented. `proximity_mine` extends the environment-object catalog with validated trigger, fuse, blast, damage, chain, rendering, audio/VFX, placement, and accessibility metadata. `EnvironmentObjectPlacement` forks deterministic per-hazard cluster RNG without perturbing ordinary object selection, places 4-6 mines per final `mine_belt` schedule, and retains fixed 640x720 entry/exit and safe-lane validation. `CombatState` keeps mine anchors immutable, advances proximity/damage/chain fuses in fixed time even while scroll is held, lets ordinary fire wear down seven armored hull, sensitizes mines immediately to bomb/special/chain damage, damages both sides plus set pieces on blast, and reuses the capped six-reaction environment chain path. Mine fuses shorten rather than disappear when chained. The canvas uses non-color glyph, trigger/blast rings, and a countdown arc; high contrast strengthens outlines while reduced-motion/performance settings avoid decorative motion. The old drifting mine band is now a non-damaging scheduling envelope and is not painted. Debug state reports active and armed mines. No generated-run, permanent-save, or suspended-expedition schema migration is required because operation combat restarts from its existing safe checkpoint.
+
+Verification: `npm run verify:release` passes with 92 Vitest files and 552 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. The focused content/placement/runtime/hazard/environment/combat pass covers 8 files and 117 tests. Regression proves deterministic 4-6-mine cluster materialization, fixed-world bounds, invalid proximity-schema rejection, removal of legacy rectangle damage, ordinary-fire resistance, explosion arming, enemy damage, and two-mine delayed fuse chaining. The production build emits 840.21 kB minified/226.51 kB gzip initial JavaScript and unchanged 26.76 kB CSS. The existing chunk warning remains open and no threshold changed.
+
 ## Review subagent prompt
 
 Use after a feature PR:
