@@ -86,6 +86,7 @@ export interface CombatBounds {
   readonly height: number;
   readonly padding: number;
   readonly safeFrame?: CombatSafeFrame;
+  readonly enemyProjectileBoundary?: 'open' | 'sideWalls';
 }
 
 export interface CombatSafeFrame {
@@ -3809,7 +3810,7 @@ function updateProjectiles(state: CombatState, dt: number, bounds: CombatBounds)
     projectile.y += projectile.vy * dt;
     projectile.ttl -= dt;
 
-    if (projectile.owner === 'enemy') {
+    if (projectile.owner === 'enemy' && bounds.enemyProjectileBoundary === 'sideWalls') {
       projectile.x = clamp(projectile.x, bounds.padding, bounds.width - bounds.padding);
     }
   }

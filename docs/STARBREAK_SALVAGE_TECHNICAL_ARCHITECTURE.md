@@ -783,6 +783,13 @@ seed + permanent save fingerprint
 - `CombatState.damageCombatActorsByHazard` centralizes allegiance-neutral enemy, boss, and ally damage/defeat handling. A transient per-hazard/per-actor cooldown map advances in fixed time and is discarded with combat state; it is not generated content or snapshot data.
 - `CanvasRenderer` gives warning and active phases dedicated presentation: source aperture/arrow, endpoint reticle, dashed world guide, perpendicular tracking marks, moving outer-energy body, bright core, leading flare, and optional glow. Entrance and exit centers lie on canvas boundaries so round caps render as continuous offscreen crossings. The beam ignites, holds fully lit, then clears; reduced motion lowers marker count, performance mode removes glow/markers, and high contrast retains a white core without changing geometry or damage.
 
+### Work order 121 camera line-of-sight boundary
+
+- `GameplayScene.render` preserves a three-part composition: passive background first, transformed gameplay second, and arena-frame chrome last. Background generation therefore remains full viewport without being admitted to the combat camera layer.
+- `CanvasRenderer.beginGameplayLayer` clips to `ViewportLayout.gameplaySafeFrame` in unshaken viewport coordinates, then translates and scales the fixed 640x720 world. Every gameplay renderer shares that single clip, including shapes whose radii or sprites straddle the world boundary; `endGameplayLayer` restores it before frame chrome.
+- The clip is presentation-only. Simulation, collision, pointer conversion, player movement, world anchors, TTL, and offscreen cleanup continue in combat coordinates. Screen shake moves the world beneath the fixed camera aperture rather than moving the aperture itself.
+- `CombatBounds.enemyProjectileBoundary` is an explicit physical-policy seam. Open flight is the default and applies no enemy-projectile clamp; boarding supplies `sideWalls` and retains horizontal containment at its authored 60-unit rails.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

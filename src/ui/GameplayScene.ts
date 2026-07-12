@@ -2123,7 +2123,7 @@ export class GameplayScene implements Scene {
   private getCombatBounds(): CombatBounds {
     const bounds = createDefaultCombatBounds();
     return this.missionContext?.projection.operationMode === 'boarding'
-      ? { ...bounds, padding: 60 }
+      ? { ...bounds, padding: 60, enemyProjectileBoundary: 'sideWalls' as const }
       : bounds;
   }
 

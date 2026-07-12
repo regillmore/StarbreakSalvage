@@ -332,6 +332,9 @@ export class CanvasRenderer {
     const scale = this.viewportLayout.canvasScale;
 
     this.context.save();
+    this.context.beginPath();
+    this.context.rect(frame.x, frame.y, frame.width, frame.height);
+    this.context.clip();
     this.context.translate(frame.x + offset.x, frame.y + offset.y);
     this.context.scale(scale, scale);
   }

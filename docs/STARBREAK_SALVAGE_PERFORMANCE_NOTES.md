@@ -84,6 +84,10 @@ Work order 120 replaces one beam rectangle with one distant immutable world vect
 
 The refined work order 120 release build emits 858.89 kB minified/232.95 kB gzip initial JavaScript and unchanged 31.96 kB CSS/7.19 kB gzip. This is a 3.42 kB minified/1.06 kB gzip increase over the initially deployed work order 120 beam and a 10.05 kB minified/3.11 kB gzip increase over work order 119. No warning threshold changed; the existing initial-chunk warning remains open.
 
+Work order 121 adds one rectangular canvas clip around the existing balanced gameplay layer. It introduces no per-entity visibility branch, culling scan, extra canvas, offscreen buffer, actor, effect, or render pass; all gameplay draw calls inherit the same native context clip. Background cost is unchanged because passive art remains full viewport. Open-flight enemy projectiles no longer run a horizontal clamp, while boarding performs the former constant-time clamp behind an explicit boundary policy. Existing TTL and ±80-unit cleanup bounds remain unchanged.
+
+The work order 121 release build emits 859.05 kB minified/233.01 kB gzip initial JavaScript and unchanged 31.96 kB CSS/7.19 kB gzip. This is a 0.16 kB minified/0.06 kB gzip increase over work order 120. No warning threshold changed; the existing initial-chunk warning remains open.
+
 Phase 5 closeout: work order 050 keeps progression/sector-feedback optimization deferred until profiling requires it. `npm run check`, Playwright Chromium smoke, and production preview asset-path smoke passed locally. Manual cross-browser performance/readability checks outside Chromium remain pending.
 
 ## Phase 6 Item Catalog Budget Targets

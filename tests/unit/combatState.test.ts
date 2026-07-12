@@ -82,6 +82,97 @@ describe('CombatState', () => {
     expect(state.pickups).toHaveLength(0);
   });
 
+  it('lets enemy projectiles leave open arenas but keeps authored side walls solid', () => {
+    const openState = createCombatState(bounds, 'OPEN-PROJECTILE-BOUNDARY', {
+      skipEnemyWaves: true
+    });
+    openState.projectiles.push({
+      id: 998,
+      owner: 'enemy',
+      x: bounds.padding + 1,
+      y: 120,
+      vx: -200,
+      vy: 0,
+      radius: 5,
+      damage: 1,
+      ttl: 1,
+      tags: ['plasma'],
+      procDepth: 0
+    });
+    openState.projectiles.push(
+      {
+        id: 997,
+        owner: 'enemy',
+        x: bounds.width - 1,
+        y: 140,
+        vx: 200,
+        vy: 0,
+        radius: 5,
+        damage: 1,
+        ttl: 1,
+        tags: ['plasma'],
+        procDepth: 0
+      },
+      {
+        id: 996,
+        owner: 'enemy',
+        x: 220,
+        y: 1,
+        vx: 0,
+        vy: -200,
+        radius: 5,
+        damage: 1,
+        ttl: 1,
+        tags: ['plasma'],
+        procDepth: 0
+      },
+      {
+        id: 995,
+        owner: 'enemy',
+        x: 420,
+        y: bounds.height - 1,
+        vx: 0,
+        vy: 200,
+        radius: 5,
+        damage: 1,
+        ttl: 1,
+        tags: ['plasma'],
+        procDepth: 0
+      }
+    );
+
+    updateCombatState(openState, { movement: { x: 0, y: 0 }, fire: false }, 0.1, bounds);
+    expect(openState.projectiles[0]?.x).toBe(5);
+    expect(openState.projectiles[1]?.x).toBe(659);
+    expect(openState.projectiles[2]?.y).toBe(-19);
+    expect(openState.projectiles[3]?.y).toBe(739);
+
+    const wallBounds: CombatBounds = {
+      ...bounds,
+      padding: 60,
+      enemyProjectileBoundary: 'sideWalls'
+    };
+    const wallState = createCombatState(wallBounds, 'WALL-PROJECTILE-BOUNDARY', {
+      skipEnemyWaves: true
+    });
+    wallState.projectiles.push({
+      id: 999,
+      owner: 'enemy',
+      x: wallBounds.padding + 1,
+      y: 120,
+      vx: -200,
+      vy: 0,
+      radius: 5,
+      damage: 1,
+      ttl: 1,
+      tags: ['plasma'],
+      procDepth: 0
+    });
+
+    updateCombatState(wallState, { movement: { x: 0, y: 0 }, fire: false }, 0.1, wallBounds);
+    expect(wallState.projectiles[0]?.x).toBe(wallBounds.padding);
+  });
+
   it('ends the run when enemy damage removes the final hull point', () => {
     const state = createCombatState(bounds, 'STARBREAK-SMOKE');
     state.player.hull = 1;
