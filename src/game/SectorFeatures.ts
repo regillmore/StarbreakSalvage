@@ -15,7 +15,7 @@ import type { Rng } from '../core/rng';
 import type { CombatBounds } from './CombatState';
 import {
   createBeamSegmentDamageRects,
-  getBeamHazardSegment,
+  getActiveBeamBoltSegment,
   type BeamHazardGeometry
 } from './BeamHazard';
 import {
@@ -93,6 +93,7 @@ export interface ActiveSectorHazard {
   readonly phase: SectorHazardPhase;
   readonly progress: number;
   readonly phaseProgress: number;
+  readonly worldProgress?: number;
 }
 
 export interface SectorHazardActivationOptions {
@@ -223,13 +224,17 @@ export function getActiveSectorHazards(
         : Math.max(1, window.endDistance - window.startDistance);
     const phaseStart = phase === 'telegraph' ? window.telegraphDistance : window.startDistance;
 
+    const worldProgress = roundFeatureValue(
+      clamp((distance - window.telegraphDistance) / totalSpan, 0, 1)
+    );
     active.push({
       hazard,
       phase,
       progress: roundFeatureValue(
         clamp((hazardDistance - window.telegraphDistance) / totalSpan, 0, 1)
       ),
-      phaseProgress: roundFeatureValue(clamp((hazardDistance - phaseStart) / phaseSpan, 0, 1))
+      phaseProgress: roundFeatureValue(clamp((hazardDistance - phaseStart) / phaseSpan, 0, 1)),
+      ...(Math.abs(hazardDistance - distance) > 0.001 ? { worldProgress } : {})
     });
   }
 
@@ -310,7 +315,8 @@ export function getSectorHazardDamageRects(
       return [];
     }
 
-    return createBeamSegmentDamageRects(getBeamHazardSegment(activeHazard.hazard, bounds));
+    const bolt = getActiveBeamBoltSegment(activeHazard, bounds);
+    return bolt ? createBeamSegmentDamageRects(bolt) : [];
   }
 
   return getHazardZoneDamageRects(

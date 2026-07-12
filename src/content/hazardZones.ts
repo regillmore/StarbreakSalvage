@@ -209,7 +209,8 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     family: 'beam',
     label: 'WARNING BEAM',
     debugLabel: 'beam',
-    summary: 'a directional edge-to-edge beam with a tracked source, endpoint, and brilliant core',
+    summary:
+      'a world-anchored firing track crossed by a finite-velocity, allegiance-blind energy bolt',
     sectorFit: ALL_SECTOR_IDS,
     factionFit: 'any',
     telegraphShape: 'beamLine',

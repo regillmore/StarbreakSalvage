@@ -22,9 +22,12 @@ describe('SectorHazardRuntime', () => {
     }
 
     expect(state.effectiveDistances[hazard.id]).toBe(160);
-    expect(
-      getActiveSectorHazards(plan, 120, { distanceOverrides: state.effectiveDistances })[0]?.phase
-    ).toBe('active');
+    const heldHazard = getActiveSectorHazards(plan, 120, {
+      distanceOverrides: state.effectiveDistances
+    })[0];
+    expect(heldHazard?.phase).toBe('active');
+    expect(heldHazard?.progress).toBe(0.4);
+    expect(heldHazard?.worldProgress).toBe(0.13);
 
     for (let step = 0; step < 10; step += 1) {
       advancePaused(state, plan, 120);

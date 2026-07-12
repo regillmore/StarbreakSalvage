@@ -775,11 +775,12 @@ seed + permanent save fingerprint
 
 ### Work order 120 directional beam boundary
 
-- `src/game/BeamHazard.ts` owns seeded source/target edge selection, offset geometry, combat-world endpoint projection, exact circle-to-capsule overlap, bounded world-damage sampling, and accessible direction copy. Renderer and collision consumers receive the same `BeamHazardSegment`; neither reconstructs an independent line.
+- `src/game/BeamHazard.ts` owns seeded source/target edge selection, offset geometry, world-track projection, finite bolt slicing, exact circle-to-capsule overlap, bounded world-damage sampling, and accessible direction copy. Renderer and collision consumers receive the same track/bolt functions; neither reconstructs an independent line.
 - `HazardZoneDirector` materializes beam geometry only after work order 119 finalizes the operation sequence and hazard family. The geometry key includes run seed, save fingerprint, stage identity, sequence ordinal, hazard id, and entry index, so the same operation repeats exactly while other operations vary direction and offsets.
-- `SectorHazards` uses exact segment overlap for player, enemy, boss, and ally circles. At most 24 continuous expanded segment boxes reuse existing environment/set-piece hazard damage paths; all samples pierce rather than terminate on contact.
+- `getActiveSectorHazards` exposes `worldProgress` only when the pause-safe effective hazard distance diverges from actual scroll distance. The full source/target track translates with actual sector scroll and therefore stays stationary during a scroll hold; bolt head/tail travel continues from effective phase progress so work order 112 pause-safe expiry remains intact.
+- `SectorHazards` uses only the finite moving bolt segment for player, enemy, boss, and ally circles. At most 24 continuous expanded bolt boxes reuse existing environment/set-piece hazard damage paths; all samples pierce rather than terminate on contact.
 - `CombatState.damageCombatActorsByHazard` centralizes allegiance-neutral enemy, boss, and ally damage/defeat handling. A transient per-hazard/per-actor cooldown map advances in fixed time and is discarded with combat state; it is not generated content or snapshot data.
-- `CanvasRenderer` gives warning and active phases dedicated presentation: source aperture/arrow, endpoint reticle, dashed guide, perpendicular tracking marks, layered outer energy, bright core, and optional glow. Reduced motion lowers marker count, performance mode removes glow/markers, and high contrast retains a white core without changing geometry or damage.
+- `CanvasRenderer` gives warning and active phases dedicated presentation: source aperture/arrow, endpoint reticle, dashed world guide, perpendicular tracking marks, a long moving outer-energy body, bright core, leading flare, and optional glow. The bolt grows at its source, traverses at constant finite velocity, then shrinks through the endpoint. Reduced motion lowers marker count, performance mode removes glow/markers, and high contrast retains a white core without changing geometry or damage.
 
 ## GitHub Pages notes
 

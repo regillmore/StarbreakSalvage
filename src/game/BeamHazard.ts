@@ -36,6 +36,24 @@ interface BeamBounds {
   readonly padding: number;
 }
 
+interface ActiveBeamHazard {
+  readonly hazard: {
+    readonly beam?: BeamHazardGeometry;
+    readonly xRatio: number;
+    readonly widthRatio: number;
+    readonly telegraphDistance: number;
+    readonly startDistance: number;
+    readonly endDistance: number;
+  };
+  readonly phase: 'telegraph' | 'active';
+  readonly progress: number;
+  readonly phaseProgress: number;
+  readonly worldProgress?: number;
+}
+
+export const BEAM_BOLT_LENGTH_RATIO = 0.42;
+export const BEAM_WORLD_SCROLL_SCALE = 0.55;
+
 const BEAM_ROUTES: readonly (readonly [BeamHazardEdge, BeamHazardEdge])[] = [
   ['top', 'bottom'],
   ['bottom', 'top'],
@@ -91,6 +109,48 @@ export function getBeamHazardSegment(
     angle: Math.atan2(dy, dx),
     length: Math.sqrt(dx * dx + dy * dy)
   };
+}
+
+export function getWorldAnchoredBeamTrack(
+  activeHazard: ActiveBeamHazard,
+  bounds: BeamBounds
+): BeamHazardSegment {
+  const segment = getBeamHazardSegment(activeHazard.hazard, bounds);
+  const totalSpan = Math.max(
+    1,
+    activeHazard.hazard.endDistance - activeHazard.hazard.telegraphDistance
+  );
+  const telegraphLead = Math.max(
+    0,
+    activeHazard.hazard.startDistance - activeHazard.hazard.telegraphDistance
+  );
+  const distanceFromTelegraph =
+    clamp(activeHazard.worldProgress ?? activeHazard.progress, 0, 1) * totalSpan;
+  const worldOffsetY = roundBeamValue(
+    (distanceFromTelegraph - telegraphLead) * BEAM_WORLD_SCROLL_SCALE
+  );
+
+  return translateBeamSegment(segment, 0, worldOffsetY);
+}
+
+export function getActiveBeamBoltSegment(
+  activeHazard: ActiveBeamHazard,
+  bounds: BeamBounds
+): BeamHazardSegment | null {
+  if (activeHazard.phase !== 'active') {
+    return null;
+  }
+
+  const track = getWorldAnchoredBeamTrack(activeHazard, bounds);
+  const travel = clamp(activeHazard.phaseProgress, 0, 1) * (1 + BEAM_BOLT_LENGTH_RATIO);
+  const headProgress = clamp(travel, 0, 1);
+  const tailProgress = clamp(travel - BEAM_BOLT_LENGTH_RATIO, 0, 1);
+
+  if (headProgress - tailProgress <= 0.001) {
+    return null;
+  }
+
+  return sliceBeamSegment(track, tailProgress, headProgress);
 }
 
 export function formatBeamHazardTrack(geometry: BeamHazardGeometry | undefined): string {
@@ -170,6 +230,43 @@ function getEdgePoint(
   }
   if (edge === 'left') return { x: bounds.padding, y: bounds.height * ratio };
   return { x: bounds.width - bounds.padding, y: bounds.height * ratio };
+}
+
+function translateBeamSegment(
+  segment: BeamHazardSegment,
+  offsetX: number,
+  offsetY: number
+): BeamHazardSegment {
+  return {
+    ...segment,
+    startX: roundBeamValue(segment.startX + offsetX),
+    startY: roundBeamValue(segment.startY + offsetY),
+    endX: roundBeamValue(segment.endX + offsetX),
+    endY: roundBeamValue(segment.endY + offsetY)
+  };
+}
+
+function sliceBeamSegment(
+  segment: BeamHazardSegment,
+  startProgress: number,
+  endProgress: number
+): BeamHazardSegment {
+  const startX = segment.startX + (segment.endX - segment.startX) * startProgress;
+  const startY = segment.startY + (segment.endY - segment.startY) * startProgress;
+  const endX = segment.startX + (segment.endX - segment.startX) * endProgress;
+  const endY = segment.startY + (segment.endY - segment.startY) * endProgress;
+  const dx = endX - startX;
+  const dy = endY - startY;
+
+  return {
+    startX: roundBeamValue(startX),
+    startY: roundBeamValue(startY),
+    endX: roundBeamValue(endX),
+    endY: roundBeamValue(endY),
+    radius: segment.radius,
+    angle: Math.atan2(dy, dx),
+    length: roundBeamValue(Math.sqrt(dx * dx + dy * dy))
+  };
 }
 
 function roundBeamValue(value: number): number {

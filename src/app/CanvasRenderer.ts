@@ -36,7 +36,11 @@ import {
 import { generateStarfield, type Star, starCountForViewport } from '../core/starfield';
 import { createDefaultCombatBounds } from '../game/CombatGeometry';
 import type { CombatBounds } from '../game/CombatState';
-import { getBeamHazardSegment, type BeamHazardSegment } from '../game/BeamHazard';
+import {
+  getActiveBeamBoltSegment,
+  getWorldAnchoredBeamTrack,
+  type BeamHazardSegment
+} from '../game/BeamHazard';
 import { getPlayerShipCueState, type PlayerShipCueState } from './ShipCombatCues';
 import { calculateViewportLayout, type ViewportLayout } from './ViewportLayout';
 import type { PlayerDestructionPresentation } from '../game/PlayerDestruction';
@@ -2031,7 +2035,8 @@ export class CanvasRenderer {
     style: SectorHazardVisualState
   ): void {
     const context = this.context;
-    const segment = getBeamHazardSegment(activeHazard.hazard, bounds);
+    const track = getWorldAnchoredBeamTrack(activeHazard, bounds);
+    const bolt = getActiveBeamBoltSegment(activeHazard, bounds);
     const active = activeHazard.phase === 'active';
     const highContrast = this.settings.bulletContrast === 'high';
     const coreColor = highContrast ? '#ffffff' : '#fffbd6';
@@ -2041,40 +2046,46 @@ export class CanvasRenderer {
     context.lineJoin = 'round';
 
     if (active) {
+      context.setLineDash([3, 15]);
+      this.strokeBeamSegment(track, color, Math.max(1.4, style.lineWidth * 0.72), 0.24);
+      context.setLineDash([]);
       context.globalCompositeOperation = highContrast ? 'source-over' : 'lighter';
       context.shadowColor = color;
       context.shadowBlur = this.settings.performanceMode ? 0 : 18;
-      this.strokeBeamSegment(segment, color, segment.radius * 3.2, style.fillAlpha * 0.62);
-      this.strokeBeamSegment(segment, color, segment.radius * 1.85, style.strokeAlpha * 0.78);
-      this.strokeBeamSegment(
-        segment,
-        coreColor,
-        Math.max(3, segment.radius * 0.58),
-        highContrast ? 1 : 0.96
-      );
-      this.strokeBeamSegment(segment, '#ffffff', Math.max(1.2, segment.radius * 0.18), 1);
+      if (bolt) {
+        this.strokeBeamSegment(bolt, color, bolt.radius * 3.2, style.fillAlpha * 0.62);
+        this.strokeBeamSegment(bolt, color, bolt.radius * 1.85, style.strokeAlpha * 0.78);
+        this.strokeBeamSegment(
+          bolt,
+          coreColor,
+          Math.max(3, bolt.radius * 0.58),
+          highContrast ? 1 : 0.96
+        );
+        this.strokeBeamSegment(bolt, '#ffffff', Math.max(1.2, bolt.radius * 0.18), 1);
+        this.paintBeamBoltHead(bolt, color, coreColor);
+      }
     } else {
       context.setLineDash([12, 10]);
-      this.strokeBeamSegment(segment, color, Math.max(2, style.lineWidth), style.strokeAlpha);
+      this.strokeBeamSegment(track, color, Math.max(2, style.lineWidth), style.strokeAlpha);
       context.setLineDash([]);
-      this.strokeBeamSegment(segment, coreColor, 1, 0.26 + activeHazard.phaseProgress * 0.34);
+      this.strokeBeamSegment(track, coreColor, 1, 0.26 + activeHazard.phaseProgress * 0.34);
     }
 
-    this.paintBeamSourceEmitter(segment, color, coreColor, active, style);
-    this.paintBeamEndpoint(segment, color, coreColor, active, style);
+    this.paintBeamSourceEmitter(track, color, coreColor, active, style);
+    this.paintBeamEndpoint(track, color, coreColor, active, style);
 
     if (!this.settings.performanceMode) {
       const markerCount = this.settings.reducedMotion ? 2 : 4;
       for (let index = 1; index <= markerCount; index += 1) {
         const progress = index / (markerCount + 1);
-        const x = segment.startX + (segment.endX - segment.startX) * progress;
-        const y = segment.startY + (segment.endY - segment.startY) * progress;
-        const normalX = -Math.sin(segment.angle);
-        const normalY = Math.cos(segment.angle);
-        const halfWidth = active ? segment.radius * 1.18 : 7;
-        context.globalAlpha = active ? 0.52 : 0.34;
-        context.strokeStyle = active ? coreColor : color;
-        context.lineWidth = active ? 1.4 : 1;
+        const x = track.startX + (track.endX - track.startX) * progress;
+        const y = track.startY + (track.endY - track.startY) * progress;
+        const normalX = -Math.sin(track.angle);
+        const normalY = Math.cos(track.angle);
+        const halfWidth = active ? track.radius * 0.82 : 7;
+        context.globalAlpha = active ? 0.24 : 0.34;
+        context.strokeStyle = color;
+        context.lineWidth = 1;
         context.beginPath();
         context.moveTo(x - normalX * halfWidth, y - normalY * halfWidth);
         context.lineTo(x + normalX * halfWidth, y + normalY * halfWidth);
@@ -2082,6 +2093,26 @@ export class CanvasRenderer {
       }
     }
 
+    context.restore();
+  }
+
+  private paintBeamBoltHead(bolt: BeamHazardSegment, color: string, coreColor: string): void {
+    const context = this.context;
+    const normalX = -Math.sin(bolt.angle);
+    const normalY = Math.cos(bolt.angle);
+    const flareRadius = bolt.radius * 1.18;
+    context.save();
+    context.globalAlpha = 0.96;
+    context.fillStyle = coreColor;
+    context.strokeStyle = color;
+    context.lineWidth = 2;
+    context.beginPath();
+    context.arc(bolt.endX, bolt.endY, Math.max(4, bolt.radius * 0.52), 0, Math.PI * 2);
+    context.fill();
+    context.beginPath();
+    context.moveTo(bolt.endX - normalX * flareRadius, bolt.endY - normalY * flareRadius);
+    context.lineTo(bolt.endX + normalX * flareRadius, bolt.endY + normalY * flareRadius);
+    context.stroke();
     context.restore();
   }
 

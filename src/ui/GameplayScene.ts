@@ -2011,7 +2011,7 @@ export class GameplayScene implements Scene {
           : '';
       return activeHazard.phase === 'telegraph'
         ? `Hint ${activeHazard.hazard.label} ahead.${beamTrack} Shift clear before it activates.`
-        : `Hint ${activeHazard.hazard.label} active.${beamTrack} Track both endpoints and stay clear.`;
+        : `Hint ${activeHazard.hazard.label} active.${beamTrack} Dodge the advancing luminous bolt.`;
     }
 
     if (state.stats.shotsFired === 0) {
@@ -2176,7 +2176,10 @@ function formatActiveHazardWarning(activeHazard: ActiveSectorHazard | undefined)
     return activeHazard.hazard.label;
   }
 
-  const phase = activeHazard.phase === 'active' ? 'FIRING' : 'TRACKING';
+  const phase =
+    activeHazard.phase === 'active'
+      ? `BOLT ${Math.round(activeHazard.phaseProgress * 100)}%`
+      : 'TRACKING';
   return `${activeHazard.hazard.label} ${phase} | ${formatBeamHazardTrack(activeHazard.hazard.beam)}`;
 }
 

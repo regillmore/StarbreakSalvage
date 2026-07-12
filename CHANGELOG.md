@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Rebuilt warning beams as deterministic directional edge-to-edge hazards. Telegraphs now expose a distinct source emitter, endpoint reticle, direction, and offsets; active beams render layered glow, bright core, and track markers from the same segment used by collision. Beams pierce the field and damage players, enemies, bosses, allies, set pieces, and eligible environment objects indiscriminately with bounded per-target cooldowns.
+- Rebuilt warning beams as deterministic directional hazards with world-anchored firing tracks. Telegraph hardware now scrolls with the sector while a long finite-velocity bolt grows, traverses, and clears the track; only its visible luminous body collides. Bolts retain distinct emitters, endpoint reticles, layered glow, bright cores, deterministic direction/offset copy, allegiance-blind piercing damage, and bounded per-target cooldowns.
 
 - Eliminated repeated hazard sequences across sectors and bonus operations. Every sector/operation role now receives a unique run-seeded sequence identity that deterministically varies authored hazard families, lanes, and director additions while preserving explicit route hazards, timing bounds, boss deferrals, and exact replay of the same operation.
 

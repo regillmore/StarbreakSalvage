@@ -7,6 +7,7 @@ import {
 } from '../../src/content/hazardZones';
 import { createCombatState, spawnBoss, type CombatBounds } from '../../src/game/CombatState';
 import { resolveSectorHazardCollisions } from '../../src/game/SectorHazards';
+import { getActiveBeamBoltSegment } from '../../src/game/BeamHazard';
 import {
   getActiveSectorHazards,
   getSectorHazardDamageRects,
@@ -128,17 +129,42 @@ describe('HazardZoneBehavior', () => {
     const state = createCombatState(bounds, 'INDISCRIMINATE-BEAM', {
       skipEnemyWaves: true
     });
-    const beamY = state.player.y;
+    const hazard = createHazard('warning_beam', {
+      telegraphDistance: 40,
+      startDistance: 190,
+      endDistance: 340,
+      beam: {
+        sourceEdge: 'left',
+        sourceOffsetRatio: 0.46,
+        targetEdge: 'right',
+        targetOffsetRatio: 0.46
+      }
+    });
+    const plan = createPlan(hazard);
+    const collisionDistance = 272.5;
+    const activeHazard = getActiveSectorHazards(plan, collisionDistance)[0];
+    const bolt = activeHazard ? getActiveBeamBoltSegment(activeHazard, bounds) : null;
+    if (!bolt) throw new Error('Expected an active finite beam bolt.');
+    const pointOnBolt = (progress: number) => ({
+      x: bolt.startX + (bolt.endX - bolt.startX) * progress,
+      y: bolt.startY + (bolt.endY - bolt.startY) * progress
+    });
+    const playerPoint = pointOnBolt(0.44);
+    const enemyPoint = pointOnBolt(0.3);
+    const allyPoint = pointOnBolt(0.58);
+    const bossPoint = pointOnBolt(0.72);
+    state.player.x = playerPoint.x;
+    state.player.y = playerPoint.y;
     state.enemies.push({
       id: 901,
       factionId: 'faction_scrap_court',
-      x: 250,
-      y: beamY,
+      x: enemyPoint.x,
+      y: enemyPoint.y,
       radius: 17,
       hull: 3,
       maxHull: 3,
       drift: 0,
-      targetY: beamY,
+      targetY: enemyPoint.y,
       fireCooldown: 10
     });
     state.allies = [
@@ -151,8 +177,8 @@ describe('HazardZoneBehavior', () => {
         trait: 'steady',
         preferredCommand: 'focus',
         cue: { glyph: 'A', color: '#7cf7ff', highContrastGlyph: 'A' },
-        x: 160,
-        y: beamY,
+        x: allyPoint.x,
+        y: allyPoint.y,
         radius: 13,
         hull: 3,
         maxHull: 3,
@@ -168,24 +194,12 @@ describe('HazardZoneBehavior', () => {
       }
     ];
     const boss = spawnBoss(state, 'boss_auditor_drone_xl', bounds);
-    boss.x = 430;
-    boss.y = beamY;
+    boss.x = bossPoint.x;
+    boss.y = bossPoint.y;
     boss.hull = 5;
-    const hazard = createHazard('warning_beam', {
-      telegraphDistance: 40,
-      startDistance: 190,
-      endDistance: 340,
-      beam: {
-        sourceEdge: 'left',
-        sourceOffsetRatio: beamY / bounds.height,
-        targetEdge: 'right',
-        targetOffsetRatio: beamY / bounds.height
-      }
-    });
-    const plan = createPlan(hazard);
 
-    const first = resolveSectorHazardCollisions(state, plan, 220, bounds);
-    const second = resolveSectorHazardCollisions(state, plan, 230, bounds);
+    const first = resolveSectorHazardCollisions(state, plan, collisionDistance, bounds);
+    const second = resolveSectorHazardCollisions(state, plan, collisionDistance, bounds);
 
     expect(first.hitHazardIds).toEqual([hazard.id]);
     expect(second.hitHazardIds).toEqual([]);

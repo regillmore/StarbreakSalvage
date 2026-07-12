@@ -19,7 +19,7 @@ import {
   type SectorFeaturePlan,
   type SectorHazardPlan
 } from './SectorFeatures';
-import { circleOverlapsBeamSegment, getBeamHazardSegment } from './BeamHazard';
+import { circleOverlapsBeamSegment, getActiveBeamBoltSegment } from './BeamHazard';
 
 export interface SectorHazardCollisionResult {
   readonly activeHazardIds: readonly string[];
@@ -58,7 +58,10 @@ export function resolveSectorHazardCollisions(
     }
 
     if (activeHazard.hazard.kind === 'warning_beam') {
-      const segment = getBeamHazardSegment(activeHazard.hazard, bounds);
+      const segment = getActiveBeamBoltSegment(activeHazard, bounds);
+      if (!segment) {
+        continue;
+      }
       const definition = getHazardZoneDefinition(activeHazard.hazard.kind);
       damageCombatActorsByHazard(
         state,
@@ -116,7 +119,8 @@ export function playerOverlapsActiveHazard(
       return false;
     }
 
-    return circleOverlapsBeamSegment(player, getBeamHazardSegment(activeHazard.hazard, bounds));
+    const segment = getActiveBeamBoltSegment(activeHazard, bounds);
+    return segment ? circleOverlapsBeamSegment(player, segment) : false;
   }
 
   return getSectorHazardDamageRects(activeHazard, bounds).some((rect) =>
