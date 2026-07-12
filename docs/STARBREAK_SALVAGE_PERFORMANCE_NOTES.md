@@ -88,6 +88,10 @@ Work order 121 adds one rectangular canvas clip around the existing balanced gam
 
 The work order 121 release build emits 859.05 kB minified/233.01 kB gzip initial JavaScript and unchanged 31.96 kB CSS/7.19 kB gzip. This is a 0.16 kB minified/0.06 kB gzip increase over work order 120. No warning threshold changed; the existing initial-chunk warning remains open.
 
+Work order 122 retains the already allocated terminal `SectorExitSequenceState` for the scene-handoff frame instead of clearing it. It adds no frame-time scan, render pass, entity, timer, allocation loop, or persisted field; the existing exit guard and presentation calculation run for any delayed frame exactly as they did during the animation.
+
+The work order 122 release build emits 859.10 kB minified/233.01 kB gzip initial JavaScript and unchanged 31.96 kB CSS/7.19 kB gzip. This is a 0.05 kB minified/0.00 kB gzip increase over work order 121. No warning threshold changed; the existing initial-chunk warning remains open.
+
 Phase 5 closeout: work order 050 keeps progression/sector-feedback optimization deferred until profiling requires it. `npm run check`, Playwright Chromium smoke, and production preview asset-path smoke passed locally. Manual cross-browser performance/readability checks outside Chromium remain pending.
 
 ## Phase 6 Item Catalog Budget Targets

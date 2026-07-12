@@ -1250,7 +1250,9 @@ export class GameplayScene implements Scene {
       return;
     }
 
-    this.exitSequence = null;
+    if (this.exitSequence) {
+      advanceSectorExitSequence(this.exitSequence, this.exitSequence.durationSeconds);
+    }
     this.exitSequenceResult = null;
     this.sectorCooldown = null;
     this.syncExitSequenceUi();

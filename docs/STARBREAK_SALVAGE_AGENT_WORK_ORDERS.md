@@ -2131,6 +2131,25 @@ Status: implemented. `CanvasRenderer.beginGameplayLayer` now establishes a viewp
 
 Verification: `npm run verify:release` passes with 94 Vitest files and 564 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. Focused camera, combat, viewport, environment-object, and loose-currency coverage passes with 55 tests. Coverage pins viewport-frame clip coordinates and call ordering before world translation, open projectile travel through left/right/top/bottom edges, boarding side-wall containment, responsive frame geometry, object runtime, and currency cleanup. Chromium covers high-contrast/reduced-motion environmental stress, narrow safe-frame layout, pointer-guided combat, sector departure, Act II/boarding fixtures, snapshot recovery, and ordinary gameplay without browser errors. The production build emits 859.05 kB minified/233.01 kB gzip initial JavaScript and unchanged 31.96 kB CSS/7.19 kB gzip, a 0.16 kB minified/0.06 kB gzip increase over work order 120. The existing chunk warning remains open and no threshold changed. Direct visual inspection was attempted through the in-app browser control surface, but no browser target was available in this session; automated Chromium is the available local visual evidence.
 
+## Work order 122 - Terminal departure-frame latch
+
+Goal: keep the departed player ship outside camera range through the exact frame that hands control to the next menu.
+
+Prompt:
+
+> Fix the one-frame visual pop at the end of every sector-exit animation where the player ship returns to its ordinary arena-center pose immediately before route selection or the run summary appears. Once departure begins, the ship must remain owned by the exit presentation through handoff. At terminal progress it must stay above the camera and fully transparent beneath the closing transition. Preserve normal, reduced-motion, debug-fast, sector-complete, victory, boarding, route, summary, HUD announcement, camera clip, and callback behavior. Prevent duplicate completion callbacks and add a focused orchestration regression. Run checks.
+
+Acceptance criteria:
+
+- Normal completion, victory, and debug-forced completion all reach the terminal exit presentation before invoking their handoff callback.
+- Clearing the one-shot completion result cannot clear the presentation state or re-enable ordinary combat-player rendering on an intermediate frame.
+- A delayed replacement scene leaves the old gameplay scene frozen at transition progress 100%, with ship alpha zero and ship position above view, without resuming combat updates or firing the callback twice.
+- Existing departure duration, reduced-motion treatment, transition aperture, accessible announcements, route/summary outcomes, and work order 121 camera clipping remain unchanged.
+
+Status: implemented. `GameplayScene.finishSectorExitSequence` now advances any normal or debug-shortcut departure to terminal elapsed time, clears the result latch and cooldown state, but deliberately retains the completed `SectorExitSequenceState`. `render`, `syncExitSequenceUi`, and the update guard therefore continue consuming the final transition presentation until the scene callback replaces gameplay: the ship remains above -100 world units with alpha zero and the aperture remains closed. `exitSequenceResult` still becomes null before invoking `onSectorComplete` or `onGameOver`, so repeated updates or input cannot dispatch a second result. No timing constant, renderer, combat state, generation, save, snapshot, or content schema changes.
+
+Verification: `npm run verify:release` passes with 94 Vitest files and 565 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. Focused sector-exit, recovery-coast, and camera coverage passes with 12 tests. The orchestration regression invokes completion before natural duration, proves terminalization occurs, verifies `exitSequence` remains latched while `exitSequenceResult` and cooldown clear, confirms ship alpha zero and Y below -100, and observes exactly one sector-complete callback. Existing sequence coverage still pins normal, reduced-motion, debug-fast, and victory presentations. Chromium force-completes sectors through the departure announcement into operational-map/route flow without browser errors. The production build emits 859.10 kB minified/233.01 kB gzip initial JavaScript and unchanged 31.96 kB CSS/7.19 kB gzip, a 0.05 kB minified/0.00 kB gzip increase over work order 121. The existing chunk warning remains open and no threshold changed. Direct visual inspection was attempted through the in-app browser control surface, but no browser target was available in this session; automated Chromium is the available local visual evidence.
+
 ## Review subagent prompt
 
 Use after a feature PR:

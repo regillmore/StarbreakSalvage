@@ -790,6 +790,12 @@ seed + permanent save fingerprint
 - The clip is presentation-only. Simulation, collision, pointer conversion, player movement, world anchors, TTL, and offscreen cleanup continue in combat coordinates. Screen shake moves the world beneath the fixed camera aperture rather than moving the aperture itself.
 - `CombatBounds.enemyProjectileBoundary` is an explicit physical-policy seam. Open flight is the default and applies no enemy-projectile clamp; boarding supplies `sideWalls` and retains horizontal containment at its authored 60-unit rails.
 
+### Work order 122 terminal departure handoff invariant
+
+- `exitSequenceResult` is the one-shot callback latch, while `exitSequence` remains the render owner from ignition through scene replacement. Finishing clears the former but retains the latter at terminal elapsed time.
+- If scene replacement is delayed by one or more frames, `GameplayScene.update` remains inside the exit guard and `render` continues using progress-100% departure coordinates instead of falling back to `CombatState.player`.
+- Normal, victory, and debug-forced completion share the same terminalization path. The retained state is transient scene memory and does not enter run generation, suspended snapshots, or permanent saves.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

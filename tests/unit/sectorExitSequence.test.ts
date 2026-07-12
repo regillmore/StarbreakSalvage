@@ -1,11 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
+import type { CombatRunResult } from '../../src/game/CombatState';
 import {
   advanceSectorExitSequence,
   createSectorExitSequence,
   getSectorExitPresentation,
   getSectorExitProgress
 } from '../../src/game/SectorExitSequence';
+import { GameplayScene } from '../../src/ui/GameplayScene';
 
 describe('SectorExitSequence', () => {
   it('ignites, recenters, and accelerates the player ship beyond the top of the combat view', () => {
@@ -101,5 +103,42 @@ describe('SectorExitSequence', () => {
     expect(presentation.phase).toBe('transition');
     expect(presentation.announcement).toBe('Opening run summary.');
     expect(presentation.hint).toBe('Ship clear; opening run summary.');
+  });
+
+  it('latches the invisible terminal presentation through the scene handoff frame', () => {
+    const sequence = createSectorExitSequence({
+      sectorName: 'Trade War Corridor',
+      sectorIndex: 1,
+      sectorCount: 5,
+      reason: 'sectorComplete',
+      reducedMotion: false
+    });
+    const result = { reason: 'sectorComplete' } as CombatRunResult;
+    const onSectorComplete = vi.fn();
+    const syncExitSequenceUi = vi.fn();
+    const scene = Object.create(GameplayScene.prototype) as GameplayScene;
+    Object.assign(scene, {
+      exitSequence: sequence,
+      exitSequenceResult: result,
+      sectorCooldown: {},
+      onSectorComplete,
+      syncExitSequenceUi
+    });
+    const harness = scene as unknown as {
+      exitSequence: typeof sequence | null;
+      exitSequenceResult: CombatRunResult | null;
+      sectorCooldown: unknown;
+      finishSectorExitSequence(): void;
+    };
+
+    harness.finishSectorExitSequence();
+
+    expect(harness.exitSequence).toBe(sequence);
+    expect(harness.exitSequenceResult).toBeNull();
+    expect(harness.sectorCooldown).toBeNull();
+    expect(getSectorExitPresentation(harness.exitSequence!).shipAlpha).toBe(0);
+    expect(getSectorExitPresentation(harness.exitSequence!).shipY).toBeLessThan(-100);
+    expect(syncExitSequenceUi).toHaveBeenCalledOnce();
+    expect(onSectorComplete).toHaveBeenCalledWith(result);
   });
 });

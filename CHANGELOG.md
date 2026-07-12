@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fixed the final sector-departure handoff frame. Completing an exit now latches the terminal offscreen, fully transparent ship presentation until the route or summary scene owns rendering, preventing the ordinary centered combat ship from flashing back beneath the closing transition.
+
 - Reasserted the gameplay arena as the camera's line of sight. The transformed gameplay layer is now clipped to its stable viewport frame, preventing projectiles, ships, mines, obstacles, pickups, effects, hazards, and landmarks from bleeding into the surrounding presentation while full-viewport scrolling background art remains visible behind it. Open-flight enemy projectiles may leave the arena freely and expire through ordinary cleanup; boarding operations explicitly retain solid authored side walls.
 
 - Rebuilt warning beams as deterministic directional hazards projected from distant world-anchored vectors. Arena entrance/exit markers are clipped to the true canvas edges, so round beam caps disappear beyond player line of sight instead of terminating inside the arena. Every route now uses the same 960-unit/second leading- and trailing-edge velocity: the beam ignites across the arena, remains fully lit for exactly two seconds, then clears at the same speed. Rendering and collision consume only the visible in-arena body, with layered glow, bright cores, deterministic direction/offset copy, allegiance-blind piercing damage, and bounded per-target cooldowns.
