@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Rebuilt warning beams as deterministic directional hazards projected from distant world-anchored vectors. Arena entrance/exit markers are clipped to and slide along the arena edges as the sector scrolls; offscreen sources and endpoints never enter player line of sight. A long finite-velocity bolt grows, traverses, and clears the vector, while rendering and collision consume only its visible in-arena body. Bolts retain layered glow, bright cores, deterministic direction/offset copy, allegiance-blind piercing damage, and bounded per-target cooldowns.
+- Rebuilt warning beams as deterministic directional hazards projected from distant world-anchored vectors. Arena entrance/exit markers are clipped to the true canvas edges, so round beam caps disappear beyond player line of sight instead of terminating inside the arena. Every route now uses the same 960-unit/second leading- and trailing-edge velocity: the beam ignites across the arena, remains fully lit for exactly two seconds, then clears at the same speed. Rendering and collision consume only the visible in-arena body, with layered glow, bright cores, deterministic direction/offset copy, allegiance-blind piercing damage, and bounded per-target cooldowns.
 
 - Eliminated repeated hazard sequences across sectors and bonus operations. Every sector/operation role now receives a unique run-seeded sequence identity that deterministically varies authored hazard families, lanes, and director additions while preserving explicit route hazards, timing bounds, boss deferrals, and exact replay of the same operation.
 

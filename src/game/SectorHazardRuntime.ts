@@ -1,6 +1,8 @@
 import { clamp } from '../core/math';
+import { getBeamHazardTiming } from './BeamHazard';
 import {
   getActiveSectorHazards,
+  getHazardActivationWindow,
   type SectorFeaturePlan,
   type SectorHazardActivationOptions
 } from './SectorFeatures';
@@ -8,6 +10,7 @@ import {
 export interface SectorHazardRuntimeState {
   lastScrollDistance: number;
   readonly effectiveDistances: Record<string, number>;
+  readonly beamElapsedSeconds: Record<string, number>;
   pausedAdvanceSeconds: number;
   pausedAdvanceDistance: number;
 }
@@ -27,6 +30,7 @@ export function createSectorHazardRuntimeState(
   return {
     lastScrollDistance: roundRuntimeValue(Math.max(0, initialScrollDistance)),
     effectiveDistances: {},
+    beamElapsedSeconds: {},
     pausedAdvanceSeconds: 0,
     pausedAdvanceDistance: 0
   };
@@ -45,6 +49,9 @@ export function advanceSectorHazardRuntime(
   if (options.suspended) {
     for (const hazardId of Object.keys(state.effectiveDistances)) {
       delete state.effectiveDistances[hazardId];
+    }
+    for (const hazardId of Object.keys(state.beamElapsedSeconds)) {
+      delete state.beamElapsedSeconds[hazardId];
     }
     state.lastScrollDistance = scrollDistance;
     return;
@@ -70,6 +77,10 @@ export function advanceSectorHazardRuntime(
     : 0;
 
   for (const hazardId of Object.keys(state.effectiveDistances)) {
+    if (state.beamElapsedSeconds[hazardId] !== undefined) {
+      continue;
+    }
+
     if (options.scrollingPaused && !activeIds.has(hazardId)) {
       continue;
     }
@@ -81,6 +92,49 @@ export function advanceSectorHazardRuntime(
         previousDistance + (options.scrollingPaused ? pausedAdvance : scrollDelta)
       )
     );
+  }
+
+  const beamActive = getActiveSectorHazards(plan, scrollDistance, {
+    ...activationOptions,
+    distanceOverrides: state.effectiveDistances
+  }).filter(({ hazard, phase }) => hazard.kind === 'warning_beam' && phase === 'active');
+
+  for (const { hazard } of beamActive) {
+    state.beamElapsedSeconds[hazard.id] ??= 0;
+  }
+
+  const hazardById = new Map(plan.hazards.map((hazard) => [hazard.id, hazard]));
+  for (const hazardId of Object.keys(state.beamElapsedSeconds)) {
+    const hazard = hazardById.get(hazardId);
+    if (!hazard || hazard.kind !== 'warning_beam') {
+      delete state.beamElapsedSeconds[hazardId];
+      continue;
+    }
+    if (
+      activationOptions.allowedHazardIds &&
+      !activationOptions.allowedHazardIds.includes(hazardId)
+    ) {
+      continue;
+    }
+
+    const timing = getBeamHazardTiming(hazard);
+    const nextElapsedSeconds = state.beamElapsedSeconds[hazardId]! + safeDt;
+    const elapsedSeconds =
+      nextElapsedSeconds >= timing.totalSeconds
+        ? timing.totalSeconds
+        : roundRuntimeValue(nextElapsedSeconds);
+    const window = getHazardActivationWindow(
+      hazard,
+      activationOptions.deferOverlappingFromDistance
+    );
+    state.beamElapsedSeconds[hazardId] = elapsedSeconds;
+    state.effectiveDistances[hazardId] =
+      elapsedSeconds >= timing.totalSeconds
+        ? roundRuntimeValue(window.endDistance + 0.01)
+        : roundRuntimeValue(
+            window.startDistance +
+              (elapsedSeconds / timing.totalSeconds) * (window.endDistance - window.startDistance)
+          );
   }
 
   if (options.scrollingPaused && activeIds.size > 0 && pausedAdvance > 0) {

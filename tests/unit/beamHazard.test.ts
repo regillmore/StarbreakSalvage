@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  BEAM_END_VELOCITY_UNITS_PER_SECOND,
+  BEAM_FULLY_LIT_DURATION_SECONDS,
   circleOverlapsBeamSegment,
   createBeamHazardGeometry,
   createBeamSegmentDamageRects,
   getActiveBeamBoltSegment,
+  getBeamHazardTiming,
   getBeamHazardSegment,
   getWorldAnchoredBeamTrack
 } from '../../src/game/BeamHazard';
@@ -61,8 +64,8 @@ describe('BeamHazard', () => {
       radius: 8
     };
 
-    expect(segment.startX).toBe(bounds.padding);
-    expect(segment.endX).toBe(bounds.width - bounds.padding);
+    expect(segment.startX).toBe(0);
+    expect(segment.endX).toBe(bounds.width);
     expect(segment.length).toBeGreaterThan(600);
     expect(circleOverlapsBeamSegment(midpoint, segment)).toBe(true);
     expect(
@@ -160,12 +163,12 @@ describe('BeamHazard', () => {
     }
     expectBeamSegmentClippedToArena(topMarkerAtTelegraph);
     expectBeamSegmentClippedToArena(topMarkerAtFire);
-    expect(topMarkerAtTelegraph.startY).toBe(bounds.padding);
-    expect(topMarkerAtFire.startY).toBe(bounds.padding);
+    expect(topMarkerAtTelegraph.startY).toBe(0);
+    expect(topMarkerAtFire.startY).toBe(0);
     expect(topMarkerAtTelegraph.startX).not.toBe(topMarkerAtFire.startX);
   });
 
-  it('advances a finite long bolt whose visible body defines collision', () => {
+  it('uses shared end velocity around an exact two-second fully-lit dwell', () => {
     const hazard = {
       id: 'finite-bolt',
       kind: 'warning_beam' as const,
@@ -183,43 +186,85 @@ describe('BeamHazard', () => {
         targetOffsetRatio: 0.5
       }
     };
-    const makeActive = (phaseProgress: number) => ({
+    const timing = getBeamHazardTiming(hazard, bounds);
+    const makeActive = (elapsedSeconds: number) => ({
       hazard,
       phase: 'active' as const,
-      progress: (170 + phaseProgress * 140) / 310,
-      phaseProgress
+      progress: (170 + (elapsedSeconds / timing.totalSeconds) * 140) / 310,
+      phaseProgress: elapsedSeconds / timing.totalSeconds,
+      elapsedSeconds,
+      worldDistance: hazard.startDistance
     });
-    const early = getActiveBeamBoltSegment(makeActive(0.18), bounds);
-    const middle = getActiveBeamBoltSegment(makeActive(0.55), bounds);
-    const late = getActiveBeamBoltSegment(makeActive(0.86), bounds);
-    const finished = getActiveBeamBoltSegment(makeActive(1), bounds);
+    const ignitionElapsed = 0.5;
+    const early = getActiveBeamBoltSegment(makeActive(ignitionElapsed), bounds);
+    const fullyLitStart = getActiveBeamBoltSegment(makeActive(timing.endTravelSeconds), bounds);
+    const fullyLitEnd = getActiveBeamBoltSegment(
+      makeActive(timing.endTravelSeconds + BEAM_FULLY_LIT_DURATION_SECONDS),
+      bounds
+    );
+    const late = getActiveBeamBoltSegment(
+      makeActive(timing.endTravelSeconds + BEAM_FULLY_LIT_DURATION_SECONDS + 0.5),
+      bounds
+    );
+    const finished = getActiveBeamBoltSegment(makeActive(timing.totalSeconds), bounds);
 
     expect(early).not.toBeNull();
-    expect(middle).not.toBeNull();
+    expect(fullyLitStart).not.toBeNull();
+    expect(fullyLitEnd).not.toBeNull();
     expect(late).not.toBeNull();
     expect(finished).toBeNull();
-    if (!early || !middle || !late) throw new Error('Expected finite beam bolt segments.');
+    if (!early || !fullyLitStart || !fullyLitEnd || !late) {
+      throw new Error('Expected timed beam lifecycle segments.');
+    }
 
-    expect(middle.startX).toBeGreaterThan(early.startX);
-    expect(late.startX).toBeGreaterThan(middle.startX);
-    expect(middle.length).toBeGreaterThan(200);
-    expect(middle.length).toBeLessThan(bounds.width / 2);
+    expect(early.startX).toBe(0);
+    expect(early.endX).toBeCloseTo(
+      ignitionElapsed * BEAM_END_VELOCITY_UNITS_PER_SECOND - bounds.height * 0.22,
+      2
+    );
+    expect(fullyLitStart.startX).toBe(0);
+    expect(fullyLitStart.endX).toBe(bounds.width);
+    expect(fullyLitEnd).toEqual(fullyLitStart);
+    expect(late.startX).toBeCloseTo(early.endX, 2);
+    expect(late.endX).toBe(bounds.width);
+
+    const verticalHazard = {
+      ...hazard,
+      beam: {
+        sourceEdge: 'top' as const,
+        sourceOffsetRatio: 0.5,
+        targetEdge: 'bottom' as const,
+        targetOffsetRatio: 0.5
+      }
+    };
+    const verticalTiming = getBeamHazardTiming(verticalHazard, bounds);
+    const verticalEarly = getActiveBeamBoltSegment(
+      {
+        hazard: verticalHazard,
+        phase: 'active',
+        progress: 0.6,
+        phaseProgress: ignitionElapsed / verticalTiming.totalSeconds,
+        elapsedSeconds: ignitionElapsed,
+        worldDistance: verticalHazard.startDistance
+      },
+      bounds
+    );
+    expect(verticalEarly?.length).toBeCloseTo(early.length, 2);
     expect(
       circleOverlapsBeamSegment(
         {
-          x: (middle.startX + middle.endX) / 2,
-          y: (middle.startY + middle.endY) / 2,
+          x: (fullyLitStart.startX + fullyLitStart.endX) / 2,
+          y: (fullyLitStart.startY + fullyLitStart.endY) / 2,
           radius: 8
         },
-        middle
+        fullyLitStart
       )
     ).toBe(true);
-    expect(
-      circleOverlapsBeamSegment(
-        { x: bounds.width - bounds.padding, y: middle.endY, radius: 8 },
-        middle
-      )
-    ).toBe(false);
+    expect(circleOverlapsBeamSegment({ x: bounds.width, y: early.endY, radius: 8 }, early)).toBe(
+      false
+    );
+    expect(timing.fullyLitSeconds).toBe(2);
+    expect(timing.totalSeconds).toBeCloseTo(timing.endTravelSeconds * 2 + 2, 3);
   });
 
   it('rejects malformed authored beam endpoints', () => {
@@ -273,10 +318,10 @@ function expectBeamSegmentClippedToArena(segment: {
   readonly endX: number;
   readonly endY: number;
 }): void {
-  const left = bounds.padding;
-  const right = bounds.width - bounds.padding;
-  const top = bounds.padding;
-  const bottom = bounds.height - bounds.padding;
+  const left = 0;
+  const right = bounds.width;
+  const top = 0;
+  const bottom = bounds.height;
   const isOnArenaEdge = (x: number, y: number) =>
     x === left || x === right || y === top || y === bottom;
 

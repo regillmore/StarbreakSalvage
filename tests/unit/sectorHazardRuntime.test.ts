@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { getBeamHazardTiming } from '../../src/game/BeamHazard';
 import {
   advanceSectorHazardRuntime,
   createSectorHazardRuntimeState,
@@ -124,6 +125,54 @@ describe('SectorHazardRuntime', () => {
     });
 
     expect(state.effectiveDistances).toEqual({ [settling.id]: 130 });
+  });
+
+  it('drives every beam from the same elapsed-time clock regardless of scroll speed', () => {
+    const beam = makeHazard({
+      id: 'timed-beam',
+      kind: 'warning_beam',
+      beam: {
+        sourceEdge: 'left',
+        sourceOffsetRatio: 0.5,
+        targetEdge: 'right',
+        targetOffsetRatio: 0.5
+      }
+    });
+    const plan = makePlan([beam]);
+    const slow = createSectorHazardRuntimeState(160);
+    const fast = createSectorHazardRuntimeState(160);
+
+    for (let step = 0; step < 10; step += 1) {
+      advanceSectorHazardRuntime(slow, plan, {
+        scrollDistance: 160,
+        dt: 0.1,
+        scrollingPaused: true,
+        nominalScrollSpeed: 50
+      });
+      advanceSectorHazardRuntime(fast, plan, {
+        scrollDistance: 160,
+        dt: 0.1,
+        scrollingPaused: true,
+        nominalScrollSpeed: 200
+      });
+    }
+
+    expect(slow.beamElapsedSeconds[beam.id]).toBe(1);
+    expect(fast.beamElapsedSeconds[beam.id]).toBe(1);
+    expect(slow.effectiveDistances[beam.id]).toBe(fast.effectiveDistances[beam.id]);
+
+    const timing = getBeamHazardTiming(beam);
+    for (let step = 0; step < Math.ceil(timing.totalSeconds * 10); step += 1) {
+      advancePaused(slow, plan, 160);
+    }
+
+    expect(slow.beamElapsedSeconds[beam.id]).toBe(timing.totalSeconds);
+    expect(
+      getActiveSectorHazards(plan, 160, {
+        distanceOverrides: slow.effectiveDistances,
+        elapsedSecondsOverrides: slow.beamElapsedSeconds
+      })
+    ).toEqual([]);
   });
 });
 

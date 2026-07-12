@@ -94,15 +94,18 @@ export interface ActiveSectorHazard {
   readonly progress: number;
   readonly phaseProgress: number;
   readonly worldProgress?: number;
+  readonly worldDistance?: number;
+  readonly elapsedSeconds?: number;
 }
 
 export interface SectorHazardActivationOptions {
   readonly deferOverlappingFromDistance?: number | null;
   readonly allowedHazardIds?: readonly string[];
   readonly distanceOverrides?: Readonly<Record<string, number>>;
+  readonly elapsedSecondsOverrides?: Readonly<Record<string, number>>;
 }
 
-interface SectorHazardActivationWindow {
+export interface SectorHazardActivationWindow {
   readonly telegraphDistance: number;
   readonly startDistance: number;
   readonly endDistance: number;
@@ -227,6 +230,8 @@ export function getActiveSectorHazards(
     const worldProgress = roundFeatureValue(
       clamp((distance - window.telegraphDistance) / totalSpan, 0, 1)
     );
+    const hasDistanceOverride = Math.abs(hazardDistance - distance) > 0.001;
+    const elapsedSeconds = options.elapsedSecondsOverrides?.[hazard.id];
     active.push({
       hazard,
       phase,
@@ -234,14 +239,15 @@ export function getActiveSectorHazards(
         clamp((hazardDistance - window.telegraphDistance) / totalSpan, 0, 1)
       ),
       phaseProgress: roundFeatureValue(clamp((hazardDistance - phaseStart) / phaseSpan, 0, 1)),
-      ...(Math.abs(hazardDistance - distance) > 0.001 ? { worldProgress } : {})
+      ...(hasDistanceOverride ? { worldProgress, worldDistance: distance } : {}),
+      ...(elapsedSeconds === undefined ? {} : { elapsedSeconds })
     });
   }
 
   return active;
 }
 
-function getHazardActivationWindow(
+export function getHazardActivationWindow(
   hazard: SectorHazardPlan,
   deferOverlappingFromDistance?: number | null
 ): SectorHazardActivationWindow {

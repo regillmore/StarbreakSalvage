@@ -2162,6 +2162,9 @@ export class GameplayScene implements Scene {
       allowedHazardIds: this.sectorCooldown?.settlingHazardIds,
       distanceOverrides: includeRuntime
         ? this.sectorHazardRuntimeState?.effectiveDistances
+        : undefined,
+      elapsedSecondsOverrides: includeRuntime
+        ? this.sectorHazardRuntimeState?.beamElapsedSeconds
         : undefined
     };
   }

@@ -49,11 +49,22 @@ interface ActiveBeamHazard {
   readonly progress: number;
   readonly phaseProgress: number;
   readonly worldProgress?: number;
+  readonly worldDistance?: number;
+  readonly elapsedSeconds?: number;
 }
 
-export const BEAM_BOLT_LENGTH_RATIO = 0.42;
+export interface BeamHazardTiming {
+  readonly endTravelSeconds: number;
+  readonly fullyLitSeconds: number;
+  readonly totalSeconds: number;
+}
+
+export const BEAM_END_VELOCITY_UNITS_PER_SECOND = 960;
+export const BEAM_FULLY_LIT_DURATION_SECONDS = 2;
 export const BEAM_WORLD_OVERSCAN_RATIO = 0.22;
 export const BEAM_WORLD_SCROLL_SCALE = 0.42;
+
+const DEFAULT_BEAM_BOUNDS: BeamBounds = { width: 640, height: 720, padding: 0 };
 
 const BEAM_ROUTES: readonly (readonly [BeamHazardEdge, BeamHazardEdge])[] = [
   ['top', 'bottom'],
@@ -143,7 +154,9 @@ function getDistantWorldBeamTrack(
     activeHazard.hazard.startDistance - activeHazard.hazard.telegraphDistance
   );
   const distanceFromTelegraph =
-    clamp(activeHazard.worldProgress ?? activeHazard.progress, 0, 1) * totalSpan;
+    activeHazard.worldDistance === undefined
+      ? clamp(activeHazard.worldProgress ?? activeHazard.progress, 0, 1) * totalSpan
+      : Math.max(0, activeHazard.worldDistance - activeHazard.hazard.telegraphDistance);
   const worldOffsetY = roundBeamValue(
     (distanceFromTelegraph - telegraphLead) * BEAM_WORLD_SCROLL_SCALE
   );
@@ -159,12 +172,24 @@ export function getActiveBeamBoltSegment(
     return null;
   }
 
-  const arenaSegment = getBeamHazardSegment(activeHazard.hazard, bounds);
   const worldTrack = getDistantWorldBeamTrack(activeHazard, bounds);
-  const boltLength = arenaSegment.length * BEAM_BOLT_LENGTH_RATIO;
-  const travelDistance = clamp(activeHazard.phaseProgress, 0, 1) * (worldTrack.length + boltLength);
-  const headDistance = clamp(travelDistance, 0, worldTrack.length);
-  const tailDistance = clamp(travelDistance - boltLength, 0, worldTrack.length);
+  const timing = getBeamHazardTiming(activeHazard.hazard, bounds);
+  const elapsedSeconds = clamp(
+    activeHazard.elapsedSeconds ?? activeHazard.phaseProgress * timing.totalSeconds,
+    0,
+    timing.totalSeconds
+  );
+  const fullyLitEndsAt = timing.endTravelSeconds + timing.fullyLitSeconds;
+  const headDistance = clamp(
+    elapsedSeconds * BEAM_END_VELOCITY_UNITS_PER_SECOND,
+    0,
+    worldTrack.length
+  );
+  const tailDistance = clamp(
+    (elapsedSeconds - fullyLitEndsAt) * BEAM_END_VELOCITY_UNITS_PER_SECOND,
+    0,
+    worldTrack.length
+  );
 
   if (headDistance - tailDistance <= 0.001) {
     return null;
@@ -176,6 +201,27 @@ export function getActiveBeamBoltSegment(
     headDistance / worldTrack.length
   );
   return clipBeamSegmentToArena(worldBolt, bounds);
+}
+
+export function getBeamHazardTiming(
+  hazard: {
+    readonly beam?: BeamHazardGeometry;
+    readonly xRatio: number;
+    readonly widthRatio: number;
+  },
+  bounds: BeamBounds = DEFAULT_BEAM_BOUNDS
+): BeamHazardTiming {
+  const arenaSegment = getBeamHazardSegment(hazard, bounds);
+  const overscan = Math.max(bounds.width, bounds.height) * BEAM_WORLD_OVERSCAN_RATIO;
+  const endTravelSeconds = roundBeamValue(
+    (arenaSegment.length + overscan * 2) / BEAM_END_VELOCITY_UNITS_PER_SECOND
+  );
+
+  return {
+    endTravelSeconds,
+    fullyLitSeconds: BEAM_FULLY_LIT_DURATION_SECONDS,
+    totalSeconds: roundBeamValue(endTravelSeconds * 2 + BEAM_FULLY_LIT_DURATION_SECONDS)
+  };
 }
 
 export function formatBeamHazardTrack(geometry: BeamHazardGeometry | undefined): string {
@@ -249,12 +295,12 @@ function getEdgePoint(
 ): { readonly x: number; readonly y: number } {
   const ratio = clamp(offsetRatio, 0.08, 0.92);
 
-  if (edge === 'top') return { x: bounds.width * ratio, y: bounds.padding };
+  if (edge === 'top') return { x: bounds.width * ratio, y: 0 };
   if (edge === 'bottom') {
-    return { x: bounds.width * ratio, y: bounds.height - bounds.padding };
+    return { x: bounds.width * ratio, y: bounds.height };
   }
-  if (edge === 'left') return { x: bounds.padding, y: bounds.height * ratio };
-  return { x: bounds.width - bounds.padding, y: bounds.height * ratio };
+  if (edge === 'left') return { x: 0, y: bounds.height * ratio };
+  return { x: bounds.width, y: bounds.height * ratio };
 }
 
 function translateBeamSegment(
@@ -277,10 +323,10 @@ function clipBeamSegmentToArena(
 ): BeamHazardSegment | null {
   const dx = segment.endX - segment.startX;
   const dy = segment.endY - segment.startY;
-  const left = bounds.padding;
-  const right = bounds.width - bounds.padding;
-  const top = bounds.padding;
-  const bottom = bounds.height - bounds.padding;
+  const left = 0;
+  const right = bounds.width;
+  const top = 0;
+  const bottom = bounds.height;
   const p = [-dx, dx, -dy, dy];
   const q = [
     segment.startX - left,
