@@ -766,6 +766,13 @@ seed + permanent save fingerprint
 - `WaveDirector.fitSpawnScheduleBeforeBossLock` performs one bounded reverse pass over the assembled schedule. Distance-gated entries preserve ordering and at least 12 units of separation where space permits, with the final arrival no later than 96 units before the live lock; time-gated entries remain unchanged.
 - This is a schedule normalization only. It does not mark targets defeated, clear the field, bypass objective accounting, alter enemy composition, or change boss state. The normal fixed-step spawn, combat, support-clear, and boss-request paths remain authoritative.
 
+### Work order 119 run-wide hazard sequence identity
+
+- `HazardZoneDirector` receives a stable operation key plus a numeric sequence ordinal derived from global sector index and operational role. Advance, detour, gate, and pursuit therefore occupy distinct slots, including optional and boarding projections; restarting the same operation deliberately reproduces its sequence.
+- Authored sector hazards are resequenced alongside director additions. Run seed, permanent-save fingerprint, operation key, and entry index select hazard-family permutations, while explicit condition/route hazard kinds remain intact. Both sources consume the same operation-specific lane function before the final feature plan is built.
+- The lane function is a run-seeded permutation over 641 positions from 0.180 through 0.820. The current fifteen-sector graph uses at most 120 sector/role ordinals and 60 combat-role ordinals, so the first hazard lane makes every current operation sequence collision-free without a mutable run registry or snapshot field.
+- Sequence selection occurs once during `GameplayScene` plan construction. Fixed-step activation, pause-safe runtime progression, collision, mine materialization, boss deferral, recovery-coast allowlists, and rendering continue to consume the resulting ordinary `SectorFeaturePlan`.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

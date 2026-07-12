@@ -113,6 +113,7 @@ import {
   createHazardZoneDirectorPlan,
   formatHazardZoneDirectorDebug,
   formatHazardZoneDirectorReadout,
+  getHazardSequenceOrdinal,
   type HazardZoneDirectorPlan
 } from '../game/HazardZoneDirector';
 import { resolveSectorHazardCollisions } from '../game/SectorHazards';
@@ -1629,6 +1630,12 @@ export class GameplayScene implements Scene {
       const hazardZoneDirector = createHazardZoneDirectorPlan({
         runSeed: this.run.seed,
         saveStateKey: this.run.unlockedIds.join('|'),
+        sequenceKey:
+          this.missionContext?.projection.stageId ?? `legacy-sector-${this.sectorIndex + 1}`,
+        sequenceOrdinal: getHazardSequenceOrdinal(
+          this.sectorIndex,
+          this.missionContext?.projection.operationalRole ?? null
+        ),
         features: pacedFeatures,
         scroll: this.getCurrentScrollPlan(),
         conditions: this.sectorConditions,

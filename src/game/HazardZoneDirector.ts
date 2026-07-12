@@ -1,4 +1,5 @@
 import type { SectorId } from '../content/sectors';
+import type { ExpeditionOperationalRole } from '../content/expeditions';
 import {
   DEFAULT_HAZARD_ZONE_PACING_CHOICES,
   HAZARD_ZONE_PACING_CHOICES,
@@ -70,6 +71,7 @@ export interface HazardZoneScheduleRuntimeState {
 export interface HazardZoneDirectorPlan {
   readonly sectorIndex: number;
   readonly sectorId: SectorId;
+  readonly sequenceOrdinal: number | null;
   readonly backgroundId: string | null;
   readonly existingHazardCount: number;
   readonly scheduledHazardCount: number;
@@ -85,6 +87,8 @@ export interface HazardZoneDirectorPlan {
 export interface HazardZoneDirectorOptions {
   readonly runSeed: string;
   readonly saveStateKey?: string;
+  readonly sequenceKey?: string;
+  readonly sequenceOrdinal?: number;
   readonly features: SectorFeaturePlan;
   readonly scroll: SectorScrollPlan;
   readonly conditions: SectorConditionPlan;
@@ -106,6 +110,22 @@ const MIN_DIRECTOR_DISTANCE = 190;
 const HAZARD_START_GAP = 120;
 const RELIEF_PADDING_RATIO = 0.02;
 const RELIEF_EXIT_RATIO = 0.04;
+const HAZARD_SEQUENCE_ROLE_SLOTS = 8;
+const HAZARD_SEQUENCE_LANE_SLOT_COUNT = 641;
+const HAZARD_SEQUENCE_ORDINAL_STEP = 173;
+const HAZARD_SEQUENCE_ENTRY_STEP = 97;
+
+const HAZARD_SEQUENCE_ROLE_SLOT: Readonly<
+  Record<ExpeditionOperationalRole, number>
+> = {
+  ingress: 0,
+  advance: 1,
+  detour: 2,
+  staging: 3,
+  gate: 4,
+  pursuit: 5,
+  extraction: 6
+};
 
 const DIRECTOR_HAZARD_LABELS: Readonly<Record<SectorHazardKind, string>> = {
   debris_lane: 'PACED DEBRIS',
@@ -131,8 +151,11 @@ export function createHazardZoneDirectorPlan(
     options.conditions.hazardDensityDelta < 0
       ? 0
       : Math.max(0, MAX_DIRECTOR_TOTAL_HAZARDS - options.features.hazards.length);
-  const existingEntries = options.features.hazards.map((hazard) =>
-    createExistingEntry(hazard, options.scroll.length)
+  const existingEntries = options.features.hazards.map((hazard, index) =>
+    createExistingEntry(
+      diversifyExistingHazard(options, hazard, index),
+      options.scroll.length
+    )
   );
   const directorEntries = createDirectorEntries(options, maxAdditional);
   const entries = [...existingEntries, ...directorEntries].sort(compareEntries);
@@ -142,6 +165,7 @@ export function createHazardZoneDirectorPlan(
   return {
     sectorIndex: options.features.sectorIndex,
     sectorId: options.features.sectorId,
+    sequenceOrdinal: options.sequenceOrdinal ?? null,
     backgroundId: options.backgroundId ?? null,
     existingHazardCount: options.features.hazards.length,
     scheduledHazardCount: directorEntries.length,
@@ -163,15 +187,23 @@ export function applyHazardZoneDirectorToFeatures(
   features: SectorFeaturePlan,
   plan: HazardZoneDirectorPlan
 ): SectorFeaturePlan {
-  const hazards = [
-    ...features.hazards,
-    ...plan.entries.filter((entry) => entry.source === 'director').map((entry) => entry.hazard)
-  ].sort((left, right) => left.startDistance - right.startDistance);
+  const hazards = plan.entries
+    .map((entry) => entry.hazard)
+    .sort((left, right) => left.startDistance - right.startDistance);
 
   return {
     ...features,
     hazards
   };
+}
+
+export function getHazardSequenceOrdinal(
+  sectorIndex: number,
+  operationalRole: ExpeditionOperationalRole | null
+): number {
+  const safeSectorIndex = Math.max(0, Math.floor(sectorIndex));
+  const roleSlot = operationalRole === null ? 7 : HAZARD_SEQUENCE_ROLE_SLOT[operationalRole];
+  return safeSectorIndex * HAZARD_SEQUENCE_ROLE_SLOTS + roleSlot;
 }
 
 export function createHazardZoneScheduleRuntimeState(
@@ -209,7 +241,8 @@ export function consumeHazardZoneScheduleEvents(
 
 export function formatHazardZoneDirectorDebug(plan: HazardZoneDirectorPlan): string {
   const deferral = plan.bossDeferralCount > 0 ? ` D${plan.bossDeferralCount}` : '';
-  return `${plan.totalHazardCount} zones +${plan.scheduledHazardCount} P${plan.pressureLevel}/R${plan.reliefWindowCount}${deferral}`;
+  const sequence = plan.sequenceOrdinal === null ? '' : ` Q${plan.sequenceOrdinal}`;
+  return `${plan.totalHazardCount} zones +${plan.scheduledHazardCount} P${plan.pressureLevel}/R${plan.reliefWindowCount}${sequence}${deferral}`;
 }
 
 export function formatHazardZoneDirectorReadout(plan: HazardZoneDirectorPlan): string {
@@ -299,6 +332,7 @@ export function summarizeHazardZoneDirectorPlan(plan: HazardZoneDirectorPlan): u
   return {
     sectorIndex: plan.sectorIndex,
     sectorId: plan.sectorId,
+    sequenceOrdinal: plan.sequenceOrdinal,
     backgroundId: plan.backgroundId,
     existingHazardCount: plan.existingHazardCount,
     scheduledHazardCount: plan.scheduledHazardCount,
@@ -478,11 +512,7 @@ function createDirectorEntry(
     telegraphDistance: window.telegraphDistance,
     startDistance: window.startDistance,
     endDistance: window.endDistance,
-    xRatio: ratioFromKey(
-      `${options.runSeed}:${options.saveStateKey ?? 'fresh'}:${id}:x`,
-      0.18,
-      0.82
-    ),
+    xRatio: getHazardSequenceLaneRatio(options, options.features.hazards.length + index, id),
     widthRatio: metrics.widthRatio,
     damage: definition.damage,
     label: DIRECTOR_HAZARD_LABELS[kind]
@@ -551,6 +581,71 @@ function createExistingEntry(
   };
 }
 
+function diversifyExistingHazard(
+  options: HazardZoneDirectorOptions,
+  hazard: SectorHazardPlan,
+  index: number
+): SectorHazardPlan {
+  if (options.sequenceKey === undefined && options.sequenceOrdinal === undefined) {
+    return hazard;
+  }
+
+  const source = applyScheduleSource(hazard);
+  const kind = source === 'sector' ? chooseExistingHazardKind(options, index) : hazard.kind;
+  const definition = getHazardZoneDefinition(kind);
+  const metrics = getHazardZoneMetrics(kind, 'sector');
+
+  return {
+    ...hazard,
+    kind,
+    xRatio: getHazardSequenceLaneRatio(options, index, hazard.id),
+    widthRatio: metrics.widthRatio,
+    damage: definition.damage,
+    label: source === 'sector' ? definition.label : hazard.label
+  };
+}
+
+function chooseExistingHazardKind(
+  options: HazardZoneDirectorOptions,
+  index: number
+): SectorHazardKind {
+  const choices =
+    HAZARD_ZONE_PACING_CHOICES[options.features.sectorId] ??
+    DEFAULT_HAZARD_ZONE_PACING_CHOICES;
+  const offset =
+    stableHash(
+      `${options.runSeed}:${options.saveStateKey ?? 'fresh'}:${options.sequenceKey ?? 'base'}:sector-hazards`
+    ) % choices.length;
+
+  return choices[(offset + index) % choices.length] ?? 'debris_lane';
+}
+
+function getHazardSequenceLaneRatio(
+  options: HazardZoneDirectorOptions,
+  entryIndex: number,
+  fallbackKey: string
+): number {
+  if (options.sequenceOrdinal === undefined) {
+    return ratioFromKey(
+      `${options.runSeed}:${options.saveStateKey ?? 'fresh'}:${options.sequenceKey ?? fallbackKey}:${fallbackKey}:x`,
+      0.18,
+      0.82
+    );
+  }
+
+  const seedOffset =
+    stableHash(`${options.runSeed}:${options.saveStateKey ?? 'fresh'}:hazard-lane-order`) %
+    HAZARD_SEQUENCE_LANE_SLOT_COUNT;
+  const ordinal = Math.max(0, Math.floor(options.sequenceOrdinal));
+  const laneSlot =
+    (seedOffset +
+      ordinal * HAZARD_SEQUENCE_ORDINAL_STEP +
+      entryIndex * HAZARD_SEQUENCE_ENTRY_STEP) %
+    HAZARD_SEQUENCE_LANE_SLOT_COUNT;
+
+  return roundSequenceRatio(0.18 + laneSlot / 1000);
+}
+
 function createScheduleEvents(
   entries: readonly HazardZoneScheduleEntry[]
 ): readonly HazardZoneScheduleEvent[] {
@@ -597,7 +692,7 @@ function chooseHazardKind(
 
   const choices =
     HAZARD_ZONE_PACING_CHOICES[options.features.sectorId] ?? DEFAULT_HAZARD_ZONE_PACING_CHOICES;
-  const key = `${options.runSeed}:${options.saveStateKey ?? 'fresh'}:${options.features.sectorId}:${candidate.pressureKind}:${index}`;
+  const key = `${options.runSeed}:${options.saveStateKey ?? 'fresh'}:${options.sequenceKey ?? 'base'}:${options.features.sectorId}:${candidate.pressureKind}:${index}`;
 
   return choices[stableHash(key) % choices.length] ?? 'debris_lane';
 }
@@ -730,6 +825,10 @@ function stableHash(value: string): number {
 
 function roundDirectorValue(value: number): number {
   return Math.round(value * 100) / 100;
+}
+
+function roundSequenceRatio(value: number): number {
+  return Math.round(value * 1000) / 1000;
 }
 
 interface SectorHazardWindow {

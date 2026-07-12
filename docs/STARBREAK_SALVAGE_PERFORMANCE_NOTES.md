@@ -76,6 +76,10 @@ Work order 118 adds one reverse pass and one final sort over the already bounded
 
 The work order 118 release build emits 847.65 kB minified/229.46 kB gzip initial JavaScript and unchanged 31.96 kB CSS/7.19 kB gzip. This is a 0.45 kB minified/0.11 kB gzip initial-JavaScript increase over work order 117. No warning threshold changed; the existing initial-chunk warning remains open.
 
+Work order 119 resequences the existing bounded hazard list once during scene setup. It adds one small map over two-to-four existing/director entries plus constant-time hashes and lane arithmetic; there is no run-history scan, rejection loop, frame-time RNG, new hazard, actor, projectile, effect, or snapshot field. Runtime hazard budgets and collision/render costs are unchanged.
+
+The work order 119 release build emits 848.84 kB minified/229.84 kB gzip initial JavaScript and unchanged 31.96 kB CSS/7.19 kB gzip. This is a 1.19 kB minified/0.38 kB gzip initial-JavaScript increase over work order 118. No warning threshold changed; the existing initial-chunk warning remains open.
+
 Phase 5 closeout: work order 050 keeps progression/sector-feedback optimization deferred until profiling requires it. `npm run check`, Playwright Chromium smoke, and production preview asset-path smoke passed locally. Manual cross-browser performance/readability checks outside Chromium remain pending.
 
 ## Phase 6 Item Catalog Budget Targets

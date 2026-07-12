@@ -7,6 +7,7 @@ import {
   createHazardZoneDirectorPlan,
   createHazardZoneScheduleRuntimeState,
   formatHazardZoneDirectorReadout,
+  getHazardSequenceOrdinal,
   summarizeHazardZoneDirectorPlan
 } from '../../src/game/HazardZoneDirector';
 import { generateRunSkeleton, type RouteKind, type RouteOption } from '../../src/game/Generation';
@@ -32,6 +33,62 @@ import {
 import { getActiveSectorHazards, validateSectorFeaturePlan } from '../../src/game/SectorFeatures';
 
 describe('HazardZoneDirector', () => {
+  it('assigns every sector and bonus-operation hazard sequence a deterministic run-wide identity', () => {
+    const fixture = getDirectedSectorAfterRoute('HAZARD-SEQUENCE-NONREUSE', 0, 'factionAmbush');
+    const roles = ['advance', 'detour', 'gate', 'pursuit'] as const;
+    const plans = Array.from({ length: 15 }, (_value, sectorIndex) =>
+      roles.map((role) =>
+        createHazardZoneDirectorPlan({
+          runSeed: fixture.run.seed,
+          saveStateKey: fixture.run.unlockedIds.join('|'),
+          sequenceKey: `sector-${sectorIndex + 1}:${role}`,
+          sequenceOrdinal: getHazardSequenceOrdinal(sectorIndex, role),
+          features: fixture.pacedFeatures,
+          scroll: fixture.scroll,
+          conditions: fixture.conditions,
+          pacing: fixture.pacing,
+          bossArena: fixture.arena,
+          backgroundId: fixture.sector.background.id
+        })
+      )
+    ).flat();
+    const fingerprints = plans.map((plan) =>
+      plan.entries
+        .map(
+          (entry) =>
+            `${entry.source}:${entry.hazard.kind}:${entry.hazard.startDistance}:${entry.hazard.xRatio}`
+        )
+        .join('|')
+    );
+    const repeated = createHazardZoneDirectorPlan({
+      runSeed: fixture.run.seed,
+      saveStateKey: fixture.run.unlockedIds.join('|'),
+      sequenceKey: 'sector-1:advance',
+      sequenceOrdinal: getHazardSequenceOrdinal(0, 'advance'),
+      features: fixture.pacedFeatures,
+      scroll: fixture.scroll,
+      conditions: fixture.conditions,
+      pacing: fixture.pacing,
+      bossArena: fixture.arena,
+      backgroundId: fixture.sector.background.id
+    });
+
+    expect(plans).toHaveLength(60);
+    expect(new Set(plans.map((plan) => plan.sequenceOrdinal)).size).toBe(60);
+    expect(new Set(fingerprints).size).toBe(60);
+    expect(summarizeHazardZoneDirectorPlan(repeated)).toEqual(
+      summarizeHazardZoneDirectorPlan(plans[0]!)
+    );
+
+    const applied = applyHazardZoneDirectorToFeatures(fixture.pacedFeatures, plans[0]!);
+    expect(applied.hazards.map((hazard) => hazard.xRatio)).toEqual(
+      plans[0]!.entries
+        .map((entry) => entry.hazard)
+        .sort((left, right) => left.startDistance - right.startDistance)
+        .map((hazard) => hazard.xRatio)
+    );
+  });
+
   it('creates deterministic known-seed schedules from run and save context', () => {
     const first = getDirectedSectorAfterRoute('LONG-SECTOR-CARAVAN', 0, 'factionAmbush');
     const second = getDirectedSectorAfterRoute('LONG-SECTOR-CARAVAN', 0, 'factionAmbush');

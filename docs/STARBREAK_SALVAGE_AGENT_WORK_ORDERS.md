@@ -2072,6 +2072,25 @@ Status: implemented. Work order 114 correctly rebuilt the mission-projected aren
 
 Verification: `npm run verify:release` passes with 92 Vitest files and 553 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. Focused wave-director, boss-arena, and mission-director coverage passes with 21 tests, including an exact 1116-unit lock regression with support entries originally at 1108u and 1260u. The production build emits 847.65 kB minified/229.46 kB gzip initial JavaScript and unchanged 31.96 kB CSS/7.19 kB gzip. The existing chunk warning remains open and no threshold changed.
 
+## Work order 119 - Run-wide hazard sequence non-reuse
+
+Goal: stop adjacent sectors and bonus operations from replaying recognizable hazard scripts.
+
+Prompt:
+
+> Ensure the same sector hazard sequence is not reused again within a run, including optional, bonus, pursuit, boarding, and required gate operations. Preserve overall seed determinism, route-authored hazard identity, boss-lock deferral, pause-safe hazard expiry, recovery-coast allowlists, mine materialization, collision/render parity, accessibility settings, and bounded runtime cost. Re-entering or restoring the same operation should reproduce its prior sequence. Add run-wide deterministic non-reuse coverage and run checks.
+
+Acceptance criteria:
+
+- Every current global sector plus advance, detour, gate, and pursuit role receives a distinct hazard-sequence identity within the run.
+- Both inherited/authored hazards and director-added hazards consume the operation identity; variation covers hazard-family ordering and lanes rather than changing labels alone.
+- Explicit route/condition hazard kinds remain intact, and all existing timing, relief, boss-deferral, mine, boarding, cooldown, runtime, collision, and rendering contracts remain valid.
+- The same run seed, permanent-save fingerprint, route, sector, and operation reproduce the same sequence without runtime randomness, history search, or save migration.
+
+Status: implemented. Hazard repetition came from mission and bonus projections retaining the parent sector's authored feature list while `HazardZoneDirector` salted only some additions from run seed, save fingerprint, sector id, and pressure kind. `GameplayScene` now supplies the current mission stage as a stable sequence key plus an ordinal derived from global sector index and operational role. `HazardZoneDirector` applies that identity to both authored sector hazards and director additions. Sector-authored hazard families use an operation-keyed deterministic permutation; explicit route/condition hazards keep their authored kind. Every hazard receives a run-seeded lane from a 641-slot permutation, so the current 60 combat-role combinations are collision-free while repeated construction of the same operation is identical. The final entries replace the inherited hazard list before ordinary feature consumers run. No mutable used-sequence registry, runtime RNG, generation fingerprint, save, or snapshot schema is added.
+
+Verification: `npm run verify:release` passes with 92 Vitest files and 554 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. Focused hazard-director, sector-feature, sector-condition, and boarding coverage passes with 34 tests. A run-wide regression materializes all 60 current sector/advance-detour-gate-pursuit combinations, proves all 60 ordinals and fingerprints are distinct, reconstructs one operation identically, and verifies the diversified entries reach the final feature plan. The production build emits 848.84 kB minified/229.84 kB gzip initial JavaScript and unchanged 31.96 kB CSS/7.19 kB gzip. The existing chunk warning remains open and no threshold changed.
+
 ## Review subagent prompt
 
 Use after a feature PR:
