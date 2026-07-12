@@ -164,6 +164,34 @@ describe('SectorFeatures', () => {
     expect(getActiveSectorHazards(singleHazardPlan, hazard.endDistance + 0.01)).toEqual([]);
   });
 
+  it('allows an active hazard to settle without activating later coast hazards', () => {
+    const activeHazard = {
+      ...getRequiredHazard(),
+      id: 'settling-hazard',
+      telegraphDistance: 80,
+      startDistance: 100,
+      endDistance: 220
+    };
+    const laterHazard = {
+      ...activeHazard,
+      id: 'suppressed-coast-hazard',
+      telegraphDistance: 120,
+      startDistance: 160,
+      endDistance: 260
+    };
+    const plan = {
+      ...createSingleHazardPlan(activeHazard),
+      hazards: [activeHazard, laterHazard]
+    };
+
+    expect(
+      getActiveSectorHazards(plan, 170, { allowedHazardIds: [activeHazard.id] }).map(
+        ({ hazard }) => hazard.id
+      )
+    ).toEqual([activeHazard.id]);
+    expect(getActiveSectorHazards(plan, 221, { allowedHazardIds: [activeHazard.id] })).toEqual([]);
+  });
+
   it('damages the player only while overlapping an active hazard lane', () => {
     const state = createCombatState(bounds, 'HAZARD-COLLISION', {
       skipEnemyWaves: true

@@ -1,6 +1,12 @@
 import { clamp } from '../core/math';
 import type { CombatState } from './CombatState';
-import type { SectorScrollPlan } from './ScrollState';
+import {
+  advanceScrollState,
+  setScrollDistance,
+  type ScrollAdvanceResult,
+  type ScrollState,
+  type SectorScrollPlan
+} from './ScrollState';
 import type { SectorExitSequenceReason } from './SectorExitSequence';
 
 export const SECTOR_COOLDOWN_DISTANCE = 180;
@@ -15,6 +21,7 @@ export interface SectorCooldownPlan {
 export interface SectorCooldownState {
   readonly plan: SectorCooldownPlan;
   readonly reason: SectorExitSequenceReason;
+  readonly settlingHazardIds: readonly string[];
 }
 
 export interface SectorCooldownPresentation {
@@ -61,9 +68,41 @@ export function applySectorCooldownToScroll(
 
 export function createSectorCooldownState(
   plan: SectorCooldownPlan,
-  reason: SectorExitSequenceReason
+  reason: SectorExitSequenceReason,
+  settlingHazardIds: readonly string[] = []
 ): SectorCooldownState | null {
-  return plan.enabled && reason === 'sectorComplete' ? { plan, reason } : null;
+  return plan.enabled && reason === 'sectorComplete'
+    ? { plan, reason, settlingHazardIds: [...new Set(settlingHazardIds)] }
+    : null;
+}
+
+export function advanceSectorCooldownScroll(
+  state: ScrollState,
+  plan: SectorCooldownPlan,
+  cooldownActive: boolean,
+  dt: number,
+  speedOverride?: number
+): ScrollAdvanceResult {
+  if (!plan.enabled) {
+    return advanceScrollState(state, dt, speedOverride);
+  }
+
+  const travelLimit = cooldownActive ? plan.exitDistance : plan.combatEndDistance;
+  const atTravelLimit = state.distance >= travelLimit;
+  const resumedSpeed = cooldownActive && state.speed === 0 ? state.plan.baseSpeed : speedOverride;
+  const result = advanceScrollState(state, dt, atTravelLimit ? 0 : resumedSpeed);
+
+  if (state.distance <= travelLimit) {
+    return result;
+  }
+
+  setScrollDistance(state, travelLimit, 0);
+  return {
+    previousDistance: result.previousDistance,
+    distance: state.distance,
+    delta: roundDistance(state.distance - result.previousDistance),
+    crossedExit: false
+  };
 }
 
 export function getSectorCooldownPresentation(
@@ -91,7 +130,7 @@ export function getSectorCooldownPresentation(
     readout: `Recovery coast ${Math.round(traveledDistance)}/${Math.round(
       state.plan.cooldownDistance
     )}u`,
-    warning: 'Hazards clear | hostile pressure retired',
+    warning: 'No new contacts | field settling naturally',
     hint:
       remainingDistance > 0
         ? `Hint Collect remaining drops; exit beacon in ${Math.ceil(remainingDistance)}u.`
@@ -99,14 +138,12 @@ export function getSectorCooldownPresentation(
   };
 }
 
-export function prepareSectorCooldownCombatState(state: CombatState): void {
-  state.enemies = [];
-  state.projectiles = [];
-  state.telegraphs = [];
-  state.environmentObjects = [];
-  state.boss = null;
+export function suppressSectorCooldownSpawns(state: CombatState): void {
   state.nextSpawnIndex = state.spawnSchedule.length;
-  state.nextLooseCurrencyIndex = state.looseCurrencyPlan?.events.length ?? 0;
+}
+
+export function isSectorFieldSettled(state: Pick<CombatState, 'enemies' | 'boss'>): boolean {
+  return state.enemies.length === 0 && state.boss === null;
 }
 
 function roundDistance(value: number): number {

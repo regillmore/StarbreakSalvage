@@ -90,6 +90,7 @@ export interface ActiveSectorHazard {
 
 export interface SectorHazardActivationOptions {
   readonly deferOverlappingFromDistance?: number | null;
+  readonly allowedHazardIds?: readonly string[];
 }
 
 interface SectorHazardActivationWindow {
@@ -194,6 +195,10 @@ export function getActiveSectorHazards(
   const active: ActiveSectorHazard[] = [];
 
   for (const hazard of plan.hazards) {
+    if (options.allowedHazardIds && !options.allowedHazardIds.includes(hazard.id)) {
+      continue;
+    }
+
     const window = getHazardActivationWindow(hazard, options.deferOverlappingFromDistance);
 
     if (distance < window.telegraphDistance || distance > window.endDistance) {

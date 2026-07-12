@@ -2,14 +2,16 @@ import { describe, expect, it } from 'vitest';
 
 import {
   SECTOR_COOLDOWN_DISTANCE,
+  advanceSectorCooldownScroll,
   applySectorCooldownToScroll,
   createSectorCooldownPlan,
   createSectorCooldownState,
   getSectorCooldownPresentation,
-  prepareSectorCooldownCombatState
+  isSectorFieldSettled,
+  suppressSectorCooldownSpawns
 } from '../../src/game/SectorCooldown';
 import type { CombatState } from '../../src/game/CombatState';
-import type { SectorScrollPlan } from '../../src/game/ScrollState';
+import { createScrollState, type SectorScrollPlan } from '../../src/game/ScrollState';
 
 describe('SectorCooldown', () => {
   it('extends a typical flight sector without moving its authored combat endpoint', () => {
@@ -49,7 +51,7 @@ describe('SectorCooldown', () => {
       progress: 0.45,
       complete: false,
       readout: 'Recovery coast 81/180u',
-      warning: 'Hazards clear | hostile pressure retired'
+      warning: 'No new contacts | field settling naturally'
     });
     expect(getSectorCooldownPresentation(state!, 9999)).toMatchObject({
       traveledDistance: 180,
@@ -80,31 +82,78 @@ describe('SectorCooldown', () => {
     expect(createSectorCooldownState(finalSector, 'victory')).toBeNull();
   });
 
-  it('retires pressure and future schedules while preserving collectible drops', () => {
+  it('holds at the combat endpoint before consuming the full coast distance', () => {
+    const authoredScroll = makeScrollPlan();
+    const plan = createSectorCooldownPlan({
+      scroll: authoredScroll,
+      sectorIndex: 0,
+      sectorCount: 3
+    });
+    const scroll = createScrollState(applySectorCooldownToScroll(authoredScroll, plan));
+
+    for (let step = 0; step < 200; step += 1) {
+      advanceSectorCooldownScroll(scroll, plan, false, 0.1, authoredScroll.baseSpeed);
+    }
+
+    expect(scroll.distance).toBe(plan.combatEndDistance);
+    expect(scroll.complete).toBe(false);
+    expect(scroll.speed).toBe(0);
+
+    advanceSectorCooldownScroll(scroll, plan, false, 1, authoredScroll.baseSpeed);
+    expect(scroll.distance).toBe(plan.combatEndDistance);
+
+    for (let step = 0; step < 20; step += 1) {
+      advanceSectorCooldownScroll(scroll, plan, true, 0.1, authoredScroll.baseSpeed);
+    }
+
+    expect(scroll.distance).toBe(plan.exitDistance);
+    expect(scroll.distance - plan.combatEndDistance).toBe(SECTOR_COOLDOWN_DISTANCE);
+    expect(scroll.complete).toBe(true);
+  });
+
+  it('suppresses future spawns while preserving the live field and drop schedules', () => {
     const pickups = [{ id: 41, kind: 'salvage', value: 3 }];
+    const enemies = [{ id: 1 }];
+    const projectiles = [{ id: 2 }];
+    const telegraphs = [{ id: 3 }];
+    const environmentObjects = [{ id: 4 }];
+    const boss = { id: 5 };
     const state = {
-      enemies: [{ id: 1 }],
-      projectiles: [{ id: 2 }],
-      telegraphs: [{ id: 3 }],
+      enemies,
+      projectiles,
+      telegraphs,
       pickups,
-      environmentObjects: [{ id: 4 }],
-      boss: { id: 5 },
+      environmentObjects,
+      boss,
       nextSpawnIndex: 0,
       spawnSchedule: [{ atSeconds: 10 }],
       nextLooseCurrencyIndex: 0,
       looseCurrencyPlan: { events: [{ id: 'late-drop' }, { id: 'later-drop' }] }
     } as unknown as CombatState;
 
-    prepareSectorCooldownCombatState(state);
+    suppressSectorCooldownSpawns(state);
 
-    expect(state.enemies).toEqual([]);
-    expect(state.projectiles).toEqual([]);
-    expect(state.telegraphs).toEqual([]);
-    expect(state.environmentObjects).toEqual([]);
-    expect(state.boss).toBeNull();
+    expect(state.enemies).toBe(enemies);
+    expect(state.projectiles).toBe(projectiles);
+    expect(state.telegraphs).toBe(telegraphs);
+    expect(state.environmentObjects).toBe(environmentObjects);
+    expect(state.boss).toBe(boss);
     expect(state.nextSpawnIndex).toBe(1);
-    expect(state.nextLooseCurrencyIndex).toBe(2);
+    expect(state.nextLooseCurrencyIndex).toBe(0);
     expect(state.pickups).toBe(pickups);
+  });
+
+  it('waits for every sector enemy, including non-objective contacts, to leave the field', () => {
+    expect(isSectorFieldSettled({ enemies: [], boss: null })).toBe(true);
+    expect(
+      isSectorFieldSettled({
+        enemies: [{ countsForObjective: false }] as CombatState['enemies'],
+        boss: null
+      })
+    ).toBe(false);
+    expect(isSectorFieldSettled({ enemies: [], boss: { id: 9 } as CombatState['boss'] })).toBe(
+      false
+    );
   });
 });
 

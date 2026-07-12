@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Added a deterministic 180-unit recovery coast after standard non-final flight sectors. The authored combat endpoint now retires hostile actors, bullets, telegraphs, pending spawns, scheduled loose currency, world obstacles, and sector hazards while preserving live pickups and player control until the existing exit sequence begins; boarding and final-victory handoffs retain their specialized timing.
+- Added a deterministic 180-unit recovery coast after standard non-final flight sectors. Scroll now holds at the authored combat endpoint until every live enemy is resolved, then preserves existing bullets, telegraphs, hazards, objects, loose-currency schedules, pickups, and player control while preventing new enemy or hazard activation through the coast and exit transition. Boarding and final-victory handoffs retain their specialized timing.
 
 - Closed Phase 11 as the first resumable deep-voyage release candidate after auditing snapshot v9 recovery/retirement, permanent-save v5 migration, multi-operation cleanup, frontier endings, carrier, boarding, faction fronts, crew arcs, fleetcraft, apex hunts, summaries, accessibility automation, browser load, and Pages paths with no severe blocker found.
 - Expanded Scenario Lab from thirteen to sixteen public fixtures with dedicated carrier-command, frontier-ending, and snapshot/duration-audit cards. Endurance now round-trips every fixture plus the finale and restores one frontier checkpoint into both extraction and breach state.

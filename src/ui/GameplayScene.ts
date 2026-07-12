@@ -120,10 +120,10 @@ import {
   getActiveSectorHazards,
   getVisibleSectorLandmarks,
   type ActiveSectorHazard,
+  type SectorHazardActivationOptions,
   type SectorFeaturePlan
 } from '../game/SectorFeatures';
 import {
-  advanceScrollState,
   createScrollState,
   formatScrollReadout,
   getScrollProgress,
@@ -139,11 +139,13 @@ import {
   type SectorExitSequenceState
 } from '../game/SectorExitSequence';
 import {
+  advanceSectorCooldownScroll,
   applySectorCooldownToScroll,
   createSectorCooldownPlan,
   createSectorCooldownState,
   getSectorCooldownPresentation,
-  prepareSectorCooldownCombatState,
+  isSectorFieldSettled,
+  suppressSectorCooldownSpawns,
   type SectorCooldownPlan,
   type SectorCooldownState
 } from '../game/SectorCooldown';
@@ -527,16 +529,23 @@ export class GameplayScene implements Scene {
     const scrollState = this.getScrollState();
     const state = this.getCombatState();
     const arenaBeforeScroll = this.updateBossArena(scrollState.distance, state);
+    const cooldownPlan = this.getSectorCooldownPlan();
 
     const setPieceTravelLocked = Boolean(
       state.setPiece &&
       !state.setPiece.completed &&
       scrollState.distance >= state.setPiece.plan.anchorDistance
     );
-    advanceScrollState(
+    advanceSectorCooldownScroll(
       scrollState,
+      cooldownPlan,
+      this.sectorCooldown !== null,
       dt,
-      setPieceTravelLocked ? 0 : (arenaBeforeScroll.speedOverride ?? undefined)
+      setPieceTravelLocked
+        ? 0
+        : this.sectorCooldown
+          ? scrollState.plan.baseSpeed
+          : (arenaBeforeScroll.speedOverride ?? undefined)
     );
 
     const arenaAfterScroll = this.updateBossArena(scrollState.distance, state);
@@ -569,14 +578,14 @@ export class GameplayScene implements Scene {
 
     this.updateBossArena(scrollState.distance, state);
 
-    if (!result && !this.sectorCooldown && this.bossArenaUpdate.phase !== 'locked') {
+    if (!result && this.bossArenaUpdate.phase !== 'locked') {
       const hazardFeedbackBefore = createCombatFeedbackSnapshot(state);
       const collisions = resolveSectorHazardCollisions(
         state,
         this.getCurrentFeatures(),
         scrollState.distance,
         this.getCombatBounds(),
-        { deferOverlappingFromDistance: this.bossHazardReleaseDistance }
+        this.getSectorHazardActivationOptions()
       );
 
       if (collisions.hitHazardIds.length > 0) {
@@ -615,10 +624,12 @@ export class GameplayScene implements Scene {
 
     const progress = getObjectiveProgress(this.getWavePlan(), state);
     const setPieceComplete = !state.setPiece || state.setPiece.completed;
-    const completionReason = setPieceComplete
-      ? ((progress.complete ? this.missionContext?.projection.completionReason : null) ??
-        getSectorCompletionReason(this.run, this.sectorIndex, progress))
-      : null;
+    const fieldSettled = isSectorFieldSettled(state);
+    const completionReason =
+      setPieceComplete && fieldSettled
+        ? ((progress.complete ? this.missionContext?.projection.completionReason : null) ??
+          getSectorCompletionReason(this.run, this.sectorIndex, progress))
+        : null;
 
     if (!this.sectorCompleted && completionReason) {
       this.sectorCompleted = true;
@@ -1138,7 +1149,6 @@ export class GameplayScene implements Scene {
     const state = this.getCombatState();
     const scroll = this.getScrollState();
 
-    this.sectorCooldown = null;
     state.scrollDistance = scroll.distance;
     clearExitPressure(state);
     this.exitSequence = createSectorExitSequence({
@@ -1160,7 +1170,12 @@ export class GameplayScene implements Scene {
       return;
     }
 
-    const cooldown = createSectorCooldownState(this.getSectorCooldownPlan(), reason);
+    const settlingHazardIds = this.getActiveHazards().map(({ hazard }) => hazard.id);
+    const cooldown = createSectorCooldownState(
+      this.getSectorCooldownPlan(),
+      reason,
+      settlingHazardIds
+    );
 
     if (!cooldown) {
       this.startSectorExitSequence(reason);
@@ -1169,7 +1184,7 @@ export class GameplayScene implements Scene {
 
     const state = this.getCombatState();
     state.scrollDistance = this.getScrollState().distance;
-    prepareSectorCooldownCombatState(state);
+    suppressSectorCooldownSpawns(state);
     this.sectorCooldown = cooldown;
     this.syncReadouts();
   }
@@ -1199,6 +1214,7 @@ export class GameplayScene implements Scene {
 
     this.exitSequence = null;
     this.exitSequenceResult = null;
+    this.sectorCooldown = null;
     this.syncExitSequenceUi();
 
     if (result.reason === 'victory') {
@@ -1691,6 +1707,7 @@ export class GameplayScene implements Scene {
     const cooldownPresentation = this.sectorCooldown
       ? getSectorCooldownPresentation(this.sectorCooldown, this.getScrollState().distance)
       : null;
+    const settlingHazard = cooldownPresentation ? this.getActiveHazards()[0] : null;
     const exitPresentation = this.exitSequence
       ? getSectorExitPresentation(this.exitSequence)
       : null;
@@ -1765,8 +1782,12 @@ export class GameplayScene implements Scene {
 
     if (cooldownPresentation) {
       this.objectiveReadout.textContent = cooldownPresentation.readout;
-      this.warningReadout.textContent = cooldownPresentation.warning;
-      this.hintReadout.textContent = cooldownPresentation.hint;
+      this.warningReadout.textContent = settlingHazard
+        ? `${settlingHazard.hazard.label} settling | no new hazards`
+        : cooldownPresentation.warning;
+      this.hintReadout.textContent = settlingHazard
+        ? `Hint ${settlingHazard.hazard.label} is clearing; collect remaining drops en route.`
+        : cooldownPresentation.hint;
     }
 
     if (exitPresentation) {
@@ -2063,13 +2084,22 @@ export class GameplayScene implements Scene {
   private getActiveHazards(
     distance = this.getScrollState().distance
   ): readonly ActiveSectorHazard[] {
-    if (this.sectorCooldown || this.bossArenaUpdate.phase === 'locked') {
+    if (this.bossArenaUpdate.phase === 'locked') {
       return [];
     }
 
-    return getActiveSectorHazards(this.getCurrentFeatures(), distance, {
-      deferOverlappingFromDistance: this.bossHazardReleaseDistance
-    });
+    return getActiveSectorHazards(
+      this.getCurrentFeatures(),
+      distance,
+      this.getSectorHazardActivationOptions()
+    );
+  }
+
+  private getSectorHazardActivationOptions(): SectorHazardActivationOptions {
+    return {
+      deferOverlappingFromDistance: this.bossHazardReleaseDistance,
+      allowedHazardIds: this.sectorCooldown?.settlingHazardIds
+    };
   }
 }
 
