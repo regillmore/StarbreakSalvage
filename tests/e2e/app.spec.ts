@@ -695,6 +695,8 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
   await expect(page.locator('.debug-overlay')).toContainText(
     'Act Act II Core Descent 5/5 escalated/elevated'
   );
+  await expect(page.locator('.debug-overlay')).toContainText(/Hazards .* A[1-4]/);
+  await expect(page.locator('.debug-overlay')).toContainText(/Features L\d+\/H0/);
 
   await page.keyboard.press('Y');
   await expect(page.getByRole('heading', { name: 'Debug Run Ended' })).toBeVisible();

@@ -1454,7 +1454,7 @@ Acceptance:
 
 Status:
 
-- Implemented in work order 072. The first hazard-zone registry covers all current hazard IDs with family, fit, telegraph/damage shape, sector/condition/pacing metrics, phase minimums, damage/cooldown, safe-lane expectations, readability colors/layers/settings variants, and `hideAndDefer` boss-arena behavior. Current feature, route-condition, pacing, renderer, validation, and tests consume or verify that registry without changing hazard density.
+- Implemented in work order 072 and revised by work order 124. The hazard-zone registry covers all current hazard IDs with family, fit, telegraph/damage shape, sector/condition/pacing metrics, phase minimums, damage/cooldown, safe-lane expectations, readability colors/layers/settings variants, and the enforced `settleBeforeLock` boss-arena policy. Current feature, route-condition, pacing, director, renderer, validation, and tests consume or verify that registry without changing hazard density.
 
 ### AW2 - Hazard behavior library
 
@@ -1478,7 +1478,7 @@ Acceptance:
 
 Status:
 
-- Implemented in work order 074. `HazardZoneDirector` now consumes sector pacing, route pressure, relief windows, formation clusters, lunar/background context, and boss arena locks to generate deterministic hazard-zone schedules. Ordered telegraph/active/clear events support frame-catchup consumption, summaries/debug show hazard pressure and deferrals, and boss-lock overlaps restart a fresh post-lock telegraph or are dropped if no fair window remains.
+- Implemented in work order 074 and superseded at the boss boundary by work order 124. `HazardZoneDirector` consumes sector pacing, route pressure, relief windows, formation clusters, lunar/background context, and boss arena locks to generate deterministic hazard-zone schedules. Ordered telegraph/active/clear events support frame-catchup consumption; the final combined plan now preserves full windows while packing every clear event before boss lock, with summaries/debug reporting approach adjustments and no post-boss deferral.
 
 ## Epic AX - Destructibles and obstacles
 
@@ -1656,7 +1656,7 @@ Acceptance:
 
 Status:
 
-- Completed in work order 088 with deterministic Act II finale variants, existing-arena boss hull and approach tuning, explicit victory/defeat/abandon copy, finale rows in run summaries, finale metadata in last-run save records, a Core Descent victory unlock hook, `Finale` debug overlay state, and an `F` debug shortcut that reaches the final-sector boss smoke while preserving boss-release hazard deferral.
+- Completed in work order 088 with deterministic Act II finale variants, existing-arena boss hull and approach tuning, explicit victory/defeat/abandon copy, finale rows in run summaries, finale metadata in last-run save records, a Core Descent victory unlock hook, `Finale` debug overlay state, and an `F` debug shortcut that reaches the final-sector boss smoke. Work order 124 now settles finale hazards before lock instead of deferring them after release.
 
 ## Epic BC - Phase 9 release and QA
 

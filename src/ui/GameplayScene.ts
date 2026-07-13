@@ -281,7 +281,6 @@ export class GameplayScene implements Scene {
   private sectorCooldown: SectorCooldownState | null = null;
   private destructionSequence: PlayerDestructionSequenceState | null = null;
   private destructionSequenceResult: CombatRunResult | null = null;
-  private bossHazardReleaseDistance: number | null = null;
   private sectorCompleted = false;
   private queuedSpecial = false;
   private queuedBomb = false;
@@ -993,7 +992,6 @@ export class GameplayScene implements Scene {
       bossAlreadySpawned: true,
       bossDefeated: false
     });
-    this.bossHazardReleaseDistance = null;
     this.sectorCompleted = false;
     this.sectorCooldown = null;
     this.debugScenario = `finale-smoke:${finale.variantId}`;
@@ -1731,8 +1729,6 @@ export class GameplayScene implements Scene {
       ...state,
       scrollDistance: distance
     });
-    const previousPhase = this.bossArenaUpdate.phase;
-
     this.bossArenaUpdate = updateBossArenaState(this.getBossArenaState(), {
       distance,
       supportComplete:
@@ -1741,10 +1737,6 @@ export class GameplayScene implements Scene {
       bossAlreadySpawned: state.bossSpawned,
       bossDefeated: state.stats.bossesDefeated > 0
     });
-
-    if (previousPhase !== 'released' && this.bossArenaUpdate.phase === 'released') {
-      this.bossHazardReleaseDistance ??= distance;
-    }
 
     return this.bossArenaUpdate;
   }
@@ -2160,7 +2152,6 @@ export class GameplayScene implements Scene {
 
   private getSectorHazardActivationOptions(includeRuntime = true): SectorHazardActivationOptions {
     return {
-      deferOverlappingFromDistance: this.bossHazardReleaseDistance,
       allowedHazardIds: this.sectorCooldown?.settlingHazardIds,
       distanceOverrides: includeRuntime
         ? this.sectorHazardRuntimeState?.effectiveDistances

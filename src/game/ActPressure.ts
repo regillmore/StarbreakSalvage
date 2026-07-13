@@ -62,7 +62,7 @@ export interface ActPressureDebugState {
     readonly scheduled: number;
     readonly total: number;
     readonly pressureLevel: number;
-    readonly bossDeferrals: number;
+    readonly bossApproachAdjustments: number;
   };
   readonly environment: {
     readonly objects: number;
@@ -264,7 +264,7 @@ export function createActPressureDebugState(
       scheduled: options.hazardZoneDirector.scheduledHazardCount,
       total: options.hazardZoneDirector.totalHazardCount,
       pressureLevel: options.hazardZoneDirector.pressureLevel,
-      bossDeferrals: options.hazardZoneDirector.bossDeferralCount
+      bossApproachAdjustments: options.hazardZoneDirector.bossApproachAdjustmentCount
     },
     environment: {
       objects: options.environmentStress.environmentObjects,

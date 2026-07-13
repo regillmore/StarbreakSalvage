@@ -2,7 +2,6 @@ import { clamp } from '../core/math';
 import { getBeamHazardTiming } from './BeamHazard';
 import {
   getActiveSectorHazards,
-  getHazardActivationWindow,
   type SectorFeaturePlan,
   type SectorHazardActivationOptions
 } from './SectorFeatures';
@@ -123,10 +122,7 @@ export function advanceSectorHazardRuntime(
       nextElapsedSeconds >= timing.totalSeconds
         ? timing.totalSeconds
         : roundRuntimeValue(nextElapsedSeconds);
-    const window = getHazardActivationWindow(
-      hazard,
-      activationOptions.deferOverlappingFromDistance
-    );
+    const window = hazard;
     state.beamElapsedSeconds[hazardId] = elapsedSeconds;
     state.effectiveDistances[hazardId] =
       elapsedSeconds >= timing.totalSeconds

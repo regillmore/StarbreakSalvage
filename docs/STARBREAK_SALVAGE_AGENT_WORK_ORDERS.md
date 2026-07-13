@@ -2170,6 +2170,26 @@ Status: implemented. `src/ui/FoundryPresentation.ts` provides pure draft-versus-
 
 Verification: `npm run verify:release` passes with 95 Vitest files and 568 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. Focused foundry, presentation, and ship-preview coverage passes with 15 tests, including valid/invalid drafts, overclock deltas, direct replacement burden, and draft weapon-pattern overrides. Desktop 1440x1000 and narrow 390x844 Chromium captures were inspected directly; the responsive attack console, meters, comparisons, sticky controls, and overflow remain usable. The production build emits 868.86 kB minified/235.63 kB gzip initial JavaScript and 41.17 kB CSS/8.85 kB gzip. The existing chunk warning remains open and no threshold changed. In-app browser control exposed no active target, so direct visual QA used local Playwright Chromium captures.
 
+## Work order 124 - Boss-approach hazard settlement
+
+Goal: let environmental pressure finish before boss combat so defeat releases into a genuinely quiet lane instead of resurrecting stale hazards.
+
+Prompt:
+
+> Fix boss arrival suppressing active hazards until defeat, observed at least in Act I sector 4. Allow hazards to complete as the boss approaches, then keep arena lock and post-fight travel free of deferred hazard surprises. Preserve full telegraph and active durations, deterministic operation-specific sequences, pause-safe runtime, finite beam timing, collision/render parity, boss and set-piece gates, recovery coast behavior, accessibility settings, and bounded performance. Remove obsolete post-release hazard reconstruction, update the hazard policy contract, add a STARBREAK-SMOKE sector-4 regression, and run checks.
+
+Acceptance criteria:
+
+- Every authored, route-conditioned, and director-added hazard in a boss operation retains its full warning and active span but clears before the live arena lock.
+- Late windows are deterministically packed into the approach with stable ordering and bounded separation; debug/read models identify approach adjustments rather than post-boss deferrals.
+- Arena lock and boss combat have no active hazards, and boss release cannot reconstruct, reactivate, or reschedule a completed window.
+- STARBREAK-SMOKE Act I sector 4 contains environmental pressure during its approach but reports no active hazard at lock or release.
+- Pause-safe expiry, two-second finite beams, mines, world anchors, allegiance-blind damage, operation non-reuse, set pieces, cooldowns, accessibility modes, saves, and snapshots remain compatible.
+
+Status: implemented. The hazard registry policy is now `settleBeforeLock`, enforced by content validation for every shipped hazard family. After operation-specific family/lane diversification, `HazardZoneDirector` combines authored, condition, and director entries and performs one deterministic latest-to-earliest approach pass. Each adjusted entry preserves its telegraph lead and active span, keeps a 12-unit gap from the next window, and clears at least 18 units before the live arena lock; entries that cannot retain a complete window are omitted rather than moved after the boss. Schedule events, summaries, act-pressure telemetry, and debug labels report boss-approach adjustments. `GameplayScene` no longer records a boss-release distance, and `SectorFeatures`/`SectorHazardRuntime` no longer expose the obsolete release-deferral activation path. Locked suppression remains a readability safeguard but has no scheduled hazard left to freeze or resurrect. No runtime RNG, combat entity, save field, snapshot field, or content fingerprint changes.
+
+Verification: `npm run verify:release` passes with 95 Vitest files and 569 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. Focused hazard-director, sector-feature/runtime, content-validation, act-pressure, and finale coverage passes with 77 tests. Regression pins STARBREAK-SMOKE Act I sector 4 to retain a hazard in the approach while every window ends before lock and both lock/release active lists remain empty. The Chromium finale path confirms the new approach-adjustment readout and zero active hazards at arena lock under narrow high-contrast/reduced-motion/performance settings. The production build emits 868.72 kB minified/235.53 kB gzip initial JavaScript and unchanged 41.17 kB CSS/8.85 kB gzip. The existing chunk warning remains open and no threshold changed. In-app browser control exposed no active target, so local Playwright Chromium supplied the browser evidence.
+
 ## Review subagent prompt
 
 Use after a feature PR:

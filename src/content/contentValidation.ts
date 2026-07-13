@@ -2306,8 +2306,8 @@ function validateHazardZoneDefinitions(
       errors.push(`${owner} has invalid boss arena policy: ${String(hazard.bossArenaPolicy)}`);
     }
 
-    if (hazard.bossArenaPolicy !== 'hideAndDefer') {
-      errors.push(`${owner} must hide and defer during locked boss arenas`);
+    if (hazard.bossArenaPolicy !== 'settleBeforeLock') {
+      errors.push(`${owner} must settle before locked boss arenas`);
     }
 
     if (!registries.renderLayers.has(hazard.readability.renderLayer)) {

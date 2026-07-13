@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Removed post-boss hazard debt. Every authored, route-conditioned, and director-added hazard in a boss operation is now deterministically packed into the approach with its full warning and active span preserved, then cleared before arena lock. Boss defeat no longer reschedules hidden hazards, leaving the release lane naturally quiet.
+
 - Reimagined the salvage foundry as Hardpoint Control: a draft-aware attack simulation uses the selected ship and weapon pattern, a compact mini-HUD compares output against the committed loadout, visual meters replace raw resource prose, cargo install controls show direct replacement deltas, and hardpoint/component cards use scannable stat and modifier chips. Responsive, high-contrast, reduced-motion, and performance-mode treatments remain first-class.
 
 - Fixed the final sector-departure handoff frame. Completing an exit now latches the terminal offscreen, fully transparent ship presentation until the route or summary scene owns rendering, preventing the ordinary centered combat ship from flashing back beneath the closing transition.

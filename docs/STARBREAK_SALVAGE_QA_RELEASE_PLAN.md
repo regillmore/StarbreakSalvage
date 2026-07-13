@@ -144,14 +144,14 @@ Phase 7 enriches enemy behavior and longer-sector pacing. Add tests closest to t
 Phase 8 enriches environmental pressure and loose salvage flow. Add tests closest to the risk:
 
 - hazard-zone metadata validation for family, sector/faction fit, telegraph timing, active damage shape, damage cooldown, safe-lane expectation, accessibility metadata, and boss-arena suppression behavior;
-- richer hazard behavior tests for phase timing, warning lead, active collision windows, damage cooldowns, frame-catchup order, cleanup, reduced-motion/high-contrast/performance render state, and post-boss release deferral;
+- richer hazard behavior tests for phase timing, warning lead, active collision windows, damage cooldowns, frame-catchup order, cleanup, reduced-motion/high-contrast/performance render state, and pre-lock boss-approach settlement;
 - hazard director snapshots for route pressure, relief-window spacing, lunar/background context, formation-cluster interaction, boss approach/release state, and known-seed schedule reproducibility;
 - destructible and obstacle schema validation for collision shape, hull, damage interactions, objective policy, reward policy, chain behavior, placement constraints, rendering cues, audio/VFX cue names, and debug labels;
 - destructible runtime tests for weapon/special/bomb/hazard damage, deterministic rewards, bounded chain reactions, item-hook dispatch, cleanup, and objective safety;
 - obstacle placement tests for safe lanes, player spawn and exit corridors, boss approach locks, hazard overlays, enemy spawn lanes, frame-catchup cleanup, fixed-world placement, and viewport parity;
 - loose currency tests for scatter determinism, pickup magnet behavior, collection radius, lifetime, cap enforcement, value accounting, upgrade progress, and fresh/progressed save paths;
 - browser smoke for at least one environmental stress path under debug, high contrast, reduced motion, performance mode, and narrow viewport where practical; work order 079 adds a Playwright path that launches `ENVIRONMENT-STRESS-SMOKE`, triggers the `H` environmental stress pocket, and verifies hazard, environment object, loose currency, and budget readouts;
-- regression coverage that keeps item-storm, enemy-rich, dense-combat, forced-exit, forced-destruction, boss-release hazard, and quiet long-scroll paths green while environmental density grows.
+- regression coverage that keeps item-storm, enemy-rich, dense-combat, forced-exit, forced-destruction, boss-boundary hazard settlement, and quiet long-scroll paths green while environmental density grows.
 - release-hardening regressions for scroll-world environmental presentation; work order 080 adds unit coverage proving environment object collision/presentation derives from scroll distance, planned loose currency scrolls in before its anchor, and dropped enemy loot continues moving with the sector.
 
 ## Phase 9 QA focus
@@ -166,7 +166,7 @@ Phase 9 expands the game loop into a deterministic second act. Add tests closest
 - reward, shop, vault, elite, boss, repair, reroll, loose-currency, and banked-scrap economy snapshots under fresh and progressed saves;
 - second-act boss/finale tests for deterministic selection, arena release fairness, victory/defeat/abandon summaries, save records, and unlock hooks;
 - browser smoke for reaching the inter-act junction, entering Act II, inspecting Act II pressure, forcing the finale, and returning from the two-act summary where practical;
-- regression coverage that keeps item-storm, enemy-rich, environmental-stress, dense-combat, forced-exit, forced-destruction, boss-release hazard, and quiet long-scroll paths green while the run length grows.
+- regression coverage that keeps item-storm, enemy-rich, environmental-stress, dense-combat, forced-exit, forced-destruction, boss-boundary hazard settlement, and quiet long-scroll paths green while the run length grows.
 
 Current Phase 9 coverage:
 
@@ -310,7 +310,7 @@ Phase 9 should add these seed/save fixtures:
 - `ACT2-PRESSURE-GAUNTLET` - Act II combined enemy/environment/item-pressure budget fixture.
 - `ACT2-ECONOMY-SNAPSHOT` - Act II reward, shop, vault, junction, summary, and save-accounting fixture under fresh and progressed saves; first covered by work order 087 through `tests/unit/actEconomy.test.ts`.
 - `ACT2-FINALE-SMOKE` - browser debug path for Act II junction, entry, enemy-rich pressure, finale, and two-act summary; first covered by work order 089 Playwright smoke.
-- `ACT2-FINALE-SMOKE` - deterministic second-act boss/finale, victory, summary, save, and boss-release hazard fairness fixture; first covered in work order 088 by `tests/unit/secondActFinale.test.ts`.
+- `ACT2-FINALE-SMOKE` - deterministic second-act boss/finale, victory, summary, save, and pre-lock hazard settlement fixture; first covered in work order 088 and updated by work order 124.
 
 Phase 10 should add these seed/save/decision fixtures:
 
@@ -393,7 +393,7 @@ Phase 6 performance checks should include item hook dispatch cost, proc budget l
 
 Phase 7 performance checks should include active role counts, upgraded variant counts, formation membership counts, long-sector wave spacing, projectile/telegraph budgets under role-specific attacks, and whether longer sectors create sustained CPU/render pressure beyond existing dense and item-storm pockets.
 
-Work order 070 closes Phase 7 with release-hardening evidence and a boss-release hazard regression. Locked boss arenas still suppress hazards for readability, but overlapping hidden hazard windows now restart their telegraph lead when the arena releases so damage cannot occur on the boss-death handoff.
+Work order 070 originally closed Phase 7 with a safe post-release warning. Work order 124 replaces that behavior: final boss-operation schedules preserve each warning/active span while settling all hazards before arena lock, and release-time hazard reconstruction is removed.
 
 Phase 8 performance checks should include active hazard-zone count, hazard family label count, destructible/obstacle count, loose currency count/value, pickup attraction cost, chain-reaction caps, environmental stress budgets, and whether richer environmental pressure hides bullets or extends per-frame collision scans beyond current dense/enemy-rich pockets.
 

@@ -23,7 +23,7 @@ Phase 3 adds continuous vertical motion, procedural backgrounds, landmarks, and 
 - Sector completion now waits for exit distance plus required combat gates, so smoke and playtest timing should budget for full-sector travel instead of quick wave clears.
 - Sector feature plans are generated once per sector and currently add 3 landmarks plus 2-3 sparse hazard windows. Hazard telegraph and active phases are distance-based and should follow the same indexed-marker discipline as waves if they become denser later.
 - Hazard rendering uses low-alpha fills/pattern strokes below pickups, enemies, projectiles, and the player. Do not raise hazard opacity or paint it above bullets without a contrast/readability pass.
-- Boss arena plans are generated once per boss-gated sector. Arena approach slows scroll, locked arenas hold distance at explicit zero speed, and active hazard rendering/collision is suppressed during the locked boss fight to keep boss bullets readable. If a hazard window overlaps that hidden lock, gameplay defers it on release so the telegraph lead restarts after boss defeat before collision damage is enabled.
+- Boss arena plans are generated once per boss-gated sector. Arena approach slows scroll, locked arenas hold distance at explicit zero speed, and the final hazard schedule preserves full telegraph/active spans while fitting every clear event before lock. Boss fights and their release lanes therefore contain no hidden or deferred hazard work.
 - Sector condition plans are derived once per gameplay scene from route outcomes plus challenge/unlock flags. They transform existing scroll, feature, and boss arena plans instead of generating per-frame terrain, so route-conditioned speed, distance, hazards, landmarks, and approach lengths should stay allocation-light and deterministic.
 - Velocity presentation currently uses low-alpha deterministic canvas primitives: background streaks, frame rails, engine wake, pickup trails, impact streaks, and projectile outlines. Reduced motion disables the scrolling streak/parallax cues, performance mode lowers cue density, and high-contrast bullets reduce moving-background intensity while adding outlines.
 - Avoid per-frame allocation in background rendering; cache reusable primitives or draw plans when profiling shows pressure.
@@ -132,7 +132,7 @@ Phase 7 expands enemy behavior, variants, formations, and sector length. Keep th
 - Work order 067 keeps formation integration on existing paths: route/encounter/faction weighting is generation-time only, formation instance IDs are spawn metadata, clear-bonus salvage is awarded during normal defeat pickup creation, and offscreen despawns use the same objective accounting path without drops or charge. Cleanup still scans only the active enemy list once per tick.
 - Work order 068 adds a generation-time sector pacing layer after route-conditioned modifiers. It modestly lengthens selected route-pressure, lunar, boss, and late sectors, then spreads waves with explicit distance ratios, inserts at most three landmark beats and two extra hazards under the existing feature budget, and marks one formation-cluster wave instead of raising sustained enemy density.
 - Work order 069 adds a debug-only enemy-rich pocket with 10 enemies, 36 enemy projectiles, 4 telegraphs, and 2 effects, staying under the 80-entity alpha field budget while exercising all current role families, variant badges, and multiple formation labels. The overlay now reports enemy projectile and telegraph counts against stress budgets.
-- Work order 070 keeps release hardening focused on blockers: the boss-release hazard handoff now evaluates overlapping hidden hazards against a deferred warning window, preserving existing generated hazard plans without adding per-frame terrain mutation or extra entity pressure.
+- Work order 070 originally deferred lock overlaps after the boss; work order 124 supersedes that handoff by normalizing the final combined schedule before lock, eliminating post-fight hazard work without per-frame terrain mutation or extra entity pressure.
 - Enemy role metadata should be data-driven and validated. Behavior systems should read explicit role/movement/attack families rather than infer from display names or faction strings.
 - Movement profiles should stay fixed-step and clamped to the 640x720 combat world. Retreating, escorting, hovering, and lane-holding roles must have cleanup or timeout behavior so objectives cannot stall.
 - Attack-role differentiation should prefer cadence, angle, aim style, telegraph timing, and position pressure over simply adding more bullets.
@@ -170,7 +170,7 @@ Phase 8 expands the environmental layer. Keep the first richer pass visible, det
 - Performance mode may reduce hazard animation detail, destructible debris, pickup trails, and loose currency sparkle density, but must not change generated timing, collision shapes, or economy values.
 - Reduced motion should lower environmental animation and travel streaks while preserving telegraph clarity.
 - High-contrast mode should outline bullets and keep hazard/destructible/currency cues distinct from projectile warnings.
-- The boss-release hazard fairness rule from work order 070 remains a performance/readability requirement: hazards hidden during arena lock must restart a post-release warning before damage.
+- The work order 124 boss-approach settlement rule is the current performance/readability requirement: hazards keep their warning and active spans, clear before lock, and cannot restart after release.
 
 ## Phase 9 Second-Act Budget Targets
 
@@ -311,7 +311,7 @@ The debug overlay total entity count includes player, enemies, boss, bullets, pi
 - Formations now share objective accounting for simultaneous kills, secondary item effects, body collisions, and despawns; future break/retreat behavior can still reintroduce target desyncs if it bypasses that shared path.
 - Longer sectors can become exhausting if pressure lacks relief windows. Favor mid-sector punctuation, landmarks, and formation beats over continuous enemy density.
 - Enemy-rich sectors can interact with the Phase 6 item catalog in surprising ways. Keep item-storm, dense-combat, and formation stress paths separate and then test combined pressure intentionally.
-- Boss-gated sectors suppress hazards during arena locks; future hazard density increases should keep the work order 070 deferred-release contract so a hidden warning cannot become damaging on the same moment the boss dies.
+- Boss-gated sectors finish hazards before arena locks; future hazard density increases must retain enough approach room for full warning/active spans rather than moving pressure after the boss.
 
 ## Phase 8 Playtest Risks
 
@@ -329,7 +329,12 @@ The debug overlay total entity count includes player, enemies, boss, bullets, pi
 - The inter-act junction can confuse resource accounting if repair, shop, reward, and risk choices apply outside the same deterministic transition path.
 - Act II rewards and loose currency can inflate banked scrap or shop power. Work order 087 now tracks Act I and Act II income separately in summaries and snapshots; keep using those before increasing drop rates.
 - Act II pressure can hide bullets if enemy formations, hazards, obstacles, and item effects peak together. Work order 089 adds browser smoke for Act II pressure under high contrast, reduced motion, performance mode, and a narrow viewport; keep using combined budget telemetry before raising caps.
-- Second-act boss arenas must preserve the boss-release hazard fairness rule so hidden warnings cannot become instant damage after a finale transition.
+- Second-act boss arenas must preserve the pre-lock settlement invariant so finale transitions and post-boss lanes remain hazard-free.
+
+Work order 124 adds one bounded reverse pass over at most four final hazard entries during scene-plan construction. The pass preserves each telegraph and active span, applies a 12-unit inter-window gap and 18-unit lock clearance, and may drop an entry only if the complete window cannot fit before distance zero. It removes runtime release-window reconstruction and adds no frame-time search, hazard, actor, effect, timer, RNG call, or persisted field.
+
+The work order 124 release build emits 868.72 kB minified/235.53 kB gzip initial JavaScript and unchanged 41.17 kB CSS/8.85 kB gzip. This is a 0.14 kB minified/0.10 kB gzip decrease from work order 123 because the former runtime deferral path was removed. No warning threshold changed; the existing initial-chunk warning remains open.
+
 - The first finale pass adds hull/approach pressure and summary/unlock hooks, not new projectile families; remaining work should keep profiling the `F` finale smoke alongside enemy-rich, environmental stress, and the `Y` two-act summary before adding denser final-phase attacks.
 
 ## Phase 10 Playtest Risks

@@ -99,16 +99,9 @@ export interface ActiveSectorHazard {
 }
 
 export interface SectorHazardActivationOptions {
-  readonly deferOverlappingFromDistance?: number | null;
   readonly allowedHazardIds?: readonly string[];
   readonly distanceOverrides?: Readonly<Record<string, number>>;
   readonly elapsedSecondsOverrides?: Readonly<Record<string, number>>;
-}
-
-export interface SectorHazardActivationWindow {
-  readonly telegraphDistance: number;
-  readonly startDistance: number;
-  readonly endDistance: number;
 }
 
 export interface SectorHazardCollisionRect {
@@ -212,7 +205,7 @@ export function getActiveSectorHazards(
       continue;
     }
 
-    const window = getHazardActivationWindow(hazard, options.deferOverlappingFromDistance);
+    const window = hazard;
     const hazardDistance = options.distanceOverrides?.[hazard.id] ?? distance;
 
     if (hazardDistance < window.telegraphDistance || hazardDistance > window.endDistance) {
@@ -245,32 +238,6 @@ export function getActiveSectorHazards(
   }
 
   return active;
-}
-
-export function getHazardActivationWindow(
-  hazard: SectorHazardPlan,
-  deferOverlappingFromDistance?: number | null
-): SectorHazardActivationWindow {
-  if (
-    typeof deferOverlappingFromDistance !== 'number' ||
-    !Number.isFinite(deferOverlappingFromDistance) ||
-    hazard.telegraphDistance >= deferOverlappingFromDistance ||
-    hazard.endDistance <= deferOverlappingFromDistance
-  ) {
-    return hazard;
-  }
-
-  const telegraphLead = Math.max(1, hazard.startDistance - hazard.telegraphDistance);
-  const activeSpan = Math.max(1, hazard.endDistance - hazard.startDistance);
-  const telegraphDistance = roundFeatureValue(deferOverlappingFromDistance);
-  const startDistance = roundFeatureValue(telegraphDistance + telegraphLead);
-  const endDistance = roundFeatureValue(startDistance + activeSpan);
-
-  return {
-    telegraphDistance,
-    startDistance,
-    endDistance
-  };
 }
 
 export function getSectorHazardCollisionRect(

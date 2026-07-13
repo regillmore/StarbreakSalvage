@@ -54,7 +54,7 @@ export interface HazardZoneScheduleEntry {
   readonly source: HazardZoneDirectorEntrySource;
   readonly pressureKind: HazardZoneDirectorPressureKind;
   readonly distanceRatio: number;
-  readonly deferredForBossLock: boolean;
+  readonly adjustedForBossApproach: boolean;
 }
 
 export interface HazardZoneScheduleEvent {
@@ -79,7 +79,7 @@ export interface HazardZoneDirectorPlan {
   readonly totalHazardCount: number;
   readonly pressureLevel: number;
   readonly reliefWindowCount: number;
-  readonly bossDeferralCount: number;
+  readonly bossApproachAdjustmentCount: number;
   readonly debugLabel: string;
   readonly entries: readonly HazardZoneScheduleEntry[];
   readonly events: readonly HazardZoneScheduleEvent[];
@@ -115,6 +115,8 @@ const HAZARD_SEQUENCE_ROLE_SLOTS = 8;
 const HAZARD_SEQUENCE_LANE_SLOT_COUNT = 641;
 const HAZARD_SEQUENCE_ORDINAL_STEP = 173;
 const HAZARD_SEQUENCE_ENTRY_STEP = 97;
+const BOSS_APPROACH_CLEARANCE = 18;
+const BOSS_APPROACH_HAZARD_GAP = 12;
 
 const HAZARD_SEQUENCE_ROLE_SLOT: Readonly<Record<ExpeditionOperationalRole, number>> = {
   ingress: 0,
@@ -153,26 +155,33 @@ export function createHazardZoneDirectorPlan(
   const existingEntries = options.features.hazards.map((hazard, index) =>
     createExistingEntry(diversifyExistingHazard(options, hazard, index), options.scroll.length)
   );
-  const directorEntries = createDirectorEntries(options, maxAdditional);
-  const entries = [...existingEntries, ...directorEntries].sort(compareEntries);
+  const rawDirectorEntries = createDirectorEntries(options, maxAdditional);
+  const entries = settleHazardsBeforeBossLock(
+    [...existingEntries, ...rawDirectorEntries],
+    options.bossArena,
+    options.scroll.length
+  ).sort(compareEntries);
+  const directorEntries = entries.filter((entry) => entry.source === 'director');
   const pressureLevel = calculatePressureLevel(options);
-  const bossDeferralCount = directorEntries.filter((entry) => entry.deferredForBossLock).length;
+  const bossApproachAdjustmentCount = entries.filter(
+    (entry) => entry.adjustedForBossApproach
+  ).length;
 
   return {
     sectorIndex: options.features.sectorIndex,
     sectorId: options.features.sectorId,
     sequenceOrdinal: options.sequenceOrdinal ?? null,
     backgroundId: options.backgroundId ?? null,
-    existingHazardCount: options.features.hazards.length,
+    existingHazardCount: entries.length - directorEntries.length,
     scheduledHazardCount: directorEntries.length,
     totalHazardCount: entries.length,
     pressureLevel,
     reliefWindowCount: options.pacing.reliefWindows.length,
-    bossDeferralCount,
+    bossApproachAdjustmentCount,
     debugLabel: createDebugLabel(
       pressureLevel,
       options.pacing.reliefWindows.length,
-      bossDeferralCount
+      bossApproachAdjustmentCount
     ),
     entries,
     events: createScheduleEvents(entries)
@@ -236,7 +245,8 @@ export function consumeHazardZoneScheduleEvents(
 }
 
 export function formatHazardZoneDirectorDebug(plan: HazardZoneDirectorPlan): string {
-  const deferral = plan.bossDeferralCount > 0 ? ` D${plan.bossDeferralCount}` : '';
+  const deferral =
+    plan.bossApproachAdjustmentCount > 0 ? ` A${plan.bossApproachAdjustmentCount}` : '';
   const sequence = plan.sequenceOrdinal === null ? '' : ` Q${plan.sequenceOrdinal}`;
   const beam = plan.entries.find((entry) => entry.hazard.kind === 'warning_beam')?.hazard.beam;
   const beamTrack = beam ? ` B[${formatBeamHazardTrack(beam)}]` : '';
@@ -245,7 +255,9 @@ export function formatHazardZoneDirectorDebug(plan: HazardZoneDirectorPlan): str
 
 export function formatHazardZoneDirectorReadout(plan: HazardZoneDirectorPlan): string {
   const deferral =
-    plan.bossDeferralCount > 0 ? `, ${plan.bossDeferralCount} boss-safe deferral` : '';
+    plan.bossApproachAdjustmentCount > 0
+      ? `, ${plan.bossApproachAdjustmentCount} boss-approach adjustment`
+      : '';
 
   return `Hazard zones: ${plan.totalHazardCount} scheduled (+${plan.scheduledHazardCount} paced, pressure ${plan.pressureLevel}, ${plan.reliefWindowCount} relief${deferral}).`;
 }
@@ -263,7 +275,10 @@ export function formatHazardZoneDirectorSummary(plan: HazardZoneDirectorPlan): s
     )
   ];
   const familyText = families.length > 0 ? ` ${families.join('/')}` : '';
-  const bossText = plan.bossDeferralCount > 0 ? `, ${plan.bossDeferralCount} boss deferral` : '';
+  const bossText =
+    plan.bossApproachAdjustmentCount > 0
+      ? `, ${plan.bossApproachAdjustmentCount} boss-approach adjustment`
+      : '';
 
   return `S${plan.sectorIndex + 1} hazards: +${plan.scheduledHazardCount}${familyText}, pressure ${plan.pressureLevel}, ${plan.reliefWindowCount} relief${bossText}`;
 }
@@ -337,7 +352,7 @@ export function summarizeHazardZoneDirectorPlan(plan: HazardZoneDirectorPlan): u
     totalHazardCount: plan.totalHazardCount,
     pressureLevel: plan.pressureLevel,
     reliefWindowCount: plan.reliefWindowCount,
-    bossDeferralCount: plan.bossDeferralCount,
+    bossApproachAdjustmentCount: plan.bossApproachAdjustmentCount,
     entries: plan.entries.map((entry) => ({
       source: entry.source,
       pressureKind: entry.pressureKind,
@@ -348,7 +363,7 @@ export function summarizeHazardZoneDirectorPlan(plan: HazardZoneDirectorPlan): u
       endDistance: entry.hazard.endDistance,
       xRatio: entry.hazard.xRatio,
       beam: entry.hazard.beam ?? null,
-      deferredForBossLock: entry.deferredForBossLock
+      adjustedForBossApproach: entry.adjustedForBossApproach
     }))
   };
 }
@@ -483,26 +498,7 @@ function createDirectorEntry(
     return null;
   }
 
-  const bossLockDistance = options.bossArena?.lockDistance ?? null;
-  const requiresBossDeferral =
-    bossLockDistance !== null && overlapsBossLock(baseWindow, bossLockDistance);
-  let deferredWindow: SectorHazardWindow | null = null;
-
-  if (requiresBossDeferral && bossLockDistance !== null) {
-    deferredWindow = createDeferredBossWindow(
-      options.scroll.length,
-      bossLockDistance,
-      metrics.telegraphLead,
-      metrics.activeSpan,
-      definition.phase.minActiveSpan
-    );
-  }
-
-  if (requiresBossDeferral && !deferredWindow) {
-    return null;
-  }
-
-  const window = deferredWindow ?? baseWindow;
+  const window = baseWindow;
 
   const pressureKind = reliefAdjusted.adjusted ? 'reliefAdjusted' : candidate.pressureKind;
   const hazard: SectorHazardPlan = {
@@ -524,7 +520,7 @@ function createDirectorEntry(
     source: 'director',
     pressureKind,
     distanceRatio: roundDirectorValue(hazard.startDistance / options.scroll.length),
-    deferredForBossLock: deferredWindow !== null
+    adjustedForBossApproach: false
   };
 }
 
@@ -550,15 +546,50 @@ function createWindow(
   };
 }
 
-function createDeferredBossWindow(
-  scrollLength: number,
-  lockDistance: number,
-  telegraphLead: number,
-  activeSpan: number,
-  minActiveSpan: number
-): SectorHazardWindow | null {
-  const startDistance = roundDirectorValue(lockDistance + telegraphLead);
-  return createWindow(scrollLength, startDistance, telegraphLead, activeSpan, minActiveSpan);
+function settleHazardsBeforeBossLock(
+  entries: readonly HazardZoneScheduleEntry[],
+  bossArena: BossArenaPlan | null,
+  scrollLength: number
+): HazardZoneScheduleEntry[] {
+  if (!bossArena) return [...entries];
+
+  let latestEnd = roundDirectorValue(bossArena.lockDistance - BOSS_APPROACH_CLEARANCE);
+  const settled: HazardZoneScheduleEntry[] = [];
+
+  for (const entry of [...entries].sort(
+    (left, right) => right.hazard.startDistance - left.hazard.startDistance
+  )) {
+    const hazard = entry.hazard;
+    const telegraphLead = Math.max(1, hazard.startDistance - hazard.telegraphDistance);
+    const activeSpan = Math.max(1, hazard.endDistance - hazard.startDistance);
+    const endDistance = Math.min(hazard.endDistance, latestEnd);
+    const startDistance = roundDirectorValue(endDistance - activeSpan);
+    const telegraphDistance = roundDirectorValue(startDistance - telegraphLead);
+
+    if (telegraphDistance < 0 || endDistance <= 0) continue;
+
+    const adjusted = endDistance < hazard.endDistance;
+    const settledHazard = adjusted
+      ? {
+          ...hazard,
+          telegraphDistance,
+          startDistance,
+          endDistance: roundDirectorValue(endDistance)
+        }
+      : hazard;
+
+    settled.push({
+      ...entry,
+      hazard: settledHazard,
+      distanceRatio: roundDirectorValue(settledHazard.startDistance / scrollLength),
+      adjustedForBossApproach: adjusted
+    });
+    latestEnd = roundDirectorValue(
+      Math.min(latestEnd, settledHazard.telegraphDistance - BOSS_APPROACH_HAZARD_GAP)
+    );
+  }
+
+  return settled;
 }
 
 function applyScheduleSource(hazard: SectorHazardPlan): HazardZoneDirectorEntrySource {
@@ -577,7 +608,7 @@ function createExistingEntry(
     source,
     pressureKind: source === 'condition' ? 'routePressure' : 'sector',
     distanceRatio: roundDirectorValue(hazard.startDistance / scrollLength),
-    deferredForBossLock: false
+    adjustedForBossApproach: false
   };
 }
 
@@ -769,10 +800,6 @@ function separateFromOccupiedStarts(
   return null;
 }
 
-function overlapsBossLock(window: SectorHazardWindow, lockDistance: number): boolean {
-  return window.telegraphDistance < lockDistance && window.endDistance > lockDistance;
-}
-
 function calculatePressureLevel(options: HazardZoneDirectorOptions): number {
   const routePressure = Math.max(0, options.conditions.hazardDensityDelta);
   const pacingPressure = options.pacing.arcKind === 'standard' ? 0 : 1;
@@ -827,9 +854,9 @@ function compareEntries(left: HazardZoneScheduleEntry, right: HazardZoneSchedule
 function createDebugLabel(
   pressureLevel: number,
   reliefWindowCount: number,
-  bossDeferralCount: number
+  bossApproachAdjustmentCount: number
 ): string {
-  const boss = bossDeferralCount > 0 ? ` D${bossDeferralCount}` : '';
+  const boss = bossApproachAdjustmentCount > 0 ? ` A${bossApproachAdjustmentCount}` : '';
   return `HZ P${pressureLevel} R${reliefWindowCount}${boss}`;
 }
 

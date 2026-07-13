@@ -300,7 +300,7 @@ src/game/BackgroundPlan.ts
 - Wave and hazard schedules should support distance markers as well as time gates.
 - Spawn logic must process all crossed distance markers in order when frame time catches up.
 - Tests should prove no marker is skipped or duplicated under large fixed-step batches.
-- Work order 112 adds transient per-hazard effective distance for visible gameplay scroll holds. Only hazards that already entered telegraph or active state advance at nominal sector speed; future hazards remain on real distance, zero-time/menu pauses remain frozen, and boss hide-and-defer clears overrides before its fresh release telegraph.
+- Work order 112 adds transient per-hazard effective distance for visible gameplay scroll holds. Only hazards that already entered telegraph or active state advance at nominal sector speed; future hazards remain on real distance and zero-time/menu pauses remain frozen. Work order 124 guarantees boss-operation windows finish before arena lock, so locked suspension no longer creates a release-time hazard.
 - Boss arena transitions should be explicit states: travel, approach, arena lock/slow, defeated/exit. Hazards hidden during a locked arena must not become damaging on the release frame; if a distance-tied hazard window overlaps the lock, restart its telegraph lead from the release distance before collision damage can apply.
 
 ### Route-conditioned sector state
@@ -401,7 +401,7 @@ src/game/EnemyRolePressure.ts
 - Longer-sector pacing should extend generated sector conditions with pressure bands, relief windows, formation clusters, landmark beats, and boss approach changes.
 - The first implementation lives in `src/game/SectorPacing.ts`: gameplay derives route-conditioned scroll/features/arena first, then applies the pacing layer for final scroll length, encounter-pacing ratios, sparse feature beats, and boss approach scaling. Keep this layer deterministic and avoid mutating the base run skeleton.
 - Avoid per-frame random decisions. Generate the schedule once, then let fixed-step simulation consume it.
-- Gameplay may evaluate generated sector hazards through a transient boss-release deferral when an arena lock hid their warning. That deferral belongs to runtime hazard activation state, not run generation, so seeded feature plans and summaries remain stable.
+- Final boss-operation feature plans must contain no hazard window at or beyond the arena lock. `HazardZoneDirector` owns this deterministic generation-time normalization, so runtime never carries hidden hazard debt through a boss fight.
 - Summaries and debug overlays should expose length, pressure band, role/variant/formation counts, and route-conditioned reasons where useful.
 - Performance mode and reduced motion may simplify presentation, but should not change combat generation or objective requirements.
 
@@ -433,7 +433,7 @@ src/game/EnvironmentStress.ts
 - Work order 072 adds `src/content/hazardZones.ts` as the first schema registry for existing hazards. It keeps separate sector, route-condition, and pacing metrics so behavior does not retune while the definition contract becomes content-driven.
 - Work order 073 adds `src/game/HazardZoneBehavior.ts` as the pure runtime behavior layer. It derives presentation state, pulse damage-window gating, fixed-world damage rectangles, and settings simplification from the content registry before `SectorHazards` and `CanvasRenderer` consume it.
 - Work order 074 adds `src/game/HazardZoneDirector.ts` as the deterministic schedule layer between `SectorPacing` and `SectorFeatures`. Pacing keeps pressure/relief/formation/boss beats, while the director materializes fair hazard windows from seed plus save/sector context and exposes ordered telegraph/active/clear events for catchup-safe processing.
-- Collision damage must only occur after a visible warning lead. If a boss arena hides a hazard warning during lock, preserve the work order 070 release contract by restarting a post-release telegraph before damage can occur.
+- Collision damage must only occur after a visible warning lead. Boss operations preserve the full warning and active spans while packing them before lock; post-release telegraph reconstruction is not permitted.
 - Rendering should keep hazards below bullets, enemies, pickups, and the player. Richer hazard art should use low-alpha fills, clear outlines, and compact labels before adding animated effects.
 
 ### Destructibles and obstacles
@@ -510,7 +510,7 @@ src/game/ActPressure.ts
 ### Finale and debug smoke
 
 - Second-act bosses and finales should reuse the existing boss arena, phase, hazard-release, victory, defeat, and run-summary contracts where possible.
-- Boss-release hazard fairness remains mandatory: hazards hidden during a finale arena lock need a fresh visible warning lead before damage.
+- Boss-release hazard fairness remains mandatory: finale hazards must settle before arena lock and may not reappear after boss defeat.
 - Debug shortcuts should be able to jump to the inter-act junction, Act II pressure, and finale while still using generated plans and public overlay state.
 - Work order 088 adds `src/game/SecondActFinale.ts` as the finale read-model boundary. Generation attaches a deterministic finale plan to the final Act II sector; gameplay consumes it for boss hull and arena-approach tuning after route/pacing modifiers; summaries, debug state, and save records consume the same plan for outcome copy, unlock hooks, and final-boss smoke without adding a separate combat path.
 - Work order 089 adds `src/game/ActTwoDebug.ts` for public Act II smoke setup. The helpers identify Act II entry/finale indexes, scaffold deterministic debug route history, format route tags, and create debug summary results; app shortcuts should rebuild generated run/session state and expose details through DOM/debug readouts rather than private object access.
@@ -552,7 +552,14 @@ Work order 091 audit and implementation:
 - Represent a capital ship or station as one set-piece instance with stable component ids, parent/child references, local transforms, damage policy, collision shapes, objective hooks, and staged state.
 - Convert local component geometry into the fixed 640x720 combat world through one scroll/set-piece transform. Presentation scaling must never affect targeting or safe lanes.
 - Route subsystem damage, chain reactions, disablement, destruction, rewards, and cleanup through typed set-piece events so simultaneous hits cannot duplicate outcomes.
-- Boss arena locks and hazard suppression remain separate policies. Set pieces may request those policies but must not bypass the fresh post-lock hazard telegraph rule.
+- Boss arena locks and hazard scheduling remain separate policies. Set pieces may request a lock, but the final hazard plan must settle before it and leave the release lane clear.
+
+### Work order 124 boss-approach hazard settlement invariant
+
+- `HazardZoneDirector` normalizes the combined authored, condition, and director entry list after operation-specific diversification. It processes entries from latest to earliest, preserves each warning lead and active span, retains a bounded gap, and fits the final clear event at least 18 distance units before the live arena lock.
+- The hazard registry policy is `settleBeforeLock`; content validation rejects any shipped definition with another boss policy. Debug/read models report approach adjustments rather than release deferrals.
+- `GameplayScene` no longer records a boss-release distance or asks `SectorFeatures` to reconstruct overlapping activation windows. The obsolete release-deferral activation option and helper are removed, so a completed hazard cannot be resurrected after the boss.
+- Pause-safe hazard runtime, finite beam timing, collision/render parity, operation-sequence determinism, coast allowlists, and boss visibility suppression retain their existing ownership. No run, save, or snapshot schema changes are required.
 
 Work order 096 implementation:
 

@@ -993,9 +993,7 @@ describe('validateContent', () => {
     expect(errors).toContain(
       'Hazard zone hazard_missing has invalid boss arena policy: damageThrough'
     );
-    expect(errors).toContain(
-      'Hazard zone hazard_missing must hide and defer during locked boss arenas'
-    );
+    expect(errors).toContain('Hazard zone hazard_missing must settle before locked boss arenas');
     expect(errors).toContain(
       'Hazard zone hazard_missing readability has invalid render layer: overBullets'
     );

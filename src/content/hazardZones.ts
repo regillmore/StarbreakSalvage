@@ -56,7 +56,7 @@ export const HAZARD_ZONE_SETTINGS_VARIANTS = [
 ] as const;
 export type HazardZoneSettingsVariant = (typeof HAZARD_ZONE_SETTINGS_VARIANTS)[number];
 
-export const HAZARD_ZONE_BOSS_ARENA_POLICIES = ['hideAndDefer'] as const;
+export const HAZARD_ZONE_BOSS_ARENA_POLICIES = ['settleBeforeLock'] as const;
 export type HazardZoneBossArenaPolicy = (typeof HAZARD_ZONE_BOSS_ARENA_POLICIES)[number];
 
 export const HAZARD_ZONE_SCHEDULE_SOURCES = ['sector', 'condition', 'pacing'] as const;
@@ -200,7 +200,7 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     damage: 1,
     damageCooldownSeconds: 0.35,
     safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.5 },
-    bossArenaPolicy: 'hideAndDefer',
+    bossArenaPolicy: 'settleBeforeLock',
     readability: createReadability(120, '#8aa4b8', '#f8fbff', 'staticPulse', 'simplifiedPattern'),
     behavior: createBehavior('orbitalShadow', 'shadow track', 'debris shadow', 0.32, 1, 1, 1, 0.42)
   },
@@ -224,7 +224,7 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     damage: 1,
     damageCooldownSeconds: 0.35,
     safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.68 },
-    bossArenaPolicy: 'hideAndDefer',
+    bossArenaPolicy: 'settleBeforeLock',
     readability: createReadability(
       145,
       '#ffd166',
@@ -263,7 +263,7 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     damage: 1,
     damageCooldownSeconds: 0.35,
     safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.44 },
-    bossArenaPolicy: 'hideAndDefer',
+    bossArenaPolicy: 'settleBeforeLock',
     readability: createReadability(120, '#ff6bd6', '#f8fbff', 'staticPulse', 'simplifiedPattern'),
     behavior: createBehavior(
       'discreteMineCluster',
@@ -295,7 +295,7 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     damage: 1,
     damageCooldownSeconds: 0.35,
     safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.38 },
-    bossArenaPolicy: 'hideAndDefer',
+    bossArenaPolicy: 'settleBeforeLock',
     readability: createReadability(120, '#7cf7ff', '#f8fbff', 'staticPulse', 'simplifiedPattern'),
     behavior: createBehavior(
       'plasmaCurtain',
@@ -327,7 +327,7 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     damage: 1,
     damageCooldownSeconds: 0.35,
     safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.46 },
-    bossArenaPolicy: 'hideAndDefer',
+    bossArenaPolicy: 'settleBeforeLock',
     readability: createReadability(150, '#ffd166', '#ffef5f', 'staticPulse', 'simplifiedPattern'),
     behavior: createBehavior(
       'collapsingColumns',
@@ -359,7 +359,7 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     damage: 1,
     damageCooldownSeconds: 0.35,
     safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.42 },
-    bossArenaPolicy: 'hideAndDefer',
+    bossArenaPolicy: 'settleBeforeLock',
     readability: createReadability(140, '#c8d4e3', '#f8fbff', 'staticPulse', 'simplifiedPattern'),
     behavior: createBehavior('dustFront', 'dust wake', 'sand shear', 0.62, 0.92, 1, 1, 0.56)
   },
@@ -382,7 +382,7 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     damage: 1,
     damageCooldownSeconds: 0.35,
     safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.7 },
-    bossArenaPolicy: 'hideAndDefer',
+    bossArenaPolicy: 'settleBeforeLock',
     readability: createReadability(150, '#ffd166', '#ffef5f', 'staticPulse', 'simplifiedPattern'),
     behavior: createBehavior('sweepBeam', 'sweep trace', 'mining sweep', 0.74, 1, 1, 1, 0.38)
   },
@@ -405,7 +405,7 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     damage: 1,
     damageCooldownSeconds: 0.35,
     safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.5 },
-    bossArenaPolicy: 'hideAndDefer',
+    bossArenaPolicy: 'settleBeforeLock',
     readability: createReadability(145, '#7cf7ff', '#f8fbff', 'staticPulse', 'simplifiedPattern'),
     behavior: createBehavior('pulseField', 'arc charge', 'defense pulse', 0.42, 0.58, 3, 2, 0.58)
   }

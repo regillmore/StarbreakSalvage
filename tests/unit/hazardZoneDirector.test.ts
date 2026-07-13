@@ -178,29 +178,55 @@ describe('HazardZoneDirector', () => {
     }
   });
 
-  it('defers director hazards hidden by boss locks until a fresh post-lock telegraph', () => {
-    const directed = getDirectedBossSectorWithDeferredHazard('BOSS-HAZARD-DIRECTOR');
-    const deferred = directed.director.entries.find(
-      (entry) => entry.source === 'director' && entry.deferredForBossLock
+  it('settles boss-lock hazard overlaps inside the approach instead of deferring them', () => {
+    const directed = getDirectedBossSectorWithAdjustedHazard('BOSS-HAZARD-DIRECTOR');
+    const adjusted = directed.director.entries.find(
+      (entry) => entry.source === 'director' && entry.adjustedForBossApproach
     );
 
     expect(directed.arena).not.toBeNull();
-    expect(deferred).toBeDefined();
+    expect(adjusted).toBeDefined();
 
-    if (!directed.arena || !deferred) {
-      throw new Error('Expected a boss arena and deferred director hazard.');
+    if (!directed.arena || !adjusted) {
+      throw new Error('Expected a boss arena and approach-adjusted director hazard.');
     }
 
-    const definition = getHazardZoneDefinition(deferred.hazard.kind);
+    const definition = getHazardZoneDefinition(adjusted.hazard.kind);
     const activeAtLock = getActiveSectorHazards(directed.features, directed.arena.lockDistance);
 
-    expect(deferred.hazard.telegraphDistance).toBe(directed.arena.lockDistance);
+    expect(adjusted.hazard.endDistance).toBeLessThan(directed.arena.lockDistance);
     expect(
-      deferred.hazard.startDistance - deferred.hazard.telegraphDistance
+      adjusted.hazard.startDistance - adjusted.hazard.telegraphDistance
     ).toBeGreaterThanOrEqual(definition.phase.minTelegraphLead);
-    expect(activeAtLock.find((active) => active.hazard.id === deferred.hazard.id)?.phase).toBe(
-      'telegraph'
+    expect(activeAtLock.find((active) => active.hazard.id === adjusted.hazard.id)).toBeUndefined();
+    expect(directed.director.bossApproachAdjustmentCount).toBeGreaterThan(0);
+    expect(formatHazardZoneDirectorReadout(directed.director)).toContain(
+      'boss-approach adjustment'
     );
+  });
+
+  it('leaves STARBREAK-SMOKE Act I sector 4 free of post-boss hazard debt', () => {
+    const run = generateRunSkeleton('STARBREAK-SMOKE');
+    const contract = run.contracts[0];
+    if (!contract) throw new Error('Expected contract.');
+    const session = createRunSession(run, contract);
+    session.currentSectorIndex = 3;
+    const directed = createDirectedCurrentSector(run, session);
+
+    expect(directed.arena).not.toBeNull();
+    if (!directed.arena) throw new Error('Expected Act I sector 4 boss arena.');
+
+    expect(directed.features.hazards.length).toBeGreaterThan(0);
+    expect(
+      directed.features.hazards.every((hazard) => hazard.endDistance < directed.arena!.lockDistance)
+    ).toBe(true);
+    expect(
+      directed.features.hazards.some(
+        (hazard) => hazard.endDistance > directed.arena!.approachStartDistance
+      )
+    ).toBe(true);
+    expect(getActiveSectorHazards(directed.features, directed.arena.lockDistance)).toEqual([]);
+    expect(getActiveSectorHazards(directed.features, directed.arena.releaseDistance)).toEqual([]);
   });
 });
 
@@ -209,7 +235,7 @@ function getDirectedSectorAfterRoute(seed: string, sourceSectorIndex: number, ki
   return createDirectedCurrentSector(run, session);
 }
 
-function getDirectedBossSectorWithDeferredHazard(seed: string) {
+function getDirectedBossSectorWithAdjustedHazard(seed: string) {
   const run = generateRunSkeleton(seed);
   const contract = run.contracts[0];
 
@@ -226,16 +252,16 @@ function getDirectedBossSectorWithDeferredHazard(seed: string) {
 
     session.currentSectorIndex = index;
     const directed = createDirectedCurrentSector(run, session);
-    const deferred = directed.director.entries.some(
-      (entry) => entry.source === 'director' && entry.deferredForBossLock
+    const adjusted = directed.director.entries.some(
+      (entry) => entry.source === 'director' && entry.adjustedForBossApproach
     );
 
-    if (deferred) {
+    if (adjusted) {
       return directed;
     }
   }
 
-  throw new Error('Expected at least one boss sector with a deferred director hazard.');
+  throw new Error('Expected at least one boss sector with an approach-adjusted director hazard.');
 }
 
 function createDirectedCurrentSector(
