@@ -1,4 +1,8 @@
-import { calculateViewportLayout, viewportPointToCombatPoint } from '../app/ViewportLayout';
+import {
+  calculateViewportLayout,
+  viewportPointToCombatPoint,
+  type ViewportLayout
+} from '../app/ViewportLayout';
 import type { Vector2 } from '../core/math';
 
 export type ActiveInputMode = 'none' | 'keyboard' | 'pointer';
@@ -64,6 +68,29 @@ export const INACTIVE_POINTER_CONTROL_STATE: PointerControlState = {
   position: { x: 0, y: 0 },
   pointerType: 'unknown'
 };
+
+export function mapViewportPointerControlState(
+  layout: Pick<ViewportLayout, 'canvasScale' | 'gameplaySafeFrame'>,
+  point: Vector2,
+  primaryDown = false,
+  pointerType = 'unknown'
+): PointerControlState {
+  const position = viewportPointToCombatPoint(layout, point);
+
+  return {
+    // The full browser viewport is the pointer control plane. The mapped
+    // combat position is already clamped to the arena, so an outside pointer
+    // continues to steer toward (and along) the nearest arena edge.
+    active: true,
+    insideFrame: position.insideFrame,
+    primaryDown,
+    position: {
+      x: position.x,
+      y: position.y
+    },
+    pointerType
+  };
+}
 
 export const DEFAULT_KEY_BINDINGS: KeyBindingMap = {
   moveUp: ['ArrowUp', 'W'],
@@ -368,24 +395,14 @@ export class InputSystem {
       height: this.ownerWindow.innerHeight,
       dpr: this.ownerWindow.devicePixelRatio || 1
     });
-    const position = viewportPointToCombatPoint(layout, {
-      x: event.clientX,
-      y: event.clientY
-    });
-    const active = position.insideFrame || primaryDown;
-
-    this.pointerState = {
-      active,
-      insideFrame: position.insideFrame,
+    this.pointerState = mapViewportPointerControlState(
+      layout,
+      { x: event.clientX, y: event.clientY },
       primaryDown,
-      position: {
-        x: position.x,
-        y: position.y
-      },
-      pointerType: event.pointerType || 'unknown'
-    };
+      event.pointerType || 'unknown'
+    );
 
-    if (active) {
+    if (this.pointerState.active) {
       this.activeInputMode = 'pointer';
     }
   }

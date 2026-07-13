@@ -1089,14 +1089,25 @@ test('supports pointer-guided movement and primary-button fire during gameplay',
   await page.keyboard.press('Enter');
   await expectGameplaySector(page, 'Outer Debris Field');
 
-  const startPosition = await page.getByTestId('player-position').textContent();
-  await page.mouse.move(760, 550);
+  const startPosition = await readPlayerPosition(page);
+  await page.mouse.move(1200, 550);
   await expect(page.locator('.debug-overlay')).toContainText('Input pointer');
   await expect(page.locator('.debug-overlay')).toContainText(/Safe \d+,\d+ \d+x\d+/);
 
   await expect
-    .poll(async () => page.getByTestId('player-position').textContent())
-    .not.toBe(startPosition);
+    .poll(async () => (await readPlayerPosition(page)).x)
+    .toBeGreaterThan(startPosition.x + 100);
+
+  await expect.poll(async () => (await readPlayerPosition(page)).x).toBeGreaterThan(585);
+  const edgePosition = await readPlayerPosition(page);
+
+  await page.mouse.move(1200, 300);
+  await expect
+    .poll(async () => (await readPlayerPosition(page)).y)
+    .toBeLessThan(edgePosition.y - 80);
+
+  const slidePosition = await readPlayerPosition(page);
+  expect(slidePosition.x).toBeGreaterThanOrEqual(edgePosition.x - 4);
 
   await page.mouse.down();
   await expect(page.getByTestId('combat-status')).toContainText(/Shots [1-9]/);
@@ -1104,6 +1115,20 @@ test('supports pointer-guided movement and primary-button fire during gameplay',
 
   expect(browserErrors).toEqual([]);
 });
+
+async function readPlayerPosition(page: Page): Promise<{ x: number; y: number }> {
+  const text = await page.getByTestId('player-position').textContent();
+  const match = text?.match(/^Player (\d+),(\d+)$/);
+
+  if (!match) {
+    throw new Error(`Unable to parse player position: ${text ?? 'missing'}`);
+  }
+
+  return {
+    x: Number(match[1]),
+    y: Number(match[2])
+  };
+}
 
 test('keeps the gameplay HUD and safe frame readable in a narrow viewport', async ({ page }) => {
   const browserErrors: string[] = [];

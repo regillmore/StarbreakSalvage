@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Extended mouse/touch guidance across the full gameplay browser viewport. Pointer positions outside the arena now project onto its nearest edge, so the ship remains responsive and slides along its existing combat bounds instead of stopping at the frame rail; menus, settings, DOM controls, keyboard priority, and primary-button fire retain their existing input rules.
+
 - Removed post-boss hazard debt. Every authored, route-conditioned, and director-added hazard in a boss operation is now deterministically packed into the approach with its full warning and active span preserved, then cleared before arena lock. Boss defeat no longer reschedules hidden hazards, leaving the release lane naturally quiet.
 
 - Reimagined the salvage foundry as Hardpoint Control: a draft-aware attack simulation uses the selected ship and weapon pattern, a compact mini-HUD compares output against the committed loadout, visual meters replace raw resource prose, cargo install controls show direct replacement deltas, and hardpoint/component cards use scannable stat and modifier chips. Responsive, high-contrast, reduced-motion, and performance-mode treatments remain first-class.

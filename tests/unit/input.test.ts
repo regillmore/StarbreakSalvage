@@ -5,6 +5,7 @@ import {
   DEFAULT_KEY_BINDINGS,
   getPointerGuidanceAxis,
   INACTIVE_POINTER_CONTROL_STATE,
+  mapViewportPointerControlState,
   movementAxisFromActions,
   normalizeKey,
   preferKeyboardMovement,
@@ -80,6 +81,41 @@ describe('input helpers', () => {
 
     expect(axis.x).toBeCloseTo(1);
     expect(axis.y).toBeCloseTo(0);
+  });
+
+  it('guides toward a projected arena-edge target outside the frame', () => {
+    const axis = getPointerGuidanceAxis(
+      { x: 598, y: 560 },
+      {
+        ...INACTIVE_POINTER_CONTROL_STATE,
+        active: true,
+        insideFrame: false,
+        position: { x: 640, y: 320 }
+      }
+    );
+
+    expect(axis.x).toBeGreaterThan(0);
+    expect(axis.y).toBeLessThan(0);
+  });
+
+  it('keeps pointer control active across the browser viewport', () => {
+    const pointer = mapViewportPointerControlState(
+      {
+        canvasScale: 1,
+        gameplaySafeFrame: { x: 100, y: 50, width: 640, height: 720 }
+      },
+      { x: 980, y: 300 },
+      false,
+      'mouse'
+    );
+
+    expect(pointer).toEqual({
+      active: true,
+      insideFrame: false,
+      primaryDown: false,
+      position: { x: 640, y: 250 },
+      pointerType: 'mouse'
+    });
   });
 
   it('keeps keyboard movement authoritative over pointer guidance', () => {

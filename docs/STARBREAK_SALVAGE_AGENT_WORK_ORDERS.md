@@ -2190,6 +2190,26 @@ Status: implemented. The hazard registry policy is now `settleBeforeLock`, enfor
 
 Verification: `npm run verify:release` passes with 95 Vitest files and 569 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. Focused hazard-director, sector-feature/runtime, content-validation, act-pressure, and finale coverage passes with 77 tests. Regression pins STARBREAK-SMOKE Act I sector 4 to retain a hazard in the approach while every window ends before lock and both lock/release active lists remain empty. The Chromium finale path confirms the new approach-adjustment readout and zero active hazards at arena lock under narrow high-contrast/reduced-motion/performance settings. The production build emits 868.72 kB minified/235.53 kB gzip initial JavaScript and unchanged 41.17 kB CSS/8.85 kB gzip. The existing chunk warning remains open and no threshold changed. In-app browser control exposed no active target, so local Playwright Chromium supplied the browser evidence.
 
+## Work order 125 - Viewport-wide pointer guidance
+
+Goal: keep mouse/touch steering responsive everywhere inside the gameplay browser window while preserving the arena as the ship's physical movement boundary.
+
+Prompt:
+
+> Extend the mouse-follow control plane from the arena rectangle to the full browser viewport. Project pointer positions in letterbox and HUD-reserve space onto the nearest arena edge, keep the ship radius inside existing combat bounds, and let remaining tangential guidance slide the ship along that edge rather than halting. Preserve keyboard priority, primary-button fire, menu/settings/native-control focus safety, pointer cancellation, blur handling, deterministic fixed-step movement, viewport scaling, touch compatibility, saves, snapshots, and bounded performance. Add unit and browser regressions, update the pointer contract, and run checks.
+
+Acceptance criteria:
+
+- Every non-UI pointer move inside the browser viewport keeps pointer guidance active, whether or not the raw point is inside the gameplay safe frame.
+- Raw viewport positions still map to fixed 640x720 combat coordinates and clamp to the nearest arena perimeter; presentation scale never alters ship simulation bounds.
+- The player remains radius-clamped inside the combat safe frame and continues moving tangentially along an edge when the outside pointer changes along that edge.
+- Keyboard movement remains authoritative while held; primary-button/touch fire and DOM/menu/settings focus safety retain their existing behavior.
+- Focused tests cover outside-frame guidance, clamped projection, real edge capture, tangential sliding, input-mode reporting, primary fire, and console safety.
+
+Status: implemented. `InputSystem` now treats every non-ignored window pointer update as active guidance instead of requiring `insideFrame` or a held primary button. The existing `viewportPointToCombatPoint` conversion continues clamping raw browser coordinates to the fixed combat perimeter and retaining `insideFrame` telemetry; `getPointerGuidanceAxis` consumes the projected target, keyboard input keeps priority, and `CombatState` remains the radius-aware final bounds authority. Pointer cancellation, blur, DOM overlay/native-control exclusion, touch identity, and fire state are unchanged. The focused Chromium path now drives the pointer into the right letterbox, requires the ship to reach its right combat bound, moves the still-outside pointer vertically, requires tangential edge travel, then verifies primary fire and no console errors. No RNG, renderer, combat geometry, settings, save, or snapshot changes.
+
+Verification: focused input/viewport coverage passes with 2 files and 14 tests. `npm run check` passes typecheck, ESLint, 95 Vitest files and 571 tests, plus the production build; `npm run test:preview` confirms the Pages base and every hashed asset. `npx playwright test --list` discovers all 13 Chromium paths, including the expanded pointer regression. The production build emits 868.79 kB minified/235.57 kB gzip initial JavaScript and unchanged 41.17 kB CSS/8.85 kB gzip. The existing chunk warning remains open and no threshold changed. The outside-frame edge-capture/slide/fire Chromium regression is authored, but its local launch was not executed: Playwright AppData access was not granted and the in-app browser exposed no active target in this session.
+
 ## Review subagent prompt
 
 Use after a feature PR:

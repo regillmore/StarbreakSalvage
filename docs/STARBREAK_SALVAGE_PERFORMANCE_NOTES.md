@@ -335,6 +335,10 @@ Work order 124 adds one bounded reverse pass over at most four final hazard entr
 
 The work order 124 release build emits 868.72 kB minified/235.53 kB gzip initial JavaScript and unchanged 41.17 kB CSS/8.85 kB gzip. This is a 0.14 kB minified/0.10 kB gzip decrease from work order 123 because the former runtime deferral path was removed. No warning threshold changed; the existing initial-chunk warning remains open.
 
+Work order 125 changes only the activation policy applied to existing window-level pointer events. Viewport mapping already clamps to the arena, guidance already normalizes one vector, and combat already clamps the player radius, so outside-frame movement adds no listener, frame-time query, entity scan, allocation class, RNG call, render primitive, save field, or snapshot field. Pointer-move cost and fixed-step movement cost remain constant; dense-combat profiling is unaffected.
+
+The work order 125 check build emits 868.79 kB minified/235.57 kB gzip initial JavaScript and unchanged 41.17 kB CSS/8.85 kB gzip. This is a 0.07 kB minified/0.04 kB gzip increase from work order 124 for the explicit pure viewport-pointer state mapper. No warning threshold changed; the existing initial-chunk warning remains open.
+
 - The first finale pass adds hull/approach pressure and summary/unlock hooks, not new projectile families; remaining work should keep profiling the `F` finale smoke alongside enemy-rich, environmental stress, and the `Y` two-act summary before adding denser final-phase attacks.
 
 ## Phase 10 Playtest Risks

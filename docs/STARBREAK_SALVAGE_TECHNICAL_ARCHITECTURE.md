@@ -330,7 +330,7 @@ Phase 4 adds display/input/identity polish without turning presentation into a s
 
 - Route mouse movement, pointer state, and click/hold fire through the input abstraction.
 - Pointer controls should be optional and must not interfere with DOM focus, settings, menus, pause, or keyboard-only play.
-- Clamp gameplay pointer targets to the safe frame, not the full browser window when HUD or letterboxing is active.
+- Treat the gameplay browser viewport as the pointer control plane, but project every non-UI target onto the fixed combat safe frame. Preserve whether the raw pointer was inside the frame for telemetry; do not use that flag to disable guidance through HUD reserve or letterbox space.
 - Store new pointer settings through the settings module only when the implementation needs user-tunable behavior.
 
 ### Ship appearance and previews
@@ -809,6 +809,13 @@ seed + permanent save fingerprint
 - `FoundryScene` remains an event-driven DOM scene. Its attack simulation reuses `ShipPreview` with draft frame, module count, weapon name, and weapon-pattern overrides; the same existing engineering operations still own install, remove, scrap, reroute, overclock, fusion, undo, and commit behavior.
 - Visual meters, glyph stat strips, badges, and direct install comparisons are progressive presentation. Full values and relationships remain exposed through native meter semantics, labels, button accessible names, modifier titles, validation issues, and live status updates.
 - The read models are built only on foundry entry and after explicit actions. They add no gameplay-frame work, runtime RNG, generated content, production dependency, save field, or snapshot migration.
+
+### Work order 125 viewport-wide pointer-control boundary
+
+- `InputSystem` remains the only raw pointer-event consumer. Non-UI pointer movement anywhere in the browser viewport stays active; menus, settings, native controls, pointer cancellation, and window blur still clear or ignore pointer state through the existing abstraction.
+- `viewportPointToCombatPoint` preserves raw `insideFrame` telemetry while clamping presentation coordinates to the fixed 640x720 arena. Outside positions therefore resolve to the nearest perimeter point instead of introducing viewport-scaled simulation coordinates.
+- `getPointerGuidanceAxis` continues aiming at that projected point, keyboard movement retains priority, and `CombatState` remains the final radius-aware movement clamp. Once the ship reaches one axis bound, the remaining guidance component naturally slides it along the arena edge.
+- No generated content, RNG stream, combat bounds, save/snapshot schema, renderer clip, or input setting changes.
 
 ## GitHub Pages notes
 

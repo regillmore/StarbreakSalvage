@@ -72,7 +72,7 @@ Phase 4 introduces display/input/identity polish. Add tests closest to the risk:
 
 - viewport scaling helpers for canvas size, device pixel ratio, fixed combat arena fit, gameplay safe frame, and HUD safe areas;
 - narrow/wide viewport E2E smoke for main menu, contract selection, gameplay HUD, pause, and summary; work order 031 adds narrow gameplay HUD/safe-frame smoke, with wider route/pause/summary viewport coverage still useful;
-- mouse/pointer input mapping, bounds clamping, click/hold fire, and focus safety in menus/settings; work order 032 adds passive pointer guidance, primary-button fire, debug input-mode reporting, and pointer movement/fire smoke coverage;
+- mouse/pointer input mapping, bounds clamping, click/hold fire, and focus safety in menus/settings; work order 032 adds passive pointer guidance, primary-button fire, debug input-mode reporting, and pointer movement/fire smoke coverage, while work order 125 extends that path through letterbox/HUD-reserve space and asserts edge capture plus tangential sliding;
 - keyboard-only parity after mouse, contract-preview, and future HUD changes; work orders 034 and 036 add arrow-key preview selection plus keyboard-only start/pause/summary smoke coverage;
 - ship appearance content validation for silhouettes, palettes, engine/cockpit accents, weapon mount hints, and HUD theme keys; work orders 033-035 add appearance, preview, and cockpit HUD coverage, with manual cross-theme QA still useful;
 - contract selection preview state for keyboard focus, pointer selection, and narrow layouts; work order 034 adds pure preview-model coverage and Playwright preview-selection assertions, with manual contrast/narrow browser checks still useful;
