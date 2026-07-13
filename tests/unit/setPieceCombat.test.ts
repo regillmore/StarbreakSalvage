@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { getSetPieceById, getSetPieceLayoutById } from '../../src/content/setPieces';
 import {
   createCombatState,
   damageSetPieceComponentsInRadius,
@@ -8,11 +9,51 @@ import {
   type CombatBounds,
   type CombatState
 } from '../../src/game/CombatState';
-import { createSetPiecePlan, setPieceComponentOverlapsCircle } from '../../src/game/SetPiece';
+import {
+  createSetPiecePlan,
+  getSetPieceForwardFireLane,
+  setPieceComponentOverlapsCircle
+} from '../../src/game/SetPiece';
 
 const bounds: CombatBounds = { width: 640, height: 720, padding: 24 };
 
 describe('set-piece combat integration', () => {
+  it('lets corrected straight-fire loadouts reach either opening Hecaton shield', () => {
+    for (const targetId of ['hecaton-emitter-a', 'hecaton-emitter-b']) {
+      const state = createState(1, 'starboard-ledger');
+      const target = requireComponent(state, targetId);
+      const definition = getSetPieceById(state.setPiece!.plan.definitionId);
+      const layout = getSetPieceLayoutById(definition, state.setPiece!.plan.layoutId);
+      const lane = getSetPieceForwardFireLane(definition, layout, targetId);
+      if (!lane) throw new Error(`Expected a forward-fire lane to ${targetId}.`);
+
+      target.hull = 0.5;
+      for (const component of state.setPiece!.components) {
+        component.subsystemCooldownSeconds = 99;
+      }
+      state.player.x = (lane.minX + lane.maxX) / 2;
+      state.player.y = bounds.height - bounds.padding - state.player.radius;
+      updateCombatState(
+        state,
+        { movement: { x: 0, y: 0 }, fire: true, scrollDistance: state.scrollDistance },
+        1 / 120,
+        bounds
+      );
+
+      for (let frame = 0; frame < 240 && !target.destroyed; frame += 1) {
+        updateCombatState(
+          state,
+          { movement: { x: 0, y: 0 }, fire: false, scrollDistance: state.scrollDistance },
+          1 / 120,
+          bounds
+        );
+      }
+
+      expect(target.destroyed).toBe(true);
+      expect(state.stats.setPieceComponentsDestroyed).toBe(1);
+    }
+  });
+
   it('routes projectile damage through dependency locks and explicit accounting', () => {
     const state = createState(1);
     const emitter = requireComponent(state, 'hecaton-emitter-a');
@@ -202,8 +243,8 @@ describe('set-piece combat integration', () => {
   });
 });
 
-function createState(sectorIndex: number): CombatState {
-  const setPiecePlan = createSetPiecePlan({ sectorIndex, scrollLength: 2400 });
+function createState(sectorIndex: number, layoutId?: string): CombatState {
+  const setPiecePlan = createSetPiecePlan({ sectorIndex, scrollLength: 2400, layoutId });
   const state = createCombatState(bounds, `SET-PIECE-COMBAT-${sectorIndex}`, {
     skipEnemyWaves: true,
     bossSpawnAtSeconds: null,

@@ -85,6 +85,7 @@ export interface SceneDebugState {
     readonly totalComponents: number;
     readonly objectiveTargetsDestroyed: number;
     readonly objectiveTargetsTotal: number;
+    readonly layoutLabel: string;
     readonly safeLaneLabel: string;
     readonly bossLockActive: boolean;
   };

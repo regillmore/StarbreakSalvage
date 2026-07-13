@@ -353,6 +353,10 @@ The work order 128 check build emits 872.73 kB minified/236.85 kB gzip initial J
 
 The post-deployment correction samples at most six sequential source volleys so periodic item effects are visible, stopping before the same 48-node ceiling. The check build emits 872.99 kB minified/236.97 kB gzip initial JavaScript and unchanged 43.09 kB CSS/9.23 kB gzip. The existing chunk warning and thresholds are unchanged.
 
+Work order 129 adds nine small authored placement arrays and chooses one layout once during sector generation. Combat setup builds one map for the selected seven or eight placements, then creates the same bounded component state used before; fixed-step collision, targeting, rendering, and subsystem behavior add no new actor or scan. The forward-fire interval search runs only during content validation and tests across at most eight components per objective. Mission projection carries an existing layout id rather than rerolling it. No frame-time RNG, runtime adaptive layout, projectile, effect, reward, save, snapshot, external asset, or dependency is added.
+
+The work order 129 release build emits 877.56 kB minified/237.92 kB gzip initial JavaScript and unchanged 43.09 kB CSS/9.23 kB gzip. This is a 4.57 kB minified/0.95 kB gzip initial-JavaScript increase over the corrected work order 128 build for nine authored layouts, plan/read-model identity, and conservative validation. No warning threshold changed; the existing initial-chunk warning remains open.
+
 - The first finale pass adds hull/approach pressure and summary/unlock hooks, not new projectile families; remaining work should keep profiling the `F` finale smoke alongside enemy-rich, environmental stress, and the `Y` two-act summary before adding denser final-phase attacks.
 
 ## Phase 10 Playtest Risks

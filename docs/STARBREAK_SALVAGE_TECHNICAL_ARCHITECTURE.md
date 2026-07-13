@@ -840,6 +840,14 @@ seed + permanent save fingerprint
 - The combat-mode `ShipPreview` omits its card background, role bars, hit ring, and abstract weapon-guide primitives. Reduced motion freezes the bounded volley along its real trajectories; performance mode freezes one representative volley and removes projectile/ship glow. High contrast adds white cores and dark outlines.
 - Engineering mutations still rebuild the whole event-driven foundry scene from draft state. Apart from the intentional starter-acquisition policy correction above, no content table, gameplay state, hook order, projectile cap, save/snapshot schema, input, or commit boundary changes.
 
+### Work order 129 seeded set-piece layout boundary
+
+- Set-piece component records own stable subsystem identity, template, dependency, objective, and stage semantics. Separate layout records own only component coordinates, safe-lane identity, and reinforcement positions, allowing geometry to vary without cloning damage graphs or rewards.
+- `Generation` selects one authored layout through the sector's named `set-piece-layout` fork. `SetPiecePlan` carries the resulting layout id/label and composed geometry policy; shortened terminal mission projections reuse that explicit id while rebuilding only scroll and arena coordinates.
+- Content validation treats forward-fire reachability as an authored-layout invariant. For each objective, it recursively removes only dependencies guaranteed destroyed before unlock, keeps every unrelated locked or optional component as a blocker, reserves arena-edge clearance for the largest current player hull, expands collision by the largest current weapon projectile radius, and requires a useful vertical shot interval to remain.
+- Runtime state resolves one seven- or eight-entry placement map when combat is created. Collision, player pushout, ally focus, subsystem fire, rendering, rewards, stage progression, boss locks, and objective accounting continue consuming the same component state and fixed 640x720 transform; no per-frame reachability search or adaptive geometry is introduced.
+- HUD, debug, and deterministic run summaries expose the chosen layout label and layout-specific safe lane. Layout selection adds no save or snapshot field because immutable run generation reconstructs it from the existing seed and named stream.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

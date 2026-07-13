@@ -1795,7 +1795,7 @@ export class GameplayScene implements Scene {
         ? `${this.campaignInfluence.front.mapCue} ${this.campaignInfluence.front.strategyLabel} | owner ${this.campaignInfluence.front.ownerFactionName} | ${this.campaignInfluence.front.stance} | reinforcements ${this.campaignInfluence.frontReinforcementCount} / support ${this.campaignInfluence.frontSupportCount}`
         : null,
       setPiece
-        ? `${setPiece.name} (${getFactionById(state.setPiece?.ownerFactionId ?? this.getCurrentSector().bossFactionId).name}): ${setPiece.stageLabel} | target ${setPiece.targetLabel} | ${setPiece.destroyedComponents}/${setPiece.totalComponents}`
+        ? `${setPiece.name} / ${setPiece.layoutLabel} (${getFactionById(state.setPiece?.ownerFactionId ?? this.getCurrentSector().bossFactionId).name}): ${setPiece.stageLabel} | target ${setPiece.targetLabel} | ${setPiece.destroyedComponents}/${setPiece.totalComponents}`
         : null
     ]
       .filter((part): part is string => Boolean(part))
@@ -1825,7 +1825,7 @@ export class GameplayScene implements Scene {
         : null) ??
       formatActiveHazardWarning(this.getActiveHazards()[0]) ??
       (setPiece && setPiece.active
-        ? `${setPiece.stageLabel}; safe ${setPiece.safeLaneLabel}`
+        ? `${setPiece.layoutLabel}; ${setPiece.stageLabel}; safe ${setPiece.safeLaneLabel}`
         : null) ??
       this.campaignInfluence?.frontForecast ??
       formatBossArenaReadout(this.bossArenaUpdate.phase) ??

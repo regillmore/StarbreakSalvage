@@ -52,11 +52,27 @@ export interface SetPieceComponentTemplate {
 export interface SetPieceComponentDefinition {
   readonly id: string;
   readonly templateId: SetPieceComponentTemplateId;
-  readonly x: number;
-  readonly y: number;
   readonly stageId: string;
   readonly dependsOn: readonly string[];
   readonly objectiveTarget: boolean;
+}
+
+export interface SetPieceComponentPlacement {
+  readonly componentId: string;
+  readonly x: number;
+  readonly y: number;
+}
+
+export interface SetPieceLayoutDefinition {
+  readonly id: string;
+  readonly label: string;
+  readonly safeLane: {
+    readonly label: string;
+    readonly minX: number;
+    readonly maxX: number;
+  };
+  readonly componentPlacements: readonly SetPieceComponentPlacement[];
+  readonly reinforcementXRatios: readonly number[];
 }
 
 export interface SetPieceStageDefinition {
@@ -76,17 +92,12 @@ export interface SetPieceDefinition {
   readonly objectiveText: string;
   readonly summary: string;
   readonly anchorDistanceRatio: number;
-  readonly safeLane: {
-    readonly label: string;
-    readonly minX: number;
-    readonly maxX: number;
-  };
   readonly components: readonly SetPieceComponentDefinition[];
+  readonly layouts: readonly SetPieceLayoutDefinition[];
   readonly stages: readonly SetPieceStageDefinition[];
   readonly reinforcement: {
     readonly formationId: EnemyFormationId;
     readonly memberCount: number;
-    readonly xRatios: readonly number[];
   };
   readonly bossLock: 'none' | 'untilComplete';
   readonly completionReward: { readonly credits: number; readonly salvage: number };
@@ -238,15 +249,12 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
     factionId: 'faction_corporate_ledger',
     contractTitle: 'Void the Hecaton',
     objectiveText: 'Strip the ark shield, breach its armor, and cut the drive ledger.',
-    summary: 'A capital collection ship occupying the starboard field with a port safe lane.',
+    summary: 'A capital collection ship rebuilt into one of several seeded breach geometries.',
     anchorDistanceRatio: 0.42,
-    safeLane: { label: 'port maintenance lane', minX: 34, maxX: 216 },
     components: [
       {
         id: 'hecaton-emitter-a',
         templateId: 'setpiece_shield_emitter',
-        x: 356,
-        y: 178,
         stageId: 'hecaton-screen',
         dependsOn: [],
         objectiveTarget: true
@@ -254,8 +262,6 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
       {
         id: 'hecaton-emitter-b',
         templateId: 'setpiece_shield_emitter',
-        x: 542,
-        y: 198,
         stageId: 'hecaton-screen',
         dependsOn: [],
         objectiveTarget: true
@@ -263,8 +269,6 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
       {
         id: 'hecaton-turret',
         templateId: 'setpiece_defense_turret',
-        x: 492,
-        y: 284,
         stageId: 'hecaton-screen',
         dependsOn: [],
         objectiveTarget: false
@@ -272,8 +276,6 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
       {
         id: 'hecaton-armor',
         templateId: 'setpiece_armor_section',
-        x: 438,
-        y: 350,
         stageId: 'hecaton-breach',
         dependsOn: ['hecaton-emitter-a', 'hecaton-emitter-b'],
         objectiveTarget: true
@@ -281,8 +283,6 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
       {
         id: 'hecaton-hangar',
         templateId: 'setpiece_hangar_bay',
-        x: 506,
-        y: 440,
         stageId: 'hecaton-breach',
         dependsOn: ['hecaton-armor'],
         objectiveTarget: false
@@ -290,8 +290,6 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
       {
         id: 'hecaton-drive',
         templateId: 'setpiece_drive_cluster',
-        x: 414,
-        y: 518,
         stageId: 'hecaton-collapse',
         dependsOn: ['hecaton-armor'],
         objectiveTarget: true
@@ -299,11 +297,56 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
       {
         id: 'hecaton-core',
         templateId: 'setpiece_breach_core',
-        x: 522,
-        y: 556,
         stageId: 'hecaton-collapse',
         dependsOn: ['hecaton-drive'],
         objectiveTarget: true
+      }
+    ],
+    layouts: [
+      {
+        id: 'starboard-ledger',
+        label: 'Starboard Ledger',
+        safeLane: { label: 'port maintenance lane', minX: 30, maxX: 170 },
+        componentPlacements: [
+          { componentId: 'hecaton-emitter-a', x: 210, y: 170 },
+          { componentId: 'hecaton-emitter-b', x: 600, y: 190 },
+          { componentId: 'hecaton-turret', x: 520, y: 280 },
+          { componentId: 'hecaton-armor', x: 320, y: 340 },
+          { componentId: 'hecaton-hangar', x: 500, y: 420 },
+          { componentId: 'hecaton-drive', x: 420, y: 520 },
+          { componentId: 'hecaton-core', x: 270, y: 590 }
+        ],
+        reinforcementXRatios: [0.42, 0.62, 0.82]
+      },
+      {
+        id: 'port-ledger',
+        label: 'Port Ledger',
+        safeLane: { label: 'starboard maintenance lane', minX: 470, maxX: 610 },
+        componentPlacements: [
+          { componentId: 'hecaton-emitter-a', x: 430, y: 170 },
+          { componentId: 'hecaton-emitter-b', x: 40, y: 190 },
+          { componentId: 'hecaton-turret', x: 120, y: 280 },
+          { componentId: 'hecaton-armor', x: 320, y: 340 },
+          { componentId: 'hecaton-hangar', x: 140, y: 420 },
+          { componentId: 'hecaton-drive', x: 220, y: 520 },
+          { componentId: 'hecaton-core', x: 370, y: 590 }
+        ],
+        reinforcementXRatios: [0.18, 0.38, 0.58]
+      },
+      {
+        id: 'inverted-audit',
+        label: 'Inverted Audit',
+        safeLane: { label: 'port audit lane', minX: 30, maxX: 170 },
+        componentPlacements: [
+          { componentId: 'hecaton-emitter-a', x: 280, y: 540 },
+          { componentId: 'hecaton-emitter-b', x: 560, y: 520 },
+          { componentId: 'hecaton-turret', x: 600, y: 440 },
+          { componentId: 'hecaton-armor', x: 400, y: 400 },
+          { componentId: 'hecaton-hangar', x: 400, y: 310 },
+          { componentId: 'hecaton-drive', x: 280, y: 230 },
+          { componentId: 'hecaton-core', x: 540, y: 120 }
+        ],
+        reinforcementXRatios: [0.28, 0.55, 0.82]
       }
     ],
     stages: [
@@ -329,7 +372,7 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
         reward: { credits: 4, salvage: 3 }
       }
     ],
-    reinforcement: { formationId: 'formation_screen', memberCount: 3, xRatios: [0.42, 0.62, 0.82] },
+    reinforcement: { formationId: 'formation_screen', memberCount: 3 },
     bossLock: 'none',
     completionReward: { credits: 6, salvage: 4 },
     caps: { reinforcementEnemies: 3, projectiles: 18, debris: 20, effects: 24, rewardPickups: 24 }
@@ -341,15 +384,12 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
     factionId: 'faction_bloom_hive',
     contractTitle: 'Open the Spindle',
     objectiveText: 'Silence the living batteries and reach the station seed chamber.',
-    summary: 'A grown orbital exchange occupying port space with a starboard evacuation lane.',
+    summary: 'A grown orbital exchange whose seeded crown and stem can bloom to either flank.',
     anchorDistanceRatio: 0.55,
-    safeLane: { label: 'starboard evacuation lane', minX: 424, maxX: 606 },
     components: [
       {
         id: 'spindle-emitter',
         templateId: 'setpiece_shield_emitter',
-        x: 116,
-        y: 170,
         stageId: 'spindle-crown',
         dependsOn: [],
         objectiveTarget: true
@@ -357,8 +397,6 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
       {
         id: 'spindle-turret-a',
         templateId: 'setpiece_defense_turret',
-        x: 244,
-        y: 220,
         stageId: 'spindle-crown',
         dependsOn: [],
         objectiveTarget: false
@@ -366,8 +404,6 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
       {
         id: 'spindle-turret-b',
         templateId: 'setpiece_defense_turret',
-        x: 92,
-        y: 302,
         stageId: 'spindle-crown',
         dependsOn: [],
         objectiveTarget: false
@@ -375,8 +411,6 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
       {
         id: 'spindle-armor',
         templateId: 'setpiece_armor_section',
-        x: 224,
-        y: 350,
         stageId: 'spindle-stem',
         dependsOn: ['spindle-emitter'],
         objectiveTarget: true
@@ -384,8 +418,6 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
       {
         id: 'spindle-hangar',
         templateId: 'setpiece_hangar_bay',
-        x: 124,
-        y: 438,
         stageId: 'spindle-stem',
         dependsOn: ['spindle-armor'],
         objectiveTarget: false
@@ -393,8 +425,6 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
       {
         id: 'spindle-drive',
         templateId: 'setpiece_drive_cluster',
-        x: 250,
-        y: 518,
         stageId: 'spindle-seed',
         dependsOn: ['spindle-armor'],
         objectiveTarget: true
@@ -402,11 +432,56 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
       {
         id: 'spindle-core',
         templateId: 'setpiece_breach_core',
-        x: 116,
-        y: 564,
         stageId: 'spindle-seed',
         dependsOn: ['spindle-drive'],
         objectiveTarget: true
+      }
+    ],
+    layouts: [
+      {
+        id: 'starboard-bloom',
+        label: 'Starboard Bloom',
+        safeLane: { label: 'port evacuation lane', minX: 30, maxX: 170 },
+        componentPlacements: [
+          { componentId: 'spindle-emitter', x: 600, y: 170 },
+          { componentId: 'spindle-turret-a', x: 520, y: 250 },
+          { componentId: 'spindle-turret-b', x: 260, y: 300 },
+          { componentId: 'spindle-armor', x: 320, y: 350 },
+          { componentId: 'spindle-hangar', x: 500, y: 430 },
+          { componentId: 'spindle-drive', x: 420, y: 520 },
+          { componentId: 'spindle-core', x: 270, y: 590 }
+        ],
+        reinforcementXRatios: [0.42, 0.62, 0.82]
+      },
+      {
+        id: 'port-bloom',
+        label: 'Port Bloom',
+        safeLane: { label: 'starboard evacuation lane', minX: 470, maxX: 610 },
+        componentPlacements: [
+          { componentId: 'spindle-emitter', x: 40, y: 170 },
+          { componentId: 'spindle-turret-a', x: 120, y: 250 },
+          { componentId: 'spindle-turret-b', x: 380, y: 300 },
+          { componentId: 'spindle-armor', x: 320, y: 350 },
+          { componentId: 'spindle-hangar', x: 140, y: 430 },
+          { componentId: 'spindle-drive', x: 220, y: 520 },
+          { componentId: 'spindle-core', x: 370, y: 590 }
+        ],
+        reinforcementXRatios: [0.18, 0.38, 0.58]
+      },
+      {
+        id: 'seed-first',
+        label: 'Seed-First Bloom',
+        safeLane: { label: 'port cultivation lane', minX: 30, maxX: 170 },
+        componentPlacements: [
+          { componentId: 'spindle-emitter', x: 560, y: 540 },
+          { componentId: 'spindle-turret-a', x: 600, y: 440 },
+          { componentId: 'spindle-turret-b', x: 220, y: 460 },
+          { componentId: 'spindle-armor', x: 400, y: 400 },
+          { componentId: 'spindle-hangar', x: 400, y: 310 },
+          { componentId: 'spindle-drive', x: 280, y: 230 },
+          { componentId: 'spindle-core', x: 540, y: 120 }
+        ],
+        reinforcementXRatios: [0.28, 0.55, 0.82]
       }
     ],
     stages: [
@@ -432,7 +507,7 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
         reward: { credits: 3, salvage: 4 }
       }
     ],
-    reinforcement: { formationId: 'formation_ring', memberCount: 3, xRatios: [0.18, 0.34, 0.5] },
+    reinforcement: { formationId: 'formation_ring', memberCount: 3 },
     bossLock: 'none',
     completionReward: { credits: 5, salvage: 6 },
     caps: { reinforcementEnemies: 3, projectiles: 18, debris: 20, effects: 24, rewardPickups: 24 }
@@ -444,15 +519,12 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
     factionId: 'faction_scrap_court',
     contractTitle: 'Uncouple the Crown',
     objectiveText: 'Split the wreck train, expose the throne core, and clear the boss approach.',
-    summary: 'A two-sided convoy structure leaving a stable center flight corridor.',
+    summary: 'A seeded wreck convoy that can flank, mirror, or reverse its crown progression.',
     anchorDistanceRatio: 0.78,
-    safeLane: { label: 'center tow corridor', minX: 252, maxX: 388 },
     components: [
       {
         id: 'train-coupler-a',
         templateId: 'setpiece_convoy_coupler',
-        x: 168,
-        y: 190,
         stageId: 'train-links',
         dependsOn: [],
         objectiveTarget: true
@@ -460,8 +532,6 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
       {
         id: 'train-coupler-b',
         templateId: 'setpiece_convoy_coupler',
-        x: 472,
-        y: 210,
         stageId: 'train-links',
         dependsOn: [],
         objectiveTarget: true
@@ -469,8 +539,6 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
       {
         id: 'train-turret-a',
         templateId: 'setpiece_defense_turret',
-        x: 92,
-        y: 294,
         stageId: 'train-links',
         dependsOn: [],
         objectiveTarget: false
@@ -478,8 +546,6 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
       {
         id: 'train-turret-b',
         templateId: 'setpiece_defense_turret',
-        x: 548,
-        y: 310,
         stageId: 'train-links',
         dependsOn: [],
         objectiveTarget: false
@@ -487,8 +553,6 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
       {
         id: 'train-armor-a',
         templateId: 'setpiece_armor_section',
-        x: 132,
-        y: 402,
         stageId: 'train-hulks',
         dependsOn: ['train-coupler-a'],
         objectiveTarget: true
@@ -496,8 +560,6 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
       {
         id: 'train-armor-b',
         templateId: 'setpiece_armor_section',
-        x: 508,
-        y: 426,
         stageId: 'train-hulks',
         dependsOn: ['train-coupler-b'],
         objectiveTarget: true
@@ -505,8 +567,6 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
       {
         id: 'train-drive',
         templateId: 'setpiece_drive_cluster',
-        x: 116,
-        y: 540,
         stageId: 'train-crown',
         dependsOn: ['train-armor-a', 'train-armor-b'],
         objectiveTarget: true
@@ -514,11 +574,59 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
       {
         id: 'train-core',
         templateId: 'setpiece_breach_core',
-        x: 526,
-        y: 556,
         stageId: 'train-crown',
         dependsOn: ['train-drive'],
         objectiveTarget: true
+      }
+    ],
+    layouts: [
+      {
+        id: 'starboard-crown',
+        label: 'Starboard Crown',
+        safeLane: { label: 'port tow corridor', minX: 30, maxX: 170 },
+        componentPlacements: [
+          { componentId: 'train-coupler-a', x: 214, y: 190 },
+          { componentId: 'train-coupler-b', x: 600, y: 210 },
+          { componentId: 'train-turret-a', x: 520, y: 290 },
+          { componentId: 'train-turret-b', x: 410, y: 310 },
+          { componentId: 'train-armor-a', x: 300, y: 400 },
+          { componentId: 'train-armor-b', x: 470, y: 420 },
+          { componentId: 'train-drive', x: 380, y: 520 },
+          { componentId: 'train-core', x: 250, y: 590 }
+        ],
+        reinforcementXRatios: [0.42, 0.62, 0.82]
+      },
+      {
+        id: 'port-crown',
+        label: 'Port Crown',
+        safeLane: { label: 'starboard tow corridor', minX: 470, maxX: 610 },
+        componentPlacements: [
+          { componentId: 'train-coupler-a', x: 426, y: 190 },
+          { componentId: 'train-coupler-b', x: 40, y: 210 },
+          { componentId: 'train-turret-a', x: 120, y: 290 },
+          { componentId: 'train-turret-b', x: 230, y: 310 },
+          { componentId: 'train-armor-a', x: 340, y: 400 },
+          { componentId: 'train-armor-b', x: 170, y: 420 },
+          { componentId: 'train-drive', x: 260, y: 520 },
+          { componentId: 'train-core', x: 390, y: 590 }
+        ],
+        reinforcementXRatios: [0.18, 0.38, 0.58]
+      },
+      {
+        id: 'crown-first',
+        label: 'Crown-First Train',
+        safeLane: { label: 'port salvage corridor', minX: 30, maxX: 170 },
+        componentPlacements: [
+          { componentId: 'train-coupler-a', x: 260, y: 540 },
+          { componentId: 'train-coupler-b', x: 560, y: 520 },
+          { componentId: 'train-turret-a', x: 600, y: 450 },
+          { componentId: 'train-turret-b', x: 210, y: 470 },
+          { componentId: 'train-armor-a', x: 350, y: 400 },
+          { componentId: 'train-armor-b', x: 520, y: 420 },
+          { componentId: 'train-drive', x: 280, y: 230 },
+          { componentId: 'train-core', x: 520, y: 120 }
+        ],
+        reinforcementXRatios: [0.28, 0.55, 0.82]
       }
     ],
     stages: [
@@ -544,7 +652,7 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
         reward: { credits: 4, salvage: 4 }
       }
     ],
-    reinforcement: { formationId: 'formation_convoy', memberCount: 3, xRatios: [0.18, 0.5, 0.82] },
+    reinforcement: { formationId: 'formation_convoy', memberCount: 3 },
     bossLock: 'untilComplete',
     completionReward: { credits: 7, salvage: 7 },
     caps: { reinforcementEnemies: 3, projectiles: 18, debris: 22, effects: 26, rewardPickups: 24 }
@@ -559,6 +667,19 @@ export function getSetPieceById(id: SetPieceId): SetPieceDefinition {
   }
 
   return definition;
+}
+
+export function getSetPieceLayoutById(
+  definition: SetPieceDefinition,
+  layoutId: string
+): SetPieceLayoutDefinition {
+  const layout = definition.layouts.find((candidate) => candidate.id === layoutId);
+
+  if (!layout) {
+    throw new Error(`Unknown set-piece layout: ${definition.id}/${layoutId}`);
+  }
+
+  return layout;
 }
 
 export function getSetPieceComponentTemplate(

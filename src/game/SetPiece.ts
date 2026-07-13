@@ -2,31 +2,41 @@ import {
   SET_PIECES,
   getSetPieceById,
   getSetPieceComponentTemplate,
+  getSetPieceLayoutById,
   type SetPieceCollisionShape,
   type SetPieceComponentKind,
+  type SetPieceComponentTemplate,
   type SetPieceDamageSource,
   type SetPieceDefinition,
   type SetPieceId,
   type SetPieceKind,
+  type SetPieceLayoutDefinition,
   type SetPieceStageBeat
 } from '../content/setPieces';
 import { ENEMY_FORMATION_IDS } from '../content/enemyFormations';
 import { FACTIONS } from '../content/factions';
 import type { FactionId } from '../content/factions';
+import { SHIPS } from '../content/ships';
+import { WEAPONS } from '../content/weapons';
 import { clamp } from '../core/math';
-import { COMBAT_ARENA_HEIGHT, COMBAT_ARENA_WIDTH } from './CombatGeometry';
+import { createRng } from '../core/rng';
+import { COMBAT_ARENA_HEIGHT, COMBAT_ARENA_PADDING, COMBAT_ARENA_WIDTH } from './CombatGeometry';
 import type { BossArenaPlan } from './BossArena';
 import type { EnemySpawn } from './CombatState';
 
 export interface SetPiecePlan {
   readonly id: string;
   readonly definitionId: SetPieceId;
+  readonly layoutId: string;
+  readonly layoutLabel: string;
   readonly name: string;
   readonly kind: SetPieceKind;
   readonly anchorDistance: number;
-  readonly safeLane: SetPieceDefinition['safeLane'];
+  readonly safeLane: SetPieceLayoutDefinition['safeLane'];
   readonly bossLock: SetPieceDefinition['bossLock'];
-  readonly reinforcement: SetPieceDefinition['reinforcement'];
+  readonly reinforcement: SetPieceDefinition['reinforcement'] & {
+    readonly xRatios: readonly number[];
+  };
   readonly caps: SetPieceDefinition['caps'];
 }
 
@@ -96,6 +106,7 @@ export interface SetPieceReadModel {
   readonly totalComponents: number;
   readonly objectiveTargetsDestroyed: number;
   readonly objectiveTargetsTotal: number;
+  readonly layoutLabel: string;
   readonly safeLaneLabel: string;
   readonly bossLockActive: boolean;
 }
@@ -109,6 +120,12 @@ const ACTIVE_LEAD_DISTANCE = 210;
 const ACTIVE_TRAIL_DISTANCE = 210;
 const HAZARD_COOLDOWN_SECONDS = 0.35;
 const MIN_SAFE_LANE_WIDTH = 128;
+const FORWARD_FIRE_PROJECTILE_RADIUS = Math.max(
+  ...WEAPONS.map((weapon) => weapon.projectileRadius)
+);
+const FORWARD_FIRE_PLAYER_EDGE_CLEARANCE =
+  COMBAT_ARENA_PADDING + Math.max(...SHIPS.map((ship) => ship.stats.hitRadius));
+const MIN_FORWARD_FIRE_LANE_WIDTH = 14;
 const SET_PIECE_BY_SECTOR: Readonly<Record<number, SetPieceId>> = {
   1: 'setpiece_ledger_hecaton',
   7: 'setpiece_bloom_spindle',
@@ -119,6 +136,8 @@ export function createSetPiecePlan(options: {
   readonly sectorIndex: number;
   readonly scrollLength: number;
   readonly bossArena?: BossArenaPlan | null;
+  readonly layoutId?: string;
+  readonly layoutSeed?: string;
 }): SetPiecePlan | null {
   const definitionId = SET_PIECE_BY_SECTOR[options.sectorIndex];
 
@@ -127,6 +146,16 @@ export function createSetPiecePlan(options: {
   }
 
   const definition = getSetPieceById(definitionId);
+  const layout = options.layoutId
+    ? getSetPieceLayoutById(definition, options.layoutId)
+    : options.layoutSeed
+      ? createRng(options.layoutSeed).choice(definition.layouts)
+      : definition.layouts[0];
+
+  if (!layout) {
+    throw new Error(`Set piece ${definition.id} has no layouts.`);
+  }
+
   const ratioDistance = Math.round(options.scrollLength * definition.anchorDistanceRatio);
   const anchorDistance =
     definition.bossLock === 'untilComplete' && options.bossArena
@@ -134,14 +163,19 @@ export function createSetPiecePlan(options: {
       : clamp(ratioDistance, 260, Math.max(260, options.scrollLength - 360));
 
   return {
-    id: `${definition.id}:sector-${options.sectorIndex}`,
+    id: `${definition.id}:${layout.id}:sector-${options.sectorIndex}`,
     definitionId: definition.id,
+    layoutId: layout.id,
+    layoutLabel: layout.label,
     name: definition.name,
     kind: definition.kind,
     anchorDistance,
-    safeLane: definition.safeLane,
+    safeLane: layout.safeLane,
     bossLock: definition.bossLock,
-    reinforcement: definition.reinforcement,
+    reinforcement: {
+      ...definition.reinforcement,
+      xRatios: layout.reinforcementXRatios
+    },
     caps: definition.caps
   };
 }
@@ -155,15 +189,24 @@ export function createSetPieceState(
   }
 
   const definition = getSetPieceById(plan.definitionId);
+  const layout = getSetPieceLayoutById(definition, plan.layoutId);
+  const placementByComponentId = new Map(
+    layout.componentPlacements.map((placement) => [placement.componentId, placement])
+  );
   const components = definition.components.map((component): SetPieceComponentState => {
     const template = getSetPieceComponentTemplate(component.templateId);
+    const placement = placementByComponentId.get(component.id);
+
+    if (!placement) {
+      throw new Error(`Set-piece layout ${definition.id}/${layout.id} is missing ${component.id}.`);
+    }
 
     return {
       id: component.id,
       templateId: component.templateId,
       kind: template.kind,
-      x: component.x,
-      y: component.y,
+      x: placement.x,
+      y: placement.y,
       distance: plan.anchorDistance,
       collisionShape: template.collision.shape,
       width: template.collision.width,
@@ -442,7 +485,8 @@ export function getSetPieceReadModel(state: SetPieceState | null): SetPieceReadM
     totalComponents: state.components.length,
     objectiveTargetsDestroyed: targets.filter((component) => component.destroyed).length,
     objectiveTargetsTotal: targets.length,
-    safeLaneLabel: definition.safeLane.label,
+    layoutLabel: state.plan.layoutLabel,
+    safeLaneLabel: state.plan.safeLane.label,
     bossLockActive: state.plan.bossLock === 'untilComplete' && !state.completed
   };
 }
@@ -459,7 +503,7 @@ export function createSetPieceReinforcementSpawns(
   }
 
   const definition = getSetPieceById(plan.definitionId);
-  const formation = definition.reinforcement;
+  const formation = plan.reinforcement;
   const memberCount = Math.min(
     formation.memberCount,
     formation.xRatios.length,
@@ -482,6 +526,119 @@ export function createSetPieceReinforcementSpawns(
     formationMemberIndex: index,
     formationMemberCount: memberCount
   }));
+}
+
+export interface SetPieceForwardFireLane {
+  readonly minX: number;
+  readonly maxX: number;
+}
+
+export function getSetPieceForwardFireLane(
+  definition: SetPieceDefinition,
+  layout: SetPieceLayoutDefinition,
+  targetComponentId: string,
+  projectileRadius = FORWARD_FIRE_PROJECTILE_RADIUS
+): SetPieceForwardFireLane | null {
+  const componentById = new Map(
+    definition.components.map((component) => [component.id, component])
+  );
+  const placementById = new Map(
+    layout.componentPlacements.map((placement) => [placement.componentId, placement])
+  );
+  const target = componentById.get(targetComponentId);
+  const targetPlacement = placementById.get(targetComponentId);
+
+  if (!target || !targetPlacement) {
+    return null;
+  }
+
+  const destroyedBeforeTarget = new Set<string>();
+  const collectDependencies = (componentId: string): void => {
+    for (const dependencyId of componentById.get(componentId)?.dependsOn ?? []) {
+      if (!destroyedBeforeTarget.has(dependencyId)) {
+        destroyedBeforeTarget.add(dependencyId);
+        collectDependencies(dependencyId);
+      }
+    }
+  };
+  collectDependencies(targetComponentId);
+
+  const targetTemplate = getSetPieceComponentTemplate(target.templateId);
+  const targetHalfWidth = getCollisionHalfWidth(targetTemplate.collision);
+  const targetHalfHeight = getCollisionHalfHeight(targetTemplate.collision);
+  const targetBottom = targetPlacement.y + targetHalfHeight;
+  if (targetBottom > COMBAT_ARENA_HEIGHT - FORWARD_FIRE_PLAYER_EDGE_CLEARANCE) {
+    return null;
+  }
+  const candidate: SetPieceForwardFireLane = {
+    minX: Math.max(
+      FORWARD_FIRE_PLAYER_EDGE_CLEARANCE,
+      targetPlacement.x - targetHalfWidth - projectileRadius
+    ),
+    maxX: Math.min(
+      COMBAT_ARENA_WIDTH - FORWARD_FIRE_PLAYER_EDGE_CLEARANCE,
+      targetPlacement.x + targetHalfWidth + projectileRadius
+    )
+  };
+
+  if (candidate.maxX - candidate.minX < MIN_FORWARD_FIRE_LANE_WIDTH) {
+    return null;
+  }
+
+  const blockedIntervals = definition.components.flatMap((component) => {
+    if (component.id === targetComponentId || destroyedBeforeTarget.has(component.id)) {
+      return [];
+    }
+
+    const placement = placementById.get(component.id);
+    if (!placement) {
+      return [];
+    }
+
+    const template = getSetPieceComponentTemplate(component.templateId);
+    const halfHeight = getCollisionHalfHeight(template.collision);
+    if (placement.y + halfHeight <= targetBottom) {
+      return [];
+    }
+
+    const halfWidth = getCollisionHalfWidth(template.collision);
+    const minX = Math.max(candidate.minX, placement.x - halfWidth - projectileRadius);
+    const maxX = Math.min(candidate.maxX, placement.x + halfWidth + projectileRadius);
+    return maxX > minX ? [{ minX, maxX }] : [];
+  });
+
+  const merged = [...blockedIntervals]
+    .sort((left, right) => left.minX - right.minX)
+    .reduce<SetPieceForwardFireLane[]>((intervals, interval) => {
+      const previous = intervals[intervals.length - 1];
+      if (!previous || interval.minX > previous.maxX) {
+        intervals.push(interval);
+      } else {
+        intervals[intervals.length - 1] = {
+          minX: previous.minX,
+          maxX: Math.max(previous.maxX, interval.maxX)
+        };
+      }
+      return intervals;
+    }, []);
+
+  let cursor = candidate.minX;
+  let best: SetPieceForwardFireLane | null = null;
+  const consider = (minX: number, maxX: number): void => {
+    if (
+      maxX - minX >= MIN_FORWARD_FIRE_LANE_WIDTH &&
+      (!best || maxX - minX > best.maxX - best.minX)
+    ) {
+      best = { minX, maxX };
+    }
+  };
+
+  for (const interval of merged) {
+    consider(cursor, interval.minX);
+    cursor = Math.max(cursor, interval.maxX);
+  }
+  consider(cursor, candidate.maxX);
+  return best;
 }
 
 export function validateSetPieceContent(
@@ -532,37 +689,8 @@ export function validateSetPieceContent(
       errors.push(`${owner} must define exterior, interior, and destruction stages in order.`);
     }
 
-    if (definition.safeLane.maxX - definition.safeLane.minX < MIN_SAFE_LANE_WIDTH) {
-      errors.push(`${owner} safe lane must be at least ${MIN_SAFE_LANE_WIDTH}px wide.`);
-    }
-
-    if (definition.safeLane.minX < 0 || definition.safeLane.maxX > COMBAT_ARENA_WIDTH) {
-      errors.push(`${owner} safe lane must remain inside the ${COMBAT_ARENA_WIDTH}px arena.`);
-    }
-
     for (const component of definition.components) {
-      const template = getSetPieceComponentTemplate(component.templateId);
       templateUse.set(component.templateId, (templateUse.get(component.templateId) ?? 0) + 1);
-      const extentX =
-        template.collision.shape === 'circle'
-          ? template.collision.radius
-          : template.collision.width / 2;
-
-      if (component.x - extentX < 0 || component.x + extentX > COMBAT_ARENA_WIDTH) {
-        errors.push(`${owner} component ${component.id} leaves the fixed arena.`);
-      }
-
-      if (component.y < 0 || component.y > COMBAT_ARENA_HEIGHT) {
-        errors.push(`${owner} component ${component.id} has an invalid vertical anchor.`);
-      }
-
-      if (
-        component.x + extentX > definition.safeLane.minX &&
-        component.x - extentX < definition.safeLane.maxX
-      ) {
-        errors.push(`${owner} component ${component.id} intrudes on its safe lane.`);
-      }
-
       if (!stageIds.has(component.stageId)) {
         errors.push(
           `${owner} component ${component.id} references unknown stage ${component.stageId}.`
@@ -573,6 +701,85 @@ export function validateSetPieceContent(
         if (!componentIds.has(dependencyId) || dependencyId === component.id) {
           errors.push(`${owner} component ${component.id} has invalid dependency ${dependencyId}.`);
         }
+      }
+    }
+
+    const layoutIds = new Set<string>();
+    if (definition.layouts.length < 3) {
+      errors.push(`${owner} must define at least three seeded layouts.`);
+    }
+
+    for (const layout of definition.layouts) {
+      const layoutOwner = `${owner} layout ${layout.id}`;
+      const placementIds = new Set(
+        layout.componentPlacements.map((placement) => placement.componentId)
+      );
+
+      if (layoutIds.has(layout.id)) {
+        errors.push(`${owner} has duplicate layout id ${layout.id}.`);
+      }
+      layoutIds.add(layout.id);
+
+      if (layout.safeLane.maxX - layout.safeLane.minX < MIN_SAFE_LANE_WIDTH) {
+        errors.push(`${layoutOwner} safe lane must be at least ${MIN_SAFE_LANE_WIDTH}px wide.`);
+      }
+
+      if (layout.safeLane.minX < 0 || layout.safeLane.maxX > COMBAT_ARENA_WIDTH) {
+        errors.push(
+          `${layoutOwner} safe lane must remain inside the ${COMBAT_ARENA_WIDTH}px arena.`
+        );
+      }
+
+      if (
+        placementIds.size !== layout.componentPlacements.length ||
+        layout.componentPlacements.length !== definition.components.length
+      ) {
+        errors.push(`${layoutOwner} must place every component exactly once.`);
+      }
+
+      for (const placement of layout.componentPlacements) {
+        const component = definition.components.find(
+          (candidate) => candidate.id === placement.componentId
+        );
+        if (!component) {
+          errors.push(`${layoutOwner} places unknown component ${placement.componentId}.`);
+          continue;
+        }
+
+        const template = getSetPieceComponentTemplate(component.templateId);
+        const extentX = getCollisionHalfWidth(template.collision);
+        const extentY = getCollisionHalfHeight(template.collision);
+        if (placement.x - extentX < 0 || placement.x + extentX > COMBAT_ARENA_WIDTH) {
+          errors.push(`${layoutOwner} component ${component.id} leaves the fixed arena.`);
+        }
+
+        if (placement.y - extentY < 0 || placement.y + extentY > COMBAT_ARENA_HEIGHT) {
+          errors.push(
+            `${layoutOwner} component ${component.id} leaves the fixed arena vertically.`
+          );
+        }
+
+        if (
+          placement.x + extentX > layout.safeLane.minX &&
+          placement.x - extentX < layout.safeLane.maxX
+        ) {
+          errors.push(`${layoutOwner} component ${component.id} intrudes on its safe lane.`);
+        }
+      }
+
+      for (const component of definition.components.filter(
+        (candidate) => candidate.objectiveTarget
+      )) {
+        if (!getSetPieceForwardFireLane(definition, layout, component.id)) {
+          errors.push(`${layoutOwner} leaves no forward-fire lane to ${component.id}.`);
+        }
+      }
+
+      if (
+        layout.reinforcementXRatios.length < definition.reinforcement.memberCount ||
+        layout.reinforcementXRatios.some((ratio) => ratio <= 0 || ratio >= 1)
+      ) {
+        errors.push(`${layoutOwner} has invalid reinforcement positions.`);
       }
     }
 
@@ -703,6 +910,14 @@ function appendEvent(state: SetPieceState, event: SetPieceRuntimeEvent): void {
 
 function isComponentDestroyed(state: SetPieceState, componentId: string): boolean {
   return state.components.some((component) => component.id === componentId && component.destroyed);
+}
+
+function getCollisionHalfWidth(collision: SetPieceComponentTemplate['collision']): number {
+  return collision.shape === 'circle' ? collision.radius : collision.width / 2;
+}
+
+function getCollisionHalfHeight(collision: SetPieceComponentTemplate['collision']): number {
+  return collision.shape === 'circle' ? collision.radius : collision.height / 2;
 }
 
 function hasDependencyCycle(definition: SetPieceDefinition): boolean {

@@ -2272,6 +2272,26 @@ Verification: `npm run verify:release` passes with 95 Vitest files and 576 tests
 
 Follow-up verification: `npm run verify:release` passes with 95 Vitest files and 579 tests, ESLint, typecheck, production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Focused reward/unlock/foundry presentation coverage passes with 3 files and 15 tests, including exact six-projectile Split Prism preview/combat parity, distinct known-seed starter kits, sequential periodic volleys, and refreshed deterministic Act II reward snapshots. The build emits 872.99 kB minified/236.97 kB gzip initial JavaScript and unchanged 43.09 kB CSS/9.23 kB gzip. The existing chunk warning remains open and no threshold changed. The supplied deployed screenshot established the visual discrepancy; the correction changes projectile composition only and retains the verified work order 128 layout/CSS.
 
+## Work order 129 - Seeded set-piece layout solvability and variety
+
+Goal: make corrected forward-firing starter loadouts viable against the first multi-part assembly while giving every set piece seed-dependent structural variety.
+
+Prompt:
+
+> Review all capital-ship, station, and wreck-convoy layouts, beginning with the Hecaton arrangement that protects its opening shield emitter behind locked lower structure. Do not restore accidental universal forked projectiles or make dependency-locked components intangible. Guarantee that ordinary forward-firing weapons can reach every required subsystem when it unlocks, then add multiple valid arrangements selected deterministically on different run seeds. Preserve component identity, dependencies, stage/reward/objective accounting, safe lanes, ally targeting, hazards, boss locks, mission projection, fixed-world rendering/collision parity, accessibility settings, and bounded runtime cost. Add validation, deterministic, combat, and release coverage. Run checks.
+
+Acceptance criteria:
+
+- The first Hecaton arrangement gives corrected single/dual forward weapons a legal shot to either opening shield emitter from within player movement bounds; locked armor, drives, cores, hangars, and turrets do not form an unavoidable projectile wall.
+- Every set piece supplies at least three authored arrangements with distinct flanked, mirrored, or reversed geometry, layout-specific safe lanes and reinforcement positions, and deterministic named-seed selection.
+- Every arrangement places each stable component exactly once, remains inside the fixed 640x720 arena, keeps a safe lane at least 128px wide, preserves the same dependency/stage/reward graph, and exposes a straight-fire corridor to each objective at its earliest unlock state.
+- Mission/operation reprojection preserves the already selected layout instead of rerolling it; HUD, debug, and deterministic summaries identify the arrangement and current safe lane.
+- Runtime component, projectile, actor, reward, effect, save, snapshot, accessibility, collision, objective, and boss-lock contracts remain bounded and compatible.
+
+Status: implemented. `setPieces.ts` now separates seven/eight-component subsystem graphs from layout geometry. Hecaton Ledger Ark, Bloom Spindle Exchange, and Court Wreck-Train Crown each own three original arrangements: a starboard structure, mirrored port structure, and reversed vertical progression. A dedicated sector-generation fork chooses the layout without moving other streams; `SetPiecePlan` carries layout identity, label, safe lane, and reinforcement positions, and terminal mission reprojection retains that identity while rebuilding its distance. The canonical Hecaton moves its opening emitters out from the former locked stack. `getSetPieceForwardFireLane` conservatively models the largest current player hull and projectile, removes only recursively satisfied dependencies, retains unrelated locked/optional parts, and requires a useful vertical firing interval for every objective. Content validation also checks layout/component bijection, ids, arena bounds, safe lanes, reinforcement positions, stages, dependencies, cycles, and caps. Runtime resolves the selected placements once, while existing collision, rendering, ally focus, rewards, objectives, and boss locks remain authoritative. HUD/debug/run summaries expose arrangement identity.
+
+Verification: `npm run verify:release` passes with 95 Vitest files and 582 tests, ESLint, typecheck, production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Focused set-piece/combat/mission coverage passes with 3 files and 25 tests, including all nine layouts, 64-seed selection sweeps, an intentionally blocked fixture, explicit mission-layout preservation, and production Light Needle shots from legal player positions to both opening Hecaton emitters. The build emits 877.56 kB minified/237.92 kB gzip initial JavaScript and unchanged 43.09 kB CSS/9.23 kB gzip. The existing chunk warning remains open and no threshold changed. Direct inspection through the in-app browser was unavailable in this session; the complete Chromium suite and fixed-world geometry/combat regressions are the local visual/runtime evidence.
+
 ## Review subagent prompt
 
 Use after a feature PR:

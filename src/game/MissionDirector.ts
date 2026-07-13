@@ -913,7 +913,8 @@ function projectObjectiveSector(
     ? createSetPiecePlan({
         sectorIndex: sector.index,
         scrollLength: projectedScroll.length,
-        bossArena: projectedArena
+        bossArena: projectedArena,
+        layoutId: sector.setPiece?.layoutId
       })
     : null;
 

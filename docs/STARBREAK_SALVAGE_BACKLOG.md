@@ -1762,6 +1762,7 @@ Acceptance:
 Status:
 
 - Implemented in work order 096. Seven shared component templates compose three original capital/station/wreck-convoy contracts with dependency-gated targets, exterior/interior/destruction stages, fixed safe lanes, deterministic one-shot rewards, objective credit, bounded turret/hangar pressure, hazard/bomb/special integration, scroll anchors, public debug/read models, and finale boss-lock release. Accessibility modes preserve collision geometry and stage timing while simplifying presentation; unit, deterministic, and Chromium coverage is green.
+- Expanded in work order 129. Component identity and dependency data are now separate from nine authored layout records: each contract has flanked, mirrored, and reversed arrangements with layout-specific safe lanes and reinforcement positions selected by a named seed stream. Content validation requires every layout to place every component exactly once inside the fixed arena, preserve its safe lane, and leave a straight-fire corridor from a valid player position to every objective when that dependency layer unlocks. The first Hecaton arrangement therefore remains viable for corrected single/dual forward weapons without restoring the former universal projectile fork.
 
 ### BF2 - Faction campaigns and rivals
 

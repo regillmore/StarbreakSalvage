@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   SET_PIECES,
+  getSetPieceLayoutById,
   getSetPieceComponentTemplate,
   type SetPieceDefinition
 } from '../../src/content/setPieces';
@@ -13,6 +14,7 @@ import {
   getSetPieceComponentRect,
   getSetPieceComponentScreenState,
   getSetPieceDebugJumpDistance,
+  getSetPieceForwardFireLane,
   getSetPieceReadModel,
   isSetPieceBossLockReleased,
   validateSetPieceContent
@@ -63,12 +65,55 @@ describe('SetPiece', () => {
     expect(createSetPiecePlan({ sectorIndex: 4, scrollLength: 2400 })).toBeNull();
   });
 
+  it('selects every authored layout from named seed streams and preserves explicit reprojections', () => {
+    for (const [definition, sectorIndex] of SET_PIECES.map(
+      (entry, index) => [entry, [1, 7, 10][index]!] as const
+    )) {
+      const selectedLayoutIds = new Set(
+        Array.from(
+          { length: 64 },
+          (_, seedIndex) =>
+            createSetPiecePlan({
+              sectorIndex,
+              scrollLength: 3000,
+              layoutSeed: `SET-PIECE-LAYOUT-${definition.id}-${seedIndex}`
+            })?.layoutId
+        )
+      );
+
+      expect(selectedLayoutIds).toEqual(new Set(definition.layouts.map((layout) => layout.id)));
+      for (const layout of definition.layouts) {
+        const explicit = createSetPiecePlan({
+          sectorIndex,
+          scrollLength: 3000,
+          layoutId: layout.id
+        });
+        expect(explicit).toMatchObject({
+          layoutId: layout.id,
+          layoutLabel: layout.label,
+          safeLane: layout.safeLane
+        });
+      }
+    }
+  });
+
   it('rejects duplicate component identities, unsafe lanes, and undersized pressure budgets', () => {
     const source = SET_PIECES[0];
     if (!source) throw new Error('Expected a set-piece fixture.');
+    const firstLayout = source.layouts[0];
+    if (!firstLayout) throw new Error('Expected a set-piece layout fixture.');
     const broken: SetPieceDefinition = {
       ...source,
-      safeLane: { ...source.safeLane, maxX: source.safeLane.minX + 40 },
+      layouts: [
+        {
+          ...firstLayout,
+          safeLane: {
+            ...firstLayout.safeLane,
+            maxX: firstLayout.safeLane.minX + 40
+          }
+        },
+        ...source.layouts.slice(1)
+      ],
       components: [...source.components, source.components[0]!],
       caps: { ...source.caps, reinforcementEnemies: 1, projectiles: 0 }
     };
@@ -82,6 +127,30 @@ describe('SetPiece', () => {
         expect.stringContaining('reinforcement count exceeds'),
         expect.stringContaining('positive projectile')
       ])
+    );
+  });
+
+  it('rejects an arrangement that puts locked structure across an objective firing lane', () => {
+    const source = SET_PIECES[0];
+    const layout = source?.layouts[0];
+    if (!source || !layout) throw new Error('Expected a set-piece layout fixture.');
+    const blocked: SetPieceDefinition = {
+      ...source,
+      layouts: [
+        {
+          ...layout,
+          componentPlacements: layout.componentPlacements.map((placement) =>
+            placement.componentId === 'hecaton-turret'
+              ? { ...placement, x: 210, y: 280 }
+              : placement
+          )
+        },
+        ...source.layouts.slice(1)
+      ]
+    };
+
+    expect(validateSetPieceContent([blocked, ...SET_PIECES.slice(1)]).errors).toContain(
+      `Set piece ${source.id} layout ${layout.id} leaves no forward-fire lane to hecaton-emitter-a.`
     );
   });
 
@@ -149,29 +218,40 @@ describe('SetPiece', () => {
     });
   });
 
-  it('keeps collision silhouettes outside fixed 640x720 safe lanes at every viewport setting', () => {
+  it('keeps every layout inside fixed geometry with a straight-shot route to every objective', () => {
     for (const definition of SET_PIECES) {
-      const plan = createSetPiecePlan({
-        sectorIndex:
-          definition.id === 'setpiece_ledger_hecaton'
-            ? 1
-            : definition.id === 'setpiece_bloom_spindle'
-              ? 7
-              : 10,
-        scrollLength: 3000
-      });
-      const state = requireState(plan);
+      for (const layout of definition.layouts) {
+        const plan = createSetPiecePlan({
+          sectorIndex:
+            definition.id === 'setpiece_ledger_hecaton'
+              ? 1
+              : definition.id === 'setpiece_bloom_spindle'
+                ? 7
+                : 10,
+          scrollLength: 3000,
+          layoutId: layout.id
+        });
+        const state = requireState(plan);
 
-      expect(plan!.safeLane.maxX - plan!.safeLane.minX).toBeGreaterThanOrEqual(128);
-      for (const component of state.components) {
-        const rect = getSetPieceComponentRect(plan!.anchorDistance, component);
-        const normal = getSetPieceComponentScreenState(plan!.anchorDistance, component);
-        const reducedMotion = getSetPieceComponentScreenState(plan!.anchorDistance, component);
+        expect(getSetPieceLayoutById(definition, plan!.layoutId)).toBe(layout);
+        expect(plan!.safeLane.maxX - plan!.safeLane.minX).toBeGreaterThanOrEqual(128);
+        for (const component of state.components) {
+          const rect = getSetPieceComponentRect(plan!.anchorDistance, component);
+          const normal = getSetPieceComponentScreenState(plan!.anchorDistance, component);
+          const reducedMotion = getSetPieceComponentScreenState(plan!.anchorDistance, component);
 
-        expect(rect.left >= plan!.safeLane.maxX || rect.right <= plan!.safeLane.minX).toBe(true);
-        expect(rect.left).toBeGreaterThanOrEqual(0);
-        expect(rect.right).toBeLessThanOrEqual(640);
-        expect(normal).toEqual(reducedMotion);
+          expect(rect.left >= plan!.safeLane.maxX || rect.right <= plan!.safeLane.minX).toBe(true);
+          expect(rect.left).toBeGreaterThanOrEqual(0);
+          expect(rect.right).toBeLessThanOrEqual(640);
+          expect(rect.top).toBeGreaterThanOrEqual(0);
+          expect(rect.bottom).toBeLessThanOrEqual(720);
+          expect(normal).toEqual(reducedMotion);
+        }
+        for (const component of definition.components.filter(
+          (candidate) => candidate.objectiveTarget
+        )) {
+          expect(getSetPieceForwardFireLane(definition, layout, component.id)).not.toBeNull();
+        }
       }
     }
   });

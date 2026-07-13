@@ -176,6 +176,8 @@ describe('MissionDirector', () => {
     ).toBe(true);
     expect(arena!.lockDistance).toBeLessThan(projection.sector.scroll.length);
     expect(setPiece!.anchorDistance).toBe(Math.round(arena!.lockDistance));
+    expect(setPiece!.layoutId).toBe(sector.setPiece!.layoutId);
+    expect(setPiece!.safeLane).toEqual(sector.setPiece!.safeLane);
 
     const setPieceState = createSetPieceState(setPiece);
     setPieceState!.completed = true;

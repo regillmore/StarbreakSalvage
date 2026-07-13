@@ -480,7 +480,8 @@ function generateSectorRoute(
   const setPiece = createSetPiecePlan({
     sectorIndex: index,
     scrollLength: scroll.length,
-    bossArena: arena
+    bossArena: arena,
+    layoutSeed: rng.fork('set-piece-layout').seedLabel
   });
 
   return {
@@ -952,6 +953,8 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
         ? {
             setPiece: {
               id: sector.setPiece.definitionId,
+              layoutId: sector.setPiece.layoutId,
+              layoutLabel: sector.setPiece.layoutLabel,
               anchorDistance: sector.setPiece.anchorDistance,
               safeLane: sector.setPiece.safeLane,
               bossLock: sector.setPiece.bossLock,

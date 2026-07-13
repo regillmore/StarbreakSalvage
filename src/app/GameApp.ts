@@ -2564,7 +2564,7 @@ export class GameApp {
       : [];
     const setPieceDebug = debugState.setPiece
       ? [
-          `Set-piece ${debugState.setPiece.name} ${debugState.setPiece.beat} ${debugState.setPiece.destroyedComponents}/${debugState.setPiece.totalComponents} target ${debugState.setPiece.targetLabel} lane ${debugState.setPiece.safeLaneLabel}${debugState.setPiece.bossLockActive ? ' BOSS-LOCK' : ''}`
+          `Set-piece ${debugState.setPiece.name}/${debugState.setPiece.layoutLabel} ${debugState.setPiece.beat} ${debugState.setPiece.destroyedComponents}/${debugState.setPiece.totalComponents} target ${debugState.setPiece.targetLabel} lane ${debugState.setPiece.safeLaneLabel}${debugState.setPiece.bossLockActive ? ' BOSS-LOCK' : ''}`
         ]
       : [];
     const factionCampaignDebug = debugState.factionCampaign
