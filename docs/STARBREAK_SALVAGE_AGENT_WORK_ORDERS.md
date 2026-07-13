@@ -2292,6 +2292,26 @@ Status: implemented. `setPieces.ts` now separates seven/eight-component subsyste
 
 Verification: `npm run verify:release` passes with 95 Vitest files and 582 tests, ESLint, typecheck, production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Focused set-piece/combat/mission coverage passes with 3 files and 25 tests, including all nine layouts, 64-seed selection sweeps, an intentionally blocked fixture, explicit mission-layout preservation, and production Light Needle shots from legal player positions to both opening Hecaton emitters. The build emits 877.56 kB minified/237.92 kB gzip initial JavaScript and unchanged 43.09 kB CSS/9.23 kB gzip. The existing chunk warning remains open and no threshold changed. Direct inspection through the in-app browser was unavailable in this session; the complete Chromium suite and fixed-world geometry/combat regressions are the local visual/runtime evidence.
 
+## Work order 130 - Boss-arena request delivery repair
+
+Goal: prevent a resolved boss approach from losing its spawn request between the gameplay frame's two arena evaluations.
+
+Prompt:
+
+> Fix the Act I sector-four Corporate Kill Grid gate soft lock observed at 1074/1768u after all visible enemies are defeated. Reproduce the earlier lock and audit the complete boss-readiness handoff, including the scene's pre-scroll and post-scroll arena evaluations, rather than adding another forced clear or moving the arena. Preserve normal enemy resolution, Rescue objective clauses, faction-front pressure, mission projection, spawn-envelope fitting, hazards, set pieces, boss identity, arena approach/release, recovery coast, debug shortcuts, deterministic behavior, and objective/reward accounting. Add an exact regression and run release checks.
+
+Acceptance criteria:
+
+- A locked arena with unresolved support does not request the boss; once support resolves, every arena poll continues requesting until `CombatState` confirms that the boss actor spawned.
+- The pre-scroll poll cannot consume the request before the post-scroll result used by `GameplayScene` to call `spawnBoss`, including when the final target dies after the prior frame's arena evaluations.
+- A spawned or defeated boss suppresses further requests, exactly one actor appears, debug/external bypass remains compatible, and arena release still requires ordinary boss resolution.
+- The Rescue corridor's 90% travel clause may remain incomplete at the pre-boss lock and completes through normal post-fight travel; no enemy, clause, reward, or distance is force-cleared or credited.
+- Existing spawn fitting, faction/rival/apex pressure, mission projection, set-piece gates, hazards, coasts, saves, snapshots, and deterministic content remain unchanged.
+
+Status: implemented. The soft lock was a lost edge trigger rather than another unreachable spawn or objective clause. `GameplayScene` evaluates `updateBossArenaState` before advancing scroll and again afterward, but only the second result owns the `spawnBoss` call. If support became clear while the arena was already locked, the following frame's first poll set `bossSpawnRequested` and returned `shouldSpawnBoss`; the second poll treated that request as spent and returned false forever. Locked readiness is now level-triggered until `CombatState.bossSpawned` acknowledges a real actor. The historical request flag remains available to distinguish legitimate arena flow from the existing external/debug bypass, while boss activation immediately suppresses repeat delivery. The displayed 1074/1768u position consists of a 1074u arena lock inside a 1408u live operation plus the existing 360u recovery coast; the Rescue corridor ratio is expected to finish after boss defeat and was not gating the request.
+
+Verification: `npm run verify:release` passes with 95 Vitest files and 583 tests, ESLint, typecheck, production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Focused boss-arena, mission-director, and wave-director coverage passes with 3 files and 22 tests. The new exact fixture uses the Corporate Kill Grid, a 1074u lock, unresolved then resolved support, consecutive pre/post-scroll polls, and explicit spawn acknowledgement; approach, release, debug bypass, projection, and spawn-envelope tests remain green. The build emits 877.54 kB minified/237.92 kB gzip initial JavaScript and unchanged 43.09 kB CSS/9.23 kB gzip. The existing chunk warning remains open and no threshold changed.
+
 ## Review subagent prompt
 
 Use after a feature PR:

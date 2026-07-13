@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fixed the Act I Corporate Kill Grid boss soft lock observed at 1074/1768u. Boss-arena readiness now remains asserted until combat acknowledges that the boss actor actually spawned, so the scene's pre-scroll arena poll cannot consume the one-shot request before its post-scroll spawning pass after the last support target dies.
+
 - Rebuilt the three multi-part set pieces around nine seed-selected layouts. The opening Hecaton no longer stacks locked structure beneath its shield emitters, every objective stage now has a validated straight-fire lane reachable by the largest player hull, mirrored and reversed arrangements vary across run seeds, mission reprojection preserves the selected geometry, and HUD/debug copy names the active arrangement and safe lane.
 
 - Corrected Hardpoint Control/combat volley drift and retired the universal starter firing pattern. The attack simulation now applies the run's owned `onFire` and `onProjectileSpawn` item hooks in the same bounded order as combat and samples sequential volleys so periodic procs remain visible, while starter contracts receive three deterministic bias-weighted items instead of every ship being forced to carry Split Prism and Chain Arc Capacitor. Base weapons retain distinct silhouettes and legitimately acquired projectile-shaping items remain visible in both combat and preview.

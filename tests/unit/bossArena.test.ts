@@ -90,7 +90,7 @@ describe('BossArena', () => {
     ).toBeNull();
   });
 
-  it('slows on approach, locks at the arena, and spawns once when support is clear', () => {
+  it('slows on approach, locks at the arena, and requests a boss until the spawn is acknowledged', () => {
     const arena = getBossArena();
     const state = createBossArenaState(arena);
 
@@ -142,7 +142,58 @@ describe('BossArena', () => {
         bossAlreadySpawned: false,
         bossDefeated: false
       })
+    ).toEqual({ phase: 'locked', speedOverride: 0, shouldSpawnBoss: true });
+
+    expect(
+      updateBossArenaState(state, {
+        distance: arena.lockDistance,
+        supportComplete: true,
+        bossActive: true,
+        bossAlreadySpawned: true,
+        bossDefeated: false
+      })
     ).toEqual({ phase: 'locked', speedOverride: 0, shouldSpawnBoss: false });
+  });
+
+  it('preserves the 1074u rescue-gate request across pre-scroll and post-scroll polls', () => {
+    const arena: BossArenaPlan = {
+      sectorId: 'sector_trade_war_corridor',
+      approachStartDistance: 904,
+      lockDistance: 1_074,
+      releaseDistance: 1_408,
+      approachSpeed: 54,
+      exitSpeed: 94
+    };
+    const state = createBossArenaState(arena);
+
+    expect(
+      updateBossArenaState(state, {
+        distance: 1_074,
+        supportComplete: false,
+        bossActive: false,
+        bossAlreadySpawned: false,
+        bossDefeated: false
+      }).shouldSpawnBoss
+    ).toBe(false);
+
+    const preScroll = updateBossArenaState(state, {
+      distance: 1_074,
+      supportComplete: true,
+      bossActive: false,
+      bossAlreadySpawned: false,
+      bossDefeated: false
+    });
+    const postScroll = updateBossArenaState(state, {
+      distance: 1_074,
+      supportComplete: true,
+      bossActive: false,
+      bossAlreadySpawned: false,
+      bossDefeated: false
+    });
+
+    expect(preScroll).toEqual({ phase: 'locked', speedOverride: 0, shouldSpawnBoss: true });
+    expect(postScroll).toEqual({ phase: 'locked', speedOverride: 0, shouldSpawnBoss: true });
+    expect(state.bossSpawnRequested).toBe(true);
   });
 
   it('unlocks after boss defeat and resumes exit speed', () => {

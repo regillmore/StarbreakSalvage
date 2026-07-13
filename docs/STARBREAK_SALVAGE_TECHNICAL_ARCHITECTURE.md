@@ -848,6 +848,13 @@ seed + permanent save fingerprint
 - Runtime state resolves one seven- or eight-entry placement map when combat is created. Collision, player pushout, ally focus, subsystem fire, rendering, rewards, stage progression, boss locks, and objective accounting continue consuming the same component state and fixed 640x720 transform; no per-frame reachability search or adaptive geometry is introduced.
 - HUD, debug, and deterministic run summaries expose the chosen layout label and layout-specific safe lane. Layout selection adds no save or snapshot field because immutable run generation reconstructs it from the existing seed and named stream.
 
+### Work order 130 boss-spawn request acknowledgement invariant
+
+- `GameplayScene` evaluates boss-arena state before choosing scroll speed and again after scroll advancement. Arena outputs must therefore be safe to observe more than once before their side effect is applied; an edge-triggered request cannot be consumed merely by reading it.
+- While distance is locked, support is resolved, and `CombatState.bossSpawned` is false, `BossArena.updateBossArenaState` reports `shouldSpawnBoss` on every poll. `bossSpawnRequested` remains historical state for distinguishing a legitimate request from the existing external/debug bypass, but it no longer suppresses delivery.
+- `spawnBoss` is the acknowledgement boundary: it creates the actor and sets `bossSpawned` before the next arena poll, which deasserts the request and prevents duplicate actors. Boss defeat and external debug bypass retain their existing release rules.
+- Rescue `travelRatio` and other route clauses may remain incomplete at arena lock; they are presentation/outcome progress completed after boss defeat when travel resumes. They do not replace support-field readiness or authorize target clearing, forced credit, or premature release.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

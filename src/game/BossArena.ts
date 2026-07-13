@@ -116,8 +116,7 @@ export function updateBossArenaState(
   if (input.distance >= plan.lockDistance) {
     state.phase = 'locked';
 
-    const shouldSpawnBoss =
-      input.supportComplete && !input.bossAlreadySpawned && !state.bossSpawnRequested;
+    const shouldSpawnBoss = input.supportComplete && !input.bossAlreadySpawned;
 
     if (shouldSpawnBoss) {
       state.bossSpawnRequested = true;

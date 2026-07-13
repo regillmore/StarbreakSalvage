@@ -357,6 +357,10 @@ Work order 129 adds nine small authored placement arrays and chooses one layout 
 
 The work order 129 release build emits 877.56 kB minified/237.92 kB gzip initial JavaScript and unchanged 43.09 kB CSS/9.23 kB gzip. This is a 4.57 kB minified/0.95 kB gzip initial-JavaScript increase over the corrected work order 128 build for nine authored layouts, plan/read-model identity, and conservative validation. No warning threshold changed; the existing initial-chunk warning remains open.
 
+Work order 130 changes the locked-arena request from edge-triggered suppression to a level signal acknowledged by the existing `bossSpawned` flag. It adds no poll, actor, schedule pass, entity scan, allocation, RNG call, timer, render primitive, content entry, save field, or snapshot field; the same two arena updates and one boss spawn path run per applicable frame.
+
+The work order 130 release build emits 877.54 kB minified/237.92 kB gzip initial JavaScript and unchanged 43.09 kB CSS/9.23 kB gzip. This is a 0.02 kB minified decrease with unchanged gzip/CSS measurements relative to work order 129. No warning threshold changed; the existing initial-chunk warning remains open.
+
 - The first finale pass adds hull/approach pressure and summary/unlock hooks, not new projectile families; remaining work should keep profiling the `F` finale smoke alongside enemy-rich, environmental stress, and the `Y` two-act summary before adding denser final-phase attacks.
 
 ## Phase 10 Playtest Risks
