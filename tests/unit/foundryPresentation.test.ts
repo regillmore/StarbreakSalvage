@@ -1,11 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  createEngineeringCombatProfile,
   createEngineeringState,
   getInstalledComponent,
   planOverclockComponent,
   planRemoveComponent
 } from '../../src/game/Foundry';
+import {
+  createCombatState,
+  updateCombatState,
+  type CombatBounds
+} from '../../src/game/CombatState';
+import { generateStartingItemLoadout } from '../../src/game/Rewards';
 import { generateRunSkeleton } from '../../src/game/Generation';
 import {
   compareFoundryComponents,
@@ -91,6 +98,83 @@ describe('foundry visual presentation', () => {
     expect(dashboard.attackStats.find((stat) => stat.id === 'volley')?.value).toBe(2);
   });
 
+  it('matches combat when owned item hooks reshape the loadout volley', () => {
+    const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
+      (candidate) => candidate.shipId === 'ship_drone_chaplain'
+    );
+    if (!contract) throw new Error('Expected the baseline Drone Chaplain contract.');
+    const engineering = createEngineeringState(contract.loadout);
+    const items = [
+      { itemId: 'item_split_prism' as const, acquisitionOrder: 0 },
+      { itemId: 'item_chain_arc_capacitor' as const, acquisitionOrder: 1 }
+    ];
+    const dashboard = createFoundryDashboardModel(engineering, items);
+    const combat = createCombatState(bounds, 'FOUNDRY-COMBAT-PARITY', {
+      weaponId: contract.startingWeaponId,
+      shipStats: contract.shipStats,
+      items,
+      engineering: createEngineeringCombatProfile(engineering),
+      skipEnemyWaves: true
+    });
+
+    updateCombatState(combat, { movement: { x: 0, y: 0 }, fire: true }, 0, bounds);
+
+    const previewVolley = dashboard.attackSimulation.projectiles
+      .filter((projectile) => projectile.waveIndex === 0)
+      .map((projectile) => ({
+        x: projectile.x,
+        vx: projectile.vx,
+        vy: projectile.vy,
+        radius: projectile.radius,
+        damage: projectile.damage,
+        ttl: projectile.ttl,
+        tags: projectile.tags
+      }));
+    const combatVolley = combat.projectiles
+      .filter((projectile) => projectile.owner === 'player')
+      .map((projectile) => ({
+        x: projectile.x - combat.player.x,
+        vx: projectile.vx,
+        vy: projectile.vy,
+        radius: projectile.radius,
+        damage: projectile.damage,
+        ttl: projectile.ttl,
+        tags: projectile.tags
+      }));
+
+    expect(previewVolley).toHaveLength(6);
+    expect(previewVolley).toEqual(combatVolley);
+    expect(dashboard.attackSimulation.ariaLabel).toContain('owned item hooks');
+  });
+
+  it('keeps the known-seed Drone Chaplain distinct from the universal six-shot fan', () => {
+    const run = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] });
+    const contract = run.contracts.find((candidate) => candidate.shipId === 'ship_drone_chaplain');
+    if (!contract) throw new Error('Expected the baseline Drone Chaplain contract.');
+    const items = generateStartingItemLoadout(run.seed, contract, { unlockedIds: [] });
+    const dashboard = createFoundryDashboardModel(createEngineeringState(contract.loadout), items);
+
+    expect(items.map((item) => item.itemId)).not.toContain('item_split_prism');
+    expect(dashboard.attackSimulation.volleySize).toBe(4);
+    expect(
+      Array.from(
+        { length: dashboard.attackSimulation.waveCopies },
+        (_value, waveIndex) =>
+          dashboard.attackSimulation.projectiles.filter(
+            (projectile) => projectile.waveIndex === waveIndex
+          ).length
+      )
+    ).toEqual([3, 3, 3, 4, 3, 3]);
+    expect(
+      dashboard.attackSimulation.projectiles
+        .filter((projectile) => projectile.waveIndex === 0)
+        .map((projectile) => projectile.vy)
+    ).toEqual([-660, -660, 495]);
+    expect(dashboard.attackSimulation.ariaLabel).toContain(
+      '3-4 projectiles per volley across the firing cycle'
+    );
+  });
+
   it('builds steady velocity-scaled flight copies inside the preview actor budget', () => {
     const volley = Array.from({ length: 12 }, (_value, index) =>
       projectile(index - 6, (index - 6) * 20, -500)
@@ -146,3 +230,9 @@ function projectile(x: number, vx: number, vy: number): ProjectileBlueprint {
     environmentDamageSource: 'weapon'
   };
 }
+
+const bounds: CombatBounds = {
+  width: 640,
+  height: 720,
+  padding: 24
+};

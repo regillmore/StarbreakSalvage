@@ -7,6 +7,7 @@ import {
 } from '../content/engineering';
 import { getShipFrameById, getShipModuleById } from '../content/shipModules';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
+import type { ItemInstance } from '../game/Rewards';
 import {
   commitFoundryDraft,
   createEngineeringDebugState,
@@ -53,6 +54,7 @@ export class FoundryScene implements Scene {
     private readonly run: RunSkeleton,
     private readonly contract: StartingContract,
     engineering: EngineeringState,
+    private readonly itemInstances: readonly ItemInstance[],
     private readonly sectorIndex: number,
     private readonly onComplete: (state: EngineeringState, salvageGained: number) => void,
     private readonly crewAssist: string | null = null
@@ -63,7 +65,7 @@ export class FoundryScene implements Scene {
   public enter(): void {
     const frame = getShipFrameById(this.state.draft.frameId);
     const resolution = resolveEngineeringSnapshot(this.state.draft);
-    const dashboard = createFoundryDashboardModel(this.state);
+    const dashboard = createFoundryDashboardModel(this.state, this.itemInstances);
     const shell = document.createElement('main');
     shell.className = 'scene-panel scene-panel-wide foundry-panel';
     shell.dataset.testid = 'salvage-foundry';

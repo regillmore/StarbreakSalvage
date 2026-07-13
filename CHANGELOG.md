@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Corrected Hardpoint Control/combat volley drift and retired the universal starter firing pattern. The attack simulation now applies the run's owned `onFire` and `onProjectileSpawn` item hooks in the same bounded order as combat and samples sequential volleys so periodic procs remain visible, while starter contracts receive three deterministic bias-weighted items instead of every ship being forced to carry Split Prism and Chain Arc Capacitor. Base weapons retain distinct silhouettes and legitimately acquired projectile-shaping items remain visible in both combat and preview.
+
 - Replaced Hardpoint Control's pulsing close-up weapon indicators with a live firing range. The draft ship now sits low in the pane and steadily fires its production weapon volley toward the target reticle using real pattern geometry, cadence, velocity, radius, damage, tags, and ordered engineering topology/convergence hooks; reduced-motion and performance modes retain readable bounded static presentations.
 
 - Allies now help dismantle multi-part capital ships, stations, and wrecks. Focus fire acquires the nearest visible targetable subsystem before ordinary enemies or bosses, so crew wingmates and support craft can destroy exposed turrets, emitters, armor, hangars, drives, couplers, and cores through the same dependency, armor, reward, stage, and completion rules as player weapons.

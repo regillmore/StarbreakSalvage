@@ -11,6 +11,7 @@ import {
 } from '../game/Foundry';
 import { applyCombinedHooks } from '../game/CombinedHooks';
 import type { ProjectileBlueprint } from '../game/ItemHooks';
+import type { ItemInstance } from '../game/Rewards';
 import { createWeaponProjectileBlueprints } from '../game/WeaponProjectiles';
 
 export type FoundryComparisonTone = 'improved' | 'declined' | 'same' | 'danger';
@@ -126,7 +127,10 @@ const ATTACK_PREVIEW_TRAVEL_DISTANCE = 560;
 const MAX_ATTACK_PREVIEW_WAVE_COPIES = 6;
 const MAX_ATTACK_PREVIEW_PROJECTILES = 48;
 
-export function createFoundryDashboardModel(state: EngineeringState): FoundryDashboardModel {
+export function createFoundryDashboardModel(
+  state: EngineeringState,
+  items: readonly ItemInstance[] = []
+): FoundryDashboardModel {
   const committed = resolveEngineeringSnapshot(state.committed);
   const draft = resolveEngineeringSnapshot(state.draft);
   const committedLoadout = requireLoadout(committed);
@@ -149,12 +153,14 @@ export function createFoundryDashboardModel(state: EngineeringState): FoundryDas
   const attackSimulation = createFoundryAttackSimulationModel(
     draftWeapon,
     draft,
-    procBudget
+    procBudget,
+    items
   );
   const committedAttackSimulation = createFoundryAttackSimulationModel(
     committedWeapon,
     committed,
-    committedProcBudget
+    committedProcBudget,
+    items
   );
   const meters: FoundryMeterModel[] = [
     createCapacityMeter(
@@ -254,27 +260,32 @@ export function createFoundryDashboardModel(state: EngineeringState): FoundryDas
 function createFoundryAttackSimulationModel(
   weapon: ReturnType<typeof getWeaponById>,
   resolution: EngineeringResolution,
-  procBudget: number
+  procBudget: number,
+  items: readonly ItemInstance[]
 ): FoundryAttackSimulationModel {
-  const baseProjectiles = createWeaponProjectileBlueprints(weapon, { x: 0, y: 0, radius: 0 });
-  const firePayload = applyCombinedHooks(
-    'onFire',
-    [],
-    resolution.hooks,
-    { volleyIndex: 1, projectiles: baseProjectiles },
-    { maxApplications: procBudget }
-  );
-  const volley = firePayload.projectiles.map(
-    (projectile) =>
-      applyCombinedHooks(
-        'onProjectileSpawn',
-        [],
-        resolution.hooks,
-        { projectile },
-        { maxApplications: procBudget }
-      ).projectile
-  );
-  return createFoundryAttackPreviewModel(weapon.name, weapon.fireCooldownSeconds, volley);
+  const volleys = Array.from({ length: MAX_ATTACK_PREVIEW_WAVE_COPIES }, (_value, index) => {
+    const firePayload = applyCombinedHooks(
+      'onFire',
+      items,
+      resolution.hooks,
+      {
+        volleyIndex: index + 1,
+        projectiles: createWeaponProjectileBlueprints(weapon, { x: 0, y: 0, radius: 0 })
+      },
+      { maxApplications: procBudget }
+    );
+    return firePayload.projectiles.map(
+      (projectile) =>
+        applyCombinedHooks(
+          'onProjectileSpawn',
+          items,
+          resolution.hooks,
+          { projectile },
+          { maxApplications: procBudget }
+        ).projectile
+    );
+  });
+  return createFoundryAttackPatternPreviewModel(weapon.name, weapon.fireCooldownSeconds, volleys);
 }
 
 export function createFoundryAttackPreviewModel(
@@ -282,28 +293,45 @@ export function createFoundryAttackPreviewModel(
   fireCooldownSeconds: number,
   volley: readonly ProjectileBlueprint[]
 ): FoundryAttackSimulationModel {
+  return createFoundryAttackPatternPreviewModel(weaponName, fireCooldownSeconds, [volley]);
+}
+
+function createFoundryAttackPatternPreviewModel(
+  weaponName: string,
+  fireCooldownSeconds: number,
+  sourceVolleys: readonly (readonly ProjectileBlueprint[])[]
+): FoundryAttackSimulationModel {
   const safeCooldown = Math.max(0.05, fireCooldownSeconds);
-  const safeVolley = volley.slice(0, 12);
-  const slowestForwardSpeed = safeVolley.reduce(
+  const safeVolleys = sourceVolleys.map((volley) => volley.slice(0, 12));
+  const safeProjectiles = safeVolleys.flat();
+  const slowestForwardSpeed = safeProjectiles.reduce(
     (slowest, projectile) => Math.min(slowest, Math.max(1, -projectile.vy)),
     Number.POSITIVE_INFINITY
   );
   const flightSeconds = ATTACK_PREVIEW_TRAVEL_DISTANCE / Math.max(1, slowestForwardSpeed);
-  const maxCopiesForBudget = Math.max(
+  const desiredWaveCopies = Math.max(
     1,
-    Math.floor(MAX_ATTACK_PREVIEW_PROJECTILES / Math.max(1, safeVolley.length))
+    Math.min(MAX_ATTACK_PREVIEW_WAVE_COPIES, Math.ceil(flightSeconds / safeCooldown))
   );
-  const waveCopies = Math.max(
-    1,
-    Math.min(
-      MAX_ATTACK_PREVIEW_WAVE_COPIES,
-      maxCopiesForBudget,
-      Math.ceil(flightSeconds / safeCooldown)
-    )
-  );
+  const selectedVolleys: (readonly ProjectileBlueprint[])[] = [];
+  let projectileCount = 0;
+
+  for (let waveIndex = 0; waveIndex < desiredWaveCopies; waveIndex += 1) {
+    const volley = safeVolleys[waveIndex % Math.max(1, safeVolleys.length)] ?? [];
+    if (
+      selectedVolleys.length > 0 &&
+      projectileCount + volley.length > MAX_ATTACK_PREVIEW_PROJECTILES
+    ) {
+      break;
+    }
+    selectedVolleys.push(volley);
+    projectileCount += volley.length;
+  }
+
+  const waveCopies = selectedVolleys.length;
   const durationSeconds = safeCooldown * waveCopies;
-  const projectiles = Array.from({ length: waveCopies }, (_value, waveIndex) =>
-    safeVolley.map((projectile, projectileIndex) =>
+  const projectiles = selectedVolleys.flatMap((volley, waveIndex) =>
+    volley.map((projectile, projectileIndex) =>
       createFoundryAttackProjectileModel(
         projectile,
         projectileIndex,
@@ -313,16 +341,22 @@ export function createFoundryAttackPreviewModel(
         safeCooldown
       )
     )
-  ).flat();
-  const volleySize = safeVolley.length;
+  );
+  const volleySizes = selectedVolleys.map((volley) => volley.length);
+  const minimumVolleySize = Math.min(...volleySizes);
+  const volleySize = Math.max(...volleySizes);
   const volleysPerSecond = 1 / safeCooldown;
+  const volleyDescription =
+    minimumVolleySize === volleySize
+      ? `${volleySize} projectile${volleySize === 1 ? '' : 's'} per volley`
+      : `${minimumVolleySize}-${volleySize} projectiles per volley across the firing cycle`;
   return {
     volleySize,
     volleysPerSecond,
     fireCooldownSeconds: safeCooldown,
     waveCopies,
     projectiles,
-    ariaLabel: `${weaponName} live-fire preview. ${volleySize} projectile${volleySize === 1 ? '' : 's'} per volley at ${volleysPerSecond.toFixed(1)} volleys per second. Projectile paths use the draft loadout's combat velocity, spread, radius, damage, and engineering hooks.`
+    ariaLabel: `${weaponName} live-fire preview. ${volleyDescription} at ${volleysPerSecond.toFixed(1)} volleys per second. Projectile paths use the draft loadout's combat velocity, spread, radius, damage, engineering hooks, and owned item hooks.`
   };
 }
 

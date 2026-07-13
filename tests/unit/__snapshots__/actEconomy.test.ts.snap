@@ -11,7 +11,7 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
   },
   "eliteRewards": [
     [
-      "item_scrap_saints_relay",
+      "item_missile_splinter_warrant",
       "Elite pool",
     ],
     [
@@ -19,15 +19,15 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
       "lunar source",
     ],
     [
-      "item_market_echo_locator",
-      "Elite pool",
+      "item_oathbound_deflector",
+      "boss source",
     ],
     [
       "item_phase_breaker_subpoena",
       "boss source",
     ],
     [
-      "item_missile_splinter_warrant",
+      "item_scrap_saints_relay",
       "Elite pool",
     ],
   ],
@@ -101,7 +101,7 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
   },
   "eliteRewards": [
     [
-      "item_scrap_saints_relay",
+      "item_missile_splinter_warrant",
       "Elite pool",
     ],
     [
@@ -109,15 +109,15 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
       "lunar source",
     ],
     [
-      "item_market_echo_locator",
-      "Elite pool",
+      "item_oathbound_deflector",
+      "boss source",
     ],
     [
       "item_phase_breaker_subpoena",
       "boss source",
     ],
     [
-      "item_missile_splinter_warrant",
+      "item_scrap_saints_relay",
       "Elite pool",
     ],
   ],

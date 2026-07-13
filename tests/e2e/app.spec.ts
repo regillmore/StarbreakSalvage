@@ -162,7 +162,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('verb-readout')).toContainText('Special');
   await expect(page.getByTestId('weapon-readout')).toContainText('Heat');
   await expect(page.getByTestId('boss-readout')).toContainText('Boss');
-  await expect(page.getByTestId('item-readout')).toContainText('Prism Battery');
+  await expect(page.getByTestId('item-readout')).toContainText(/Build .+ \| 3 items/);
   await expect(page.locator('.debug-overlay')).toContainText('Theme redline/Debt Runner');
   await expect(page.locator('.debug-overlay')).toContainText('HUD standard');
   await expect(page.locator('.debug-overlay')).toContainText(
@@ -270,6 +270,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('foundry-command-console')).toBeVisible();
   const attackPreview = page.getByTestId('foundry-attack-preview');
   await expect(attackPreview.getByRole('img')).toBeVisible();
+  await expect(attackPreview).toHaveAttribute('aria-label', /owned item hooks/);
   await expect(attackPreview.locator('.ship-preview-weapon-cue')).toHaveCount(0);
   const liveProjectiles = attackPreview.getByTestId('foundry-attack-projectile');
   expect(await liveProjectiles.count()).toBeGreaterThan(0);
@@ -334,11 +335,11 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.locator('.summary-stats')).toContainText('Recovered');
   await expect(page.getByText('permadeath', { exact: true })).toBeVisible();
   await expect(page.getByText('Loss: ship destroyed and contract closed.')).toBeVisible();
-  await expect(page.getByTestId('summary-item-list')).toContainText('Split Prism');
-  await expect(page.getByTestId('summary-item-list')).toContainText('Laser Split');
+  await expect(page.getByTestId('summary-item-list')).toContainText('Route Ledger Spool');
+  await expect(page.getByTestId('summary-item-list')).toContainText('Route Economy');
   await expect(
     page.getByTestId('summary-item-list').getByRole('img', {
-      name: 'Split Prism Laser Split item icon'
+      name: 'Route Ledger Spool Route Economy item icon'
     })
   ).toBeVisible();
   await expect(page.getByTestId('scrap-breakdown')).toContainText(
@@ -358,7 +359,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
 
   await page.getByRole('button', { name: 'Unlock Archive' }).click();
   await expect(page.getByRole('heading', { name: 'Unlock Archive' })).toBeVisible();
-  await expect(page.getByTestId('discovered-item-list')).toContainText('Split Prism');
+  await expect(page.getByTestId('discovered-item-list')).toContainText('Route Ledger Spool');
   await expect(page.getByTestId('discovered-item-list')).toContainText('Live effect');
 
   await page.getByRole('button', { name: 'Export Save' }).click();

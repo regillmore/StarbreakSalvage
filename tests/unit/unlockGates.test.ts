@@ -62,8 +62,8 @@ describe('unlock gates', () => {
     expect(combatRewards).not.toContain('item_capital_wound_ledger');
     expect(vaultRewards).not.toContain('item_curse_interest_bond');
     expect(starterLoadout).toHaveLength(3);
-    expect(starterLoadout.map((item) => item.itemId)).toContain('item_split_prism');
-    expect(starterLoadout.map((item) => item.itemId)).toContain('item_chain_arc_capacitor');
+    expect(new Set(starterLoadout.map((item) => item.itemId)).size).toBe(3);
+    expect(starterLoadout.map((item) => item.acquisitionOrder)).toEqual([0, 1, 2]);
   });
 
   it('excludes locked factions from directed combat waves', () => {

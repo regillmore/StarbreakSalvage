@@ -37,8 +37,6 @@ export interface RewardPoolContext {
   readonly actEconomy?: ActEconomyProfile;
 }
 
-const DEFAULT_FIELD_KIT: readonly ItemId[] = ['item_split_prism', 'item_chain_arc_capacitor'];
-
 export function generateRewardChoices(options: {
   readonly seed: string;
   readonly poolId: RewardPoolId;
@@ -85,16 +83,11 @@ export function generateStartingItemLoadout(
     poolId: 'starter',
     count: 3,
     biasTags: contract.itemBias,
-    excludeItemIds: DEFAULT_FIELD_KIT,
     unlockedIds: options.unlockedIds
   });
-  const itemIds = [...DEFAULT_FIELD_KIT, ...rewardChoices.map((choice) => choice.item.id)].slice(
-    0,
-    3
-  );
 
-  return itemIds.map((itemId, acquisitionOrder) => ({
-    itemId,
+  return rewardChoices.map((choice, acquisitionOrder) => ({
+    itemId: choice.item.id,
     acquisitionOrder
   }));
 }

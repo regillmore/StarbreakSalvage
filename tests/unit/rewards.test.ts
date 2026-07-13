@@ -30,7 +30,7 @@ describe('reward generation', () => {
     expect(first).toEqual(second);
   });
 
-  it('creates a starter loadout with acquisition order and visible split/arc kit', () => {
+  it('creates a deterministic contract-biased starter loadout without a universal field kit', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
     const contract = run.contracts[0];
 
@@ -39,12 +39,34 @@ describe('reward generation', () => {
     }
 
     const loadout = generateStartingItemLoadout(run.seed, contract);
+    const replay = generateStartingItemLoadout(run.seed, contract);
+    const itemIds = loadout.map((item) => item.itemId);
 
-    expect(loadout).toEqual([
-      expect.objectContaining({ itemId: 'item_split_prism', acquisitionOrder: 0 }),
-      expect.objectContaining({ itemId: 'item_chain_arc_capacitor', acquisitionOrder: 1 }),
-      expect.objectContaining({ acquisitionOrder: 2 })
-    ]);
+    expect(loadout).toEqual(replay);
+    expect(loadout.map((item) => item.acquisitionOrder)).toEqual([0, 1, 2]);
+    expect(new Set(itemIds).size).toBe(3);
+    expect(
+      itemIds.some((itemId) =>
+        getItemById(itemId).tags.some((tag) => contract.itemBias.includes(tag))
+      )
+    ).toBe(true);
+  });
+
+  it('keeps baseline contract field kits distinct instead of forcing one firing silhouette', () => {
+    const run = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] });
+    const loadouts = run.contracts.map((contract) => ({
+      contract,
+      itemIds: generateStartingItemLoadout(run.seed, contract, { unlockedIds: [] }).map(
+        (item) => item.itemId
+      )
+    }));
+    const droneChaplain = loadouts.find(
+      ({ contract }) => contract.shipId === 'ship_drone_chaplain'
+    );
+
+    expect(new Set(loadouts.map(({ itemIds }) => itemIds.join('|'))).size).toBe(loadouts.length);
+    expect(loadouts.every(({ itemIds }) => itemIds.includes('item_split_prism'))).toBe(false);
+    expect(droneChaplain?.itemIds).not.toContain('item_split_prism');
   });
 
   it('weights source profiles by rarity, source, family, and context', () => {
@@ -162,12 +184,12 @@ describe('reward generation', () => {
           sourceHint: 'Elite pool'
         },
         {
-          id: 'item_overkill_ledger',
+          id: 'item_drone_uplink',
           profile: 'elite',
           sourceHint: 'Elite pool'
         },
         {
-          id: 'item_prototype_vent_script',
+          id: 'item_phase_wake_suture',
           profile: 'elite',
           sourceHint: 'Elite pool'
         }

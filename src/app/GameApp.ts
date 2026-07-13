@@ -431,6 +431,7 @@ export class GameApp {
           this.currentRun,
           this.selectedContract,
           launch.session.engineering,
+          launch.session.itemInstances,
           launch.session.currentSectorIndex + 1,
           (engineering, salvageGained) => {
             this.runSession.engineering = engineering;
@@ -1998,6 +1999,7 @@ export class GameApp {
         this.currentRun,
         this.selectedContract,
         this.runSession.engineering,
+        this.runSession.itemInstances,
         sector.index,
         (engineering, salvageGained) => {
           this.runSession.engineering = engineering;
