@@ -92,6 +92,10 @@ Work order 122 retains the already allocated terminal `SectorExitSequenceState` 
 
 The work order 122 release build emits 859.10 kB minified/233.01 kB gzip initial JavaScript and unchanged 31.96 kB CSS/7.19 kB gzip. This is a 0.05 kB minified/0.00 kB gzip increase over work order 121. No warning threshold changed; the existing initial-chunk warning remains open.
 
+Work order 123 derives foundry dashboard and component comparison read models only when the DOM scene enters or an explicit draft action rebuilds it. The attack preview reuses one static inline SVG, weapon cues use bounded CSS opacity animation, and resource/output bars are ordinary DOM spans. Reduced motion and performance mode disable the cue animation and decorative filtering. There is no gameplay-loop work, canvas pass, actor, particle, timer, runtime RNG, external asset, production dependency, or persisted field.
+
+The work order 123 release build emits 868.86 kB minified/235.63 kB gzip initial JavaScript and 41.17 kB CSS/8.85 kB gzip. This is a 9.76 kB minified/2.62 kB gzip initial-JavaScript increase and a 9.21 kB minified/1.66 kB gzip CSS increase over work order 122. The CSS growth is isolated to the foundry's responsive visual system; no warning threshold changed and the existing initial-chunk warning remains open.
+
 Phase 5 closeout: work order 050 keeps progression/sector-feedback optimization deferred until profiling requires it. `npm run check`, Playwright Chromium smoke, and production preview asset-path smoke passed locally. Manual cross-browser performance/readability checks outside Chromium remain pending.
 
 ## Phase 6 Item Catalog Budget Targets

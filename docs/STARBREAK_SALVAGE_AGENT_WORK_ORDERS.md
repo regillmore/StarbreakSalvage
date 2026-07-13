@@ -2150,6 +2150,26 @@ Status: implemented. `GameplayScene.finishSectorExitSequence` now advances any n
 
 Verification: `npm run verify:release` passes with 94 Vitest files and 565 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. Focused sector-exit, recovery-coast, and camera coverage passes with 12 tests. The orchestration regression invokes completion before natural duration, proves terminalization occurs, verifies `exitSequence` remains latched while `exitSequenceResult` and cooldown clear, confirms ship alpha zero and Y below -100, and observes exactly one sector-complete callback. Existing sequence coverage still pins normal, reduced-motion, debug-fast, and victory presentations. Chromium force-completes sectors through the departure announcement into operational-map/route flow without browser errors. The production build emits 859.10 kB minified/233.01 kB gzip initial JavaScript and unchanged 31.96 kB CSS/7.19 kB gzip, a 0.05 kB minified/0.00 kB gzip increase over work order 121. The existing chunk warning remains open and no threshold changed. Direct visual inspection was attempted through the in-app browser control surface, but no browser target was available in this session; automated Chromium is the available local visual evidence.
 
+## Work order 123 - Hardpoint control interface reimagining
+
+Goal: turn loadout engineering from a prose ledger into a fast visual decision surface that previews how the draft ship will fight.
+
+Prompt:
+
+> Reimagine the hardpoint management menu. Reduce default text verbosity and replace raw equipment-stat prose with visual representations wherever practical. Make item replacement comparisons straightforward. Add a visual ship attack preview pane and compact mini-HUD that demonstrate the selected draft loadout's weapon pattern and behavior. Preserve deterministic engineering, reversible draft/commit boundaries, legality validation, every install/remove/scrap/reroute/overclock/fusion operation, keyboard and pointer access, narrow layouts, high contrast, reduced motion, performance mode, and static/offline hosting. Add pure presentation models and focused tests. Run checks.
+
+Acceptance criteria:
+
+- Hardpoint Control leads with a draft-aware ship attack simulation, weapon-pattern cue, compact output HUD, and grid-validity readout derived from real loadout resolution.
+- Power, thermal, mass, command, instability, weapon output, and component burden are represented with labeled meters, bars, glyph strips, and accessible numeric equivalents rather than repeated prose.
+- Every compatible cargo install action names its destination and shows direct P/H/M/C/instability change against the currently installed component before selection.
+- Hardpoints, quality, source, slot, size, tags, affixes, evolutions, pending actions, and fusion recipes remain scannable without hiding validation failures or operation results.
+- Existing deterministic content, engineering operations, commit legality, gameplay behavior, save/snapshot compatibility, accessibility settings, and responsive flows remain unchanged.
+
+Status: implemented. `src/ui/FoundryPresentation.ts` provides pure draft-versus-commit presentation models for five resource envelopes, real primary-weapon volley/impact/cadence/velocity/shot-heat output, active engineering traits, compact component stats, and candidate-versus-installed burden. `ShipPreview` accepts optional draft frame/module/weapon overrides while retaining the contract silhouette and palette. `FoundryScene` now opens as Hardpoint Control with a large attack-simulation pane, target cue, mini-HUD, normalized output bars, grid meters, compact hardpoint/cargo stat strips, quality/source/tag/modifier badges, direct install-delta controls, concise draft history, and structured evolution cards. Existing foundry reducers and resolution remain the only mutation and legality authority. CSS provides desktop and narrow compositions plus high-contrast, reduced-motion, and performance-mode simplification; all detail remains available through ARIA labels, native meter roles, modifier titles, blocker text, and live status.
+
+Verification: `npm run verify:release` passes with 95 Vitest files and 568 tests, ESLint, typecheck, production build, all 13 Chromium paths, and the Pages-base production-preview asset smoke. Focused foundry, presentation, and ship-preview coverage passes with 15 tests, including valid/invalid drafts, overclock deltas, direct replacement burden, and draft weapon-pattern overrides. Desktop 1440x1000 and narrow 390x844 Chromium captures were inspected directly; the responsive attack console, meters, comparisons, sticky controls, and overflow remain usable. The production build emits 868.86 kB minified/235.63 kB gzip initial JavaScript and 41.17 kB CSS/8.85 kB gzip. The existing chunk warning remains open and no threshold changed. In-app browser control exposed no active target, so direct visual QA used local Playwright Chromium captures.
+
 ## Review subagent prompt
 
 Use after a feature PR:

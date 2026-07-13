@@ -58,6 +58,22 @@ describe('ship previews', () => {
     ]);
   });
 
+  it('accepts a draft weapon override for engineering previews', () => {
+    const contract = generateRunSkeleton('SHIP-PREVIEW-ENGINEERING').contracts[0]!;
+    const model = createShipPreviewModel(contract, 'hero', {
+      weaponName: 'Prototype Beam',
+      weaponPattern: 'beam',
+      mountedModuleCount: 7,
+      ariaContext: 'Draft attack simulation'
+    });
+
+    expect(model.weaponName).toBe('Prototype Beam');
+    expect(model.weaponPattern).toBe('beam');
+    expect(model.mountedModuleCount).toBe(7);
+    expect(model.weaponCuePrimitives.some((primitive) => primitive.kind === 'rect')).toBe(true);
+    expect(model.ariaLabel).toContain('Draft attack simulation');
+  });
+
   it('keeps silhouette paths and selection movement deterministic', () => {
     expect(getShipSilhouettePath('needle', 24)).toBe(
       'M 60 23 L 79.68 65.72 L 60 55.64 L 40.32 65.72 Z'

@@ -686,9 +686,15 @@ export function getCargoComponents(snapshot: EngineeringSnapshot): FoundryCompon
   return snapshot.components.filter((component) => !installed.has(component.id));
 }
 
-export function consumeCargoComponent(state: EngineeringState, componentId: string): EngineeringState {
+export function consumeCargoComponent(
+  state: EngineeringState,
+  componentId: string
+): EngineeringState {
   const installed = new Set(state.committed.mounts.map((mount) => mount.componentId));
-  if (installed.has(componentId) || !state.committed.components.some((component) => component.id === componentId)) {
+  if (
+    installed.has(componentId) ||
+    !state.committed.components.some((component) => component.id === componentId)
+  ) {
     return state;
   }
   const remove = (snapshot: EngineeringSnapshot): EngineeringSnapshot => ({
@@ -922,7 +928,9 @@ function getComponentEffects(component: FoundryComponentInstance): EngineeringEf
   ].map((effect) => ({ ...effect, magnitude: effect.magnitude * multiplier }));
 }
 
-function getComponentResourceDelta(component: FoundryComponentInstance): EngineeringResourceDelta {
+export function getComponentResourceDelta(
+  component: FoundryComponentInstance
+): EngineeringResourceDelta {
   const affixAndRecipe = [
     ...component.affixIds.map((affixId) => getComponentAffix(affixId).resourceDelta),
     ...component.evolutionIds.map((recipeId) => getWeaponEvolutionRecipe(recipeId).resourceDelta)

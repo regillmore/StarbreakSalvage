@@ -65,12 +65,25 @@ export interface ShipPreviewModel {
   readonly ariaLabel: string;
 }
 
+export interface ShipPreviewOverrides {
+  readonly frameName?: string;
+  readonly mountedModuleCount?: number;
+  readonly weaponName?: string;
+  readonly weaponPattern?: WeaponPatternId;
+  readonly ariaContext?: string;
+}
+
 export function createShipPreviewModel(
   contract: StartingContract,
-  variant: ShipPreviewVariant
+  variant: ShipPreviewVariant,
+  overrides: ShipPreviewOverrides = {}
 ): ShipPreviewModel {
   const { shipAppearance: appearance } = contract;
-  const patternLabel = formatWeaponPattern(contract.startingWeaponPattern);
+  const weaponPattern = overrides.weaponPattern ?? contract.startingWeaponPattern;
+  const weaponName = overrides.weaponName ?? contract.startingWeaponName;
+  const frameName = overrides.frameName ?? contract.loadout.frameName;
+  const mountedModuleCount = overrides.mountedModuleCount ?? contract.loadout.mounts.length;
+  const patternLabel = formatWeaponPattern(weaponPattern);
   const roleBars = [
     appearance.primaryColor,
     appearance.engineColor,
@@ -81,10 +94,10 @@ export function createShipPreviewModel(
   return {
     variant,
     shipName: contract.shipName,
-    frameName: contract.loadout.frameName,
-    mountedModuleCount: contract.loadout.mounts.length,
-    weaponName: contract.startingWeaponName,
-    weaponPattern: contract.startingWeaponPattern,
+    frameName,
+    mountedModuleCount,
+    weaponName,
+    weaponPattern,
     patternLabel,
     themeKey: appearance.hudThemeKey,
     primaryColor: appearance.primaryColor,
@@ -95,9 +108,9 @@ export function createShipPreviewModel(
     silhouettePath: getShipSilhouettePath(appearance.silhouette, SHIP_RADIUS),
     outerSilhouettePath: getShipSilhouettePath(appearance.silhouette, SHIP_RADIUS * 1.12),
     mountPrimitives: createMountPrimitives(appearance.weaponMounts, SHIP_RADIUS),
-    weaponCuePrimitives: createWeaponCuePrimitives(contract.startingWeaponPattern, SHIP_RADIUS),
+    weaponCuePrimitives: createWeaponCuePrimitives(weaponPattern, SHIP_RADIUS),
     roleBars,
-    ariaLabel: `${contract.shipName} ship preview, ${contract.loadout.frameName} frame with ${contract.loadout.mounts.length} mounted modules, ${appearance.silhouette} silhouette, ${appearance.hudThemeKey} theme, ${contract.startingWeaponName} ${patternLabel} weapon`
+    ariaLabel: `${overrides.ariaContext ? `${overrides.ariaContext}, ` : ''}${contract.shipName} ship preview, ${frameName} frame with ${mountedModuleCount} mounted modules, ${appearance.silhouette} silhouette, ${appearance.hudThemeKey} theme, ${weaponName} ${patternLabel} weapon`
   };
 }
 

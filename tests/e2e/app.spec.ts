@@ -264,22 +264,19 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
 
   await page.getByRole('button', { name: /Take / }).first().click();
   await expect(page.getByTestId('salvage-foundry')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Engineer The Ship' })).toBeVisible();
-  await expect(page.getByTestId('foundry-boundary')).toContainText(
-    /Undo restores the last commit/i
-  );
+  await expect(page.getByRole('heading', { name: 'Hardpoint Control' })).toBeVisible();
+  await expect(page.getByTestId('foundry-boundary')).toContainText(/Undo restores/i);
   await expect(page.getByTestId('foundry-grid-readout')).toContainText('LEGAL DRAFT');
-  await expect(page.locator('.foundry-cargo-card').first()).toContainText(/scrap \d+/i);
-  await page
-    .locator('.foundry-cargo-card')
-    .first()
-    .getByRole('button', { name: /Reroute/ })
-    .click();
+  await expect(page.getByTestId('foundry-command-console')).toBeVisible();
+  await expect(page.getByTestId('foundry-attack-preview').getByRole('img')).toBeVisible();
+  await expect(page.getByTestId('foundry-mini-hud')).toContainText(/BASELINE|DRAFT DELTA/);
+  await expect(page.getByTestId('foundry-meter-power').getByRole('meter')).toBeVisible();
+  await expect(page.getByTestId('foundry-attack-impact')).toBeVisible();
+  await expect(page.locator('.foundry-cargo-card').first()).toContainText(/scrap \+\d+/i);
+  await page.locator('.foundry-cargo-card').first().getByRole('button', { name: /Route/ }).click();
   await expect(page.getByTestId('foundry-pending-history')).toContainText('Reroute');
   await page.getByTestId('foundry-undo').click();
-  await expect(page.getByTestId('foundry-pending-history')).toContainText(
-    'No uncommitted changes.'
-  );
+  await expect(page.getByTestId('foundry-pending-history')).toContainText('Draft clean.');
   await page.getByTestId('foundry-commit').click();
   await expect(page.getByRole('heading', { name: /Running Audit briefing/ })).toBeVisible();
   await expect(page.locator('.transition-panel')).toHaveAttribute('data-contract-theme', 'redline');

@@ -1,6 +1,10 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene, SceneDebugState } from '../app/Scene';
-import { getComponentAffix, getComponentQuality } from '../content/engineering';
+import {
+  getComponentAffix,
+  getComponentQuality,
+  getWeaponEvolutionRecipe
+} from '../content/engineering';
 import { getShipFrameById, getShipModuleById } from '../content/shipModules';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import {
@@ -8,7 +12,6 @@ import {
   createEngineeringDebugState,
   formatComponentName,
   getCargoComponents,
-  getComponentTradeoff,
   getFusionOptions,
   getInstalledComponent,
   planFuseComponents,
@@ -30,11 +33,20 @@ import {
   createContractThemeStrip,
   getContractThemeOptions
 } from './ContractTheme';
+import {
+  compareFoundryComponents,
+  createFoundryComponentStatModel,
+  createFoundryDashboardModel,
+  type FoundryAttackStatModel,
+  type FoundryDashboardModel,
+  type FoundryMeterModel
+} from './FoundryPresentation';
+import { createShipPreviewElement, createShipPreviewModel } from './ShipPreview';
 
 export class FoundryScene implements Scene {
   public readonly id = 'foundry';
   private state: EngineeringState;
-  private status = 'Recovered component secured. Draft changes are reversible until commit.';
+  private status = 'Component secured. Draft is reversible.';
 
   public constructor(
     private readonly uiRoot: HTMLElement,
@@ -51,7 +63,7 @@ export class FoundryScene implements Scene {
   public enter(): void {
     const frame = getShipFrameById(this.state.draft.frameId);
     const resolution = resolveEngineeringSnapshot(this.state.draft);
-    const debug = createEngineeringDebugState(this.state);
+    const dashboard = createFoundryDashboardModel(this.state);
     const shell = document.createElement('main');
     shell.className = 'scene-panel scene-panel-wide foundry-panel';
     shell.dataset.testid = 'salvage-foundry';
@@ -64,32 +76,47 @@ export class FoundryScene implements Scene {
 
     const eyebrow = document.createElement('p');
     eyebrow.className = 'eyebrow';
-    eyebrow.textContent = `Sector ${this.sectorIndex} | ${frame.name} | Salvage Foundry`;
+    eyebrow.textContent = `Sector ${this.sectorIndex} / ${frame.name} / Salvage Foundry`;
 
     const title = document.createElement('h1');
     title.id = 'foundry-title';
-    title.textContent = 'Engineer The Ship';
+    title.textContent = 'Hardpoint Control';
 
     const boundary = document.createElement('p');
     boundary.className = 'foundry-boundary';
     boundary.dataset.testid = 'foundry-boundary';
-    boundary.textContent = `Planning bay: install, remove, reroute, fuse, overclock, or scrap. Undo restores the last commit; only Commit & Continue changes the flight ship.${this.crewAssist ? ` Crew assist: ${this.crewAssist}` : ''}`;
+    boundary.textContent = `DRAFT BAY // Commit launches. Undo restores.${this.crewAssist ? ` Crew: ${this.crewAssist}` : ''}`;
 
-    const grid = document.createElement('p');
+    const grid = document.createElement('div');
     grid.className = `foundry-grid-readout ${resolution.valid ? '' : 'foundry-grid-invalid'}`;
     grid.dataset.testid = 'foundry-grid-readout';
     grid.setAttribute('aria-live', 'polite');
-    grid.textContent = `${resolution.valid ? 'LEGAL DRAFT' : 'INVALID DRAFT'} | ${resolution.summary} | ${debug.effects} | Proc ${debug.procBudget}`;
+    const gridState = document.createElement('strong');
+    gridState.textContent = resolution.valid ? 'LEGAL DRAFT' : 'INVALID DRAFT';
+    const gridCount = document.createElement('span');
+    gridCount.textContent = `${this.state.pendingActions.length} pending / ${dashboard.mountedModuleCount} mounted`;
+    grid.append(gridState, gridCount);
 
     const issueList = document.createElement('div');
     issueList.className = 'foundry-issues';
     issueList.dataset.testid = 'foundry-issues';
     if (resolution.issues.length === 0) {
-      issueList.textContent = 'Validation: all hardpoints and resource envelopes pass.';
+      issueList.hidden = true;
+      issueList.textContent = 'All hardpoints and resource envelopes pass.';
     } else {
       issueList.classList.add('foundry-issues-invalid');
-      issueList.textContent = `Validation: ${resolution.issues.map((issue) => issue.message).join(' | ')}`;
+      const issueTitle = document.createElement('strong');
+      issueTitle.textContent = `${resolution.issues.length} BLOCKER${resolution.issues.length === 1 ? '' : 'S'}`;
+      const issues = document.createElement('ul');
+      for (const issue of resolution.issues) {
+        const item = document.createElement('li');
+        item.textContent = issue.message;
+        issues.append(item);
+      }
+      issueList.append(issueTitle, issues);
     }
+
+    const console = this.createCommandConsole(dashboard);
 
     const workspace = document.createElement('div');
     workspace.className = 'foundry-workspace';
@@ -100,13 +127,20 @@ export class FoundryScene implements Scene {
     pending.className = 'foundry-history';
     pending.setAttribute('aria-label', 'Pending engineering operations');
     const pendingTitle = document.createElement('h2');
-    pendingTitle.textContent = `Pending Operations (${this.state.pendingActions.length})`;
-    const pendingCopy = document.createElement('p');
+    pendingTitle.textContent = `Draft Log / ${this.state.pendingActions.length}`;
+    const pendingCopy = document.createElement('div');
+    pendingCopy.className = 'foundry-pending-list';
     pendingCopy.dataset.testid = 'foundry-pending-history';
-    pendingCopy.textContent =
-      this.state.pendingActions.length > 0
-        ? this.state.pendingActions.map((action) => action.summary).join(' -> ')
-        : 'No uncommitted changes.';
+    if (this.state.pendingActions.length > 0) {
+      for (const action of this.state.pendingActions) {
+        const chip = document.createElement('span');
+        chip.className = 'foundry-pending-chip';
+        chip.textContent = `${action.kind.toUpperCase()} · ${action.summary}`;
+        pendingCopy.append(chip);
+      }
+    } else {
+      pendingCopy.textContent = 'Draft clean.';
+    }
     pending.append(pendingTitle, pendingCopy);
 
     const status = document.createElement('p');
@@ -121,7 +155,7 @@ export class FoundryScene implements Scene {
     commit.className = 'primary-button';
     commit.type = 'button';
     commit.dataset.testid = 'foundry-commit';
-    commit.textContent = 'Commit & Continue';
+    commit.textContent = 'Commit Loadout';
     commit.disabled = !resolution.valid;
     commit.addEventListener('click', () => this.commit());
 
@@ -129,7 +163,7 @@ export class FoundryScene implements Scene {
     undo.className = 'secondary-button';
     undo.type = 'button';
     undo.dataset.testid = 'foundry-undo';
-    undo.textContent = 'Undo Draft';
+    undo.textContent = 'Undo';
     undo.disabled = this.state.pendingActions.length === 0;
     undo.addEventListener('click', () => {
       this.state = undoFoundryDraft(this.state);
@@ -141,7 +175,7 @@ export class FoundryScene implements Scene {
     skip.className = 'secondary-button';
     skip.type = 'button';
     skip.dataset.testid = 'foundry-skip';
-    skip.textContent = 'Continue Without Changes';
+    skip.textContent = 'Skip Foundry';
     skip.addEventListener('click', () => this.onComplete(undoFoundryDraft(this.state), 0));
     controls.append(commit, undo, skip);
 
@@ -151,6 +185,7 @@ export class FoundryScene implements Scene {
       title,
       boundary,
       grid,
+      console,
       issueList,
       workspace,
       fusion,
@@ -187,11 +222,179 @@ export class FoundryScene implements Scene {
     };
   }
 
+  private createCommandConsole(dashboard: FoundryDashboardModel): HTMLElement {
+    const console = document.createElement('section');
+    console.className = 'foundry-command-console';
+    console.dataset.testid = 'foundry-command-console';
+    console.setAttribute('aria-label', dashboard.ariaLabel);
+
+    const attack = document.createElement('div');
+    attack.className = 'foundry-attack-console';
+    const attackHeader = document.createElement('header');
+    const attackTitle = document.createElement('h2');
+    attackTitle.textContent = 'Attack Simulation';
+    const pattern = document.createElement('span');
+    pattern.className = 'foundry-pattern-badge';
+    pattern.textContent = dashboard.weaponPattern.toUpperCase();
+    attackHeader.append(attackTitle, pattern);
+
+    const previewModel = createShipPreviewModel(this.contract, 'hero', {
+      frameName: dashboard.frameName,
+      mountedModuleCount: dashboard.mountedModuleCount,
+      weaponName: dashboard.weaponName,
+      weaponPattern: dashboard.weaponPattern,
+      ariaContext: 'Draft attack simulation'
+    });
+    const previewFrame = document.createElement('div');
+    previewFrame.className = 'ship-preview-frame ship-preview-frame-hero foundry-attack-preview';
+    previewFrame.dataset.testid = 'foundry-attack-preview';
+    previewFrame.style.setProperty('--ship-primary', previewModel.primaryColor);
+    previewFrame.style.setProperty('--ship-secondary', previewModel.secondaryColor);
+    previewFrame.style.setProperty('--ship-trim', previewModel.trimColor);
+    previewFrame.style.setProperty('--ship-engine', previewModel.engineColor);
+    const targeting = document.createElement('span');
+    targeting.className = 'foundry-target-reticle';
+    targeting.setAttribute('aria-hidden', 'true');
+    previewFrame.append(createShipPreviewElement(document, previewModel), targeting);
+
+    const miniHud = document.createElement('div');
+    miniHud.className = 'foundry-mini-hud';
+    miniHud.dataset.testid = 'foundry-mini-hud';
+    const weapon = document.createElement('strong');
+    weapon.textContent = dashboard.weaponName;
+    const change = document.createElement('span');
+    change.className = 'foundry-draft-change';
+    change.dataset.changed = String(dashboard.changed);
+    change.textContent = dashboard.changed ? 'DRAFT Δ' : 'BASELINE';
+    miniHud.append(weapon, change);
+
+    const attackStats = document.createElement('div');
+    attackStats.className = 'foundry-attack-stats';
+    for (const stat of dashboard.attackStats) {
+      attackStats.append(this.createAttackStat(stat));
+    }
+
+    const traits = document.createElement('div');
+    traits.className = 'foundry-trait-row';
+    for (const trait of dashboard.traits) {
+      const chip = document.createElement('span');
+      chip.className = 'foundry-trait-chip';
+      chip.innerHTML = `<b>${trait.glyph}</b><span>${trait.label}</span><strong>${trait.value}</strong>`;
+      traits.append(chip);
+    }
+    attack.append(attackHeader, previewFrame, miniHud, attackStats, traits);
+
+    const resources = document.createElement('div');
+    resources.className = 'foundry-resource-console';
+    const resourceHeader = document.createElement('header');
+    const resourceTitle = document.createElement('h2');
+    resourceTitle.textContent = 'Grid Envelope';
+    const validity = document.createElement('span');
+    validity.className = 'foundry-validity-light';
+    validity.dataset.valid = String(dashboard.valid);
+    validity.textContent = dashboard.valid ? 'NOMINAL' : `${dashboard.issueCount} BLOCKED`;
+    resourceHeader.append(resourceTitle, validity);
+    const meterList = document.createElement('div');
+    meterList.className = 'foundry-meter-list';
+    for (const meter of dashboard.meters) meterList.append(this.createResourceMeter(meter));
+    resources.append(resourceHeader, meterList);
+
+    console.append(attack, resources);
+    return console;
+  }
+
+  private createResourceMeter(meter: FoundryMeterModel): HTMLElement {
+    const row = document.createElement('div');
+    row.className = 'foundry-meter';
+    row.dataset.tone = meter.tone;
+    row.dataset.testid = `foundry-meter-${meter.id}`;
+    row.setAttribute('aria-label', meter.ariaLabel);
+    const heading = document.createElement('div');
+    heading.className = 'foundry-meter-heading';
+    const label = document.createElement('span');
+    label.innerHTML = `<b>${meter.glyph}</b>${meter.label}`;
+    const value = document.createElement('span');
+    value.className = 'foundry-meter-value';
+    value.textContent = `${meter.value}/${meter.capacity}`;
+    const delta = document.createElement('span');
+    delta.className = 'foundry-comparison-delta';
+    delta.textContent = formatFoundryDelta(meter.delta);
+    heading.append(label, delta, value);
+    const track = document.createElement('span');
+    track.className = 'foundry-meter-track';
+    track.setAttribute('role', 'meter');
+    track.setAttribute('aria-valuemin', '0');
+    track.setAttribute('aria-valuemax', String(meter.capacity));
+    track.setAttribute('aria-valuenow', String(meter.value));
+    const fill = document.createElement('span');
+    fill.style.width = `${Math.round(meter.ratio * 100)}%`;
+    track.append(fill);
+    row.append(heading, track);
+    return row;
+  }
+
+  private createAttackStat(stat: FoundryAttackStatModel): HTMLElement {
+    const item = document.createElement('div');
+    item.className = 'foundry-attack-stat';
+    item.dataset.tone = stat.tone;
+    item.dataset.testid = `foundry-attack-${stat.id}`;
+    item.setAttribute('aria-label', stat.ariaLabel);
+    const heading = document.createElement('span');
+    heading.className = 'foundry-attack-stat-label';
+    heading.innerHTML = `<b>${stat.glyph}</b>${stat.label}`;
+    const value = document.createElement('strong');
+    value.textContent = stat.displayValue;
+    const delta = document.createElement('small');
+    delta.textContent = formatFoundryDelta(stat.delta);
+    const bar = document.createElement('span');
+    bar.className = 'foundry-attack-stat-bar';
+    const fill = document.createElement('span');
+    fill.style.width = `${Math.round(stat.ratio * 100)}%`;
+    bar.append(fill);
+    item.append(heading, value, delta, bar);
+    return item;
+  }
+
+  private createComponentStatStrip(
+    component: FoundryComponentInstance,
+    includeSalvage = false
+  ): HTMLElement {
+    const stats = createFoundryComponentStatModel(component);
+    const strip = document.createElement('div');
+    strip.className = 'foundry-component-stats';
+    strip.setAttribute(
+      'aria-label',
+      `Power ${stats.power}, heat ${stats.heat}, mass ${stats.mass}, command ${stats.command}, instability ${stats.instability}${includeSalvage ? `, scrap ${stats.salvage}` : ''}`
+    );
+    const values: readonly (readonly [string, string, number])[] = [
+      ['power', 'P', stats.power],
+      ['heat', 'H', stats.heat],
+      ['mass', 'M', stats.mass],
+      ['command', 'C', stats.command],
+      ['instability', '!', stats.instability],
+      ...(includeSalvage ? ([['salvage', '$', stats.salvage]] as const) : [])
+    ];
+    for (const [id, glyph, value] of values) {
+      const stat = document.createElement('span');
+      stat.dataset.stat = id;
+      stat.innerHTML = `<b>${glyph}</b>${value}`;
+      strip.append(stat);
+    }
+    return strip;
+  }
+
+  private createBadge(text: string, className = ''): HTMLSpanElement {
+    const badge = document.createElement('span');
+    badge.className = `foundry-badge ${className}`.trim();
+    badge.textContent = text;
+    return badge;
+  }
+
   private createInstalledSection(frame: ReturnType<typeof getShipFrameById>): HTMLElement {
     const section = document.createElement('section');
     section.className = 'foundry-section';
     const title = document.createElement('h2');
-    title.textContent = 'Installed Hardpoints';
+    title.textContent = 'Hardpoints';
     const list = document.createElement('div');
     list.className = 'foundry-card-grid';
 
@@ -200,32 +403,47 @@ export class FoundryScene implements Scene {
       const card = document.createElement('article');
       card.className = 'foundry-card foundry-installed-card';
       card.dataset.testid = `foundry-hardpoint-${hardpoint.id}`;
+      const header = document.createElement('header');
+      header.className = 'foundry-card-header';
       const heading = document.createElement('h3');
-      heading.textContent = `${hardpoint.label} | ${hardpoint.slot}/${hardpoint.size}${hardpoint.required ? ' | REQUIRED' : ''}`;
-      const copy = document.createElement('p');
-      copy.textContent = component
-        ? `${formatComponentName(component)} | ${getComponentTradeoff(component)}`
-        : 'EMPTY HARDPOINT';
-      card.append(heading, copy);
+      heading.textContent = hardpoint.label;
+      const badges = document.createElement('div');
+      badges.className = 'foundry-badge-row';
+      badges.append(
+        this.createBadge(hardpoint.slot.toUpperCase()),
+        this.createBadge(hardpoint.size.toUpperCase())
+      );
+      if (hardpoint.required) badges.append(this.createBadge('CORE', 'foundry-badge-required'));
+      header.append(heading, badges);
+      card.append(header);
 
       if (component) {
+        const componentName = document.createElement('strong');
+        componentName.className = 'foundry-component-name';
+        componentName.textContent = formatComponentName(component);
+        card.append(componentName, this.createComponentStatStrip(component));
         const actions = document.createElement('div');
         actions.className = 'foundry-card-actions';
         actions.append(
           this.createActionButton('Remove', () => {
             this.state = planRemoveComponent(this.state, hardpoint.id, this.sectorIndex);
-            this.status = `${formatComponentName(component)} moved to cargo. Commit is blocked if the frame is incomplete.`;
+            this.status = `${formatComponentName(component)} moved to cargo.`;
           }),
-          this.createActionButton(`Reroute (${component.routingMode})`, () => {
+          this.createActionButton(`Route / ${component.routingMode}`, () => {
             this.state = planRerouteComponent(this.state, component.id, this.sectorIndex);
-            this.status = 'Routing changed. Review power and heat headroom before commit.';
+            this.status = 'Routing changed.';
           }),
-          this.createActionButton(`Overclock ${component.overclockLevel}`, () => {
+          this.createActionButton(`Clock / ${component.overclockLevel}`, () => {
             this.state = planOverclockComponent(this.state, component.id, this.sectorIndex);
-            this.status = 'Overclock planned. Output rises with power, heat, and instability.';
+            this.status = 'Overclock staged.';
           })
         );
         card.append(actions);
+      } else {
+        const empty = document.createElement('strong');
+        empty.className = 'foundry-hardpoint-empty';
+        empty.textContent = 'EMPTY';
+        card.append(empty);
       }
       list.append(card);
     }
@@ -238,15 +456,14 @@ export class FoundryScene implements Scene {
     section.className = 'foundry-section';
     const cargo = getCargoComponents(this.state.draft);
     const title = document.createElement('h2');
-    title.textContent = `Component Cargo (${cargo.length})`;
+    title.textContent = `Cargo / ${cargo.length}`;
     const list = document.createElement('div');
     list.className = 'foundry-card-grid';
 
     if (cargo.length === 0) {
       const empty = document.createElement('p');
       empty.className = 'foundry-empty';
-      empty.textContent =
-        'No loose components. Remove an installed module or recover more salvage.';
+      empty.textContent = 'No loose hardware.';
       list.append(empty);
     }
 
@@ -262,52 +479,85 @@ export class FoundryScene implements Scene {
     card.className = 'foundry-card foundry-cargo-card';
     card.dataset.testid = `foundry-component-${component.id}`;
     card.style.setProperty('--component-quality', quality.presentation.color);
+    const header = document.createElement('header');
+    header.className = 'foundry-card-header';
     const heading = document.createElement('h3');
     heading.textContent = formatComponentName(component);
-    const source = document.createElement('p');
-    source.textContent = `${component.sourceLabel} | ${module.slot}/${module.size} | Tags ${component.tags.join('/')}`;
-    const tradeoff = document.createElement('p');
-    tradeoff.textContent = getComponentTradeoff(component);
-    const affixes = document.createElement('p');
-    affixes.textContent =
-      component.affixIds.length > 0
-        ? component.affixIds
-            .map((affixId) => {
-              const affix = getComponentAffix(affixId);
-              return `${affix.name}: ${affix.presentation.benefit} ${affix.presentation.tradeoff}`;
-            })
-            .join(' | ')
-        : 'No affix; clean fusion stock.';
+    header.append(heading, this.createBadge(quality.label.toUpperCase(), 'foundry-badge-quality'));
+
+    const identity = document.createElement('div');
+    identity.className = 'foundry-badge-row';
+    identity.append(
+      this.createBadge(component.sourceLabel),
+      this.createBadge(module.slot.toUpperCase()),
+      this.createBadge(module.size.toUpperCase())
+    );
+    for (const tag of component.tags.slice(0, 4)) identity.append(this.createBadge(tag));
+
+    const modifiers = document.createElement('div');
+    modifiers.className = 'foundry-badge-row foundry-modifier-row';
+    for (const affixId of component.affixIds) {
+      const affix = getComponentAffix(affixId);
+      const badge = this.createBadge(affix.name, 'foundry-badge-affix');
+      badge.title = `${affix.presentation.benefit} ${affix.presentation.tradeoff}`;
+      modifiers.append(badge);
+    }
+    for (const recipeId of component.evolutionIds) {
+      const recipe = getWeaponEvolutionRecipe(recipeId);
+      const badge = this.createBadge(recipe.name, 'foundry-badge-evolution');
+      badge.title = `${recipe.presentation.preview} ${recipe.presentation.risk}`;
+      modifiers.append(badge);
+    }
+    if (modifiers.childElementCount === 0) modifiers.append(this.createBadge('CLEAN'));
+
     const actions = document.createElement('div');
     actions.className = 'foundry-card-actions';
+    const frame = getShipFrameById(this.state.draft.frameId);
     for (const hardpointId of component.compatibility.compatibleHardpointIds) {
-      actions.append(
-        this.createActionButton(`Install: ${hardpointId}`, () => {
-          this.state = planInstallComponent(
-            this.state,
-            component.id,
-            hardpointId,
-            this.sectorIndex
-          );
-          this.status = `${formatComponentName(component)} assigned to ${hardpointId}. Displaced hardware remains in cargo.`;
-        })
+      const hardpoint = frame.hardpoints.find((candidate) => candidate.id === hardpointId);
+      const installed = getInstalledComponent(this.state.draft, hardpointId);
+      const comparison = compareFoundryComponents(component, installed);
+      const install = document.createElement('button');
+      install.className = 'secondary-button foundry-action foundry-install-action';
+      install.type = 'button';
+      install.dataset.tone = comparison.tone;
+      install.setAttribute(
+        'aria-label',
+        `Install ${formatComponentName(component)} in ${hardpoint?.label ?? hardpointId}. Resource change ${comparison.label}`
       );
+      const installLabel = document.createElement('strong');
+      installLabel.textContent = `Install / ${hardpoint?.label ?? hardpointId}`;
+      const comparisonLabel = document.createElement('small');
+      comparisonLabel.textContent = comparison.label;
+      install.append(installLabel, comparisonLabel);
+      install.addEventListener('click', () => {
+        this.state = planInstallComponent(this.state, component.id, hardpointId, this.sectorIndex);
+        this.status = `${formatComponentName(component)} installed in ${hardpoint?.label ?? hardpointId}.`;
+        this.enter();
+      });
+      actions.append(install);
     }
     actions.append(
-      this.createActionButton(`Reroute (${component.routingMode})`, () => {
+      this.createActionButton(`Route / ${component.routingMode}`, () => {
         this.state = planRerouteComponent(this.state, component.id, this.sectorIndex);
-        this.status = 'Cargo routing planned; it matters when this component is installed.';
+        this.status = 'Cargo routing staged.';
       }),
-      this.createActionButton(`Overclock ${component.overclockLevel}`, () => {
+      this.createActionButton(`Clock / ${component.overclockLevel}`, () => {
         this.state = planOverclockComponent(this.state, component.id, this.sectorIndex);
-        this.status = 'Cargo overclock planned. The risk becomes active on installation.';
+        this.status = 'Cargo overclock staged.';
       }),
       this.createActionButton(`Scrap +${component.salvageValue}`, () => {
         this.state = planScrapComponent(this.state, component.id, this.sectorIndex);
-        this.status = `${component.salvageValue} run salvage reserved; payout occurs only on commit.`;
+        this.status = `+${component.salvageValue} salvage on commit.`;
       })
     );
-    card.append(heading, source, tradeoff, affixes, actions);
+    card.append(
+      header,
+      identity,
+      this.createComponentStatStrip(component, true),
+      modifiers,
+      actions
+    );
     return card;
   }
 
@@ -316,26 +566,33 @@ export class FoundryScene implements Scene {
     section.className = 'foundry-section foundry-fusion';
     const options = getFusionOptions(this.state.draft);
     const title = document.createElement('h2');
-    title.textContent = `Weapon Evolution Recipes (${options.length})`;
+    title.textContent = `Evolution / ${options.length}`;
     const copy = document.createElement('p');
-    copy.textContent =
-      'Fusion consumes one loose catalyst and evolves one loose primary component. Outcomes are deterministic and each recipe is application-capped.';
+    copy.textContent = 'BASE + CATALYST -> NEW FIRE';
     const list = document.createElement('div');
     list.className = 'foundry-fusion-list';
     if (options.length === 0) {
       const empty = document.createElement('p');
-      empty.textContent =
-        'No legal fusion pair in cargo. Remove a primary and recover a matching catalyst.';
+      empty.textContent = 'No compatible pair in cargo.';
       list.append(empty);
     }
     for (const option of options.slice(0, 8)) {
       const button = document.createElement('button');
       button.className = 'choice-card foundry-fusion-card';
       button.type = 'button';
-      button.textContent = `${option.title} | ${option.preview} | Risk: ${option.risk}`;
+      const optionTitle = document.createElement('span');
+      optionTitle.className = 'choice-title';
+      optionTitle.textContent = option.title;
+      const preview = document.createElement('span');
+      preview.className = 'choice-body';
+      preview.textContent = option.preview;
+      const risk = document.createElement('span');
+      risk.className = 'choice-meta';
+      risk.textContent = `RISK / ${option.risk}`;
+      button.append(optionTitle, preview, risk);
       button.addEventListener('click', () => {
         this.state = planFuseComponents(this.state, option, this.sectorIndex);
-        this.status = `${option.title} planned. Install the evolved primary and validate the grid before commit.`;
+        this.status = `${option.title} staged.`;
         this.enter();
       });
       list.append(button);
@@ -365,4 +622,9 @@ export class FoundryScene implements Scene {
     }
     this.onComplete(result.state, result.salvageGained);
   }
+}
+
+function formatFoundryDelta(value: number): string {
+  if (Math.abs(value) < 0.001) return '+/-0';
+  return `${value > 0 ? '+' : ''}${Number(value.toFixed(2))}`;
 }

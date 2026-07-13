@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Reimagined the salvage foundry as Hardpoint Control: a draft-aware attack simulation uses the selected ship and weapon pattern, a compact mini-HUD compares output against the committed loadout, visual meters replace raw resource prose, cargo install controls show direct replacement deltas, and hardpoint/component cards use scannable stat and modifier chips. Responsive, high-contrast, reduced-motion, and performance-mode treatments remain first-class.
+
 - Fixed the final sector-departure handoff frame. Completing an exit now latches the terminal offscreen, fully transparent ship presentation until the route or summary scene owns rendering, preventing the ordinary centered combat ship from flashing back beneath the closing transition.
 
 - Reasserted the gameplay arena as the camera's line of sight. The transformed gameplay layer is now clipped to its stable viewport frame, preventing projectiles, ships, mines, obstacles, pickups, effects, hazards, and landmarks from bleeding into the surrounding presentation while full-viewport scrolling background art remains visible behind it. Open-flight enemy projectiles may leave the arena freely and expire through ordinary cleanup; boarding operations explicitly retain solid authored side walls.

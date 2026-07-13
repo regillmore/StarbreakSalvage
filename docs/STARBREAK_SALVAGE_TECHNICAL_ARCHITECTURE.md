@@ -796,6 +796,13 @@ seed + permanent save fingerprint
 - If scene replacement is delayed by one or more frames, `GameplayScene.update` remains inside the exit guard and `render` continues using progress-100% departure coordinates instead of falling back to `CombatState.player`.
 - Normal, victory, and debug-forced completion share the same terminalization path. The retained state is transient scene memory and does not enter run generation, suspended snapshots, or permanent saves.
 
+### Work order 123 hardpoint-control presentation boundary
+
+- `src/ui/FoundryPresentation.ts` is a pure screen read-model seam over committed and draft `EngineeringState`. It resolves both snapshots once per screen entry and derives normalized resource meters, primary-weapon volley/impact/cadence/velocity/heat stats, active engineering traits, and component replacement deltas without mutating the draft or duplicating foundry legality.
+- `FoundryScene` remains an event-driven DOM scene. Its attack simulation reuses `ShipPreview` with draft frame, module count, weapon name, and weapon-pattern overrides; the same existing engineering operations still own install, remove, scrap, reroute, overclock, fusion, undo, and commit behavior.
+- Visual meters, glyph stat strips, badges, and direct install comparisons are progressive presentation. Full values and relationships remain exposed through native meter semantics, labels, button accessible names, modifier titles, validation issues, and live status updates.
+- The read models are built only on foundry entry and after explicit actions. They add no gameplay-frame work, runtime RNG, generated content, production dependency, save field, or snapshot migration.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.
