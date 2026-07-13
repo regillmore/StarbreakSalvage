@@ -5,6 +5,8 @@ import {
   MAX_APEX_HAZARD_PRESSURE,
   MAX_APEX_REINFORCEMENTS,
   applyApexHuntEvent,
+  createApexCampaignReadModel,
+  createApexEncounterReadModel,
   createApexFinaleProfile,
   createApexHuntPlan,
   createApexHuntState,
@@ -82,6 +84,102 @@ describe('ApexHunt', () => {
       )
     );
     expect(outcomes).toEqual(new Set(APEX_OUTCOMES));
+  });
+
+  it('turns Crownless hunt evidence into explicit disposition readiness', () => {
+    const plan = createApexHuntPlan({
+      seed: 'APEX-CROWN-READINESS',
+      saveFingerprint: 'fresh',
+      sectorCount: 14
+    });
+    const hunt = plan.threats.find(
+      (candidate) => candidate.definitionId === 'apex_crownless_engine'
+    )!;
+    let state = createApexHuntState(plan);
+    for (const encounter of hunt.encounters) {
+      state = applyApexHuntEvent(plan, state, {
+        id: `readiness:${encounter.id}`,
+        type: 'encounterOutcome',
+        threatId: hunt.definitionId,
+        encounterId: encounter.id,
+        stage: encounter.stage,
+        sectorIndex: encounter.sectorIndex,
+        outcome: 'success'
+      }).state;
+    }
+    const profile = createApexFinaleProfile({
+      plan,
+      state,
+      threatId: hunt.definitionId,
+      context: {
+        alliedFronts: 0,
+        hostileFronts: 0,
+        resolvedRivals: 0,
+        crewBonds: 0,
+        crewOfficers: 0,
+        carrierSupport: 0,
+        boardingCapacity: 0,
+        fleetSupport: 0,
+        fleetBoardingAssist: 0,
+        frontierDecision: 'unresolved'
+      }
+    });
+    const capture = profile.options.find((option) => option.outcome === 'capture')!;
+    const containment = profile.options.find((option) => option.outcome === 'containment')!;
+
+    expect(profile.readyOptions).toBe(2);
+    expect(capture).toMatchObject({
+      available: true,
+      readinessLabel: 'Custody readiness 2/2'
+    });
+    expect(capture.requirements[0]).toMatchObject({
+      current: 2,
+      target: 2,
+      met: true,
+      sourceReadout:
+        'Carrier boarding 0 · Fleet boarding 0 · Lieutenant codes 1 · Exposed apex core 1'
+    });
+    expect(containment).toMatchObject({
+      available: false,
+      readinessLabel: 'Containment readiness 1/2'
+    });
+    expect(containment.requirement).toContain('Need 1 more');
+  });
+
+  it('presents named contacts, plain-language state, and explained evidence', () => {
+    const plan = createApexHuntPlan({
+      seed: 'APEX-READ-MODEL',
+      saveFingerprint: 'fresh',
+      sectorCount: 14
+    });
+    const hunt = plan.threats[0]!;
+    const encounter = hunt.encounters[0]!;
+    let state = createApexHuntState(plan);
+    state = applyApexHuntEvent(plan, state, {
+      id: 'read-model-trace',
+      type: 'encounterOutcome',
+      threatId: hunt.definitionId,
+      encounterId: encounter.id,
+      stage: encounter.stage,
+      sectorIndex: encounter.sectorIndex,
+      outcome: 'success'
+    }).state;
+
+    const campaign = createApexCampaignReadModel(plan, state, encounter.sectorIndex);
+    const threat = campaign.threats.find((candidate) => candidate.id === hunt.definitionId)!;
+    const contact = createApexEncounterReadModel(encounter);
+
+    expect(campaign.summary).toContain('unresolved hunts');
+    expect(threat.statusLabel).toBe('Hunt progressing');
+    expect(threat.integrityDetail).toContain('integrity stripped');
+    expect(threat.subsystems).toHaveLength(3);
+    expect(threat.evidence.find((entry) => entry.id === 'traces')).toMatchObject({
+      value: '1',
+      detail: 'Recovered traces count as negotiating leverage.'
+    });
+    expect(threat.contacts[0]).toMatchObject({ status: 'resolved', statusLabel: 'Contact resolved' });
+    expect(contact.banner).toContain('APEX CONTACT');
+    expect(contact.payoff).toContain('Success');
   });
 
   it('settles a finale once and returns its variety unlock', () => {

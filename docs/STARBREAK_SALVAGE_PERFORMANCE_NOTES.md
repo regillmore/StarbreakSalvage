@@ -361,6 +361,12 @@ Work order 130 changes the locked-arena request from edge-triggered suppression 
 
 The work order 130 release build emits 877.54 kB minified/237.92 kB gzip initial JavaScript and unchanged 43.09 kB CSS/9.23 kB gzip. This is a 0.02 kB minified decrease with unchanged gzip/CSS measurements relative to work order 129. No warning threshold changed; the existing initial-chunk warning remains open.
 
+## Work order 131 apex-presentation budgets
+
+Work order 131 preserves three threat states, twelve immutable contacts, 64/128 history/event ceilings, the three-escort cap, the two-hazard cap, and the single existing boss actor. Each applicable `GameplayScene` derives one small contact presentation at construction; the six-second banner performs one time comparison during existing HUD synchronization. A contact floors the already bounded apex escort projection at one marked formation and at most three, uses a deterministic existing enemy variant, and adds no actor type, targeting loop, projectile store, effect pool, RNG stream, or per-frame dossier fold. Non-finale marked contacts now count for ordinary field resolution.
+
+The selectable dossier remains lazy and rebuilds bounded DOM only on scene entry or one of three threat-tab selections. Each projection contains four contacts, three subsystem meters, four evidence cards, four finale-pressure cards, and at most three supported disposition cards with small source lists; no dossier model runs during combat. The work order 131 release build emits 888.05 kB minified/241.25 kB gzip initial JavaScript, 51.55/10.82 kB CSS, and a 9.72/2.99 kB lazy Apex Dossier. Relative to work order 130, initial JavaScript increases 10.51/3.33 kB, CSS increases 8.46/1.59 kB, and the lazy dossier increases 7.15/1.92 kB for the authored contact/evidence model and responsive presentation. No warning threshold changed; the existing initial-chunk warning remains open.
+
 - The first finale pass adds hull/approach pressure and summary/unlock hooks, not new projectile families; remaining work should keep profiling the `F` finale smoke alongside enemy-rich, environmental stress, and the `Y` two-act summary before adding denser final-phase attacks.
 
 ## Phase 10 Playtest Risks

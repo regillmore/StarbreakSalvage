@@ -2148,6 +2148,7 @@ export class GameApp {
         this.currentRun.apexHunts,
         this.runSession.apexHunts,
         this.runSession.currentSectorIndex,
+        this.createApexFinaleContext(),
         profile,
         onResolve,
         onBack

@@ -133,6 +133,31 @@ export interface ApexResolutionOption {
   readonly risk: string;
   readonly available: boolean;
   readonly requirement: string;
+  readonly readinessLabel: string;
+  readonly requirements: readonly ApexRequirementCheck[];
+}
+
+export interface ApexRequirementSource {
+  readonly label: string;
+  readonly value: number;
+}
+
+export interface ApexRequirementCheck {
+  readonly id: string;
+  readonly label: string;
+  readonly current: number;
+  readonly target: number;
+  readonly met: boolean;
+  readonly sourceReadout: string;
+  readonly missingReadout: string;
+}
+
+export interface ApexPressureReadModel {
+  readonly id: 'hull' | 'escorts' | 'hazard' | 'escape';
+  readonly label: string;
+  readonly value: string;
+  readonly detail: string;
+  readonly tone: 'advantage' | 'warning' | 'neutral';
 }
 
 export interface ApexFinaleProfile {
@@ -147,16 +172,82 @@ export interface ApexFinaleProfile {
   readonly integrityReadout: string;
   readonly subsystemReadout: string;
   readonly options: readonly ApexResolutionOption[];
+  readonly pressure: readonly ApexPressureReadModel[];
+  readonly readyOptions: number;
   readonly budget: string;
+}
+
+export interface ApexSubsystemReadModel {
+  readonly id: keyof ApexSubsystemState;
+  readonly label: string;
+  readonly current: number;
+  readonly maximum: number;
+  readonly condition: string;
+  readonly effect: string;
+}
+
+export interface ApexEvidenceReadModel {
+  readonly id: 'traces' | 'lieutenants' | 'migrations' | 'escapeRoutes';
+  readonly label: string;
+  readonly value: string;
+  readonly detail: string;
+  readonly tone: 'advantage' | 'warning' | 'neutral';
+}
+
+export interface ApexContactReadModel {
+  readonly id: string;
+  readonly stage: ApexEncounterStage;
+  readonly stageLabel: string;
+  readonly label: string;
+  readonly directive: string;
+  readonly payoff: string;
+  readonly location: string;
+  readonly status: 'resolved' | 'current' | 'ahead' | 'missed';
+  readonly statusLabel: string;
+}
+
+export interface ApexThreatReadModel {
+  readonly id: string;
+  readonly mapCue: string;
+  readonly name: string;
+  readonly title: string;
+  readonly summary: string;
+  readonly structureLabel: string;
+  readonly huntDoctrine: string;
+  readonly status: ApexThreatStatus;
+  readonly statusLabel: string;
+  readonly statusDetail: string;
+  readonly integrity: number;
+  readonly maximumIntegrity: number;
+  readonly integrityDetail: string;
+  readonly subsystems: readonly ApexSubsystemReadModel[];
+  readonly evidence: readonly ApexEvidenceReadModel[];
+  readonly contacts: readonly ApexContactReadModel[];
+  readonly nextEncounter: string | null;
+  readonly outcome: ApexOutcome | null;
+  readonly debugLabel: string;
 }
 
 export interface ApexCampaignReadModel {
   readonly activeThreats: number;
   readonly resolvedThreats: number;
   readonly awaitingResolution: number;
-  readonly threats: readonly string[];
+  readonly threats: readonly ApexThreatReadModel[];
   readonly nextEncounters: readonly string[];
   readonly summary: string;
+}
+
+export interface ApexEncounterReadModel {
+  readonly mapCue: string;
+  readonly threatName: string;
+  readonly stage: ApexEncounterStage;
+  readonly stageLabel: string;
+  readonly label: string;
+  readonly directive: string;
+  readonly payoff: string;
+  readonly banner: string;
+  readonly hudReadout: string;
+  readonly waveLabel: string;
 }
 
 export interface ApexDebugState {
@@ -388,16 +479,33 @@ export function createApexFinaleProfile(options: {
     Math.min(MAX_APEX_HAZARD_PRESSURE, threat.escapeRoutesOpen - options.context.carrierSupport)
   );
   const option = (outcome: ApexOutcome): ApexResolutionOption => {
-    const available = isOutcomeAvailable(outcome, definition.supportedOutcomes, options.context);
+    const requirements = createOutcomeRequirements(outcome, threat, options.context);
+    const available = requirements.every((requirement) => requirement.met);
     return {
       outcome,
       label: outcomeLabel(outcome),
       summary: outcomeSummary(outcome, definition.name),
       risk: outcomeRisk(outcome),
       available,
-      requirement: outcomeRequirement(outcome)
+      requirement: formatOutcomeRequirement(requirements),
+      readinessLabel:
+        requirements.length === 0
+          ? 'Ready after neutralization'
+          : requirements.map((requirement) => `${requirement.label} ${requirement.current}/${requirement.target}`).join(' | '),
+      requirements
     };
   };
+  const optionsForThreat = definition.supportedOutcomes.map(option);
+  const escapeRisk = Math.max(
+    0,
+    Math.min(
+      6,
+      threat.escapeRoutesOpen +
+        threat.migrations +
+        Math.ceil(threat.subsystems.propulsion / 2) -
+        options.context.fleetSupport
+    )
+  );
   return {
     threatId: definition.id,
     bossId: definition.bossId,
@@ -406,11 +514,160 @@ export function createApexFinaleProfile(options: {
     bossHullDelta,
     reinforcementCount,
     hazardPressure,
-    escapeRisk: Math.max(0, Math.min(6, threat.escapeRoutesOpen + threat.migrations - options.context.fleetSupport)),
+    escapeRisk,
     integrityReadout: `Integrity ${threat.integrity}/${BASE_INTEGRITY} | traces ${threat.traces} | lieutenants ${threat.lieutenantsDefeated} | migrations ${threat.migrations} | escape routes ${threat.escapeRoutesOpen}`,
     subsystemReadout: `${definition.subsystemLabels.propulsion} ${threat.subsystems.propulsion}/4 | ${definition.subsystemLabels.armor} ${threat.subsystems.armor}/4 | ${definition.subsystemLabels.core} ${threat.subsystems.core}/4`,
-    options: definition.supportedOutcomes.map(option),
+    options: optionsForThreat,
+    pressure: [
+      {
+        id: 'hull',
+        label: 'Finale hull',
+        value: formatSigned(bossHullDelta),
+        detail: bossHullDelta <= 0
+          ? 'Hunt damage and support reduced the apex hull budget.'
+          : 'Migration pressure rebuilt the apex beyond its baseline hull.',
+        tone: bossHullDelta < 0 ? 'advantage' : bossHullDelta > 0 ? 'warning' : 'neutral'
+      },
+      {
+        id: 'escorts',
+        label: 'Escort waves',
+        value: `${reinforcementCount}/${MAX_APEX_REINFORCEMENTS}`,
+        detail: 'Migrations and hostile fronts add escorts; allied fronts remove them.',
+        tone: reinforcementCount > 1 ? 'warning' : 'neutral'
+      },
+      {
+        id: 'hazard',
+        label: 'Hazard pressure',
+        value: `${hazardPressure}/${MAX_APEX_HAZARD_PRESSURE}`,
+        detail: 'Open escape routes add hazards; carrier support suppresses them.',
+        tone: hazardPressure > 0 ? 'warning' : 'advantage'
+      },
+      {
+        id: 'escape',
+        label: 'Escape risk',
+        value: `${escapeRisk}/6`,
+        detail: 'Open routes, migrations, and intact drives raise risk; fleet control lowers it.',
+        tone: escapeRisk > 2 ? 'warning' : escapeRisk === 0 ? 'advantage' : 'neutral'
+      }
+    ],
+    readyOptions: optionsForThreat.filter((candidate) => candidate.available).length,
     budget: `${reinforcementCount}/${MAX_APEX_REINFORCEMENTS} reinforcements | hazard ${hazardPressure}/${MAX_APEX_HAZARD_PRESSURE} | shared boss/projectile/effect caps`
+  };
+}
+
+export function createApexEncounterReadModel(
+  encounter: ApexEncounterPlan
+): ApexEncounterReadModel {
+  const definition = getApexThreatDefinition(encounter.threatId);
+  const cue = definition.contactCues[encounter.stage];
+  return {
+    mapCue: definition.mapCue,
+    threatName: definition.name,
+    stage: encounter.stage,
+    stageLabel: encounterStageLabel(encounter.stage),
+    label: cue.label,
+    directive: cue.directive,
+    payoff: cue.payoff,
+    banner: `${definition.mapCue} APEX CONTACT // ${cue.label}`,
+    hudReadout: `${definition.mapCue} ${definition.name} // ${encounterStageLabel(encounter.stage)} // ${cue.directive}`,
+    waveLabel: `${definition.mapCue} ${encounter.stage === 'lieutenant' ? 'marked lieutenant' : encounter.stage === 'finale' ? 'apex body' : 'hunt escort'}`
+  };
+}
+
+export function createApexThreatReadModel(
+  plan: ApexThreatPlan,
+  state: ApexThreatState,
+  sectorIndex: number
+): ApexThreatReadModel {
+  const definition = getApexThreatDefinition(state.threatId);
+  const contacts = plan.encounters.map((encounter): ApexContactReadModel => {
+    const cue = definition.contactCues[encounter.stage];
+    const completed = state.encountersCompleted.includes(encounter.id);
+    const status: ApexContactReadModel['status'] = completed
+      ? 'resolved'
+      : encounter.sectorIndex < sectorIndex
+        ? 'missed'
+        : encounter.sectorIndex === sectorIndex
+          ? 'current'
+          : 'ahead';
+    return {
+      id: encounter.id,
+      stage: encounter.stage,
+      stageLabel: encounterStageLabel(encounter.stage),
+      label: cue.label,
+      directive: cue.directive,
+      payoff: cue.payoff,
+      location: `Sector ${encounter.sectorIndex + 1} · ${formatOperationalRole(encounter.operationalRole)}`,
+      status,
+      statusLabel: {
+        resolved: 'Contact resolved',
+        current: 'Contact in this sector',
+        ahead: 'Ahead',
+        missed: 'Contact passed'
+      }[status]
+    };
+  });
+  const next = contacts.find((contact) => contact.status === 'current' || contact.status === 'ahead');
+  const subsystem = (id: keyof ApexSubsystemState): ApexSubsystemReadModel => {
+    const current = state.subsystems[id];
+    return {
+      id,
+      label: definition.subsystemLabels[id],
+      current,
+      maximum: 4,
+      condition: current === 0 ? 'Disabled' : current <= 2 ? 'Breached' : current < 4 ? 'Damaged' : 'Intact',
+      effect: definition.subsystemEffects[id]
+    };
+  };
+  return {
+    id: definition.id,
+    mapCue: definition.mapCue,
+    name: definition.name,
+    title: definition.title,
+    summary: definition.summary,
+    structureLabel: definition.structureLabel,
+    huntDoctrine: definition.huntDoctrine,
+    status: state.status,
+    statusLabel: threatStatusLabel(state),
+    statusDetail: threatStatusDetail(state),
+    integrity: state.integrity,
+    maximumIntegrity: BASE_INTEGRITY,
+    integrityDetail: `${BASE_INTEGRITY - state.integrity} integrity stripped. Every successful contact weakens the finale; migration pressure can rebuild it.`,
+    subsystems: [subsystem('propulsion'), subsystem('armor'), subsystem('core')],
+    evidence: [
+      {
+        id: 'traces',
+        label: 'Trace intelligence',
+        value: `${state.traces}`,
+        detail: 'Recovered traces count as negotiating leverage.',
+        tone: state.traces > 0 ? 'advantage' : 'neutral'
+      },
+      {
+        id: 'lieutenants',
+        label: 'Command codes',
+        value: `${state.lieutenantsDefeated}`,
+        detail: 'Defeated lieutenants supply custody and capture leverage.',
+        tone: state.lieutenantsDefeated > 0 ? 'advantage' : 'neutral'
+      },
+      {
+        id: 'migrations',
+        label: 'Migrations',
+        value: `${state.migrations}`,
+        detail: 'Failed contacts let the apex rebuild and add finale pressure.',
+        tone: state.migrations > 0 ? 'warning' : 'advantage'
+      },
+      {
+        id: 'escapeRoutes',
+        label: 'Open escape routes',
+        value: `${state.escapeRoutesOpen}`,
+        detail: 'Open lanes add hazard and escape pressure; ambush wins close them.',
+        tone: state.escapeRoutesOpen > 1 ? 'warning' : state.escapeRoutesOpen === 0 ? 'advantage' : 'neutral'
+      }
+    ],
+    contacts,
+    nextEncounter: next ? `${next.stageLabel}: ${next.label} · ${next.location}` : null,
+    outcome: state.outcome,
+    debugLabel: `${definition.mapCue} ${definition.name}: ${state.status} I${state.integrity}/${BASE_INTEGRITY} P${state.subsystems.propulsion} A${state.subsystems.armor} C${state.subsystems.core} M${state.migrations} E${state.escapeRoutesOpen} ${state.outcome ?? ''}`.trim()
   };
 }
 
@@ -419,9 +676,10 @@ export function createApexCampaignReadModel(
   state: ApexHuntState,
   sectorIndex: number
 ): ApexCampaignReadModel {
-  const threats = state.threats.map((threat) => {
-    const definition = getApexThreatDefinition(threat.threatId);
-    return `${definition.mapCue} ${definition.name}: ${threat.status} I${threat.integrity}/${BASE_INTEGRITY} P${threat.subsystems.propulsion} A${threat.subsystems.armor} C${threat.subsystems.core} M${threat.migrations} E${threat.escapeRoutesOpen} ${threat.outcome ?? ''}`.trim();
+  const threats = plan.threats.map((threatPlan) => {
+    const threat = state.threats.find((candidate) => candidate.threatId === threatPlan.definitionId);
+    if (!threat) throw new Error(`Missing apex threat state ${threatPlan.definitionId}.`);
+    return createApexThreatReadModel(threatPlan, threat, sectorIndex);
   });
   const nextEncounters = plan.threats.flatMap((threat) => {
     const stateEntry = state.threats.find((candidate) => candidate.threatId === threat.definitionId)!;
@@ -446,7 +704,7 @@ export function createApexCampaignReadModel(
     awaitingResolution,
     threats,
     nextEncounters,
-    summary: `${activeThreats} active apex hunts | ${resolvedThreats} resolved | ${awaitingResolution} awaiting disposition`
+    summary: `${activeThreats} unresolved hunts | ${resolvedThreats} resolved | ${awaitingResolution} decision${awaitingResolution === 1 ? '' : 's'} required`
   };
 }
 
@@ -458,7 +716,7 @@ export function createApexDebugState(plan: ApexHuntPlan, state: ApexHuntState): 
     resolved: readout.resolvedThreats,
     awaiting: readout.awaitingResolution,
     historyCount: state.history.length,
-    threats: readout.threats,
+    threats: readout.threats.map((threat) => threat.debugLabel),
     budget: `${MAX_APEX_REINFORCEMENTS} reinforcements | ${MAX_APEX_HAZARD_PRESSURE} hazard pressure | existing boss projectile/effect caps`
   };
 }
@@ -526,6 +784,15 @@ export function validateApexContent(): string[] {
     if (ids.has(threat.id)) errors.push(`Duplicate apex threat ${threat.id}.`);
     ids.add(threat.id);
     if (threat.supportedOutcomes.length < 3) errors.push(`Apex threat ${threat.id} requires three outcomes.`);
+    if (!threat.structureLabel || !threat.huntDoctrine) {
+      errors.push(`Apex threat ${threat.id} requires player-facing hunt doctrine.`);
+    }
+    if (Object.values(threat.contactCues).some((cue) => !cue.label || !cue.directive || !cue.payoff)) {
+      errors.push(`Apex threat ${threat.id} has incomplete contact cues.`);
+    }
+    if (Object.values(threat.subsystemEffects).some((effect) => !effect)) {
+      errors.push(`Apex threat ${threat.id} has incomplete subsystem effects.`);
+    }
   }
   for (const structure of APEX_HUNT_STRUCTURES) if (!structures.has(structure)) errors.push(`Missing apex hunt structure ${structure}.`);
   return errors;
@@ -533,20 +800,77 @@ export function validateApexContent(): string[] {
 
 export function formatApexSummary(plan: ApexHuntPlan, state: ApexHuntState): string {
   const readout = createApexCampaignReadModel(plan, state, 0);
-  return `${readout.summary}. ${readout.threats.join(' | ')}`;
+  return `${readout.summary}. ${readout.threats.map((threat) => `${threat.mapCue} ${threat.name}: ${threat.statusLabel}`).join(' | ')}`;
 }
 
-function isOutcomeAvailable(
+function createOutcomeRequirements(
   outcome: ApexOutcome,
-  supported: readonly ApexOutcome[],
+  threat: ApexThreatState,
   context: ApexFinaleContext
-): boolean {
-  if (!supported.includes(outcome)) return false;
-  if (outcome === 'capture') return context.boardingCapacity + context.fleetBoardingAssist > 1;
-  if (outcome === 'containment') return context.carrierSupport + context.crewOfficers > 1;
-  if (outcome === 'bargain') return context.alliedFronts + context.resolvedRivals + context.crewBonds > 1;
-  if (outcome === 'evacuation') return context.frontierDecision === 'breach' && context.fleetSupport > 0;
-  return true;
+): ApexRequirementCheck[] {
+  if (outcome === 'destruction') return [];
+  if (outcome === 'capture') {
+    return [
+      createRequirementCheck(
+        'custody',
+        'Custody readiness',
+        2,
+        [
+          { label: 'Carrier boarding', value: context.boardingCapacity },
+          { label: 'Fleet boarding', value: context.fleetBoardingAssist },
+          { label: 'Lieutenant codes', value: Math.min(1, threat.lieutenantsDefeated) },
+          { label: 'Exposed apex core', value: Number(threat.subsystems.core <= 1) }
+        ]
+      )
+    ];
+  }
+  if (outcome === 'containment') {
+    return [
+      createRequirementCheck(
+        'containment',
+        'Containment readiness',
+        2,
+        [
+          { label: 'Carrier support', value: context.carrierSupport },
+          { label: 'Officer chain', value: context.crewOfficers },
+          { label: 'Breached armor', value: Number(threat.subsystems.armor <= 2) }
+        ]
+      )
+    ];
+  }
+  if (outcome === 'bargain') {
+    return [
+      createRequirementCheck(
+        'leverage',
+        'Negotiating leverage',
+        2,
+        [
+          { label: 'Trace intelligence', value: threat.traces },
+          { label: 'Exposed apex core', value: Number(threat.subsystems.core <= 1) },
+          { label: 'Allied fronts', value: context.alliedFronts },
+          { label: 'Resolved rival channels', value: context.resolvedRivals },
+          { label: 'Crew bonds', value: context.crewBonds }
+        ]
+      )
+    ];
+  }
+  return [
+    createRequirementCheck(
+      'frontier',
+      'Frontier route opened',
+      1,
+      [{ label: 'Breach decision', value: Number(context.frontierDecision === 'breach') }]
+    ),
+    createRequirementCheck(
+      'route-control',
+      'Route control',
+      1,
+      [
+        { label: 'Fleet support', value: context.fleetSupport },
+        { label: 'Disrupted propulsion', value: Number(threat.subsystems.propulsion <= 2) }
+      ]
+    )
+  ];
 }
 
 function outcomeLabel(outcome: ApexOutcome): string {
@@ -579,14 +903,73 @@ function outcomeRisk(outcome: ApexOutcome): string {
   }[outcome];
 }
 
-function outcomeRequirement(outcome: ApexOutcome): string {
+function createRequirementCheck(
+  id: string,
+  label: string,
+  target: number,
+  sources: readonly ApexRequirementSource[]
+): ApexRequirementCheck {
+  const total = sources.reduce((sum, source) => sum + Math.max(0, source.value), 0);
+  const current = Math.min(target, total);
   return {
-    destruction: 'Always available after neutralization.',
-    capture: 'Requires combined carrier and fleet boarding capacity.',
-    containment: 'Requires carrier support and an officer-grade crew chain.',
-    bargain: 'Requires bonds, allied fronts, or a resolved rival channel.',
-    evacuation: 'Requires a frontier breach and operational support fleet.'
-  }[outcome];
+    id,
+    label,
+    current,
+    target,
+    met: total >= target,
+    sourceReadout: sources.map((source) => `${source.label} ${source.value}`).join(' · '),
+    missingReadout: total >= target ? 'Requirement met.' : `Need ${target - total} more.`
+  };
+}
+
+function formatOutcomeRequirement(requirements: readonly ApexRequirementCheck[]): string {
+  if (requirements.length === 0) return 'Ready. Neutralization is the only requirement.';
+  return requirements
+    .map(
+      (requirement) =>
+        `${requirement.met ? 'Ready' : 'Locked'}: ${requirement.label} ${requirement.current}/${requirement.target}. ${requirement.missingReadout} Sources: ${requirement.sourceReadout}.`
+    )
+    .join(' ');
+}
+
+function threatStatusLabel(threat: ApexThreatState): string {
+  if (threat.status === 'resolved') return `Resolved · ${outcomeLabel(threat.outcome ?? 'destruction')}`;
+  return {
+    untracked: 'Signal not acquired',
+    tracked: 'Located',
+    wounded: 'Hunt progressing',
+    awaitingResolution: 'Neutralized · decision required',
+    escaped: 'Escaped'
+  }[threat.status];
+}
+
+function threatStatusDetail(threat: ApexThreatState): string {
+  if (threat.status === 'awaitingResolution') {
+    return 'The apex combat is complete. Choose what the campaign keeps, destroys, or releases.';
+  }
+  if (threat.status === 'resolved') return `Campaign closed by ${threat.outcome ?? 'unknown disposition'}.`;
+  if (threat.status === 'escaped') return 'The final contact passed without a successful neutralization.';
+  if (threat.status === 'untracked') return 'No trace has been secured yet; its first marked contact remains ahead.';
+  if (threat.status === 'tracked') return 'The threat is located, but no lasting subsystem damage is confirmed.';
+  return 'Prior contacts inflicted lasting damage that will carry into the finale.';
+}
+
+function encounterStageLabel(stage: ApexEncounterStage): string {
+  return {
+    trace: 'Acquire trace',
+    ambush: 'Break escort',
+    lieutenant: 'Defeat lieutenant',
+    finale: 'Neutralize apex'
+  }[stage];
+}
+
+function formatOperationalRole(role: ExpeditionOperationalRole): string {
+  return role.charAt(0).toUpperCase() + role.slice(1);
+}
+
+function formatSigned(value: number): string {
+  if (value > 0) return `+${value}`;
+  return `${value}`;
 }
 
 function rejected(state: ApexHuntState, label: string): ApexHuntEventResult {

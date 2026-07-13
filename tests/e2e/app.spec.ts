@@ -855,8 +855,11 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
   for (let index = 0; index < 11; index += 1) await page.keyboard.press('Tab');
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('apex-dossier')).toBeVisible();
-  await expect(page.getByTestId('apex-threats')).toContainText(/wounded|awaitingResolution/);
-  await expect(page.getByTestId('apex-budget')).toContainText('shared boss/projectile/effect caps');
+  await expect(page.getByTestId('apex-contact-track')).toContainText('Contact resolved');
+  await expect(page.getByTestId('apex-subsystems')).toContainText(/Disabled|Breached/);
+  await expect(page.getByTestId('apex-evidence')).toContainText('Trace intelligence');
+  await expect(page.getByTestId('apex-pressure')).toContainText('Escape risk');
+  await expect(page.getByTestId('apex-dispositions')).toContainText(/Ready|Locked/);
   await expect(page.locator('.debug-overlay')).toContainText('Apex budget');
 
   await page.keyboard.press('Escape');

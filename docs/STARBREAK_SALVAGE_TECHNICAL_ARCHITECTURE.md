@@ -855,6 +855,14 @@ seed + permanent save fingerprint
 - `spawnBoss` is the acknowledgement boundary: it creates the actor and sets `bossSpawned` before the next arena poll, which deasserts the request and prevents duplicate actors. Boss defeat and external debug bypass retain their existing release rules.
 - Rescue `travelRatio` and other route clauses may remain incomplete at arena lock; they are presentation/outcome progress completed after boss defeat when travel resumes. They do not replace support-field readiness or authorize target clearing, forced credit, or premature release.
 
+### Work order 131 apex evidence and presentation boundary
+
+- `ApexThreatDefinition` remains the data authority for each threat's structure, subsystem identity, four contact cues, supported outcomes, and variety unlock. The run plan still contains twelve immutable seed/save-stable encounter records, while `ApexHuntState` retains its existing bounded persisted shape and snapshot-v9 validation.
+- `ApexHunt` derives three player-facing layers without mutating state: a campaign/threat/contact read model, an encounter presentation used once by `GameplayScene`, and a finale profile containing pressure plus scored disposition requirements. Debug telemetry alone retains compressed reducer codes; DOM scenes consume structured labels, values, details, tones, and source lists.
+- A requirement is an explicit `current/target` check with named additive sources and a missing-value readout. Hunt results are first-class sources alongside expedition systems: trace intelligence supports bargains, lieutenant codes and exposed cores support capture, breached armor supports containment, and disrupted propulsion supports evacuation. Availability is the conjunction of visible checks, never a separate hidden predicate.
+- `GameplayScene` derives one immutable contact presentation at construction. Its banner and HUD reuse that record, and its marked contact formations clone at most the existing three apex escorts, apply a deterministic stage variant, and reuse normal spawn, collision, objective, projectile, effect, and reward paths. Non-finale contacts count for field resolution; finales retain the centralized single-boss arena.
+- `ApexDossierScene` remains a lazy chunk. It may switch among three static threat projections and rebuild bounded DOM, but it owns no run mutation except forwarding a ready finale outcome to `GameApp`; locked resolution cards use `aria-disabled` while remaining focusable so their exact deficit stays keyboard and screen-reader inspectable.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

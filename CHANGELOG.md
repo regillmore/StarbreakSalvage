@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Reimagined roaming apex hunts as explicit four-contact campaigns. Named trace, escort, lieutenant, and finale operations now announce themselves in combat and explain their lasting effects; the Apex Dossier replaces internal codes with pursuit timelines, subsystem meters, evidence, pressure forecasts, and pre-finale route previews. Finale choices show exact readiness sources and deficits, while trace intelligence, lieutenant codes, exposed cores, breached armor, and disrupted drives now create disposition leverage earned inside the hunt.
+
 - Fixed the Act I Corporate Kill Grid boss soft lock observed at 1074/1768u. Boss-arena readiness now remains asserted until combat acknowledges that the boss actor actually spawned, so the scene's pre-scroll arena poll cannot consume the one-shot request before its post-scroll spawning pass after the last support target dies.
 
 - Rebuilt the three multi-part set pieces around nine seed-selected layouts. The opening Hecaton no longer stacks locked structure beneath its shield emitters, every objective stage now has a validated straight-fire lane reachable by the largest player hull, mirrored and reversed arrangements vary across run seeds, mission reprojection preserves the selected geometry, and HUD/debug copy names the active arrangement and safe lane.

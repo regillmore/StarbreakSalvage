@@ -202,8 +202,10 @@ import {
 } from '../game/BoardingOperation';
 import { createFactionFrontDebugState, type FactionFrontState } from '../game/FactionFront';
 import {
+  createApexEncounterReadModel,
   createApexDebugState,
   type ApexEncounterPlan,
+  type ApexEncounterReadModel,
   type ApexFinaleProfile,
   type ApexHuntState
 } from '../game/ApexHunt';
@@ -276,6 +278,8 @@ export class GameplayScene implements Scene {
   private readonly bombMeter: HudMeterElements;
   private readonly heatMeter: HudMeterElements;
   private hudRoot: HTMLElement | null = null;
+  private apexContactBanner: HTMLElement | null = null;
+  private readonly apexEncounterPresentation: ApexEncounterReadModel | null;
   private exitSequence: SectorExitSequenceState | null = null;
   private exitSequenceResult: CombatRunResult | null = null;
   private sectorCooldown: SectorCooldownState | null = null;
@@ -318,6 +322,9 @@ export class GameplayScene implements Scene {
     private readonly apexProfile: ApexFinaleProfile | null = null,
     private readonly apexState: ApexHuntState | null = null
   ) {
+    this.apexEncounterPresentation = this.apexEncounter
+      ? createApexEncounterReadModel(this.apexEncounter)
+      : null;
     this.positionReadout = document.createElement('p');
     this.positionReadout.className = 'sr-only';
     this.positionReadout.dataset.testid = 'player-position';
@@ -474,11 +481,17 @@ export class GameplayScene implements Scene {
       boarding.hidden = true;
     }
 
+    const apexEncounterModel = this.apexEncounterPresentation;
     const apex = ownerDocument.createElement('p');
-    apex.className = 'hud-pill hud-pill-wide hud-pill-system';
+    apex.className = 'hud-pill hud-pill-wide hud-pill-system hud-pill-apex';
     apex.dataset.testid = 'apex-readout';
-    if (this.apexEncounter && this.apexProfile) {
-      apex.textContent = `${this.apexProfile.mapCue} ${this.apexProfile.bossName} ${this.apexEncounter.stage.toUpperCase()} | ${this.apexProfile.integrityReadout} | ${this.apexProfile.subsystemReadout} | ${this.apexProfile.budget}`;
+    if (apexEncounterModel && this.apexProfile) {
+      apex.dataset.stage = apexEncounterModel.stage;
+      apex.textContent = `${apexEncounterModel.hudReadout} // Lasting effect: ${apexEncounterModel.payoff}`;
+      apex.setAttribute(
+        'aria-label',
+        `${apexEncounterModel.banner}. ${apexEncounterModel.directive} ${apexEncounterModel.payoff}`
+      );
     } else {
       apex.hidden = true;
     }
@@ -522,8 +535,24 @@ export class GameplayScene implements Scene {
       commandBar.append(button);
     }
     hud.append(chrome, commandBar, readoutStrip, this.positionReadout);
+    const contactBanner = ownerDocument.createElement('aside');
+    contactBanner.className = 'apex-contact-banner';
+    contactBanner.dataset.testid = 'apex-contact-banner';
+    contactBanner.setAttribute('aria-live', 'polite');
+    if (apexEncounterModel) {
+      const contactEyebrow = ownerDocument.createElement('span');
+      contactEyebrow.textContent = apexEncounterModel.banner;
+      const contactTitle = ownerDocument.createElement('strong');
+      contactTitle.textContent = apexEncounterModel.stageLabel;
+      const contactDirective = ownerDocument.createElement('span');
+      contactDirective.textContent = apexEncounterModel.directive;
+      contactBanner.append(contactEyebrow, contactTitle, contactDirective);
+    } else {
+      contactBanner.hidden = true;
+    }
+    this.apexContactBanner = contactBanner;
     this.hudRoot = hud;
-    this.uiRoot.replaceChildren(hud, this.exitToast, this.destructionToast);
+    this.uiRoot.replaceChildren(hud, contactBanner, this.exitToast, this.destructionToast);
     this.syncExitSequenceUi();
     this.syncPlayerDestructionUi();
     this.syncReadouts();
@@ -1390,15 +1419,30 @@ export class GameplayScene implements Scene {
         formationInstanceId: `front-reinforcement:${this.sectorIndex}:${index}`,
         countsForObjective: false
       }));
+    const apexContact = this.apexEncounterPresentation;
+    const apexContactCount = apexContact
+      ? Math.max(1, this.apexProfile?.reinforcementCount ?? 0)
+      : 0;
+    const apexVariant = this.apexEncounter
+      ? {
+          trace: 'variant_evasive' as const,
+          ambush: 'variant_shielded' as const,
+          lieutenant: 'variant_overclocked' as const,
+          finale: 'variant_armored' as const
+        }[this.apexEncounter.stage]
+      : null;
     const apexReinforcements = influencedSpawnSchedule
-      .slice(0, this.apexProfile?.reinforcementCount ?? 0)
+      .slice(0, apexContactCount)
       .map((spawn, index) => ({
         ...spawn,
         atSeconds: spawn.atSeconds + 4 + index * 1.5,
         atDistance: null,
-        waveLabel: `${this.apexProfile?.mapCue ?? '[APEX]'} migration escort`,
+        hull: spawn.hull + (this.apexEncounter?.stage === 'lieutenant' ? 2 : 1),
+        waveLabel: apexContact?.waveLabel ?? '[APEX] marked contact',
+        variantId: apexVariant,
         formationInstanceId: `apex-reinforcement:${this.sectorIndex}:${index}`,
-        countsForObjective: false
+        formationLabel: apexContact?.label ?? 'Apex contact',
+        countsForObjective: this.apexEncounter?.stage !== 'finale'
       }));
     const spawnSchedule = fitSpawnScheduleBeforeBossLock(
       [
@@ -1757,6 +1801,9 @@ export class GameplayScene implements Scene {
 
   private syncReadouts(): void {
     const state = this.getCombatState();
+    if (this.apexContactBanner) {
+      this.apexContactBanner.hidden = !this.apexEncounter || state.timeSeconds > 6;
+    }
     const cooldownPresentation = this.sectorCooldown
       ? getSectorCooldownPresentation(this.sectorCooldown, this.getScrollState().distance)
       : null;
@@ -1786,8 +1833,12 @@ export class GameplayScene implements Scene {
       .join(' | ');
     this.economyReadout.textContent = `Credits ${this.startingCredits + state.player.credits} | Salvage ${this.startingSalvage + state.player.salvage}`;
     const setPiece = getSetPieceReadModel(state.setPiece);
+    const apexContact = this.apexEncounterPresentation;
     this.objectiveReadout.textContent = [
       getObjectiveProgress(this.getWavePlan(), state).readout,
+      apexContact
+        ? `APEX HUNT · ${apexContact.stageLabel}: ${apexContact.label}`
+        : null,
       this.campaignInfluence?.rival
         ? `Rival ${this.campaignInfluence.rival.name} | ${this.campaignInfluence.rival.shipName} | appearance ${this.campaignInfluence.rival.appearance}`
         : null,
@@ -1824,6 +1875,7 @@ export class GameplayScene implements Scene {
         ? `RIVAL ${state.rivalEncounter.name} | ${state.rivalEncounter.title} | ${state.rivalEncounter.tactic}`
         : null) ??
       formatActiveHazardWarning(this.getActiveHazards()[0]) ??
+      (apexContact ? `APEX CONTACT · ${apexContact.directive}` : null) ??
       (setPiece && setPiece.active
         ? `${setPiece.layoutLabel}; ${setPiece.stageLabel}; safe ${setPiece.safeLaneLabel}`
         : null) ??

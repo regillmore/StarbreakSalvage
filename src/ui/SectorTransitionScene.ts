@@ -180,11 +180,16 @@ export class SectorTransitionScene implements Scene {
     const apexLine = document.createElement('p');
     apexLine.className = 'transition-copy';
     apexLine.dataset.testid = 'apex-brief';
-    apexLine.textContent = `Apex: ${createApexCampaignReadModel(
+    const apexCampaign = createApexCampaignReadModel(
       this.run.apexHunts,
       this.session.apexHunts,
       this.session.currentSectorIndex
-    ).summary}`;
+    );
+    apexLine.textContent = `Apex network: ${apexCampaign.summary}${
+      apexCampaign.nextEncounters.length > 0
+        ? ` | Marked signals: ${apexCampaign.nextEncounters.join(' | ')}`
+        : ' | No unresolved contacts ahead.'
+    }`;
 
     const schedule = createMissionSchedule(this.run.expedition, this.session.currentSectorIndex);
     const currentStage = getMissionStage(schedule, this.session.mission.currentStageId);
