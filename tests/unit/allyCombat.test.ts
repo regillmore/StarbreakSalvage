@@ -8,6 +8,8 @@ import {
   type CombatBounds
 } from '../../src/game/CombatState';
 import type { CrewCombatProfile } from '../../src/game/CrewCommand';
+import type { FleetCombatProfile } from '../../src/game/Fleetcraft';
+import { createSetPiecePlan } from '../../src/game/SetPiece';
 
 const bounds: CombatBounds = { width: 640, height: 720, padding: 24 };
 
@@ -23,6 +25,69 @@ describe('ally combat', () => {
     expect(state.stats.enemiesDestroyed).toBe(1);
     expect(state.stats.allyEnemiesDestroyed).toBe(1);
     expect(ally.enemiesDefeated).toBe(1);
+  });
+
+  it('lets crew and support craft dismantle targetable set-piece components in dependency order', () => {
+    const setPiecePlan = createSetPiecePlan({ sectorIndex: 1, scrollLength: 2400 });
+    const state = createCombatState(bounds, 'ALLY-SET-PIECE', {
+      crew: createCrewProfile(),
+      fleet: createFleetProfile(),
+      skipEnemyWaves: true,
+      bossSpawnAtSeconds: null,
+      setPiecePlan
+    });
+    state.scrollDistance = setPiecePlan?.anchorDistance ?? 0;
+    for (const component of state.setPiece?.components ?? []) {
+      component.hull = 1;
+      component.subsystemCooldownSeconds = 99;
+    }
+
+    const crew = state.allies.find((ally) => ally.source === 'crew')!;
+    const craft = state.allies.find((ally) => ally.source === 'fleet')!;
+    const armor = requireSetPieceComponent(state, 'hecaton-armor');
+    expect(armor.targetable).toBe(false);
+
+    fireAllyAtComponent(state, crew, craft, 'hecaton-emitter-a');
+    fireAllyAtComponent(state, craft, crew, 'hecaton-emitter-b');
+    expect(armor.targetable).toBe(true);
+
+    for (const [ally, waitingAlly, componentId] of [
+      [crew, craft, 'hecaton-turret'],
+      [craft, crew, 'hecaton-armor'],
+      [crew, craft, 'hecaton-hangar'],
+      [craft, crew, 'hecaton-drive'],
+      [crew, craft, 'hecaton-core']
+    ] as const) {
+      fireAllyAtComponent(state, ally, waitingAlly, componentId);
+    }
+
+    expect(state.setPiece?.completed).toBe(true);
+    expect(state.stats.setPieceComponentsDestroyed).toBe(7);
+    expect(state.stats.setPieceStagesCompleted).toBe(3);
+    expect(state.stats.setPiecesCompleted).toBe(1);
+    expect(state.stats.environmentObjectsDestroyed).toBe(7);
+    expect(state.stats.enemiesDestroyed).toBe(0);
+    expect(state.stats.allyProjectilesFired).toBe(7);
+  });
+
+  it('focuses a visible set-piece target before a nearer standard enemy', () => {
+    const setPiecePlan = createSetPiecePlan({ sectorIndex: 1, scrollLength: 2400 });
+    const state = createCombatState(bounds, 'ALLY-SET-PIECE-FOCUS', {
+      crew: createCrewProfile(),
+      skipEnemyWaves: true,
+      bossSpawnAtSeconds: null,
+      setPiecePlan
+    });
+    state.scrollDistance = setPiecePlan?.anchorDistance ?? 0;
+    const ally = state.allies[0]!;
+    state.enemies.push(createEnemy(ally.x + 60, ally.y));
+
+    updateCombatState(state, idleInput(state.scrollDistance), 0, bounds);
+
+    expect(state.enemies).toHaveLength(1);
+    expect(state.projectiles).toHaveLength(1);
+    expect(state.projectiles[0]).toMatchObject({ owner: 'ally', allyId: ally.candidateId });
+    expect(state.projectiles[0]!.vy).toBeLessThan(0);
   });
 
   it('screens a bounded hostile projectile and respects command cooldown', () => {
@@ -120,6 +185,59 @@ function createCrewProfile(
   };
 }
 
+function createFleetProfile(): FleetCombatProfile {
+  return {
+    doctrine: 'focus',
+    readyCraft: 1,
+    deployedCraft: 1,
+    berthCapacity: 1,
+    allySlotCapacity: 1,
+    overflowCraftIds: [],
+    members: [
+      {
+        craftId: 'craft:test',
+        callsign: 'Anvil Kite',
+        role: 'Interceptor',
+        trait: 'Test support craft',
+        preferredCommand: 'focus',
+        maxHull: 3,
+        moveSpeed: 200,
+        fireCooldownSeconds: 0.5,
+        projectileDamage: 3,
+        fitLabel: 'Fleet test',
+        cue: { glyph: 'K', color: '#ffcf78', highContrastGlyph: 'ALLY-K' }
+      }
+    ]
+  };
+}
+
+function fireAllyAtComponent(
+  state: ReturnType<typeof createCombatState>,
+  firingAlly: ReturnType<typeof createCombatState>['allies'][number],
+  waitingAlly: ReturnType<typeof createCombatState>['allies'][number],
+  componentId: string
+): void {
+  const component = requireSetPieceComponent(state, componentId);
+  expect(component.targetable).toBe(true);
+  firingAlly.x = component.x;
+  firingAlly.y = component.y;
+  firingAlly.fireCooldown = 0;
+  waitingAlly.fireCooldown = 99;
+
+  updateCombatState(state, idleInput(state.scrollDistance), 0, bounds);
+
+  expect(component.destroyed).toBe(true);
+}
+
+function requireSetPieceComponent(
+  state: ReturnType<typeof createCombatState>,
+  componentId: string
+) {
+  const component = state.setPiece?.components.find((candidate) => candidate.id === componentId);
+  if (!component) throw new Error(`Expected component ${componentId}.`);
+  return component;
+}
+
 function createEnemy(x: number, y: number) {
   return {
     id: 700,
@@ -151,6 +269,6 @@ function enemyProjectile(x: number, y: number, damage = 1) {
   };
 }
 
-function idleInput() {
-  return { movement: { x: 0, y: 0 }, fire: false, scrollDistance: 0 };
+function idleInput(scrollDistance = 0) {
+  return { movement: { x: 0, y: 0 }, fire: false, scrollDistance };
 }

@@ -3496,7 +3496,7 @@ function updateAllies(state: CombatState, dt: number, bounds: CombatBounds): voi
       continue;
     }
 
-    fireAllyAtTarget(state, ally);
+    fireAllyAtTarget(state, ally, bounds);
   }
 }
 
@@ -3575,7 +3575,7 @@ function collectPickupForAlly(state: CombatState, ally: AllyState): void {
   };
 }
 
-function fireAllyAtTarget(state: CombatState, ally: AllyState): void {
+function fireAllyAtTarget(state: CombatState, ally: AllyState, bounds: CombatBounds): void {
   if (ally.fireCooldown > 0) return;
   if (
     state.projectiles.filter((projectile) => projectile.owner === 'ally').length >=
@@ -3583,6 +3583,7 @@ function fireAllyAtTarget(state: CombatState, ally: AllyState): void {
   )
     return;
   const target =
+    getNearestAllySetPieceTarget(state, ally, bounds) ??
     state.enemies.slice(0, 24).reduce<EnemyState | null>((nearest, candidate) => {
       if (!nearest) return candidate;
       return getDistanceSquared(candidate, ally) < getDistanceSquared(nearest, ally)
@@ -3613,6 +3614,32 @@ function fireAllyAtTarget(state: CombatState, ally: AllyState): void {
     ...state.stats,
     allyProjectilesFired: state.stats.allyProjectilesFired + 1
   };
+}
+
+function getNearestAllySetPieceTarget(
+  state: CombatState,
+  ally: AllyState,
+  bounds: CombatBounds
+): Vector2 | null {
+  let nearest: Vector2 | null = null;
+  let nearestDistanceSquared = Number.POSITIVE_INFINITY;
+
+  for (const component of getActiveSetPieceComponents(state.setPiece, state.scrollDistance)) {
+    if (!component.targetable) continue;
+    const rect = getSetPieceComponentRect(state.scrollDistance, component);
+    if (rect.right < 0 || rect.left > bounds.width || rect.bottom < 0 || rect.top > bounds.height) {
+      continue;
+    }
+    const screenY = getSetPieceComponentScreenY(state.scrollDistance, component);
+    const dx = component.x - ally.x;
+    const dy = screenY - ally.y;
+    const distanceSquared = dx * dx + dy * dy;
+    if (distanceSquared >= nearestDistanceSquared) continue;
+    nearest = { x: component.x, y: screenY };
+    nearestDistanceSquared = distanceSquared;
+  }
+
+  return nearest;
 }
 
 function updateEnemyAttack(
@@ -3943,6 +3970,12 @@ function resolveCombatCollisions(state: CombatState): void {
         damageBossWithAllyProjectile(state, boss, projectile);
         projectileIdsToRemove.add(projectile.id);
       }
+      if (
+        !projectileIdsToRemove.has(projectile.id) &&
+        damageSetPieceWithProjectile(state, projectile)
+      ) {
+        projectileIdsToRemove.add(projectile.id);
+      }
     }
 
     if (projectile.owner === 'player') {
@@ -3962,34 +3995,11 @@ function resolveCombatCollisions(state: CombatState): void {
         projectileIdsToRemove.add(projectile.id);
       }
 
-      if (!projectileIdsToRemove.has(projectile.id)) {
-        for (const component of getActiveSetPieceComponents(state.setPiece, state.scrollDistance)) {
-          if (
-            !setPieceComponentOverlapsCircle(
-              state.scrollDistance,
-              component,
-              projectile.x,
-              projectile.y,
-              projectile.radius
-            )
-          ) {
-            continue;
-          }
-
-          if (state.setPiece) {
-            applySetPieceRuntimeEvents(
-              state,
-              damageSetPieceComponent(
-                state.setPiece,
-                component.id,
-                projectile.environmentDamageSource === 'special' ? 'special' : 'weapon',
-                projectile.damage
-              )
-            );
-          }
-          projectileIdsToRemove.add(projectile.id);
-          break;
-        }
+      if (
+        !projectileIdsToRemove.has(projectile.id) &&
+        damageSetPieceWithProjectile(state, projectile)
+      ) {
+        projectileIdsToRemove.add(projectile.id);
       }
 
       if (!projectileIdsToRemove.has(projectile.id)) {
@@ -4284,6 +4294,37 @@ function cleanupEntities(state: CombatState, bounds: CombatBounds): void {
       state.grazedProjectileIds.delete(projectileId);
     }
   }
+}
+
+function damageSetPieceWithProjectile(state: CombatState, projectile: ProjectileState): boolean {
+  for (const component of getActiveSetPieceComponents(state.setPiece, state.scrollDistance)) {
+    if (
+      !setPieceComponentOverlapsCircle(
+        state.scrollDistance,
+        component,
+        projectile.x,
+        projectile.y,
+        projectile.radius
+      )
+    ) {
+      continue;
+    }
+
+    if (state.setPiece) {
+      applySetPieceRuntimeEvents(
+        state,
+        damageSetPieceComponent(
+          state.setPiece,
+          component.id,
+          projectile.environmentDamageSource === 'special' ? 'special' : 'weapon',
+          projectile.damage
+        )
+      );
+    }
+    return true;
+  }
+
+  return false;
 }
 
 function spawnDueLooseCurrency(state: CombatState, bounds: CombatBounds): void {

@@ -824,6 +824,13 @@ seed + permanent save fingerprint
 - The required gate still receives the authored boss clause because its projected sector owns the arena and set piece. Non-gate advance operations can settle at their combat endpoint and enter the existing recovery coast without spawning, clearing, crediting, or bypassing a boss.
 - Projection occurs once at mission combat setup. It adds no fixed-step work, RNG, actor, content fingerprint, save field, snapshot field, or migration.
 
+### Work order 127 ally set-piece targeting invariant
+
+- `CombatState` retains one shared ally actor/projectile path for crew and fleet support. A ready focus-fire ally first scans the single bounded active set-piece assembly for the nearest component that is both dependency-targetable and at least partially inside the combat camera, then falls back to its existing bounded enemy scan and boss target.
+- Ally projectiles and player projectiles use the same set-piece collision/damage adapter. `SetPiece.damageSetPieceComponent` remains authoritative for dependency locks, allowed damage sources, armor, destruction, stage advancement, and completion; `applySetPieceRuntimeEvents` remains authoritative for rewards, effects, and objective/environment accounting.
+- Hidden or off-camera components cannot attract ally fire. Locked components are not acquired, and destroyed components leave the active set, so the same deterministic component order naturally advances emitters, armor, drives, cores, and other exposed subsystems without a parallel objective AI.
+- Existing four-ally and 20-shot ceilings, enemy scan limit, projectile speed/cadence, formation commands, RNG streams, saves, snapshots, rendering, and content fingerprints are unchanged.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

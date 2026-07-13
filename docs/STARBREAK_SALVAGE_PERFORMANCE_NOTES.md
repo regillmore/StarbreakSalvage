@@ -343,6 +343,10 @@ Work order 126 adds one bounded clause filter when a mission combat projection i
 
 The work order 126 check build emits 869.37 kB minified/235.78 kB gzip initial JavaScript and unchanged 41.17 kB CSS/8.85 kB gzip. This is a 0.58 kB minified/0.21 kB gzip increase from work order 125 for the pure objective projection and regression-facing copy. No warning threshold changed; the existing initial-chunk warning remains open.
 
+Work order 127 reuses the existing ally readiness gate, global projectile array, and single active set-piece component list. Only an ally whose fire cooldown has elapsed scans the current 7-8-component assembly; the existing per-shot scan of at most 24 ordinary enemies remains the fallback. Collision replaces duplicated player set-piece handling with one shared helper and adds the same bounded component pass for ally shots. No actor, projectile, effect, proc, reward, RNG, save, snapshot, or content cap changes.
+
+The work order 127 check build emits 869.75 kB minified/235.88 kB gzip initial JavaScript and unchanged 41.17 kB CSS/8.85 kB gzip. This is a 0.38 kB minified/0.10 kB gzip increase from work order 126 for visible-component acquisition and shared projectile damage routing. No warning threshold changed; the existing initial-chunk warning remains open.
+
 - The first finale pass adds hull/approach pressure and summary/unlock hooks, not new projectile families; remaining work should keep profiling the `F` finale smoke alongside enemy-rich, environmental stress, and the `Y` two-act summary before adding denser final-phase attacks.
 
 ## Phase 10 Playtest Risks

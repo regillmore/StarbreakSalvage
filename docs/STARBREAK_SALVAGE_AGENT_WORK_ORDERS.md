@@ -2230,6 +2230,26 @@ Status: implemented. `ObjectiveDirector.projectMissionObjectivePlan` now compare
 
 Verification: `npm run verify:release` passes with 95 Vitest files and 572 tests, ESLint, typecheck, production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Focused objective/mission/wave/coast coverage passes with 4 files and 30 tests. Chromium covers Act II finale, snapshot, accessibility, pointer, and main mission flows. The production build emits 869.37 kB minified/235.78 kB gzip initial JavaScript and unchanged 41.17 kB CSS/8.85 kB gzip. The existing chunk warning remains open and no threshold changed. The supplied deployed screenshot provided the visual diagnosis; this is a state-projection repair with no visual asset or layout change. In-app browser control exposed no active target, so automated local Chromium supplied browser evidence.
 
+## Work order 127 - Allied multi-part target support
+
+Goal: let crew wingmates and support craft contribute directly to multi-part set-piece fights.
+
+Prompt:
+
+> Extend existing ally focus fire to exposed set-piece subsystems such as turrets, shield emitters, armor, hangars, drives, couplers, and cores. Crew and fleet support must use one deterministic bounded targeting policy and the same projectile collision, dependency locks, armor, allowed-damage, reward, stage, completion, and objective accounting paths as player weapon fire. Do not let locked, destroyed, or off-camera components attract shots. Preserve ordinary enemy/boss fallback, formation commands, actor/projectile caps, seeded behavior, saves, snapshots, and performance. Add focused regressions and run release checks.
+
+Acceptance criteria:
+
+- Active focus-fire allies prefer the nearest visible targetable component of the current set piece, then fall back to the existing bounded standard-enemy scan and boss target.
+- Crew and fleet support projectiles can damage and destroy every weapon-vulnerable component without bypassing dependency locks, armor, allowed damage sources, or stage order.
+- Component destruction uses existing environment/set-piece accounting, rewards, effects, stage advancement, and completion exactly once; it does not count as an ordinary enemy defeat.
+- Locked, destroyed, fully off-camera, and inactive components do not attract ally fire, while exposed optional turrets/hangars and required emitters/armor/drives/cores remain eligible.
+- The combined four-ally/20-projectile ceilings, 24-enemy fallback scan, commands, cadence, projectile motion, RNG, content, saves, snapshots, rendering, and objective contracts remain unchanged.
+
+Status: implemented. `CombatState` now resolves a ready ally's set-piece focus from the single active assembly, filters acquisition to dependency-targetable components intersecting the combat camera, and chooses the nearest component in stable content order before ordinary enemy/boss fallback. Both crew and fleet retain the same actor, command, cadence, projectile, and cap path. A shared projectile-to-set-piece helper now serves player and ally shots, delegating all legality and state transitions to `damageSetPieceComponent` and all feedback, rewards, and accounting to `applySetPieceRuntimeEvents`. Focused tests alternate a crew wingmate and support craft through the Hecaton's full emitter, turret, armor, hangar, drive, and core chain, verify three stages and one completion without ordinary enemy credit, and prove a visible assembly receives focus ahead of a nearer standard enemy. No content, RNG, renderer, save, snapshot, objective, or cap changes.
+
+Verification: `npm run verify:release` passes with 95 Vitest files and 574 tests, ESLint, typecheck, production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Focused ally/set-piece/fleet coverage passes with 4 files and 26 tests. The build emits 869.75 kB minified/235.88 kB gzip initial JavaScript and unchanged 41.17 kB CSS/8.85 kB gzip. The existing chunk warning remains open and no threshold changed. This work order changes combat behavior without adding visual assets or layout; Chromium regression coverage supplies the browser and console-safety evidence.
+
 ## Review subagent prompt
 
 Use after a feature PR:

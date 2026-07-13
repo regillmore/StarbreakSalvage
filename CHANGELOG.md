@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Allies now help dismantle multi-part capital ships, stations, and wrecks. Focus fire acquires the nearest visible targetable subsystem before ordinary enemies or bosses, so crew wingmates and support craft can destroy exposed turrets, emitters, armor, hangars, drives, couplers, and cores through the same dependency, armor, reward, stage, and completion rules as player weapons.
+
 - Fixed the Core Wreck operation soft lock observed at 2499/2859u. The 360-unit gap was the peaceful recovery coast waiting on an impossible advance-stage boss clause, not an arena lock: mission objectives are now projected against the actual operation world, so non-gate approaches require only their available support/travel targets while the required gate retains its command-hull clause, set piece, arena, and boss.
 
 - Extended mouse/touch guidance across the full gameplay browser viewport. Pointer positions outside the arena now project onto its nearest edge, so the ship remains responsive and slides along its existing combat bounds instead of stopping at the frame rail; menus, settings, DOM controls, keyboard priority, and primary-button fire retain their existing input rules.
