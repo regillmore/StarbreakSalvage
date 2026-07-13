@@ -115,6 +115,33 @@ export function createMissionObjectivePlan(options: {
   };
 }
 
+export function projectMissionObjectivePlan(
+  plan: MissionObjectivePlan,
+  sectorObjective: Pick<SectorObjectivePlan, 'bossRequired'>
+): MissionObjectivePlan {
+  if (sectorObjective.bossRequired) {
+    return plan;
+  }
+
+  const clauses = plan.clauses.filter((clause) => clause.metric !== 'bossDefeats');
+  if (clauses.length === plan.clauses.length) {
+    return plan;
+  }
+
+  return {
+    ...plan,
+    label: `${plan.label} Screen`,
+    hudVerb: 'CLEAR APPROACH',
+    summary:
+      'Clear the support field and cross this operation lane; the terminal target remains at the required gate.',
+    clauses,
+    cleanupPolicy: 'clearField',
+    successCopy: 'Support field cleared; terminal contact remains ahead.',
+    partialSuccessCopy: 'Support field crossed with unresolved approach losses.',
+    failureCopy: 'The support field retained control of the approach.'
+  };
+}
+
 export function getMissionObjectiveProgress(
   plan: MissionObjectivePlan,
   sectorObjective: SectorObjectivePlan,

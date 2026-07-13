@@ -339,6 +339,10 @@ Work order 125 changes only the activation policy applied to existing window-lev
 
 The work order 125 check build emits 868.79 kB minified/235.57 kB gzip initial JavaScript and unchanged 41.17 kB CSS/8.85 kB gzip. This is a 0.07 kB minified/0.04 kB gzip increase from work order 124 for the explicit pure viewport-pointer state mapper. No warning threshold changed; the existing initial-chunk warning remains open.
 
+Work order 126 adds one bounded clause filter when a mission combat projection is created. The current objective catalog has at most three clauses, and the result is reused by the existing objective progress path; no per-frame filter, actor scan, spawn, forced cleanup, RNG call, render primitive, save field, or snapshot field is added.
+
+The work order 126 check build emits 869.37 kB minified/235.78 kB gzip initial JavaScript and unchanged 41.17 kB CSS/8.85 kB gzip. This is a 0.58 kB minified/0.21 kB gzip increase from work order 125 for the pure objective projection and regression-facing copy. No warning threshold changed; the existing initial-chunk warning remains open.
+
 - The first finale pass adds hull/approach pressure and summary/unlock hooks, not new projectile families; remaining work should keep profiling the `F` finale smoke alongside enemy-rich, environmental stress, and the `Y` two-act summary before adding denser final-phase attacks.
 
 ## Phase 10 Playtest Risks

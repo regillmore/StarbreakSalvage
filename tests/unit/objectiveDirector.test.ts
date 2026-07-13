@@ -20,7 +20,8 @@ import {
 import {
   createMissionObjectivePlan,
   createMissionObjectiveResultSnapshot,
-  getMissionObjectiveProgress
+  getMissionObjectiveProgress,
+  projectMissionObjectivePlan
 } from '../../src/game/ObjectiveDirector';
 import {
   createRunSession,
@@ -79,6 +80,52 @@ describe('objective grammar and mission anthology', () => {
         )
       ).size
     ).toBeGreaterThanOrEqual(8);
+  });
+
+  it('removes the unreachable boss clause from the sector-10 advance operation', () => {
+    const run = generateRunSkeleton('STARBREAK-SMOKE');
+    const sector = run.sectors[9]!;
+    const schedule = createMissionSchedule(run.expedition, 9);
+    const projection = createMissionCombatProjection(schedule, reachCombat(schedule), sector);
+    const plan = projection.missionObjective!;
+    const observedCombatEndDistance = 2_499;
+    const state = createCombatState(createDefaultCombatBounds(), 'sector-10-advance', {
+      spawnSchedule: [],
+      bossSpawnAtSeconds: null,
+      sectorLength: observedCombatEndDistance
+    });
+
+    state.scrollDistance = observedCombatEndDistance;
+    state.stats = {
+      ...state.stats,
+      enemiesDestroyed: projection.sector.objective.requiredEnemyKills
+    };
+
+    expect(projection.stageLabel).toBe('Boss Approach: advance');
+    expect(projection.sector.objective.bossRequired).toBe(false);
+    expect(projection.sector.arena).toBeNull();
+    expect(plan.hudVerb).toBe('CLEAR APPROACH');
+    expect(plan.cleanupPolicy).toBe('clearField');
+    expect(plan.clauses.map((clause) => clause.metric)).toEqual([
+      'enemyDefeatRatio',
+      'travelRatio'
+    ]);
+    expect(
+      getMissionObjectiveProgress(
+        plan,
+        projection.sector.objective,
+        observedCombatEndDistance,
+        state
+      )
+    ).toMatchObject({ terminal: true, outcome: 'success' });
+
+    const authored = createMissionObjectivePlan({
+      contract: schedule.contract!,
+      objective: getMissionObjective(schedule.contract!.primaryObjectiveId),
+      optional: false
+    });
+    expect(projectMissionObjectivePlan(authored, { bossRequired: true })).toBe(authored);
+    expect(authored.clauses.some((clause) => clause.metric === 'bossDefeats')).toBe(true);
   });
 
   it('resolves success, partial success, and failure only after the active field settles', () => {
@@ -225,7 +272,9 @@ describe('objective grammar and mission anthology', () => {
 
     expect(schedule.contract?.branchPolicy).toBe('afterSuccess');
     expect(state.currentStageId).toBe(schedule.reliefStageId);
-    expect(getMissionBranchOptions(schedule, state).map((option) => option.default)).toEqual([true]);
+    expect(getMissionBranchOptions(schedule, state).map((option) => option.default)).toEqual([
+      true
+    ]);
   });
 
   it('records outcome rewards once and feeds later sector reward generation', () => {

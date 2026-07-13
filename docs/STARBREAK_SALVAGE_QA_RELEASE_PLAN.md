@@ -181,7 +181,7 @@ Phase 10 expands each route sector into a deterministic expedition graph with mu
 
 - expedition graph snapshots for node identity, branches, duration/pressure bands, reward hooks, finale reachability, older ten-sector normalization, and decision-history replay;
 - mission director transition tests for entry, advance, branch, checkpoint, resume, partial success, failure, completion, frame catchup, simultaneous events, death, pause, abandon, and boss gates;
-- objective grammar validation and safety tests across assault, pursuit, escort, salvage, defense, rescue, scan, sabotage, escape, and boss-approach contracts;
+- objective grammar validation and safety tests across assault, pursuit, escort, salvage, defense, rescue, scan, sabotage, escape, and boss-approach contracts, including operation-world projection so non-gate stages cannot retain boss-only clauses;
 - frame/module loadout tests for hardpoints, power, mass, cooling, heat, compatibility, uniqueness, deterministic starts, collision parity, previews, HUD, and save migration;
 - foundry and evolution snapshots for component sources, install/scrap/fuse/overclock choices, recipe/affix results, undo/commit boundaries, item-module hook ordering, and combined proc caps;
 - set-piece component tests for targetable subsystems, scroll anchors, collision silhouettes, safe lanes, staged destruction, cleanup, rewards, hazard overlap, and objective safety;

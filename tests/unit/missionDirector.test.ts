@@ -170,6 +170,10 @@ describe('MissionDirector', () => {
     expect(sector.setPiece?.anchorDistance).toBeGreaterThan(projection.sector.scroll.length);
     expect(arena).not.toBeNull();
     expect(setPiece).not.toBeNull();
+    expect(projection.missionObjective?.hudVerb).toBe('BREACH GATE');
+    expect(
+      projection.missionObjective?.clauses.some((clause) => clause.metric === 'bossDefeats')
+    ).toBe(true);
     expect(arena!.lockDistance).toBeLessThan(projection.sector.scroll.length);
     expect(setPiece!.anchorDistance).toBe(Math.round(arena!.lockDistance));
 

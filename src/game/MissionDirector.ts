@@ -15,6 +15,7 @@ import type { SectorRoute } from './Generation';
 import {
   createMissionObjectivePlan,
   formatMissionObjectiveBrief,
+  projectMissionObjectivePlan,
   type MissionObjectivePlan,
   type MissionObjectiveResultSnapshot
 } from './ObjectiveDirector';
@@ -806,7 +807,9 @@ export function createMissionCombatProjection(
     : missionProjectedSector;
   const projectedObjective = boardingOperation
     ? createBoardingMissionObjectivePlan(boardingOperation, missionObjective)
-    : missionObjective;
+    : missionObjective
+      ? projectMissionObjectivePlan(missionObjective, projectedSector.objective)
+      : null;
 
   return {
     stageId: stage.id,

@@ -2210,6 +2210,26 @@ Status: implemented. `InputSystem` now treats every non-ignored window pointer u
 
 Verification: focused input/viewport coverage passes with 2 files and 14 tests. `npm run check` passes typecheck, ESLint, 95 Vitest files and 571 tests, plus the production build; `npm run test:preview` confirms the Pages base and every hashed asset. `npx playwright test --list` discovers all 13 Chromium paths, including the expanded pointer regression. The production build emits 868.79 kB minified/235.57 kB gzip initial JavaScript and unchanged 41.17 kB CSS/8.85 kB gzip. The existing chunk warning remains open and no threshold changed. The outside-frame edge-capture/slide/fire Chromium regression is authored, but its local launch was not executed: Playwright AppData access was not granted and the in-app browser exposed no active target in this session.
 
+## Work order 126 - Operation-world objective soft-lock repair
+
+Goal: prevent multi-operation missions from requiring targets that do not exist in the current projected combat world.
+
+Prompt:
+
+> Fix the sector-10 soft lock observed at 2499/2859u with a clear field, zero scroll speed, and `command hull defeated 0/1`. Distinguish recovery-coast holds from arena locks, trace authored mission clauses through operation projection, and ensure every required clause is realizable by the current operation. Non-gate Boss Approach stages must settle their support/travel work and enter the peaceful coast without a boss; the required gate must retain its set piece, arena, and command-hull requirement. Preserve natural field clearing, objective/result identity, deterministic missions, route/faction/apex influences, work orders 111/114/118, saves, snapshots, and bounded performance. Add deterministic regressions and run checks.
+
+Acceptance criteria:
+
+- The sector-10 `Boss Approach: advance` operation has no boss, arena, or set piece and no longer retains a `bossDefeats` clause.
+- At the observed 2499u combat endpoint, a naturally cleared support field satisfies the projected objective and allows the existing 360-unit recovery coast to begin.
+- The later required gate still exposes `BREACH GATE`, the command-hull clause, the reachable set piece, and the boss arena; no boss requirement is globally weakened.
+- Objective projection preserves contract/objective identity and consequence policies while supplying accurate support-stage copy and cleanup behavior.
+- No enemies or hazards are force-cleared, no kills are credited, and no boss, set piece, RNG stream, save field, or snapshot field is added or bypassed.
+
+Status: implemented. `ObjectiveDirector.projectMissionObjectivePlan` now compares the authored plan with the already projected sector objective. When an operation has no boss, the pure projection removes only `bossDefeats` clauses, changes boss-gate cleanup to ordinary field cleanup, and provides support-approach HUD/outcome copy; plans without a boss clause and boss-required gate plans retain their original object identity. `MissionDirector.createMissionCombatProjection` applies that projection after flight/boarding world projection, so clause availability follows the same sector plan consumed by gameplay. The STARBREAK-SMOKE sector-10 advance regression reproduces the `Boss Approach: advance` stage and observed 2499u endpoint, proves the boss/arena are absent, then reaches terminal success from normal support defeat and travel. The existing gate regression now also proves `BREACH GATE` and `bossDefeats` remain alongside the reachable arena/set piece. No combat-runtime, coast, arena, set-piece, generation, save, or snapshot behavior changes.
+
+Verification: `npm run verify:release` passes with 95 Vitest files and 572 tests, ESLint, typecheck, production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Focused objective/mission/wave/coast coverage passes with 4 files and 30 tests. Chromium covers Act II finale, snapshot, accessibility, pointer, and main mission flows. The production build emits 869.37 kB minified/235.78 kB gzip initial JavaScript and unchanged 41.17 kB CSS/8.85 kB gzip. The existing chunk warning remains open and no threshold changed. The supplied deployed screenshot provided the visual diagnosis; this is a state-projection repair with no visual asset or layout change. In-app browser control exposed no active target, so automated local Chromium supplied browser evidence.
+
 ## Review subagent prompt
 
 Use after a feature PR:

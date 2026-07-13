@@ -817,6 +817,13 @@ seed + permanent save fingerprint
 - `getPointerGuidanceAxis` continues aiming at that projected point, keyboard movement retains priority, and `CombatState` remains the final radius-aware movement clamp. Once the ship reaches one axis bound, the remaining guidance component naturally slides it along the arena edge.
 - No generated content, RNG stream, combat bounds, save/snapshot schema, renderer clip, or input setting changes.
 
+### Work order 126 operation-objective projection invariant
+
+- Authored mission objectives describe the complete contract, but each executable operation may expose only a subset of that world. `MissionDirector` must project the objective plan after it projects the sector so required clauses cannot reference a boss, arena, set piece, environment target, or other actor absent from that operation.
+- `ObjectiveDirector.projectMissionObjectivePlan` currently enforces the boss boundary: if the projected sector is not boss-required, it removes `bossDefeats` clauses, converts boss-gate cleanup to ordinary field cleanup, and supplies support-approach copy while preserving contract/objective identity, consequence policy, and available clause ids.
+- The required gate still receives the authored boss clause because its projected sector owns the arena and set piece. Non-gate advance operations can settle at their combat endpoint and enter the existing recovery coast without spawning, clearing, crediting, or bypassing a boss.
+- Projection occurs once at mission combat setup. It adds no fixed-step work, RNG, actor, content fingerprint, save field, snapshot field, or migration.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

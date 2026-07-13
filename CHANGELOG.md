@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fixed the Core Wreck operation soft lock observed at 2499/2859u. The 360-unit gap was the peaceful recovery coast waiting on an impossible advance-stage boss clause, not an arena lock: mission objectives are now projected against the actual operation world, so non-gate approaches require only their available support/travel targets while the required gate retains its command-hull clause, set piece, arena, and boss.
+
 - Extended mouse/touch guidance across the full gameplay browser viewport. Pointer positions outside the arena now project onto its nearest edge, so the ship remains responsive and slides along its existing combat bounds instead of stopping at the frame rail; menus, settings, DOM controls, keyboard priority, and primary-button fire retain their existing input rules.
 
 - Removed post-boss hazard debt. Every authored, route-conditioned, and director-added hazard in a boss operation is now deterministically packed into the approach with its full warning and active span preserved, then cleared before arena lock. Boss defeat no longer reschedules hidden hazards, leaving the release lane naturally quiet.
