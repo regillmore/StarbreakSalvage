@@ -831,6 +831,14 @@ seed + permanent save fingerprint
 - Hidden or off-camera components cannot attract ally fire. Locked components are not acquired, and destroyed components leave the active set, so the same deterministic component order naturally advances emitters, armor, drives, cores, and other exposed subsystems without a parallel objective AI.
 - Existing four-ally and 20-shot ceilings, enemy scan limit, projectile speed/cadence, formation commands, RNG streams, saves, snapshots, rendering, and content fingerprints are unchanged.
 
+### Work order 128 hardpoint live-fire presentation boundary
+
+- `src/game/WeaponProjectiles.ts` is the pure base-volley authority shared by combat and Hardpoint Control. Single, dual, spread, split, missile, and beam projectile offsets, lateral/forward velocity, damage, radius, TTL, tags, and source identity are no longer duplicated in the preview layer.
+- `FoundryPresentation` resolves the draft once, creates the production base volley, then applies the draft's ordered module-only `onFire` and per-projectile `onProjectileSpawn` hooks under the same proc budget. Items remain outside this explicitly loadout-scoped pane; installed topology, convergence, heat, and proc-routing changes are represented.
+- The DOM view receives a bounded pure flight model: at most 12 distinct projectiles per volley, six cadence copies, and 48 rendered projectile nodes. CSS transform/opacity animation preserves scaled production velocity and fire cadence without a scene timer, combat actor, canvas pass, or RNG stream.
+- The combat-mode `ShipPreview` omits its card background, role bars, hit ring, and abstract weapon-guide primitives. Reduced motion freezes the bounded volley along its real trajectories; performance mode freezes one representative volley and removes projectile/ship glow. High contrast adds white cores and dark outlines.
+- Engineering mutations still rebuild the whole event-driven foundry scene from draft state. No gameplay state, hook order, projectile cap, generated content, save/snapshot schema, input, or commit boundary changes.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

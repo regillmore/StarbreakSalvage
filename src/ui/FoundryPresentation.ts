@@ -9,6 +9,9 @@ import {
   type EngineeringState,
   type FoundryComponentInstance
 } from '../game/Foundry';
+import { applyCombinedHooks } from '../game/CombinedHooks';
+import type { ProjectileBlueprint } from '../game/ItemHooks';
+import { createWeaponProjectileBlueprints } from '../game/WeaponProjectiles';
 
 export type FoundryComparisonTone = 'improved' | 'declined' | 'same' | 'danger';
 
@@ -44,6 +47,38 @@ export interface FoundryTraitModel {
   readonly value: string;
 }
 
+export interface FoundryAttackProjectileModel {
+  readonly id: string;
+  readonly projectileIndex: number;
+  readonly waveIndex: number;
+  readonly x: number;
+  readonly vx: number;
+  readonly vy: number;
+  readonly radius: number;
+  readonly damage: number;
+  readonly ttl: number;
+  readonly tags: readonly string[];
+  readonly startX: number;
+  readonly endX: number;
+  readonly endY: number;
+  readonly restX: number;
+  readonly restY: number;
+  readonly performanceX: number;
+  readonly performanceY: number;
+  readonly displaySize: number;
+  readonly durationSeconds: number;
+  readonly delaySeconds: number;
+}
+
+export interface FoundryAttackSimulationModel {
+  readonly volleySize: number;
+  readonly volleysPerSecond: number;
+  readonly fireCooldownSeconds: number;
+  readonly waveCopies: number;
+  readonly projectiles: readonly FoundryAttackProjectileModel[];
+  readonly ariaLabel: string;
+}
+
 export interface FoundryDashboardModel {
   readonly valid: boolean;
   readonly changed: boolean;
@@ -52,6 +87,7 @@ export interface FoundryDashboardModel {
   readonly weaponPattern: WeaponPatternId;
   readonly frameName: string;
   readonly mountedModuleCount: number;
+  readonly attackSimulation: FoundryAttackSimulationModel;
   readonly meters: readonly FoundryMeterModel[];
   readonly attackStats: readonly FoundryAttackStatModel[];
   readonly traits: readonly FoundryTraitModel[];
@@ -85,6 +121,10 @@ const ATTACK_CAPS = {
   velocity: 1_000,
   shotHeat: 0.6
 } as const;
+const ATTACK_PREVIEW_WORLD_SCALE = 0.24;
+const ATTACK_PREVIEW_TRAVEL_DISTANCE = 560;
+const MAX_ATTACK_PREVIEW_WAVE_COPIES = 6;
+const MAX_ATTACK_PREVIEW_PROJECTILES = 48;
 
 export function createFoundryDashboardModel(state: EngineeringState): FoundryDashboardModel {
   const committed = resolveEngineeringSnapshot(state.committed);
@@ -97,6 +137,24 @@ export function createFoundryDashboardModel(state: EngineeringState): FoundryDas
     draft.loadout?.primaryWeaponId ??
       getDraftPrimaryWeaponId(state) ??
       committedLoadout.primaryWeaponId
+  );
+  const procBudget = Math.min(
+    MAX_COMBINED_PROC_BUDGET,
+    BASE_COMBINED_PROC_BUDGET + draft.effects.procBudgetBonus
+  );
+  const committedProcBudget = Math.min(
+    MAX_COMBINED_PROC_BUDGET,
+    BASE_COMBINED_PROC_BUDGET + committed.effects.procBudgetBonus
+  );
+  const attackSimulation = createFoundryAttackSimulationModel(
+    draftWeapon,
+    draft,
+    procBudget
+  );
+  const committedAttackSimulation = createFoundryAttackSimulationModel(
+    committedWeapon,
+    committed,
+    committedProcBudget
   );
   const meters: FoundryMeterModel[] = [
     createCapacityMeter(
@@ -140,10 +198,8 @@ export function createFoundryDashboardModel(state: EngineeringState): FoundryDas
       committed.instability
     )
   ];
-  const draftVolley =
-    getPatternProjectileCount(draftWeapon.pattern) + draft.effects.extraProjectiles;
-  const committedVolley =
-    getPatternProjectileCount(committedWeapon.pattern) + committed.effects.extraProjectiles;
+  const draftVolley = attackSimulation.volleySize;
+  const committedVolley = committedAttackSimulation.volleySize;
   const attackStats: FoundryAttackStatModel[] = [
     createAttackStat('volley', '◉', 'Volley', draftVolley, committedVolley, false, 0),
     createAttackStat('impact', '◆', 'Impact', draftWeapon.damage, committedWeapon.damage, false, 2),
@@ -175,10 +231,6 @@ export function createFoundryDashboardModel(state: EngineeringState): FoundryDas
       2
     )
   ];
-  const procBudget = Math.min(
-    MAX_COMBINED_PROC_BUDGET,
-    BASE_COMBINED_PROC_BUDGET + draft.effects.procBudgetBonus
-  );
   const traits = createTraitModels(draft, procBudget);
 
   return {
@@ -189,12 +241,125 @@ export function createFoundryDashboardModel(state: EngineeringState): FoundryDas
     weaponPattern: draftWeapon.pattern,
     frameName: getShipFrameById(state.draft.frameId).name,
     mountedModuleCount: state.draft.mounts.length,
+    attackSimulation,
     meters,
     attackStats,
     traits,
     ariaLabel: `${draft.valid ? 'Legal' : 'Invalid'} draft. ${draftWeapon.name} ${draftWeapon.pattern}. ${meters
       .map((meter) => meter.ariaLabel)
       .join('. ')}. ${attackStats.map((stat) => stat.ariaLabel).join('. ')}`
+  };
+}
+
+function createFoundryAttackSimulationModel(
+  weapon: ReturnType<typeof getWeaponById>,
+  resolution: EngineeringResolution,
+  procBudget: number
+): FoundryAttackSimulationModel {
+  const baseProjectiles = createWeaponProjectileBlueprints(weapon, { x: 0, y: 0, radius: 0 });
+  const firePayload = applyCombinedHooks(
+    'onFire',
+    [],
+    resolution.hooks,
+    { volleyIndex: 1, projectiles: baseProjectiles },
+    { maxApplications: procBudget }
+  );
+  const volley = firePayload.projectiles.map(
+    (projectile) =>
+      applyCombinedHooks(
+        'onProjectileSpawn',
+        [],
+        resolution.hooks,
+        { projectile },
+        { maxApplications: procBudget }
+      ).projectile
+  );
+  return createFoundryAttackPreviewModel(weapon.name, weapon.fireCooldownSeconds, volley);
+}
+
+export function createFoundryAttackPreviewModel(
+  weaponName: string,
+  fireCooldownSeconds: number,
+  volley: readonly ProjectileBlueprint[]
+): FoundryAttackSimulationModel {
+  const safeCooldown = Math.max(0.05, fireCooldownSeconds);
+  const safeVolley = volley.slice(0, 12);
+  const slowestForwardSpeed = safeVolley.reduce(
+    (slowest, projectile) => Math.min(slowest, Math.max(1, -projectile.vy)),
+    Number.POSITIVE_INFINITY
+  );
+  const flightSeconds = ATTACK_PREVIEW_TRAVEL_DISTANCE / Math.max(1, slowestForwardSpeed);
+  const maxCopiesForBudget = Math.max(
+    1,
+    Math.floor(MAX_ATTACK_PREVIEW_PROJECTILES / Math.max(1, safeVolley.length))
+  );
+  const waveCopies = Math.max(
+    1,
+    Math.min(
+      MAX_ATTACK_PREVIEW_WAVE_COPIES,
+      maxCopiesForBudget,
+      Math.ceil(flightSeconds / safeCooldown)
+    )
+  );
+  const durationSeconds = safeCooldown * waveCopies;
+  const projectiles = Array.from({ length: waveCopies }, (_value, waveIndex) =>
+    safeVolley.map((projectile, projectileIndex) =>
+      createFoundryAttackProjectileModel(
+        projectile,
+        projectileIndex,
+        waveIndex,
+        waveCopies,
+        durationSeconds,
+        safeCooldown
+      )
+    )
+  ).flat();
+  const volleySize = safeVolley.length;
+  const volleysPerSecond = 1 / safeCooldown;
+  return {
+    volleySize,
+    volleysPerSecond,
+    fireCooldownSeconds: safeCooldown,
+    waveCopies,
+    projectiles,
+    ariaLabel: `${weaponName} live-fire preview. ${volleySize} projectile${volleySize === 1 ? '' : 's'} per volley at ${volleysPerSecond.toFixed(1)} volleys per second. Projectile paths use the draft loadout's combat velocity, spread, radius, damage, and engineering hooks.`
+  };
+}
+
+function createFoundryAttackProjectileModel(
+  projectile: ProjectileBlueprint,
+  projectileIndex: number,
+  waveIndex: number,
+  waveCopies: number,
+  durationSeconds: number,
+  fireCooldownSeconds: number
+): FoundryAttackProjectileModel {
+  const startX = projectile.x * ATTACK_PREVIEW_WORLD_SCALE;
+  const endX = (projectile.x + projectile.vx * durationSeconds) * ATTACK_PREVIEW_WORLD_SCALE;
+  const endY = projectile.vy * durationSeconds * ATTACK_PREVIEW_WORLD_SCALE;
+  const restProgress = (waveIndex + 1) / (waveCopies + 1);
+  const performanceProgress = 0.58;
+  return {
+    id: `preview-shot-${waveIndex}-${projectileIndex}`,
+    projectileIndex,
+    waveIndex,
+    x: projectile.x,
+    vx: projectile.vx,
+    vy: projectile.vy,
+    radius: projectile.radius,
+    damage: projectile.damage,
+    ttl: projectile.ttl,
+    tags: projectile.tags,
+    startX,
+    endX,
+    endY,
+    restX: startX + (endX - startX) * restProgress,
+    restY: endY * restProgress,
+    performanceX: startX + (endX - startX) * performanceProgress,
+    performanceY: endY * performanceProgress,
+    displaySize: Math.max(4, projectile.radius * 0.9),
+    durationSeconds,
+    delaySeconds: -waveIndex * fireCooldownSeconds
   };
 }
 
@@ -321,10 +486,6 @@ function createTraitModels(
       : null,
     { glyph: '↯', label: 'Proc', value: String(procBudget) }
   ].filter((trait): trait is FoundryTraitModel => trait !== null);
-}
-
-function getPatternProjectileCount(pattern: WeaponPatternId): number {
-  return pattern === 'dual' ? 2 : pattern === 'spread' || pattern === 'split' ? 3 : 1;
 }
 
 function getDraftPrimaryWeaponId(state: EngineeringState) {

@@ -2250,6 +2250,26 @@ Status: implemented. `CombatState` now resolves a ready ally's set-piece focus f
 
 Verification: `npm run verify:release` passes with 95 Vitest files and 574 tests, ESLint, typecheck, production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Focused ally/set-piece/fleet coverage passes with 4 files and 26 tests. The build emits 869.75 kB minified/235.88 kB gzip initial JavaScript and unchanged 41.17 kB CSS/8.85 kB gzip. The existing chunk warning remains open and no threshold changed. This work order changes combat behavior without adding visual assets or layout; Chromium regression coverage supplies the browser and console-safety evidence.
 
+## Work order 128 - Hardpoint live-fire attack simulation
+
+Goal: make the Hardpoint Control attack pane demonstrate the draft ship actually firing its loadout instead of pulsing abstract indicators over a close-up model.
+
+Prompt:
+
+> Replace the pulsing weapon-guide presentation with a bounded live firing range. Show the draft ship low in the pane and continuously launch the same projectile volley the loadout creates in combat, including single/dual/spread/split/missile/beam geometry, cadence, velocity, relative radius/damage, tags, extra engineered shots, and convergence. Reuse production projectile rules rather than duplicating them. Preserve the foundry mini-HUD, comparisons, reversible draft/commit operations, responsive layouts, keyboard/pointer access, high contrast, reduced motion, performance mode, deterministic behavior, static hosting, saves, snapshots, and combat balance. Add focused unit/browser coverage, inspect the result visually, update documentation, and run release checks.
+
+Acceptance criteria:
+
+- The attack pane frames a smaller combat-ready draft ship in the lower field with steady projectiles traveling toward the existing target reticle; the old close-up pulse guides are absent.
+- The base volley comes from the same production factory used by `CombatState`, and installed engineering `onFire`/`onProjectileSpawn` hooks alter the preview in production order under the existing proc budget.
+- Projectile paths preserve scaled lateral/forward velocity and actual fire cadence while exposing real volley size, radius, damage, TTL, and tags for regression inspection.
+- Presentation stays bounded to 12 source shots, six cadence copies, and 48 projectile nodes. Reduced motion shows static trajectory samples, performance mode shows one unfiltered static volley, and high contrast preserves dark-outlined white cores.
+- Foundry reducers, item hooks outside the loadout boundary, combat behavior/caps, inputs, RNG, generation, saves, snapshots, and every draft/commit operation remain unchanged.
+
+Status: implemented. `WeaponProjectiles.createWeaponProjectileBlueprints` now owns the production base volley and `CombatState` consumes it directly. `FoundryPresentation` creates that same volley from the draft primary weapon, applies ordered installed engineering fire and projectile-spawn hooks with no item layer, and derives a bounded cadence/velocity flight plan plus accessible summary. `FoundryScene` renders the plan as projectile actors with real metadata while `ShipPreview` combat mode removes the card background, hit ring, role bars, and abstract weapon cues. CSS positions the ship in the lower third, sends shots toward the retained reticle, differentiates missile/arc cues, and supplies reduced-motion, performance, high-contrast, responsive, and glow policies. Unit coverage proves the production volley feeds stats and trajectories, Prism Fork and Convergence Vanes materially change the pane, and the node budget holds. Chromium verifies the old cue group is absent, projectile velocity/damage and volley metadata are present, all foundry operations still work, and no browser errors occur. A direct capture confirms the 1280x720 firing-range composition. No visual asset, dependency, gameplay, RNG, content, save, or snapshot change.
+
+Verification: `npm run verify:release` passes with 95 Vitest files and 576 tests, ESLint, typecheck, production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Focused foundry/presentation/ship-preview/weapon coverage passes with 4 files and 22 tests; the main sector-to-foundry Chromium journey verifies live projectile metadata and all existing engineering actions. A direct 1280x720 Chromium capture confirms the smaller lower-field ship, steady shot stream, clear target lane, and readable surrounding mini-HUD. The build emits 872.73 kB minified/236.85 kB gzip initial JavaScript and 43.09 kB CSS/9.23 kB gzip. The existing chunk warning remains open and no threshold changed.
+
 ## Review subagent prompt
 
 Use after a feature PR:

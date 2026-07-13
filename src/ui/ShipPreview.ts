@@ -73,6 +73,10 @@ export interface ShipPreviewOverrides {
   readonly ariaContext?: string;
 }
 
+export interface ShipPreviewElementOptions {
+  readonly mode?: 'card' | 'combat';
+}
+
 export function createShipPreviewModel(
   contract: StartingContract,
   variant: ShipPreviewVariant,
@@ -134,10 +138,13 @@ export function getShipSilhouettePath(silhouette: ShipSilhouette, radius: number
 
 export function createShipPreviewElement(
   ownerDocument: Document,
-  model: ShipPreviewModel
+  model: ShipPreviewModel,
+  options: ShipPreviewElementOptions = {}
 ): SVGSVGElement {
+  const combatMode = options.mode === 'combat';
   const svg = ownerDocument.createElementNS(SVG_NS, 'svg');
   svg.classList.add('ship-preview-svg', `ship-preview-${model.variant}`);
+  if (combatMode) svg.classList.add('ship-preview-combat');
   svg.setAttribute('viewBox', `0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`);
   svg.setAttribute('role', 'img');
   svg.setAttribute('aria-label', model.ariaLabel);
@@ -240,17 +247,21 @@ export function createShipPreviewElement(
     roleGroup.append(bar);
   }
 
-  svg.append(
-    background,
-    weaponCueGroup,
-    wake,
-    outer,
-    body,
-    hitRing,
-    mountGroup,
-    cockpit,
-    roleGroup
-  );
+  if (combatMode) {
+    svg.append(wake, outer, body, mountGroup, cockpit);
+  } else {
+    svg.append(
+      background,
+      weaponCueGroup,
+      wake,
+      outer,
+      body,
+      hitRing,
+      mountGroup,
+      cockpit,
+      roleGroup
+    );
+  }
   return svg;
 }
 

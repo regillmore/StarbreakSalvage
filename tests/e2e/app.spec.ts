@@ -268,7 +268,17 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('foundry-boundary')).toContainText(/Undo restores/i);
   await expect(page.getByTestId('foundry-grid-readout')).toContainText('LEGAL DRAFT');
   await expect(page.getByTestId('foundry-command-console')).toBeVisible();
-  await expect(page.getByTestId('foundry-attack-preview').getByRole('img')).toBeVisible();
+  const attackPreview = page.getByTestId('foundry-attack-preview');
+  await expect(attackPreview.getByRole('img')).toBeVisible();
+  await expect(attackPreview.locator('.ship-preview-weapon-cue')).toHaveCount(0);
+  const liveProjectiles = attackPreview.getByTestId('foundry-attack-projectile');
+  expect(await liveProjectiles.count()).toBeGreaterThan(0);
+  await expect(liveProjectiles.first()).toHaveAttribute('data-velocity', /-?\d+(?:\.\d+)?,-\d+/);
+  await expect(liveProjectiles.first()).toHaveAttribute('data-damage', /\d/);
+  await expect(page.getByTestId('foundry-attack-projectile-layer')).toHaveAttribute(
+    'data-volley-size',
+    /[1-9]\d*/
+  );
   await expect(page.getByTestId('foundry-mini-hud')).toContainText(/BASELINE|DRAFT DELTA/);
   await expect(page.getByTestId('foundry-meter-power').getByRole('meter')).toBeVisible();
   await expect(page.getByTestId('foundry-attack-impact')).toBeVisible();

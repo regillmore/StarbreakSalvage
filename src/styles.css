@@ -837,13 +837,80 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
     auto;
 }
 
-.foundry-attack-preview .ship-preview-svg {
-  width: 54%;
-  margin-inline: auto;
+.foundry-attack-preview .ship-preview-combat {
+  position: absolute;
+  bottom: -5%;
+  left: 50%;
+  z-index: 2;
+  width: 31%;
+  height: 58%;
+  overflow: visible;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 0 11px color-mix(in srgb, var(--ship-engine) 34%, transparent));
 }
 
-.foundry-attack-preview .ship-preview-weapon-cue {
-  animation: foundry-weapon-pulse 1.45s steps(2, end) infinite;
+.foundry-attack-projectile-layer {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.foundry-attack-projectile {
+  position: absolute;
+  bottom: 22%;
+  left: 50%;
+  width: var(--shot-size);
+  height: var(--shot-size);
+  border: 1px solid rgba(3, 5, 13, 0.82);
+  border-radius: 50%;
+  opacity: 0;
+  background: #7cf7ff;
+  box-shadow:
+    0 0 4px #ffffff,
+    0 0 11px rgba(124, 247, 255, 0.9);
+  transform: translate(calc(-50% + var(--shot-start-x)), 0);
+  animation: foundry-projectile-flight var(--shot-duration) linear infinite;
+  animation-delay: var(--shot-delay);
+}
+
+.foundry-attack-projectile::after {
+  position: absolute;
+  top: 65%;
+  left: 50%;
+  width: max(1px, calc(var(--shot-size) * 0.32));
+  height: calc(var(--shot-size) * 2.4);
+  border-radius: 99px;
+  content: '';
+  background: linear-gradient(rgba(124, 247, 255, 0.78), transparent);
+  transform: translateX(-50%);
+}
+
+.foundry-attack-projectile[data-tags~='missile'] {
+  border-radius: 46% 46% 62% 62%;
+  background: #ffef9a;
+  box-shadow:
+    0 0 4px #ffffff,
+    0 0 12px rgba(255, 209, 102, 0.88);
+}
+
+.foundry-attack-projectile[data-tags~='arc'] {
+  outline: 1px solid rgba(255, 107, 214, 0.8);
+  outline-offset: 1px;
+}
+
+.foundry-live-fire-label {
+  position: absolute;
+  right: 0.55rem;
+  bottom: 0.42rem;
+  z-index: 3;
+  color: rgba(174, 188, 197, 0.82);
+  font-family: 'Cascadia Mono', 'Consolas', monospace;
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
 }
 
 .foundry-target-reticle {
@@ -878,15 +945,18 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   height: 2.2rem;
 }
 
-@keyframes foundry-weapon-pulse {
-  0%,
-  42%,
-  100% {
-    opacity: 0.25;
+@keyframes foundry-projectile-flight {
+  0% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--shot-start-x)), 0);
   }
-  48%,
-  66% {
+  4%,
+  88% {
     opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--shot-end-x)), var(--shot-end-y));
   }
 }
 
@@ -1301,10 +1371,26 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   background: rgba(2, 4, 10, 0.94);
 }
 
-html[data-reduced-motion='true'] .foundry-attack-preview .ship-preview-weapon-cue,
-html[data-performance-mode='true'] .foundry-attack-preview .ship-preview-weapon-cue {
+html[data-reduced-motion='true'] .foundry-attack-projectile {
   animation: none;
-  opacity: 0.8;
+  opacity: 0.94;
+  transform: translate(calc(-50% + var(--shot-rest-x)), var(--shot-rest-y));
+}
+
+html[data-performance-mode='true'] .foundry-attack-projectile {
+  animation: none;
+  opacity: 0.94;
+  box-shadow: none;
+  transform: translate(calc(-50% + var(--shot-performance-x)), var(--shot-performance-y));
+}
+
+html[data-performance-mode='true'] .foundry-attack-projectile-echo {
+  display: none;
+}
+
+html[data-reduced-motion='true'] .foundry-attack-preview .ship-preview-combat,
+html[data-performance-mode='true'] .foundry-attack-preview .ship-preview-combat {
+  filter: none;
 }
 
 html[data-bullet-contrast='high'] .foundry-attack-console,
@@ -1314,6 +1400,12 @@ html[data-bullet-contrast='high'] .foundry-history,
 html[data-bullet-contrast='high'] .foundry-card {
   border-color: rgba(248, 251, 255, 0.58);
   box-shadow: none;
+}
+
+html[data-bullet-contrast='high'] .foundry-attack-projectile {
+  border: 2px solid #03050d;
+  background: #ffffff;
+  box-shadow: 0 0 7px #ffffff;
 }
 
 .contract-panel {

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Replaced Hardpoint Control's pulsing close-up weapon indicators with a live firing range. The draft ship now sits low in the pane and steadily fires its production weapon volley toward the target reticle using real pattern geometry, cadence, velocity, radius, damage, tags, and ordered engineering topology/convergence hooks; reduced-motion and performance modes retain readable bounded static presentations.
+
 - Allies now help dismantle multi-part capital ships, stations, and wrecks. Focus fire acquires the nearest visible targetable subsystem before ordinary enemies or bosses, so crew wingmates and support craft can destroy exposed turrets, emitters, armor, hangars, drives, couplers, and cores through the same dependency, armor, reward, stage, and completion rules as player weapons.
 
 - Fixed the Core Wreck operation soft lock observed at 2499/2859u. The 360-unit gap was the peaceful recovery coast waiting on an impossible advance-stage boss clause, not an arena lock: mission objectives are now projected against the actual operation world, so non-gate approaches require only their available support/travel targets while the required gate retains its command-hull clause, set piece, arena, and boss.

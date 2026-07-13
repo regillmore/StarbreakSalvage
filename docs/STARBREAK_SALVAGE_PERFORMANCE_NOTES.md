@@ -347,6 +347,10 @@ Work order 127 reuses the existing ally readiness gate, global projectile array,
 
 The work order 127 check build emits 869.75 kB minified/235.88 kB gzip initial JavaScript and unchanged 41.17 kB CSS/8.85 kB gzip. This is a 0.38 kB minified/0.10 kB gzip increase from work order 126 for visible-component acquisition and shared projectile damage routing. No warning threshold changed; the existing initial-chunk warning remains open.
 
+Work order 128 builds the attack range only when Hardpoint Control enters or an explicit draft action rebuilds the DOM. The pure plan reuses the production weapon factory and installed engineering hooks, caps the source volley at 12, cadence copies at 6, and rendered projectile nodes at 48. Normal mode uses compositor-friendly transform/opacity CSS animation without a scene update or JavaScript timer. Reduced motion removes movement while retaining trajectory samples; performance mode additionally hides echo copies and removes glow. No combat actor, canvas draw, runtime RNG, external asset, dependency, save, or snapshot field is added.
+
+The work order 128 check build emits 872.73 kB minified/236.85 kB gzip initial JavaScript and 43.09 kB CSS/9.23 kB gzip. This is a 2.98 kB minified/0.97 kB gzip JavaScript increase and 1.92 kB minified/0.38 kB gzip CSS increase from work order 127 for the shared projectile factory, hook-derived flight plan, accessible projectile metadata, and responsive firing-range presentation. No warning threshold changed; the existing initial-chunk warning remains open.
+
 - The first finale pass adds hull/approach pressure and summary/unlock hooks, not new projectile families; remaining work should keep profiling the `F` finale smoke alongside enemy-rich, environmental stress, and the `Y` two-act summary before adding denser final-phase attacks.
 
 ## Phase 10 Playtest Risks
