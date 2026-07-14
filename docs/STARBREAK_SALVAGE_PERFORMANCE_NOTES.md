@@ -481,3 +481,11 @@ The release build emits 914.17 kB minified/248.88 kB gzip initial JavaScript and
 `RouteNavigation` projects one source, one optional target, one mission contract/objective, and exactly three generated route records only when the extraction-stage hub opens. Each option retains at most two exceptional note strings. The projection, constellation state overrides, and bounded DOM route cards never enter gameplay simulation, generation RNG, collision, targeting, actor, projectile, effect, or proc loops. Route outcomes still execute once through their existing reducer path.
 
 The release build emits 916.14 kB minified/249.61 kB gzip initial JavaScript and 63.07/13.06 kB CSS. Relative to work order 135, the compact read model, route-mode constellation state, snapshot recovery, and responsive cards add 1.97/0.73 kB JavaScript and 0.69/0.11 kB CSS after the old `RouteScene` importer is removed. No dependency, simulation budget, RNG stream, or warning threshold changes; the existing initial-chunk warning remains open.
+
+## Work order 137 constellation-visibility budgets
+
+The base projection still creates exactly five sector nodes and four edges once per hub entry. Removing passive next-sector resolution deletes one status branch; the post-sector scene resolves at most one immutable generated sector record and one matching edge. No new RNG, persisted field, reducer fold, DOM node, timer callback, scene update, or gameplay hot-loop work is introduced.
+
+The active pulse is one CSS pseudo-element on at most two actionable sector buttons. The browser compositor changes only opacity, transform, and a bounded glow; reduced-motion and performance modes disable animation and retain a static ring. Hidden, completed, and service nodes receive no pulse pseudo-element.
+
+The release build emits 916.13 kB minified/249.62 kB gzip initial JavaScript and 64.05/13.24 kB CSS. Relative to work order 136, JavaScript is effectively flat (-0.01/+0.01 kB) and the just-in-time visibility/pulse presentation adds 0.98/0.18 kB CSS. No dependency, simulation budget, snapshot, RNG stream, or warning threshold changes; the existing initial-chunk warning remains open.

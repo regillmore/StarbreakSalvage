@@ -143,8 +143,8 @@ export class SectorTransitionScene implements Scene {
     subtitle.textContent = this.routeChoice
       ? `${this.run.carrierPlan.name} route plot · Commitment accepted; choose how the ship crosses the highlighted edge.`
       : this.postSectorChoice
-        ? `${this.run.carrierPlan.name} act chart · Hold this node once for its paired challenge, or continue along the revealed route.`
-        : `${this.run.carrierPlan.name} act chart · Sector signals reveal as the expedition advances; carrier services remain in local orbit.`;
+        ? `${this.run.carrierPlan.name} act chart · Hold this node once for its paired challenge, or continue along the newly resolved route.`
+        : `${this.run.carrierPlan.name} act chart · Future sectors remain unresolved until their routes open; carrier services remain in local orbit.`;
     headingGroup.append(eyebrow, title, subtitle);
     const resources = document.createElement('div');
     resources.className = 'navigation-resource-strip';
@@ -171,8 +171,8 @@ export class SectorTransitionScene implements Scene {
     footer.textContent = this.routeChoice
       ? 'ROUTE COMMIT // Choose one travel vector from the settled sector to the next mission signal.'
       : this.postSectorChoice
-        ? 'POST-SECTOR HOLD // Optional challenge remains on the cleared node · The revealed node continues the expedition.'
-        : 'ACT CHART // Connected sectors reveal with progress · Unlinked carrier services remain locally available.';
+        ? 'POST-SECTOR HOLD // Optional challenge remains on the cleared node · The active destination continues the expedition.'
+        : 'ACT CHART // Future sectors resolve only when travel opens · Unlinked carrier services remain locally available.';
 
     shell.append(
       header,
@@ -329,6 +329,7 @@ export class SectorTransitionScene implements Scene {
   private createNavigationMap(plan: SectorNavigationPlan): HTMLElement {
     const onwardNodeId = this.getOnwardSectorNodeId(plan);
     const routeTargetNodeId = this.getRouteTargetNodeId(plan);
+    const activeTargetNodeId = routeTargetNodeId ?? (this.postSectorChoice ? onwardNodeId : null);
     const sectorNodes: ConstellationMapNode[] = plan.constellation.nodes
       .filter((node) => node.kind === 'sector')
       .map((node) => {
@@ -339,13 +340,17 @@ export class SectorTransitionScene implements Scene {
           node.id === (routeTargetNodeId ?? plan.constellation.currentSectorNodeId)
         );
         const routeSource = Boolean(this.routeChoice && current && !routeTarget);
+        const activeDestination = routeTarget || onward;
+        const resolvedSector = activeDestination ? this.run.sectors[node.sectorIndex] : null;
         const optionalAvailable = this.postSectorChoice?.optional.available ?? true;
         return {
           id: node.id,
           kind: 'sector',
-          label: node.label,
-          shortLabel: node.shortLabel,
-          glyph: node.glyph,
+          label: resolvedSector?.sectorName ?? node.label,
+          shortLabel: resolvedSector
+            ? `S${node.revealOrder + 1} · ${resolvedSector.sectorName}`
+            : node.shortLabel,
+          glyph: resolvedSector ? '◆' : node.glyph,
           x: node.x,
           y: node.y,
           status: routeTarget
@@ -368,7 +373,7 @@ export class SectorTransitionScene implements Scene {
                 : onward
                   ? 'CONTINUE'
                   : node.stateLabel,
-          selectable: routeTarget || routeSource || node.status !== 'hidden',
+          selectable: routeTarget || routeSource || onward || node.status !== 'hidden',
           available: routeTarget
             ? true
             : routeSource
@@ -434,12 +439,11 @@ export class SectorTransitionScene implements Scene {
       layoutId: plan.layoutId,
       nodes: [...sectorNodes, ...serviceNodes],
       edges: plan.constellation.edges.map((edge) =>
-        this.routeChoice &&
-        routeTargetNodeId &&
+        activeTargetNodeId &&
         ((edge.fromId === plan.constellation.currentSectorNodeId &&
-          edge.toId === routeTargetNodeId) ||
+          edge.toId === activeTargetNodeId) ||
           (edge.toId === plan.constellation.currentSectorNodeId &&
-            edge.fromId === routeTargetNodeId))
+            edge.fromId === activeTargetNodeId))
           ? { ...edge, status: 'choice' }
           : edge
       ),

@@ -2517,7 +2517,6 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
   stroke: rgba(114, 242, 167, 0.7);
 }
 
-.navigation-map-routes line[data-status='revealed'],
 .navigation-map-routes line[data-status='choice'] {
   opacity: 0;
   stroke-dasharray: 1;
@@ -2607,18 +2606,38 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
   background: rgba(10, 34, 32, 0.88);
 }
 
-.constellation-node[data-node-kind='sector'][data-constellation-status='revealed'],
+.constellation-node[data-node-kind='sector'][data-constellation-status='choice'],
 .constellation-node[data-node-kind='approach'] {
   opacity: 0;
   animation: constellation-node-reveal 620ms cubic-bezier(0.2, 0.84, 0.28, 1.15) forwards;
   animation-delay: var(--constellation-delay);
 }
 
-.constellation-node[data-node-kind='sector'][data-constellation-status='revealed'] {
+.constellation-node[data-node-kind='sector'][data-constellation-status='choice'] {
   border-color: rgba(124, 247, 255, 0.62);
   box-shadow:
     0 0 0 3px rgba(5, 12, 27, 0.82),
     0 0 24px rgba(124, 247, 255, 0.18);
+}
+
+.constellation-node[data-node-kind='sector'][data-constellation-status='current'],
+.constellation-node[data-node-kind='sector'][data-constellation-status='choice'] {
+  --constellation-pulse-color: rgba(255, 209, 102, 0.58);
+}
+
+.constellation-node[data-node-kind='sector'][data-constellation-status='choice'] {
+  --constellation-pulse-color: rgba(124, 247, 255, 0.62);
+}
+
+.constellation-node[data-node-kind='sector'][data-constellation-status='current']::after,
+.constellation-node[data-node-kind='sector'][data-constellation-status='choice']::after {
+  position: absolute;
+  inset: -0.34rem;
+  border: 1px solid var(--constellation-pulse-color);
+  border-radius: 7px;
+  content: '';
+  pointer-events: none;
+  animation: constellation-sector-pulse 3.2s ease-in-out infinite;
 }
 
 .constellation-node[data-node-kind='sector'][data-constellation-status='hidden'] {
@@ -2652,6 +2671,21 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
   to {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes constellation-sector-pulse {
+  0%,
+  100% {
+    opacity: 0.2;
+    box-shadow: 0 0 4px transparent;
+    transform: scale(0.98);
+  }
+
+  50% {
+    opacity: 0.68;
+    box-shadow: 0 0 14px var(--constellation-pulse-color);
+    transform: scale(1.035);
   }
 }
 
@@ -2843,16 +2877,26 @@ html[data-performance-mode='true'] .constellation-node {
   animation: none;
 }
 
-html[data-reduced-motion='true'] .navigation-map-routes line[data-status='revealed'],
 html[data-reduced-motion='true'] .navigation-map-routes line[data-status='choice'],
-html[data-performance-mode='true'] .navigation-map-routes line[data-status='revealed'],
 html[data-performance-mode='true'] .navigation-map-routes line[data-status='choice'],
-html[data-reduced-motion='true'] .constellation-node[data-constellation-status='revealed'],
 html[data-reduced-motion='true'] .constellation-node[data-constellation-status='choice'],
-html[data-performance-mode='true'] .constellation-node[data-constellation-status='revealed'],
 html[data-performance-mode='true'] .constellation-node[data-constellation-status='choice'] {
   opacity: 1;
   stroke-dashoffset: 0;
+}
+
+html[data-reduced-motion='true']
+  .constellation-node[data-node-kind='sector'][data-constellation-status='current']::after,
+html[data-reduced-motion='true']
+  .constellation-node[data-node-kind='sector'][data-constellation-status='choice']::after,
+html[data-performance-mode='true']
+  .constellation-node[data-node-kind='sector'][data-constellation-status='current']::after,
+html[data-performance-mode='true']
+  .constellation-node[data-node-kind='sector'][data-constellation-status='choice']::after {
+  opacity: 0.42;
+  box-shadow: 0 0 8px var(--constellation-pulse-color);
+  transform: none;
+  animation: none;
 }
 
 html[data-bullet-contrast='high'] .navigation-map,

@@ -1973,23 +1973,35 @@ Status:
 
 Acceptance:
 
-- One seeded sector constellation persists through each act, reveals only actionable progress, and refreshes at the next act boundary.
+- One seeded sector constellation persists through each act, resolves only actionable progress, and refreshes at the next act boundary.
 - Common carrier services float outside route connectivity while remaining visible and locally available under explicit story locks.
-- Clearing a required sector gate returns to the chart: the current node offers one paired optional hold, while the revealed next-sector node continues the expedition without a separate approach menu.
+- Clearing a required sector gate returns to the chart: the current node offers one paired optional hold, while the newly actionable next-sector node continues the expedition without a separate approach menu.
 - Fresh sectors expose exactly one optional combat after their required gate; act-final continuation does not draw a false edge into the next act's independently seeded constellation.
 
 Status:
 
-- Implemented in work order 134 and flow-refined in work order 135. `ActConstellation` supplies four stable five-sector layouts with completed/current/revealed/hidden edge projection, and `ConstellationMap` renders the shared hub grammar with spatial controls and bounded reveal motion. Sector Navigation composes five unlinked service satellites around the chart. Fresh mission schedules skip the former early approach/detour branch, then return after the required gate with `HOLD ONCE` on the current node and `CONTINUE` on the revealed next node. Final relief now advances directly into route selection after either branch; the Operational Map remains only as a compatibility/data-model boundary. The paired hold, direct branch, service returns, and reveal state derive from existing mission/run state, so snapshot v11 remains authoritative without new persisted fields.
+- Implemented in work order 134, flow-refined in work order 135, and discovery-refined in work order 137. `ActConstellation` supplies four stable five-sector layouts with completed/current/hidden base projection; later sectors stay anonymous until the post-sector presentation promotes the one actionable destination and edge to `choice`. `ConstellationMap` renders the shared hub grammar with spatial controls and bounded resolve motion, plus a reduced-motion-safe pulse on active sector choices. Sector Navigation composes five unlinked service satellites around the chart. Fresh mission schedules skip the former early approach/detour branch, then return after the required gate with `HOLD ONCE` on the current node and `CONTINUE` on the newly resolved next node. Final relief advances directly into route selection after either branch; the Operational Map remains only as a compatibility/data-model boundary. The paired hold, direct branch, service returns, and visibility state derive from existing mission/run state, so snapshot v11 remains authoritative without new persisted fields.
 
 ### BL4 - Embedded constellation route plotting
 
 Acceptance:
 
-- Route selection occurs in the revealed destination's constellation detail instead of a separate full-screen choice scene.
+- Route selection occurs in the newly actionable destination's constellation detail instead of a separate full-screen choice scene.
 - One concise next-mission brief and three bounded edge options replace repeated campaign/debug dumps while preserving every route consequence.
 - Direct, optional, service-return, act-boundary, final-extraction, accessibility, and snapshot-v11 flows remain coherent.
 
 Status:
 
 - Implemented in work order 136. `RouteNavigation` projects the completed-to-next-sector edge, next contract/objective, and three compact authored route options. `SectorTransitionScene` marks the source `DEPARTED`, the destination `CHOOSE ROUTE`, and their same-act edge as the active choice; cross-act and terminal choices stay local rather than creating false edges. `GameApp` retains the existing route outcome/shop/event/reward/advance sequence, returns common services to the pending plot, and checkpoints extraction-stage route plots through the compatible v11 operational-map target.
+
+### BL5 - Unknown future signals and active destination emphasis
+
+Acceptance:
+
+- Unavailable future sectors retain anonymous labels and hidden edges until the post-sector chart makes exactly one next destination selectable.
+- Current and actionable sector choices pulse gently without moving hit targets; hidden/completed/service nodes remain still.
+- Reduced-motion and performance settings use a static active outline, and constellation visibility remains derived rather than persisted.
+
+Status:
+
+- Implemented in work order 137. The base act plan no longer has a `revealed` status. `SectorTransitionScene` resolves only its known onward or route target from immutable run generation and promotes only that edge to `choice`. CSS isolates active emphasis in a pseudo-ring with a 3.2-second cycle and static accessibility fallbacks; deterministic and Chromium coverage proves anonymous opening signals, just-in-time S2 resolution, and active-node emphasis.

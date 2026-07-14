@@ -40,29 +40,34 @@ describe('sector navigation hub', () => {
     expect(first.constellation.edges).toHaveLength(4);
   });
 
-  it('reveals only the current and next sector while drawing new connections with progress', () => {
+  it('keeps every future sector unresolved until its travel choice opens', () => {
     const run = generateRunSkeleton('CONSTELLATION-REVEAL-SMOKE');
     const first = createSectorNavigationPlan({ run, sectorIndex: 0 }).constellation;
     const second = createSectorNavigationPlan({ run, sectorIndex: 1 }).constellation;
 
     expect(first.nodes.filter((node) => node.kind === 'sector').map((node) => node.status)).toEqual(
-      ['current', 'revealed', 'hidden', 'hidden', 'hidden']
+      ['current', 'hidden', 'hidden', 'hidden', 'hidden']
     );
     expect(first.edges.map((edge) => edge.status)).toEqual([
-      'revealed',
+      'hidden',
       'hidden',
       'hidden',
       'hidden'
     ]);
     expect(
       second.nodes.filter((node) => node.kind === 'sector').map((node) => node.status)
-    ).toEqual(['completed', 'current', 'revealed', 'hidden', 'hidden']);
+    ).toEqual(['completed', 'current', 'hidden', 'hidden', 'hidden']);
     expect(second.edges.map((edge) => edge.status)).toEqual([
       'completed',
-      'revealed',
+      'hidden',
       'hidden',
       'hidden'
     ]);
+    expect(
+      first.nodes
+        .filter((node) => node.status === 'hidden')
+        .every((node) => node.label === 'Uncharted signal' && node.stateLabel === 'UNRESOLVED')
+    ).toBe(true);
   });
 
   it('keeps floating services off the connected graph across many seeds', () => {

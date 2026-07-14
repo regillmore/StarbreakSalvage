@@ -146,7 +146,22 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.locator('.navigation-map-routes line')).toHaveCount(4);
   await expect(
     page.locator('.constellation-node[data-constellation-status="revealed"]')
-  ).toHaveCount(1);
+  ).toHaveCount(0);
+  await expect(
+    page.locator('.constellation-node[data-node-kind="sector"][data-constellation-status="hidden"]')
+  ).toHaveCount(4);
+  await expect(page.getByTestId('navigation-sector-2')).toContainText('Unknown');
+  await expect(page.getByTestId('navigation-sector-2')).toContainText('UNRESOLVED');
+  await expect(page.getByTestId('navigation-sector-2')).toBeDisabled();
+  await expect(page.getByTestId('navigation-destination-launch')).toHaveCSS(
+    'animation-name',
+    'none'
+  );
+  expect(
+    await page
+      .getByTestId('navigation-destination-launch')
+      .evaluate((element) => getComputedStyle(element, '::after').animationName)
+  ).toContain('constellation-sector-pulse');
   await expect(page.getByTestId('open-shop')).toHaveAttribute('aria-label', /available/);
   await expect(page.getByTestId('open-hardpoint-control')).toHaveAttribute(
     'aria-label',
@@ -246,7 +261,23 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.keyboard.press('8');
   await expect(page.getByTestId('mission-briefing')).toBeVisible();
   await expect(page.getByTestId('navigation-destination-optional')).toContainText('HOLD ONCE');
+  await expect(page.getByTestId('navigation-destination-continue')).toContainText(
+    'S2 · Trade War Corridor'
+  );
   await expect(page.getByTestId('navigation-destination-continue')).toContainText('CONTINUE');
+  await expect(page.getByTestId('navigation-destination-continue')).toHaveAttribute(
+    'data-constellation-status',
+    'choice'
+  );
+  await expect(page.getByTestId('navigation-destination-continue')).toBeEnabled();
+  await expect(
+    page.locator('.constellation-node[data-node-kind="sector"][data-constellation-status="choice"]')
+  ).toHaveCount(2);
+  expect(
+    await page
+      .getByTestId('navigation-destination-continue')
+      .evaluate((element) => getComputedStyle(element, '::after').animationName)
+  ).toContain('constellation-sector-pulse');
   await page.getByTestId('navigation-optional-action').click();
   await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
   await page.keyboard.press('8');

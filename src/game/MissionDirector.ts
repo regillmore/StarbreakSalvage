@@ -258,7 +258,7 @@ export function createMissionSchedule(
             ...option,
             label: nextSector ? `Continue to ${nextSector.sectorName}` : 'Continue beyond the act',
             summary: nextSector
-              ? `Leave local orbit and continue along the revealed route to ${nextSector.sectorName}.`
+              ? `Leave local orbit and continue along the resolved route to ${nextSector.sectorName}.`
               : 'Leave local orbit and commit the completed act to the frontier handoff.'
           }
         : {

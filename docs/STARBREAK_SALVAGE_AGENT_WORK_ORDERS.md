@@ -2464,6 +2464,29 @@ Status: implemented. `src/game/RouteNavigation.ts` is the deterministic compact 
 
 Verification: focused route-navigation, sector-navigation, route-event, mission, and snapshot coverage passes with 5 files and 38 tests. `npm run verify:release` passes typecheck, ESLint, all 98 Vitest files and 602 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Chromium covers both the optional and direct route entries, confirms no `Choose Route` heading or `mission-relief` scene, asserts one next-mission brief, three compact route cards, source/destination/edge labels, absence of campaign/seed dumps, shop and reward settlement, the next-sector briefing, narrow/high-contrast/reduced-motion flows, and no console errors. A clean 1280×720 capture was inspected directly; the full plot and all choices fit without scrolling or overlap. The build emits 916.14 kB minified/249.61 kB gzip initial JavaScript and 63.07/13.06 kB CSS, increases of 1.97/0.73 kB JavaScript and 0.69/0.11 kB CSS over work order 135 after removing the old route-scene import. The existing initial-chunk warning remains open and no threshold changed. The Browser skill package remains absent at its catalog path, so Playwright Chromium supplied visual/runtime evidence.
 
+## Work order 137 - Unknown future signals and active-sector pulse
+
+Goal: preserve discovery by keeping every future sector anonymous until it becomes an actionable destination, while making active sector choices easy to find without adding UI noise.
+
+Prompt:
+
+> Remove the passive `REVEALED` sector state. During an ordinary sector hub, every later sector and untraveled edge remains unresolved and anonymous. Resolve the next sector's identity and connecting edge only when the post-sector constellation actually offers it as `CONTINUE`, then keep it resolved through embedded route selection. Give current and actionable choice sectors a gentle pulse that never applies to services or hidden nodes and becomes static under reduced-motion or performance settings.
+
+Acceptance criteria:
+
+- `ActConstellation` no longer emits a `revealed` node or edge status. The current sector is named; every future sector reads `Unknown / UNRESOLVED`, is disabled, and keeps its edge hidden.
+- Post-sector continuation resolves exactly the next same-act sector's real name, short label, glyph, and connecting edge when that node becomes selectable. Later sectors remain anonymous.
+- The embedded route plot retains the resolved target as `CHOOSE ROUTE`; act-boundary and terminal choices still avoid false cross-act edges.
+- Current launch sectors and actionable post-sector/route-choice sector nodes receive a restrained pulse ring. Completed, hidden, and service nodes do not pulse.
+- The pulse does not translate the button or alter its pointer/focus geometry. Reduced-motion and performance modes replace it with a static ring; high contrast and keyboard/pointer behavior remain intact.
+- Visibility remains derived from seeded act geometry plus current mission presentation. No RNG stream, snapshot field/version, route consequence, service rule, or simulation path changes.
+
+Status: implemented. `ActConstellation` now projects only completed, current, and hidden base-sector states; all future nodes retain anonymous labels and all untraveled edges remain hidden. `SectorTransitionScene` is the sole presentation boundary that resolves an onward node: post-sector and route modes recover its immutable generated sector identity, promote it to `choice`, and promote only the matching current-to-target edge. The existing cross-act null-target fallback is unchanged.
+
+`ConstellationMap` continues to expose native button state and semantic data attributes. CSS adds a pseudo-element pulse to sector nodes in `current` or `choice` state, leaving the button transform and hit area fixed. The 3.2-second opacity/glow cycle is disabled under reduced motion and performance mode in favor of a static outline. The former revealed-node/edge selectors and player-facing revealed-route copy are removed.
+
+Verification: focused constellation/route coverage passes with 2 files and 8 tests. `npm run verify:release` passes typecheck, ESLint, all 98 Vitest files and 602 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Chromium proves four anonymous disabled future sectors at the opening hub, no `revealed` state, a pulse on the current node, exact S2 identity and edge resolution only when `CONTINUE` opens, two pulsing post-sector sector choices, embedded route continuation, and no console errors. Direct 1280×720 captures of the ordinary and post-sector hubs confirm later signals stay anonymous and the pulse ring does not disturb node layout. The build emits 916.13 kB minified/249.62 kB gzip initial JavaScript and 64.05/13.24 kB CSS. Relative to work order 136, JavaScript is effectively flat (-0.01/+0.01 kB) and the accessible pulse/visibility styling adds 0.98/0.18 kB CSS. The existing initial-chunk warning remains open and no threshold changed. The in-app Browser skill package remains absent at its catalog path, so repository Playwright Chromium supplied visual/runtime evidence.
+
 ## Review subagent prompt
 
 Use after a feature PR:

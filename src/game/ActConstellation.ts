@@ -1,8 +1,8 @@
 import { createRng } from '../core/rng';
 
-export type ActConstellationNodeStatus = 'completed' | 'current' | 'revealed' | 'hidden' | 'choice';
+export type ActConstellationNodeStatus = 'completed' | 'current' | 'hidden' | 'choice';
 
-export type ActConstellationEdgeStatus = 'completed' | 'revealed' | 'hidden' | 'choice';
+export type ActConstellationEdgeStatus = 'completed' | 'hidden' | 'choice';
 
 export interface ActConstellationSectorSource {
   readonly id: string;
@@ -234,13 +234,11 @@ function createApproachNodes(
 function getSectorStatus(offset: number, currentOffset: number): ActConstellationNodeStatus {
   if (offset < currentOffset) return 'completed';
   if (offset === currentOffset) return 'current';
-  if (offset === currentOffset + 1) return 'revealed';
   return 'hidden';
 }
 
 function getSectorEdgeStatus(offset: number, currentOffset: number): ActConstellationEdgeStatus {
   if (offset <= currentOffset) return 'completed';
-  if (offset === currentOffset + 1) return 'revealed';
   return 'hidden';
 }
 
@@ -252,23 +250,18 @@ function getSectorSummary(
 ): string {
   if (status === 'completed') return `${sectorName} is charted and settled for this run.`;
   if (status === 'current') return `${sectorName} is the active operation.`;
-  if (status === 'revealed') {
-    return `${sectorName} has resolved from long-range signals and awaits a safe approach.`;
-  }
   return `Act sector ${actSectorNumber}/${actSectorCount} remains beyond reliable sensor range.`;
 }
 
 function getSectorGlyph(status: ActConstellationNodeStatus): string {
   if (status === 'completed') return '✓';
   if (status === 'current') return '◆';
-  if (status === 'revealed') return '◇';
   return '·';
 }
 
 function getSectorStateLabel(status: ActConstellationNodeStatus): string {
   if (status === 'completed') return 'CHARTED';
   if (status === 'current') return 'CURRENT';
-  if (status === 'revealed') return 'REVEALED';
   return 'UNRESOLVED';
 }
 
