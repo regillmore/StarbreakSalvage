@@ -371,9 +371,7 @@ export class SectorTransitionScene implements Scene {
           stateLabel: routeTarget
             ? 'CHOOSE ROUTE'
             : current && this.postSectorChoice
-              ? optionalAvailable
-                ? 'HOLD ONCE'
-                : 'SETTLED'
+              ? 'OPTIONAL'
               : routeSource
                 ? 'DEPARTED'
                 : onward

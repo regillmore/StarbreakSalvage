@@ -1980,7 +1980,7 @@ Acceptance:
 
 Status:
 
-- Implemented in work order 134, flow-refined in work orders 135 and 138, and discovery-refined in work order 137. `ActConstellation` supplies four stable five-sector layouts with completed/current/hidden base projection; later sectors stay anonymous until the post-sector presentation promotes the one actionable destination and edge to `choice`. `ConstellationMap` renders the shared hub grammar with spatial controls and bounded resolve motion, plus a reduced-motion-safe pulse on active sector choices. Sector Navigation composes five unlinked service satellites around the chart. Fresh mission schedules skip the former early approach/detour branch, then return after the required gate with `HOLD ONCE` on the current node and `CHOOSE ROUTE` on the newly resolved next node. The source detail owns its one optional action, the target detail owns its three route actions, and both nodes share the orange ready state. Final relief is settled synchronously when a route begins. The Operational Map remains only as a compatibility/data-model boundary. The paired hold, direct branch, service returns, and visibility state derive from existing mission/run state, so snapshot v11 remains authoritative without new persisted fields.
+- Implemented in work order 134, flow-refined in work orders 135 and 138, and discovery-refined in work order 137. `ActConstellation` supplies four stable five-sector layouts with completed/current/hidden base projection; later sectors stay anonymous until the post-sector presentation promotes the one actionable destination and edge to `choice`. `ConstellationMap` renders the shared hub grammar with spatial controls and bounded resolve motion, plus a reduced-motion-safe pulse on active sector choices. Sector Navigation composes five unlinked service satellites around the chart. Fresh mission schedules skip the former early approach/detour branch, then return after the required gate with `OPTIONAL` on the current node and `CHOOSE ROUTE` on the newly resolved next node. The source detail owns its one optional action, the target detail owns its three route actions, and both nodes share the beige ready state. Final relief is settled synchronously when a route begins. The Operational Map remains only as a compatibility/data-model boundary. The paired hold, direct branch, service returns, and visibility state derive from existing mission/run state, so snapshot v11 remains authoritative without new persisted fields.
 
 ### BL4 - Embedded constellation route plotting
 
@@ -1992,7 +1992,7 @@ Acceptance:
 
 Status:
 
-- Implemented in work order 136 and flattened with the paired hold in work order 138. `RouteNavigation` projects the completed-to-next-sector edge, next contract/objective, and three compact authored route options. `SectorTransitionScene` marks the destination `CHOOSE ROUTE` and keeps the source at `HOLD ONCE` while the optional remains available; each node exclusively renders its own action set. After optional resolution, the source becomes `DEPARTED`. Cross-act and terminal choices stay local rather than creating false edges. `GameApp` retains the existing route outcome/shop/event/reward/advance sequence, returns common services to the pending plot, checkpoints extraction-stage route plots through the compatible v11 operational-map target, and enters same-act combat directly once a route reward settles.
+- Implemented in work order 136 and flattened with the paired hold in work order 138. `RouteNavigation` projects the completed-to-next-sector edge, next contract/objective, and three compact authored route options. `SectorTransitionScene` marks the destination `CHOOSE ROUTE` and labels the source `OPTIONAL`; each node exclusively renders its own action set. After optional resolution, the source becomes `DEPARTED`. Cross-act and terminal choices stay local rather than creating false edges. `GameApp` retains the existing route outcome/shop/event/reward/advance sequence, returns common services to the pending plot, checkpoints extraction-stage route plots through the compatible v11 operational-map target, and enters same-act combat directly once a route reward settles.
 
 ### BL5 - Unknown future signals and active destination emphasis
 
@@ -2011,7 +2011,7 @@ Status:
 Acceptance:
 
 - The first post-sector view offers one local optional hold and three next-sector routes across two simultaneously actionable sector nodes, with no separate continuation commitment.
-- The source node exclusively owns the optional action, the target node exclusively owns the three routes, and both nodes use the same orange pulsing ready state.
+- The source node exclusively owns the optional action, the target node exclusively owns the three routes, and both nodes use the same beige pulsing ready state. The source sublabel remains `OPTIONAL` instead of exposing availability as `HOLD ONCE` or `SETTLED`.
 - Direct route choice preserves default-branch, relief, route outcome, reward, service, and sector-advance ordering; optional choice preserves its guarded combat path and then returns to three routes.
 - Same-act route completion enters the next sector directly instead of reopening its constellation briefing. Each selected-node action set remains keyboard/pointer accessible and fits the standard detail pane without internal scrolling.
 

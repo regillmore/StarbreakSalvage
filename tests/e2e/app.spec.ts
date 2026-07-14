@@ -260,7 +260,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('objective-readout')).toContainText('Hecaton Ledger Ark');
   await page.keyboard.press('8');
   await expect(page.getByTestId('mission-briefing')).toBeVisible();
-  await expect(page.getByTestId('navigation-destination-optional')).toContainText('HOLD ONCE');
+  await expect(page.getByTestId('navigation-destination-optional')).toContainText('OPTIONAL');
   await expect(page.getByTestId('navigation-destination-route')).toContainText(
     'S2 · Trade War Corridor'
   );
@@ -287,7 +287,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   for (const nodeId of ['navigation-destination-optional', 'navigation-destination-route']) {
     expect(
       await page.getByTestId(nodeId).evaluate((element) => getComputedStyle(element).borderTopColor)
-    ).toContain('255, 159, 67');
+    ).toContain('255, 209, 102');
   }
   await expect(page.getByTestId('navigation-route-options')).toBeVisible();
   await expect(page.locator('.navigation-flight-option')).toHaveCount(3);
@@ -1301,7 +1301,7 @@ async function forceCompleteSectorAndEnterNext(page: Page, nextSectorName: strin
   await expect(page.getByTestId('navigation-route-options')).toBeVisible();
   await expect(page.locator('.navigation-flight-option')).toHaveCount(3);
   await expect(page.getByTestId('navigation-optional-action')).toHaveCount(0);
-  await expect(page.getByTestId('navigation-destination-optional')).toContainText('HOLD ONCE');
+  await expect(page.getByTestId('navigation-destination-optional')).toContainText('OPTIONAL');
   await expect(page.getByTestId('navigation-destination-continue')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Choose Route' })).toHaveCount(0);
   await expect(page.getByTestId('mission-relief')).toHaveCount(0);

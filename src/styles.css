@@ -2614,12 +2614,12 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
 }
 
 .constellation-node[data-node-kind='sector'][data-constellation-status='choice'] {
-  border-color: rgba(255, 159, 67, 0.86);
-  color: #ffe0b2;
-  background: rgba(47, 26, 10, 0.94);
+  border-color: rgba(255, 209, 102, 0.72);
+  color: #fff1b5;
+  background: rgba(35, 29, 14, 0.94);
   box-shadow:
     0 0 0 3px rgba(5, 12, 27, 0.82),
-    0 0 24px rgba(255, 159, 67, 0.24);
+    0 0 24px rgba(255, 209, 102, 0.22);
 }
 
 .constellation-node[data-node-kind='sector'][data-constellation-status='current'],
@@ -2628,18 +2628,18 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
 }
 
 .constellation-node[data-node-kind='sector'][data-constellation-status='choice'] {
-  --constellation-pulse-color: rgba(255, 159, 67, 0.78);
+  --constellation-pulse-color: rgba(255, 209, 102, 0.68);
 }
 
 .constellation-node[data-node-kind='sector'][data-constellation-status='choice']:hover,
 .constellation-node[data-node-kind='sector'][data-constellation-status='choice']:focus-visible,
 .constellation-node[data-node-kind='sector'][data-constellation-status='choice'][aria-pressed='true'] {
-  border-color: #ff9f43;
-  color: #fff4df;
-  background: rgba(67, 34, 10, 0.98);
+  border-color: #ffd166;
+  color: #fff8df;
+  background: rgba(49, 39, 15, 0.98);
   box-shadow:
     0 0 0 3px rgba(5, 12, 27, 0.86),
-    0 0 28px rgba(255, 159, 67, 0.42);
+    0 0 28px rgba(255, 209, 102, 0.38);
 }
 
 .constellation-node[data-node-kind='sector'][data-constellation-status='current']::after,
