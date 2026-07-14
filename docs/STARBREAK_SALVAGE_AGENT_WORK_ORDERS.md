@@ -2440,6 +2440,30 @@ Status: implemented. `GameApp.showMissionRelief` now distinguishes the authored 
 
 Verification: focused mission/operational/snapshot coverage passes with 3 files and 25 tests. `npm run verify:release` passes typecheck, ESLint, all 97 Vitest files and 599 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Chromium takes the paired optional challenge and the direct continuation independently, asserts each opens `Choose Route` without rendering `mission-relief`, and completes the existing reward-to-next-sector journey without console errors. The build emits 914.17 kB minified/248.88 kB gzip initial JavaScript and 62.38/12.95 kB CSS. Removing the only fresh runtime import of `OperationalMapScene` reduces initial JavaScript by 10.68/2.83 kB from the deployed work order 134 build; the existing initial-chunk warning remains open and no threshold changed. The in-app Browser skill package remains absent at its catalog path, so Playwright Chromium supplied the local functional and transition evidence.
 
+## Work order 136 - Embedded constellation route plotting
+
+Goal: retire the separate route-choice screen and make the constellation's revealed destination the single place where the player chooses how to travel from the completed sector into the next mission.
+
+Prompt:
+
+> Remove the standalone `Choose Route` menu while preserving all three deterministic route options and their existing economy, combat, faction, shop, reward, and progression effects. After the player commits away from the cleared sector, keep the act constellation visible, mark the source as departed, highlight the connecting edge, select the next sector, and place compact route choices inside that sector's intro detail. Present the next mission story/objective once and remove repeated campaign, seed, ledger, and debug paragraphs from each route. Preserve services, keyboard/pointer access, act boundaries, final extraction, reduced motion, high contrast, route rewards, and snapshot v11 recovery.
+
+Acceptance criteria:
+
+- Neither direct continuation nor completion of the paired optional hold opens `RouteScene`; both select the revealed destination in `SectorTransitionScene` route mode.
+- The completed sector reads `DEPARTED`, the destination reads `CHOOSE ROUTE`, and their existing constellation edge becomes the active choice edge without adding a false cross-act connection.
+- The destination detail presents a brief next-mission story, one source-to-destination label, one objective label, and exactly the source sector's three route options.
+- Each route card keeps its authored name, risk, reward intent, and at most two exceptional pressure/yield/terrain/intel notes. Campaign ledgers, seed exchanges, crew manifests, and repeated next-mission paragraphs are absent.
+- Choosing a route still applies its outcome against the completed source sector before the existing route event or shop and reward scenes; component salvage, route history, next-sector modifiers, act junctions, frontier choice, and victory remain unchanged.
+- Carrier services remain selectable while the route plot is pending and return to the same plot. Pointer, Tab, spatial arrows, Enter, narrow layout, high contrast, reduced motion, and performance mode remain valid.
+- Snapshot v11 remains authoritative. The existing `operationalMap` target accepts the extraction-stage route plot and restores directly into it without replaying route outcomes or requiring a schema migration.
+
+Status: implemented. `src/game/RouteNavigation.ts` is the deterministic compact read-model boundary for the completed-sector edge, next contract/objective, risk bands, and bounded route notes. `SectorTransitionScene` adds an explicit route mode: it selects the revealed sector, changes the source and destination states to `DEPARTED` and `CHOOSE ROUTE`, promotes their edge to choice styling, and renders three compact native route buttons in the ordinary destination detail. Same-act routes use the revealed node; act/finale routes reuse the current boundary node rather than drawing across independently seeded constellations.
+
+`GameApp.showRouteChoice` now composes that mode instead of importing `RouteScene`. Shop, Hardpoint Control, Fleet Bay, Crew Quarters, and Apex callbacks return to the pending route plot. Route selection still calls the existing `handleRouteChoice`, so outcome generation, source-sector hooks, shops/events, rewards, component acquisition, extraction completion, sector advancement, act junctions, frontier decisions, and summaries retain their established order. Extraction-stage plots checkpoint under the already-versioned `operationalMap` target; restore recognizes that stage and reconstructs the embedded plot without new persisted fields.
+
+Verification: focused route-navigation, sector-navigation, route-event, mission, and snapshot coverage passes with 5 files and 38 tests. `npm run verify:release` passes typecheck, ESLint, all 98 Vitest files and 602 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Chromium covers both the optional and direct route entries, confirms no `Choose Route` heading or `mission-relief` scene, asserts one next-mission brief, three compact route cards, source/destination/edge labels, absence of campaign/seed dumps, shop and reward settlement, the next-sector briefing, narrow/high-contrast/reduced-motion flows, and no console errors. A clean 1280×720 capture was inspected directly; the full plot and all choices fit without scrolling or overlap. The build emits 916.14 kB minified/249.61 kB gzip initial JavaScript and 63.07/13.06 kB CSS, increases of 1.97/0.73 kB JavaScript and 0.69/0.11 kB CSS over work order 135 after removing the old route-scene import. The existing initial-chunk warning remains open and no threshold changed. The Browser skill package remains absent at its catalog path, so Playwright Chromium supplied visual/runtime evidence.
+
 ## Review subagent prompt
 
 Use after a feature PR:

@@ -1981,3 +1981,15 @@ Acceptance:
 Status:
 
 - Implemented in work order 134 and flow-refined in work order 135. `ActConstellation` supplies four stable five-sector layouts with completed/current/revealed/hidden edge projection, and `ConstellationMap` renders the shared hub grammar with spatial controls and bounded reveal motion. Sector Navigation composes five unlinked service satellites around the chart. Fresh mission schedules skip the former early approach/detour branch, then return after the required gate with `HOLD ONCE` on the current node and `CONTINUE` on the revealed next node. Final relief now advances directly into route selection after either branch; the Operational Map remains only as a compatibility/data-model boundary. The paired hold, direct branch, service returns, and reveal state derive from existing mission/run state, so snapshot v11 remains authoritative without new persisted fields.
+
+### BL4 - Embedded constellation route plotting
+
+Acceptance:
+
+- Route selection occurs in the revealed destination's constellation detail instead of a separate full-screen choice scene.
+- One concise next-mission brief and three bounded edge options replace repeated campaign/debug dumps while preserving every route consequence.
+- Direct, optional, service-return, act-boundary, final-extraction, accessibility, and snapshot-v11 flows remain coherent.
+
+Status:
+
+- Implemented in work order 136. `RouteNavigation` projects the completed-to-next-sector edge, next contract/objective, and three compact authored route options. `SectorTransitionScene` marks the source `DEPARTED`, the destination `CHOOSE ROUTE`, and their same-act edge as the active choice; cross-act and terminal choices stay local rather than creating false edges. `GameApp` retains the existing route outcome/shop/event/reward/advance sequence, returns common services to the pending plot, and checkpoints extraction-stage route plots through the compatible v11 operational-map target.

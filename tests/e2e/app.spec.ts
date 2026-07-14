@@ -250,12 +250,22 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.getByTestId('navigation-optional-action').click();
   await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
   await page.keyboard.press('8');
-  await expect(page.getByRole('heading', { name: 'Choose Route' })).toBeVisible();
+  await expect(page.getByTestId('mission-briefing')).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Running Audit briefing/ })).toBeVisible();
+  await expect(page.getByTestId('navigation-destination-route')).toContainText('CHOOSE ROUTE');
+  await expect(page.getByTestId('navigation-route-options')).toBeVisible();
+  await expect(page.locator('.navigation-route-card')).toHaveCount(3);
   await expect(page.getByTestId('mission-relief')).toHaveCount(0);
-  await expect(page.getByTestId('route-shop-mission-preview')).toContainText(
-    'Next mission: Running Audit / PURSUE'
+  await expect(page.getByTestId('route-edge-preview')).toContainText(
+    'Outer Debris Field → Trade War Corridor'
   );
-  await expect(page.locator('.route-panel')).toHaveAttribute('data-contract-theme', 'redline');
+  await expect(page.getByTestId('route-mission-preview')).toContainText('PURSUE · Running Pursuit');
+  await expect(page.getByTestId('navigation-destination-detail')).not.toContainText('Campaign:');
+  await expect(page.getByTestId('navigation-destination-detail')).not.toContainText(
+    'Seed Exchange'
+  );
+  await expect(page.getByRole('heading', { name: 'Choose Route' })).toHaveCount(0);
+  await expect(page.locator('.transition-panel')).toHaveAttribute('data-contract-theme', 'redline');
   await expect(page.getByTestId('contract-theme-strip')).toContainText(
     'REDLINE CONTRACT | Debt Runner'
   );
@@ -1242,7 +1252,8 @@ async function forceCompleteSectorAndEnterNext(page: Page, nextSectorName: strin
     await continueNode.click();
   }
   await page.getByTestId('navigation-continue-action').click();
-  await expect(page.getByRole('heading', { name: 'Choose Route' })).toBeVisible();
+  await expect(page.getByTestId('navigation-route-options')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Choose Route' })).toHaveCount(0);
   await expect(page.getByTestId('mission-relief')).toHaveCount(0);
 
   await chooseFirstRouteAndReward(page);

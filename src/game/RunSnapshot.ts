@@ -493,7 +493,8 @@ function validateSnapshotSession(
       currentStage.kind !== 'branch') ||
     (target === 'operationalMap' &&
       currentStage.kind !== 'branch' &&
-      currentStage.kind !== 'relief') ||
+      currentStage.kind !== 'relief' &&
+      currentStage.kind !== 'extraction') ||
     (target === 'gameplay' &&
       session.mission.status !== 'active' &&
       session.mission.status !== 'suspended') ||

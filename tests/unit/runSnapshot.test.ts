@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { SAVE_STORAGE_KEY } from '../../src/core/saveData';
 import { generateRunSkeleton } from '../../src/game/Generation';
 import { createRunSession, dispatchMissionEvent } from '../../src/game/RunSession';
+import { createMissionSchedule, getMissionBranchOptions } from '../../src/game/MissionDirector';
 import {
   RUN_SNAPSHOT_MAX_BYTES,
   RUN_SNAPSHOT_STORAGE_KEY,
@@ -136,6 +137,59 @@ describe('RunSnapshot', () => {
     expect(restored.session).toEqual(session);
     expect(restored.session.mission.currentStageId).toContain('pursuit-map');
     expect(createRunSnapshotSummary(snapshot).target).toBe('sectorTransition');
+  });
+
+  it('restores an extraction-stage route plot through the v11 operational-map target', () => {
+    const run = generateRunSkeleton('SNAPSHOT-ROUTE-PLOT');
+    const contract = run.contracts[0]!;
+    const session = createRunSession(run, contract);
+    const schedule = createMissionSchedule(run.expedition, 0);
+    dispatchMissionEvent(run, session, { id: 'briefing', type: 'confirmBriefing' });
+    dispatchMissionEvent(run, session, { id: 'entry', type: 'completeEntry' });
+    dispatchMissionEvent(run, session, {
+      id: 'advance',
+      type: 'completeCombat',
+      checkpoint: {
+        hull: 3,
+        scrollDistance: 640,
+        worldOffset: 10_640,
+        credits: session.credits,
+        salvage: session.salvage
+      }
+    });
+    dispatchMissionEvent(run, session, { id: 'staging', type: 'completeRelief' });
+    dispatchMissionEvent(run, session, {
+      id: 'gate',
+      type: 'completeCombat',
+      checkpoint: {
+        hull: 3,
+        scrollDistance: 1_540,
+        worldOffset: 11_540,
+        credits: session.credits,
+        salvage: session.salvage
+      }
+    });
+    const direct = getMissionBranchOptions(schedule, session.mission).find(
+      (option) => option.default
+    )!;
+    dispatchMissionEvent(run, session, {
+      id: 'continue',
+      type: 'selectBranch',
+      optionId: direct.id
+    });
+    dispatchMissionEvent(run, session, { id: 'final-relief', type: 'completeRelief' });
+
+    const snapshot = createRunSnapshot({
+      run,
+      contract,
+      session,
+      target: 'operationalMap',
+      label: 'Embedded route plot'
+    });
+    const restored = restoreRunSnapshot(snapshot);
+
+    expect(restored.session.mission.currentStageId).toBe(schedule.extractionStageId);
+    expect(createRunSnapshotSummary(snapshot).target).toBe('operationalMap');
   });
 
   it('removes corrupt or unsupported snapshots without touching permanent save data', () => {

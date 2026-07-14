@@ -475,3 +475,9 @@ The release build emits 910.81 kB minified/247.77 kB gzip initial JavaScript and
 Final relief dispatch is one synchronous mission-reducer event at sector settlement and does not enter the fixed-step loop. The staging Command Deck, operational cleanup ledger, route/reward flow, and snapshot schema are unchanged. `OperationalMapScene` has no fresh runtime importer after the redundant `Proceed to Extraction` stop is removed, so Vite omits that DOM presentation from the initial graph while the source and reducer-compatible `operationalMap` restore target remain available for deployed checkpoint recovery.
 
 The release build emits 914.17 kB minified/248.88 kB gzip initial JavaScript and unchanged 62.38/12.95 kB CSS. This is a 10.68/2.83 kB initial-JavaScript reduction from the deployed work order 134 build. No dependency, simulation budget, RNG stream, or warning threshold changes; the existing initial-chunk warning remains open.
+
+## Work order 136 embedded-route budgets
+
+`RouteNavigation` projects one source, one optional target, one mission contract/objective, and exactly three generated route records only when the extraction-stage hub opens. Each option retains at most two exceptional note strings. The projection, constellation state overrides, and bounded DOM route cards never enter gameplay simulation, generation RNG, collision, targeting, actor, projectile, effect, or proc loops. Route outcomes still execute once through their existing reducer path.
+
+The release build emits 916.14 kB minified/249.61 kB gzip initial JavaScript and 63.07/13.06 kB CSS. Relative to work order 135, the compact read model, route-mode constellation state, snapshot recovery, and responsive cards add 1.97/0.73 kB JavaScript and 0.69/0.11 kB CSS after the old `RouteScene` importer is removed. No dependency, simulation budget, RNG stream, or warning threshold changes; the existing initial-chunk warning remains open.

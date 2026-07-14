@@ -117,7 +117,6 @@ import { MainMenuScene } from '../ui/MainMenuScene';
 import { PauseScene } from '../ui/PauseScene';
 import { RewardScene } from '../ui/RewardScene';
 import { RouteEventScene } from '../ui/RouteEventScene';
-import { RouteScene } from '../ui/RouteScene';
 import { RunSummaryScene } from '../ui/RunSummaryScene';
 import { SettingsScene } from '../ui/SettingsScene';
 import { SectorTransitionScene } from '../ui/SectorTransitionScene';
@@ -1778,17 +1777,35 @@ export class GameApp {
   }
 
   private showRouteChoice(): void {
+    const schedule = this.getCurrentMissionSchedule();
+    const sourceSectorIndex = this.runSession.currentSectorIndex;
+    const targetSectorIndex =
+      sourceSectorIndex + 1 < this.currentRun.sectors.length ? sourceSectorIndex + 1 : null;
+    const returnToRoutePlot = () => this.showRouteChoice();
     this.sceneManager.switchTo(
-      new RouteScene(
+      new SectorTransitionScene(
         this.uiRoot,
         this.currentRun,
         this.runSession,
         this.selectedContract,
-        (route) => {
-          this.handleRouteChoice(route);
+        () => {},
+        createMissionReadModel(schedule, this.runSession.mission),
+        createMissionDebugState(schedule, this.runSession.mission),
+        () => void this.showCrewQuarters(returnToRoutePlot),
+        () => void this.showFleetBay(returnToRoutePlot, 'Return to Route Plot'),
+        () => void this.showApexDossier(null, null, returnToRoutePlot),
+        () => this.showNavigationShop(returnToRoutePlot),
+        () => this.showNavigationFoundry(returnToRoutePlot, 'Return to Route Plot'),
+        {},
+        null,
+        {
+          sourceSectorIndex,
+          targetSectorIndex,
+          onChoose: (route) => this.handleRouteChoice(route)
         }
       )
     );
+    this.checkpointRun('operationalMap', `Route plot after sector ${sourceSectorIndex + 1}`);
   }
 
   private handleRouteChoice(route: RouteOption): void {
@@ -2044,7 +2061,7 @@ export class GameApp {
     this.advanceAfterReward();
   }
 
-  private showNavigationShop(): void {
+  private showNavigationShop(onBack: () => void = () => this.showSectorTransition()): void {
     this.sceneManager.switchTo(
       new ShopScene(
         this.uiRoot,
@@ -2053,12 +2070,15 @@ export class GameApp {
         this.selectedContract,
         (itemId, price) => this.buyShopItem(itemId, price),
         () => this.rerollShop(),
-        () => this.showSectorTransition()
+        onBack
       )
     );
   }
 
-  private showNavigationFoundry(): void {
+  private showNavigationFoundry(
+    onBack: () => void = () => this.showSectorTransition(),
+    backLabel = 'Return to Navigation'
+  ): void {
     const sector = getCurrentSector(this.currentRun, this.runSession);
     const crewAssist = getCrewFoundryAssist(this.currentRun.crewRoster, this.runSession.crewRoster);
     const carrierInfluence = createCarrierInfluence(
@@ -2117,10 +2137,10 @@ export class GameApp {
               detailId: `history-${engineering.history.length}`
             });
           }
-          this.showSectorTransition();
+          onBack();
         },
         crewAssist?.label ?? null,
-        'Return to Navigation',
+        backLabel,
         'Carrier hardpoint draft. Changes remain reversible until commit.'
       )
     );
@@ -2877,6 +2897,8 @@ export class GameApp {
           this.showMissionBranch();
         } else if (stage.kind === 'relief') {
           this.showMissionRelief();
+        } else if (stage.kind === 'extraction') {
+          this.showRouteChoice();
         } else {
           throw new Error(`Operational-map snapshot points to ${stage.kind}.`);
         }
