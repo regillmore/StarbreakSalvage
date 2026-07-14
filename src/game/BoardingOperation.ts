@@ -15,12 +15,7 @@ import type { MissionObjectivePlan, MissionObjectiveOutcome } from './ObjectiveD
 
 export type BoardingOperationalRole = Extract<ExpeditionOperationalRole, 'detour' | 'pursuit'>;
 export type BoardingOperationStatus =
-  | 'available'
-  | 'active'
-  | 'success'
-  | 'partialSuccess'
-  | 'failure'
-  | 'retreated';
+  'available' | 'active' | 'success' | 'partialSuccess' | 'failure' | 'retreated';
 export type BoardingLootCustody = 'unclaimed' | 'held' | 'stowed' | 'lost';
 
 export interface BoardingDoorPlan {
@@ -135,8 +130,10 @@ export function createBoardingCampaignPlan(options: {
     .map((_, index) => index)
     .filter((index) => index > 0 && index < options.sectors.length - 1);
   const shuffledIndexes = rng.fork('sectors').shuffle(eligibleIndexes);
-  const selectedIndexes = BOARDING_CONTRACTS.map((_, index) =>
-    shuffledIndexes[index % Math.max(1, shuffledIndexes.length)] ?? Math.min(index + 1, options.sectors.length - 1)
+  const selectedIndexes = BOARDING_CONTRACTS.map(
+    (_, index) =>
+      shuffledIndexes[index % Math.max(1, shuffledIndexes.length)] ??
+      Math.min(index + 1, options.sectors.length - 1)
   ).sort((left, right) => left - right);
   const shuffledContracts = rng.fork('contracts').shuffle(BOARDING_CONTRACTS);
   const operations = selectedIndexes.map((sectorIndex, index) => {
@@ -169,7 +166,9 @@ export function createBoardingOperationPlan(options: {
     `${options.seed}:boarding:${options.saveFingerprint}:${options.sectorIndex}:${contract.id}:${options.operationalRole}`
   );
   const middleCount = rng.int(2, 4);
-  const middleKinds = rng.fork('rooms').shuffle(contract.roomKinds.filter((kind) => kind !== 'airlock' && kind !== 'extraction'));
+  const middleKinds = rng
+    .fork('rooms')
+    .shuffle(contract.roomKinds.filter((kind) => kind !== 'airlock' && kind !== 'extraction'));
   const kinds: BoardingRoomKind[] = ['airlock'];
   for (let index = 0; index < middleCount; index += 1) {
     kinds.push(middleKinds[index % Math.max(1, middleKinds.length)] ?? 'corridor');
@@ -189,9 +188,10 @@ export function createBoardingOperationPlan(options: {
       index > 0 && index < kinds.length - 1 && index % 2 === 1
         ? (hazards[index % hazards.length] ?? null)
         : null,
-    subsystem: kind === 'subsystem' || kind === 'reactor' || kind === 'bridge' || kind === 'hangar'
-      ? formatSubsystem(kind)
-      : null
+    subsystem:
+      kind === 'subsystem' || kind === 'reactor' || kind === 'bridge' || kind === 'hangar'
+        ? formatSubsystem(kind)
+        : null
   }));
   const doors = rooms.slice(1).map<BoardingDoorPlan>((room, index) => ({
     id: `boarding-door-s${options.sectorIndex + 1}-${index + 1}`,
@@ -220,7 +220,9 @@ export function createBoardingOperationPlan(options: {
     sectorIndex: options.sectorIndex,
     operationalRole: options.operationalRole,
     scrollLength,
-    extractionSeconds: contract.objectiveKinds.includes('timedExtraction') ? 75 + kinds.length * 8 : null,
+    extractionSeconds: contract.objectiveKinds.includes('timedExtraction')
+      ? 75 + kinds.length * 8
+      : null,
     rooms,
     doors,
     loot,
@@ -250,10 +252,13 @@ export function getBoardingOperationForNode(
   plan: BoardingCampaignPlan,
   node: { readonly sectorIndex: number; readonly operationalRole: ExpeditionOperationalRole }
 ): BoardingOperationPlan | null {
-  return plan.operations.find(
+  const exact = plan.operations.find(
     (operation) =>
-      operation.sectorIndex === node.sectorIndex && operation.operationalRole === node.operationalRole
-  ) ?? null;
+      operation.sectorIndex === node.sectorIndex &&
+      operation.operationalRole === node.operationalRole
+  );
+  if (exact || node.operationalRole !== 'pursuit') return exact ?? null;
+  return plan.operations.find((operation) => operation.sectorIndex === node.sectorIndex) ?? null;
 }
 
 export function createBoardingMissionObjectivePlan(
@@ -319,19 +324,21 @@ export function projectSectorForBoarding(
         distance: Math.round(landmark.distance * ratio),
         label: operation.rooms[index % operation.rooms.length]?.label ?? landmark.label
       })),
-      hazards: sector.features.hazards.slice(0, Math.max(1, Math.min(3, operation.rooms.length - 2))).map((hazard, index) => {
-        const room = operation.rooms[index + 1] ?? operation.rooms[0]!;
-        const startDistance = Math.max(80, room.startDistance + 22);
-        const endDistance = Math.min(operation.scrollLength - 40, startDistance + 72);
-        return {
-          ...hazard,
-          id: `${operation.id}:hazard:${index + 1}`,
-          label: formatHazard(room.hazard ?? 'securityGrid'),
-          telegraphDistance: Math.max(0, startDistance - 48),
-          startDistance,
-          endDistance
-        };
-      })
+      hazards: sector.features.hazards
+        .slice(0, Math.max(1, Math.min(3, operation.rooms.length - 2)))
+        .map((hazard, index) => {
+          const room = operation.rooms[index + 1] ?? operation.rooms[0]!;
+          const startDistance = Math.max(80, room.startDistance + 22);
+          const endDistance = Math.min(operation.scrollLength - 40, startDistance + 72);
+          return {
+            ...hazard,
+            id: `${operation.id}:hazard:${index + 1}`,
+            label: formatHazard(room.hazard ?? 'securityGrid'),
+            telegraphDistance: Math.max(0, startDistance - 48),
+            startDistance,
+            endDistance
+          };
+        })
     },
     arena: null,
     finale: null,
@@ -367,7 +374,8 @@ export function settleBoardingOperation(options: {
   readonly completionRatio: number;
   readonly retreated: boolean;
 }): BoardingSettlementResult {
-  if (options.state.planId !== options.plan.id) return rejected(options.state, 'Boarding plan mismatch');
+  if (options.state.planId !== options.plan.id)
+    return rejected(options.state, 'Boarding plan mismatch');
   if (!options.plan.operations.some((operation) => operation.id === options.operation.id)) {
     return rejected(options.state, 'Unknown boarding operation');
   }
@@ -385,19 +393,19 @@ export function settleBoardingOperation(options: {
   if (!current || !['available', 'active'].includes(current.status)) {
     return rejected(options.state, 'Boarding operation already closed');
   }
-  const status: BoardingOperationStatus = options.retreated
-    ? 'retreated'
-    : options.outcome;
+  const status: BoardingOperationStatus = options.retreated ? 'retreated' : options.outcome;
   const ratio = clamp01(options.completionRatio);
-  const securedCount = status === 'success'
-    ? options.operation.rooms.length
-    : Math.floor(options.operation.rooms.length * ratio);
+  const securedCount =
+    status === 'success'
+      ? options.operation.rooms.length
+      : Math.floor(options.operation.rooms.length * ratio);
   const breachedCount = Math.min(options.operation.doors.length, Math.max(0, securedCount - 1));
-  const custody: BoardingLootCustody = status === 'success'
-    ? 'stowed'
-    : (status === 'partialSuccess' || status === 'retreated') && ratio >= 0.5
-      ? 'held'
-      : 'lost';
+  const custody: BoardingLootCustody =
+    status === 'success'
+      ? 'stowed'
+      : (status === 'partialSuccess' || status === 'retreated') && ratio >= 0.5
+        ? 'held'
+        : 'lost';
   const operationState: BoardingOperationState = {
     operationId: options.operation.id,
     status,
@@ -407,18 +415,21 @@ export function settleBoardingOperation(options: {
     completionRatio: ratio,
     cleanupActorsRetained: 0
   };
-  const unlockedHooks = status === 'success' || status === 'partialSuccess'
-    ? options.operation.integrations
-        .filter((integration) => integration !== 'carrier')
-        .map((integration) => `${integration}:${options.operation.contractId}`)
-    : [];
+  const unlockedHooks =
+    status === 'success' || status === 'partialSuccess'
+      ? options.operation.integrations
+          .filter((integration) => integration !== 'carrier')
+          .map((integration) => `${integration}:${options.operation.contractId}`)
+      : [];
   const state: BoardingCampaignState = {
     ...options.state,
     operations: options.state.operations.map((operation) =>
       operation.operationId === options.operation.id ? operationState : operation
     ),
     unlockedHooks: [...new Set([...options.state.unlockedHooks, ...unlockedHooks])],
-    processedEventIds: [...options.state.processedEventIds, options.eventId].slice(-MAX_BOARDING_EVENTS),
+    processedEventIds: [...options.state.processedEventIds, options.eventId].slice(
+      -MAX_BOARDING_EVENTS
+    ),
     history: [
       ...options.state.history,
       {
@@ -442,7 +453,8 @@ export function settleBoardingOperation(options: {
 export function validateBoardingCampaignPlan(plan: BoardingCampaignPlan): string[] {
   const errors: string[] = [];
   const ids = new Set<string>();
-  if (plan.operations.length < 4) errors.push('Boarding campaign requires at least four operations.');
+  if (plan.operations.length < 4)
+    errors.push('Boarding campaign requires at least four operations.');
   const targets = new Set<BoardingTargetKind>();
   const objectives = new Set<BoardingObjectiveKind>();
   for (const operation of plan.operations) {
@@ -459,13 +471,23 @@ export function validateBoardingCampaignPlan(plan: BoardingCampaignPlan): string
     if (operation.doors.length !== operation.rooms.length - 1) {
       errors.push(`Boarding operation ${operation.id} door chain is incomplete.`);
     }
-    if (operation.loot.length < 1) errors.push(`Boarding operation ${operation.id} has no custody loot.`);
+    if (operation.loot.length < 1)
+      errors.push(`Boarding operation ${operation.id} has no custody loot.`);
   }
   for (const target of ['capitalShip', 'station', 'wreck', 'derelict'] as const) {
     if (!targets.has(target)) errors.push(`Boarding campaign is missing target ${target}.`);
   }
-  for (const objective of ['breach', 'secure', 'rescue', 'sabotage', 'salvage', 'escort', 'timedExtraction'] as const) {
-    if (!objectives.has(objective)) errors.push(`Boarding campaign is missing objective ${objective}.`);
+  for (const objective of [
+    'breach',
+    'secure',
+    'rescue',
+    'sabotage',
+    'salvage',
+    'escort',
+    'timedExtraction'
+  ] as const) {
+    if (!objectives.has(objective))
+      errors.push(`Boarding campaign is missing objective ${objective}.`);
   }
   return errors;
 }
@@ -476,18 +498,24 @@ export function validateBoardingCampaignState(
 ): string[] {
   const errors: string[] = [];
   if (state.planId !== plan.id) errors.push('Boarding state plan mismatch.');
-  if (state.operations.length !== plan.operations.length) errors.push('Boarding state operation count mismatch.');
-  if (state.history.length > MAX_BOARDING_HISTORY || state.processedEventIds.length > MAX_BOARDING_EVENTS) {
+  if (state.operations.length !== plan.operations.length)
+    errors.push('Boarding state operation count mismatch.');
+  if (
+    state.history.length > MAX_BOARDING_HISTORY ||
+    state.processedEventIds.length > MAX_BOARDING_EVENTS
+  ) {
     errors.push('Boarding state history exceeds bounds.');
   }
-  if (new Set(state.processedEventIds).size !== state.processedEventIds.length) errors.push('Boarding state has duplicate event ids.');
+  if (new Set(state.processedEventIds).size !== state.processedEventIds.length)
+    errors.push('Boarding state has duplicate event ids.');
   for (const operation of state.operations) {
     const source = plan.operations.find((candidate) => candidate.id === operation.operationId);
     if (!source) {
       errors.push(`Boarding state references unknown operation ${operation.operationId}.`);
       continue;
     }
-    if (operation.cleanupActorsRetained !== 0) errors.push(`Boarding operation ${operation.operationId} retained cleanup actors.`);
+    if (operation.cleanupActorsRetained !== 0)
+      errors.push(`Boarding operation ${operation.operationId} retained cleanup actors.`);
     if (operation.loot.some((loot) => !source.loot.some((candidate) => candidate.id === loot.id))) {
       errors.push(`Boarding operation ${operation.operationId} has unknown loot.`);
     }
@@ -499,41 +527,90 @@ export function formatBoardingCampaignSummary(
   plan: BoardingCampaignPlan,
   state: BoardingCampaignState
 ): string {
-  const closed = state.operations.filter((operation) => operation.status !== 'available' && operation.status !== 'active');
-  const custody = state.operations.flatMap((operation) => operation.loot).filter((loot) => loot.custody === 'stowed' || loot.custody === 'held');
+  const closed = state.operations.filter(
+    (operation) => operation.status !== 'available' && operation.status !== 'active'
+  );
+  const custody = state.operations
+    .flatMap((operation) => operation.loot)
+    .filter((loot) => loot.custody === 'stowed' || loot.custody === 'held');
   return `${closed.length}/${plan.operations.length} incursions | custody ${custody.length} | ${closed.map((operation) => `${plan.operations.find((candidate) => candidate.id === operation.operationId)?.title ?? operation.operationId}:${operation.status}`).join(', ') || 'no boarding outcomes'}`;
 }
 
-function getOperationState(state: BoardingCampaignState, id: string): BoardingOperationState | null {
+function getOperationState(
+  state: BoardingCampaignState,
+  id: string
+): BoardingOperationState | null {
   return state.operations.find((operation) => operation.operationId === id) ?? null;
 }
 
 function rejected(state: BoardingCampaignState, label: string): BoardingSettlementResult {
-  return { state, disposition: 'rejected', status: 'failure', stowedLoot: [], unlockedHooks: [], label };
+  return {
+    state,
+    disposition: 'rejected',
+    status: 'failure',
+    stowedLoot: [],
+    unlockedHooks: [],
+    label
+  };
 }
 
 function formatRoomLabel(kind: BoardingRoomKind): string {
-  return ({
-    airlock: 'Breach Airlock', corridor: 'Armored Corridor', cargo: 'Claim Hold', quarters: 'Crew Quarters',
-    brig: 'Sealed Brig', subsystem: 'Subsystem Spine', reactor: 'Reactor Gallery', hangar: 'Hangar Deck',
-    bridge: 'Command Bridge', extraction: 'Extraction Lock'
-  } satisfies Record<BoardingRoomKind, string>)[kind];
+  return (
+    {
+      airlock: 'Breach Airlock',
+      corridor: 'Armored Corridor',
+      cargo: 'Claim Hold',
+      quarters: 'Crew Quarters',
+      brig: 'Sealed Brig',
+      subsystem: 'Subsystem Spine',
+      reactor: 'Reactor Gallery',
+      hangar: 'Hangar Deck',
+      bridge: 'Command Bridge',
+      extraction: 'Extraction Lock'
+    } satisfies Record<BoardingRoomKind, string>
+  )[kind];
 }
 
 function formatSubsystem(kind: BoardingRoomKind): string {
-  return kind === 'reactor' ? 'power core' : kind === 'bridge' ? 'command lattice' : kind === 'hangar' ? 'launch control' : 'defense bus';
+  return kind === 'reactor'
+    ? 'power core'
+    : kind === 'bridge'
+      ? 'command lattice'
+      : kind === 'hangar'
+        ? 'launch control'
+        : 'defense bus';
 }
 
 function formatHazard(kind: BoardingHazardKind): string {
-  return ({ decompression: 'DECOMPRESSION', coolant: 'COOLANT FLOOD', powerArc: 'POWER ARC', fire: 'DECK FIRE', sporeCloud: 'SPORE CLOUD', securityGrid: 'SECURITY GRID' } satisfies Record<BoardingHazardKind, string>)[kind];
+  return (
+    {
+      decompression: 'DECOMPRESSION',
+      coolant: 'COOLANT FLOOD',
+      powerArc: 'POWER ARC',
+      fire: 'DECK FIRE',
+      sporeCloud: 'SPORE CLOUD',
+      securityGrid: 'SECURITY GRID'
+    } satisfies Record<BoardingHazardKind, string>
+  )[kind];
 }
 
 function formatTarget(kind: BoardingTargetKind): string {
-  return ({ capitalShip: 'Capital Ship', station: 'Station', wreck: 'Wreck', derelict: 'Derelict' } satisfies Record<BoardingTargetKind, string>)[kind];
+  return (
+    {
+      capitalShip: 'Capital Ship',
+      station: 'Station',
+      wreck: 'Wreck',
+      derelict: 'Derelict'
+    } satisfies Record<BoardingTargetKind, string>
+  )[kind];
 }
 
 function formatObjectives(kinds: readonly BoardingObjectiveKind[]): string {
-  return kinds.map((kind) => kind === 'timedExtraction' ? 'Timed Extraction' : `${kind[0]!.toUpperCase()}${kind.slice(1)}`).join(' / ');
+  return kinds
+    .map((kind) =>
+      kind === 'timedExtraction' ? 'Timed Extraction' : `${kind[0]!.toUpperCase()}${kind.slice(1)}`
+    )
+    .join(' / ');
 }
 
 function clamp01(value: number): number {

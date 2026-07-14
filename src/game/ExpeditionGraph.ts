@@ -544,7 +544,12 @@ export function createExpeditionPathReadModel(
   progress: ExpeditionProgressState
 ): ExpeditionPathReadModel {
   const nodeById = new Map(graph.nodes.map((node) => [node.id, node]));
-  const visitedNodeIds = uniqueStrings(progress.visitedNodeIds).filter((id) => nodeById.has(id));
+  const executableNodeIds = new Set(
+    graph.nodes.filter(isFreshMissionExpeditionNode).map((node) => node.id)
+  );
+  const visitedNodeIds = uniqueStrings(progress.visitedNodeIds).filter((id) =>
+    executableNodeIds.has(id)
+  );
   const currentNodeId = visitedNodeIds.at(-1) ?? graph.startNodeId;
   const currentNode = nodeById.get(currentNodeId) ?? nodeById.get(graph.startNodeId);
   const visitedSectorCount = new Set(
@@ -558,7 +563,7 @@ export function createExpeditionPathReadModel(
     currentNodeLabel,
     visitedNodeIds,
     visitedNodeCount: visitedNodeIds.length,
-    totalNodeCount: graph.nodes.length,
+    totalNodeCount: executableNodeIds.size,
     visitedSectorCount,
     totalSectorCount: graph.sectors.length,
     decisionCount: progress.decisions.length,
@@ -816,7 +821,9 @@ function createGateRewardHooks(
 
 function createExpeditionCapacity(graph: Omit<ExpeditionGraph, 'capacity'>): ExpeditionCapacity {
   const baseline = resolveExpeditionPath({ ...graph, capacity: createEmptyCapacity() }, []);
-  const optionalNodeIds = graph.nodes.filter((node) => node.optional).map((node) => node.id);
+  const optionalNodeIds = graph.nodes
+    .filter((node) => node.optional && isFreshMissionExpeditionNode(node))
+    .map((node) => node.id);
 
   return {
     requiredNodeCount: baseline.nodeIds.length,
@@ -827,6 +834,10 @@ function createExpeditionCapacity(graph: Omit<ExpeditionGraph, 'capacity'>): Exp
     expandedTargetSeconds:
       baseline.targetSeconds + sumNodeDuration(graph, optionalNodeIds, 'targetSeconds')
   };
+}
+
+export function isFreshMissionExpeditionNode(node: ExpeditionEncounterNode): boolean {
+  return !node.optional || node.operationalRole === 'pursuit';
 }
 
 function createEmptyCapacity(): ExpeditionCapacity {

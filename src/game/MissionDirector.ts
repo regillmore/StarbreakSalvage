@@ -246,25 +246,32 @@ export function createMissionSchedule(
   const contract = selectMissionContract(graph, sectorIndex, sectorPlan.actId);
   const primaryObjective = getMissionObjective(contract.primaryObjectiveId);
   const optionalObjective = getMissionObjective(contract.optionalObjectiveId);
-  const authoredBranches = branches.map((branch, branchIndex): ExpeditionBranch => ({
-    ...branch,
-    label:
-      branchIndex === 0
-        ? `${contract.title} approach decision`
-        : `${contract.title} extraction decision`,
-    options: branch.options.map((option) =>
+  const legacyApproachBranch = branches.find((branch) => branch.sourceNodeId === advance.id)!;
+  const sourcePursuitBranch = branches.find((branch) => branch.sourceNodeId === gateOperation.id)!;
+  const nextSector = graph.sectors[sectorIndex + 1];
+  const pursuitBranch: ExpeditionBranch = {
+    ...sourcePursuitBranch,
+    label: `${contract.title} post-sector choice`,
+    options: sourcePursuitBranch.options.map((option) =>
       option.default
-        ? option
+        ? {
+            ...option,
+            label: nextSector ? `Continue to ${nextSector.sectorName}` : 'Continue beyond the act',
+            summary: nextSector
+              ? `Leave local orbit and continue along the revealed route to ${nextSector.sectorName}.`
+              : 'Leave local orbit and commit the completed act to the frontier handoff.'
+          }
         : {
             ...option,
-            summary: `High-risk optional: ${optionalObjective.summary} ${option.summary}`
+            label: `Hold orbit: ${pursuit.label}`,
+            summary: `Stay at this sector once for a high-risk optional challenge. ${optionalObjective.summary} ${option.summary}`
           }
     )
-  }));
-  const approachBranch = authoredBranches.find((branch) => branch.sourceNodeId === advance.id)!;
-  const pursuitBranch = authoredBranches.find(
-    (branch) => branch.sourceNodeId === gateOperation.id
-  )!;
+  };
+  // Retain the former approach branch as unreachable compatibility data so a v11
+  // checkpoint taken before this flow change can still resolve safely. Fresh
+  // missions advance directly from the opening operation into gate staging.
+  const authoredBranches = [legacyApproachBranch, pursuitBranch];
 
   const prefix = `mission_s${String(sectorIndex + 1).padStart(2, '0')}`;
   const ids = {
@@ -295,10 +302,10 @@ export function createMissionSchedule(
       'mission_operation_advance',
       `${primaryObjective.label}: advance`,
       advance,
-      { objectiveId: primaryObjective.id, nextStageId: ids.approachBranch }
+      { objectiveId: primaryObjective.id, nextStageId: ids.staging }
     ),
-    createStage(prefix, 'approach-map', 'mission_branch', approachBranch.label, advance, {
-      branchId: approachBranch.id
+    createStage(prefix, 'approach-map', 'mission_branch', legacyApproachBranch.label, advance, {
+      branchId: legacyApproachBranch.id
     }),
     createStage(prefix, 'optional-detour', 'mission_detour_operation', detour.label, detour, {
       optional: true,
@@ -345,9 +352,9 @@ export function createMissionSchedule(
       extraction
     )
   ];
-  const operationStageIds = [ids.advance, ids.detour, ids.gate, ids.pursuit];
-  const optionalStageIds = [ids.detour, ids.pursuit];
-  const branchStageIds = [ids.approachBranch, ids.pursuitBranch];
+  const operationStageIds = [ids.advance, ids.gate, ids.pursuit];
+  const optionalStageIds = [ids.pursuit];
+  const branchStageIds = [ids.pursuitBranch];
   const reliefStageIds = [ids.staging, ids.relief];
 
   return {
@@ -360,16 +367,16 @@ export function createMissionSchedule(
     startStageId: ids.briefing,
     operationStageId: ids.advance,
     operationStageIds,
-    optionalStageId: ids.detour,
+    optionalStageId: ids.pursuit,
     optionalStageIds,
-    branchStageId: ids.approachBranch,
+    branchStageId: ids.pursuitBranch,
     branchStageIds,
     reliefStageId: ids.staging,
     reliefStageIds,
     extractionStageId: ids.extraction,
     failureStageId: ids.failure,
     completionStageId: ids.completion,
-    branch: approachBranch,
+    branch: pursuitBranch,
     branches: authoredBranches,
     branchConditions: Object.fromEntries(
       authoredBranches

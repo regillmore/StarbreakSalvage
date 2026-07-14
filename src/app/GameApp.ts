@@ -677,10 +677,7 @@ export class GameApp {
       }),
       this.runSession.currentSectorIndex,
       this.runSession.expedition,
-      getActiveFittedItems(
-        this.runSession.itemInstances,
-        this.runSession.engineering.committed
-      ),
+      getActiveFittedItems(this.runSession.itemInstances, this.runSession.engineering.committed),
       this.runSession.credits,
       this.runSession.salvage,
       this.debugEnabled,
@@ -905,6 +902,33 @@ export class GameApp {
         salvage: this.runSession.salvage
       }
     });
+    let stage = getMissionStage(
+      this.getCurrentMissionSchedule(),
+      this.runSession.mission.currentStageId
+    );
+    if (stage.kind === 'relief') {
+      this.dispatchCurrentMission({
+        id: `${stage.id}:debug-staging`,
+        type: 'completeRelief'
+      });
+    }
+    stage = getMissionStage(
+      this.getCurrentMissionSchedule(),
+      this.runSession.mission.currentStageId
+    );
+    if (stage.operationalRole === 'gate') {
+      this.dispatchCurrentMission({
+        id: `${stage.id}:debug-gate-complete`,
+        type: 'completeCombat',
+        checkpoint: {
+          hull: getEffectiveShipStats(this.selectedContract, this.runSession).maxHull,
+          scrollDistance: 1_800,
+          worldOffset: 11_800,
+          credits: this.runSession.credits,
+          salvage: this.runSession.salvage
+        }
+      });
+    }
     const schedule = this.getCurrentMissionSchedule();
     const optional = getMissionBranchOptions(schedule, this.runSession.mission).find(
       (option) => !option.default
@@ -1284,10 +1308,7 @@ export class GameApp {
         outcome: campaignOutcome,
         checkpoint: operationCheckpoint
       });
-      const fleetInfluence = createFleetInfluence(
-        this.currentRun.fleet,
-        this.runSession.fleet
-      );
+      const fleetInfluence = createFleetInfluence(this.currentRun.fleet, this.runSession.fleet);
       const fleetSalvage =
         boundary.disposition === 'applied' &&
         operationNode.optional &&
@@ -1295,8 +1316,7 @@ export class GameApp {
           ? Math.min(
               3,
               fleetInfluence.optionalSalvageBonus +
-                Number(operationNode.operationalRole === 'pursuit') *
-                  fleetInfluence.pursuitControl
+                Number(operationNode.operationalRole === 'pursuit') * fleetInfluence.pursuitControl
             )
           : 0;
       if (fleetSalvage > 0) {
@@ -1392,20 +1412,25 @@ export class GameApp {
     });
     schedule = this.getCurrentMissionSchedule();
     stage = getMissionStage(schedule, this.runSession.mission.currentStageId);
-    const branch = stage.branchId
-      ? schedule.branches.find((candidate) => candidate.id === stage.branchId)
-      : null;
-    const direct = branch?.options.find((option) => option.default);
-    if (!branch || !direct) {
-      throw new Error('Debug gate setup could not resolve the staging route.');
+    if (stage.kind === 'branch') {
+      const branch = stage.branchId
+        ? schedule.branches.find((candidate) => candidate.id === stage.branchId)
+        : null;
+      const direct = branch?.options.find((option) => option.default);
+      if (!branch || !direct) {
+        throw new Error('Debug gate setup could not resolve the staging route.');
+      }
+      this.dispatchCurrentMission({
+        id: `${stage.id}:debug-direct`,
+        type: 'selectBranch',
+        optionId: direct.id
+      });
+      recordExpeditionBranchDecision(this.currentRun, this.runSession, branch.id, direct.id);
+      stage = getMissionStage(schedule, this.runSession.mission.currentStageId);
     }
-    this.dispatchCurrentMission({
-      id: `${stage.id}:debug-direct`,
-      type: 'selectBranch',
-      optionId: direct.id
-    });
-    recordExpeditionBranchDecision(this.currentRun, this.runSession, branch.id, direct.id);
-    stage = getMissionStage(schedule, this.runSession.mission.currentStageId);
+    if (stage.kind !== 'relief' || stage.operationalRole !== 'staging') {
+      throw new Error('Debug gate setup could not reach the staging checkpoint.');
+    }
     this.dispatchCurrentMission({
       id: `${stage.id}:debug-staging`,
       type: 'completeRelief'
@@ -1422,9 +1447,7 @@ export class GameApp {
     const boardingOperation = node
       ? getBoardingOperationForNode(this.currentRun.boardingCampaign, node)
       : null;
-    const apexEncounter = node
-      ? getApexEncounterForNode(this.currentRun.apexHunts, node)
-      : null;
+    const apexEncounter = node ? getApexEncounterForNode(this.currentRun.apexHunts, node) : null;
     if (apexEncounter) {
       recordApexHuntEvent(this.currentRun, this.runSession, {
         id: `${stage.id}:apex-failed:${result.reason}`,
@@ -1478,6 +1501,25 @@ export class GameApp {
     if (!currentBranch) {
       throw new Error(`Operational map stage ${branchStage.id} has no branch.`);
     }
+    if (branchStage.id !== schedule.branchStageId) {
+      const direct = currentBranch.options.find((option) => option.default);
+      if (!direct) throw new Error(`Legacy branch ${currentBranch.id} has no safe continuation.`);
+      const result = this.dispatchCurrentMission({
+        id: `${branchStage.id}:compatibility-direct:${direct.id}`,
+        type: 'selectBranch',
+        optionId: direct.id
+      });
+      if (result.disposition === 'advanced') {
+        recordExpeditionBranchDecision(
+          this.currentRun,
+          this.runSession,
+          currentBranch.id,
+          direct.id
+        );
+        this.showMissionRelief();
+      }
+      return;
+    }
     const sector = getCurrentSector(this.currentRun, this.runSession);
     const capturableRival = getCapturableRivalForSector(
       this.currentRun.factionCampaign,
@@ -1512,21 +1554,22 @@ export class GameApp {
       this.runSession.factionFronts,
       this.runSession.currentSectorIndex
     );
-    const availableMissionOptions = getMissionBranchOptions(
-      schedule,
-      this.runSession.mission
-    ).filter((option) => {
+    const conditionEligibleOptions = getMissionBranchOptions(schedule, this.runSession.mission);
+    const optionalSource = currentBranch.options.find((option) => !option.default) ?? null;
+    const optionalTarget = optionalSource
+      ? (this.currentRun.expedition.nodes.find((node) => node.id === optionalSource.targetNodeId) ??
+        null)
+      : null;
+    const optionalBoarding = optionalTarget
+      ? getBoardingOperationForNode(this.currentRun.boardingCampaign, optionalTarget)
+      : null;
+    const availableMissionOptions = conditionEligibleOptions.filter((option) => {
       if (option.default) return true;
-      const target = this.currentRun.expedition.nodes.find(
-        (node) => node.id === option.targetNodeId
-      );
-      const boarding = target
-        ? getBoardingOperationForNode(this.currentRun.boardingCampaign, target)
-        : null;
       return (
         carrierInfluence.optionalMissionAccess &&
-        (!boarding || carrierInfluence.boardingCapacity + fleetInfluence.boardingAssist > 0) &&
-        (!target || isFactionFrontNodeAvailable(frontInfluence, target))
+        (!optionalBoarding ||
+          carrierInfluence.boardingCapacity + fleetInfluence.boardingAssist > 0) &&
+        (!optionalTarget || isFactionFrontNodeAvailable(frontInfluence, optionalTarget))
       );
     });
     const missionOptions = projectFactionFrontBranchOptions(
@@ -1534,79 +1577,107 @@ export class GameApp {
       this.currentRun.expedition.nodes,
       frontInfluence
     );
+    const direct = missionOptions.find((option) => option.default);
+    const optional = missionOptions.find((option) => !option.default) ?? optionalSource;
+    if (!direct || !optional) {
+      throw new Error(`Post-sector branch ${currentBranch.id} is incomplete.`);
+    }
+    const optionalAvailable = missionOptions.some((option) => option.id === optional.id);
+    const optionalUnavailableReason = optionalAvailable
+      ? null
+      : !conditionEligibleOptions.some((option) => option.id === optional.id)
+        ? 'The paired challenge requires a surviving hull and a successful required objective outcome.'
+        : !carrierInfluence.optionalMissionAccess
+          ? `${this.currentRun.carrierPlan.name} cannot support another local operation while hull, heat, or debt is outside mission limits.`
+          : optionalBoarding &&
+              carrierInfluence.boardingCapacity + fleetInfluence.boardingAssist <= 0
+            ? 'The paired challenge requires an available boarding team or fleet boarding assist.'
+            : 'The local faction front has closed this optional challenge for the current route state.';
+    const chooseOption = (optionId: string) => {
+      const option = currentBranch.options.find((candidate) => candidate.id === optionId);
+      if (!option) return;
+      const result = this.dispatchCurrentMission({
+        id: `${this.runSession.mission.currentStageId}:branch:${option.id}`,
+        type: 'selectBranch',
+        optionId: option.id
+      });
+
+      if (result.disposition !== 'advanced') return;
+
+      if (capturableRival && option.default) {
+        recordFactionCampaignEvent(
+          this.runSession,
+          this.currentRun.factionCampaign,
+          {
+            id: `${currentBranch.id}:${option.id}:spared:${capturableRival.id}`,
+            type: 'targetSpared',
+            sectorIndex: this.runSession.currentSectorIndex,
+            factionId: capturableRival.factionId,
+            rivalId: capturableRival.id
+          },
+          this.currentRun.factionFronts
+        );
+      }
+
+      recordExpeditionBranchDecision(this.currentRun, this.runSession, currentBranch.id, option.id);
+      const stage = getMissionStage(schedule, this.runSession.mission.currentStageId);
+      if (stage.kind === 'combat') {
+        this.showGameplay();
+      } else if (stage.kind === 'relief') {
+        this.showMissionRelief();
+      } else if (stage.kind === 'extraction') {
+        this.showRouteChoice();
+      }
+    };
     this.sceneManager.switchTo(
-      new OperationalMapScene(
+      new SectorTransitionScene(
         this.uiRoot,
-        this.currentRun.expedition,
-        this.runSession.expedition,
-        this.runSession.operational,
-        schedule,
-        this.runSession.mission,
+        this.currentRun,
+        this.runSession,
         this.selectedContract,
+        () => {},
         createMissionReadModel(schedule, this.runSession.mission),
         createMissionDebugState(schedule, this.runSession.mission),
-        missionOptions,
-        this.runSession.credits,
-        this.runSession.salvage,
-        (option) => {
-          const result = this.dispatchCurrentMission({
-            id: `${this.runSession.mission.currentStageId}:branch:${option.id}`,
-            type: 'selectBranch',
-            optionId: option.id
-          });
-
-          if (result.disposition !== 'advanced') {
-            return;
-          }
-
-          if (capturableRival && option.default) {
-            recordFactionCampaignEvent(
-              this.runSession,
-              this.currentRun.factionCampaign,
-              {
-                id: `${currentBranch.id}:${option.id}:spared:${capturableRival.id}`,
-                type: 'targetSpared',
-                sectorIndex: this.runSession.currentSectorIndex,
-                factionId: capturableRival.factionId,
-                rivalId: capturableRival.id
-              },
-              this.currentRun.factionFronts
-            );
-          }
-
-          recordExpeditionBranchDecision(
-            this.currentRun,
-            this.runSession,
-            currentBranch.id,
-            option.id
-          );
-          const stage = getMissionStage(schedule, this.runSession.mission.currentStageId);
-          if (stage.kind === 'combat') {
-            this.showGameplay();
-          } else if (stage.kind === 'relief') {
-            this.showMissionRelief();
-          } else if (stage.kind === 'extraction') {
-            this.showRouteChoice();
-          }
-        },
-        () => {},
-        [
-          capturableRival
-            ? `Rival option: extract and let ${capturableRival.name} recur, or pursue the optional lane to capture ${capturableRival.shipName}.`
-            : null,
-          crewCandidate
-            ? `Distress option: the optional lane can recover ${crewCandidate.callsign} and ${crewCandidate.wingName}.`
-            : null,
-          carrierInfluence.optionalMissionAccess
-            ? `${this.currentRun.carrierPlan.name}: optional operations available; support ${carrierInfluence.supportCapacity}, boarding ${carrierInfluence.boardingCapacity}.`
-            : `${this.currentRun.carrierPlan.name}: optional operation access restricted by carrier hull, heat, or debt.`
-        ]
-          .filter((copy): copy is string => Boolean(copy))
-          .join(' ') || null,
-        frontInfluence
+        () => void this.showCrewQuarters(),
+        () => void this.showFleetBay(() => this.showSectorTransition(), 'Return to Navigation'),
+        () => void this.showApexDossier(),
+        () => this.showNavigationShop(),
+        () => this.showNavigationFoundry(),
+        {},
+        {
+          optional: {
+            id: optional.id,
+            label: optional.label,
+            summary: [
+              optional.summary,
+              capturableRival
+                ? `Success can capture ${capturableRival.shipName}; continuing leaves ${capturableRival.name} in circulation.`
+                : null,
+              crewCandidate
+                ? `${crewCandidate.callsign} and ${crewCandidate.wingName} are inside the optional signal.`
+                : null
+            ]
+              .filter((copy): copy is string => Boolean(copy))
+              .join(' '),
+            available: optionalAvailable,
+            unavailableReason: optionalUnavailableReason
+          },
+          onward: {
+            id: direct.id,
+            label: direct.label,
+            summary: direct.summary,
+            available: true,
+            unavailableReason: null,
+            nextSectorIndex:
+              this.runSession.currentSectorIndex + 1 < this.currentRun.sectors.length
+                ? this.runSession.currentSectorIndex + 1
+                : null
+          },
+          onChoose: chooseOption
+        }
       )
     );
-    this.checkpointRun('operationalMap', `${branchStage.label} checkpoint`);
+    this.checkpointRun('sectorTransition', `${branchStage.label} checkpoint`);
   }
 
   private showMissionRelief(): void {
@@ -2116,6 +2187,11 @@ export class GameApp {
 
   private showSectorTransition(): void {
     const schedule = this.getCurrentMissionSchedule();
+    const stage = getMissionStage(schedule, this.runSession.mission.currentStageId);
+    if (stage.kind === 'branch') {
+      this.showMissionBranch();
+      return;
+    }
     this.checkpointRun(
       'sectorTransition',
       `Sector ${this.runSession.currentSectorIndex + 1} briefing`
@@ -2412,10 +2488,7 @@ export class GameApp {
       salvageRecovered: Math.max(result.salvage, this.runSession.salvage),
       itemTriggers: result.itemTriggers,
       itemIds: this.runSession.itemInstances.map((item) => item.itemId),
-      bonusUnlockIds: getResolvedApexUnlockIds(
-        this.currentRun.apexHunts,
-        this.runSession.apexHunts
-      )
+      bonusUnlockIds: getResolvedApexUnlockIds(this.currentRun.apexHunts, this.runSession.apexHunts)
     };
   }
 

@@ -488,7 +488,9 @@ function validateSnapshotSession(
   )!;
   if (
     (target === 'gameplay' && currentStage.kind !== 'combat') ||
-    (target === 'sectorTransition' && currentStage.kind !== 'briefing') ||
+    (target === 'sectorTransition' &&
+      currentStage.kind !== 'briefing' &&
+      currentStage.kind !== 'branch') ||
     (target === 'operationalMap' &&
       currentStage.kind !== 'branch' &&
       currentStage.kind !== 'relief') ||

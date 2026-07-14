@@ -187,11 +187,11 @@ export function createOperationalMapReadModel(options: {
           ? 'completed'
           : frontApplies && options.factionFront?.nodePolicy === 'close'
             ? 'closed'
-          : bypassed
-            ? 'bypassed'
-            : isNodeAvailable(options.graph, node.id, completedNodeIds, decisions)
-              ? 'available'
-              : 'planned';
+            : bypassed
+              ? 'bypassed'
+              : isNodeAvailable(options.graph, node.id, completedNodeIds, decisions)
+                ? 'available'
+                : 'planned';
     return {
       id: node.id,
       label:
@@ -229,7 +229,7 @@ export function createOperationalMapReadModel(options: {
     operationRange: '2 required / up to 4 with detour and pursuit',
     completedOperations,
     nodes,
-    summary: `${sector.sectorName} | ${completedOperations} operations settled | 2-4 operation itinerary${options.factionFront ? ` | ${options.factionFront.mapCue} ${options.factionFront.ownerFactionName} ${options.factionFront.stance}` : ''}`
+    summary: `${sector.sectorName} | ${completedOperations} operations settled | paired sector itinerary${options.factionFront ? ` | ${options.factionFront.mapCue} ${options.factionFront.ownerFactionName} ${options.factionFront.stance}` : ''}`
   };
 }
 

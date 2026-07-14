@@ -1,4 +1,5 @@
 import type { RunSkeleton } from './Generation';
+import { isFreshMissionExpeditionNode } from './ExpeditionGraph';
 
 export type VoyageSaveProfile = 'fresh' | 'progressed';
 export type VoyageRouteProfile = 'earlyExtraction' | 'standard' | 'completionist';
@@ -89,7 +90,12 @@ function measureCompletionist(
   run: RunSkeleton,
   saveProfile: VoyageSaveProfile
 ): VoyageDurationMeasurement {
-  return measurement(saveProfile, 'completionist', run.sectors.length, run.expedition.nodes);
+  return measurement(
+    saveProfile,
+    'completionist',
+    run.sectors.length,
+    run.expedition.nodes.filter(isFreshMissionExpeditionNode)
+  );
 }
 
 function measurement(

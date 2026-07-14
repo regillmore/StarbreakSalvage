@@ -172,15 +172,15 @@ describe('OperationalMap', () => {
     expect(getOperationalInfluence(state, 1, 'gate')).toBeUndefined();
   });
 
-  it('replays both optional decisions into four live combat operations', () => {
-    const run = generateRunSkeleton('OPERATIONAL-FOUR-OPS');
+  it('replays one paired optional decision into three live combat operations', () => {
+    const run = generateRunSkeleton('OPERATIONAL-THREE-OPS');
     const session = createRunSession(run, run.contracts[0]!);
     const schedule = createMissionSchedule(run.expedition, 0);
     dispatchMissionEvent(run, session, { id: 'brief', type: 'confirmBriefing' });
     dispatchMissionEvent(run, session, { id: 'entry', type: 'completeEntry' });
     const visitedRoles: string[] = [];
 
-    for (let operation = 0; operation < 4; operation += 1) {
+    for (let operation = 0; operation < 3; operation += 1) {
       const stage = getMissionStage(schedule, session.mission.currentStageId);
       visitedRoles.push(stage.operationalRole ?? 'none');
       dispatchMissionEvent(run, session, {
@@ -188,7 +188,7 @@ describe('OperationalMap', () => {
         type: 'completeCombat',
         checkpoint: CHECKPOINT
       });
-      if (operation === 0 || operation === 2) {
+      if (operation === 1) {
         const branchStage = getMissionStage(schedule, session.mission.currentStageId);
         const branch = schedule.branches.find(
           (candidate) => candidate.id === branchStage.branchId
@@ -200,13 +200,13 @@ describe('OperationalMap', () => {
           optionId: optional.id
         });
         recordExpeditionBranchDecision(run, session, branch.id, optional.id);
-      } else if (operation === 1) {
+      } else if (operation === 0) {
         dispatchMissionEvent(run, session, { id: 'staging', type: 'completeRelief' });
       }
     }
 
-    expect(visitedRoles).toEqual(['advance', 'detour', 'gate', 'pursuit']);
-    expect(session.expedition.decisions).toHaveLength(2);
+    expect(visitedRoles).toEqual(['advance', 'gate', 'pursuit']);
+    expect(session.expedition.decisions).toHaveLength(1);
     expect(getMissionStage(schedule, session.mission.currentStageId).kind).toBe('relief');
   });
 

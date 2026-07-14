@@ -9,6 +9,7 @@ import {
   createBoardingCampaignState,
   createBoardingMissionObjectivePlan,
   createBoardingTranslatedLoadout,
+  getBoardingOperationForNode,
   projectSectorForBoarding,
   settleBoardingOperation,
   validateBoardingCampaignPlan,
@@ -61,6 +62,19 @@ describe('BoardingOperation', () => {
     expect(objective.cleanupPolicy).toBe('clearField');
     expect(translated.summary).toContain('breach cutter');
     expect(translated.bomb).toContain('room-clear');
+  });
+
+  it('pairs legacy detour boarding contracts with the sector post-gate pursuit hold', () => {
+    const run = generateRunSkeleton('BOARDING-PAIRED-HOLD');
+    const operation = run.boardingCampaign.operations.find(
+      (candidate) => candidate.operationalRole === 'detour'
+    )!;
+    expect(
+      getBoardingOperationForNode(run.boardingCampaign, {
+        sectorIndex: operation.sectorIndex,
+        operationalRole: 'pursuit'
+      })
+    ).toBe(operation);
   });
 
   it('resolves every generated boarding objective before an approach decision can launch it', () => {

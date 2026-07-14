@@ -51,7 +51,8 @@ describe('ExpeditionGraph', () => {
 
   it('includes save state in graph identity and optional opportunity selection', () => {
     const fresh = generateRunSkeleton('EXPEDITION-SAVE-FINGERPRINT', {
-      unlockedIds: [], purchasedUpgradeIds: []
+      unlockedIds: [],
+      purchasedUpgradeIds: []
     });
     const progressed = generateRunSkeleton('EXPEDITION-SAVE-FINGERPRINT', {
       unlockedIds: ['unlock_ship_scrap_monk', 'unlock_item_executive_override'],
@@ -59,8 +60,14 @@ describe('ExpeditionGraph', () => {
     });
     expect(fresh.expedition.id).not.toBe(progressed.expedition.id);
     expect(fresh.expedition.saveFingerprint).not.toBe(progressed.expedition.saveFingerprint);
-    expect(fresh.expedition.nodes.filter((node) => node.optional).map((node) => node.content.opportunityId)).not.toEqual(
-      progressed.expedition.nodes.filter((node) => node.optional).map((node) => node.content.opportunityId)
+    expect(
+      fresh.expedition.nodes
+        .filter((node) => node.optional)
+        .map((node) => node.content.opportunityId)
+    ).not.toEqual(
+      progressed.expedition.nodes
+        .filter((node) => node.optional)
+        .map((node) => node.content.opportunityId)
     );
   });
 
@@ -69,7 +76,12 @@ describe('ExpeditionGraph', () => {
     const branch = graph.branches[0];
     const detour = branch?.options.find((option) => !option.default);
     if (!branch || !detour) throw new Error('Expected an expedition branch and optional detour.');
-    const progress = recordExpeditionDecision(graph, createExpeditionProgress(graph), branch.id, detour.id);
+    const progress = recordExpeditionDecision(
+      graph,
+      createExpeditionProgress(graph),
+      branch.id,
+      detour.id
+    );
     const first = resolveExpeditionPath(graph, progress.decisions);
     expect(first).toEqual(resolveExpeditionPath(graph, progress.decisions));
     expect(first.nodeIds).toContain(detour.targetNodeId);
@@ -84,8 +96,12 @@ describe('ExpeditionGraph', () => {
     const atActTwo = synchronizeExpeditionCompatibilityProgress(graph, initial, 5);
     const model = createExpeditionPathReadModel(graph, atActTwo);
     expect(afterFirstSector.visitedNodeIds).toEqual([
-      'expedition_s01_ingress', 'expedition_s01_operation', 'expedition_s01_staging',
-      'expedition_s01_gate_operation', 'expedition_s01_exit', 'expedition_s02_ingress'
+      'expedition_s01_ingress',
+      'expedition_s01_operation',
+      'expedition_s01_staging',
+      'expedition_s01_gate_operation',
+      'expedition_s01_exit',
+      'expedition_s02_ingress'
     ]);
     expect(afterFirstSector.visitedNodeIds).not.toContain('expedition_s01_detour');
     expect(model.currentNodeId).toBe('expedition_s06_ingress');
@@ -96,11 +112,11 @@ describe('ExpeditionGraph', () => {
     const capacity = generateRunSkeleton('EXPEDITION-GRAPH-SMOKE').expedition.capacity;
     expect(capacity).toEqual({
       requiredNodeCount: 75,
-      optionalNodeCount: 30,
+      optionalNodeCount: 15,
       baselineMinSeconds: 1104,
       baselineTargetSeconds: 1689,
       baselineMaxSeconds: 2286,
-      expandedTargetSeconds: 2199
+      expandedTargetSeconds: 1944
     });
     expect(capacity.baselineTargetSeconds).toBeGreaterThanOrEqual(20 * 60);
     expect(capacity.baselineTargetSeconds).toBeLessThanOrEqual(30 * 60);
@@ -119,9 +135,39 @@ describe('ExpeditionGraph', () => {
       };
     });
     expect(summaries).toEqual([
-      { seed: 'STARBREAK-SMOKE', id: 'expedition_starbreak-smoke_53f226d4', target: 1689, optionalOpportunityCount: 30, gates: ['act_outer_rim:interActJunction', 'act_core_descent:frontierChoice', 'act_null_frontier:victory'] },
-      { seed: 'LASER-TAX-404', id: 'expedition_laser-tax-404_60d04233', target: 1689, optionalOpportunityCount: 30, gates: ['act_outer_rim:interActJunction', 'act_core_descent:frontierChoice', 'act_null_frontier:victory'] },
-      { seed: 'EXPEDITION-GRAPH-SMOKE', id: 'expedition_expedition-graph-smoke_5bca58c1', target: 1689, optionalOpportunityCount: 30, gates: ['act_outer_rim:interActJunction', 'act_core_descent:frontierChoice', 'act_null_frontier:victory'] }
+      {
+        seed: 'STARBREAK-SMOKE',
+        id: 'expedition_starbreak-smoke_53f226d4',
+        target: 1689,
+        optionalOpportunityCount: 30,
+        gates: [
+          'act_outer_rim:interActJunction',
+          'act_core_descent:frontierChoice',
+          'act_null_frontier:victory'
+        ]
+      },
+      {
+        seed: 'LASER-TAX-404',
+        id: 'expedition_laser-tax-404_60d04233',
+        target: 1689,
+        optionalOpportunityCount: 30,
+        gates: [
+          'act_outer_rim:interActJunction',
+          'act_core_descent:frontierChoice',
+          'act_null_frontier:victory'
+        ]
+      },
+      {
+        seed: 'EXPEDITION-GRAPH-SMOKE',
+        id: 'expedition_expedition-graph-smoke_5bca58c1',
+        target: 1689,
+        optionalOpportunityCount: 30,
+        gates: [
+          'act_outer_rim:interActJunction',
+          'act_core_descent:frontierChoice',
+          'act_null_frontier:victory'
+        ]
+      }
     ]);
   });
 
@@ -132,16 +178,25 @@ describe('ExpeditionGraph', () => {
     const errors = validateExpeditionGraph({
       ...graph,
       startNodeId: 'expedition_missing_start',
-      nodes: [...graph.nodes, {
-        ...firstNode,
-        optional: true,
-        nextNodeIds: ['expedition_missing_exit'],
-        content: { ...firstNode.content, opportunityId: 'expedition_opportunity_missing' }
-      }]
+      nodes: [
+        ...graph.nodes,
+        {
+          ...firstNode,
+          optional: true,
+          nextNodeIds: ['expedition_missing_exit'],
+          content: { ...firstNode.content, opportunityId: 'expedition_opportunity_missing' }
+        }
+      ]
     });
     expect(errors).toContain(`Duplicate expedition node id: ${firstNode.id}`);
-    expect(errors).toContain('Expedition graph references missing start node: expedition_missing_start');
-    expect(errors).toContain(`Expedition node ${firstNode.id} references missing exit node: expedition_missing_exit`);
-    expect(errors).toContain(`Expedition node ${firstNode.id} references missing opportunity: expedition_opportunity_missing`);
+    expect(errors).toContain(
+      'Expedition graph references missing start node: expedition_missing_start'
+    );
+    expect(errors).toContain(
+      `Expedition node ${firstNode.id} references missing exit node: expedition_missing_exit`
+    );
+    expect(errors).toContain(
+      `Expedition node ${firstNode.id} references missing opportunity: expedition_opportunity_missing`
+    );
   });
 });

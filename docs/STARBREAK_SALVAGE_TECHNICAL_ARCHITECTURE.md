@@ -704,7 +704,7 @@ seed + permanent save fingerprint
 - `ACT_DEFINITIONS` now models Act II's `frontierChoice` separately from the final `victory` transition. The Act II boss remains a finale encounter, but its graph exit carries state; only the Act III Horizon Scar gate is terminal. `FrontierGateScene` is a presentation-only accessible choice surface.
 - Five new sector/background records, six Act III route contracts, five mission contracts, five hazard/landmark fits, and three bosses extend existing registries. Frontier laws enter `SectorConditions`; no Act III-specific combat engine or renderer path exists.
 - Run sessions and the bounded timeline store the frontier decision. Snapshot schema/storage v3 validates it and retires v1/v2 independently of permanent save v5. Early extraction saves ten cleared sectors; frontier victory saves all fifteen and identifies the generated campaign in finale metadata.
-- Graph nodes retain their schema-v2 topology but use 75% duration bands. The complete standard projection is 1,689 seconds (28.15 minutes), and every detour/pursuit projects 2,199 seconds (36.65 minutes), with simulation speed and durability unchanged.
+- Graph nodes retain their schema-v2 compatibility topology but use 75% duration bands. Fresh schedules execute required nodes plus the one post-gate pursuit paired with each sector: the standard projection is 1,689 seconds (28.15 minutes), and all executable optional holds project 1,944 seconds (32.40 minutes), with simulation speed and durability unchanged. Dormant detour nodes remain only for v11 checkpoint compatibility and do not inflate HUD or capacity totals.
 
 ### Work order 104 implementation
 

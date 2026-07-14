@@ -470,8 +470,8 @@ describe('WaveDirector', () => {
             "baselineMaxSeconds": 2286,
             "baselineMinSeconds": 1104,
             "baselineTargetSeconds": 1689,
-            "expandedTargetSeconds": 2199,
-            "optionalNodeCount": 30,
+            "expandedTargetSeconds": 1944,
+            "optionalNodeCount": 15,
             "requiredNodeCount": 75,
           },
           "gates": [

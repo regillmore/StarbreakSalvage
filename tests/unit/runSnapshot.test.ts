@@ -95,7 +95,7 @@ describe('RunSnapshot', () => {
     expect(storage.getItem(SAVE_STORAGE_KEY)).toBe('permanent-save-sentinel');
   });
 
-  it('restores a settled operational-map checkpoint without replaying its payout', () => {
+  it('restores a settled post-sector hub choice without replaying its payout', () => {
     const run = generateRunSkeleton('SNAPSHOT-OPERATIONAL-MAP');
     const contract = run.contracts[0]!;
     const session = createRunSession(run, contract);
@@ -112,18 +112,30 @@ describe('RunSnapshot', () => {
         salvage: session.salvage
       }
     });
+    dispatchMissionEvent(run, session, { id: 'staging-complete', type: 'completeRelief' });
+    dispatchMissionEvent(run, session, {
+      id: 'gate-complete',
+      type: 'completeCombat',
+      checkpoint: {
+        hull: 3,
+        scrollDistance: 1_540,
+        worldOffset: 11_540,
+        credits: session.credits,
+        salvage: session.salvage
+      }
+    });
     const snapshot = createRunSnapshot({
       run,
       contract,
       session,
-      target: 'operationalMap',
-      label: 'Approach decision'
+      target: 'sectorTransition',
+      label: 'Post-sector constellation choice'
     });
     const restored = restoreRunSnapshot(snapshot);
 
     expect(restored.session).toEqual(session);
-    expect(restored.session.mission.currentStageId).toContain('approach-map');
-    expect(createRunSnapshotSummary(snapshot).target).toBe('operationalMap');
+    expect(restored.session.mission.currentStageId).toContain('pursuit-map');
+    expect(createRunSnapshotSummary(snapshot).target).toBe('sectorTransition');
   });
 
   it('removes corrupt or unsupported snapshots without touching permanent save data', () => {
