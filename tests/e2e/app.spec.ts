@@ -133,7 +133,13 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
 
   await expect(page.getByTestId('mission-briefing')).toBeVisible();
   await expect(page.getByRole('heading', { name: /Breach Levy briefing/ })).toBeVisible();
+  await expect(page.getByTestId('mission-story-brief')).toContainText(
+    'Open the debris customs line by force.'
+  );
   await expect(page.getByTestId('mission-objective-preview')).toContainText('ASSAULT');
+  const briefingMetricCount = await page.locator('.navigation-detail-body > *').count();
+  expect(briefingMetricCount).toBeGreaterThanOrEqual(2);
+  expect(briefingMetricCount).toBeLessThanOrEqual(4);
   await expect(page.getByTestId('navigation-map')).toBeVisible();
   await expect(page.getByTestId('open-shop')).toHaveAttribute('aria-label', /available/);
   await expect(page.getByTestId('open-hardpoint-control')).toHaveAttribute(
@@ -794,7 +800,6 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
 
   await page.keyboard.press('R');
   await expect(page.getByTestId('mission-briefing')).toBeVisible();
-  await expect(page.getByTestId('faction-campaign-brief')).toContainText('Faction campaign:');
   await expect(page.getByTestId('faction-campaign-brief')).toContainText('RIVAL');
   await expect(page.locator('.debug-overlay')).toContainText('Campaign rivals');
   await page.keyboard.press('Enter');
@@ -803,8 +808,7 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
 
   await page.keyboard.press('T');
   await expect(page.getByTestId('mission-briefing')).toBeVisible();
-  await expect(page.getByTestId('crew-brief')).toContainText('Crew manifest:');
-  await expect(page.getByTestId('crew-brief')).toContainText(':active:');
+  await expect(page.getByTestId('crew-brief')).toContainText('3 active wingmates');
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('crew-command-readout')).toContainText(
     /Wing C[1-3]\/F[0-2] active/

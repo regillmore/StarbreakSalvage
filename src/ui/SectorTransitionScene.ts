@@ -1,36 +1,15 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene, SceneDebugState } from '../app/Scene';
+import { getMissionObjective } from '../content/objectives';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import { createActDebugState, formatActSectorLabel } from '../game/ActPlan';
 import { formatRouteTagSummary } from '../game/ActTwoDebug';
-import { formatInterActEffectsReadout } from '../game/InterActJunction';
-import {
-  getCurrentSector,
-  getInterActEffectsForSector,
-  type RunSessionState
-} from '../game/RunSession';
-import {
-  applySectorConditionsToScroll,
-  createSectorConditionPlan,
-  formatSectorConditionReadout
-} from '../game/SectorConditions';
-import {
-  applySectorPacingToScroll,
-  createSectorPacingPlan,
-  formatSectorPacingReadout
-} from '../game/SectorPacing';
-import {
-  formatSectorObjectiveVariantDebug,
-  formatSectorObjectiveVariantReadout
-} from '../game/SectorObjectives';
+import { getCurrentSector, type RunSessionState } from '../game/RunSession';
+import { applySectorConditionsToScroll, createSectorConditionPlan } from '../game/SectorConditions';
+import { applySectorPacingToScroll, createSectorPacingPlan } from '../game/SectorPacing';
+import { formatSectorObjectiveVariantDebug } from '../game/SectorObjectives';
 import { getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
-import {
-  createMissionSchedule,
-  getMissionStage,
-  type MissionDebugState,
-  type MissionReadModel
-} from '../game/MissionDirector';
-import { createOperationalMapReadModel } from '../game/OperationalMap';
+import type { MissionDebugState, MissionReadModel } from '../game/MissionDirector';
 import type { InputAction } from '../systems/InputSystem';
 import {
   applyContractScreenTheme,
@@ -64,12 +43,10 @@ interface NavigationBriefingContext {
   readonly pacing: ReturnType<typeof createSectorPacingPlan>;
   readonly scroll: ReturnType<typeof applySectorPacingToScroll>;
   readonly campaign: ReturnType<typeof getFactionCampaignInfluence>;
-  readonly operationalMap: ReturnType<typeof createOperationalMapReadModel>;
   readonly crew: ReturnType<typeof createCrewDebugState>;
   readonly crewArcSummary: string;
   readonly fleetSummary: string;
   readonly apex: ReturnType<typeof createApexCampaignReadModel>;
-  readonly interActReadout: string | null;
 }
 
 export class SectorTransitionScene implements Scene {
@@ -248,7 +225,6 @@ export class SectorTransitionScene implements Scene {
 
   private createBriefingContext(): NavigationBriefingContext {
     const sector = getCurrentSector(this.run, this.session);
-    const interActEffects = getInterActEffectsForSector(this.session, sector);
     const conditions = createSectorConditionPlan({
       run: this.run,
       sectorIndex: this.session.currentSectorIndex,
@@ -269,22 +245,12 @@ export class SectorTransitionScene implements Scene {
       sector,
       { plan: this.run.factionFronts, state: this.session.factionFronts }
     );
-    const schedule = createMissionSchedule(this.run.expedition, this.session.currentSectorIndex);
-    const currentStage = getMissionStage(schedule, this.session.mission.currentStageId);
-    const operationalMap = createOperationalMapReadModel({
-      graph: this.run.expedition,
-      sectorIndex: this.session.currentSectorIndex,
-      expedition: this.session.expedition,
-      operational: this.session.operational,
-      currentNodeId: currentStage.nodeId
-    });
     return {
       sector,
       conditions,
       pacing,
       scroll,
       campaign,
-      operationalMap,
       crew: createCrewDebugState(this.run.crewRoster, this.session.crewRoster),
       crewArcSummary: createCrewArcRosterReadModel(
         this.run.crewArcs,
@@ -296,8 +262,7 @@ export class SectorTransitionScene implements Scene {
         this.run.apexHunts,
         this.session.apexHunts,
         this.session.currentSectorIndex
-      ),
-      interActReadout: formatInterActEffectsReadout(interActEffects)
+      )
     };
   }
 
@@ -424,7 +389,10 @@ export class SectorTransitionScene implements Scene {
     heading.append(identity, status);
     const summary = document.createElement('p');
     summary.className = 'navigation-detail-summary';
-    summary.textContent = destination.unavailableReason ?? destination.summary;
+    if (destination.id === 'launch') summary.dataset.testid = 'mission-story-brief';
+    summary.textContent =
+      destination.unavailableReason ??
+      (destination.id === 'launch' ? this.createLaunchStory(context) : destination.summary);
     const body = document.createElement('div');
     body.className = 'navigation-detail-body';
     this.appendDestinationBody(body, destination, context);
@@ -513,72 +481,67 @@ export class SectorTransitionScene implements Scene {
   }
 
   private appendLaunchBriefing(body: HTMLElement, context: NavigationBriefingContext): void {
-    const objectiveLine = this.createDetailCopy(
-      this.mission?.objectiveBrief
-        ? `${this.mission.contractSummary} | ${this.mission.objectiveBrief}`
-        : [
-            `${context.sector.objective.label} | Travel ${Math.floor(context.scroll.length)}u | ${context.sector.objective.requiredEnemyKills} targets${context.sector.objective.bossRequired ? ' + boss gate' : ''}`,
-            formatSectorObjectiveVariantReadout(context.sector.objective)
-          ]
-            .filter((part): part is string => part !== null)
-            .join(' | '),
-      'mission-objective-preview'
-    );
-    const conditions = this.createDetailCopy(
-      [
-        formatSectorConditionReadout(context.conditions),
-        context.interActReadout,
-        context.pacing.arcKind === 'standard' ? null : formatSectorPacingReadout(context.pacing),
-        `Cruise ${Math.round(context.scroll.baseSpeed)}u/s`
-      ]
-        .filter((part): part is string => part !== null)
-        .join(' | ')
-    );
-    const waves = this.createDetailCopy(context.sector.majorWaves.join(' | '));
-    const campaign = this.createDetailCopy(
-      [
-        `Faction campaign: ${context.campaign.missionBrief}`,
-        `Response ${context.campaign.responseLabel} | Aid ${context.campaign.aid} | Hostility ${context.campaign.hostility} | Territory ${context.campaign.territoryPressure}`,
-        context.campaign.rival
-          ? `RIVAL ${context.campaign.rival.name} | ${context.campaign.rival.title} | ${context.campaign.rival.shipName} | ${context.campaign.rival.tactic}`
-          : null,
-        context.campaign.crewOfferSignal ? `Crew lead: ${context.campaign.crewOfferSignal}` : null,
-        context.sector.setPiece
-          ? `Set-piece owner projection: ${context.campaign.factionName}`
-          : null,
-        context.campaign.finaleIntervention ? 'Finale intervention risk active.' : null
-      ]
-        .filter((part): part is string => Boolean(part))
-        .join(' | '),
-      'faction-campaign-brief'
-    );
-    const crew = this.createDetailCopy(
-      context.crew.roster.length > 0
-        ? `Crew manifest: ${context.crew.roster.join(' | ')} | Commands FOCUS [L], SCREEN [C], SALVAGE [V], REGROUP [O], DISENGAGE [Z].`
-        : 'Crew manifest: no wingmates. Rescue and specialist contracts can add run-local allies.',
-      'crew-brief'
-    );
-    const arc = this.createDetailCopy(context.crewArcSummary, 'crew-arc-brief');
-    const fleet = this.createDetailCopy(`Fleet: ${context.fleetSummary}`, 'fleet-brief');
-    const apex = this.createDetailCopy(
-      `Apex network: ${context.apex.summary}${
-        context.apex.nextEncounters.length > 0
-          ? ` | Marked signals: ${context.apex.nextEncounters.join(' | ')}`
-          : ' | No unresolved contacts ahead.'
-      }`,
-      'apex-brief'
-    );
-    const operation = this.createDetailCopy(
-      `${context.operationalMap.operationRange} | ${context.operationalMap.nodes
-        .filter((node) => ['advance', 'detour', 'gate', 'pursuit'].includes(node.role))
-        .map(
-          (node) =>
-            `${node.optional ? 'Optional' : 'Required'} ${node.label}: ${node.timeEstimate}, danger ${node.danger}, ${node.reward}; ${node.consequence}`
+    const objective = [
+      this.mission?.objectiveId
+        ? getMissionObjective(this.mission.objectiveId).hudVerb
+        : 'SECTOR OBJECTIVE',
+      context.sector.objective.label
+    ].join(' · ');
+    const transit = `${Math.floor(context.scroll.length)}u · ${Math.round(context.scroll.baseSpeed)}u/s`;
+    const notableMetrics: HTMLElement[] = [];
+
+    if (context.campaign.rival) {
+      notableMetrics.push(
+        this.createDetailMetric(
+          'Opposition',
+          `RIVAL · ${context.campaign.rival.name} · ${context.campaign.rival.tactic}`,
+          'faction-campaign-brief'
         )
-        .join(' | ')}`,
-      'operational-map-preview'
+      );
+    } else if (context.sector.objective.bossRequired) {
+      notableMetrics.push(
+        this.createDetailMetric('Threat', `${context.sector.bossName} · boss gate`)
+      );
+    } else if (context.sector.setPiece) {
+      notableMetrics.push(
+        this.createDetailMetric('Fortification', `${context.campaign.factionName} control`)
+      );
+    }
+
+    if (context.crew.activeCount > 0) {
+      notableMetrics.push(
+        this.createDetailMetric(
+          'Wing',
+          `${context.crew.activeCount} active wingmate${context.crew.activeCount === 1 ? '' : 's'}`,
+          'crew-brief'
+        )
+      );
+    } else if (context.conditions.modifiers.length > 0) {
+      notableMetrics.push(
+        this.createDetailMetric(
+          'Conditions',
+          context.conditions.modifiers.map((modifier) => modifier.label).join(' · ')
+        )
+      );
+    } else if (context.pacing.arcKind !== 'standard') {
+      notableMetrics.push(
+        this.createDetailMetric(
+          'Flight profile',
+          `${context.pacing.label} · ${context.pacing.pressureBand} pressure`
+        )
+      );
+    }
+
+    body.append(
+      this.createDetailMetric('Objective', objective, 'mission-objective-preview'),
+      this.createDetailMetric('Transit', transit),
+      ...notableMetrics.slice(0, 2)
     );
-    body.append(objectiveLine, conditions, waves, campaign, crew, arc, fleet, apex, operation);
+  }
+
+  private createLaunchStory(context: NavigationBriefingContext): string {
+    const missionLead = this.mission?.contractSummary?.trim() || context.sector.objective.label;
+    return `${finishSentence(missionLead)} ${finishSentence(context.campaign.missionBrief)}`;
   }
 
   private activateDestination(destinationId: SectorNavigationDestinationId): void {
@@ -658,9 +621,10 @@ export class SectorTransitionScene implements Scene {
     return item;
   }
 
-  private createDetailMetric(label: string, value: string): HTMLElement {
+  private createDetailMetric(label: string, value: string, testId?: string): HTMLElement {
     const metric = document.createElement('div');
     metric.className = 'navigation-detail-metric';
+    if (testId) metric.dataset.testid = testId;
     const name = document.createElement('small');
     name.textContent = label;
     const readout = document.createElement('strong');
@@ -685,4 +649,9 @@ export class SectorTransitionScene implements Scene {
     if (destinationId === 'shop') return 'open-shop';
     return 'navigation-destination-launch';
   }
+}
+
+function finishSentence(value: string): string {
+  const trimmed = value.trim();
+  return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
 }
