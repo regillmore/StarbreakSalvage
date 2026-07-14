@@ -1591,16 +1591,16 @@ export class GameApp {
               carrierInfluence.boardingCapacity + fleetInfluence.boardingAssist <= 0
             ? 'The paired challenge requires an available boarding team or fleet boarding assist.'
             : 'The local faction front has closed this optional challenge for the current route state.';
-    const chooseOption = (optionId: string) => {
+    const commitOption = (optionId: string) => {
       const option = currentBranch.options.find((candidate) => candidate.id === optionId);
-      if (!option) return;
+      if (!option) return null;
       const result = this.dispatchCurrentMission({
         id: `${this.runSession.mission.currentStageId}:branch:${option.id}`,
         type: 'selectBranch',
         optionId: option.id
       });
 
-      if (result.disposition !== 'advanced') return;
+      if (result.disposition !== 'advanced') return null;
 
       if (capturableRival && option.default) {
         recordFactionCampaignEvent(
@@ -1618,7 +1618,11 @@ export class GameApp {
       }
 
       recordExpeditionBranchDecision(this.currentRun, this.runSession, currentBranch.id, option.id);
-      const stage = getMissionStage(schedule, this.runSession.mission.currentStageId);
+      return getMissionStage(schedule, this.runSession.mission.currentStageId);
+    };
+    const chooseOption = (optionId: string) => {
+      const stage = commitOption(optionId);
+      if (!stage) return;
       if (stage.kind === 'combat') {
         this.showGameplay();
       } else if (stage.kind === 'relief') {
@@ -1627,6 +1631,25 @@ export class GameApp {
         this.showRouteChoice();
       }
     };
+    const chooseRoute = (route: RouteOption) => {
+      let stage = commitOption(direct.id);
+      if (!stage) return;
+      if (stage.kind === 'relief') {
+        const result = this.dispatchCurrentMission({
+          id: `${stage.id}:relief-complete`,
+          type: 'completeRelief'
+        });
+        if (result.disposition !== 'advanced') return;
+        stage = getMissionStage(schedule, this.runSession.mission.currentStageId);
+      }
+      if (stage.kind !== 'extraction') {
+        throw new Error(`Post-sector route advanced to unexpected mission stage ${stage.kind}.`);
+      }
+      this.handleRouteChoice(route);
+    };
+    const sourceSectorIndex = this.runSession.currentSectorIndex;
+    const targetSectorIndex =
+      sourceSectorIndex + 1 < this.currentRun.sectors.length ? sourceSectorIndex + 1 : null;
     this.sceneManager.switchTo(
       new SectorTransitionScene(
         this.uiRoot,
@@ -1672,6 +1695,11 @@ export class GameApp {
                 : null
           },
           onChoose: chooseOption
+        },
+        {
+          sourceSectorIndex,
+          targetSectorIndex,
+          onChoose: chooseRoute
         }
       )
     );

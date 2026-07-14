@@ -2487,6 +2487,29 @@ Status: implemented. `ActConstellation` now projects only completed, current, an
 
 Verification: focused constellation/route coverage passes with 2 files and 8 tests. `npm run verify:release` passes typecheck, ESLint, all 98 Vitest files and 602 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Chromium proves four anonymous disabled future sectors at the opening hub, no `revealed` state, a pulse on the current node, exact S2 identity and edge resolution only when `CONTINUE` opens, two pulsing post-sector sector choices, embedded route continuation, and no console errors. Direct 1280×720 captures of the ordinary and post-sector hubs confirm later signals stay anonymous and the pulse ring does not disturb node layout. The build emits 916.13 kB minified/249.62 kB gzip initial JavaScript and 64.05/13.24 kB CSS. Relative to work order 136, JavaScript is effectively flat (-0.01/+0.01 kB) and the accessible pulse/visibility styling adds 0.98/0.18 kB CSS. The existing initial-chunk warning remains open and no threshold changed. The in-app Browser skill package remains absent at its catalog path, so repository Playwright Chromium supplied visual/runtime evidence.
 
+## Work order 138 - Flat post-sector flight board
+
+Goal: remove the artificial commitment step between a cleared sector's paired optional challenge and the next sector's route choices, presenting the four real departures as peers.
+
+Prompt:
+
+> When a required sector is cleared, open the constellation with the cleared sector's one optional hold and all three routes into the next sector immediately available. Remove the intermediate `CONTINUE` action and do not lock the hold merely because the player inspected or chose the onward destination. A route selection should begin its established travel outcome directly; an optional selection should enter that combat and return to the ordinary three-route plot when resolved.
+
+Acceptance criteria:
+
+- The first post-sector constellation view resolves the next sector as `CHOOSE ROUTE` and shows exactly four native action buttons together: one local optional hold plus three generated onward routes.
+- No `CONTINUE` node/action or separate relief/route menu interrupts the direct route path. Selecting an onward route synchronously settles the existing default branch and relief stages before invoking the established route outcome sequence.
+- Selecting the optional hold retains its existing availability guard, faction/expedition recording, combat, reward, and recovery behavior. After that operation, the next-sector detail presents the normal three-route-only plot.
+- The current sector remains an actionable `HOLD ONCE` node until departure, the next sector remains an actionable pulsing choice, and later sectors remain anonymous.
+- The compact four-card board fits the 1280×720 detail pane without internal scrolling. Visible summaries stay brief while full route and optional descriptions remain exposed through accessible button names.
+- Seed generation, route rewards/consequences, services, snapshots, mission schema, and simulation behavior remain unchanged.
+
+Status: implemented. `GameApp.showMissionBranch` now separates branch commitment from scene routing. The optional action still uses the authored optional branch, while each route button commits the authored default branch, settles its relief stage, and enters the existing `handleRouteChoice` pipeline in one input. Rival and expedition records therefore retain their prior ordering, and optional completion still returns to the extraction-stage route plot.
+
+`SectorTransitionScene` composes `postSectorChoice` and `routeChoice` simultaneously. It leaves the cleared node at `HOLD ONCE`, promotes the resolved target directly to `CHOOSE ROUTE`, and defaults its detail to a two-by-two flight board containing the optional action and three routes. Route-only recovery and post-optional states retain the established three-card presentation. Compact CSS clamps only visual secondary prose; each native button's accessible name includes the complete authored description and exceptional route notes.
+
+Verification: focused mission, route-navigation, sector-navigation, and snapshot coverage passes with 4 files and 28 tests. `npm run verify:release` passes typecheck, ESLint, all 98 Vitest files and 602 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Chromium covers both the direct multi-sector helper and the optional path, asserting four initial flight options, three onward routes, no `CONTINUE` action, no internal detail scrolling, the three-route post-optional state, and no console errors. An unobstructed 1280×720 capture was inspected directly; the complete two-by-two decision board is visible without overlap. The build emits 918.39 kB minified/250.14 kB gzip initial JavaScript and 65.22/13.41 kB CSS, increases of 2.26/0.52 kB JavaScript and 1.17/0.17 kB CSS over work order 137. The existing initial-chunk warning remains open and no threshold changed. The in-app Browser skill package remains absent at its catalog path, so repository Playwright Chromium supplied visual/runtime evidence.
+
 ## Review subagent prompt
 
 Use after a feature PR:

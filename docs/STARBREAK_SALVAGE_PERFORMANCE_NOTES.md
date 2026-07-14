@@ -489,3 +489,11 @@ The base projection still creates exactly five sector nodes and four edges once 
 The active pulse is one CSS pseudo-element on at most two actionable sector buttons. The browser compositor changes only opacity, transform, and a bounded glow; reduced-motion and performance modes disable animation and retain a static ring. Hidden, completed, and service nodes receive no pulse pseudo-element.
 
 The release build emits 916.13 kB minified/249.62 kB gzip initial JavaScript and 64.05/13.24 kB CSS. Relative to work order 136, JavaScript is effectively flat (-0.01/+0.01 kB) and the just-in-time visibility/pulse presentation adds 0.98/0.18 kB CSS. No dependency, simulation budget, snapshot, RNG stream, or warning threshold changes; the existing initial-chunk warning remains open.
+
+## Work order 138 flat-flight-board budgets
+
+The post-sector scene adds one optional native button beside the three already-generated route buttons and reuses the same five-sector constellation. Route selection performs one existing default-branch dispatch and, when required, one existing relief dispatch before entering the unchanged route pipeline. These operations replace user-mediated scene transitions; they add no generation fold, RNG draw, snapshot field, timer, frame update, or gameplay hot-loop work.
+
+The combined detail uses a bounded two-by-two grid. Visual secondary prose is line-clamped, while complete descriptions remain in accessible names; the 1280×720 Chromium contract asserts that the route body has no internal overflow. The route-only post-optional and recovery presentations still render exactly three cards.
+
+The release build emits 918.39 kB minified/250.14 kB gzip initial JavaScript and 65.22/13.41 kB CSS. Relative to work order 137, the shared commitment seam, combined presentation, accessibility labels, and responsive compact layout add 2.26/0.52 kB JavaScript and 1.17/0.17 kB CSS. No dependency, simulation budget, snapshot, RNG stream, or warning threshold changes; the existing initial-chunk warning remains open.

@@ -2787,12 +2787,70 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
   gap: 0.42rem;
 }
 
-.navigation-route-card {
+.navigation-route-options-flat {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-column: 1 / -1;
+}
+
+.navigation-route-card,
+.navigation-optional-flight-card {
   min-height: auto;
   gap: 0.24rem;
   padding: 0.58rem 0.64rem;
   border-radius: 5px;
   background: rgba(9, 19, 36, 0.9);
+}
+
+.navigation-route-options-flat .navigation-flight-option {
+  min-height: 5.8rem;
+  align-content: start;
+}
+
+.navigation-hub-panel-flat-choice .navigation-destination-detail {
+  gap: 0.46rem;
+  padding: 0.7rem;
+}
+
+.navigation-hub-panel-flat-choice .navigation-detail-heading h2 {
+  font-size: clamp(1.15rem, 2vw, 1.55rem);
+}
+
+.navigation-hub-panel-flat-choice .navigation-detail-summary {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 0.82rem;
+  line-height: 1.32;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.navigation-hub-panel-flat-choice .navigation-route-body {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.navigation-route-options-flat .navigation-route-card-heading {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.navigation-route-options-flat .navigation-route-card-summary {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.navigation-route-options-flat .navigation-route-card-detail {
+  display: none;
+}
+
+.navigation-optional-flight-card {
+  border-color: rgba(255, 209, 102, 0.56);
+  background: rgba(42, 31, 12, 0.52);
+}
+
+.navigation-optional-flight-card .navigation-route-card-heading strong {
+  color: #ffd166;
 }
 
 .navigation-route-card-heading {

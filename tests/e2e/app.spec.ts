@@ -261,23 +261,33 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.keyboard.press('8');
   await expect(page.getByTestId('mission-briefing')).toBeVisible();
   await expect(page.getByTestId('navigation-destination-optional')).toContainText('HOLD ONCE');
-  await expect(page.getByTestId('navigation-destination-continue')).toContainText(
+  await expect(page.getByTestId('navigation-destination-route')).toContainText(
     'S2 · Trade War Corridor'
   );
-  await expect(page.getByTestId('navigation-destination-continue')).toContainText('CONTINUE');
-  await expect(page.getByTestId('navigation-destination-continue')).toHaveAttribute(
+  await expect(page.getByTestId('navigation-destination-route')).toContainText('CHOOSE ROUTE');
+  await expect(page.getByTestId('navigation-destination-route')).toHaveAttribute(
     'data-constellation-status',
     'choice'
   );
-  await expect(page.getByTestId('navigation-destination-continue')).toBeEnabled();
+  await expect(page.getByTestId('navigation-destination-route')).toBeEnabled();
+  await expect(page.getByTestId('navigation-destination-continue')).toHaveCount(0);
   await expect(
     page.locator('.constellation-node[data-node-kind="sector"][data-constellation-status="choice"]')
   ).toHaveCount(2);
   expect(
     await page
-      .getByTestId('navigation-destination-continue')
+      .getByTestId('navigation-destination-route')
       .evaluate((element) => getComputedStyle(element, '::after').animationName)
   ).toContain('constellation-sector-pulse');
+  await expect(page.getByTestId('navigation-route-options')).toBeVisible();
+  await expect(page.locator('.navigation-flight-option')).toHaveCount(4);
+  await expect(page.locator('.navigation-route-card')).toHaveCount(3);
+  await expect(page.getByTestId('navigation-optional-action')).toBeEnabled();
+  expect(
+    await page
+      .locator('.navigation-route-body')
+      .evaluate((element) => element.scrollHeight <= element.clientHeight + 1)
+  ).toBe(true);
   await page.getByTestId('navigation-optional-action').click();
   await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
   await page.keyboard.press('8');
@@ -285,6 +295,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByRole('heading', { name: /Running Audit briefing/ })).toBeVisible();
   await expect(page.getByTestId('navigation-destination-route')).toContainText('CHOOSE ROUTE');
   await expect(page.getByTestId('navigation-route-options')).toBeVisible();
+  await expect(page.locator('.navigation-flight-option')).toHaveCount(3);
   await expect(page.locator('.navigation-route-card')).toHaveCount(3);
   await expect(page.getByTestId('mission-relief')).toHaveCount(0);
   await expect(page.getByTestId('route-edge-preview')).toContainText(
@@ -1278,12 +1289,10 @@ async function forceCompleteSectorAndEnterNext(page: Page, nextSectorName: strin
   await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
   await page.keyboard.press('8');
   await expect(page.getByTestId('mission-briefing')).toBeVisible();
-  const continueNode = page.getByTestId('navigation-destination-continue');
-  if ((await continueNode.count()) > 0) {
-    await continueNode.click();
-  }
-  await page.getByTestId('navigation-continue-action').click();
   await expect(page.getByTestId('navigation-route-options')).toBeVisible();
+  await expect(page.locator('.navigation-flight-option')).toHaveCount(4);
+  await expect(page.getByTestId('navigation-optional-action')).toBeEnabled();
+  await expect(page.getByTestId('navigation-destination-continue')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Choose Route' })).toHaveCount(0);
   await expect(page.getByTestId('mission-relief')).toHaveCount(0);
 

@@ -117,6 +117,9 @@ export class SectorTransitionScene implements Scene {
     }
     const shell = document.createElement('main');
     shell.className = 'scene-panel scene-panel-wide transition-panel navigation-hub-panel';
+    if (this.routeChoice && this.postSectorChoice) {
+      shell.classList.add('navigation-hub-panel-flat-choice');
+    }
     shell.dataset.testid = 'mission-briefing';
     shell.dataset.navigationLayout = this.plan.layoutId;
     shell.setAttribute('aria-labelledby', 'transition-title');
@@ -141,7 +144,9 @@ export class SectorTransitionScene implements Scene {
     const subtitle = document.createElement('p');
     subtitle.className = 'navigation-hub-subtitle';
     subtitle.textContent = this.routeChoice
-      ? `${this.run.carrierPlan.name} route plot · Commitment accepted; choose how the ship crosses the highlighted edge.`
+      ? this.postSectorChoice
+        ? `${this.run.carrierPlan.name} flight board · Hold the cleared sector once, or begin one of three routes into the next mission.`
+        : `${this.run.carrierPlan.name} route plot · Commitment accepted; choose how the ship crosses the highlighted edge.`
       : this.postSectorChoice
         ? `${this.run.carrierPlan.name} act chart · Hold this node once for its paired challenge, or continue along the newly resolved route.`
         : `${this.run.carrierPlan.name} act chart · Future sectors remain unresolved until their routes open; carrier services remain in local orbit.`;
@@ -169,7 +174,9 @@ export class SectorTransitionScene implements Scene {
     const footer = document.createElement('p');
     footer.className = 'navigation-hub-footer';
     footer.textContent = this.routeChoice
-      ? 'ROUTE COMMIT // Choose one travel vector from the settled sector to the next mission signal.'
+      ? this.postSectorChoice
+        ? 'FOUR FLIGHT OPTIONS // One local hold · Three onward routes · Selecting a route begins departure.'
+        : 'ROUTE COMMIT // Choose one travel vector from the settled sector to the next mission signal.'
       : this.postSectorChoice
         ? 'POST-SECTOR HOLD // Optional challenge remains on the cleared node · The active destination continues the expedition.'
         : 'ACT CHART // Future sectors resolve only when travel opens · Unlinked carrier services remain locally available.';
@@ -339,7 +346,9 @@ export class SectorTransitionScene implements Scene {
           this.routeChoice &&
           node.id === (routeTargetNodeId ?? plan.constellation.currentSectorNodeId)
         );
-        const routeSource = Boolean(this.routeChoice && current && !routeTarget);
+        const routeSource = Boolean(
+          this.routeChoice && !this.postSectorChoice && current && !routeTarget
+        );
         const activeDestination = routeTarget || onward;
         const resolvedSector = activeDestination ? this.run.sectors[node.sectorIndex] : null;
         const optionalAvailable = this.postSectorChoice?.optional.available ?? true;
@@ -355,21 +364,21 @@ export class SectorTransitionScene implements Scene {
           y: node.y,
           status: routeTarget
             ? 'choice'
-            : routeSource
-              ? 'completed'
-              : current && this.postSectorChoice
-                ? 'choice'
+            : current && this.postSectorChoice
+              ? 'choice'
+              : routeSource
+                ? 'completed'
                 : onward
                   ? 'choice'
                   : node.status,
           stateLabel: routeTarget
             ? 'CHOOSE ROUTE'
-            : routeSource
-              ? 'DEPARTED'
-              : current && this.postSectorChoice
-                ? optionalAvailable
-                  ? 'HOLD ONCE'
-                  : 'SETTLED'
+            : current && this.postSectorChoice
+              ? optionalAvailable
+                ? 'HOLD ONCE'
+                : 'SETTLED'
+              : routeSource
+                ? 'DEPARTED'
                 : onward
                   ? 'CONTINUE'
                   : node.stateLabel,
@@ -494,10 +503,10 @@ export class SectorTransitionScene implements Scene {
       return;
     }
     const stateLabel =
-      current && this.routeChoice
-        ? 'DEPARTED'
-        : current && this.postSectorChoice
-          ? 'POST-SECTOR HOLD'
+      current && this.postSectorChoice
+        ? 'POST-SECTOR HOLD'
+        : current && this.routeChoice
+          ? 'DEPARTED'
           : onward
             ? 'CONTINUE'
             : node.stateLabel;
@@ -509,10 +518,10 @@ export class SectorTransitionScene implements Scene {
     kicker.textContent = `${this.plan.constellation.actShortLabel} // SECTOR ${actSectorNumber}/${sectorNodes.length} // ${stateLabel}`;
     const title = document.createElement('h2');
     title.textContent = current
-      ? this.routeChoice
-        ? node.label
-        : this.postSectorChoice
-          ? this.postSectorChoice.optional.label
+      ? this.postSectorChoice
+        ? this.postSectorChoice.optional.label
+        : this.routeChoice
+          ? node.label
           : (this.mission?.stageLabel ?? `Entering ${context.sector.sectorName}`)
       : onward && this.postSectorChoice
         ? this.postSectorChoice.onward.label
@@ -521,9 +530,11 @@ export class SectorTransitionScene implements Scene {
     const status = document.createElement('span');
     status.className = 'navigation-detail-status';
     const available = current
-      ? this.routeChoice
-        ? false
-        : (this.postSectorChoice?.optional.available ?? true)
+      ? this.postSectorChoice
+        ? this.postSectorChoice.optional.available
+        : this.routeChoice
+          ? false
+          : true
       : onward
         ? true
         : false;
@@ -534,29 +545,29 @@ export class SectorTransitionScene implements Scene {
     summary.className = 'navigation-detail-summary';
     if (current) summary.dataset.testid = 'mission-story-brief';
     summary.textContent = current
-      ? this.routeChoice
-        ? `Departure is committed. Select the highlighted next signal to choose the travel vector from ${node.label}.`
-        : this.postSectorChoice
-          ? (this.postSectorChoice.optional.unavailableReason ??
-            this.postSectorChoice.optional.summary)
+      ? this.postSectorChoice
+        ? (this.postSectorChoice.optional.unavailableReason ??
+          this.postSectorChoice.optional.summary)
+        : this.routeChoice
+          ? `Departure is committed. Select the highlighted next signal to choose the travel vector from ${node.label}.`
           : this.createLaunchStory(context)
       : onward && this.postSectorChoice
         ? this.postSectorChoice.onward.summary
         : node.summary;
     const body = document.createElement('div');
     body.className = 'navigation-detail-body';
-    if (current && this.routeChoice) {
-      body.append(
-        this.createDetailMetric('Sector state', 'Cleared and departed'),
-        this.createDetailMetric('Navigation', 'Route choice pending at next signal')
-      );
-    } else if (current && !this.postSectorChoice) {
-      this.appendLaunchBriefing(body, context);
-    } else if (current && this.postSectorChoice) {
+    if (current && this.postSectorChoice) {
       body.append(
         this.createDetailMetric('Sector state', 'Required operation cleared'),
         this.createDetailMetric('Commitment', 'One optional local challenge')
       );
+    } else if (current && this.routeChoice) {
+      body.append(
+        this.createDetailMetric('Sector state', 'Cleared and departed'),
+        this.createDetailMetric('Navigation', 'Route choice pending at next signal')
+      );
+    } else if (current) {
+      this.appendLaunchBriefing(body, context);
     } else if (onward && this.postSectorChoice) {
       body.append(
         this.createDetailMetric('Route', `Sector ${node.sectorIndex + 1}`),
@@ -575,21 +586,23 @@ export class SectorTransitionScene implements Scene {
     }
     const action = document.createElement('button');
     action.className =
-      current && this.routeChoice
-        ? 'secondary-button'
-        : current || onward
-          ? 'primary-button'
-          : 'secondary-button';
+      current && this.postSectorChoice
+        ? 'primary-button'
+        : current && this.routeChoice
+          ? 'secondary-button'
+          : current || onward
+            ? 'primary-button'
+            : 'secondary-button';
     action.type = 'button';
     action.dataset.testid = 'navigation-destination-action';
     action.disabled = !available;
     action.textContent = current
-      ? this.routeChoice
-        ? 'Choose Route at Next Signal'
-        : this.postSectorChoice
-          ? this.postSectorChoice.optional.available
-            ? 'Stay for Optional Challenge'
-            : 'Optional Challenge Unavailable'
+      ? this.postSectorChoice
+        ? this.postSectorChoice.optional.available
+          ? 'Stay for Optional Challenge'
+          : 'Optional Challenge Unavailable'
+        : this.routeChoice
+          ? 'Choose Route at Next Signal'
           : 'Begin Operation'
       : onward && this.postSectorChoice
         ? 'Continue to Next Sector'
@@ -629,13 +642,15 @@ export class SectorTransitionScene implements Scene {
     const status = document.createElement('span');
     status.className = 'navigation-detail-status';
     status.dataset.available = 'true';
-    status.textContent = 'CHOOSE ROUTE';
+    status.textContent = this.postSectorChoice ? '4 OPTIONS' : 'CHOOSE ROUTE';
     heading.append(identity, status);
 
     const summary = document.createElement('p');
     summary.className = 'navigation-detail-summary';
     summary.dataset.testid = 'route-story-brief';
-    summary.textContent = model.summary;
+    summary.textContent = this.postSectorChoice
+      ? `${model.summary} The cleared sector's optional hold remains open until departure.`
+      : model.summary;
 
     const body = document.createElement('div');
     body.className = 'navigation-detail-body navigation-route-body';
@@ -645,15 +660,57 @@ export class SectorTransitionScene implements Scene {
     );
     const routeOptions = document.createElement('div');
     routeOptions.className = 'navigation-route-options';
+    if (this.postSectorChoice) routeOptions.classList.add('navigation-route-options-flat');
     routeOptions.dataset.testid = 'navigation-route-options';
-    routeOptions.setAttribute('aria-label', `Routes from ${model.edgeLabel}`);
+    routeOptions.setAttribute(
+      'aria-label',
+      this.postSectorChoice
+        ? `Optional hold and routes from ${model.edgeLabel}`
+        : `Routes from ${model.edgeLabel}`
+    );
+
+    if (this.postSectorChoice) {
+      const optional = this.postSectorChoice.optional;
+      const button = document.createElement('button');
+      button.className = 'choice-card navigation-optional-flight-card navigation-flight-option';
+      button.type = 'button';
+      button.disabled = !optional.available;
+      button.dataset.testid = 'navigation-optional-action';
+      button.addEventListener('click', () => this.postSectorChoice?.onChoose(optional.id));
+
+      const optionHeading = document.createElement('span');
+      optionHeading.className = 'navigation-route-card-heading';
+      const name = document.createElement('strong');
+      name.textContent = optional.label.replace(/^Hold orbit:\s*/i, '');
+      const kind = document.createElement('small');
+      kind.textContent = `OPTIONAL · HOLD S${this.routeChoice.sourceSectorIndex + 1}`;
+      optionHeading.append(name, kind);
+      const optionSummary = document.createElement('span');
+      optionSummary.className = 'navigation-route-card-summary';
+      optionSummary.textContent = optional.unavailableReason ?? optional.summary;
+      button.setAttribute(
+        'aria-label',
+        `${optional.label}. Optional hold in sector ${this.routeChoice.sourceSectorIndex + 1}. ${optionSummary.textContent}`
+      );
+      button.append(optionHeading, optionSummary);
+      routeOptions.append(button);
+    }
 
     for (const option of model.options) {
       const button = document.createElement('button');
-      button.className = 'choice-card route-card navigation-route-card';
+      button.className = 'choice-card route-card navigation-route-card navigation-flight-option';
       button.type = 'button';
       button.dataset.testid = `route-${option.route.kind}`;
       button.addEventListener('click', () => this.routeChoice?.onChoose(option.route));
+      button.setAttribute(
+        'aria-label',
+        [
+          option.route.label,
+          `${option.riskLabel} risk ${option.route.risk}`,
+          option.summary,
+          ...option.details
+        ].join('. ')
+      );
 
       const routeHeading = document.createElement('span');
       routeHeading.className = 'navigation-route-card-heading';

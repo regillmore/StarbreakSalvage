@@ -1980,7 +1980,7 @@ Acceptance:
 
 Status:
 
-- Implemented in work order 134, flow-refined in work order 135, and discovery-refined in work order 137. `ActConstellation` supplies four stable five-sector layouts with completed/current/hidden base projection; later sectors stay anonymous until the post-sector presentation promotes the one actionable destination and edge to `choice`. `ConstellationMap` renders the shared hub grammar with spatial controls and bounded resolve motion, plus a reduced-motion-safe pulse on active sector choices. Sector Navigation composes five unlinked service satellites around the chart. Fresh mission schedules skip the former early approach/detour branch, then return after the required gate with `HOLD ONCE` on the current node and `CONTINUE` on the newly resolved next node. Final relief advances directly into route selection after either branch; the Operational Map remains only as a compatibility/data-model boundary. The paired hold, direct branch, service returns, and visibility state derive from existing mission/run state, so snapshot v11 remains authoritative without new persisted fields.
+- Implemented in work order 134, flow-refined in work orders 135 and 138, and discovery-refined in work order 137. `ActConstellation` supplies four stable five-sector layouts with completed/current/hidden base projection; later sectors stay anonymous until the post-sector presentation promotes the one actionable destination and edge to `choice`. `ConstellationMap` renders the shared hub grammar with spatial controls and bounded resolve motion, plus a reduced-motion-safe pulse on active sector choices. Sector Navigation composes five unlinked service satellites around the chart. Fresh mission schedules skip the former early approach/detour branch, then return after the required gate with `HOLD ONCE` on the current node and `CHOOSE ROUTE` on the newly resolved next node. The target detail exposes the local hold beside all three onward routes; final relief is settled synchronously when a route begins. The Operational Map remains only as a compatibility/data-model boundary. The paired hold, direct branch, service returns, and visibility state derive from existing mission/run state, so snapshot v11 remains authoritative without new persisted fields.
 
 ### BL4 - Embedded constellation route plotting
 
@@ -1992,7 +1992,7 @@ Acceptance:
 
 Status:
 
-- Implemented in work order 136. `RouteNavigation` projects the completed-to-next-sector edge, next contract/objective, and three compact authored route options. `SectorTransitionScene` marks the source `DEPARTED`, the destination `CHOOSE ROUTE`, and their same-act edge as the active choice; cross-act and terminal choices stay local rather than creating false edges. `GameApp` retains the existing route outcome/shop/event/reward/advance sequence, returns common services to the pending plot, and checkpoints extraction-stage route plots through the compatible v11 operational-map target.
+- Implemented in work order 136 and flattened with the paired hold in work order 138. `RouteNavigation` projects the completed-to-next-sector edge, next contract/objective, and three compact authored route options. `SectorTransitionScene` marks the destination `CHOOSE ROUTE` and keeps the source at `HOLD ONCE` while the optional remains available; after optional resolution, the source becomes `DEPARTED`. Cross-act and terminal choices stay local rather than creating false edges. `GameApp` retains the existing route outcome/shop/event/reward/advance sequence, returns common services to the pending plot, and checkpoints extraction-stage route plots through the compatible v11 operational-map target.
 
 ### BL5 - Unknown future signals and active destination emphasis
 
@@ -2005,3 +2005,15 @@ Acceptance:
 Status:
 
 - Implemented in work order 137. The base act plan no longer has a `revealed` status. `SectorTransitionScene` resolves only its known onward or route target from immutable run generation and promotes only that edge to `choice`. CSS isolates active emphasis in a pseudo-ring with a 3.2-second cycle and static accessibility fallbacks; deterministic and Chromium coverage proves anonymous opening signals, just-in-time S2 resolution, and active-node emphasis.
+
+### BL6 - Flat post-sector flight board
+
+Acceptance:
+
+- The first post-sector view offers one local optional hold and three next-sector routes as four simultaneous actions, with no separate continuation commitment.
+- Direct route choice preserves default-branch, relief, route outcome, reward, service, and sector-advance ordering; optional choice preserves its guarded combat path and then returns to three routes.
+- The four options remain keyboard/pointer accessible and fit the standard detail pane without internal scrolling.
+
+Status:
+
+- Implemented in work order 138. `GameApp.showMissionBranch` exposes a shared branch-commit seam so direct route selection can settle the default branch and relief synchronously before entering the existing route pipeline. `SectorTransitionScene` composes the optional and route inputs into a four-card flight board while retaining the route-only recovery state. No mission, route, generation, or snapshot schema changed.
