@@ -279,15 +279,28 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
       .getByTestId('navigation-destination-route')
       .evaluate((element) => getComputedStyle(element, '::after').animationName)
   ).toContain('constellation-sector-pulse');
+  expect(
+    await page
+      .getByTestId('navigation-destination-optional')
+      .evaluate((element) => getComputedStyle(element, '::after').animationName)
+  ).toContain('constellation-sector-pulse');
+  for (const nodeId of ['navigation-destination-optional', 'navigation-destination-route']) {
+    expect(
+      await page.getByTestId(nodeId).evaluate((element) => getComputedStyle(element).borderTopColor)
+    ).toContain('255, 159, 67');
+  }
   await expect(page.getByTestId('navigation-route-options')).toBeVisible();
-  await expect(page.locator('.navigation-flight-option')).toHaveCount(4);
+  await expect(page.locator('.navigation-flight-option')).toHaveCount(3);
   await expect(page.locator('.navigation-route-card')).toHaveCount(3);
-  await expect(page.getByTestId('navigation-optional-action')).toBeEnabled();
+  await expect(page.getByTestId('navigation-optional-action')).toHaveCount(0);
   expect(
     await page
       .locator('.navigation-route-body')
       .evaluate((element) => element.scrollHeight <= element.clientHeight + 1)
   ).toBe(true);
+  await page.getByTestId('navigation-destination-optional').click();
+  await expect(page.getByTestId('navigation-route-options')).toHaveCount(0);
+  await expect(page.getByTestId('navigation-optional-action')).toBeEnabled();
   await page.getByTestId('navigation-optional-action').click();
   await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
   await page.keyboard.press('8');
@@ -312,6 +325,56 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
     'REDLINE CONTRACT | Debt Runner'
   );
 
+  await page.getByTestId('open-hardpoint-control').click();
+  await expect(page.getByTestId('navigation-destination-detail')).toContainText(
+    'Hardpoint Control'
+  );
+  await page.getByTestId('navigation-destination-action').click();
+  await expect(page.getByTestId('salvage-foundry')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Hardpoint Control' })).toBeVisible();
+  await expect(page.getByTestId('foundry-boundary')).toContainText(/Undo restores/i);
+  await expect(page.getByTestId('foundry-grid-readout')).toContainText('LEGAL DRAFT');
+  await expect(page.getByTestId('foundry-command-console')).toBeVisible();
+  const attackPreview = page.getByTestId('foundry-attack-preview');
+  await expect(attackPreview.getByRole('img')).toBeVisible();
+  await expect(attackPreview).toHaveAttribute('aria-label', /owned item hooks/);
+  await expect(attackPreview.locator('.ship-preview-weapon-cue')).toHaveCount(0);
+  const liveProjectiles = attackPreview.getByTestId('foundry-attack-projectile');
+  expect(await liveProjectiles.count()).toBeGreaterThan(0);
+  await expect(liveProjectiles.first()).toHaveAttribute('data-velocity', /-?\d+(?:\.\d+)?,-\d+/);
+  await expect(liveProjectiles.first()).toHaveAttribute('data-damage', /\d/);
+  await expect(page.getByTestId('foundry-attack-projectile-layer')).toHaveAttribute(
+    'data-volley-size',
+    /[1-9]\d*/
+  );
+  await expect(page.getByTestId('foundry-mini-hud')).toContainText(/BASELINE|DRAFT DELTA/);
+  await expect(page.getByTestId('foundry-meter-power').getByRole('meter')).toBeVisible();
+  await expect(page.getByTestId('foundry-attack-impact')).toBeVisible();
+  const upgradeCircuit = page.getByTestId('foundry-upgrade-circuit');
+  await expect(
+    upgradeCircuit.getByRole('heading', { name: /Upgrade Circuit \/ 3\/6/ })
+  ).toBeVisible();
+  await expect(upgradeCircuit).toContainText(/Signal order: .* > /);
+  await expect(page.locator('.foundry-socket')).toHaveCount(6);
+  await expect(page.locator('.foundry-socket').first()).toContainText(/1 .* \/ /);
+  const firstUpgrade = upgradeCircuit.locator('.foundry-upgrade-card').first();
+  await expect(firstUpgrade).toContainText(/LIVE \d/);
+  const moveSelector = firstUpgrade.locator('.foundry-socket-select');
+  await expect(moveSelector).toHaveAttribute('aria-label', /Fit or move/);
+  await moveSelector.selectOption({ index: 1 });
+  await expect(page.getByTestId('foundry-status')).toContainText(/routed into/i);
+  await page.getByTestId('foundry-undo').click();
+  await expect(page.getByTestId('foundry-upgrade-circuit')).toContainText(
+    /Upgrade Circuit \/ 3\/6/
+  );
+  await expect(page.locator('.foundry-cargo-card')).toHaveCount(0);
+  await expect(page.getByTestId('foundry-pending-history')).toContainText('Draft clean.');
+  await page.getByTestId('foundry-commit').click();
+  await expect(page.getByRole('heading', { name: /Running Audit briefing/ })).toBeVisible();
+  await expect(page.locator('.transition-panel')).toHaveAttribute('data-contract-theme', 'redline');
+  await expect(page.getByTestId('open-hardpoint-control')).toHaveAttribute('data-visited', 'true');
+
+  await page.getByTestId('navigation-destination-route').click();
   await page.getByTestId('route-shop').click();
   await expect(page.getByRole('heading', { name: 'Shop' })).toBeVisible();
   await expect(page.locator('.shop-panel')).toHaveAttribute('data-contract-theme', 'redline');
@@ -338,61 +401,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.locator('.reward-card').first()).toContainText(/Live effect|Bridge effect/);
 
   await page.getByRole('button', { name: /Take / }).first().click();
-  await expect(page.getByTestId('mission-briefing')).toBeVisible();
-  await expect(page.getByRole('heading', { name: /Running Audit briefing/ })).toBeVisible();
-  await page.getByTestId('open-hardpoint-control').click();
-  await expect(page.getByTestId('navigation-destination-detail')).toContainText(
-    'Recovered hardware'
-  );
-  await page.getByTestId('navigation-destination-action').click();
-  await expect(page.getByTestId('salvage-foundry')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Hardpoint Control' })).toBeVisible();
-  await expect(page.getByTestId('foundry-boundary')).toContainText(/Undo restores/i);
-  await expect(page.getByTestId('foundry-grid-readout')).toContainText('LEGAL DRAFT');
-  await expect(page.getByTestId('foundry-command-console')).toBeVisible();
-  const attackPreview = page.getByTestId('foundry-attack-preview');
-  await expect(attackPreview.getByRole('img')).toBeVisible();
-  await expect(attackPreview).toHaveAttribute('aria-label', /owned item hooks/);
-  await expect(attackPreview.locator('.ship-preview-weapon-cue')).toHaveCount(0);
-  const liveProjectiles = attackPreview.getByTestId('foundry-attack-projectile');
-  expect(await liveProjectiles.count()).toBeGreaterThan(0);
-  await expect(liveProjectiles.first()).toHaveAttribute('data-velocity', /-?\d+(?:\.\d+)?,-\d+/);
-  await expect(liveProjectiles.first()).toHaveAttribute('data-damage', /\d/);
-  await expect(page.getByTestId('foundry-attack-projectile-layer')).toHaveAttribute(
-    'data-volley-size',
-    /[1-9]\d*/
-  );
-  await expect(page.getByTestId('foundry-mini-hud')).toContainText(/BASELINE|DRAFT DELTA/);
-  await expect(page.getByTestId('foundry-meter-power').getByRole('meter')).toBeVisible();
-  await expect(page.getByTestId('foundry-attack-impact')).toBeVisible();
-  const upgradeCircuit = page.getByTestId('foundry-upgrade-circuit');
-  await expect(
-    upgradeCircuit.getByRole('heading', { name: /Upgrade Circuit \/ 4\/6/ })
-  ).toBeVisible();
-  await expect(upgradeCircuit).toContainText(/Signal order: .* > /);
-  await expect(page.locator('.foundry-socket')).toHaveCount(6);
-  await expect(page.locator('.foundry-socket').first()).toContainText(/1 .* \/ /);
-  const firstUpgrade = upgradeCircuit.locator('.foundry-upgrade-card').first();
-  await expect(firstUpgrade).toContainText(/LIVE \d/);
-  const moveSelector = firstUpgrade.locator('.foundry-socket-select');
-  await expect(moveSelector).toHaveAttribute('aria-label', /Fit or move/);
-  await moveSelector.selectOption({ index: 1 });
-  await expect(page.getByTestId('foundry-status')).toContainText(/routed into/i);
-  await page.getByTestId('foundry-undo').click();
-  await expect(page.getByTestId('foundry-upgrade-circuit')).toContainText(
-    /Upgrade Circuit \/ 4\/6/
-  );
-  await expect(page.locator('.foundry-cargo-card').first()).toContainText(/scrap \+\d+/i);
-  await page.locator('.foundry-cargo-card').first().getByRole('button', { name: /Route/ }).click();
-  await expect(page.getByTestId('foundry-pending-history')).toContainText('Reroute');
-  await page.getByTestId('foundry-undo').click();
-  await expect(page.getByTestId('foundry-pending-history')).toContainText('Draft clean.');
-  await page.getByTestId('foundry-commit').click();
-  await expect(page.getByRole('heading', { name: /Running Audit briefing/ })).toBeVisible();
-  await expect(page.locator('.transition-panel')).toHaveAttribute('data-contract-theme', 'redline');
-  await expect(page.getByTestId('open-hardpoint-control')).toHaveAttribute('data-visited', 'true');
-
-  await page.getByRole('button', { name: 'Begin Operation' }).click();
+  await expect(page.getByTestId('mission-briefing')).toHaveCount(0);
   await expectGameplaySector(page, 'Trade War Corridor');
 
   await page.keyboard.press('5');
@@ -1290,19 +1299,15 @@ async function forceCompleteSectorAndEnterNext(page: Page, nextSectorName: strin
   await page.keyboard.press('8');
   await expect(page.getByTestId('mission-briefing')).toBeVisible();
   await expect(page.getByTestId('navigation-route-options')).toBeVisible();
-  await expect(page.locator('.navigation-flight-option')).toHaveCount(4);
-  await expect(page.getByTestId('navigation-optional-action')).toBeEnabled();
+  await expect(page.locator('.navigation-flight-option')).toHaveCount(3);
+  await expect(page.getByTestId('navigation-optional-action')).toHaveCount(0);
+  await expect(page.getByTestId('navigation-destination-optional')).toContainText('HOLD ONCE');
   await expect(page.getByTestId('navigation-destination-continue')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Choose Route' })).toHaveCount(0);
   await expect(page.getByTestId('mission-relief')).toHaveCount(0);
 
   await chooseFirstRouteAndReward(page);
-  await expect(page.getByTestId('mission-briefing')).toBeVisible();
-  await expect(page.getByTestId('mission-objective-preview')).toContainText(
-    /ASSAULT|PURSUE|SALVAGE|RESCUE|DEFEND|SCAN|SABOTAGE|ESCAPE|ESCORT|BREACH GATE/
-  );
-
-  await page.getByRole('button', { name: 'Begin Operation' }).click();
+  await expect(page.getByTestId('mission-briefing')).toHaveCount(0);
   await expectGameplaySector(page, nextSectorName);
 }
 
@@ -1333,5 +1338,4 @@ async function chooseFirstRouteAndReward(page: Page): Promise<void> {
 
   await expect(page.getByRole('heading', { name: 'Choose Reward' })).toBeVisible();
   await page.getByRole('button', { name: /Take / }).first().click();
-  await expect(page.getByTestId('mission-briefing')).toBeVisible();
 }

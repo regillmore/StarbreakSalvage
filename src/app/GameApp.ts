@@ -1984,7 +1984,7 @@ export class GameApp {
       return;
     }
 
-    this.showSectorTransition();
+    this.beginCurrentSectorOperation();
   }
 
   private showDebugFrontierGate(): void {
@@ -2223,23 +2223,7 @@ export class GameApp {
         this.currentRun,
         this.runSession,
         this.selectedContract,
-        () => {
-          const briefing = this.dispatchCurrentMission({
-            id: `${this.runSession.mission.currentStageId}:briefing-confirmed`,
-            type: 'confirmBriefing'
-          });
-          if (briefing.disposition !== 'advanced') {
-            return;
-          }
-
-          const entry = this.dispatchCurrentMission({
-            id: `${this.runSession.mission.currentStageId}:entry-complete`,
-            type: 'completeEntry'
-          });
-          if (entry.disposition === 'advanced') {
-            this.showGameplay();
-          }
-        },
+        () => this.beginCurrentSectorOperation(),
         createMissionReadModel(schedule, this.runSession.mission),
         createMissionDebugState(schedule, this.runSession.mission),
         () => void this.showCrewQuarters(),
@@ -2249,6 +2233,20 @@ export class GameApp {
         () => this.showNavigationFoundry()
       )
     );
+  }
+
+  private beginCurrentSectorOperation(): void {
+    const briefing = this.dispatchCurrentMission({
+      id: `${this.runSession.mission.currentStageId}:briefing-confirmed`,
+      type: 'confirmBriefing'
+    });
+    if (briefing.disposition !== 'advanced') return;
+
+    const entry = this.dispatchCurrentMission({
+      id: `${this.runSession.mission.currentStageId}:entry-complete`,
+      type: 'completeEntry'
+    });
+    if (entry.disposition === 'advanced') this.showGameplay();
   }
 
   private async showCrewQuarters(
