@@ -151,7 +151,7 @@ describe('RunSnapshot', () => {
     expect(storage.getItem(SAVE_STORAGE_KEY)).toBe('permanent-save-sentinel');
   });
 
-  it('retires every pre-apex snapshot generation safely', () => {
+  it('retires every pre-socket snapshot generation safely', () => {
     for (const key of LEGACY_RUN_SNAPSHOT_STORAGE_KEYS) {
       const storage = new MemoryStorage();
       storage.setItem(SAVE_STORAGE_KEY, 'permanent-save-sentinel');
@@ -196,6 +196,40 @@ describe('RunSnapshot', () => {
         })
       )
     ).toThrow(/carrier extension is invalid/);
+  });
+
+  it('rejects duplicate or ghost item socket assignments', () => {
+    const run = generateRunSkeleton('SNAPSHOT-SOCKET-DRIFT');
+    const contract = run.contracts[0]!;
+    const snapshot = createRunSnapshot({
+      run,
+      contract,
+      session: createRunSession(run, contract),
+      target: 'sectorTransition',
+      label: 'Socket circuit'
+    });
+    const firstSocket = snapshot.session.itemInstances[0]!.socket!;
+    const duplicate = snapshot.session.itemInstances.map((item, index) =>
+      index === 1 ? { ...item, socket: firstSocket } : item
+    );
+    const ghost = snapshot.session.itemInstances.map((item, index) =>
+      index === 0
+        ? { ...item, socket: { componentId: 'missing', socketIndex: 0, circuitOrder: 0 } }
+        : item
+    );
+
+    expect(() =>
+      restoreRunSnapshot({
+        ...snapshot,
+        session: { ...snapshot.session, itemInstances: duplicate }
+      })
+    ).toThrow(/item socket state/);
+    expect(() =>
+      restoreRunSnapshot({
+        ...snapshot,
+        session: { ...snapshot.session, itemInstances: ghost }
+      })
+    ).toThrow(/item socket state/);
   });
 
   it('enforces the snapshot byte budget and explicit storage helpers', () => {

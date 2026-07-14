@@ -315,14 +315,13 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'uncommon',
     tags: ['ricochet', 'plasma'],
     hooks: ['onProjectileSpawn'],
-    effect: 'eligible shots live longer for edge bounces later',
+    effect: 'phase, plasma, and ricochet shots rebound once from an arena sidewall',
     weight: 9,
     metadata: {
       family: 'phase-graze',
       sources: ['combat'],
       unlockTier: 'baseline',
-      implementationStatus: 'bridge',
-      implementationNote: 'Extends projectile life now; true edge-bounce behavior is future work.',
+      implementationStatus: 'live',
       stacking: 'unique',
       uiTags: ['plasma', 'phase']
     }
@@ -418,14 +417,13 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'cursed',
     tags: ['curse', 'armor'],
     hooks: ['onPlayerHit'],
-    effect: 'lowers comfort but makes revenge builds louder',
+    effect: 'turns existing retaliation shots into amplified cursed overkill, then adds a fan',
     weight: 4,
     metadata: {
       family: 'curse-relic',
       sources: ['vault'],
       unlockTier: 'advanced',
-      implementationStatus: 'bridge',
-      implementationNote: 'Has curse retaliation now; explicit downside tuning is future work.',
+      implementationStatus: 'live',
       stacking: 'unique',
       uiTags: ['curse', 'armor']
     }
@@ -453,15 +451,13 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'rare',
     tags: ['phase'],
     hooks: ['onFire'],
-    effect: 'phase-biased volleys add a tiny homing shard later',
+    effect: 'every fourth volley phases the entire current projectile chain',
     weight: 6,
     metadata: {
       family: 'phase-graze',
       sources: ['combat', 'vault'],
       unlockTier: 'baseline',
-      implementationStatus: 'bridge',
-      implementationNote:
-        'Adds phase shots now; a dedicated graze hook should carry more of the identity.',
+      implementationStatus: 'live',
       stacking: 'unique',
       uiTags: ['phase']
     }
@@ -472,14 +468,13 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'prototype',
     tags: ['curse'],
     hooks: ['onEnemyKilled'],
-    effect: 'cursed rewards bias toward stronger salvage payouts',
+    effect: 'cursed and overkill executions rupture into salvage and blast damage',
     weight: 3,
     metadata: {
       family: 'curse-relic',
       sources: ['vault'],
       unlockTier: 'advanced',
-      implementationStatus: 'bridge',
-      implementationNote: 'Pays salvage now; vault/source reward weighting is future work.',
+      implementationStatus: 'live',
       stacking: 'unique',
       uiTags: ['vault', 'curse']
     }
@@ -813,7 +808,7 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'rare',
     tags: ['arc', 'plasma'],
     hooks: ['onProjectileSpawn'],
-    effect: 'arc and plasma shots gain a brighter invoice charge',
+    effect: 'split, phase, ricochet, plasma, and arc shots gain a heavy arc charge',
     weight: 6,
     metadata: {
       family: 'laser-split',
@@ -880,8 +875,8 @@ export const ITEMS: readonly ItemDefinition[] = [
     name: 'Signal Clone Stamp',
     rarity: 'rare',
     tags: ['drone', 'arc'],
-    hooks: ['onProjectileSpawn'],
-    effect: 'drone shots carry a stamped arc signature',
+    hooks: ['onFire'],
+    effect: 'every third volley clones the projectile chain built before this socket into drone shots',
     weight: 6,
     metadata: {
       family: 'drone-copy',

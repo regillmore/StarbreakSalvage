@@ -24,6 +24,7 @@ export interface ProjectileBlueprint {
   readonly ttl: number;
   readonly tags: readonly ItemTag[];
   readonly procDepth: number;
+  readonly ricochetBounces?: number;
   readonly environmentDamageSource?: EnvironmentObjectDamageSource;
 }
 
@@ -187,7 +188,8 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_arc_welder_drone',
     'item_lane_splitter_chisel',
     'item_wake_missile_abacus',
-    'item_sidecar_drone_bay'
+    'item_sidecar_drone_bay',
+    'item_signal_clone_stamp'
   ],
   onProjectileSpawn: [
     'item_chain_arc_capacitor',
@@ -196,7 +198,6 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_phase_anchor_spool',
     'item_plasma_bloom_filter',
     'item_arc_window_invoice',
-    'item_signal_clone_stamp',
     'item_heat_signature_loop'
   ],
   onEnemyKilled: [
@@ -305,7 +306,11 @@ export function applyItemHooksWithReport<THook extends ItemHookName>(
 
 export function getOrderedItemInstances(instances: readonly ItemInstance[]): ItemInstance[] {
   return [...instances].sort(
-    (a, b) => a.acquisitionOrder - b.acquisitionOrder || a.itemId.localeCompare(b.itemId)
+    (a, b) =>
+      (a.socket?.circuitOrder ?? 1_000_000 + a.acquisitionOrder) -
+        (b.socket?.circuitOrder ?? 1_000_000 + b.acquisitionOrder) ||
+      a.acquisitionOrder - b.acquisitionOrder ||
+      a.itemId.localeCompare(b.itemId)
   );
 }
 
@@ -413,11 +418,16 @@ function applyOnProjectileSpawn(
     };
   }
 
-  if (itemId === 'item_ricochet_license' && hasAnyTag(payload.projectile.tags, ['plasma'])) {
+  if (
+    itemId === 'item_ricochet_license' &&
+    hasAnyTag(payload.projectile.tags, ['plasma', 'phase', 'ricochet'])
+  ) {
     return {
       projectile: {
         ...payload.projectile,
-        ttl: payload.projectile.ttl + 0.35
+        ttl: payload.projectile.ttl + 0.8,
+        tags: addTags(payload.projectile.tags, ['ricochet']),
+        ricochetBounces: Math.max(1, payload.projectile.ricochetBounces ?? 0)
       }
     };
   }
@@ -460,23 +470,14 @@ function applyOnProjectileSpawn(
 
   if (
     itemId === 'item_arc_window_invoice' &&
-    hasAnyTag(payload.projectile.tags, ['arc', 'plasma'])
+    hasAnyTag(payload.projectile.tags, ['arc', 'plasma', 'phase', 'ricochet', 'split'])
   ) {
     return {
       projectile: {
         ...payload.projectile,
-        damage: payload.projectile.damage * 1.06,
-        ttl: payload.projectile.ttl + 0.12,
-        tags: addTags(payload.projectile.tags, ['arc'])
-      }
-    };
-  }
-
-  if (itemId === 'item_signal_clone_stamp' && hasAnyTag(payload.projectile.tags, ['drone'])) {
-    return {
-      projectile: {
-        ...payload.projectile,
-        damage: payload.projectile.damage * 1.08,
+        damage: payload.projectile.damage * 1.32,
+        radius: payload.projectile.radius + 1,
+        ttl: payload.projectile.ttl + 0.2,
         tags: addTags(payload.projectile.tags, ['arc'])
       }
     };
@@ -599,27 +600,35 @@ function applyOnFire(
     };
   }
 
-  if (itemId === 'item_phase_grazer' && payload.volleyIndex % 5 === 0) {
-    const seedProjectile = payload.projectiles[0];
+  if (itemId === 'item_phase_grazer' && payload.volleyIndex % 4 === 0) {
+    return {
+      ...payload,
+      projectiles: payload.projectiles.map((projectile) => ({
+        ...projectile,
+        damage: projectile.damage * 1.2,
+        ttl: projectile.ttl + 0.35,
+        tags: addTags(projectile.tags, ['phase'])
+      }))
+    };
+  }
 
-    if (!seedProjectile) {
-      return payload;
-    }
-
+  if (itemId === 'item_signal_clone_stamp' && payload.volleyIndex % 3 === 0) {
+    const sources = payload.projectiles
+      .filter((projectile) => !projectile.tags.includes('drone'))
+      .slice(0, 8);
     return {
       ...payload,
       projectiles: [
         ...payload.projectiles,
-        {
-          ...seedProjectile,
-          vx: seedProjectile.vx * 0.35,
-          vy: seedProjectile.vy * 1.08,
-          damage: Math.max(0.35, seedProjectile.damage * 0.45),
-          radius: Math.max(3, seedProjectile.radius * 0.7),
-          ttl: Math.max(1.1, seedProjectile.ttl * 0.8),
-          tags: addTags(seedProjectile.tags, ['phase']),
-          procDepth: seedProjectile.procDepth + 1
-        }
+        ...sources.map((projectile, index) => ({
+          ...projectile,
+          x: projectile.x + (index % 2 === 0 ? -24 : 24),
+          vx: projectile.vx + (index % 2 === 0 ? -36 : 36),
+          damage: Math.max(0.3, projectile.damage * 0.55),
+          radius: Math.max(3, projectile.radius * 0.78),
+          tags: addTags(projectile.tags, ['drone', 'arc']),
+          procDepth: projectile.procDepth + 1
+        }))
       ]
     };
   }
@@ -819,10 +828,15 @@ function applyOnEnemyKilled(
     };
   }
 
-  if (itemId === 'item_vault_parasite') {
+  if (
+    itemId === 'item_vault_parasite' &&
+    hasAnyTag(payload.projectileTags, ['curse', 'overkill'])
+  ) {
     return {
       ...payload,
-      bonusSalvage: payload.bonusSalvage + 1
+      bonusSalvage:
+        payload.bonusSalvage + 2 + Math.max(0, Math.ceil(payload.overkillDamage * 0.5)),
+      blastDamage: payload.blastDamage + 0.75
     };
   }
 
@@ -946,21 +960,26 @@ function applyOnPlayerHit(
   }
 
   if (itemId === 'item_cursed_hull_plate') {
+    const amplified = payload.revengeProjectiles.map((projectile) => ({
+      ...projectile,
+      damage: projectile.damage * 1.35,
+      tags: addTags(projectile.tags, ['curse', 'overkill'])
+    }));
     return {
       ...payload,
       revengeProjectiles: [
-        ...payload.revengeProjectiles,
-        {
+        ...amplified,
+        ...[-120, 0, 120].map((vx) => ({
           x: 0,
           y: 0,
-          vx: 0,
+          vx,
           vy: -570,
           radius: 5,
-          damage: Math.max(0.65, payload.damage * 0.6),
+          damage: Math.max(0.75, payload.damage * 0.7),
           ttl: 0.8,
-          tags: ['curse', 'armor'],
+          tags: ['curse', 'armor', 'overkill'] as const,
           procDepth: 1
-        }
+        }))
       ]
     };
   }

@@ -1942,3 +1942,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 110. The release audit found no severe Phase 11 blocker across snapshot/save recovery, executable topology and cleanup, frontier endings, carrier, boarding, fronts, crew arcs, fleetcraft, apex hunts, summaries, accessibility automation, browser load, or Pages paths. Scenario Lab grows from thirteen to sixteen public fixtures with carrier-command, frontier-ending, and snapshot/duration audit cards. Endurance round-trips all fixtures plus the finale and restores one frontier snapshot into both decisions; Chromium resumes combat and settled-map checkpoints before reaching extraction victory. Deterministic structural measurements are 28.15 minutes fresh/progressed standard, 18.50 early extraction, and 36.65 completionist, while real full-voyage fatigue and non-Chromium/device evidence remain manual.
+
+## Epic BL - Phase 12 construction grammar
+
+### BL1 - Socketed upgrade circuits
+
+Acceptance:
+
+- Installed major components expose limited typed upgrade sockets, and acquired items remain portable inventory whose mechanics activate only while validly fitted.
+- Fit, eject, move, swap, component replacement, undo, skip, commit, preview, combat, economy, and snapshot flows share one deterministic reconciliation model.
+- Circuit order creates materially different projectile and retaliation chains, with bounded recursion and readable cause-and-effect in Hardpoint Control.
+
+Status:
+
+- Implemented in work order 132. Every module provides a native and flex socket, `ItemSockets` owns fitting and active-loadout projection, and Hardpoint Control exposes occupancy plus compact rack controls and a signal-order readout. Snapshot v10 persists and validates the circuit while retiring v9. Six previously weak or placeholder upgrades now form order-sensitive phase, split, clone, ricochet, arc, curse, overkill, revenge, blast, and salvage interactions; only fitted items reach combat, route, reward, shop, or preview hooks.

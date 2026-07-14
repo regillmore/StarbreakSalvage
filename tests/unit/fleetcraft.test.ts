@@ -181,7 +181,7 @@ describe('Fleetcraft', () => {
     });
   });
 
-  it('round-trips fleet state through snapshot v9', () => {
+  it('round-trips fleet state through snapshot v10', () => {
     const session = createRunSession(run, run.contracts[0]!);
     session.fleet = readyState(2);
     const snapshot = createRunSnapshot({
@@ -191,7 +191,7 @@ describe('Fleetcraft', () => {
       target: 'sectorTransition',
       label: 'Fleet bay'
     });
-    expect(snapshot.version).toBe(9);
+    expect(snapshot.version).toBe(10);
     expect(snapshot.extensions.fleet.planId).toBe(run.fleet.id);
     expect(restoreRunSnapshot(snapshot).session.fleet).toEqual(session.fleet);
   });

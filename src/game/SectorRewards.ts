@@ -13,6 +13,7 @@ import { generateRewardChoices, type RewardChoice } from './Rewards';
 import { getRewardUpgradeBiasTags, getRewardUpgradeChoiceBonus } from './UpgradeEffects';
 import { createActEconomyProfile, getActEconomyRewardChoiceBonus } from './ActEconomy';
 import { createCarrierInfluence } from './CarrierCommand';
+import { getActiveFittedItems } from './ItemSockets';
 
 export function generateSectorRewardChoices(options: {
   readonly run: RunSkeleton;
@@ -46,7 +47,10 @@ export function generateSectorRewardChoices(options: {
   const carrier = createCarrierInfluence(options.run.carrierPlan, options.session.carrier);
   const rewardPayload = applyCombinedHooks(
     'onRewardGenerated',
-    options.session.itemInstances,
+    getActiveFittedItems(
+      options.session.itemInstances,
+      options.session.engineering.committed
+    ),
     engineering.hooks,
     {
       routeKind: options.routeKind,

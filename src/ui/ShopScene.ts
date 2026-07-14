@@ -30,6 +30,7 @@ import {
   getFactionCampaignInfluence
 } from '../game/FactionCampaign';
 import { createCarrierInfluence } from '../game/CarrierCommand';
+import { getActiveFittedItems } from '../game/ItemSockets';
 
 export class ShopScene implements Scene {
   public readonly id = 'shop';
@@ -86,7 +87,10 @@ export class ShopScene implements Scene {
       priceDiscount,
       count: 4 + stockBonus,
       unlockedIds: this.run.unlockedIds,
-      itemInstances: this.session.itemInstances,
+      itemInstances: getActiveFittedItems(
+        this.session.itemInstances,
+        this.session.engineering.committed
+      ),
       sectorId: sector.sectorId,
       sectorRole: sector.sectorName,
       bossFactionId: sector.bossFactionId,

@@ -6,8 +6,19 @@ import {
   getWeaponEvolutionRecipe
 } from '../content/engineering';
 import { getShipFrameById, getShipModuleById } from '../content/shipModules';
+import { getItemById } from '../content/items';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import type { ItemInstance } from '../game/Rewards';
+import {
+  canFitItemInSocket,
+  createItemSocketCircuitSummary,
+  fitItemInSocket,
+  getActiveFittedItems,
+  getItemCompatibleSocketTypes,
+  getItemSocketSlots,
+  reconcileItemSockets,
+  unfitItem
+} from '../game/ItemSockets';
 import {
   commitFoundryDraft,
   createEngineeringDebugState,
@@ -47,6 +58,8 @@ import { createShipPreviewElement, createShipPreviewModel } from './ShipPreview'
 export class FoundryScene implements Scene {
   public readonly id = 'foundry';
   private state: EngineeringState;
+  private itemInstances: ItemInstance[];
+  private readonly committedItemInstances: ItemInstance[];
   private status = 'Component secured. Draft is reversible.';
 
   public constructor(
@@ -54,18 +67,28 @@ export class FoundryScene implements Scene {
     private readonly run: RunSkeleton,
     private readonly contract: StartingContract,
     engineering: EngineeringState,
-    private readonly itemInstances: readonly ItemInstance[],
+    itemInstances: readonly ItemInstance[],
     private readonly sectorIndex: number,
-    private readonly onComplete: (state: EngineeringState, salvageGained: number) => void,
+    private readonly onComplete: (
+      state: EngineeringState,
+      itemInstances: readonly ItemInstance[],
+      salvageGained: number
+    ) => void,
     private readonly crewAssist: string | null = null
   ) {
     this.state = engineering;
+    this.itemInstances = reconcileItemSockets(itemInstances, engineering.draft);
+    this.committedItemInstances = reconcileItemSockets(itemInstances, engineering.committed);
   }
 
   public enter(): void {
     const frame = getShipFrameById(this.state.draft.frameId);
     const resolution = resolveEngineeringSnapshot(this.state.draft);
-    const dashboard = createFoundryDashboardModel(this.state, this.itemInstances);
+    this.itemInstances = reconcileItemSockets(this.itemInstances, this.state.draft);
+    const dashboard = createFoundryDashboardModel(
+      this.state,
+      getActiveFittedItems(this.itemInstances, this.state.draft)
+    );
     const shell = document.createElement('main');
     shell.className = 'scene-panel scene-panel-wide foundry-panel';
     shell.dataset.testid = 'salvage-foundry';
@@ -124,6 +147,7 @@ export class FoundryScene implements Scene {
     workspace.className = 'foundry-workspace';
     workspace.append(this.createInstalledSection(frame), this.createCargoSection());
 
+    const sockets = this.createUpgradeCircuitSection();
     const fusion = this.createFusionSection();
     const pending = document.createElement('section');
     pending.className = 'foundry-history';
@@ -166,9 +190,13 @@ export class FoundryScene implements Scene {
     undo.type = 'button';
     undo.dataset.testid = 'foundry-undo';
     undo.textContent = 'Undo';
-    undo.disabled = this.state.pendingActions.length === 0;
+    undo.disabled =
+      this.state.pendingActions.length === 0 &&
+      this.getItemSocketSignature(this.itemInstances) ===
+        this.getItemSocketSignature(this.committedItemInstances);
     undo.addEventListener('click', () => {
       this.state = undoFoundryDraft(this.state);
+      this.itemInstances = [...this.committedItemInstances];
       this.status = 'Draft reset to the last committed ship.';
       this.enter();
     });
@@ -178,7 +206,9 @@ export class FoundryScene implements Scene {
     skip.type = 'button';
     skip.dataset.testid = 'foundry-skip';
     skip.textContent = 'Skip Foundry';
-    skip.addEventListener('click', () => this.onComplete(undoFoundryDraft(this.state), 0));
+    skip.addEventListener('click', () =>
+      this.onComplete(undoFoundryDraft(this.state), this.committedItemInstances, 0)
+    );
     controls.append(commit, undo, skip);
 
     shell.append(
@@ -190,6 +220,7 @@ export class FoundryScene implements Scene {
       console,
       issueList,
       workspace,
+      sockets,
       fusion,
       pending,
       status,
@@ -210,7 +241,7 @@ export class FoundryScene implements Scene {
       this.commit();
     }
     if (action === 'back' || action === 'pause') {
-      this.onComplete(undoFoundryDraft(this.state), 0);
+      this.onComplete(undoFoundryDraft(this.state), this.committedItemInstances, 0);
     }
   }
 
@@ -466,7 +497,11 @@ export class FoundryScene implements Scene {
         const componentName = document.createElement('strong');
         componentName.className = 'foundry-component-name';
         componentName.textContent = formatComponentName(component);
-        card.append(componentName, this.createComponentStatStrip(component));
+        card.append(
+          componentName,
+          this.createComponentStatStrip(component),
+          this.createComponentSocketStrip(component.id)
+        );
         const actions = document.createElement('div');
         actions.className = 'foundry-card-actions';
         actions.append(
@@ -493,6 +528,129 @@ export class FoundryScene implements Scene {
       list.append(card);
     }
     section.append(title, list);
+    return section;
+  }
+
+  private createComponentSocketStrip(componentId: string): HTMLElement {
+    const strip = document.createElement('div');
+    strip.className = 'foundry-socket-strip';
+    for (const slot of getItemSocketSlots(this.state.draft).filter(
+      (candidate) => candidate.componentId === componentId
+    )) {
+      const item = this.itemInstances.find(
+        (candidate) =>
+          candidate.socket?.componentId === componentId &&
+          candidate.socket.socketIndex === slot.socketIndex
+      );
+      const socket = document.createElement('span');
+      socket.className = `foundry-socket foundry-socket-${slot.type}`;
+      socket.dataset.testid = `foundry-socket-${componentId}-${slot.socketIndex}`;
+      socket.textContent = item
+        ? `${slot.circuitOrder + 1} ${slot.type.toUpperCase()} / ${getItemById(item.itemId).name}`
+        : `${slot.circuitOrder + 1} ${slot.type.toUpperCase()} / EMPTY`;
+      strip.append(socket);
+    }
+    return strip;
+  }
+
+  private createUpgradeCircuitSection(): HTMLElement {
+    const section = document.createElement('section');
+    section.className = 'foundry-section foundry-upgrade-circuit';
+    section.dataset.testid = 'foundry-upgrade-circuit';
+    const summary = createItemSocketCircuitSummary(this.itemInstances, this.state.draft);
+    const title = document.createElement('h2');
+    title.textContent = `Upgrade Circuit / ${summary.fitted}/${summary.capacity}`;
+    const copy = document.createElement('p');
+    copy.className = 'foundry-circuit-copy';
+    copy.textContent =
+      summary.chain.length > 0
+        ? `Signal order: ${summary.chain.join(' > ')}. Later upgrades receive earlier transformations.`
+        : 'No live circuit. Fit upgrades to installed components.';
+    const rack = document.createElement('div');
+    rack.className = 'foundry-card-grid foundry-upgrade-rack';
+
+    for (const instance of [...this.itemInstances].sort(
+      (left, right) => left.acquisitionOrder - right.acquisitionOrder
+    )) {
+      const item = getItemById(instance.itemId);
+      const card = document.createElement('article');
+      card.className = `foundry-card foundry-upgrade-card ${
+        instance.socket ? 'foundry-upgrade-fitted' : 'foundry-upgrade-idle'
+      }`;
+      card.dataset.testid = `foundry-upgrade-${instance.acquisitionOrder}`;
+      const heading = document.createElement('h3');
+      heading.textContent = item.name;
+      const effect = document.createElement('p');
+      effect.textContent = item.effect;
+      const badges = document.createElement('div');
+      badges.className = 'foundry-badge-row';
+      badges.append(
+        this.createBadge(instance.socket ? `LIVE ${instance.socket.circuitOrder + 1}` : 'RACK'),
+        ...getItemCompatibleSocketTypes(item).map((type) =>
+          this.createBadge(type.toUpperCase(), `foundry-badge-${type}`)
+        )
+      );
+      const actions = document.createElement('div');
+      actions.className = 'foundry-card-actions foundry-socket-actions';
+      if (instance.socket) {
+        actions.append(
+          this.createActionButton('Eject', () => {
+            this.itemInstances = unfitItem(this.itemInstances, instance.acquisitionOrder);
+            this.status = `${item.name} returned to the upgrade rack.`;
+          })
+        );
+      }
+      const compatibleSlots = getItemSocketSlots(this.state.draft).filter(
+        (candidate) =>
+          canFitItemInSocket(item.id, candidate) &&
+          !(
+            instance.socket?.componentId === candidate.componentId &&
+            instance.socket.socketIndex === candidate.socketIndex
+          )
+      );
+      if (compatibleSlots.length > 0) {
+        const select = document.createElement('select');
+        select.className = 'foundry-socket-select';
+        select.setAttribute('aria-label', `Fit or move ${item.name}`);
+        const prompt = document.createElement('option');
+        prompt.value = '';
+        prompt.textContent = instance.socket ? 'Move / swap…' : 'Fit / swap…';
+        select.append(prompt);
+        for (const slot of compatibleSlots) {
+          const occupant = this.itemInstances.find(
+            (candidate) =>
+              candidate.socket?.componentId === slot.componentId &&
+              candidate.socket.socketIndex === slot.socketIndex
+          );
+          const option = document.createElement('option');
+          option.value = `${slot.componentId}:${slot.socketIndex}`;
+          option.textContent = `${slot.circuitOrder + 1} / ${slot.moduleName} / ${slot.type.toUpperCase()}${
+            occupant ? ` / swap ${getItemById(occupant.itemId).name}` : ''
+          }`;
+          select.append(option);
+        }
+        select.addEventListener('change', () => {
+          const slot = compatibleSlots.find(
+            (candidate) =>
+              `${candidate.componentId}:${candidate.socketIndex}` === select.value
+          );
+          if (!slot) return;
+          this.itemInstances = fitItemInSocket(
+            this.itemInstances,
+            this.state.draft,
+            instance.acquisitionOrder,
+            slot.componentId,
+            slot.socketIndex
+          );
+          this.status = `${item.name} routed into ${slot.moduleName} ${slot.type} socket.`;
+          this.enter();
+        });
+        actions.append(select);
+      }
+      card.append(heading, badges, effect, actions);
+      rack.append(card);
+    }
+    section.append(title, copy, rack);
     return section;
   }
 
@@ -665,7 +823,20 @@ export class FoundryScene implements Scene {
       this.enter();
       return;
     }
-    this.onComplete(result.state, result.salvageGained);
+    this.onComplete(
+      result.state,
+      reconcileItemSockets(this.itemInstances, result.state.committed),
+      result.salvageGained
+    );
+  }
+
+  private getItemSocketSignature(items: readonly ItemInstance[]): string {
+    return items
+      .map(
+        (item) =>
+          `${item.acquisitionOrder}:${item.socket?.componentId ?? '-'}:${item.socket?.socketIndex ?? '-'}`
+      )
+      .join('|');
   }
 }
 

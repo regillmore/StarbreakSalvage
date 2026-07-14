@@ -21,6 +21,7 @@ import { formatInterActHistory, type InterActChoiceRecord } from '../game/InterA
 import type { RouteHistoryEntry } from '../game/RunSession';
 import type { AppliedRouteOutcome } from '../game/RouteEvents';
 import type { ItemInstance } from '../game/Rewards';
+import { getActiveFittedItems } from '../game/ItemSockets';
 import {
   createEngineeringDebugState,
   formatEngineeringHistory,
@@ -241,7 +242,14 @@ export class RunSummaryScene implements Scene {
       ['Upgrade Economy', progress.economyScopeText],
       ['Upgrade Outlook', progress.upgradeProgressText],
       ['Banked Salvage', `${this.saveData.salvageBank} kg`],
-      ['Build Identity', formatBuildSynergySummary(createBuildSynergyModel(this.itemInstances))],
+      [
+        'Active Circuit',
+        formatBuildSynergySummary(
+          createBuildSynergyModel(
+            getActiveFittedItems(this.itemInstances, this.engineering.committed)
+          )
+        )
+      ],
       ['Item Sources', formatItemSourceSummary(this.itemInstances)],
       ['Items', this.result?.itemNames.join(', ') ?? 'none'],
       ['Unlock Reasons', formatUnlockReasons(this.saveUpdate)]
@@ -376,7 +384,9 @@ export class RunSummaryScene implements Scene {
       appendItemCardContent(
         card,
         createItemCardViewModel(getItemById(instance.itemId), {
-          sourceLabel: 'Run item',
+          sourceLabel: instance.socket
+            ? `Circuit ${instance.socket.circuitOrder + 1}`
+            : 'Upgrade rack',
           acquisitionOrder: instance.acquisitionOrder
         }),
         { compact: true, includeEffect: false, includeSynergy: false }

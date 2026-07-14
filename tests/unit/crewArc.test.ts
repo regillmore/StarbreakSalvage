@@ -171,7 +171,7 @@ describe('CrewArc', () => {
     expect(session.timeline.entries.some((entry) => entry.kind === 'arcOutcome')).toBe(true);
   });
 
-  it('round-trips relationship history and fate through snapshot v7', () => {
+  it('round-trips relationship history and fate through snapshot v10', () => {
     const session = createRunSession(run, run.contracts[0]!);
     session.crewRoster = roster;
     session.crewArcs = resolveOutcome('commandSuccession');
@@ -182,7 +182,7 @@ describe('CrewArc', () => {
       target: 'sectorTransition',
       label: 'Crew decision'
     });
-    expect(snapshot.version).toBe(9);
+    expect(snapshot.version).toBe(10);
     expect(snapshot.extensions.crewArcs.planId).toBe(run.crewArcs.id);
     expect(restoreRunSnapshot(snapshot).session.crewArcs).toEqual(session.crewArcs);
   });

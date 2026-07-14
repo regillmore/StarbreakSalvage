@@ -1297,6 +1297,122 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   color: #ffd166;
 }
 
+.foundry-socket-strip {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.foundry-socket {
+  padding: 0.34rem 0.42rem;
+  border: 1px solid color-mix(in srgb, var(--socket-color, #7cf7ff) 55%, transparent);
+  border-left: 3px solid var(--socket-color, #7cf7ff);
+  border-radius: 3px;
+  color: #effcff;
+  background: color-mix(in srgb, var(--socket-color, #7cf7ff) 9%, rgba(2, 5, 14, 0.82));
+  font-family: 'Cascadia Mono', 'Consolas', monospace;
+  font-size: 0.58rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.foundry-socket-weapon,
+.foundry-badge-weapon {
+  --socket-color: #ff6b8d;
+  border-color: #ff6b8d;
+  color: #ffb3c3;
+}
+
+.foundry-socket-ordnance,
+.foundry-badge-ordnance {
+  --socket-color: #ffc15a;
+  border-color: #ffc15a;
+  color: #ffe0a8;
+}
+
+.foundry-socket-defense,
+.foundry-badge-defense {
+  --socket-color: #8ee6b0;
+  border-color: #8ee6b0;
+  color: #c9f7da;
+}
+
+.foundry-socket-drive,
+.foundry-badge-drive {
+  --socket-color: #70d7ff;
+  border-color: #70d7ff;
+  color: #c2efff;
+}
+
+.foundry-socket-utility,
+.foundry-badge-utility {
+  --socket-color: #ffd166;
+  border-color: #ffd166;
+  color: #ffe9aa;
+}
+
+.foundry-socket-drone,
+.foundry-badge-drone {
+  --socket-color: #b7a4ff;
+  border-color: #b7a4ff;
+  color: #ded5ff;
+}
+
+.foundry-socket-experimental,
+.foundry-badge-experimental {
+  --socket-color: #ff72e1;
+  border-color: #ff72e1;
+  color: #ffc4f2;
+}
+
+.foundry-socket-flex {
+  --socket-color: #aebcc5;
+}
+
+.foundry-upgrade-circuit {
+  border-color: rgba(255, 114, 225, 0.34);
+  background:
+    linear-gradient(135deg, rgba(255, 114, 225, 0.055), transparent 44%),
+    rgba(4, 6, 18, 0.62);
+}
+
+.foundry-circuit-copy {
+  font-family: 'Cascadia Mono', 'Consolas', monospace;
+  font-size: 0.69rem;
+}
+
+.foundry-upgrade-rack {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.foundry-upgrade-card {
+  border-left-color: #ff72e1;
+}
+
+.foundry-upgrade-idle {
+  opacity: 0.78;
+  border-left-color: #77848d;
+}
+
+.foundry-socket-actions {
+  align-items: stretch;
+}
+
+.foundry-socket-actions .foundry-action {
+  flex: 1 1 8.5rem;
+}
+
+.foundry-socket-select {
+  flex: 2 1 12rem;
+  min-width: 0;
+  min-height: 2.15rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid rgba(255, 114, 225, 0.42);
+  border-radius: 4px;
+  color: #f8fbff;
+  background: #090d20;
+  font: 700 0.66rem/1.2 'Cascadia Mono', 'Consolas', monospace;
+}
+
 .foundry-hardpoint-empty {
   display: grid;
   min-height: 2.4rem;
@@ -3133,7 +3249,8 @@ html[data-bullet-contrast='high'] .hud-meter-track {
   }
 
   .foundry-workspace,
-  .foundry-fusion-list {
+  .foundry-fusion-list,
+  .foundry-upgrade-rack {
     grid-template-columns: 1fr;
   }
 

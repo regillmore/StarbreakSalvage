@@ -21,8 +21,8 @@ describe('item catalog audit', () => {
       cursed: 3
     });
     expect(audit.hookCounts).toEqual({
-      onFire: 11,
-      onProjectileSpawn: 8,
+      onFire: 12,
+      onProjectileSpawn: 7,
       onEnemyKilled: 11,
       onPlayerHit: 6,
       onPickupCollected: 5,
@@ -57,8 +57,8 @@ describe('item catalog audit', () => {
       'boss-pressure': 5
     });
     expect(audit.implementationStatusCounts).toEqual({
-      live: 56,
-      bridge: 4,
+      live: 60,
+      bridge: 0,
       planned: 0
     });
     expect(audit.unlockTierCounts).toEqual({
@@ -128,13 +128,8 @@ describe('item catalog audit', () => {
     expect(audit.archetypeAudits).toHaveLength(8);
     expect(audit.archetypeAudits.every((archetype) => archetype.rewardedItemCount > 0)).toBe(true);
     expect(audit.underrepresentedArchetypeIds).toEqual([]);
-    expect(audit.bridgeEffectNotes.map((note) => note.itemId)).toEqual([
-      'item_ricochet_license',
-      'item_cursed_hull_plate',
-      'item_phase_grazer',
-      'item_vault_parasite'
-    ]);
-    expect(BRIDGE_EFFECT_AUDIT_NOTES).toHaveLength(4);
+    expect(audit.bridgeEffectNotes).toEqual([]);
+    expect(BRIDGE_EFFECT_AUDIT_NOTES).toHaveLength(0);
   });
 
   it('records the target family set for the Phase 6 expansion plan', () => {

@@ -863,6 +863,14 @@ seed + permanent save fingerprint
 - `GameplayScene` derives one immutable contact presentation at construction. Its banner and HUD reuse that record, and its marked contact formations clone at most the existing three apex escorts, apply a deterministic stage variant, and reuse normal spawn, collision, objective, projectile, effect, and reward paths. Non-finale contacts count for field resolution; finales retain the centralized single-boss arena.
 - `ApexDossierScene` remains a lazy chunk. It may switch among three static threat projections and rebuild bounded DOM, but it owns no run mutation except forwarding a ready finale outcome to `GameApp`; locked resolution cards use `aria-disabled` while remaining focusable so their exact deficit stays keyboard and screen-reader inspectable.
 
+### Work order 132 item socket and circuit boundary
+
+- `ItemSockets.ts` is the authority between owned inventory and active mechanics. It derives ordered slots only from installed `EngineeringSnapshot.mounts` and each module's data-defined native/flex layout, reconciles assignments against component identity and compatibility, and projects a bounded active `ItemInstance[]`.
+- Acquisition order remains ownership identity. Circuit order is recomputed from stable installed-component and socket order whenever the engineering graph changes; item hooks use it when present and preserve acquisition order for isolated fixtures.
+- Consumers do not infer fitting independently. `GameApp` supplies the active projection to gameplay; `RunSession`, `SectorRewards`, and `ShopScene` do the same for noncombat hooks; `FoundryPresentation` previews the current draft projection.
+- Hardpoint Control owns a reversible item draft beside the existing engineering draft. Component changes reconcile it immediately, while Undo/Skip restore committed assignments and Commit returns only locations valid against the committed component graph.
+- Snapshot v10 persists explicit item socket assignments and validates acquisition identity, socket shape, component existence, type compatibility, exclusive occupancy, capacity, and computed order. Permanent save records still retain only completed-run owned item ids, so routing remains run-local build state.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

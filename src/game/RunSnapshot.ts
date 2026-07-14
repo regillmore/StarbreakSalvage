@@ -19,10 +19,12 @@ import { validateFactionFrontState } from './FactionFront';
 import { validateCrewArcState } from './CrewArc';
 import { validateFleetState } from './Fleetcraft';
 import { validateApexHuntState } from './ApexHunt';
+import { reconcileItemSockets } from './ItemSockets';
 
-export const RUN_SNAPSHOT_SCHEMA_VERSION = 9;
-export const RUN_SNAPSHOT_STORAGE_KEY = 'starbreak.run.v9';
+export const RUN_SNAPSHOT_SCHEMA_VERSION = 10;
+export const RUN_SNAPSHOT_STORAGE_KEY = 'starbreak.run.v10';
 export const LEGACY_RUN_SNAPSHOT_STORAGE_KEYS = [
+  'starbreak.run.v9',
   'starbreak.run.v8',
   'starbreak.run.v7',
   'starbreak.run.v6',
@@ -32,7 +34,7 @@ export const LEGACY_RUN_SNAPSHOT_STORAGE_KEYS = [
   'starbreak.run.v2',
   'starbreak.run.v1'
 ] as const;
-export const LEGACY_RUN_SNAPSHOT_STORAGE_KEY = LEGACY_RUN_SNAPSHOT_STORAGE_KEYS[7];
+export const LEGACY_RUN_SNAPSHOT_STORAGE_KEY = LEGACY_RUN_SNAPSHOT_STORAGE_KEYS[8];
 export const RUN_SNAPSHOT_MAX_BYTES = 512 * 1024;
 
 export type RunSnapshotResumeTarget = 'sectorTransition' | 'gameplay' | 'operationalMap';
@@ -43,7 +45,7 @@ export interface RunSnapshotCheckpoint {
   readonly sequence: number;
 }
 
-export interface RunSnapshotExtensionsV9 {
+export interface RunSnapshotExtensionsV10 {
   readonly carrier: { readonly planId: string };
   readonly boarding: { readonly planId: string };
   readonly factionFronts: { readonly planId: string };
@@ -52,8 +54,8 @@ export interface RunSnapshotExtensionsV9 {
   readonly apex: { readonly planId: string };
 }
 
-export interface RunSnapshotV9 {
-  readonly version: 9;
+export interface RunSnapshotV10 {
+  readonly version: 10;
   readonly plan: {
     readonly seed: string;
     readonly graphId: string;
@@ -64,18 +66,18 @@ export interface RunSnapshotV9 {
   };
   readonly checkpoint: RunSnapshotCheckpoint;
   readonly session: RunSessionState;
-  readonly extensions: RunSnapshotExtensionsV9;
+  readonly extensions: RunSnapshotExtensionsV10;
 }
 
 export interface RestoredRunSnapshot {
-  readonly snapshot: RunSnapshotV9;
+  readonly snapshot: RunSnapshotV10;
   readonly run: RunSkeleton;
   readonly contract: StartingContract;
   readonly session: RunSessionState;
 }
 
 export interface RunSnapshotLoadResult {
-  readonly snapshot: RunSnapshotV9 | null;
+  readonly snapshot: RunSnapshotV10 | null;
   readonly repaired: boolean;
   readonly error: string | null;
 }
@@ -104,7 +106,7 @@ export class RunSnapshotCoordinator {
     readonly session: RunSessionState;
     readonly target: RunSnapshotResumeTarget;
     readonly label: string;
-  }): RunSnapshotV9 {
+  }): RunSnapshotV10 {
     const snapshot = createRunSnapshot({
       ...options,
       sequence: options.session.timeline.entries.length
@@ -114,7 +116,7 @@ export class RunSnapshotCoordinator {
     return snapshot;
   }
 
-  public restore(snapshot: RunSnapshotV9): RestoredRunSnapshot {
+  public restore(snapshot: RunSnapshotV10): RestoredRunSnapshot {
     return restoreRunSnapshot(snapshot);
   }
 
@@ -130,12 +132,12 @@ export function createRunSnapshot(options: {
   readonly target: RunSnapshotResumeTarget;
   readonly label: string;
   readonly sequence?: number;
-}): RunSnapshotV9 {
+}): RunSnapshotV10 {
   const generationFingerprint = createRunGenerationSaveFingerprint(
     options.run.unlockedIds,
     options.run.upgradeEffects
   );
-  const snapshot: RunSnapshotV9 = {
+  const snapshot: RunSnapshotV10 = {
     version: RUN_SNAPSHOT_SCHEMA_VERSION,
     plan: {
       seed: options.run.seed,
@@ -163,7 +165,7 @@ export function createRunSnapshot(options: {
   return importRunSnapshot(exportRunSnapshot(snapshot));
 }
 
-export function restoreRunSnapshot(snapshot: RunSnapshotV9): RestoredRunSnapshot {
+export function restoreRunSnapshot(snapshot: RunSnapshotV10): RestoredRunSnapshot {
   const run = generateRunSkeleton(snapshot.plan.seed, {
     unlockedIds: snapshot.plan.unlockedIds,
     purchasedUpgradeIds: snapshot.plan.purchasedUpgradeIds
@@ -208,7 +210,7 @@ export function restoreRunSnapshot(snapshot: RunSnapshotV9): RestoredRunSnapshot
   };
 }
 
-export function createRunSnapshotSummary(snapshot: RunSnapshotV9): RunSnapshotSummary {
+export function createRunSnapshotSummary(snapshot: RunSnapshotV10): RunSnapshotSummary {
   const restored = restoreRunSnapshot(snapshot);
   const sector = restored.run.sectors[restored.session.currentSectorIndex]!;
   return {
@@ -251,7 +253,7 @@ export function loadRunSnapshot(storage: StorageLike): RunSnapshotLoadResult {
   }
 }
 
-export function writeRunSnapshot(storage: StorageLike, snapshot: RunSnapshotV9): void {
+export function writeRunSnapshot(storage: StorageLike, snapshot: RunSnapshotV10): void {
   storage.setItem(RUN_SNAPSHOT_STORAGE_KEY, exportRunSnapshot(snapshot));
 }
 
@@ -260,7 +262,7 @@ export function clearRunSnapshot(storage: StorageLike): void {
   for (const key of LEGACY_RUN_SNAPSHOT_STORAGE_KEYS) storage.removeItem(key);
 }
 
-export function exportRunSnapshot(snapshot: RunSnapshotV9): string {
+export function exportRunSnapshot(snapshot: RunSnapshotV10): string {
   const serialized = JSON.stringify(snapshot);
   const byteLength = new TextEncoder().encode(serialized).byteLength;
   if (byteLength > RUN_SNAPSHOT_MAX_BYTES) {
@@ -269,7 +271,7 @@ export function exportRunSnapshot(snapshot: RunSnapshotV9): string {
   return serialized;
 }
 
-export function importRunSnapshot(serialized: string): RunSnapshotV9 {
+export function importRunSnapshot(serialized: string): RunSnapshotV10 {
   if (new TextEncoder().encode(serialized).byteLength > RUN_SNAPSHOT_MAX_BYTES) {
     throw new Error(`Run snapshot exceeds ${RUN_SNAPSHOT_MAX_BYTES} bytes.`);
   }
@@ -305,33 +307,33 @@ export function importRunSnapshot(serialized: string): RunSnapshotV9 {
     !isRecord(parsed.extensions.carrier) ||
     typeof parsed.extensions.carrier.planId !== 'string'
   ) {
-    throw new Error('Run snapshot v9 carrier extension is invalid.');
+    throw new Error('Run snapshot v10 carrier extension is invalid.');
   }
   if (
     !isRecord(parsed.extensions.boarding) ||
     typeof parsed.extensions.boarding.planId !== 'string'
   ) {
-    throw new Error('Run snapshot v9 boarding extension is invalid.');
+    throw new Error('Run snapshot v10 boarding extension is invalid.');
   }
   if (
     !isRecord(parsed.extensions.factionFronts) ||
     typeof parsed.extensions.factionFronts.planId !== 'string'
   ) {
-    throw new Error('Run snapshot v9 faction-front extension is invalid.');
+    throw new Error('Run snapshot v10 faction-front extension is invalid.');
   }
   if (
     !isRecord(parsed.extensions.crewArcs) ||
     typeof parsed.extensions.crewArcs.planId !== 'string'
   ) {
-    throw new Error('Run snapshot v9 crew-arc extension is invalid.');
+    throw new Error('Run snapshot v10 crew-arc extension is invalid.');
   }
   if (!isRecord(parsed.extensions.fleet) || typeof parsed.extensions.fleet.planId !== 'string') {
-    throw new Error('Run snapshot v9 fleet extension is invalid.');
+    throw new Error('Run snapshot v10 fleet extension is invalid.');
   }
   if (!isRecord(parsed.extensions.apex) || typeof parsed.extensions.apex.planId !== 'string') {
-    throw new Error('Run snapshot v9 apex extension is invalid.');
+    throw new Error('Run snapshot v10 apex extension is invalid.');
   }
-  return parsed as unknown as RunSnapshotV9;
+  return parsed as unknown as RunSnapshotV10;
 }
 
 function validateSnapshotSession(
@@ -410,6 +412,22 @@ function validateSnapshotSession(
     for (const instance of session.itemInstances) getItemById(instance.itemId);
   } catch {
     throw new Error('Run snapshot item state is invalid.');
+  }
+  const itemOrders = new Set<number>();
+  for (const instance of session.itemInstances) {
+    if (
+      !isNonNegativeInteger(instance.acquisitionOrder) ||
+      itemOrders.has(instance.acquisitionOrder) ||
+      !Object.hasOwn(instance, 'socket') ||
+      (instance.socket !== null &&
+        (!isRecord(instance.socket) ||
+          typeof instance.socket.componentId !== 'string' ||
+          !isNonNegativeInteger(instance.socket.socketIndex) ||
+          !isNonNegativeInteger(instance.socket.circuitOrder)))
+    ) {
+      throw new Error('Run snapshot item socket state is invalid.');
+    }
+    itemOrders.add(instance.acquisitionOrder);
   }
   if (!isNonNegativeInteger(session.currentSectorIndex)) {
     throw new Error('Run snapshot sector index is invalid.');
@@ -507,8 +525,14 @@ function validateSnapshotSession(
     if (!resolveEngineeringSnapshot(session.engineering.committed).valid) {
       throw new Error('invalid engineering resolution');
     }
+    if (
+      JSON.stringify(reconcileItemSockets(session.itemInstances, session.engineering.committed)) !==
+      JSON.stringify(session.itemInstances)
+    ) {
+      throw new Error('invalid item socket assignment');
+    }
   } catch {
-    throw new Error('Run snapshot committed engineering state is invalid.');
+    throw new Error('Run snapshot committed engineering or item socket state is invalid.');
   }
 }
 

@@ -42,7 +42,14 @@ describe('item card view model', () => {
   });
 
   it('distinguishes bridge and planned implementation status copy', () => {
-    const bridge = createItemCardViewModel(getItemById('item_cursed_hull_plate'));
+    const bridge = createItemCardViewModel({
+      ...getItemById('item_cursed_hull_plate'),
+      metadata: {
+        ...getItemById('item_cursed_hull_plate').metadata,
+        implementationStatus: 'bridge',
+        implementationNote: 'Synthetic bridge fixture.'
+      }
+    } satisfies ItemDefinition);
     const planned = createItemCardViewModel({
       ...getItemById('item_split_prism'),
       id: 'item_split_prism',

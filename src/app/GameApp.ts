@@ -88,6 +88,7 @@ import {
   type RunSessionState
 } from '../game/RunSession';
 import { getSaveRecordSectorCount } from '../game/RunOutcome';
+import { getActiveFittedItems } from '../game/ItemSockets';
 import { createExpeditionDebugState, createExpeditionPathReadModel } from '../game/ExpeditionGraph';
 import {
   createMissionCombatProjection,
@@ -152,7 +153,7 @@ import type { ScenarioLabId } from '../game/ScenarioLab';
 import {
   RunSnapshotCoordinator,
   createRunSnapshotSummary,
-  type RunSnapshotV9
+  type RunSnapshotV10
 } from '../game/RunSnapshot';
 import { getOperationalInfluence } from '../game/OperationalMap';
 import { createCarrierInfluence } from '../game/CarrierCommand';
@@ -194,7 +195,7 @@ export class GameApp {
   private lastSaveUpdate: SaveUpdateResult | null = null;
   private summarySaved = false;
   private scenarioLabSession = false;
-  private runSnapshot: RunSnapshotV9 | null = null;
+  private runSnapshot: RunSnapshotV10 | null = null;
   private runSnapshotNotice: string | null = null;
   private snapshotEligible = false;
   private frameStats: FrameStats = {
@@ -433,8 +434,9 @@ export class GameApp {
           launch.session.engineering,
           launch.session.itemInstances,
           launch.session.currentSectorIndex + 1,
-          (engineering, salvageGained) => {
+          (engineering, itemInstances, salvageGained) => {
             this.runSession.engineering = engineering;
+            this.runSession.itemInstances = [...itemInstances];
             recordRunSessionTimelineEvent(this.runSession, {
               id: `scenario-lab:${id}:foundry-complete`,
               category: 'engineering',
@@ -675,7 +677,10 @@ export class GameApp {
       }),
       this.runSession.currentSectorIndex,
       this.runSession.expedition,
-      this.runSession.itemInstances,
+      getActiveFittedItems(
+        this.runSession.itemInstances,
+        this.runSession.engineering.committed
+      ),
       this.runSession.credits,
       this.runSession.salvage,
       this.debugEnabled,
@@ -2001,8 +2006,9 @@ export class GameApp {
         this.runSession.engineering,
         this.runSession.itemInstances,
         sector.index,
-        (engineering, salvageGained) => {
+        (engineering, itemInstances, salvageGained) => {
           this.runSession.engineering = engineering;
+          this.runSession.itemInstances = [...itemInstances];
           this.runSession.salvage +=
             salvageGained + (crewAssist?.salvageBonus ?? 0) + carrierInfluence.foundrySalvageBonus;
           if (crewAssist) {

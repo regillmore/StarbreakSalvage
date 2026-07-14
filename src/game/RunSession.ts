@@ -50,6 +50,7 @@ import {
   type InterActEffectSummary
 } from './InterActJunction';
 import { generateStartingItemLoadout, type ItemInstance } from './Rewards';
+import { autoFitItemSocket, autoFitItemSockets, getActiveFittedItems } from './ItemSockets';
 import type {
   AppliedRouteOutcome,
   RouteCombatModifier,
@@ -220,6 +221,13 @@ export function createRunSession(
   const actTwoSectorIndex =
     run.acts.find((act) => act.id === 'act_core_descent')?.endSectorIndex ??
     Math.max(0, run.sectors.length - 1);
+  const engineering = createEngineeringState(contract.loadout);
+  const itemInstances = autoFitItemSockets(
+    generateStartingItemLoadout(run.seed, contract, {
+      unlockedIds: options.unlockedIds ?? run.unlockedIds
+    }),
+    engineering.committed
+  );
 
   return {
     currentSectorIndex: 0,
@@ -232,9 +240,7 @@ export function createRunSession(
     hullPatch: 0,
     curse: 0,
     relicsRecovered: 0,
-    itemInstances: generateStartingItemLoadout(run.seed, contract, {
-      unlockedIds: options.unlockedIds ?? run.unlockedIds
-    }),
+    itemInstances,
     routeHistory: [],
     routeOutcomes: [],
     interActChoices: [],
@@ -245,7 +251,7 @@ export function createRunSession(
     shopRerollsBySector: {},
     lastCombatResult: null,
     objectiveHistory: [],
-    engineering: createEngineeringState(contract.loadout),
+    engineering,
     factionCampaign: createFactionCampaignState(run.factionCampaign),
     crewRoster: createCrewRosterState(run.crewRoster),
     crewArcs: createCrewArcState(run.crewArcs, run.crewRoster),
@@ -1243,7 +1249,7 @@ function applyRouteChosenHooks(
   const engineering = createEngineeringCombatProfile(session.engineering);
   const payload = applyCombinedHooks(
     'onRouteChosen',
-    session.itemInstances,
+    getActiveFittedItems(session.itemInstances, session.engineering.committed),
     engineering.hooks,
     {
       routeKind: route.kind,
@@ -1392,11 +1398,18 @@ export function getRouteCreditReward(
 export function addItemToSession(session: RunSessionState, itemId: ItemId): ItemInstance {
   const instance = {
     itemId,
-    acquisitionOrder: session.itemInstances.length
+    acquisitionOrder: session.itemInstances.length,
+    socket: null
   };
 
-  session.itemInstances = [...session.itemInstances, instance];
-  return instance;
+  session.itemInstances = autoFitItemSocket(
+    [...session.itemInstances, instance],
+    session.engineering.committed,
+    instance.acquisitionOrder
+  );
+  return session.itemInstances.find(
+    (candidate) => candidate.acquisitionOrder === instance.acquisitionOrder
+  )!;
 }
 
 export function getOwnedItemIds(session: RunSessionState): ItemId[] {

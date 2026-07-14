@@ -19,6 +19,13 @@ import { getActEconomyRarityMultiplier, type ActEconomyProfile } from './ActEcon
 export interface ItemInstance {
   readonly itemId: ItemId;
   readonly acquisitionOrder: number;
+  readonly socket?: ItemSocketAssignment | null;
+}
+
+export interface ItemSocketAssignment {
+  readonly componentId: string;
+  readonly socketIndex: number;
+  readonly circuitOrder: number;
 }
 
 export interface RewardChoice {

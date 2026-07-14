@@ -229,7 +229,7 @@ describe('FactionFront', () => {
     expect(validateFactionFrontState(run.factionFronts, session.factionFronts)).toEqual([]);
   });
 
-  it('round-trips moved fronts through snapshot v6', () => {
+  it('round-trips moved fronts through snapshot v10', () => {
     const run = generateRunSkeleton('FACTION-FRONT-SNAPSHOT');
     const contract = run.contracts[0]!;
     const session = createRunSession(run, contract);
@@ -250,7 +250,7 @@ describe('FactionFront', () => {
       label: 'Moved faction front'
     });
     const restored = restoreRunSnapshot(snapshot);
-    expect(snapshot.version).toBe(9);
+    expect(snapshot.version).toBe(10);
     expect(snapshot.extensions.factionFronts.planId).toBe(run.factionFronts.id);
     expect(restored.session.factionFronts).toEqual(session.factionFronts);
   });

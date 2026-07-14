@@ -7,6 +7,7 @@ import { createDebugFactionFrontState } from './FactionFront';
 import { createDebugFactionCampaignState } from './FactionCampaign';
 import { createFoundryDebugFixture } from './Foundry';
 import { createItemStormLoadout } from './ItemStress';
+import { autoFitItemSockets } from './ItemSockets';
 import type { RunSkeleton, StartingContract } from './Generation';
 import { getMissionBranchOptions, createMissionSchedule } from './MissionDirector';
 import {
@@ -335,7 +336,10 @@ export function createScenarioLabLaunch(options: {
     };
   }
   if (definition.id === 'lab_combined_pressure') {
-    session.itemInstances = [...createItemStormLoadout()];
+    session.itemInstances = autoFitItemSockets(
+      createItemStormLoadout(),
+      session.engineering.committed
+    );
   }
 
   if (definition.target === 'gameplay' || definition.optionalMission) {

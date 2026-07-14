@@ -154,18 +154,18 @@ The legacy archetype audit now reports no underrepresented rewarded archetypes. 
 | Phase/Graze      | 13             |
 | Heat/Prototype   | 12             |
 
-## Bridge Or Lightweight Effects
+## Former Bridge Effects Promoted In Work Order 132
 
-These items have live behavior today, but their text or fantasy points toward future Phase 6 systems:
+These former bridge entries now have live, order-sensitive circuit behavior:
 
-| Item              | Current behavior                                                 | Phase 6 follow-up                                                                                              |
+| Item              | Current behavior                                                 | Circuit role                                                                                              |
 | ----------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Ricochet License  | Extends plasma projectile lifetime.                              | Add true edge-bounce or lane-reflection behavior once projectile boundary hooks are safe.                      |
-| Phase Grazer      | Adds phase shots and participates in current graze charge logic. | Decide whether to keep this as a fire-hook phase source or move more of the fantasy onto direct graze rewards. |
-| Vault Parasite    | Pays extra salvage on kills.                                     | Consider deeper curse/relic reward flow beyond the current vault weighting.                                    |
-| Cursed Hull Plate | Fires curse-themed revenge shards on hit.                        | Add an explicit cost/downside or update copy if the item stays purely retaliatory.                             |
+| Ricochet License  | Gives eligible phase/plasma/ricochet shots one real sidewall rebound. | Live in work order 132; chains into phase and arc projectile modifiers. |
+| Phase Grazer      | Transforms every fourth complete volley into a phase chain. | Live in work order 132; socket order controls which split/clone shots inherit it. |
+| Vault Parasite    | Converts cursed/overkill executions into salvage plus blast pressure. | Live in work order 132; requires an actual tagged execution. |
+| Cursed Hull Plate | Amplifies retaliation already built before it, adds curse/overkill, and emits a fan. | Live in work order 132; socket order changes the amplified set. |
 
-No shipped item is a pure no-op: current validation requires every declared hook to have an implementation. Work order 052 formalized live, bridge, and planned implementation status in item metadata.
+No shipped item is a pure no-op or bridge: current validation requires every declared hook to have an implementation, and work order 132 promoted the final four bridge entries to live mechanics. Work order 052 formalized live, bridge, and planned implementation status in item metadata.
 
 ## Risks For 057-060
 

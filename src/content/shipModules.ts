@@ -13,6 +13,17 @@ export const SHIP_MODULE_SLOTS = [
 
 export const SHIP_MODULE_MOUNT_SIZES = ['light', 'medium', 'heavy'] as const;
 
+export const SHIP_UPGRADE_SOCKET_TYPES = [
+  'weapon',
+  'ordnance',
+  'defense',
+  'drive',
+  'utility',
+  'drone',
+  'experimental',
+  'flex'
+] as const;
+
 export const SHIPCRAFT_TAGS = [
   'armor',
   'beam',
@@ -54,6 +65,7 @@ export const SHIPCRAFT_TAGS = [
 export type ShipModuleSlot = (typeof SHIP_MODULE_SLOTS)[number];
 export type ShipModuleMountSize = (typeof SHIP_MODULE_MOUNT_SIZES)[number];
 export type ShipcraftTag = (typeof SHIPCRAFT_TAGS)[number];
+export type ShipUpgradeSocketType = (typeof SHIP_UPGRADE_SOCKET_TYPES)[number];
 
 export type ShipFrameId =
   | 'frame_redline_needle'
@@ -160,6 +172,7 @@ export interface ShipModuleDefinition {
   readonly mass: number;
   readonly commandDraw: number;
   readonly tags: readonly ShipcraftTag[];
+  readonly upgradeSockets: readonly ShipUpgradeSocketType[];
   readonly unique: boolean;
   readonly compatibility: ShipModuleCompatibility;
   readonly behavior: ShipModuleBehavior;
@@ -170,6 +183,18 @@ export interface ShipModuleDefinition {
     readonly icon: string;
     readonly accentColor: string;
   };
+}
+
+function createUpgradeSockets(slot: ShipModuleSlot): readonly ShipUpgradeSocketType[] {
+  const nativeType: Exclude<ShipUpgradeSocketType, 'flex'> =
+    slot === 'primary'
+      ? 'weapon'
+      : slot === 'secondary'
+        ? 'ordnance'
+        : slot === 'engine'
+          ? 'drive'
+          : slot;
+  return [nativeType, 'flex'];
 }
 
 const NONE: readonly never[] = [];
@@ -617,6 +642,7 @@ function createWeaponModule(profile: WeaponModuleProfile): ShipModuleDefinition 
     mass: profile.mass,
     commandDraw: 0,
     tags: profile.tags,
+    upgradeSockets: createUpgradeSockets('primary'),
     unique: true,
     compatibility: createCompatibility(profile.compatibility),
     behavior: { kind: 'weaponAdapter', weaponId: profile.weaponId },
@@ -631,7 +657,7 @@ function createWeaponModule(profile: WeaponModuleProfile): ShipModuleDefinition 
 }
 
 function createSystemModule(
-  definition: Omit<ShipModuleDefinition, 'compatibility' | 'behavior'> & {
+  definition: Omit<ShipModuleDefinition, 'compatibility' | 'behavior' | 'upgradeSockets'> & {
     readonly compatibility?: Partial<ShipModuleCompatibility>;
     readonly adapterId: string;
   }
@@ -639,6 +665,7 @@ function createSystemModule(
   const { adapterId, compatibility, ...module } = definition;
   return {
     ...module,
+    upgradeSockets: createUpgradeSockets(module.slot),
     compatibility: createCompatibility(compatibility),
     behavior: { kind: 'legacySystemAdapter', adapterId }
   };

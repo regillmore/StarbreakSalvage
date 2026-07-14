@@ -24,6 +24,29 @@ const bounds: CombatBounds = {
 };
 
 describe('CombatState', () => {
+  it('consumes a fitted ricochet charge when a player shot reaches a sidewall', () => {
+    const state = createCombatState(bounds, 'RICOCHET-RUNTIME');
+    state.projectiles.push({
+      id: state.nextId++,
+      owner: 'player',
+      x: 6,
+      y: 300,
+      vx: -100,
+      vy: -200,
+      radius: 4,
+      damage: 1,
+      ttl: 2,
+      tags: ['plasma', 'ricochet'],
+      procDepth: 0,
+      ricochetBounces: 1
+    });
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 0.05, bounds);
+
+    expect(state.projectiles[0]?.vx).toBeGreaterThan(0);
+    expect(state.projectiles[0]?.ricochetBounces).toBe(0);
+  });
+
   it('clamps player movement to a provided gameplay safe frame', () => {
     const safeFrame = {
       x: 78,

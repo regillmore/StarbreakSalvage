@@ -137,13 +137,14 @@ export interface ProjectileState {
   readonly owner: ProjectileOwner;
   x: number;
   y: number;
-  readonly vx: number;
+  vx: number;
   readonly vy: number;
   readonly radius: number;
   readonly damage: number;
   ttl: number;
   readonly tags: readonly ItemTag[];
   readonly procDepth: number;
+  ricochetBounces?: number;
   readonly environmentDamageSource?: EnvironmentObjectDamageSource;
   readonly factionId?: FactionId;
   readonly setPieceSourceId?: string;
@@ -3769,6 +3770,18 @@ function updateProjectiles(state: CombatState, dt: number, bounds: CombatBounds)
     projectile.x += projectile.vx * dt;
     projectile.y += projectile.vy * dt;
     projectile.ttl -= dt;
+
+    if (projectile.owner === 'player' && (projectile.ricochetBounces ?? 0) > 0) {
+      if (projectile.x <= projectile.radius && projectile.vx < 0) {
+        projectile.x = projectile.radius;
+        projectile.vx = Math.abs(projectile.vx);
+        projectile.ricochetBounces = Math.max(0, (projectile.ricochetBounces ?? 0) - 1);
+      } else if (projectile.x >= bounds.width - projectile.radius && projectile.vx > 0) {
+        projectile.x = bounds.width - projectile.radius;
+        projectile.vx = -Math.abs(projectile.vx);
+        projectile.ricochetBounces = Math.max(0, (projectile.ricochetBounces ?? 0) - 1);
+      }
+    }
 
     if (projectile.owner === 'enemy' && bounds.enemyProjectileBoundary === 'sideWalls') {
       projectile.x = clamp(projectile.x, bounds.padding, bounds.width - bounds.padding);

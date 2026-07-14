@@ -55,7 +55,7 @@ describe('item hook ordering', () => {
 
     expect(report.appliedItemIds).toEqual(['item_laser_tax_stamp', 'item_vault_parasite']);
     expect(report.skippedItemIds).toEqual(['item_salvage_dividend_chip']);
-    expect(report.payload.bonusSalvage).toBe(2);
+    expect(report.payload.bonusSalvage).toBe(1);
   });
 
   it('keeps future hook surfaces inert until items declare implementations', () => {
@@ -121,6 +121,46 @@ describe('item synergies', () => {
 
     expect(payload.projectile.tags).toContain('arc');
     expect(payload.projectile.ttl).toBeGreaterThan(1);
+    expect(payload.projectile.ricochetBounces).toBe(1);
+  });
+
+  it('uses fitted circuit order to build materially different projectile chains', () => {
+    const phaseSplitClone: ItemInstance[] = [
+      {
+        itemId: 'item_phase_grazer',
+        acquisitionOrder: 0,
+        socket: { componentId: 'a', socketIndex: 0, circuitOrder: 0 }
+      },
+      {
+        itemId: 'item_split_prism',
+        acquisitionOrder: 1,
+        socket: { componentId: 'a', socketIndex: 1, circuitOrder: 1 }
+      },
+      {
+        itemId: 'item_signal_clone_stamp',
+        acquisitionOrder: 2,
+        socket: { componentId: 'b', socketIndex: 0, circuitOrder: 2 }
+      }
+    ];
+    const clonePhaseSplit = phaseSplitClone.map((item, index) => ({
+      ...item,
+      socket: { ...item.socket!, circuitOrder: [1, 2, 0][index]! }
+    }));
+
+    const builtThenCloned = applyItemHooks('onFire', phaseSplitClone, {
+      volleyIndex: 12,
+      projectiles: [baseProjectile]
+    });
+    const clonedThenBuilt = applyItemHooks('onFire', clonePhaseSplit, {
+      volleyIndex: 12,
+      projectiles: [baseProjectile]
+    });
+
+    expect(builtThenCloned.projectiles).toHaveLength(6);
+    expect(clonedThenBuilt.projectiles).toHaveLength(4);
+    expect(builtThenCloned.projectiles.filter((shot) => shot.tags.includes('drone'))).toHaveLength(
+      3
+    );
   });
 
   it('applies missile plus overkill synergy', () => {

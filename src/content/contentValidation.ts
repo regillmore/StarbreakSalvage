@@ -128,6 +128,7 @@ import {
   SHIP_MODULES,
   SHIP_MODULE_MOUNT_SIZES,
   SHIP_MODULE_SLOTS,
+  SHIP_UPGRADE_SOCKET_TYPES,
   SHIPCRAFT_TAGS,
   type ShipFrameDefinition,
   type ShipModuleDefinition
@@ -3281,6 +3282,7 @@ function validateShipcraftDefinitions(
   const slots = new Set<string>(SHIP_MODULE_SLOTS);
   const sizes = new Set<string>(SHIP_MODULE_MOUNT_SIZES);
   const tags = new Set<string>(SHIPCRAFT_TAGS);
+  const upgradeSocketTypes = new Set<string>(SHIP_UPGRADE_SOCKET_TYPES);
 
   if (frames.length < 3) {
     errors.push('Content must define at least three ship frames');
@@ -3379,6 +3381,14 @@ function validateShipcraftDefinitions(
     validateNonNegativeNumber(errors, owner, 'mass', module.mass);
     validateNonNegativeNumber(errors, owner, 'commandDraw', module.commandDraw);
     validateKnownUniqueValues(errors, owner, 'tag', module.tags, tags);
+    if (module.upgradeSockets.length === 0 || module.upgradeSockets.length > 3) {
+      errors.push(`${owner} must define one to three upgrade sockets`);
+    }
+    for (const socketType of module.upgradeSockets) {
+      if (!upgradeSocketTypes.has(socketType)) {
+        errors.push(`${owner} has invalid upgrade socket type: ${socketType}`);
+      }
+    }
     if (!module.presentation.name.trim()) errors.push(`${owner} must have a name`);
     if (!module.presentation.shortName.trim()) errors.push(`${owner} must have a short name`);
     if (!module.presentation.summary.trim()) errors.push(`${owner} must have a summary`);

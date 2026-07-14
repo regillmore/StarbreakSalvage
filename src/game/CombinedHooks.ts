@@ -139,7 +139,7 @@ function createOrderedSources(
           kind: 'item' as const,
           sourceId: instance.itemId,
           label: item.name,
-          order: 100_000 + instance.acquisitionOrder
+          order: 100_000 + (instance.socket?.circuitOrder ?? 10_000 + instance.acquisitionOrder)
         }
       }
     ];
