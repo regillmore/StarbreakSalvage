@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { createActConstellationPlan } from '../../src/game/ActConstellation';
 import { generateRunSkeleton } from '../../src/game/Generation';
 import { createRunSession } from '../../src/game/RunSession';
 import {
@@ -11,61 +12,134 @@ import {
 import { createRunSnapshot, restoreRunSnapshot } from '../../src/game/RunSnapshot';
 
 describe('sector navigation hub', () => {
-  it('creates deterministic procedural local maps without hiding common services', () => {
-    const first = createSectorNavigationPlan({ seed: 'NAV-HUB-SMOKE', sectorIndex: 4 });
-    const repeat = createSectorNavigationPlan({ seed: 'NAV-HUB-SMOKE', sectorIndex: 4 });
-    const nextSector = createSectorNavigationPlan({ seed: 'NAV-HUB-SMOKE', sectorIndex: 5 });
+  it('keeps one deterministic sector constellation throughout an act and refreshes the next act', () => {
+    const run = generateRunSkeleton('NAV-HUB-SMOKE');
+    const first = createSectorNavigationPlan({ run, sectorIndex: 0 });
+    const repeat = createSectorNavigationPlan({ run, sectorIndex: 0 });
+    const progressed = createSectorNavigationPlan({ run, sectorIndex: 1 });
+    const nextAct = createSectorNavigationPlan({ run, sectorIndex: 5 });
 
     expect(repeat).toEqual(first);
-    expect(nextSector).not.toEqual(first);
+    expect(progressed.id).toBe(first.id);
+    expect(progressed.layoutId).toBe(first.layoutId);
+    expect(progressed.hubName).toBe(first.hubName);
+    expect(progressed.destinations).toEqual(first.destinations);
+    expect(progressed.constellation.nodes.map(({ x, y }) => ({ x, y }))).toEqual(
+      first.constellation.nodes.map(({ x, y }) => ({ x, y }))
+    );
+    expect(nextAct.id).not.toBe(first.id);
+    expect(nextAct.constellation.actId).not.toBe(first.constellation.actId);
     expect(first.destinations.map((destination) => destination.id).sort()).toEqual([
       'apex',
       'crew',
       'fleet',
       'hardpoint',
-      'launch',
       'shop'
     ]);
     expect(first.destinations.every((destination) => destination.available)).toBe(true);
-    expect(first.edges).toHaveLength(first.destinations.length - 1);
+    expect(first.constellation.edges).toHaveLength(4);
   });
 
-  it('keeps every generated node bounded, distinct, and connected across many seeds', () => {
+  it('reveals only the current and next sector while drawing new connections with progress', () => {
+    const run = generateRunSkeleton('CONSTELLATION-REVEAL-SMOKE');
+    const first = createSectorNavigationPlan({ run, sectorIndex: 0 }).constellation;
+    const second = createSectorNavigationPlan({ run, sectorIndex: 1 }).constellation;
+
+    expect(first.nodes.filter((node) => node.kind === 'sector').map((node) => node.status)).toEqual(
+      ['current', 'revealed', 'hidden', 'hidden', 'hidden']
+    );
+    expect(first.edges.map((edge) => edge.status)).toEqual([
+      'revealed',
+      'hidden',
+      'hidden',
+      'hidden'
+    ]);
+    expect(
+      second.nodes.filter((node) => node.kind === 'sector').map((node) => node.status)
+    ).toEqual(['completed', 'current', 'revealed', 'hidden', 'hidden']);
+    expect(second.edges.map((edge) => edge.status)).toEqual([
+      'completed',
+      'revealed',
+      'hidden',
+      'hidden'
+    ]);
+  });
+
+  it('keeps floating services off the connected graph across many seeds', () => {
     const layouts = new Set<string>();
     for (let index = 0; index < 64; index += 1) {
-      const plan = createSectorNavigationPlan({
-        seed: `NAVIGATION-SWEEP-${index}`,
-        sectorIndex: index % 15
-      });
+      const run = generateRunSkeleton(`NAVIGATION-SWEEP-${index}`);
+      const plan = createSectorNavigationPlan({ run, sectorIndex: index % 15 });
       layouts.add(plan.layoutId);
-      expect(new Set(plan.destinations.map(({ x, y }) => `${x}:${y}`)).size).toBe(6);
-      expect(plan.destinations.every(({ x, y }) => x >= 8 && x <= 92 && y >= 8 && y <= 92)).toBe(
-        true
-      );
+      const sectorNodes = plan.constellation.nodes.filter((node) => node.kind === 'sector');
+      const allPositions = [
+        ...sectorNodes.map(({ x, y }) => `${x}:${y}`),
+        ...plan.destinations.map(({ x, y }) => `${x}:${y}`)
+      ];
+      expect(new Set(allPositions).size).toBe(10);
+      expect(
+        [...sectorNodes, ...plan.destinations].every(
+          ({ x, y }) => x >= 7 && x <= 93 && y >= 7 && y <= 93
+        )
+      ).toBe(true);
+      expect(
+        plan.constellation.edges.every(
+          (edge) =>
+            sectorNodes.some((node) => node.id === edge.fromId) &&
+            sectorNodes.some((node) => node.id === edge.toId)
+        )
+      ).toBe(true);
 
-      const connected = new Set(['launch']);
-      let changed = true;
-      while (changed) {
-        changed = false;
-        for (const edge of plan.edges) {
-          if (connected.has(edge.fromId) && !connected.has(edge.toId)) {
-            connected.add(edge.toId);
-            changed = true;
-          }
-          if (connected.has(edge.toId) && !connected.has(edge.fromId)) {
-            connected.add(edge.fromId);
-            changed = true;
-          }
-        }
-      }
-      expect(connected.size).toBe(6);
+      const connected = new Set([sectorNodes[0]!.id]);
+      for (const edge of plan.constellation.edges) connected.add(edge.toId);
+      expect(connected.size).toBe(5);
     }
     expect(layouts.size).toBe(4);
   });
 
-  it('locks a destination only when supplied a specific story reason', () => {
+  it('projects approach choices as newly connected nodes on the same act chart', () => {
+    const plan = createActConstellationPlan({
+      seed: 'APPROACH-CONSTELLATION-SMOKE',
+      act: {
+        id: 'act-smoke',
+        index: 1,
+        label: 'Smoke Act',
+        shortLabel: 'Act S',
+        summary: 'A test constellation.',
+        sectors: Array.from({ length: 5 }, (_, index) => ({
+          id: `sector-${index}`,
+          sectorIndex: index,
+          sectorName: `Sector ${index + 1}`
+        }))
+      },
+      currentSectorIndex: 2,
+      approaches: [
+        {
+          id: 'direct',
+          label: 'Hold the spine',
+          summary: 'Continue through the required route.',
+          default: true
+        },
+        {
+          id: 'optional',
+          label: 'Break for the signal',
+          summary: 'Commit to the optional contact.',
+          default: false
+        }
+      ]
+    });
+
+    expect(plan.nodes.filter((node) => node.kind === 'approach')).toMatchObject([
+      { approachId: 'direct', status: 'choice', defaultApproach: true },
+      { approachId: 'optional', status: 'choice', defaultApproach: false }
+    ]);
+    expect(plan.edges.filter((edge) => edge.status === 'choice')).toHaveLength(2);
+  });
+
+  it('locks a service only when supplied a specific story reason', () => {
+    const run = generateRunSkeleton('STORY-LOCK-SMOKE');
     const plan = createSectorNavigationPlan({
-      seed: 'STORY-LOCK-SMOKE',
+      run,
       sectorIndex: 2,
       serviceLocks: { fleet: 'Hangar pressure doors are sealed during the mutiny.' }
     });

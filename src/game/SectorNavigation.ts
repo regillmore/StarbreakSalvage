@@ -1,4 +1,10 @@
 import { createRng } from '../core/rng';
+import {
+  createActConstellationPlan,
+  type ActConstellationPlan,
+  type ActConstellationSource
+} from './ActConstellation';
+import type { RunSkeleton } from './Generation';
 
 export const SECTOR_NAVIGATION_DESTINATION_IDS = [
   'launch',
@@ -9,7 +15,16 @@ export const SECTOR_NAVIGATION_DESTINATION_IDS = [
   'apex'
 ] as const;
 
+export const SECTOR_NAVIGATION_SERVICE_IDS = [
+  'shop',
+  'hardpoint',
+  'fleet',
+  'crew',
+  'apex'
+] as const;
+
 export type SectorNavigationDestinationId = (typeof SECTOR_NAVIGATION_DESTINATION_IDS)[number];
+export type SectorNavigationServiceId = (typeof SECTOR_NAVIGATION_SERVICE_IDS)[number];
 
 export interface SectorNavigationState {
   readonly sectorIndex: number;
@@ -17,7 +32,7 @@ export interface SectorNavigationState {
 }
 
 export interface SectorNavigationDestination {
-  readonly id: SectorNavigationDestinationId;
+  readonly id: SectorNavigationServiceId;
   readonly label: string;
   readonly shortLabel: string;
   readonly deckLabel: string;
@@ -26,13 +41,9 @@ export interface SectorNavigationDestination {
   readonly actionLabel: string;
   readonly x: number;
   readonly y: number;
+  readonly revealOrder: number;
   readonly available: boolean;
   readonly unavailableReason: string | null;
-}
-
-export interface SectorNavigationEdge {
-  readonly fromId: SectorNavigationDestinationId;
-  readonly toId: SectorNavigationDestinationId;
 }
 
 export interface SectorNavigationPlan {
@@ -40,35 +51,20 @@ export interface SectorNavigationPlan {
   readonly layoutId: string;
   readonly hubName: string;
   readonly localCode: string;
+  readonly constellation: ActConstellationPlan;
   readonly destinations: readonly SectorNavigationDestination[];
-  readonly edges: readonly SectorNavigationEdge[];
 }
 
-export type SectorNavigationServiceLocks = Partial<Record<SectorNavigationDestinationId, string>>;
+export type SectorNavigationServiceLocks = Partial<Record<SectorNavigationServiceId, string>>;
 
 interface NavigationSlot {
   readonly x: number;
   readonly y: number;
 }
 
-interface NavigationLayout {
-  readonly id: string;
-  readonly launch: NavigationSlot;
-  readonly services: readonly NavigationSlot[];
-}
-
 const DESTINATIONS: ReadonlyArray<
-  Omit<SectorNavigationDestination, 'x' | 'y' | 'available' | 'unavailableReason'>
+  Omit<SectorNavigationDestination, 'x' | 'y' | 'revealOrder' | 'available' | 'unavailableReason'>
 > = [
-  {
-    id: 'launch',
-    label: 'Operation Airlock',
-    shortLabel: 'Launch',
-    deckLabel: 'Flight Spine 01',
-    glyph: '▲',
-    summary: 'Review the next operation, then leave the carrier and enter the sector.',
-    actionLabel: 'Begin Operation'
-  },
   {
     id: 'shop',
     label: 'Freehold Exchange',
@@ -116,51 +112,12 @@ const DESTINATIONS: ReadonlyArray<
   }
 ];
 
-const LAYOUTS: readonly NavigationLayout[] = [
-  {
-    id: 'split-keel',
-    launch: { x: 50, y: 11 },
-    services: [
-      { x: 19, y: 29 },
-      { x: 78, y: 27 },
-      { x: 32, y: 54 },
-      { x: 70, y: 57 },
-      { x: 48, y: 82 }
-    ]
-  },
-  {
-    id: 'spiral-dock',
-    launch: { x: 54, y: 10 },
-    services: [
-      { x: 79, y: 29 },
-      { x: 72, y: 64 },
-      { x: 45, y: 83 },
-      { x: 19, y: 61 },
-      { x: 24, y: 28 }
-    ]
-  },
-  {
-    id: 'crosswind',
-    launch: { x: 50, y: 9 },
-    services: [
-      { x: 18, y: 40 },
-      { x: 50, y: 36 },
-      { x: 81, y: 41 },
-      { x: 32, y: 76 },
-      { x: 68, y: 77 }
-    ]
-  },
-  {
-    id: 'long-orbit',
-    launch: { x: 78, y: 13 },
-    services: [
-      { x: 45, y: 18 },
-      { x: 18, y: 31 },
-      { x: 29, y: 60 },
-      { x: 58, y: 53 },
-      { x: 74, y: 81 }
-    ]
-  }
+const SERVICE_SLOTS: readonly NavigationSlot[] = [
+  { x: 13, y: 27 },
+  { x: 13, y: 55 },
+  { x: 13, y: 82 },
+  { x: 87, y: 36 },
+  { x: 87, y: 74 }
 ];
 
 const HUB_PREFIXES = ['Wayfinder', 'Morrow', 'Kepler', 'Glass', 'Cold', 'Pilgrim'] as const;
@@ -195,37 +152,50 @@ export function recordSectorNavigationVisit(
 }
 
 export function createSectorNavigationPlan(options: {
-  readonly seed: string;
+  readonly run: Pick<RunSkeleton, 'seed' | 'acts' | 'sectors'>;
   readonly sectorIndex: number;
   readonly serviceLocks?: SectorNavigationServiceLocks;
 }): SectorNavigationPlan {
   const sectorIndex = sanitizeSectorIndex(options.sectorIndex);
-  const rng = createRng(`${options.seed}:sector-navigation:${sectorIndex}`);
-  const layout = rng.fork('layout').choice(LAYOUTS);
-  const serviceSlots = layout.services.map((slot, index) => ({
-    x: clampPercent(slot.x + rng.fork(`slot-${index}:x`).int(-2, 2)),
-    y: clampPercent(slot.y + rng.fork(`slot-${index}:y`).int(-2, 2))
-  }));
-  const serviceDefinitions = rng
-    .fork('service-order')
-    .shuffle(DESTINATIONS.filter((destination) => destination.id !== 'launch'));
-  const launch = DESTINATIONS.find((destination) => destination.id === 'launch')!;
-  const destinations: SectorNavigationDestination[] = [
-    resolveDestination(launch, layout.launch, options.serviceLocks),
-    ...serviceDefinitions.map((definition, index) =>
-      resolveDestination(definition, serviceSlots[index]!, options.serviceLocks)
-    )
-  ];
+  const sector = options.run.sectors[sectorIndex];
+  if (!sector) throw new Error(`Navigation sector ${sectorIndex + 1} is unavailable.`);
+  const act = options.run.acts.find((candidate) => candidate.id === sector.act.actId);
+  if (!act) throw new Error(`Navigation act ${sector.act.actId} is unavailable.`);
+
+  const constellationSource: ActConstellationSource = {
+    id: act.id,
+    index: act.index,
+    label: act.label,
+    shortLabel: act.shortLabel,
+    summary: act.summary,
+    sectors: options.run.sectors
+      .slice(act.startSectorIndex, act.endSectorIndex + 1)
+      .map((candidate) => ({
+        id: candidate.sectorId,
+        sectorIndex: candidate.index - 1,
+        sectorName: candidate.sectorName
+      }))
+  };
+  const constellation = createActConstellationPlan({
+    seed: options.run.seed,
+    act: constellationSource,
+    currentSectorIndex: sectorIndex
+  });
+  const rng = createRng(`${options.run.seed}:navigation-services:${act.id}`);
+  const serviceDefinitions = rng.fork('service-order').shuffle(DESTINATIONS);
+  const destinations = serviceDefinitions.map((definition, index) =>
+    resolveDestination(definition, SERVICE_SLOTS[index]!, index, options.serviceLocks)
+  );
   const prefix = rng.fork('hub-prefix').choice(HUB_PREFIXES);
   const suffix = rng.fork('hub-suffix').choice(HUB_SUFFIXES);
 
   return {
-    id: `navigation:${options.seed}:s${sectorIndex + 1}`,
-    layoutId: layout.id,
+    id: `navigation:${options.run.seed}:${act.id}`,
+    layoutId: constellation.layoutId,
     hubName: `${prefix} ${suffix}`,
-    localCode: `${prefix.slice(0, 2).toUpperCase()}-${rng.fork('local-code').int(11, 99)}`,
-    destinations,
-    edges: createNavigationEdges(destinations)
+    localCode: constellation.localCode,
+    constellation,
+    destinations
   };
 }
 
@@ -252,6 +222,7 @@ export function validateSectorNavigationState(state: SectorNavigationState): rea
 function resolveDestination(
   definition: (typeof DESTINATIONS)[number],
   slot: NavigationSlot,
+  revealOrder: number,
   serviceLocks: SectorNavigationServiceLocks | undefined
 ): SectorNavigationDestination {
   const unavailableReason = serviceLocks?.[definition.id]?.trim() || null;
@@ -259,48 +230,10 @@ function resolveDestination(
     ...definition,
     x: slot.x,
     y: slot.y,
+    revealOrder,
     available: unavailableReason === null,
     unavailableReason
   };
-}
-
-function createNavigationEdges(
-  destinations: readonly SectorNavigationDestination[]
-): readonly SectorNavigationEdge[] {
-  const connected = new Set<SectorNavigationDestinationId>(['launch']);
-  const edges: SectorNavigationEdge[] = [];
-  while (connected.size < destinations.length) {
-    let nearest:
-      | {
-          readonly fromId: SectorNavigationDestinationId;
-          readonly toId: SectorNavigationDestinationId;
-          readonly distance: number;
-        }
-      | undefined;
-    for (const from of destinations) {
-      if (!connected.has(from.id)) continue;
-      for (const to of destinations) {
-        if (connected.has(to.id)) continue;
-        const distance = Math.hypot(to.x - from.x, to.y - from.y);
-        if (
-          !nearest ||
-          distance < nearest.distance ||
-          (distance === nearest.distance &&
-            `${from.id}:${to.id}` < `${nearest.fromId}:${nearest.toId}`)
-        ) {
-          nearest = { fromId: from.id, toId: to.id, distance };
-        }
-      }
-    }
-    if (!nearest) break;
-    edges.push({ fromId: nearest.fromId, toId: nearest.toId });
-    connected.add(nearest.toId);
-  }
-  return edges;
-}
-
-function clampPercent(value: number): number {
-  return Math.max(8, Math.min(92, value));
 }
 
 function sanitizeSectorIndex(value: number): number {

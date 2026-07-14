@@ -141,6 +141,12 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   expect(briefingMetricCount).toBeGreaterThanOrEqual(2);
   expect(briefingMetricCount).toBeLessThanOrEqual(4);
   await expect(page.getByTestId('navigation-map')).toBeVisible();
+  await expect(page.locator('.constellation-node[data-node-kind="sector"]')).toHaveCount(5);
+  await expect(page.locator('.constellation-node[data-node-kind="service"]')).toHaveCount(5);
+  await expect(page.locator('.navigation-map-routes line')).toHaveCount(4);
+  await expect(
+    page.locator('.constellation-node[data-constellation-status="revealed"]')
+  ).toHaveCount(1);
   await expect(page.getByTestId('open-shop')).toHaveAttribute('aria-label', /available/);
   await expect(page.getByTestId('open-hardpoint-control')).toHaveAttribute(
     'aria-label',
@@ -231,6 +237,10 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   );
   await expect(page.getByTestId('mission-branch')).toBeVisible();
   await page.getByTestId('mission-branch-optional').click();
+  await expect(page.getByTestId('approach-constellation-detail')).toContainText(
+    'Optional operation'
+  );
+  await page.getByTestId('approach-decision-confirm').click();
   await expect(page.getByTestId('expedition-readout')).toContainText('Black Box Signal');
   await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
   await page.keyboard.press('8');
@@ -245,6 +255,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.keyboard.press('8');
   await expect(page.getByTestId('mission-branch')).toBeVisible();
   await page.getByTestId('mission-branch-optional').click();
+  await page.getByTestId('approach-decision-confirm').click();
   await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
   await page.keyboard.press('8');
   await expect(page.getByTestId('mission-relief')).toBeVisible();
@@ -1236,11 +1247,13 @@ async function forceCompleteSectorAndEnterNext(page: Page, nextSectorName: strin
   );
   await expect(page.getByTestId('mission-branch')).toBeVisible();
   await page.getByTestId('mission-branch-direct').click();
+  await page.getByTestId('approach-decision-confirm').click();
   await page.getByTestId('command-deck-continue').click();
   await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
   await page.keyboard.press('8');
   await expect(page.getByTestId('mission-branch')).toBeVisible();
   await page.getByTestId('mission-branch-direct').click();
+  await page.getByTestId('approach-decision-confirm').click();
   await page.getByTestId('mission-relief-continue').click();
   await expect(page.getByRole('heading', { name: 'Choose Route' })).toBeVisible();
 

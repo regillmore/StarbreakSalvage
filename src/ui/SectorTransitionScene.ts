@@ -3,6 +3,7 @@ import type { Scene, SceneDebugState } from '../app/Scene';
 import { getMissionObjective } from '../content/objectives';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import { createActDebugState, formatActSectorLabel } from '../game/ActPlan';
+import type { ActConstellationNode } from '../game/ActConstellation';
 import { formatRouteTagSummary } from '../game/ActTwoDebug';
 import { getCurrentSector, type RunSessionState } from '../game/RunSession';
 import { applySectorConditionsToScroll, createSectorConditionPlan } from '../game/SectorConditions';
@@ -32,10 +33,14 @@ import {
   createSectorNavigationPlan,
   recordSectorNavigationVisit,
   type SectorNavigationDestination,
-  type SectorNavigationDestinationId,
   type SectorNavigationPlan,
   type SectorNavigationServiceLocks
 } from '../game/SectorNavigation';
+import {
+  createConstellationMap,
+  updateConstellationSelection,
+  type ConstellationMapNode
+} from './ConstellationMap';
 
 interface NavigationBriefingContext {
   readonly sector: ReturnType<typeof getCurrentSector>;
@@ -51,10 +56,10 @@ interface NavigationBriefingContext {
 
 export class SectorTransitionScene implements Scene {
   public readonly id = 'sector-transition';
-  private selectedDestinationId: SectorNavigationDestinationId = 'launch';
+  private selectedNodeId: string | null = null;
   private plan: SectorNavigationPlan | null = null;
   private detailRoot: HTMLElement | null = null;
-  private destinationButtons = new Map<SectorNavigationDestinationId, HTMLButtonElement>();
+  private constellationButtons = new Map<string, HTMLButtonElement>();
 
   public constructor(
     private readonly uiRoot: HTMLElement,
@@ -75,14 +80,12 @@ export class SectorTransitionScene implements Scene {
   public enter(): void {
     const context = this.createBriefingContext();
     this.plan = createSectorNavigationPlan({
-      seed: this.run.seed,
+      run: this.run,
       sectorIndex: this.session.currentSectorIndex,
       serviceLocks: this.createEffectiveServiceLocks()
     });
-    if (
-      !this.plan.destinations.some((destination) => destination.id === this.selectedDestinationId)
-    ) {
-      this.selectedDestinationId = 'launch';
+    if (!this.selectedNodeId || !this.getPlanNodeIds(this.plan).includes(this.selectedNodeId)) {
+      this.selectedNodeId = this.plan.constellation.currentSectorNodeId;
     }
     const shell = document.createElement('main');
     shell.className = 'scene-panel scene-panel-wide transition-panel navigation-hub-panel';
@@ -106,7 +109,7 @@ export class SectorTransitionScene implements Scene {
     title.textContent = `${this.plan.hubName} Navigation`;
     const subtitle = document.createElement('p');
     subtitle.className = 'navigation-hub-subtitle';
-    subtitle.textContent = `${this.run.carrierPlan.name} local operations hub · Select a destination for live details.`;
+    subtitle.textContent = `${this.run.carrierPlan.name} act chart · Sector signals reveal as the expedition advances; carrier services remain in local orbit.`;
     headingGroup.append(eyebrow, title, subtitle);
     const resources = document.createElement('div');
     resources.className = 'navigation-resource-strip';
@@ -131,7 +134,7 @@ export class SectorTransitionScene implements Scene {
     const footer = document.createElement('p');
     footer.className = 'navigation-hub-footer';
     footer.textContent =
-      'LOCAL TRANSIT // Arrow keys move between destinations · Enter inspects · Travel controls confirm departure.';
+      'ACT CHART // Connected sectors reveal with progress · Unlinked carrier services remain locally available.';
 
     shell.append(
       header,
@@ -156,7 +159,7 @@ export class SectorTransitionScene implements Scene {
     if (action === 'confirm') {
       const focused = this.uiRoot.ownerDocument.activeElement;
       if (focused instanceof HTMLButtonElement) focused.click();
-      else this.activateDestination(this.selectedDestinationId);
+      else if (this.selectedNodeId) this.activateNode(this.selectedNodeId);
     }
   }
 
@@ -284,99 +287,157 @@ export class SectorTransitionScene implements Scene {
   }
 
   private createNavigationMap(plan: SectorNavigationPlan): HTMLElement {
-    this.destinationButtons.clear();
-    const map = document.createElement('section');
-    map.className = 'navigation-map';
-    map.dataset.testid = 'navigation-map';
-    map.setAttribute('aria-label', `${plan.hubName} local destination map`);
-    const grid = document.createElement('span');
-    grid.className = 'navigation-map-grid';
-    grid.setAttribute('aria-hidden', 'true');
-    const routes = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    routes.classList.add('navigation-map-routes');
-    routes.setAttribute('viewBox', '0 0 100 100');
-    routes.setAttribute('preserveAspectRatio', 'none');
-    routes.setAttribute('aria-hidden', 'true');
-    const byId = new Map(plan.destinations.map((destination) => [destination.id, destination]));
-    for (const edge of plan.edges) {
-      const from = byId.get(edge.fromId)!;
-      const to = byId.get(edge.toId)!;
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', String(from.x));
-      line.setAttribute('y1', String(from.y));
-      line.setAttribute('x2', String(to.x));
-      line.setAttribute('y2', String(to.y));
-      routes.append(line);
-    }
-    const mapLabel = document.createElement('div');
-    mapLabel.className = 'navigation-map-label';
-    mapLabel.innerHTML = `<strong>LOCAL NAV</strong><span>${plan.layoutId.replace('-', ' ')} // ${plan.localCode}</span>`;
-    map.append(grid, routes, mapLabel);
-
-    for (const destination of plan.destinations) {
-      const button = document.createElement('button');
-      button.className = 'navigation-destination-node';
-      button.type = 'button';
-      button.dataset.destinationId = destination.id;
-      button.dataset.testid = this.getDestinationTestId(destination.id);
-      button.dataset.available = String(destination.available);
-      button.dataset.visited = String(
-        this.session.navigation.visitedDestinationIds.includes(destination.id)
-      );
-      button.style.setProperty('--nav-x', `${destination.x}%`);
-      button.style.setProperty('--nav-y', `${destination.y}%`);
-      button.setAttribute('aria-pressed', String(destination.id === this.selectedDestinationId));
-      button.setAttribute(
-        'aria-label',
-        `${destination.label}, ${destination.available ? 'available' : `unavailable: ${destination.unavailableReason}`}`
-      );
-      const glyph = document.createElement('span');
-      glyph.className = 'navigation-node-glyph';
-      glyph.textContent = destination.glyph;
-      glyph.setAttribute('aria-hidden', 'true');
-      const label = document.createElement('span');
-      label.className = 'navigation-node-label';
-      label.textContent = destination.shortLabel;
-      const state = document.createElement('span');
-      state.className = 'navigation-node-state';
-      state.textContent = !destination.available
-        ? 'LOCKED'
-        : this.session.navigation.visitedDestinationIds.includes(destination.id)
-          ? 'VISITED'
-          : 'OPEN';
-      button.append(glyph, label, state);
-      button.addEventListener('click', () => this.selectDestination(destination.id));
-      button.addEventListener('keydown', (event) => this.handleMapKey(event, destination.id));
-      this.destinationButtons.set(destination.id, button);
-      map.append(button);
-    }
-    return map;
+    const sectorNodes: ConstellationMapNode[] = plan.constellation.nodes
+      .filter((node) => node.kind === 'sector')
+      .map((node) => {
+        const current = node.id === plan.constellation.currentSectorNodeId;
+        return {
+          id: node.id,
+          kind: 'sector',
+          label: node.label,
+          shortLabel: node.shortLabel,
+          glyph: node.glyph,
+          x: node.x,
+          y: node.y,
+          status: node.status,
+          stateLabel: node.stateLabel,
+          selectable: node.status !== 'hidden',
+          available: node.status !== 'hidden',
+          visited: node.status === 'completed',
+          revealOrder: node.revealOrder,
+          testId: current
+            ? 'navigation-destination-launch'
+            : `navigation-sector-${node.sectorIndex + 1}`,
+          destinationId: current ? 'launch' : node.id
+        };
+      });
+    const serviceNodes: ConstellationMapNode[] = plan.destinations.map((destination) => {
+      const visited = this.session.navigation.visitedDestinationIds.includes(destination.id);
+      return {
+        id: destination.id,
+        kind: 'service',
+        label: destination.label,
+        shortLabel: destination.shortLabel,
+        glyph: destination.glyph,
+        x: destination.x,
+        y: destination.y,
+        status: destination.available ? (visited ? 'visited' : 'service') : 'locked',
+        stateLabel: destination.available ? (visited ? 'VISITED' : 'OPEN') : 'LOCKED',
+        selectable: true,
+        available: destination.available,
+        visited,
+        revealOrder: destination.revealOrder,
+        testId: this.getDestinationTestId(destination.id),
+        destinationId: destination.id,
+        unavailableReason: destination.unavailableReason
+      };
+    });
+    const result = createConstellationMap({
+      document: this.uiRoot.ownerDocument,
+      ariaLabel: `${plan.constellation.actLabel} sector constellation and carrier services`,
+      label: `${plan.constellation.actShortLabel} CONSTELLATION`,
+      code: plan.localCode,
+      layoutId: plan.layoutId,
+      nodes: [...sectorNodes, ...serviceNodes],
+      edges: plan.constellation.edges,
+      selectedId: this.selectedNodeId ?? plan.constellation.currentSectorNodeId,
+      onSelect: (nodeId) => this.selectNode(nodeId)
+    });
+    this.constellationButtons = new Map(result.buttons);
+    return result.element;
   }
 
-  private selectDestination(destinationId: SectorNavigationDestinationId): void {
-    this.selectedDestinationId = destinationId;
-    for (const [id, button] of this.destinationButtons) {
-      button.setAttribute('aria-pressed', String(id === destinationId));
-    }
+  private selectNode(nodeId: string): void {
+    this.selectedNodeId = nodeId;
+    updateConstellationSelection(this.constellationButtons, nodeId);
     this.renderDestinationDetail(this.createBriefingContext());
   }
 
   private renderDestinationDetail(context: NavigationBriefingContext): void {
-    if (!this.detailRoot || !this.plan) return;
+    if (!this.detailRoot || !this.plan || !this.selectedNodeId) return;
+    const sectorNode = this.plan.constellation.nodes.find(
+      (candidate) => candidate.id === this.selectedNodeId && candidate.kind === 'sector'
+    );
+    if (sectorNode) {
+      this.renderSectorDetail(context, sectorNode);
+      return;
+    }
     const destination = this.plan.destinations.find(
-      (candidate) => candidate.id === this.selectedDestinationId
-    )!;
+      (candidate) => candidate.id === this.selectedNodeId
+    );
+    if (!destination) return;
+    this.renderServiceDetail(context, destination);
+  }
+
+  private renderSectorDetail(context: NavigationBriefingContext, node: ActConstellationNode): void {
+    if (!this.detailRoot || !this.plan) return;
+    const current = node.id === this.plan.constellation.currentSectorNodeId;
+    const sectorNodes = this.plan.constellation.nodes.filter(
+      (candidate) => candidate.kind === 'sector'
+    );
+    const actSectorNumber = sectorNodes.findIndex((candidate) => candidate.id === node.id) + 1;
     const heading = document.createElement('div');
     heading.className = 'navigation-detail-heading';
     const identity = document.createElement('div');
     const kicker = document.createElement('p');
     kicker.className = 'eyebrow';
-    kicker.textContent = `${destination.deckLabel} // ${destination.available ? 'TRANSIT OPEN' : 'ACCESS HOLD'}`;
+    kicker.textContent = `${this.plan.constellation.actShortLabel} // SECTOR ${actSectorNumber}/${sectorNodes.length} // ${node.stateLabel}`;
     const title = document.createElement('h2');
-    title.textContent =
-      destination.id === 'launch'
-        ? (this.mission?.stageLabel ?? `Entering ${context.sector.sectorName}`)
-        : destination.label;
+    title.textContent = current
+      ? (this.mission?.stageLabel ?? `Entering ${context.sector.sectorName}`)
+      : node.label;
+    identity.append(kicker, title);
+    const status = document.createElement('span');
+    status.className = 'navigation-detail-status';
+    status.dataset.available = String(current);
+    status.textContent = node.stateLabel;
+    heading.append(identity, status);
+    const summary = document.createElement('p');
+    summary.className = 'navigation-detail-summary';
+    if (current) summary.dataset.testid = 'mission-story-brief';
+    summary.textContent = current ? this.createLaunchStory(context) : node.summary;
+    const body = document.createElement('div');
+    body.className = 'navigation-detail-body';
+    if (current) {
+      this.appendLaunchBriefing(body, context);
+    } else {
+      body.append(
+        this.createDetailMetric('Act position', `${actSectorNumber}/${sectorNodes.length}`),
+        this.createDetailMetric(
+          'Signal state',
+          node.status === 'completed'
+            ? 'Route settled and retained on the chart'
+            : 'Destination fixed; approach not yet open'
+        )
+      );
+    }
+    const action = document.createElement('button');
+    action.className = current ? 'primary-button' : 'secondary-button';
+    action.type = 'button';
+    action.dataset.testid = 'navigation-destination-action';
+    action.disabled = !current;
+    action.textContent = current
+      ? 'Begin Operation'
+      : node.status === 'completed'
+        ? 'Operation Settled'
+        : 'Complete Current Sector';
+    action.addEventListener('click', () => this.activateNode(node.id));
+    this.detailRoot.replaceChildren(heading, summary, body, action);
+  }
+
+  private renderServiceDetail(
+    context: NavigationBriefingContext,
+    destination: SectorNavigationDestination
+  ): void {
+    if (!this.detailRoot) return;
+    const heading = document.createElement('div');
+    heading.className = 'navigation-detail-heading';
+    const identity = document.createElement('div');
+    const kicker = document.createElement('p');
+    kicker.className = 'eyebrow';
+    kicker.textContent = `${destination.deckLabel} // ${destination.available ? 'LOCAL ORBIT' : 'ACCESS HOLD'}`;
+    const title = document.createElement('h2');
+    title.textContent = destination.label;
     identity.append(kicker, title);
     const status = document.createElement('span');
     status.className = 'navigation-detail-status';
@@ -389,20 +450,17 @@ export class SectorTransitionScene implements Scene {
     heading.append(identity, status);
     const summary = document.createElement('p');
     summary.className = 'navigation-detail-summary';
-    if (destination.id === 'launch') summary.dataset.testid = 'mission-story-brief';
-    summary.textContent =
-      destination.unavailableReason ??
-      (destination.id === 'launch' ? this.createLaunchStory(context) : destination.summary);
+    summary.textContent = destination.unavailableReason ?? destination.summary;
     const body = document.createElement('div');
     body.className = 'navigation-detail-body';
     this.appendDestinationBody(body, destination, context);
     const action = document.createElement('button');
-    action.className = destination.id === 'launch' ? 'primary-button' : 'secondary-button';
+    action.className = 'secondary-button';
     action.type = 'button';
     action.dataset.testid = 'navigation-destination-action';
     action.disabled = !destination.available;
     action.textContent = destination.available ? destination.actionLabel : 'Transit Unavailable';
-    action.addEventListener('click', () => this.activateDestination(destination.id));
+    action.addEventListener('click', () => this.activateNode(destination.id));
     this.detailRoot.replaceChildren(heading, summary, body, action);
   }
 
@@ -411,10 +469,6 @@ export class SectorTransitionScene implements Scene {
     destination: SectorNavigationDestination,
     context: NavigationBriefingContext
   ): void {
-    if (destination.id === 'launch') {
-      this.appendLaunchBriefing(body, context);
-      return;
-    }
     if (destination.id === 'shop') {
       body.append(
         this.createDetailMetric('Tender', `${this.session.credits} credits`),
@@ -544,14 +598,17 @@ export class SectorTransitionScene implements Scene {
     return `${finishSentence(missionLead)} ${finishSentence(context.campaign.missionBrief)}`;
   }
 
-  private activateDestination(destinationId: SectorNavigationDestinationId): void {
-    const destination = this.plan?.destinations.find((candidate) => candidate.id === destinationId);
+  private activateNode(nodeId: string): void {
+    if (!this.plan) return;
+    if (nodeId === this.plan.constellation.currentSectorNodeId) {
+      this.session.navigation = recordSectorNavigationVisit(this.session.navigation, 'launch');
+      this.onEnterSector();
+      return;
+    }
+    const destination = this.plan.destinations.find((candidate) => candidate.id === nodeId);
     if (!destination?.available) return;
-    this.session.navigation = recordSectorNavigationVisit(this.session.navigation, destinationId);
-    switch (destinationId) {
-      case 'launch':
-        this.onEnterSector();
-        break;
+    this.session.navigation = recordSectorNavigationVisit(this.session.navigation, destination.id);
+    switch (destination.id) {
       case 'shop':
         this.onOpenShop?.();
         break;
@@ -570,49 +627,11 @@ export class SectorTransitionScene implements Scene {
     }
   }
 
-  private handleMapKey(event: KeyboardEvent, originId: SectorNavigationDestinationId): void {
-    const direction = event.key;
-    if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(direction) || !this.plan) {
-      return;
-    }
-    event.preventDefault();
-    const origin = this.plan.destinations.find((destination) => destination.id === originId)!;
-    const candidates = this.plan.destinations
-      .filter((candidate) => candidate.id !== originId)
-      .map((candidate) => ({
-        candidate,
-        dx: candidate.x - origin.x,
-        dy: candidate.y - origin.y
-      }))
-      .filter(({ dx, dy }) => {
-        if (direction === 'ArrowUp') return dy < 0;
-        if (direction === 'ArrowDown') return dy > 0;
-        if (direction === 'ArrowLeft') return dx < 0;
-        return dx > 0;
-      })
-      .sort((left, right) => {
-        const leftPrimary =
-          direction === 'ArrowUp' || direction === 'ArrowDown'
-            ? Math.abs(left.dy)
-            : Math.abs(left.dx);
-        const rightPrimary =
-          direction === 'ArrowUp' || direction === 'ArrowDown'
-            ? Math.abs(right.dy)
-            : Math.abs(right.dx);
-        const leftCross =
-          direction === 'ArrowUp' || direction === 'ArrowDown'
-            ? Math.abs(left.dx)
-            : Math.abs(left.dy);
-        const rightCross =
-          direction === 'ArrowUp' || direction === 'ArrowDown'
-            ? Math.abs(right.dx)
-            : Math.abs(right.dy);
-        return leftPrimary + leftCross * 0.45 - (rightPrimary + rightCross * 0.45);
-      });
-    const next = candidates[0]?.candidate;
-    if (!next) return;
-    this.selectDestination(next.id);
-    this.destinationButtons.get(next.id)?.focus();
+  private getPlanNodeIds(plan: SectorNavigationPlan): readonly string[] {
+    return [
+      ...plan.constellation.nodes.map((node) => node.id),
+      ...plan.destinations.map((destination) => destination.id)
+    ];
   }
 
   private createResource(label: string, value: string | number): HTMLElement {
@@ -641,7 +660,7 @@ export class SectorTransitionScene implements Scene {
     return copy;
   }
 
-  private getDestinationTestId(destinationId: SectorNavigationDestinationId): string {
+  private getDestinationTestId(destinationId: string): string {
     if (destinationId === 'fleet') return 'open-fleet-bay';
     if (destinationId === 'crew') return 'open-crew-quarters';
     if (destinationId === 'apex') return 'open-apex-dossier';

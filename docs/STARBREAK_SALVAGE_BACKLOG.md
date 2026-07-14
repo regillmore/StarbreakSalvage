@@ -1967,4 +1967,16 @@ Acceptance:
 
 Status:
 
-- Implemented in work order 133. Four deterministic local-map grammars shuffle five service decks around a stable launch node and build one connected bounded transit network. The navigation scene exposes service state, resources, pointer/Tab/spatial-arrow control, responsive layouts, and explicit travel; its launch detail now uses a two-sentence story briefing, two essential metrics, and at most two notable callouts instead of aggregating debug readouts. Reward components enter cargo before transit instead of forcing Hardpoint Control; common services return to the same hub, snapshot v11 persists unique visits and resets them per sector, and explicit story reasons are the only service-lock input.
+- Implemented in work order 133 and evolved in work order 134. The navigation scene exposes service state, resources, pointer/Tab/spatial-arrow control, responsive layouts, explicit travel, and a compact story-first launch detail. Reward components enter cargo before transit instead of forcing Hardpoint Control; common services return to the same hub, snapshot v11 persists unique visits and resets them per sector, and explicit story reasons are the only service-lock input. WO134 retains those contracts while moving services out of route connectivity and replacing the per-sector local tree with the act constellation described below.
+
+### BL3 - Act-scale route constellations
+
+Acceptance:
+
+- One seeded sector constellation persists through each act, reveals only actionable progress, and refreshes at the next act boundary.
+- Common carrier services float outside route connectivity while remaining visible and locally available under explicit story locks.
+- Direct and optional mission approaches resolve as inspectable connected nodes on the same chart instead of opening a separate choice-card menu.
+
+Status:
+
+- Implemented in work order 134. `ActConstellation` supplies four stable five-sector layouts with completed/current/revealed/hidden edge projection and temporary approach nodes; `ConstellationMap` renders the shared hub/approach grammar with spatial controls and bounded reveal motion. Sector Navigation composes five unlinked service satellites around the act chart, while Operational Map retains relief checkpoints but dispatches approach branches through select-then-commit constellation nodes. All state is derived from the existing run and mission plan, so snapshot v11 remains authoritative without new persisted reveal data.
