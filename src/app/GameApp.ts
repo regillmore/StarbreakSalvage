@@ -114,7 +114,6 @@ import { GameplayScene } from '../ui/GameplayScene';
 import { InterActJunctionScene } from '../ui/InterActJunctionScene';
 import { FrontierGateScene } from '../ui/FrontierGateScene';
 import { MainMenuScene } from '../ui/MainMenuScene';
-import { OperationalMapScene } from '../ui/OperationalMapScene';
 import { PauseScene } from '../ui/PauseScene';
 import { RewardScene } from '../ui/RewardScene';
 import { RouteEventScene } from '../ui/RouteEventScene';
@@ -1687,47 +1686,21 @@ export class GameApp {
       void this.showCommandDeck(schedule);
       return;
     }
-    this.sceneManager.switchTo(
-      new OperationalMapScene(
-        this.uiRoot,
-        this.currentRun.expedition,
-        this.runSession.expedition,
-        this.runSession.operational,
-        schedule,
-        this.runSession.mission,
-        this.selectedContract,
-        createMissionReadModel(schedule, this.runSession.mission),
-        createMissionDebugState(schedule, this.runSession.mission),
-        [],
-        this.runSession.credits,
-        this.runSession.salvage,
-        () => {},
-        () => {
-          const result = this.dispatchCurrentMission({
-            id: `${this.runSession.mission.currentStageId}:relief-complete`,
-            type: 'completeRelief'
-          });
-          if (result.disposition === 'advanced') {
-            const nextStage = getMissionStage(schedule, this.runSession.mission.currentStageId);
-            if (nextStage.kind === 'combat') {
-              this.showGameplay();
-            } else if (nextStage.kind === 'extraction') {
-              this.showRouteChoice();
-            }
-          }
-        },
-        'Combat world cleanup is settled; no actors, projectiles, hooks, or pending payouts cross this checkpoint.',
-        createFactionFrontInfluence(
-          this.currentRun.factionFronts,
-          this.runSession.factionFronts,
-          this.runSession.currentSectorIndex
-        )
-      )
-    );
-    this.checkpointRun(
-      'operationalMap',
-      `${createMissionReadModel(schedule, this.runSession.mission).stageLabel} checkpoint`
-    );
+
+    const result = this.dispatchCurrentMission({
+      id: `${stage.id}:relief-complete`,
+      type: 'completeRelief'
+    });
+    if (result.disposition !== 'advanced') return;
+
+    const nextStage = getMissionStage(schedule, this.runSession.mission.currentStageId);
+    if (nextStage.kind === 'combat') {
+      this.showGameplay();
+    } else if (nextStage.kind === 'extraction') {
+      this.showRouteChoice();
+    } else {
+      throw new Error(`Relief advanced to unexpected mission stage ${nextStage.kind}.`);
+    }
   }
 
   private async showCommandDeck(schedule = this.getCurrentMissionSchedule()): Promise<void> {

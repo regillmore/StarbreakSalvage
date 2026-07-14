@@ -469,3 +469,9 @@ The scene renders one bounded SVG with five lines, six native destination button
 Snapshot v11 adds one sector integer and at most six short destination ids. The map name, code, layout, coordinates, and edges are regenerated from seed and sector rather than persisted. The 512 KiB snapshot cap, combat actor/projectile/effect/proc budgets, mission topology, route generation, and fixed-step update remain unchanged.
 
 The release build emits 910.81 kB minified/247.77 kB gzip initial JavaScript and 59.77/12.52 kB CSS. Relative to work order 132, the navigation domain, expanded transition projection, service orchestration, snapshot boundary, and responsive map presentation add 13.48/4.22 kB JavaScript and 6.32/1.30 kB CSS. Existing Fleet, Crew, Apex, Command Deck, and Scenario Lab scenes remain lazy. The initial-chunk warning remains open and no threshold changed; extracting the navigation scene and its low-frequency campaign briefing readers is the clearest follow-up bundle boundary.
+
+## Work order 135 seamless-handoff budgets
+
+Final relief dispatch is one synchronous mission-reducer event at sector settlement and does not enter the fixed-step loop. The staging Command Deck, operational cleanup ledger, route/reward flow, and snapshot schema are unchanged. `OperationalMapScene` has no fresh runtime importer after the redundant `Proceed to Extraction` stop is removed, so Vite omits that DOM presentation from the initial graph while the source and reducer-compatible `operationalMap` restore target remain available for deployed checkpoint recovery.
+
+The release build emits 914.17 kB minified/248.88 kB gzip initial JavaScript and unchanged 62.38/12.95 kB CSS. This is a 10.68/2.83 kB initial-JavaScript reduction from the deployed work order 134 build. No dependency, simulation budget, RNG stream, or warning threshold changes; the existing initial-chunk warning remains open.

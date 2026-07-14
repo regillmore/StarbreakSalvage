@@ -250,9 +250,8 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.getByTestId('navigation-optional-action').click();
   await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
   await page.keyboard.press('8');
-  await expect(page.getByTestId('mission-relief')).toBeVisible();
-  await page.getByTestId('mission-relief-continue').click();
   await expect(page.getByRole('heading', { name: 'Choose Route' })).toBeVisible();
+  await expect(page.getByTestId('mission-relief')).toHaveCount(0);
   await expect(page.getByTestId('route-shop-mission-preview')).toContainText(
     'Next mission: Running Audit / PURSUE'
   );
@@ -1243,8 +1242,8 @@ async function forceCompleteSectorAndEnterNext(page: Page, nextSectorName: strin
     await continueNode.click();
   }
   await page.getByTestId('navigation-continue-action').click();
-  await page.getByTestId('mission-relief-continue').click();
   await expect(page.getByRole('heading', { name: 'Choose Route' })).toBeVisible();
+  await expect(page.getByTestId('mission-relief')).toHaveCount(0);
 
   await chooseFirstRouteAndReward(page);
   await expect(page.getByTestId('mission-briefing')).toBeVisible();
