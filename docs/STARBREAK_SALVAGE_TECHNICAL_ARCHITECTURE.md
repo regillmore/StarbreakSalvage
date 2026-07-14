@@ -871,6 +871,15 @@ seed + permanent save fingerprint
 - Hardpoint Control owns a reversible item draft beside the existing engineering draft. Component changes reconcile it immediately, while Undo/Skip restore committed assignments and Commit returns only locations valid against the committed component graph.
 - Snapshot v10 persists explicit item socket assignments and validates acquisition identity, socket shape, component existence, type compatibility, exclusive occupancy, capacity, and computed order. Permanent save records still retain only completed-run owned item ids, so routing remains run-local build state.
 
+### Work order 133 navigation hub boundary
+
+- `SectorNavigation.ts` is the pure boundary for local carrier geography. It owns the fixed six-destination vocabulary, four authored layout grammars, named sector RNG stream, bounded jitter, connected transit edges, default-open service policy, optional story-lock reasons, visit reducer, synchronization, and validation.
+- Map plans are regenerated from run seed plus zero-based sector index and are not stored. `RunSession.navigation` stores only the current sector index and up to six unique visited destination ids; `resetMissionForCurrentSector` synchronizes this boundary so debug repositioning, normal transit, and resume share one reset rule.
+- `SectorTransitionScene` remains the mission briefing scene id/checkpoint boundary but now projects the plan as a DOM navigation hub. Selection is presentation-only. Confirmed travel records the visit before delegating to `GameApp`; mission launch remains the only path that dispatches briefing and entry mission events.
+- `GameApp` owns service orchestration. Hub Shop uses the current sector's existing seeded inventory/reroll state, Hardpoint uses the existing reversible engineering reducer, and lazy Fleet/Crew/Apex scenes return to the same checkpointed hub. No service owns navigation or mission state.
+- Reward settlement still creates exactly one route-conditioned component, carrier cargo entry, and acquisition timeline event. It advances directly to the next sector; installation is now player-initiated from the next hub. Reopenable foundry calls award crew/carrier salvage bonuses only when scrapping produced positive salvage.
+- Snapshot v11 validates navigation identity, uniqueness, and destination vocabulary and retires v10. Map coordinates and edges remain derived content, keeping the persisted addition bounded and avoiding layout drift inside the fixed-step combat loop.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

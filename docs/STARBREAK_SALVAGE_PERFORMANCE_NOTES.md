@@ -459,3 +459,13 @@ Socket reconciliation scans the bounded owned-item list and the two sockets on e
 Ricochet adds one integer charge and two sidewall comparisons per active player projectile. It adds no spatial search, RNG, recursive hook dispatch, actor pool, or retained effect entity. Hardpoint Control renders one chip per installed socket and one compact card/native selector per owned item; no socket DOM runs during gameplay. Snapshot v10 adds three small scalar fields only for fitted items, while inactive inventory writes explicit null.
 
 The release build emits 897.33 kB minified/243.55 kB gzip initial JavaScript and 53.45/11.22 kB CSS. Relative to work order 131, the socket domain, validation, foundry controls, active-circuit summary, and six mechanic rewrites add 9.28/2.30 kB JavaScript and 1.90/0.40 kB CSS. The existing initial-chunk warning remains open and no threshold changed.
+
+## Work order 133 navigation-hub budgets
+
+Each hub generates exactly six destination records and five transit edges. Generation shuffles five definitions, jitters ten bounded scalar coordinates, and builds a six-node minimum connection tree only when entering the intermission scene; no navigation reducer, geometry, DOM, or RNG enters gameplay simulation. Visit state retains at most six unique ids and resets per sector.
+
+The scene renders one bounded SVG with five lines, six native destination buttons, one details pane, and at most the previous briefing's nine compact intelligence paragraphs. Selecting a node replaces only the bounded details subtree. Reduced-motion and performance modes disable route animation; high contrast changes presentation only. Shop, engineering, fleet, crew, and apex systems remain their existing scenes/chunks and are not duplicated in the map.
+
+Snapshot v11 adds one sector integer and at most six short destination ids. The map name, code, layout, coordinates, and edges are regenerated from seed and sector rather than persisted. The 512 KiB snapshot cap, combat actor/projectile/effect/proc budgets, mission topology, route generation, and fixed-step update remain unchanged.
+
+The release build emits 910.81 kB minified/247.77 kB gzip initial JavaScript and 59.77/12.52 kB CSS. Relative to work order 132, the navigation domain, expanded transition projection, service orchestration, snapshot boundary, and responsive map presentation add 13.48/4.22 kB JavaScript and 6.32/1.30 kB CSS. Existing Fleet, Crew, Apex, Command Deck, and Scenario Lab scenes remain lazy. The initial-chunk warning remains open and no threshold changed; extracting the navigation scene and its low-frequency campaign briefing readers is the clearest follow-up bundle boundary.

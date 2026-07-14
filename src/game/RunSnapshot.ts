@@ -20,10 +20,12 @@ import { validateCrewArcState } from './CrewArc';
 import { validateFleetState } from './Fleetcraft';
 import { validateApexHuntState } from './ApexHunt';
 import { reconcileItemSockets } from './ItemSockets';
+import { validateSectorNavigationState } from './SectorNavigation';
 
-export const RUN_SNAPSHOT_SCHEMA_VERSION = 10;
-export const RUN_SNAPSHOT_STORAGE_KEY = 'starbreak.run.v10';
+export const RUN_SNAPSHOT_SCHEMA_VERSION = 11;
+export const RUN_SNAPSHOT_STORAGE_KEY = 'starbreak.run.v11';
 export const LEGACY_RUN_SNAPSHOT_STORAGE_KEYS = [
+  'starbreak.run.v10',
   'starbreak.run.v9',
   'starbreak.run.v8',
   'starbreak.run.v7',
@@ -34,7 +36,7 @@ export const LEGACY_RUN_SNAPSHOT_STORAGE_KEYS = [
   'starbreak.run.v2',
   'starbreak.run.v1'
 ] as const;
-export const LEGACY_RUN_SNAPSHOT_STORAGE_KEY = LEGACY_RUN_SNAPSHOT_STORAGE_KEYS[8];
+export const LEGACY_RUN_SNAPSHOT_STORAGE_KEY = LEGACY_RUN_SNAPSHOT_STORAGE_KEYS[9];
 export const RUN_SNAPSHOT_MAX_BYTES = 512 * 1024;
 
 export type RunSnapshotResumeTarget = 'sectorTransition' | 'gameplay' | 'operationalMap';
@@ -45,7 +47,7 @@ export interface RunSnapshotCheckpoint {
   readonly sequence: number;
 }
 
-export interface RunSnapshotExtensionsV10 {
+export interface RunSnapshotExtensionsV11 {
   readonly carrier: { readonly planId: string };
   readonly boarding: { readonly planId: string };
   readonly factionFronts: { readonly planId: string };
@@ -54,8 +56,8 @@ export interface RunSnapshotExtensionsV10 {
   readonly apex: { readonly planId: string };
 }
 
-export interface RunSnapshotV10 {
-  readonly version: 10;
+export interface RunSnapshotV11 {
+  readonly version: 11;
   readonly plan: {
     readonly seed: string;
     readonly graphId: string;
@@ -66,18 +68,18 @@ export interface RunSnapshotV10 {
   };
   readonly checkpoint: RunSnapshotCheckpoint;
   readonly session: RunSessionState;
-  readonly extensions: RunSnapshotExtensionsV10;
+  readonly extensions: RunSnapshotExtensionsV11;
 }
 
 export interface RestoredRunSnapshot {
-  readonly snapshot: RunSnapshotV10;
+  readonly snapshot: RunSnapshotV11;
   readonly run: RunSkeleton;
   readonly contract: StartingContract;
   readonly session: RunSessionState;
 }
 
 export interface RunSnapshotLoadResult {
-  readonly snapshot: RunSnapshotV10 | null;
+  readonly snapshot: RunSnapshotV11 | null;
   readonly repaired: boolean;
   readonly error: string | null;
 }
@@ -106,7 +108,7 @@ export class RunSnapshotCoordinator {
     readonly session: RunSessionState;
     readonly target: RunSnapshotResumeTarget;
     readonly label: string;
-  }): RunSnapshotV10 {
+  }): RunSnapshotV11 {
     const snapshot = createRunSnapshot({
       ...options,
       sequence: options.session.timeline.entries.length
@@ -116,7 +118,7 @@ export class RunSnapshotCoordinator {
     return snapshot;
   }
 
-  public restore(snapshot: RunSnapshotV10): RestoredRunSnapshot {
+  public restore(snapshot: RunSnapshotV11): RestoredRunSnapshot {
     return restoreRunSnapshot(snapshot);
   }
 
@@ -132,12 +134,12 @@ export function createRunSnapshot(options: {
   readonly target: RunSnapshotResumeTarget;
   readonly label: string;
   readonly sequence?: number;
-}): RunSnapshotV10 {
+}): RunSnapshotV11 {
   const generationFingerprint = createRunGenerationSaveFingerprint(
     options.run.unlockedIds,
     options.run.upgradeEffects
   );
-  const snapshot: RunSnapshotV10 = {
+  const snapshot: RunSnapshotV11 = {
     version: RUN_SNAPSHOT_SCHEMA_VERSION,
     plan: {
       seed: options.run.seed,
@@ -165,7 +167,7 @@ export function createRunSnapshot(options: {
   return importRunSnapshot(exportRunSnapshot(snapshot));
 }
 
-export function restoreRunSnapshot(snapshot: RunSnapshotV10): RestoredRunSnapshot {
+export function restoreRunSnapshot(snapshot: RunSnapshotV11): RestoredRunSnapshot {
   const run = generateRunSkeleton(snapshot.plan.seed, {
     unlockedIds: snapshot.plan.unlockedIds,
     purchasedUpgradeIds: snapshot.plan.purchasedUpgradeIds
@@ -210,7 +212,7 @@ export function restoreRunSnapshot(snapshot: RunSnapshotV10): RestoredRunSnapsho
   };
 }
 
-export function createRunSnapshotSummary(snapshot: RunSnapshotV10): RunSnapshotSummary {
+export function createRunSnapshotSummary(snapshot: RunSnapshotV11): RunSnapshotSummary {
   const restored = restoreRunSnapshot(snapshot);
   const sector = restored.run.sectors[restored.session.currentSectorIndex]!;
   return {
@@ -234,7 +236,7 @@ export function loadRunSnapshot(storage: StorageLike): RunSnapshotLoadResult {
       return {
         snapshot: null,
         repaired: true,
-        error: 'A pre-apex expedition snapshot was retired safely.'
+        error: 'A previous expedition snapshot was retired safely.'
       };
     }
     return { snapshot: null, repaired: false, error: null };
@@ -253,7 +255,7 @@ export function loadRunSnapshot(storage: StorageLike): RunSnapshotLoadResult {
   }
 }
 
-export function writeRunSnapshot(storage: StorageLike, snapshot: RunSnapshotV10): void {
+export function writeRunSnapshot(storage: StorageLike, snapshot: RunSnapshotV11): void {
   storage.setItem(RUN_SNAPSHOT_STORAGE_KEY, exportRunSnapshot(snapshot));
 }
 
@@ -262,7 +264,7 @@ export function clearRunSnapshot(storage: StorageLike): void {
   for (const key of LEGACY_RUN_SNAPSHOT_STORAGE_KEYS) storage.removeItem(key);
 }
 
-export function exportRunSnapshot(snapshot: RunSnapshotV10): string {
+export function exportRunSnapshot(snapshot: RunSnapshotV11): string {
   const serialized = JSON.stringify(snapshot);
   const byteLength = new TextEncoder().encode(serialized).byteLength;
   if (byteLength > RUN_SNAPSHOT_MAX_BYTES) {
@@ -271,7 +273,7 @@ export function exportRunSnapshot(snapshot: RunSnapshotV10): string {
   return serialized;
 }
 
-export function importRunSnapshot(serialized: string): RunSnapshotV10 {
+export function importRunSnapshot(serialized: string): RunSnapshotV11 {
   if (new TextEncoder().encode(serialized).byteLength > RUN_SNAPSHOT_MAX_BYTES) {
     throw new Error(`Run snapshot exceeds ${RUN_SNAPSHOT_MAX_BYTES} bytes.`);
   }
@@ -307,33 +309,33 @@ export function importRunSnapshot(serialized: string): RunSnapshotV10 {
     !isRecord(parsed.extensions.carrier) ||
     typeof parsed.extensions.carrier.planId !== 'string'
   ) {
-    throw new Error('Run snapshot v10 carrier extension is invalid.');
+    throw new Error('Run snapshot v11 carrier extension is invalid.');
   }
   if (
     !isRecord(parsed.extensions.boarding) ||
     typeof parsed.extensions.boarding.planId !== 'string'
   ) {
-    throw new Error('Run snapshot v10 boarding extension is invalid.');
+    throw new Error('Run snapshot v11 boarding extension is invalid.');
   }
   if (
     !isRecord(parsed.extensions.factionFronts) ||
     typeof parsed.extensions.factionFronts.planId !== 'string'
   ) {
-    throw new Error('Run snapshot v10 faction-front extension is invalid.');
+    throw new Error('Run snapshot v11 faction-front extension is invalid.');
   }
   if (
     !isRecord(parsed.extensions.crewArcs) ||
     typeof parsed.extensions.crewArcs.planId !== 'string'
   ) {
-    throw new Error('Run snapshot v10 crew-arc extension is invalid.');
+    throw new Error('Run snapshot v11 crew-arc extension is invalid.');
   }
   if (!isRecord(parsed.extensions.fleet) || typeof parsed.extensions.fleet.planId !== 'string') {
-    throw new Error('Run snapshot v10 fleet extension is invalid.');
+    throw new Error('Run snapshot v11 fleet extension is invalid.');
   }
   if (!isRecord(parsed.extensions.apex) || typeof parsed.extensions.apex.planId !== 'string') {
-    throw new Error('Run snapshot v10 apex extension is invalid.');
+    throw new Error('Run snapshot v11 apex extension is invalid.');
   }
-  return parsed as unknown as RunSnapshotV10;
+  return parsed as unknown as RunSnapshotV11;
 }
 
 function validateSnapshotSession(
@@ -431,6 +433,13 @@ function validateSnapshotSession(
   }
   if (!isNonNegativeInteger(session.currentSectorIndex)) {
     throw new Error('Run snapshot sector index is invalid.');
+  }
+  if (
+    !isRecord(session.navigation) ||
+    session.navigation.sectorIndex !== session.currentSectorIndex ||
+    validateSectorNavigationState(session.navigation).length > 0
+  ) {
+    throw new Error('Run snapshot navigation hub state is invalid.');
   }
   const sector = run.sectors[session.currentSectorIndex];
   if (!sector) throw new Error('Run snapshot sector index is outside the regenerated run.');

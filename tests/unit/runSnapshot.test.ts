@@ -151,7 +151,7 @@ describe('RunSnapshot', () => {
     expect(storage.getItem(SAVE_STORAGE_KEY)).toBe('permanent-save-sentinel');
   });
 
-  it('retires every pre-socket snapshot generation safely', () => {
+  it('retires every pre-navigation snapshot generation safely', () => {
     for (const key of LEGACY_RUN_SNAPSHOT_STORAGE_KEYS) {
       const storage = new MemoryStorage();
       storage.setItem(SAVE_STORAGE_KEY, 'permanent-save-sentinel');
@@ -230,6 +230,37 @@ describe('RunSnapshot', () => {
         session: { ...snapshot.session, itemInstances: ghost }
       })
     ).toThrow(/item socket state/);
+  });
+
+  it('rejects navigation state from another sector or with duplicate visits', () => {
+    const run = generateRunSkeleton('SNAPSHOT-NAVIGATION-DRIFT');
+    const contract = run.contracts[0]!;
+    const snapshot = createRunSnapshot({
+      run,
+      contract,
+      session: createRunSession(run, contract),
+      target: 'sectorTransition',
+      label: 'Navigation hub'
+    });
+
+    expect(() =>
+      restoreRunSnapshot({
+        ...snapshot,
+        session: {
+          ...snapshot.session,
+          navigation: { sectorIndex: 1, visitedDestinationIds: ['shop'] }
+        }
+      })
+    ).toThrow(/navigation hub state/);
+    expect(() =>
+      restoreRunSnapshot({
+        ...snapshot,
+        session: {
+          ...snapshot.session,
+          navigation: { sectorIndex: 0, visitedDestinationIds: ['shop', 'shop'] }
+        }
+      })
+    ).toThrow(/navigation hub state/);
   });
 
   it('enforces the snapshot byte budget and explicit storage helpers', () => {

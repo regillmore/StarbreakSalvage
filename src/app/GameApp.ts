@@ -153,7 +153,7 @@ import type { ScenarioLabId } from '../game/ScenarioLab';
 import {
   RunSnapshotCoordinator,
   createRunSnapshotSummary,
-  type RunSnapshotV10
+  type RunSnapshotV11
 } from '../game/RunSnapshot';
 import { getOperationalInfluence } from '../game/OperationalMap';
 import { createCarrierInfluence } from '../game/CarrierCommand';
@@ -195,7 +195,7 @@ export class GameApp {
   private lastSaveUpdate: SaveUpdateResult | null = null;
   private summarySaved = false;
   private scenarioLabSession = false;
-  private runSnapshot: RunSnapshotV10 | null = null;
+  private runSnapshot: RunSnapshotV11 | null = null;
   private runSnapshotNotice: string | null = null;
   private snapshotEligible = false;
   private frameStats: FrameStats = {
@@ -1701,7 +1701,10 @@ export class GameApp {
     );
   }
 
-  private async showFleetBay(onBack: () => void): Promise<void> {
+  private async showFleetBay(
+    onBack: () => void,
+    backLabel = 'Return To Command Deck'
+  ): Promise<void> {
     const { FleetBayScene } = await import('../ui/FleetBayScene');
     this.sceneManager.switchTo(
       new FleetBayScene(
@@ -1722,9 +1725,10 @@ export class GameApp {
             option.command,
             `fleet-command:${this.runSession.currentSectorIndex}:${option.id}`
           );
-          if (result.disposition === 'applied') void this.showFleetBay(onBack);
+          if (result.disposition === 'applied') void this.showFleetBay(onBack, backLabel);
         },
-        onBack
+        onBack,
+        backLabel
       )
     );
   }
@@ -1803,7 +1807,7 @@ export class GameApp {
         route,
         (itemId) => {
           addItemToSession(this.runSession, itemId);
-          this.showFoundryAfterReward(route);
+          this.acquireComponentAfterReward(route);
         },
         () => {
           const sector = getCurrentSector(this.currentRun, this.runSession);
@@ -1811,7 +1815,7 @@ export class GameApp {
             this.runSession,
             getRouteCreditReward(this.runSession, sector.index, createActEconomyProfile(sector))
           );
-          this.showFoundryAfterReward(route);
+          this.acquireComponentAfterReward(route);
         }
       )
     );
@@ -1961,7 +1965,7 @@ export class GameApp {
     );
   }
 
-  private showFoundryAfterReward(route: RouteOption): void {
+  private acquireComponentAfterReward(route: RouteOption): void {
     const sector = getCurrentSector(this.currentRun, this.runSession);
     const component = generateComponentSalvage({
       seed: this.currentRun.seed,
@@ -1993,11 +1997,32 @@ export class GameApp {
       subjectId: component.id,
       detailId: component.moduleId
     });
+    this.advanceAfterReward();
+  }
+
+  private showNavigationShop(): void {
+    this.sceneManager.switchTo(
+      new ShopScene(
+        this.uiRoot,
+        this.currentRun,
+        this.runSession,
+        this.selectedContract,
+        (itemId, price) => this.buyShopItem(itemId, price),
+        () => this.rerollShop(),
+        () => this.showSectorTransition()
+      )
+    );
+  }
+
+  private showNavigationFoundry(): void {
+    const sector = getCurrentSector(this.currentRun, this.runSession);
     const crewAssist = getCrewFoundryAssist(this.currentRun.crewRoster, this.runSession.crewRoster);
     const carrierInfluence = createCarrierInfluence(
       this.currentRun.carrierPlan,
       this.runSession.carrier
     );
+    const previousHistoryLength = this.runSession.engineering.history.length;
+    const previousItems = JSON.stringify(this.runSession.itemInstances);
     this.sceneManager.switchTo(
       new FoundryScene(
         this.uiRoot,
@@ -2007,11 +2032,16 @@ export class GameApp {
         this.runSession.itemInstances,
         sector.index,
         (engineering, itemInstances, salvageGained) => {
+          const changed =
+            engineering.history.length !== previousHistoryLength ||
+            JSON.stringify(itemInstances) !== previousItems;
           this.runSession.engineering = engineering;
           this.runSession.itemInstances = [...itemInstances];
-          this.runSession.salvage +=
-            salvageGained + (crewAssist?.salvageBonus ?? 0) + carrierInfluence.foundrySalvageBonus;
-          if (crewAssist) {
+          const assistBonus = salvageGained > 0 ? (crewAssist?.salvageBonus ?? 0) : 0;
+          const carrierBonus = salvageGained > 0 ? carrierInfluence.foundrySalvageBonus : 0;
+          const totalSalvage = salvageGained + assistBonus + carrierBonus;
+          this.runSession.salvage += totalSalvage;
+          if (changed && crewAssist) {
             recordCrewRosterEvent(
               this.runSession,
               this.currentRun.crewRoster,
@@ -2024,29 +2054,30 @@ export class GameApp {
               this.currentRun.factionFronts
             );
           }
-          recordCrewArcEvent(this.currentRun, this.runSession, {
-            id: `foundry-arc:${sector.index}:${engineering.history.length}`,
-            source: 'module',
-            sectorIndex: this.runSession.currentSectorIndex,
-            candidateIds: crewAssist ? [crewAssist.candidateId] : [],
-            positive: true,
-            detail: `committed ${engineering.committed.frameId}`
-          });
-          recordRunSessionTimelineEvent(this.runSession, {
-            id: `engineering-commit:${sector.index}:${engineering.history.length}`,
-            category: 'engineering',
-            kind: 'commit',
-            sectorIndex: this.runSession.currentSectorIndex,
-            value:
-              salvageGained +
-              (crewAssist?.salvageBonus ?? 0) +
-              carrierInfluence.foundrySalvageBonus,
-            subjectId: engineering.committed.frameId,
-            detailId: `history-${engineering.history.length}`
-          });
-          this.advanceAfterReward();
+          if (changed) {
+            recordCrewArcEvent(this.currentRun, this.runSession, {
+              id: `foundry-arc:${sector.index}:${engineering.history.length}`,
+              source: 'module',
+              sectorIndex: this.runSession.currentSectorIndex,
+              candidateIds: crewAssist ? [crewAssist.candidateId] : [],
+              positive: true,
+              detail: `committed ${engineering.committed.frameId}`
+            });
+            recordRunSessionTimelineEvent(this.runSession, {
+              id: `engineering-commit:${sector.index}:${engineering.history.length}`,
+              category: 'engineering',
+              kind: 'commit',
+              sectorIndex: this.runSession.currentSectorIndex,
+              value: totalSalvage,
+              subjectId: engineering.committed.frameId,
+              detailId: `history-${engineering.history.length}`
+            });
+          }
+          this.showSectorTransition();
         },
-        crewAssist?.label ?? null
+        crewAssist?.label ?? null,
+        'Return to Navigation',
+        'Carrier hardpoint draft. Changes remain reversible until commit.'
       )
     );
   }
@@ -2115,8 +2146,10 @@ export class GameApp {
         createMissionReadModel(schedule, this.runSession.mission),
         createMissionDebugState(schedule, this.runSession.mission),
         () => void this.showCrewQuarters(),
-        () => void this.showFleetBay(() => this.showSectorTransition()),
-        () => void this.showApexDossier()
+        () => void this.showFleetBay(() => this.showSectorTransition(), 'Return to Navigation'),
+        () => void this.showApexDossier(),
+        () => this.showNavigationShop(),
+        () => this.showNavigationFoundry()
       )
     );
   }

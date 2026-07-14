@@ -74,8 +74,11 @@ export class FoundryScene implements Scene {
       itemInstances: readonly ItemInstance[],
       salvageGained: number
     ) => void,
-    private readonly crewAssist: string | null = null
+    private readonly crewAssist: string | null = null,
+    private readonly exitLabel = 'Skip Foundry',
+    initialStatus = 'Component secured. Draft is reversible.'
   ) {
+    this.status = initialStatus;
     this.state = engineering;
     this.itemInstances = reconcileItemSockets(itemInstances, engineering.draft);
     this.committedItemInstances = reconcileItemSockets(itemInstances, engineering.committed);
@@ -205,7 +208,7 @@ export class FoundryScene implements Scene {
     skip.className = 'secondary-button';
     skip.type = 'button';
     skip.dataset.testid = 'foundry-skip';
-    skip.textContent = 'Skip Foundry';
+    skip.textContent = this.exitLabel;
     skip.addEventListener('click', () =>
       this.onComplete(undoFoundryDraft(this.state), this.committedItemInstances, 0)
     );

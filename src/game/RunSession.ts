@@ -148,6 +148,11 @@ import {
   type ApexHuntEventResult,
   type ApexHuntState
 } from './ApexHunt';
+import {
+  createSectorNavigationState,
+  synchronizeSectorNavigationState,
+  type SectorNavigationState
+} from './SectorNavigation';
 
 export interface RouteHistoryEntry {
   readonly sectorIndex: number;
@@ -192,6 +197,7 @@ export interface RunSessionState {
   crewArcs: CrewArcState;
   fleet: FleetState;
   apexHunts: ApexHuntState;
+  navigation: SectorNavigationState;
   timeline: RunTimelineState;
 }
 
@@ -257,6 +263,7 @@ export function createRunSession(
     crewArcs: createCrewArcState(run.crewArcs, run.crewRoster),
     fleet: createFleetState(run.fleet),
     apexHunts: createApexHuntState(run.apexHunts),
+    navigation: createSectorNavigationState(0),
     timeline: recordRunTimelineEvent(createRunTimeline(), {
       id: `run-start:${run.seed}:${contract.id}`,
       category: 'run',
@@ -1513,6 +1520,10 @@ export function resetMissionForCurrentSector(
   run: RunSkeleton,
   session: RunSessionState
 ): MissionDirectorState {
+  session.navigation = synchronizeSectorNavigationState(
+    session.navigation,
+    session.currentSectorIndex
+  );
   const schedule = createMissionSchedule(run.expedition, session.currentSectorIndex);
   session.mission = createMissionDirectorState(schedule, {
     credits: session.credits,

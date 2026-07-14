@@ -39,7 +39,8 @@ export class FleetBayScene implements Scene {
     private readonly sectorIndex: number,
     private readonly salvage: number,
     private readonly onCommand: (option: FleetCommandOption) => void,
-    private readonly onBack: () => void
+    private readonly onBack: () => void,
+    private readonly backLabel = 'Return To Command Deck'
   ) {}
 
   public enter(): void {
@@ -134,7 +135,7 @@ export class FleetBayScene implements Scene {
     back.className = 'primary-button';
     back.type = 'button';
     back.dataset.testid = 'fleet-bay-back';
-    back.textContent = 'Return To Command Deck';
+    back.textContent = this.backLabel;
     back.addEventListener('click', this.onBack);
     this.buttons.push(back);
     shell.append(

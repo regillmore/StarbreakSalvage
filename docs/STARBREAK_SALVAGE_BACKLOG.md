@@ -1956,3 +1956,15 @@ Acceptance:
 Status:
 
 - Implemented in work order 132. Every module provides a native and flex socket, `ItemSockets` owns fitting and active-loadout projection, and Hardpoint Control exposes occupancy plus compact rack controls and a signal-order readout. Snapshot v10 persists and validates the circuit while retiring v9. Six previously weak or placeholder upgrades now form order-sensitive phase, split, clone, ricochet, arc, curse, overkill, revenge, blast, and salvage interactions; only fitted items reach combat, route, reward, shop, or preview hooks.
+
+### BL2 - Procedural carrier navigation hubs
+
+Acceptance:
+
+- Sector intermission is a seeded spatial navigation layer with selectable destinations, operational detail, visit state, and explicit transit.
+- Shop, Hardpoint Control, Fleet Bay, Crew Quarters, and Apex intelligence share one carrier-service grammar and remain visible unless an authored story lock explains why access is unavailable.
+- Rewards flow into cargo, service visits are optional/repeatable, mission launch remains authoritative, and snapshot/accessibility contracts cover the whole hub.
+
+Status:
+
+- Implemented in work order 133. Four deterministic local-map grammars shuffle five service decks around a stable launch node and build one connected bounded transit network. The navigation scene exposes service state, resources, mission intelligence, pointer/Tab/spatial-arrow control, responsive layouts, and explicit travel. Reward components now enter cargo before transit instead of forcing Hardpoint Control; common services return to the same hub, snapshot v11 persists unique visits and resets them per sector, and explicit story reasons are the only service-lock input.
