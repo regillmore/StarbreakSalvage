@@ -2512,6 +2512,29 @@ Status: implemented. `GameApp.showMissionBranch` separates branch commitment fro
 
 Verification: focused mission, route-navigation, sector-navigation, and snapshot coverage passes with 4 files and 28 tests. `npm run verify:release` passes typecheck, ESLint, all 98 Vitest files and 602 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Chromium covers both the direct multi-sector helper and optional path, asserting two beige pulsing sector choices, the `OPTIONAL` sublabel, mutually exclusive node-owned actions, no `CONTINUE` action, the three-route post-optional state, and direct next-sector combat without a second briefing hub. Unobstructed 1280×720 captures of both selected-node states were inspected directly; each action set fits without overlap or scrolling. The build emits 917.19 kB minified/249.90 kB gzip initial JavaScript and 64.46/13.28 kB CSS, increases of 1.06/0.28 kB JavaScript and 0.41/0.04 kB CSS over work order 137. The existing initial-chunk warning remains open and no threshold changed. The in-app Browser skill package remains absent at its catalog path, so repository Playwright Chromium supplied visual/runtime evidence.
 
+## Work order 139 - Constellation-aligned sector operations
+
+Goal: make every constellation sector correspond to one complete required combat operation followed by one genuinely available local challenge, instead of hiding two serial required combats behind a single sector node.
+
+Prompt:
+
+> Refit the live mission schedule to the constellation cadence: complete sector 1, optionally take sector 1's challenge, choose a route and complete sector 2, optionally take sector 2's challenge, then choose a route into sector 3. A gate sector must be one complete required operation, not an advance operation followed by staging and another required gate. Every completed sector must expose its paired optional challenge without opaque carrier, boarding, faction, or objective-outcome locks. Preserve deterministic generation, bosses, set pieces, objective consequences, route effects, operational cleanup, deployed snapshot recovery, Scenario Lab access, accessibility, and static hosting. Add schedule-wide and browser regressions, update project documents, and run release checks.
+
+Acceptance criteria:
+
+- Briefing and entry launch the sector's full required gate operation directly. Its world uses the complete authored scroll, wave, boss, arena, set-piece, hazard, and objective projection.
+- Fresh runs do not visit the legacy advance, approach, detour, staging, or Command Deck stages between constellation nodes. Those stable stage ids remain resolvable only for deployed v11 snapshot and debug-fixture compatibility.
+- Completing one required operation returns to the flat flight board with the cleared node's `OPTIONAL` action and the next node's three routes; choosing a route begins the next sector operation through the work order 138 direct-entry path.
+- Every generated sector owns exactly one playable paired optional pursuit. Hull checkpoint, carrier capacity, boarding capacity, faction-front state, and partial/failure objective outcomes may shape consequences but do not silently remove the challenge.
+- Optional completion settles its existing rewards, campaign effects, operational cleanup, and relief exactly once, then returns to the next-sector route plot.
+- Mission readouts and counts describe only fresh executable stages unless recovery is currently inside a compatibility stage. Seed identity, graph identity, snapshot version, route generation, and fixed-step simulation remain unchanged.
+
+Status: implemented. `MissionDirector` now compiles fresh entry directly to the required gate stage, promotes that stage to the full `mission_operation` world profile, and sends every bounded objective outcome to the post-sector branch after recording its established rewards and consequences. The paired pursuit is always structurally selectable; `GameApp` no longer removes it because a secondary carrier, boarding, or faction projection is unavailable. Thus every sector repeats one required operation, one optional local challenge, and one onward route decision.
+
+Advance, approach, detour, and staging definitions remain in each generated schedule under an explicit `compatibilityStageIds` list, and `stagingStageId` still gives Scenario Lab and deployed checkpoints a valid Command Deck target. Fresh operation/relief read models exclude those ids, but fall back to the complete graph while recovering a checkpoint already inside one. Bosses, arenas, set pieces, objectives, hazard sequencing, cleanup, route outcomes, expedition decisions, and snapshot v11 identity keep their existing reducers and stable content keys.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 98 Vitest files and 603 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Focused schedule coverage walks every generated sector and proves direct gate entry, a full world profile, no compatibility-stage visit, one-combat branch arrival, and one playable optional. Operational, objective, Scenario Lab, snapshot, and browser journeys cover direct continuation, sector-2 optional play, partial outcomes, pursuit pressure on the next real gate, safe suspend/reload, and no Command Deck in the fresh path. Executable-node readouts now exclude compatibility records and project 16.82 minutes standard, 11.08 minutes at Act II extraction, and 21.07 minutes with all paired holds; these remain authored estimates pending a deployed stopwatch. The build emits 916.91 kB minified/249.76 kB gzip initial JavaScript and 64.46/13.28 kB CSS, a 0.28/0.14 kB JavaScript reduction from work order 138. No dependency, simulation cap, RNG stream, snapshot version, or warning threshold changed.
+
 ## Review subagent prompt
 
 Use after a feature PR:

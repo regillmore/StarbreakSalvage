@@ -105,22 +105,23 @@ describe('ExpeditionGraph', () => {
     ]);
     expect(afterFirstSector.visitedNodeIds).not.toContain('expedition_s01_detour');
     expect(model.currentNodeId).toBe('expedition_s06_ingress');
-    expect(model.visitedNodeCount).toBe(26);
+    expect(model.visitedNodeCount).toBe(16);
   });
 
-  it('provides a 20-30 minute standard frontier capacity without changing combat speed', () => {
+  it('reports capacity from the fresh one-operation-per-sector itinerary', () => {
     const capacity = generateRunSkeleton('EXPEDITION-GRAPH-SMOKE').expedition.capacity;
     expect(capacity).toEqual({
-      requiredNodeCount: 75,
+      requiredNodeCount: 45,
       optionalNodeCount: 15,
-      baselineMinSeconds: 1104,
-      baselineTargetSeconds: 1689,
-      baselineMaxSeconds: 2286,
-      expandedTargetSeconds: 1944
+      baselineMinSeconds: 654,
+      baselineTargetSeconds: 1009,
+      baselineMaxSeconds: 1371,
+      expandedTargetSeconds: 1264
     });
-    expect(capacity.baselineTargetSeconds).toBeGreaterThanOrEqual(20 * 60);
-    expect(capacity.baselineTargetSeconds).toBeLessThanOrEqual(30 * 60);
-    expect(capacity.expandedTargetSeconds).toBeLessThanOrEqual(40 * 60);
+    expect(capacity.baselineTargetSeconds).toBeGreaterThanOrEqual(15 * 60);
+    expect(capacity.baselineTargetSeconds).toBeLessThanOrEqual(20 * 60);
+    expect(capacity.expandedTargetSeconds).toBeGreaterThan(capacity.baselineTargetSeconds);
+    expect(capacity.expandedTargetSeconds).toBeLessThanOrEqual(25 * 60);
   });
 
   it('keeps compact known-seed graph identities and frontier gates', () => {
@@ -138,7 +139,7 @@ describe('ExpeditionGraph', () => {
       {
         seed: 'STARBREAK-SMOKE',
         id: 'expedition_starbreak-smoke_53f226d4',
-        target: 1689,
+        target: 1009,
         optionalOpportunityCount: 30,
         gates: [
           'act_outer_rim:interActJunction',
@@ -149,7 +150,7 @@ describe('ExpeditionGraph', () => {
       {
         seed: 'LASER-TAX-404',
         id: 'expedition_laser-tax-404_60d04233',
-        target: 1689,
+        target: 1009,
         optionalOpportunityCount: 30,
         gates: [
           'act_outer_rim:interActJunction',
@@ -160,7 +161,7 @@ describe('ExpeditionGraph', () => {
       {
         seed: 'EXPEDITION-GRAPH-SMOKE',
         id: 'expedition_expedition-graph-smoke_5bca58c1',
-        target: 1689,
+        target: 1009,
         optionalOpportunityCount: 30,
         gates: [
           'act_outer_rim:interActJunction',

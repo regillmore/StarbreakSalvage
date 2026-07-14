@@ -64,7 +64,7 @@ Exit criteria:
 - Optional nodes materially change later operations instead of only adding rewards.
 - Stage cleanup cannot retain invisible actors, projectiles, hooks, or duplicated payouts.
 
-Status: implemented by work order 102. Expedition graph schema v2 generates seven explicit nodes per current sector: ingress, required advance, optional detour, staging, required gate, optional pursuit, and extraction, with two independently replayable branch decisions. Mission schedule v2 executes two required combat worlds and up to two optional worlds while carrying hull, build, economy, objective, faction/rival, crew, engineering, and scroll checkpoints. Successful detours reduce gate length/wave pressure; successful pursuits grant one-shot salvage and raise the next sector's advance pressure. `OperationalMap` owns the bounded idempotent settlement ledger, cleanup contract, consequence projection, validation, and public intel read model; `OperationalMapScene` provides keyboard/pointer cards with coarse time, danger, reward, consequence, and faction/crew/ship risk bands. Snapshot v2 adds settled-map checkpoints and operational validation while safely retiring v1 without touching permanent save v5. The ten-sector graph projects 1458 required-route seconds (24.3 minutes) and 1898 all-optional seconds (31.6 minutes); these are structural estimates awaiting deployed full-run timing.
+Status: implemented by work order 102 and refitted to the constellation by work order 139. Expedition graph schema v2 still generates seven stable compatibility nodes per sector, but fresh mission schedules enter the full required gate operation directly, then offer exactly one paired pursuit before the next route. Advance, detour, staging, and the former approach branch remain only for deployed v11 recovery and Scenario Lab fixtures. Successful pursuits retain their one-shot salvage and now raise the next real gate operation rather than a dormant advance. `OperationalMap` keeps the bounded idempotent settlement ledger and compatibility read model while fresh choices live in the constellation. Current fifteen-sector authored projection is 1,009 seconds (16.82 minutes) standard and 1,264 seconds (21.07 minutes) with all paired holds; these remain structural estimates awaiting deployed full-run timing.
 
 ### P11.3 - Null Frontier Third Act
 
@@ -76,7 +76,7 @@ Work order 103 adds a new frontier beyond the current finale:
 
 Exit criteria:
 
-- Standard frontier runs reach the 20-30 minute structural band through new content and choices.
+- Standard frontier runs reach a 15-20 minute structural band, with all paired holds carrying completionist capacity beyond 20 minutes through content and choices.
 - Early extraction remains a complete, rewarded outcome with distinct summary copy.
 - Act III content reuses shared generation/combat/save contracts and does not fork a parallel game engine.
 

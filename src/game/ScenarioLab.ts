@@ -328,11 +328,11 @@ export function createScenarioLabLaunch(options: {
   }
   if (definition.target === 'carrierDeck') {
     const schedule = createMissionSchedule(options.run.expedition, session.currentSectorIndex);
-    if (!schedule.reliefStageId) throw new Error('Carrier Scenario Lab fixture requires staging.');
+    if (!schedule.stagingStageId) throw new Error('Carrier Scenario Lab fixture requires staging.');
     session.mission = {
       ...session.mission,
-      currentStageId: schedule.reliefStageId,
-      visitedStageIds: [schedule.startStageId, schedule.reliefStageId]
+      currentStageId: schedule.stagingStageId,
+      visitedStageIds: [schedule.startStageId, schedule.stagingStageId]
     };
   }
   if (definition.id === 'lab_combined_pressure') {
@@ -484,21 +484,6 @@ function enterOptionalCombat(run: RunSkeleton, session: RunSessionState, id: str
     }
   });
   const schedule = createMissionSchedule(run.expedition, session.currentSectorIndex);
-  dispatchMissionEvent(run, session, {
-    id: `${id}:complete-staging`,
-    type: 'completeRelief'
-  });
-  dispatchMissionEvent(run, session, {
-    id: `${id}:complete-gate`,
-    type: 'completeCombat',
-    checkpoint: {
-      hull: 4,
-      scrollDistance: 1_800,
-      worldOffset: 11_800,
-      credits: session.credits,
-      salvage: session.salvage
-    }
-  });
   const option = getMissionBranchOptions(schedule, session.mission).find(
     (candidate) => !candidate.default
   );

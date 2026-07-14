@@ -73,7 +73,10 @@ function measureEarlyExtraction(
   const act = run.acts.find((candidate) => candidate.id === 'act_core_descent');
   if (!act) throw new Error('Voyage release audit requires the Core Descent act.');
   const nodes = run.expedition.nodes.filter(
-    (node) => !node.optional && node.sectorIndex <= act.endSectorIndex
+    (node) =>
+      !node.optional &&
+      node.sectorIndex <= act.endSectorIndex &&
+      isFreshMissionExpeditionNode(node)
   );
   return measurement(saveProfile, 'earlyExtraction', act.endSectorIndex + 1, nodes);
 }
@@ -82,7 +85,9 @@ function measureStandard(
   run: RunSkeleton,
   saveProfile: VoyageSaveProfile
 ): VoyageDurationMeasurement {
-  const nodes = run.expedition.nodes.filter((node) => !node.optional);
+  const nodes = run.expedition.nodes.filter(
+    (node) => !node.optional && isFreshMissionExpeditionNode(node)
+  );
   return measurement(saveProfile, 'standard', run.sectors.length, nodes);
 }
 

@@ -86,7 +86,7 @@ describe('OperationalMap', () => {
     });
 
     expect(second).toEqual(first);
-    expect(first.operationRange).toBe('2 required / up to 4 with detour and pursuit');
+    expect(first.operationRange).toBe('1 required / up to 2 with paired optional');
     expect(first.nodes.map((node) => node.role)).toEqual([
       'ingress',
       'advance',
@@ -165,22 +165,22 @@ describe('OperationalMap', () => {
       waveCountScale: 0.8,
       scrollLengthScale: 0.9
     });
-    expect(getOperationalInfluence(state, 1, 'advance')).toMatchObject({
+    expect(getOperationalInfluence(state, 1, 'gate')).toMatchObject({
       waveCountScale: 1.2,
       scrollLengthScale: 1.12
     });
-    expect(getOperationalInfluence(state, 1, 'gate')).toBeUndefined();
+    expect(getOperationalInfluence(state, 1, 'advance')).toBeUndefined();
   });
 
-  it('replays one paired optional decision into three live combat operations', () => {
-    const run = generateRunSkeleton('OPERATIONAL-THREE-OPS');
+  it('replays one paired optional decision after a single required combat operation', () => {
+    const run = generateRunSkeleton('OPERATIONAL-PAIRED-OPTIONAL');
     const session = createRunSession(run, run.contracts[0]!);
     const schedule = createMissionSchedule(run.expedition, 0);
     dispatchMissionEvent(run, session, { id: 'brief', type: 'confirmBriefing' });
     dispatchMissionEvent(run, session, { id: 'entry', type: 'completeEntry' });
     const visitedRoles: string[] = [];
 
-    for (let operation = 0; operation < 3; operation += 1) {
+    for (let operation = 0; operation < 2; operation += 1) {
       const stage = getMissionStage(schedule, session.mission.currentStageId);
       visitedRoles.push(stage.operationalRole ?? 'none');
       dispatchMissionEvent(run, session, {
@@ -188,7 +188,7 @@ describe('OperationalMap', () => {
         type: 'completeCombat',
         checkpoint: CHECKPOINT
       });
-      if (operation === 1) {
+      if (operation === 0) {
         const branchStage = getMissionStage(schedule, session.mission.currentStageId);
         const branch = schedule.branches.find(
           (candidate) => candidate.id === branchStage.branchId
@@ -200,12 +200,10 @@ describe('OperationalMap', () => {
           optionId: optional.id
         });
         recordExpeditionBranchDecision(run, session, branch.id, optional.id);
-      } else if (operation === 0) {
-        dispatchMissionEvent(run, session, { id: 'staging', type: 'completeRelief' });
       }
     }
 
-    expect(visitedRoles).toEqual(['advance', 'gate', 'pursuit']);
+    expect(visitedRoles).toEqual(['gate', 'pursuit']);
     expect(session.expedition.decisions).toHaveLength(1);
     expect(getMissionStage(schedule, session.mission.currentStageId).kind).toBe('relief');
   });

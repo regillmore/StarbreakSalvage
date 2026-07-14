@@ -821,23 +821,34 @@ function createGateRewardHooks(
 
 function createExpeditionCapacity(graph: Omit<ExpeditionGraph, 'capacity'>): ExpeditionCapacity {
   const baseline = resolveExpeditionPath({ ...graph, capacity: createEmptyCapacity() }, []);
+  const nodeById = new Map(graph.nodes.map((node) => [node.id, node]));
+  const baselineNodeIds = baseline.nodeIds.filter((nodeId) => {
+    const node = nodeById.get(nodeId);
+    return node ? isFreshMissionExpeditionNode(node) : false;
+  });
   const optionalNodeIds = graph.nodes
     .filter((node) => node.optional && isFreshMissionExpeditionNode(node))
     .map((node) => node.id);
 
   return {
-    requiredNodeCount: baseline.nodeIds.length,
+    requiredNodeCount: baselineNodeIds.length,
     optionalNodeCount: optionalNodeIds.length,
-    baselineMinSeconds: sumNodeDuration(graph, baseline.nodeIds, 'minSeconds'),
-    baselineTargetSeconds: baseline.targetSeconds,
-    baselineMaxSeconds: sumNodeDuration(graph, baseline.nodeIds, 'maxSeconds'),
+    baselineMinSeconds: sumNodeDuration(graph, baselineNodeIds, 'minSeconds'),
+    baselineTargetSeconds: sumNodeDuration(graph, baselineNodeIds, 'targetSeconds'),
+    baselineMaxSeconds: sumNodeDuration(graph, baselineNodeIds, 'maxSeconds'),
     expandedTargetSeconds:
-      baseline.targetSeconds + sumNodeDuration(graph, optionalNodeIds, 'targetSeconds')
+      sumNodeDuration(graph, baselineNodeIds, 'targetSeconds') +
+      sumNodeDuration(graph, optionalNodeIds, 'targetSeconds')
   };
 }
 
 export function isFreshMissionExpeditionNode(node: ExpeditionEncounterNode): boolean {
-  return !node.optional || node.operationalRole === 'pursuit';
+  return (
+    node.operationalRole === 'ingress' ||
+    node.operationalRole === 'gate' ||
+    node.operationalRole === 'pursuit' ||
+    node.operationalRole === 'extraction'
+  );
 }
 
 function createEmptyCapacity(): ExpeditionCapacity {

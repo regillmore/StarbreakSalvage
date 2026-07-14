@@ -1828,17 +1828,17 @@ Status:
 
 - Implemented in work order 101. A separate `starbreak.run.v1` snapshot stores regenerated-plan identity, contract, safe target, complete Phase 10 session state, and reserved null carrier/boarding/front/fleet/apex extensions under a 512 KiB cap. Restore validates graph/fingerprint, mission stage, engineering, items/economy, faction/rivals, crew, and timeline before scene entry; corrupt/unsupported snapshots are removed without touching permanent save v5. Automatic briefing/operation checkpoints, explicit pause suspend, keyboard/pointer main-menu resume/discard, and run-end/new-contract/reset cleanup are live. The public endurance harness repeats eight Scenario Lab boundaries plus the finale across snapshot regeneration and reports snapshot/history/build/set-piece budgets. Scenario Lab code emits as three lazy chunks totaling 9.80 kB; the core bundle is 663.24 kB with snapshot functionality included, so further domain extraction and code splitting remain active architecture work rather than a warning-limit exception.
 
-### BH2 - True multi-operation sectors
+### BH2 - Constellation-aligned sector operations
 
 Acceptance:
 
-- Sectors execute two required combat operations plus one paired optional post-gate challenge through the public constellation and relief flow.
+- Each constellation sector executes one complete required combat operation plus one paired optional post-sector challenge.
 - Decisions alter future structure and reproduce from seed plus snapshot/decision state.
 - World carry and cleanup contracts prevent soft locks, invisible retained work, and duplicate payouts.
 
 Status:
 
-- Implemented in work order 102 and simplified in work order 134. Expedition graph v2 still supplies ingress, advance, detour, staging, gate, pursuit, and extraction compatibility data, but fresh mission schedules execute advance, staging, gate, and at most the single post-gate pursuit paired with that sector. The earlier detour branch is unreachable for new runs. Checkpointed hull/build/resources/world state, bounded operational outcomes, zero-retained cleanup, idempotent optional salvage, and future-pressure consequences remain intact; the post-gate branch now resolves from the carrier constellation instead of a separate operational choice map.
+- Implemented in work order 102, simplified in work order 134, and aligned to the constellation in work order 139. Expedition graph v2 still supplies ingress, advance, detour, staging, gate, pursuit, and extraction compatibility data, but a fresh mission enters one full-profile gate operation and then offers its paired pursuit from the cleared sector node. Advance, approach, detour, and staging ids remain resolvable for deployed v11 checkpoints and Scenario Lab fixtures without appearing in fresh stage counts. Checkpointed hull/build/resources/world state, bounded outcomes, zero-retained cleanup, idempotent optional salvage, and future-pressure consequences remain intact.
 
 ## Epic BI - Phase 11 frontier and staging
 
@@ -1846,13 +1846,13 @@ Status:
 
 Acceptance:
 
-- Five new frontier sector families, campaign variants, missions, routes, environments, and bosses extend standard runs to a measured 20-30 minute structural band.
+- Five new frontier sector families, campaign variants, missions, routes, environments, and bosses extend standard authored capacity into a 15-20 minute band and completionist capacity beyond 20 minutes without slowing simulation.
 - The Act II boundary offers a complete extraction outcome or deterministic frontier breach.
 - Act III reuses shared engine, snapshot, save, summary, timeline, and accessibility contracts.
 
 Status:
 
-- Implemented in work order 103 and remeasured after work order 134. The shared voyage contains a deterministic five-sector Act III with three coherent campaign variants, five environmental laws, five mission contracts, six route contracts, faction/engineering hooks, five backgrounds, and three frontier bosses. The Act II finale resolves into an accessible complete-extraction or state-carrying breach choice; the selected outcome is idempotent, timeline-visible, snapshot-v3-safe, and summary/save-aware. Standard fifteen-sector capacity is 1,689 seconds (28.15 minutes), while taking the single executable optional hold paired with every sector projects 1,944 seconds (32.40 minutes).
+- Implemented in work order 103 and remeasured from the executable itinerary in work order 139. The shared voyage contains a deterministic five-sector Act III with three coherent campaign variants, five environmental laws, five mission contracts, six route contracts, faction/engineering hooks, five backgrounds, and three frontier bosses. The Act II finale resolves into an accessible complete-extraction or state-carrying breach choice; the selected outcome is idempotent, timeline-visible, snapshot-v11-safe, and summary/save-aware. One required operation per sector projects 1,009 seconds (16.82 minutes) standard; taking all 15 paired holds projects 1,264 seconds (21.07 minutes).
 
 ### BI2 - Mobile salvage carrier
 
@@ -1941,7 +1941,7 @@ Acceptance:
 
 Status:
 
-- Implemented in work order 110 and remeasured after work order 134. The release audit found no severe Phase 11 blocker across snapshot/save recovery, executable topology and cleanup, frontier endings, carrier, boarding, fronts, crew arcs, fleetcraft, apex hunts, summaries, accessibility automation, browser load, or Pages paths. Scenario Lab grows from thirteen to sixteen public fixtures with carrier-command, frontier-ending, and snapshot/duration audit cards. Endurance round-trips all fixtures plus the finale and restores one frontier snapshot into both decisions; Chromium resumes combat and settled-map checkpoints before reaching extraction victory. Deterministic structural measurements are 28.15 minutes fresh/progressed standard, 18.50 early extraction, and 32.40 completionist with one optional hold per sector, while real full-voyage fatigue and non-Chromium/device evidence remain manual.
+- Implemented in work order 110 and remeasured against the refitted schedule in work order 139. The release audit found no severe Phase 11 blocker across snapshot/save recovery, executable topology and cleanup, frontier endings, carrier, boarding, fronts, crew arcs, fleetcraft, apex hunts, summaries, accessibility automation, browser load, or Pages paths. Scenario Lab supplies sixteen public fixtures with carrier-command, frontier-ending, and snapshot/duration audit cards. Endurance round-trips all fixtures plus the finale and restores one frontier snapshot into both decisions; Chromium resumes combat and post-sector checkpoints before reaching extraction victory. Deterministic authored measurements are 16.82 minutes fresh/progressed standard, 11.08 early extraction, and 21.07 completionist, while real full-voyage fatigue and non-Chromium/device evidence remain manual.
 
 ## Epic BL - Phase 12 construction grammar
 
@@ -1975,12 +1975,12 @@ Acceptance:
 
 - One seeded sector constellation persists through each act, resolves only actionable progress, and refreshes at the next act boundary.
 - Common carrier services float outside route connectivity while remaining visible and locally available under explicit story locks.
-- Clearing a required sector gate returns to the chart: the current node offers one paired optional hold, while the newly actionable next-sector node continues the expedition without a separate approach menu.
+- Clearing the sector's single required operation returns to the chart: the current node offers one paired optional hold, while the newly actionable next-sector node continues the expedition without a separate approach or staging sequence.
 - Fresh sectors expose exactly one optional combat after their required gate; act-final continuation does not draw a false edge into the next act's independently seeded constellation.
 
 Status:
 
-- Implemented in work order 134, flow-refined in work orders 135 and 138, and discovery-refined in work order 137. `ActConstellation` supplies four stable five-sector layouts with completed/current/hidden base projection; later sectors stay anonymous until the post-sector presentation promotes the one actionable destination and edge to `choice`. `ConstellationMap` renders the shared hub grammar with spatial controls and bounded resolve motion, plus a reduced-motion-safe pulse on active sector choices. Sector Navigation composes five unlinked service satellites around the chart. Fresh mission schedules skip the former early approach/detour branch, then return after the required gate with `OPTIONAL` on the current node and `CHOOSE ROUTE` on the newly resolved next node. The source detail owns its one optional action, the target detail owns its three route actions, and both nodes share the beige ready state. Final relief is settled synchronously when a route begins. The Operational Map remains only as a compatibility/data-model boundary. The paired hold, direct branch, service returns, and visibility state derive from existing mission/run state, so snapshot v11 remains authoritative without new persisted fields.
+- Implemented in work order 134, flow-refined in work orders 135, 138, and 139, and discovery-refined in work order 137. `ActConstellation` supplies four stable five-sector layouts with completed/current/hidden base projection; later sectors stay anonymous until the post-sector presentation promotes the one actionable destination and edge to `choice`. `ConstellationMap` renders the shared hub grammar with spatial controls and bounded resolve motion, plus a reduced-motion-safe pulse on active sector choices. Sector Navigation composes five unlinked service satellites around the chart. Fresh missions now launch one complete gate-profile sector operation directly and return with `OPTIONAL` on the cleared node and `CHOOSE ROUTE` on the resolved next node. The source detail owns one always-present paired challenge, the target detail owns three route actions, and both nodes share the beige ready state. Compatibility-only advance/staging stages and the Operational Map remain valid for deployed checkpoints without entering fresh play. Snapshot v11 remains authoritative without new persisted fields.
 
 ### BL4 - Embedded constellation route plotting
 
@@ -2018,3 +2018,16 @@ Acceptance:
 Status:
 
 - Implemented in work order 138. `GameApp.showMissionBranch` exposes a shared branch-commit seam so direct route selection can settle the default branch and relief synchronously before entering the existing route pipeline. `SectorTransitionScene` composes the optional and route inputs in one map while keeping their actions in separate source and target details. `GameApp.beginCurrentSectorOperation` reuses the existing briefing/entry reducer events after same-act route rewards, avoiding a second hub visit. No mission, route, generation, or snapshot schema changed.
+
+### BL7 - One operation per sector node
+
+Acceptance:
+
+- A sector briefing launches one full authored required operation; no second required combat or Command Deck is hidden behind the same constellation node.
+- Completion exposes that sector's paired optional challenge and the next sector's three routes simultaneously through the flat flight board.
+- Every sector's optional remains playable regardless of secondary carrier, boarding, faction-front, or objective-outcome projections; those systems may alter stakes and consequences instead of removing the choice.
+- Deployed snapshot and Scenario Lab targets inside legacy advance/staging stages remain recoverable, while fresh readouts count only the executable path.
+
+Status:
+
+- Implemented in work order 139. `MissionDirector` sends fresh entry to a full-profile gate operation and marks advance, approach, detour, and staging stages as compatibility-only. Gate outcomes converge on the post-sector branch after their normal settlement, and `GameApp` keeps the generated pursuit option when optional campaign projections are unavailable. Deterministic schedule sweeps prove all 15 sectors follow required operation -> optional-or-route -> next required operation, with snapshot v11 and stable graph ids unchanged.

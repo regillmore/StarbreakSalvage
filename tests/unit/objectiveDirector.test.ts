@@ -82,7 +82,7 @@ describe('objective grammar and mission anthology', () => {
     ).toBeGreaterThanOrEqual(8);
   });
 
-  it('removes the unreachable boss clause from the sector-10 advance operation', () => {
+  it('keeps the sector-10 boss clause reachable in its single required operation', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
     const sector = run.sectors[9]!;
     const schedule = createMissionSchedule(run.expedition, 9);
@@ -98,18 +98,16 @@ describe('objective grammar and mission anthology', () => {
     state.scrollDistance = observedCombatEndDistance;
     state.stats = {
       ...state.stats,
-      enemiesDestroyed: projection.sector.objective.requiredEnemyKills
+      enemiesDestroyed: projection.sector.objective.requiredEnemyKills,
+      bossesDefeated: 1
     };
 
-    expect(projection.stageLabel).toBe('Boss Approach: advance');
-    expect(projection.sector.objective.bossRequired).toBe(false);
-    expect(projection.sector.arena).toBeNull();
-    expect(plan.hudVerb).toBe('CLEAR APPROACH');
-    expect(plan.cleanupPolicy).toBe('clearField');
-    expect(plan.clauses.map((clause) => clause.metric)).toEqual([
-      'enemyDefeatRatio',
-      'travelRatio'
-    ]);
+    expect(projection.stageLabel).toBe('Boss Approach: sector operation');
+    expect(projection.sector.objective.bossRequired).toBe(true);
+    expect(projection.sector.arena).not.toBeNull();
+    expect(plan.hudVerb).toBe('BREACH GATE');
+    expect(plan.cleanupPolicy).toBe('bossGate');
+    expect(plan.clauses.map((clause) => clause.metric)).toContain('bossDefeats');
     expect(
       getMissionObjectiveProgress(
         plan,
@@ -231,7 +229,7 @@ describe('objective grammar and mission anthology', () => {
     expect(sabotageObjects.objects.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('uses objective outcome exits to bypass a high-risk branch after partial success', () => {
+  it('keeps the paired optional branch after partial success', () => {
     const run = generateRunSkeleton('OBJECTIVE-BRANCH-POLICY');
     const schedule = createMissionSchedule(run.expedition, 3);
     let state = reachCombat(schedule);
@@ -271,9 +269,10 @@ describe('objective grammar and mission anthology', () => {
     state = result.state;
 
     expect(schedule.contract?.branchPolicy).toBe('afterSuccess');
-    expect(state.currentStageId).toBe(schedule.reliefStageId);
+    expect(state.currentStageId).toBe(schedule.branchStageId);
     expect(getMissionBranchOptions(schedule, state).map((option) => option.default)).toEqual([
-      true
+      true,
+      false
     ]);
   });
 

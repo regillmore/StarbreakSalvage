@@ -467,12 +467,12 @@ describe('WaveDirector', () => {
           "actCount": 3,
           "branchCount": 30,
           "capacity": {
-            "baselineMaxSeconds": 2286,
-            "baselineMinSeconds": 1104,
-            "baselineTargetSeconds": 1689,
-            "expandedTargetSeconds": 1944,
+            "baselineMaxSeconds": 1371,
+            "baselineMinSeconds": 654,
+            "baselineTargetSeconds": 1009,
+            "expandedTargetSeconds": 1264,
             "optionalNodeCount": 15,
-            "requiredNodeCount": 75,
+            "requiredNodeCount": 45,
           },
           "gates": [
             {
@@ -568,7 +568,7 @@ describe('WaveDirector', () => {
             ],
           ],
           "name": "Glass Meridian",
-          "standardTargetSeconds": 1689,
+          "standardTargetSeconds": 1009,
           "variantId": "glassMeridian",
         },
         "sectors": [

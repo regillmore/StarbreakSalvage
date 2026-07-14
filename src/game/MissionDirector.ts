@@ -67,8 +67,10 @@ export interface MissionSchedule {
   readonly optionalStageIds: readonly string[];
   readonly branchStageId: string | null;
   readonly branchStageIds: readonly string[];
+  readonly stagingStageId: string | null;
   readonly reliefStageId: string | null;
   readonly reliefStageIds: readonly string[];
+  readonly compatibilityStageIds: readonly string[];
   readonly extractionStageId: string | null;
   readonly failureStageId: string;
   readonly completionStageId: string;
@@ -243,7 +245,15 @@ export function createMissionSchedule(
     throw new Error(`Expedition sector ${sectorPlan.id} cannot produce a complete mission.`);
   }
 
-  const contract = selectMissionContract(graph, sectorIndex, sectorPlan.actId);
+  const authoredContract = selectMissionContract(graph, sectorIndex, sectorPlan.actId);
+  const contract: MissionContractDefinition = {
+    ...authoredContract,
+    outcomeExits: {
+      success: 'branch',
+      partialSuccess: 'branch',
+      failure: 'branch'
+    }
+  };
   const primaryObjective = getMissionObjective(contract.primaryObjectiveId);
   const optionalObjective = getMissionObjective(contract.optionalObjectiveId);
   const legacyApproachBranch = branches.find((branch) => branch.sourceNodeId === advance.id)!;
@@ -268,9 +278,9 @@ export function createMissionSchedule(
           }
     )
   };
-  // Retain the former approach branch as unreachable compatibility data so a v11
-  // checkpoint taken before this flow change can still resolve safely. Fresh
-  // missions advance directly from the opening operation into gate staging.
+  // Retain the former advance, approach, detour, and staging path as unreachable
+  // compatibility data so a deployed v11 checkpoint can still resolve safely.
+  // Fresh missions enter one full sector operation before the paired hold/route.
   const authoredBranches = [legacyApproachBranch, pursuitBranch];
 
   const prefix = `mission_s${String(sectorIndex + 1).padStart(2, '0')}`;
@@ -294,7 +304,7 @@ export function createMissionSchedule(
       nextStageId: ids.entry
     }),
     createStage(prefix, 'entry', 'mission_entry', `${sectorPlan.sectorName} entry`, ingress, {
-      nextStageId: ids.advance
+      nextStageId: ids.gate
     }),
     createStage(
       prefix,
@@ -318,8 +328,8 @@ export function createMissionSchedule(
     createStage(
       prefix,
       'gate',
-      'mission_operation_gate',
-      `${primaryObjective.label}: required gate`,
+      'mission_operation',
+      `${primaryObjective.label}: sector operation`,
       gateOperation,
       { objectiveId: primaryObjective.id, nextStageId: ids.pursuitBranch }
     ),
@@ -352,10 +362,11 @@ export function createMissionSchedule(
       extraction
     )
   ];
-  const operationStageIds = [ids.advance, ids.gate, ids.pursuit];
+  const operationStageIds = [ids.gate, ids.pursuit];
   const optionalStageIds = [ids.pursuit];
   const branchStageIds = [ids.pursuitBranch];
-  const reliefStageIds = [ids.staging, ids.relief];
+  const reliefStageIds = [ids.relief];
+  const compatibilityStageIds = [ids.advance, ids.approachBranch, ids.detour, ids.staging];
 
   return {
     id: `${graph.id}:${sectorPlan.id}:mission-v2`,
@@ -365,14 +376,16 @@ export function createMissionSchedule(
     sectorPlanId: sectorPlan.id,
     label: `${sectorPlan.sectorName} mission`,
     startStageId: ids.briefing,
-    operationStageId: ids.advance,
+    operationStageId: ids.gate,
     operationStageIds,
     optionalStageId: ids.pursuit,
     optionalStageIds,
     branchStageId: ids.pursuitBranch,
     branchStageIds,
-    reliefStageId: ids.staging,
+    stagingStageId: ids.staging,
+    reliefStageId: ids.relief,
     reliefStageIds,
+    compatibilityStageIds,
     extractionStageId: ids.extraction,
     failureStageId: ids.failure,
     completionStageId: ids.completion,
@@ -380,10 +393,10 @@ export function createMissionSchedule(
     branches: authoredBranches,
     branchConditions: Object.fromEntries(
       authoredBranches
-        .flatMap((branch) => branch.options)
-        .map((option) => [
+        .flatMap((branch) => branch.options.map((option) => ({ branch, option })))
+        .map(({ branch, option }) => [
           option.id,
-          option.default
+          option.default || branch.id === pursuitBranch.id
             ? ({ kind: 'always' } as const)
             : ({
                 kind: 'checkpointAndOutcome',
@@ -444,8 +457,10 @@ export function createSingleStageCompatibilityMissionSchedule(options: {
     optionalStageIds: [],
     branchStageId: null,
     branchStageIds: [],
+    stagingStageId: null,
     reliefStageId: null,
     reliefStageIds: [],
+    compatibilityStageIds: [],
     extractionStageId: null,
     failureStageId: failure.id,
     completionStageId: completion.id,
@@ -683,9 +698,15 @@ export function createMissionReadModel(
   state: MissionDirectorState
 ): MissionReadModel {
   const stage = getMissionStage(schedule, state.currentStageId);
-  const playableStages = schedule.stages.filter(
+  const allPlayableStages = schedule.stages.filter(
     (candidate) => candidate.kind !== 'failure' && candidate.kind !== 'completion'
   );
+  const freshPlayableStages = allPlayableStages.filter(
+    (candidate) => !schedule.compatibilityStageIds.includes(candidate.id)
+  );
+  const playableStages = freshPlayableStages.some((candidate) => candidate.id === stage.id)
+    ? freshPlayableStages
+    : allPlayableStages;
   const stageNumber = Math.max(
     1,
     playableStages.findIndex((candidate) => candidate.id === stage.id) + 1

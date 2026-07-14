@@ -159,7 +159,6 @@ import { getBoardingOperationForNode } from '../game/BoardingOperation';
 import {
   createFactionFrontCampaignReadModel,
   createFactionFrontInfluence,
-  isFactionFrontNodeAvailable,
   projectFactionFrontBranchOptions
 } from '../game/FactionFront';
 import {
@@ -1542,11 +1541,6 @@ export class GameApp {
           .commandHeadroom
       }
     );
-    const carrierInfluence = createCarrierInfluence(
-      this.currentRun.carrierPlan,
-      this.runSession.carrier
-    );
-    const fleetInfluence = createFleetInfluence(this.currentRun.fleet, this.runSession.fleet);
     const frontInfluence = createFactionFrontInfluence(
       this.currentRun.factionFronts,
       this.runSession.factionFronts,
@@ -1554,26 +1548,13 @@ export class GameApp {
     );
     const conditionEligibleOptions = getMissionBranchOptions(schedule, this.runSession.mission);
     const optionalSource = currentBranch.options.find((option) => !option.default) ?? null;
-    const optionalTarget = optionalSource
-      ? (this.currentRun.expedition.nodes.find((node) => node.id === optionalSource.targetNodeId) ??
-        null)
-      : null;
-    const optionalBoarding = optionalTarget
-      ? getBoardingOperationForNode(this.currentRun.boardingCampaign, optionalTarget)
-      : null;
-    const availableMissionOptions = conditionEligibleOptions.filter((option) => {
-      if (option.default) return true;
-      return (
-        carrierInfluence.optionalMissionAccess &&
-        (!optionalBoarding ||
-          carrierInfluence.boardingCapacity + fleetInfluence.boardingAssist > 0) &&
-        (!optionalTarget || isFactionFrontNodeAvailable(frontInfluence, optionalTarget))
-      );
-    });
-    const missionOptions = projectFactionFrontBranchOptions(
-      availableMissionOptions,
-      this.currentRun.expedition.nodes,
-      frontInfluence
+    const missionOptions = conditionEligibleOptions.map(
+      (option) =>
+        projectFactionFrontBranchOptions(
+          [option],
+          this.currentRun.expedition.nodes,
+          frontInfluence
+        )[0] ?? option
     );
     const direct = missionOptions.find((option) => option.default);
     const optional = missionOptions.find((option) => !option.default) ?? optionalSource;
@@ -1583,14 +1564,7 @@ export class GameApp {
     const optionalAvailable = missionOptions.some((option) => option.id === optional.id);
     const optionalUnavailableReason = optionalAvailable
       ? null
-      : !conditionEligibleOptions.some((option) => option.id === optional.id)
-        ? 'The paired challenge requires a surviving hull and a successful required objective outcome.'
-        : !carrierInfluence.optionalMissionAccess
-          ? `${this.currentRun.carrierPlan.name} cannot support another local operation while hull, heat, or debt is outside mission limits.`
-          : optionalBoarding &&
-              carrierInfluence.boardingCapacity + fleetInfluence.boardingAssist <= 0
-            ? 'The paired challenge requires an available boarding team or fleet boarding assist.'
-            : 'The local faction front has closed this optional challenge for the current route state.';
+      : 'The paired challenge could not be projected for this sector.';
     const commitOption = (optionId: string) => {
       const option = currentBranch.options.find((candidate) => candidate.id === optionId);
       if (!option) return null;
@@ -2011,7 +1985,7 @@ export class GameApp {
     this.runSession.currentSectorIndex = Math.min(1, this.currentRun.sectors.length - 1);
     resetMissionForCurrentSector(this.currentRun, this.runSession);
     const schedule = this.getCurrentMissionSchedule();
-    const stagingId = schedule.reliefStageId;
+    const stagingId = schedule.stagingStageId;
     if (!stagingId) return;
     this.runSession.mission = {
       ...this.runSession.mission,

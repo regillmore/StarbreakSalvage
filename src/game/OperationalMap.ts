@@ -138,7 +138,7 @@ export function getOperationalInfluence(
   }
 
   if (
-    role === 'advance' &&
+    role === 'gate' &&
     state.history.some(
       (record) =>
         record.sectorIndex === sectorIndex - 1 &&
@@ -149,7 +149,7 @@ export function getOperationalInfluence(
     return {
       scrollLengthScale: 1.12,
       waveCountScale: 1.2,
-      label: 'The previous pursuit wake lengthens this advance and raises contact pressure.'
+      label: 'The previous pursuit wake lengthens this sector operation and raises contact pressure.'
     };
   }
 
@@ -226,7 +226,7 @@ export function createOperationalMapReadModel(options: {
   return {
     sectorPlanId: sector.id,
     sectorName: sector.sectorName,
-    operationRange: '2 required / up to 4 with detour and pursuit',
+    operationRange: '1 required / up to 2 with paired optional',
     completedOperations,
     nodes,
     summary: `${sector.sectorName} | ${completedOperations} operations settled | paired sector itinerary${options.factionFront ? ` | ${options.factionFront.mapCue} ${options.factionFront.ownerFactionName} ${options.factionFront.stance}` : ''}`

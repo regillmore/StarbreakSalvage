@@ -2,11 +2,13 @@
 
 Release candidate: Phase 11 resumable deep-voyage playtest
 
-Date: 2026-07-11
+Date: 2026-07-14
 
 ## Milestone Status
 
 Phases 1-10 and work orders 101-109 are deployed historical foundations. Work order 110 closes Phase 11 after auditing the complete resumable voyage and adding dedicated carrier-command, frontier-ending, snapshot-recovery, and structural-duration evidence through sixteen public Scenario Lab fixtures.
+
+Work order 139 refits the live Phase 11 itinerary so each constellation node owns one complete required sector operation and one paired optional challenge. Legacy advance/staging ids remain recoverable for deployed v11 snapshots, but no longer inflate fresh stage counts or insert a second required combat behind one sector node.
 
 The deployed completionist measurement is approximately 12 minutes with every optional path taken. That doubles the roughly six-minute Phase 9 baseline and reaches the lower edge of Phase 10's 12-20 minute structural target through mission stages, decisions, foundry work, set pieces, factions/rivals, and crew—not global slowdown or durability inflation.
 
@@ -16,7 +18,7 @@ The deployed completionist measurement is approximately 12 minutes with every op
 | ------------------------------ | ------ | ----------------------------------------------------------------------------------- |
 | TypeScript                     | Pass   | `npm run check`                                                                     |
 | ESLint                         | Pass   | `npm run check`                                                                     |
-| Unit/deterministic/integration | Pass   | 90 files, 530 tests                                                                 |
+| Unit/deterministic/integration | Pass   | 98 files, 603 tests                                                                 |
 | Production build               | Pass   | Vite emits `dist/` under `/StarbreakSalvage/`                                       |
 | Playwright Chromium            | Pass   | 13 smoke paths, including Scenario Lab and keyboard suspend/reload/resume coverage  |
 | Production preview paths       | Pass   | `npm run test:preview` checks the Pages base plus emitted hashed JavaScript and CSS |
@@ -40,33 +42,33 @@ Local Windows note: Playwright requires escalation because Chromium lives under 
 | Timeline and summaries     | Pass                  | Timeline keeps 96 display entries and 192 processed ids, uses explicit durations, remains local/save-safe, and appears in debug and summaries.                                                                                                                       |
 | Scenario Lab               | Pass                  | Sixteen declarative public-model fixtures reach every Phase 11 domain, including snapshot recovery, carrier staging, frontier endings, and apex dispositions, without private app-state mutation or a full run.                                                      |
 | Accessibility              | Pass with manual gaps | Automated smoke covers keyboard-only flow, 390x700, high contrast, reduced motion, performance mode, pointer controls, remapping precedence, and non-color readouts. Real devices and non-Chromium remain manual.                                                    |
-| Performance                | Pass with warning     | Combined stress caps and debug counts are explicit. Functional Chromium smoke passes. The 917.19 kB minified main bundle still exceeds Vite's 500 kB warning threshold; sustained frame-time/allocation profiling and further code splitting remain next-phase work. |
+| Performance                | Pass with warning     | Combined stress caps and debug counts are explicit. Functional Chromium smoke passes. The 916.91 kB minified main bundle still exceeds Vite's 500 kB warning threshold; sustained frame-time/allocation profiling and further code splitting remain next-phase work. |
 | Browser/Pages load         | Pass locally          | Vite base path and Pages workflow are correct; the repeatable preview smoke verifies base and hashed assets. Public deployment confirmation remains a user/deployment step.                                                                                          |
 
 ## Phase 11 Foundation Audit
 
 | Area                  | Status            | Evidence and boundary                                                                                                                                                   |
 | --------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Snapshot separation   | Pass              | Permanent progression remains `starbreak.save.v5`; suspended runs use independently repaired `starbreak.run.v9`, and legacy v1-v8 records retire safely.                |
+| Snapshot separation   | Pass              | Permanent progression remains `starbreak.save.v5`; suspended runs use independently repaired `starbreak.run.v11`, and legacy v1-v10 records retire safely.             |
 | Deterministic restore | Pass              | Restore regenerates and validates seed/fingerprint/graph/contract plus mission, engineering, items/economy, faction/rival, crew, and timeline state before scene entry. |
-| Safe checkpoint UX    | Pass              | Briefing, operation-entry, and settled-map writes are automatic; main-menu resume/discard works by keyboard and pointer and explains the exact boundary.                |
+| Safe checkpoint UX    | Pass              | Briefing, operation-entry, and settled post-sector/route writes are automatic; main-menu resume/discard works by keyboard and pointer and explains the boundary.        |
 | Corruption recovery   | Pass              | Malformed, unsupported, oversized, or identity-drifted snapshots remove only the suspended record. Unit coverage pins permanent-save isolation.                         |
 | Endurance boundary    | Pass              | Public harness repeats all sixteen Scenario Lab setups plus the finale through deterministic snapshot round trips and separately restores both frontier decisions.      |
-| Loading boundary      | Pass with warning | Initial JavaScript is 828.55 kB minified/223.52 kB gzip; release-audit logic/UI are lazy at 1.78/1.92 kB and the existing warning remains active.                       |
-| Executable topology   | Pass              | Graph v2 supplies 70 nodes, 20 decisions, two required and two optional operation roles per sector, with deterministic same-seed replay.                                |
+| Loading boundary      | Pass with warning | Initial JavaScript is 916.91 kB minified/249.76 kB gzip; low-frequency audit and service scenes remain lazy and the existing warning remains active.                   |
+| Executable topology   | Pass              | The 15-sector graph retains 105 stable compatibility nodes and 30 decisions; fresh schedules execute one full required gate plus at most one paired pursuit per sector. |
 | Operational cleanup   | Pass              | A 64-record idempotent ledger settles checkpoints and payouts once and asserts zero retained actors, projectiles, or hooks at each boundary.                            |
-| Consequence carry     | Pass              | Detour support reduces current gate pressure; pursuit outcomes raise the next advance and survive snapshot/decision replay.                                             |
-| Operational map       | Pass              | Keyboard/pointer DOM maps expose time, danger, reward, consequence, and faction/crew/ship risk bands without exact rolls.                                               |
-| Snapshot v2           | Pass              | Settled map checkpoints restore without replaying payouts; legacy run v1 retires without touching permanent save v5.                                                    |
+| Consequence carry     | Pass              | Compatibility detour support still reduces its gate; paired pursuit outcomes now raise the next real sector operation and survive snapshot/decision replay.            |
+| Operational map       | Compatibility     | Its reducer/read model and v11 restore target remain valid, while fresh decisions live in the constellation and no longer render the separate map scene.                |
+| Snapshot v11          | Pass              | Operation and settled constellation checkpoints restore without replaying payouts; legacy run v1-v10 retire without touching permanent save v5.                       |
 
 ## Phase 11 Closeout Audit
 
 | Area                   | Status                | Evidence and boundary                                                                                                                                                                                                                                                        |
 | ---------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Snapshot/save recovery | Pass                  | Snapshot v9 regenerates and validates the complete run-local plan/state, retires v1-v8 independently, and leaves permanent save v5 migration/import/export intact.                                                                                                           |
-| Resume to ending       | Pass                  | Chromium suspends and reloads combat, restores a settled operational map, continues through the gate, uses the public debug frontier handoff, reaches Core Extraction victory, and confirms snapshot cleanup. This is automated boundary smoke, not a real-time full voyage. |
+| Snapshot/save recovery | Pass                  | Snapshot v11 regenerates and validates the complete run-local plan/state, retires v1-v10 independently, and leaves permanent save v5 migration/import/export intact.                                                                                                        |
+| Resume to ending       | Pass                  | Chromium suspends and reloads the single required sector operation, restores the post-sector plot, uses the public debug frontier handoff, reaches Core Extraction victory, and confirms snapshot cleanup. This is automated boundary smoke, not a real-time full voyage. |
 | Campaign systems       | Pass                  | Carrier, boarding, faction fronts, crew arcs, fleetcraft, apex hunts, summaries, timelines, and divergent outcomes have deterministic reducer/read-model tests and public Scenario Lab access. Disposable lab endings are explicitly blocked from permanent save writes.     |
-| Structural duration    | Pass with manual gap  | Local authored projections measure 28.15m fresh/progressed standard, 18.50m Act II extraction, and 32.40m completionist after pairing one optional hold with each sector. The latest real stopwatch remains the deployed approximately 12m Phase 10 completionist run.       |
+| Structural duration    | Pass with manual gap  | Executable-node projection reports 16.82m standard, 11.08m Act II extraction, and 21.07m completionist. The latest valid stopwatch remains the deployed approximately 12m Phase 10 completionist run; a new full-voyage measurement is required.                     |
 | Accessibility          | Pass with manual gaps | Sixteen-card keyboard/pointer Scenario Lab passes at 390x700 under high contrast, reduced motion, and performance mode. Non-Chromium and real-device testing remain manual.                                                                                                  |
 | Performance            | Pass with warning     | Shared combat/query/projectile/effect/history caps remain intact and debug-visible. Functional Chromium smoke passes; sustained allocation/frame-time profiling and the 500 kB chunk warning remain open.                                                                    |
 | Browser/Pages paths    | Pass locally          | All 13 Chromium paths pass and production preview returns 200 for the Pages base plus initial and every lazy hashed asset. Deployment confirmation remains external.                                                                                                         |
@@ -91,13 +93,13 @@ Local Windows note: Playwright requires escalation because Chromium lives under 
 - Narrative copy proves faction, rival, crew, and mission consequence flow but is not a finished campaign script.
 - Ally AI is bounded and objective-safe in automation, but target thrash, visual overlap, perceived usefulness, and command ergonomics still need long manual playtests.
 - Modular frames, items, evolved weapons, crew, factions, and set pieces create combinatorial builds that cannot be exhaustively balanced by current automated fixtures.
-- Twelve minutes is the last deployed real stopwatch measurement from Phase 10. Phase 11 structurally projects 18.50-minute extraction, 28.15-minute standard, and 32.40-minute completionist routes, but full-voyage active time and fatigue still need manual measurement.
-- The current main JavaScript bundle is 917.19 kB minified (249.90 kB gzip) after work order 138 separates optional and route actions across two beige post-sector nodes and launches same-act combat without a second hub visit. CSS is 64.46 kB minified/13.28 kB gzip. Several integration modules remain large: `CombatState`, `CanvasRenderer`, `GameApp`, `GameplayScene`, and content validation. These are next-phase scaling warnings, not hidden release exceptions.
+- Twelve minutes is the last deployed real stopwatch measurement from Phase 10. Work order 139's executable-node audit now projects 11.08 minutes at Act II extraction, 16.82 minutes standard, and 21.07 minutes completionist; those figures describe authored capacity, not active play or fatigue. Full-voyage timing still needs a fresh manual measurement.
+- The current main JavaScript bundle is 916.91 kB minified (249.76 kB gzip) after work order 139 aligns fresh mission schedules and duration readouts with one required operation per constellation sector. CSS is 64.46 kB minified/13.28 kB gzip. Several integration modules remain large: `CombatState`, `CanvasRenderer`, `GameApp`, `GameplayScene`, and content validation. These are next-phase scaling warnings, not hidden release exceptions.
 - Work order 102 raises the initial bundle baseline to 678.74 kB minified/183.34 kB gzip and CSS to 26.76 kB while retaining the three Scenario Lab chunks. Further splitting remains required rather than complete.
 - Work order 103 raises the initial bundle baseline to 704.95 kB minified/189.45 kB gzip with CSS unchanged at 26.76 kB. The 26.21 kB minified increase is measured and the existing split warning remains open.
 - Work order 104 raises the initial bundle baseline to 722.66 kB minified/194.63 kB gzip with CSS unchanged at 26.76 kB, while isolating the 3.42 kB command deck as a lazy chunk. The 17.71 kB minified core increase is measured and the existing split warning remains open.
-- Snapshot v9 deliberately restores active combat at the safe operation-entry checkpoint; settled operational maps, frontier decisions, carrier, boarding, front, crew, fleet, and apex state restore exactly, but live bullets, actor positions, partially damaged targets, audio, and renderer state are not serialized. Pre-apex v1-v8 snapshots retire safely.
-- The 18.50-minute extraction, 28.15-minute standard, and 32.40-minute completionist figures are structural graph projections for fresh/progressed profiles, not deployed stopwatch results. Full-run fatigue, economy, difficulty, and actual timing need post-deployment playtests.
+- Snapshot v11 deliberately restores active combat at the safe operation-entry checkpoint; settled constellation plots, frontier decisions, carrier, boarding, front, crew, fleet, and apex state restore exactly, but live bullets, actor positions, partially damaged targets, audio, and renderer state are not serialized. Legacy v1-v10 snapshots retire safely.
+- Duration audits now derive ingress, gate, extraction, and paired-pursuit nodes only. The resulting 11.08/16.82/21.07-minute projections must still not be used as deployed stopwatch expectations.
 - Browser storage eviction/quota, multi-tab last-writer behavior, and long real-device restore latency remain manual risks. Snapshot size is capped at 512 KiB and current automated fixtures remain below it.
 
 ## Release Commands

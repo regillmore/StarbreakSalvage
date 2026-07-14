@@ -58,15 +58,51 @@ describe('MissionDirector', () => {
       waveCountScale: 0.45,
       bossPolicy: 'none'
     });
-    expect(first.operationStageIds).toHaveLength(3);
+    expect(first.operationStageIds).toHaveLength(2);
     expect(first.optionalStageIds).toHaveLength(1);
     expect(first.branchStageIds).toHaveLength(1);
+    expect(first.reliefStageIds).toHaveLength(1);
+    expect(first.compatibilityStageIds).toHaveLength(4);
+    expect(getMissionStage(first, first.operationStageId).operationalRole).toBe('gate');
     expect(first.branches).toHaveLength(2);
     expect(first.branch?.label).toContain('post-sector choice');
     expect(first.branch?.options.find((option) => option.default)?.label).toContain(
       run.expedition.sectors[1]!.sectorName
     );
     expect(first.branch?.options.find((option) => !option.default)?.label).toContain('Hold orbit');
+  });
+
+  it('fits every generated sector to one required operation and one playable optional', () => {
+    const run = generateRunSkeleton('MISSION-DIRECTOR-CONSTELLATION-SEQUENCE');
+
+    for (const [sectorIndex] of run.expedition.sectors.entries()) {
+      const schedule = createMissionSchedule(run.expedition, sectorIndex);
+      let state = createMissionDirectorState(schedule);
+      state = apply(schedule, state, { id: `brief-${sectorIndex}`, type: 'confirmBriefing' });
+      state = apply(schedule, state, { id: `entry-${sectorIndex}`, type: 'completeEntry' });
+
+      const required = getMissionStage(schedule, state.currentStageId);
+      expect(required.id).toBe(schedule.operationStageId);
+      expect(required.operationalRole).toBe('gate');
+      expect(required.world).toMatchObject({
+        scrollLengthScale: 1,
+        waveCountScale: 1,
+        bossPolicy: 'inherit'
+      });
+      for (const compatibilityStageId of schedule.compatibilityStageIds) {
+        expect(state.visitedStageIds).not.toContain(compatibilityStageId);
+      }
+
+      state = apply(schedule, state, {
+        id: `sector-complete-${sectorIndex}`,
+        type: 'completeCombat',
+        checkpoint: CHECKPOINT
+      });
+      expect(getMissionStage(schedule, state.currentStageId).kind).toBe('branch');
+      expect(getMissionBranchOptions(schedule, state)).toEqual(
+        expect.arrayContaining([expect.objectContaining({ default: false })])
+      );
+    }
   });
 
   it('advances a direct mission through every required stage exactly once', () => {
@@ -80,14 +116,6 @@ describe('MissionDirector', () => {
     expect(state.currentStageId).toBe(schedule.operationStageId);
     state = apply(schedule, state, {
       id: 'operation',
-      type: 'completeCombat',
-      checkpoint: CHECKPOINT
-    });
-    expect(getMissionStage(schedule, state.currentStageId).kind).toBe('relief');
-    state = apply(schedule, state, { id: 'staging', type: 'completeRelief' });
-    expect(getMissionStage(schedule, state.currentStageId).operationalRole).toBe('gate');
-    state = apply(schedule, state, {
-      id: 'gate-operation',
       type: 'completeCombat',
       checkpoint: CHECKPOINT
     });
@@ -105,7 +133,7 @@ describe('MissionDirector', () => {
 
     expect(state.status).toBe('completed');
     expect(state.currentStageId).toBe(schedule.completionStageId);
-    expect(state.transitions).toHaveLength(8);
+    expect(state.transitions).toHaveLength(6);
     expect(createMissionReadModel(schedule, state).stageKind).toBe('completion');
   });
 
@@ -155,7 +183,7 @@ describe('MissionDirector', () => {
     const setPiece = projection.sector.setPiece;
 
     expect(sector.sectorId).toBe('sector_core_wreck');
-    expect(sector.setPiece?.anchorDistance).toBeGreaterThan(projection.sector.scroll.length);
+    expect(sector.setPiece?.anchorDistance).toBeLessThan(projection.sector.scroll.length);
     expect(arena).not.toBeNull();
     expect(setPiece).not.toBeNull();
     expect(projection.missionObjective?.hudVerb).toBe('BREACH GATE');
@@ -213,7 +241,7 @@ describe('MissionDirector', () => {
     expect(duplicate.state.transitions).toHaveLength(3);
   });
 
-  it('evaluates data-backed branch conditions against the combat checkpoint', () => {
+  it('keeps the paired optional available after every completed sector operation', () => {
     const run = generateRunSkeleton('MISSION-DIRECTOR-BRANCH-CONDITION');
     const schedule = createMissionSchedule(run.expedition, 0);
     let state = createMissionDirectorState(schedule);
@@ -222,26 +250,23 @@ describe('MissionDirector', () => {
     state = apply(schedule, state, {
       id: 'combat',
       type: 'completeCombat',
-      checkpoint: CHECKPOINT
-    });
-    state = apply(schedule, state, { id: 'staging', type: 'completeRelief' });
-    state = apply(schedule, state, {
-      id: 'gate',
-      type: 'completeCombat',
       checkpoint: { ...CHECKPOINT, hull: 0 }
     });
     const optional = getMissionBranchOptions(schedule).find((option) => !option.default)!;
     const result = transitionMission(schedule, state, {
-      id: 'unsafe-detour',
+      id: 'paired-optional',
       type: 'selectBranch',
       optionId: optional.id
     });
 
-    expect(result.disposition).toBe('rejected');
-    expect(result.reason).toContain('not currently available');
-    expect(getMissionBranchOptions(schedule, state).map((option) => option.id)).toEqual([
-      getMissionBranchOptions(schedule).find((option) => option.default)!.id
-    ]);
+    expect(schedule.contract?.outcomeExits).toEqual({
+      success: 'branch',
+      partialSuccess: 'branch',
+      failure: 'branch'
+    });
+    expect(getMissionBranchOptions(schedule, state)).toHaveLength(2);
+    expect(result.disposition).toBe('advanced');
+    expect(result.state.currentStageId).toBe(schedule.optionalStageId);
   });
 
   it('suspends, resumes, and fails without losing the active stage or checkpoint', () => {
@@ -303,12 +328,6 @@ describe('MissionDirector', () => {
       type: 'completeCombat',
       checkpoint: CHECKPOINT
     });
-    dispatchMissionEvent(run, session, { id: 'staging', type: 'completeRelief' });
-    dispatchMissionEvent(run, session, {
-      id: 'gate',
-      type: 'completeCombat',
-      checkpoint: CHECKPOINT
-    });
     const optional = getMissionBranchOptions(schedule).find((option) => !option.default)!;
     dispatchMissionEvent(run, session, {
       id: 'branch',
@@ -329,13 +348,7 @@ describe('MissionDirector', () => {
 function reachGate(schedule: MissionSchedule): MissionDirectorState {
   let state = createMissionDirectorState(schedule);
   state = apply(schedule, state, { id: 'briefing', type: 'confirmBriefing' });
-  state = apply(schedule, state, { id: 'entry', type: 'completeEntry' });
-  state = apply(schedule, state, {
-    id: 'operation',
-    type: 'completeCombat',
-    checkpoint: CHECKPOINT
-  });
-  return apply(schedule, state, { id: 'staging', type: 'completeRelief' });
+  return apply(schedule, state, { id: 'entry', type: 'completeEntry' });
 }
 
 function reachPostSectorChoice(schedule: MissionSchedule): MissionDirectorState {
