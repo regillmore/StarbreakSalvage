@@ -1980,19 +1980,19 @@ Acceptance:
 
 Status:
 
-- Implemented in work order 134, flow-refined in work orders 135, 138, and 139, and discovery-refined in work order 137. `ActConstellation` supplies four stable five-sector layouts with completed/current/hidden base projection; later sectors stay anonymous until the post-sector presentation promotes the one actionable destination and edge to `choice`. `ConstellationMap` renders the shared hub grammar with spatial controls and bounded resolve motion, plus a reduced-motion-safe pulse on active sector choices. Sector Navigation composes five unlinked service satellites around the chart. Fresh missions now launch one complete gate-profile sector operation directly and return with `OPTIONAL` on the cleared node and `CHOOSE ROUTE` on the resolved next node. The source detail owns one always-present paired challenge, the target detail owns three route actions, and both nodes share the beige ready state. Compatibility-only advance/staging stages and the Operational Map remain valid for deployed checkpoints without entering fresh play. Snapshot v11 remains authoritative without new persisted fields.
+- Implemented in work order 134, flow-refined in work orders 135, 138, and 139, discovery-refined in work order 137, and destination-effect-refined in work order 146. `ActConstellation` supplies the act's completed/current/hidden base projection; later sectors stay anonymous until the post-sector presentation promotes legal destination edges to `choice`. `ConstellationMap` renders the shared hub grammar with spatial controls and bounded resolve motion, plus a reduced-motion-safe pulse on active sector choices. Sector Navigation composes five unlinked service satellites around the chart. Fresh missions launch one complete gate-profile sector operation and return with `OPTIONAL` on the cleared node while each legal next node exposes one route effect and destination commit. Compatibility-only advance/staging stages and the Operational Map remain valid for deployed checkpoints without entering fresh play. Snapshot v12 remains authoritative without new fields for route-effect presentation.
 
 ### BL4 - Embedded constellation route plotting
 
 Acceptance:
 
 - Route selection occurs in the newly actionable destination's constellation detail instead of a separate full-screen choice scene.
-- One concise next-mission brief and three bounded edge options replace repeated campaign/debug dumps while preserving every route consequence.
+- One concise next-mission brief and one seeded base effect per destination replace repeated campaign/debug dumps and the secondary route trio while preserving every route consequence.
 - Direct, optional, service-return, act-boundary, final-extraction, accessibility, and snapshot-v11 flows remain coherent.
 
 Status:
 
-- Implemented in work order 136 and flattened with the paired hold in work order 138. `RouteNavigation` projects the completed-to-next-sector edge, next contract/objective, and three compact authored route options. `SectorTransitionScene` marks the destination `CHOOSE ROUTE` and labels the source `OPTIONAL`; each node exclusively renders its own action set. After optional resolution, the source becomes `DEPARTED`. Cross-act and terminal choices stay local rather than creating false edges. Work order 140 moves required-sector rewards ahead of this plot; `GameApp` then retains route outcome, shop/event, component-salvage, and advance ordering, returns common services to the pending plot, checkpoints extraction-stage route plots through the compatible v11 operational-map target, and enters same-act combat directly once route settlement completes.
+- Implemented in work order 136, flattened with the paired hold in work order 138, and collapsed to destination-owned effects in work order 146. `RouteNavigation` projects the completed-to-next-sector edge, next contract/objective, and one deterministic base effect selected from the destination's internal authored candidates. `SectorTransitionScene` marks each destination with its difficulty and effect, labels the source `OPTIONAL`, and renders one explicit destination commit. After optional resolution, the source becomes `DEPARTED`. Cross-act and terminal choices stay local rather than creating false edges. Work order 140 moves required-sector rewards ahead of this plot; `GameApp` then retains route outcome, shop/event, component-salvage, and advance ordering, returns common services to the pending plot, checkpoints extraction-stage route plots through the compatible operational-map target, and enters same-act combat directly once route settlement completes.
 
 ### BL5 - Unknown future signals and active destination emphasis
 
@@ -2010,21 +2010,21 @@ Status:
 
 Acceptance:
 
-- The first post-sector view offers one local optional hold and three next-sector routes across two simultaneously actionable sector nodes, with no separate continuation commitment.
-- The source node exclusively owns the optional action, the target node exclusively owns the three routes, and both nodes use the same beige pulsing ready state. The source sublabel remains `OPTIONAL` instead of exposing availability as `HOLD ONCE` or `SETTLED`.
-- Direct route choice preserves default-branch, relief, route outcome, service, component-salvage, and sector-advance ordering; optional choice preserves its guarded combat path and then returns to three routes.
+- The first post-sector view offers one local optional hold and the legal next-sector destinations with their base effects simultaneously, with no separate continuation or secondary route commitment.
+- The source node exclusively owns the optional action, each target node owns one seeded route effect, and all ready nodes use the same beige pulsing state. The source sublabel remains `OPTIONAL` instead of exposing availability as `HOLD ONCE` or `SETTLED`.
+- Direct destination commitment preserves default-branch, relief, route outcome, service, component-salvage, and sector-advance ordering; optional choice preserves its guarded combat path and then returns to the same destination effects.
 - Required-sector reward settlement occurs before this board; same-act route completion enters the next sector directly without a second reward or constellation briefing. Each selected-node action set remains keyboard/pointer accessible and fits the standard detail pane without internal scrolling.
 
 Status:
 
-- Implemented in work order 138 and reordered in work order 140. `GameApp.showMissionBranch` exposes a shared branch-commit seam so direct route selection can settle the default branch and relief synchronously before entering the existing route pipeline. `SectorTransitionScene` composes the optional and route inputs in one map while keeping their actions in separate source and target details. `GameApp.beginCurrentSectorOperation` reuses the existing briefing/entry reducer events after same-act route settlement, avoiding a second hub visit. Required rewards now settle before the board and optional/route paths do not duplicate them. No mission, route, generation, or snapshot schema changed.
+- Implemented in work order 138, reordered in work order 140, and simplified in work order 146. `GameApp.showMissionBranch` exposes a shared branch-commit seam so direct destination selection can settle the default branch and relief synchronously before entering the existing route pipeline. `SectorTransitionScene` composes the optional and destination inputs in one map while keeping their actions in separate source and target details; the latter now commits its single node-bound effect. `GameApp.beginCurrentSectorOperation` reuses the existing briefing/entry reducer events after same-act route settlement, avoiding a second hub visit. Required rewards settle before the board and optional/route paths do not duplicate them. No mission, route-outcome, or snapshot schema changed.
 
 ### BL7 - One operation per sector node
 
 Acceptance:
 
 - A sector briefing launches one full authored required operation; no second required combat or Command Deck is hidden behind the same constellation node.
-- Completion exposes that sector's paired optional challenge and the next sector's three routes simultaneously through the flat flight board.
+- Completion exposes that sector's paired optional challenge and each legal next destination's base route effect simultaneously through the flat flight board.
 - Every sector's optional remains playable regardless of secondary carrier, boarding, faction-front, or objective-outcome projections; those systems may alter stakes and consequences instead of removing the choice.
 - Deployed snapshot and Scenario Lab targets inside legacy advance/staging stages remain recoverable, while fresh readouts count only the executable path.
 
@@ -2066,20 +2066,20 @@ Acceptance:
 
 Status:
 
-- Implemented in work order 142. `SectorTransitionScene` owns one shared `Suspend & Exit` presentation and maps both non-combat back and pause actions to it. `GameApp` checkpoints ordinary constellation modes as `sectorTransition` and unresolved route plots as `operationalMap`, then returns to the existing resume-capable main menu only after storage succeeds. Chromium proves keyboard and pointer suspension plus exact briefing and three-route reconstruction; no schema or generated state changed.
+- Implemented in work order 142 and presentation-refined in work order 146. `SectorTransitionScene` owns one shared `Suspend & Exit` presentation and maps both non-combat back and pause actions to it. `GameApp` checkpoints ordinary constellation modes as `sectorTransition` and unresolved route plots as `operationalMap`, then returns to the existing resume-capable main menu only after storage succeeds. The node-owned effect is regenerated from the immutable run seed and target on resume, so no presentation field or schema change is required.
 
 ### BL11 - Forking act route constellations
 
 Acceptance:
 
 - Each act is a deterministic forward-only `1-2-3-2-1` graph containing nine sector candidates and exactly five visited layers.
-- Route ranks form an easy/standard/hard spread: `2A -> 3A/3B`, `2B -> 3B/3C`, and shared `3B` is standard difficulty; each destination retains three approach routes and one paired optional challenge after completion.
+- Route ranks form an easy/standard/hard spread: `2A -> 3A/3B`, `2B -> 3B/3C`, and shared `3B` is standard difficulty; each destination carries one seeded base effect and one paired optional challenge after completion.
 - Constellation state, mission contracts, bosses, set pieces, rewards, summaries, capacity, debug tools, and progression derive from explicit topology or route layer rather than array adjacency.
 - All legal paths reach convergence without backtracking, all nine nodes are reachable across paths, and incompatible pre-topology snapshots retire without touching permanent progression.
 
 Status:
 
-- Implemented in work order 143. `ActRouteGraph` supplies nine nodes and 14 edges per act, explicit difficulty/readout metadata, legal target queries, and exhaustive five-layer path coverage. Generation now creates 27 candidate sectors while the playable voyage remains 15 sectors. `SectorTransitionScene` plots both legal destination nodes, commits the selected node plus its route approach directly into combat, and reconstructs chart history from canonical recorded destinations so hard paths never appear as default A-node paths. Mission contracts key off route layer, generated set pieces stay attached to semantic act roles, release accounting filters a legal canonical path, and snapshot v12 retires v11 safely.
+- Implemented in work order 143 and route-effect-refined in work order 146. `ActRouteGraph` supplies nine nodes and 14 edges per act, explicit difficulty/readout metadata, legal target queries, and exhaustive five-layer path coverage. Generation creates 27 candidate sectors while the playable voyage remains 15 sectors. `SectorTransitionScene` plots both legal destination nodes, displays and commits each node's base effect directly into combat, and reconstructs chart history from canonical recorded destinations so hard paths never appear as default A-node paths. Mission contracts key off route layer, generated set pieces stay attached to semantic act roles, release accounting filters a legal canonical path, and snapshot v12 remains authoritative.
 
 ### BL12 - Apex HUD stub visibility
 
@@ -2092,3 +2092,16 @@ Acceptance:
 Status:
 
 - Implemented in work order 144. The apex contact banner now has an explicit hidden-state display rule, preventing its grid layout from overriding the native `hidden` attribute when no encounter presentation exists.
+
+### BL13 - Destination-owned route effects
+
+Acceptance:
+
+- Every actionable destination node exposes exactly one deterministic base route effect; choosing the node and committing it settles that effect without a second trio of travel-vector choices.
+- The effect is selected from the destination's own authored candidates. A shared node therefore carries the same effect from every legal parent, and suspension/resume reconstructs it without persisted presentation state.
+- Easier nodes strongly favor the safer end of their candidate pool, harder nodes strongly favor the severe end, and standard/convergence nodes favor the middle while retaining seeded variety.
+- Node labels, detail copy, risk, consequence, keyboard focus, route shops/events, combat modifiers, rewards, component salvage, direct sector entry, and GitHub Pages behavior remain coherent.
+
+Status:
+
+- Implemented in work order 146. `RouteNavigation.selectNodeRouteEffect` owns a dedicated seed stream keyed to the target sector and weights normalized candidate risk by route-node difficulty. The constellation surfaces difficulty plus effect on every ready node, presents one bounded base-effect dossier, and commits it through the existing route settlement pipeline. Internal three-option content pools remain available to generation, validation, and debug tooling but no longer create a second player decision.

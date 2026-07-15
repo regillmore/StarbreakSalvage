@@ -300,9 +300,17 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
       await page.getByTestId(nodeId).evaluate((element) => getComputedStyle(element).borderTopColor)
     ).toContain('255, 209, 102');
   }
-  await expect(page.getByTestId('navigation-route-options')).toBeVisible();
-  await expect(page.locator('.navigation-flight-option')).toHaveCount(3);
-  await expect(page.locator('.navigation-route-card')).toHaveCount(3);
+  await expect(page.getByTestId('navigation-route-effect')).toBeVisible();
+  await expect(page.getByTestId('navigation-route-effect')).toContainText('BASE ROUTE EFFECT');
+  await expect(page.getByTestId('navigation-route-commit')).toBeEnabled();
+  await expect(page.locator('.navigation-route-card')).toHaveCount(0);
+  const openingRouteEffect =
+    (await page.getByTestId('navigation-route-effect').textContent()) ?? '';
+  const openingEffectName =
+    (await page.locator('.navigation-route-effect-heading strong').textContent()) ?? '';
+  await expect(page.getByTestId('navigation-destination-route')).toContainText(
+    openingEffectName.toUpperCase()
+  );
   await expect(page.getByTestId('navigation-optional-action')).toHaveCount(0);
   expect(
     await page
@@ -310,7 +318,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
       .evaluate((element) => element.scrollHeight <= element.clientHeight + 1)
   ).toBe(true);
   await page.getByTestId('navigation-destination-optional').click();
-  await expect(page.getByTestId('navigation-route-options')).toHaveCount(0);
+  await expect(page.getByTestId('navigation-route-effect')).toHaveCount(0);
   await expect(page.getByTestId('navigation-optional-action')).toBeEnabled();
   await page.getByTestId('navigation-optional-action').click();
   await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
@@ -319,9 +327,8 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('mission-briefing')).toBeVisible();
   await expect(page.getByRole('heading', { name: /Running Audit briefing/ })).toBeVisible();
   await expect(page.getByTestId('navigation-destination-route')).toContainText('EASIER');
-  await expect(page.getByTestId('navigation-route-options')).toBeVisible();
-  await expect(page.locator('.navigation-flight-option')).toHaveCount(3);
-  await expect(page.locator('.navigation-route-card')).toHaveCount(3);
+  await expect(page.getByTestId('navigation-route-effect')).toBeVisible();
+  await expect(page.getByTestId('navigation-route-commit')).toBeEnabled();
   await expect(page.getByTestId('mission-relief')).toHaveCount(0);
   await expect(page.getByTestId('route-edge-preview')).toContainText(
     'Outer Debris Field → Trade War Corridor'
@@ -348,8 +355,9 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
     'suspended safely at the constellation'
   );
   await page.getByTestId('resume-expedition').click();
-  await expect(page.getByTestId('navigation-route-options')).toBeVisible();
-  await expect(page.locator('.navigation-route-card')).toHaveCount(3);
+  await expect(page.getByTestId('navigation-route-effect')).toBeVisible();
+  await expect(page.getByTestId('navigation-route-effect')).toHaveText(openingRouteEffect);
+  await expect(page.getByTestId('navigation-route-commit')).toBeEnabled();
 
   await page.getByTestId('open-hardpoint-control').click();
   await expect(page.getByTestId('navigation-destination-detail')).toContainText(
@@ -419,20 +427,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('open-hardpoint-control')).toHaveAttribute('data-visited', 'true');
 
   await page.getByTestId('navigation-destination-route').click();
-  await page.getByTestId('route-shop').click();
-  await expect(page.getByRole('heading', { name: 'Shop' })).toBeVisible();
-  await expect(page.locator('.shop-panel')).toHaveAttribute('data-contract-theme', 'redline');
-  await expect(page.locator('.shop-card').first()).toContainText('Build fit:');
-  await expect(
-    page
-      .locator('.shop-card')
-      .first()
-      .getByRole('img', { name: /item icon/ })
-  ).toBeVisible();
-  await expect(page.locator('.shop-card').first()).toContainText(/Live effect|Bridge effect/);
-
-  await page.getByRole('button', { name: /Reroll/ }).click();
-  await page.getByRole('button', { name: 'Leave Shop' }).click();
+  await commitSelectedDestinationAndDepart(page);
   await expect(page.getByRole('heading', { name: 'Choose Reward' })).toHaveCount(0);
   await expect(page.getByTestId('mission-briefing')).toHaveCount(0);
   await expectGameplaySector(page, 'Trade War Corridor');
@@ -836,7 +831,7 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
   await page.keyboard.press('J');
   await expect(page.getByRole('heading', { name: 'Midpoint Refit' })).toBeVisible();
   await expect(page.getByTestId('mission-briefing')).toHaveCount(0);
-  await expect(page.getByTestId('navigation-route-options')).toHaveCount(0);
+  await expect(page.getByTestId('navigation-route-effect')).toHaveCount(0);
   await expect(page.locator('.route-card')).toHaveCount(0);
   await expect(page.locator('.debug-overlay')).toContainText('Scene inter-act-junction');
   await expect(page.locator('.debug-overlay')).toContainText(
@@ -1372,8 +1367,8 @@ async function forceCompleteSectorAndEnterNext(
   await expect(page.getByRole('heading', { name: 'Choose Reward' })).toBeVisible();
   await page.getByRole('button', { name: /Take / }).first().click();
   await expect(page.getByTestId('mission-briefing')).toBeVisible();
-  await expect(page.getByTestId('navigation-route-options')).toBeVisible();
-  await expect(page.locator('.navigation-flight-option')).toHaveCount(3);
+  await expect(page.getByTestId('navigation-route-effect')).toBeVisible();
+  await expect(page.getByTestId('navigation-route-commit')).toBeEnabled();
   await expect(page.getByTestId('navigation-optional-action')).toHaveCount(0);
   await expect(page.getByTestId('navigation-destination-optional')).toContainText('OPTIONAL');
   await expect(page.getByTestId('navigation-destination-continue')).toHaveCount(0);
@@ -1388,8 +1383,8 @@ async function forceCompleteSectorAndEnterNext(
     await page.keyboard.press('8');
     await expect(page.getByRole('heading', { name: 'Choose Reward' })).toHaveCount(0);
     await expect(page.getByTestId('mission-briefing')).toBeVisible();
-    await expect(page.getByTestId('navigation-route-options')).toBeVisible();
-    await expect(page.locator('.navigation-route-card')).toHaveCount(3);
+    await expect(page.getByTestId('navigation-route-effect')).toBeVisible();
+    await expect(page.getByTestId('navigation-route-commit')).toBeEnabled();
   }
 
   if (options.routeDifficulty === 'harder') {
@@ -1397,10 +1392,10 @@ async function forceCompleteSectorAndEnterNext(
       .locator('.constellation-node[data-destination-id^="route:"]')
       .filter({ hasText: 'HARDER' })
       .click();
-    await expect(page.getByTestId('navigation-route-options')).toBeVisible();
+    await expect(page.getByTestId('navigation-route-effect')).toBeVisible();
   }
 
-  await chooseFirstRouteAndDepart(page);
+  await commitSelectedDestinationAndDepart(page);
   await expect(page.getByTestId('mission-briefing')).toHaveCount(0);
   await expectGameplaySector(page, nextSectorName);
 }
@@ -1416,13 +1411,13 @@ async function expectGameplaySector(
   await expect(page.locator('.hud-pill').filter({ hasText: expectedText })).toBeVisible();
 }
 
-async function chooseFirstRouteAndDepart(page: Page): Promise<void> {
-  const firstRoute = page.locator('.route-card').first();
-  const routeTestId = await firstRoute.getAttribute('data-testid');
+async function commitSelectedDestinationAndDepart(page: Page): Promise<void> {
+  const commit = page.getByTestId('navigation-route-commit');
+  const routeKind = await commit.getAttribute('data-route-kind');
 
-  await firstRoute.click();
+  await commit.click();
 
-  if (routeTestId === 'route-shop') {
+  if (routeKind === 'shop') {
     await expect(page.getByRole('heading', { name: 'Shop' })).toBeVisible();
     await page.getByRole('button', { name: 'Leave Shop' }).click();
   } else {

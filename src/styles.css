@@ -2993,35 +2993,31 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
   align-content: start;
 }
 
-.navigation-route-options {
+.navigation-route-effect {
   display: grid;
-  gap: 0.42rem;
-}
-
-.navigation-route-card {
-  min-height: auto;
-  gap: 0.24rem;
-  padding: 0.58rem 0.64rem;
+  gap: 0.3rem;
+  padding: 0.68rem 0.72rem;
+  border: 1px solid rgba(255, 209, 102, 0.42);
   border-radius: 5px;
-  background: rgba(9, 19, 36, 0.9);
+  background:
+    linear-gradient(120deg, rgba(255, 209, 102, 0.08), transparent 55%), rgba(9, 19, 36, 0.9);
 }
 
-.navigation-route-card-heading {
+.navigation-route-effect-heading {
   display: flex;
   justify-content: space-between;
   gap: 0.5rem;
-  align-items: baseline;
+  align-items: center;
 }
 
-.navigation-route-card-heading strong {
-  color: #7cf7ff;
-  font-size: 0.84rem;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+.navigation-route-effect-heading > span:first-child {
+  display: grid;
+  gap: 0.12rem;
 }
 
-.navigation-route-card-heading small,
-.navigation-route-card-detail {
+.navigation-route-effect-heading small,
+.navigation-route-effect-detail,
+.navigation-route-effect-risk {
   color: #8faebb;
   font-family: 'Cascadia Mono', 'Consolas', monospace;
   font-size: 0.58rem;
@@ -3029,10 +3025,28 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
   text-transform: uppercase;
 }
 
-.navigation-route-card-summary {
+.navigation-route-effect-heading strong {
+  color: #7cf7ff;
+  font-size: 0.84rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.navigation-route-effect-risk {
+  color: #ffd166;
+  white-space: nowrap;
+}
+
+.navigation-route-effect-summary {
+  margin: 0;
   color: #e7f4f8;
   font-size: 0.73rem;
   line-height: 1.32;
+}
+
+.navigation-route-commit {
+  width: 100%;
+  margin-top: auto;
 }
 
 .navigation-detail-metric {

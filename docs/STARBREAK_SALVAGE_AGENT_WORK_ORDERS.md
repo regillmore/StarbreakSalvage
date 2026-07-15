@@ -2676,6 +2676,30 @@ Hardpoint Control moves the circuit ahead of component inventory and replaces si
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 99 Vitest files and 610 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Focused socket/hook/foundry/snapshot coverage passes with 4 files and 39 tests. Chromium exercises the real post-sector Hardpoint Control at 390x700, verifies three component extensions, four live/two open nodes, cumulative output, reorder, eject, append, undo, no horizontal document overflow, return to navigation, and no console errors. The build emits 931.12 kB minified/254.01 kB gzip initial JavaScript and 67.84/13.90 kB CSS, increases of 5.81/1.54 kB and 2.83/0.51 kB over work order 144. The existing 500 kB chunk notice remains; no dependency, RNG stream, save schema, snapshot shape/version, proc budget, or warning threshold changed. The in-app browser runtime again reported no available target after its prescribed connection check, so no manual in-app screenshot is claimed.
 
+## Work order 146 - Destination-owned route effects
+
+Goal: make the constellation destination itself carry the route consequence, eliminating the secondary trio of approach choices.
+
+Prompt:
+
+> Replace the three route cards shown after selecting a destination with one deterministic base route effect owned by that destination node. Select the effect from the destination's existing authored candidates, keep shared nodes invariant across legal parents, bias easier nodes toward safer effects and harder nodes toward severe effects, and present the destination, mission, difficulty, risk, and consequence as one comparison. Commit the node and its effect together through the established route pipeline. Preserve optional holds, direct sector entry, shops/events, rewards, route-conditioned combat and components, suspension/resume, accessibility, deterministic generation, snapshots, and static hosting.
+
+Acceptance criteria:
+
+- Every ready destination names its difficulty and base effect. Selecting it opens one bounded effect dossier and one commit action; no three-card route choice remains.
+- A node's effect comes from that target sector's candidate pool and is keyed only to the run and target. Shared `3B` therefore has the same effect from `2A` and `2B`.
+- Easier targets weight low normalized candidate risk, harder targets weight high normalized candidate risk, and standard/convergence targets weight the middle without removing seeded variation.
+- Committing the destination retains default-branch and relief settlement, route outcomes, route shops/events, combat/reward modifiers, component salvage, and immediate operation entry exactly once.
+- Suspension/resume reconstructs the same effect without persisting a pending presentation choice. Pointer, keyboard, reduced motion, high contrast, narrow layout, deterministic content, release capacity, and GitHub Pages remain valid.
+
+Status: implemented. `RouteNavigation.selectNodeRouteEffect` uses a dedicated target-sector seed stream and normalized risk weighting over each target's existing three authored candidates. Its read model now exposes one base effect rather than the departure sector's trio. Because neither source sector nor presentation state participates in selection, convergent nodes keep one identity from either parent and operational-map restoration regenerates the same result without a snapshot change.
+
+`SectorTransitionScene` annotates each ready constellation node with its difficulty and selected effect, replaces the three interactive route cards with a compact base-effect dossier, and offers one explicit `Commit Destination` action. Existing `GameApp` callbacks receive the selected `RouteOption` unchanged, preserving branch/relief settlement, route outcomes, shops/events, combat and reward modifiers, component salvage, and same-act operation entry. The internal candidate arrays remain available to content validation and debug tooling.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 99 Vitest files and 612 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Focused generation, graph, route-event, and snapshot coverage passes with 5 files and 30 tests. Route-navigation regressions prove deterministic destination ownership, parent-invariant shared `3B`, no invented finale effect, and a 256-seed easy/hard normalized-risk separation. Chromium verifies one visible effect and commit action, absence of the old route cards, effect labeling on the node, optional completion, exact effect reconstruction after suspend/resume, carrier-service return, route settlement, narrow/high-contrast hard-node travel, direct operation entry, and no console errors.
+
+The build emits 932.12 kB minified/254.39 kB gzip initial JavaScript and 68.09/13.93 kB CSS, increases of 1.00/0.38 kB JavaScript and 0.25/0.03 kB CSS over work order 145. The selector evaluates three bounded candidates only when a route read model is projected, and the DOM replaces three buttons with one dossier plus one commit button. The existing 500 kB chunk notice remains; no dependency, combat budget, route outcome schema, save/snapshot version, or warning threshold changed. Repository Playwright Chromium supplied runtime/layout evidence; no separate manual screenshot is claimed.
+
 ## Review subagent prompt
 
 Use after a feature PR:

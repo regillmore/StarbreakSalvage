@@ -151,8 +151,8 @@ export class SectorTransitionScene implements Scene {
     subtitle.className = 'navigation-hub-subtitle';
     subtitle.textContent = this.routeChoice
       ? this.postSectorChoice
-        ? `${this.run.carrierPlan.name} flight board · Hold the cleared node once, or choose a ranked destination and its approach.`
-        : `${this.run.carrierPlan.name} route plot · Choose the next signal, then choose how the ship reaches it.`
+        ? `${this.run.carrierPlan.name} flight board · Hold the cleared node once, or commit a ranked destination and its built-in route effect.`
+        : `${this.run.carrierPlan.name} route plot · Each destination carries one seeded route effect; choose the signal and consequence together.`
       : this.postSectorChoice
         ? `${this.run.carrierPlan.name} act chart · Hold this node once for its paired challenge, or continue along the newly resolved route.`
         : `${this.run.carrierPlan.name} act chart · Future sectors remain unresolved until their routes open; carrier services remain in local orbit.`;
@@ -182,8 +182,8 @@ export class SectorTransitionScene implements Scene {
     const footerCopy = document.createElement('p');
     footerCopy.textContent = this.routeChoice
       ? this.postSectorChoice
-        ? 'READY SIGNALS // Cleared node: one optional hold · Next layer: ranked destinations.'
-        : 'ROUTE COMMIT // Choose a destination signal and one of its three travel vectors.'
+        ? 'READY SIGNALS // Cleared node: one optional hold · Each destination: one base route effect.'
+        : 'DESTINATION COMMIT // Compare node-bound route effects, then commit the next signal.'
       : this.postSectorChoice
         ? 'POST-SECTOR HOLD // Optional challenge remains on the cleared node · The active destination continues the expedition.'
         : 'ACT CHART // Future sectors resolve only when travel opens · Unlinked carrier services remain locally available.';
@@ -209,7 +209,7 @@ export class SectorTransitionScene implements Scene {
     this.renderDestinationDetail(context);
     this.detailRoot
       .querySelector<HTMLButtonElement>(
-        '.navigation-route-card, [data-testid="navigation-destination-action"], [data-testid="navigation-optional-action"]'
+        '[data-testid="navigation-route-commit"], [data-testid="navigation-destination-action"], [data-testid="navigation-optional-action"]'
       )
       ?.focus({ preventScroll: true });
   }
@@ -367,6 +367,9 @@ export class SectorTransitionScene implements Scene {
           this.routeChoice && !this.postSectorChoice && current && !routeTarget
         );
         const resolvedSector = routeTarget ? this.run.sectors[node.sectorIndex] : null;
+        const routeEffect = routeTarget
+          ? this.createRouteChoiceModel(node.sectorIndex).effect
+          : null;
         const optionalAvailable = this.postSectorChoice?.optional.available ?? true;
         return {
           id: node.id,
@@ -386,7 +389,7 @@ export class SectorTransitionScene implements Scene {
                 ? 'completed'
                 : node.status,
           stateLabel: routeTarget
-            ? formatRouteDifficulty(node.difficulty)
+            ? `${formatRouteDifficulty(node.difficulty)} · ${routeEffect?.route.label.toUpperCase() ?? 'ROUTE EFFECT'}`
             : current && this.postSectorChoice
               ? 'OPTIONAL'
               : routeSource
@@ -579,7 +582,7 @@ export class SectorTransitionScene implements Scene {
           ? 'Stay for Optional Challenge'
           : 'Optional Challenge Unavailable'
         : this.routeChoice
-          ? 'Choose Route at Next Signal'
+          ? 'Inspect Destination Effects'
           : 'Begin Operation'
       : node.status === 'completed'
         ? 'Operation Settled'
@@ -594,12 +597,14 @@ export class SectorTransitionScene implements Scene {
   private renderRouteChoiceDetail(targetSectorIndex: number): void {
     if (!this.detailRoot || !this.routeChoice) return;
     const model = this.createRouteChoiceModel(targetSectorIndex);
+    const effect = model.effect;
+    if (!effect) return;
     const heading = document.createElement('div');
     heading.className = 'navigation-detail-heading';
     const identity = document.createElement('div');
     const kicker = document.createElement('p');
     kicker.className = 'eyebrow';
-    kicker.textContent = `${model.actLabel} // ROUTE COMMIT`;
+    kicker.textContent = `${model.actLabel} // DESTINATION COMMIT`;
     const title = document.createElement('h2');
     title.textContent = model.title;
     identity.append(kicker, title);
@@ -621,51 +626,48 @@ export class SectorTransitionScene implements Scene {
       this.createDetailMetric('Next objective', model.objective, 'route-mission-preview'),
       this.createDetailMetric('Signal profile', model.difficultySummary, 'route-difficulty-preview')
     );
-    const routeOptions = document.createElement('div');
-    routeOptions.className = 'navigation-route-options';
-    routeOptions.dataset.testid = 'navigation-route-options';
-    routeOptions.setAttribute('aria-label', `Routes from ${model.edgeLabel}`);
-
-    for (const option of model.options) {
-      const button = document.createElement('button');
-      button.className = 'choice-card route-card navigation-route-card navigation-flight-option';
-      button.type = 'button';
-      button.dataset.testid = `route-${option.route.kind}`;
-      button.addEventListener('click', () =>
-        this.routeChoice?.onChoose(targetSectorIndex, option.route)
-      );
-      button.setAttribute(
-        'aria-label',
-        [
-          option.route.label,
-          `${option.riskLabel} risk ${option.route.risk}`,
-          option.summary,
-          ...option.details
-        ].join('. ')
-      );
-
-      const routeHeading = document.createElement('span');
-      routeHeading.className = 'navigation-route-card-heading';
-      const name = document.createElement('strong');
-      name.textContent = option.route.label;
-      const risk = document.createElement('small');
-      risk.textContent = `${option.riskLabel} · RISK ${option.route.risk}`;
-      routeHeading.append(name, risk);
-      const routeSummary = document.createElement('span');
-      routeSummary.className = 'navigation-route-card-summary';
-      routeSummary.textContent = option.summary;
-      button.append(routeHeading, routeSummary);
-      for (const detail of option.details) {
-        const routeDetail = document.createElement('span');
-        routeDetail.className = 'navigation-route-card-detail';
-        routeDetail.textContent = detail;
-        button.append(routeDetail);
-      }
-      routeOptions.append(button);
+    const routeEffect = document.createElement('article');
+    routeEffect.className = 'navigation-route-effect';
+    routeEffect.dataset.testid = 'navigation-route-effect';
+    routeEffect.setAttribute('aria-label', `Base route effect: ${effect.route.label}`);
+    const routeHeading = document.createElement('div');
+    routeHeading.className = 'navigation-route-effect-heading';
+    const routeIdentity = document.createElement('span');
+    const routeKicker = document.createElement('small');
+    routeKicker.textContent = 'BASE ROUTE EFFECT';
+    const routeName = document.createElement('strong');
+    routeName.textContent = effect.route.label;
+    routeIdentity.append(routeKicker, routeName);
+    const risk = document.createElement('span');
+    risk.className = 'navigation-route-effect-risk';
+    risk.textContent = `${effect.riskLabel} · RISK ${effect.route.risk}`;
+    routeHeading.append(routeIdentity, risk);
+    const routeSummary = document.createElement('p');
+    routeSummary.className = 'navigation-route-effect-summary';
+    routeSummary.textContent = effect.summary;
+    routeEffect.append(routeHeading, routeSummary);
+    for (const detail of effect.details) {
+      const routeDetail = document.createElement('span');
+      routeDetail.className = 'navigation-route-effect-detail';
+      routeDetail.textContent = detail;
+      routeEffect.append(routeDetail);
     }
+    body.append(routeEffect);
 
-    body.append(routeOptions);
-    this.detailRoot.replaceChildren(heading, summary, body);
+    const commit = document.createElement('button');
+    commit.className = 'primary-button navigation-route-commit';
+    commit.type = 'button';
+    commit.dataset.testid = 'navigation-route-commit';
+    commit.dataset.routeKind = effect.route.kind;
+    commit.textContent = 'Commit Destination';
+    commit.setAttribute(
+      'aria-label',
+      `Commit ${model.edgeLabel} with ${effect.route.label}, ${effect.riskLabel} risk ${effect.route.risk}`
+    );
+    commit.addEventListener('click', () =>
+      this.routeChoice?.onChoose(targetSectorIndex, effect.route)
+    );
+    this.detailRoot.replaceChildren(heading, summary, body, commit);
   }
 
   private renderServiceDetail(

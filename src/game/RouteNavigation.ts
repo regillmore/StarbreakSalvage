@@ -1,4 +1,6 @@
 import { getMissionObjective } from '../content/objectives';
+import { createRng } from '../core/rng';
+import type { ActRouteDifficulty } from './ActRouteGraph';
 import type { RouteOption, RunSkeleton } from './Generation';
 import { selectMissionContract } from './MissionDirector';
 
@@ -19,7 +21,33 @@ export interface RouteNavigationReadModel {
   readonly objective: string;
   readonly difficultyLabel: string;
   readonly difficultySummary: string;
-  readonly options: readonly RouteNavigationOptionReadModel[];
+  readonly effect: RouteNavigationOptionReadModel | null;
+}
+
+export function selectNodeRouteEffect(run: RunSkeleton, targetSectorIndex: number): RouteOption {
+  const target = run.sectors[targetSectorIndex];
+  if (!target) {
+    throw new Error(`Cannot select a route effect for sector ${targetSectorIndex}.`);
+  }
+  if (target.routeOptions.length === 0) {
+    throw new Error(`Sector ${targetSectorIndex} has no route effect candidates.`);
+  }
+
+  const risks = target.routeOptions.map((route) => route.risk);
+  const minRisk = Math.min(...risks);
+  const maxRisk = Math.max(...risks);
+  const riskSpan = maxRisk - minRisk;
+  const rng = createRng(`${run.seed}:node-route-effect:${targetSectorIndex}:${target.sectorId}`);
+
+  return rng.weightedChoice(
+    target.routeOptions.map((route) => {
+      const riskPosition = riskSpan === 0 ? 0.5 : (route.risk - minRisk) / riskSpan;
+      return {
+        item: route,
+        weight: getRouteEffectWeight(target.act.actRouteDifficulty, riskPosition)
+      };
+    })
+  );
 }
 
 export function createRouteNavigationReadModel(options: {
@@ -41,6 +69,9 @@ export function createRouteNavigationReadModel(options: {
     ? selectMissionContract(options.run.expedition, options.targetSectorIndex!)
     : null;
   const objective = contract ? getMissionObjective(contract.primaryObjectiveId) : null;
+  const routeEffect = target
+    ? selectNodeRouteEffect(options.run, options.targetSectorIndex!)
+    : null;
 
   return {
     sourceSectorIndex: options.sourceSectorIndex,
@@ -60,20 +91,28 @@ export function createRouteNavigationReadModel(options: {
     difficultySummary: target
       ? formatDifficultySummary(target.act.actRouteDifficulty)
       : 'The expedition closes beyond this signal.',
-    options: source.routeOptions.map((route) => ({
-      route,
-      riskLabel: formatRouteRisk(route.risk),
-      summary: finishSentence(route.rewardHint),
-      details: [
-        route.pressureHint ? `Pressure · ${route.pressureHint}` : null,
-        route.rewardTierHint ? `Yield · ${route.rewardTierHint}` : null,
-        route.environmentalHint ? `Terrain · ${route.environmentalHint}` : null,
-        route.intelHint ? finishSentence(route.intelHint) : null
-      ]
-        .filter((detail): detail is string => detail !== null)
-        .slice(0, 2)
-    }))
+    effect: routeEffect
+      ? {
+          route: routeEffect,
+          riskLabel: formatRouteRisk(routeEffect.risk),
+          summary: finishSentence(routeEffect.rewardHint),
+          details: [
+            routeEffect.pressureHint ? `Pressure · ${routeEffect.pressureHint}` : null,
+            routeEffect.rewardTierHint ? `Yield · ${routeEffect.rewardTierHint}` : null,
+            routeEffect.environmentalHint ? `Terrain · ${routeEffect.environmentalHint}` : null,
+            routeEffect.intelHint ? finishSentence(routeEffect.intelHint) : null
+          ]
+            .filter((detail): detail is string => detail !== null)
+            .slice(0, 2)
+        }
+      : null
   };
+}
+
+function getRouteEffectWeight(difficulty: ActRouteDifficulty, riskPosition: number): number {
+  if (difficulty === 'easier') return 1 + (1 - riskPosition) * 8;
+  if (difficulty === 'harder') return 1 + riskPosition * 8;
+  return 1 + (1 - Math.abs(riskPosition - 0.5) * 2) * 4;
 }
 
 function formatDifficultyLabel(difficulty: string): string {
@@ -85,10 +124,10 @@ function formatDifficultyLabel(difficulty: string): string {
 }
 
 function formatDifficultySummary(difficulty: string): string {
-  if (difficulty === 'easier') return 'Shorter operation · one fewer hazard window';
-  if (difficulty === 'harder') return 'Longer operation · one added hazard window';
-  if (difficulty === 'standard') return 'Baseline operation pressure';
-  if (difficulty === 'finale') return 'All surviving paths converge here';
+  if (difficulty === 'easier') return 'Shorter operation · safer route effects favored';
+  if (difficulty === 'harder') return 'Longer operation · severe route effects favored';
+  if (difficulty === 'standard') return 'Baseline operation · balanced route effects';
+  if (difficulty === 'finale') return 'All surviving paths converge · balanced route effect';
   return 'Act entry vector';
 }
 
