@@ -2858,12 +2858,26 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
 
 .navigation-hub-footer {
   margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
   color: #7693a0;
   font-family: 'Cascadia Mono', 'Consolas', monospace;
   font-size: 0.59rem;
   letter-spacing: 0.04em;
   text-align: center;
   text-transform: uppercase;
+}
+
+.navigation-hub-footer p {
+  margin: 0;
+}
+
+.navigation-suspend-action {
+  flex: 0 0 auto;
+  padding: 0.38rem 0.62rem;
+  font-size: 0.66rem;
 }
 
 @media (min-width: 761px) and (max-height: 800px) {
@@ -3780,6 +3794,10 @@ html[data-bullet-contrast='high'] .hud-meter-track {
 
   .navigation-hub-header {
     display: grid;
+  }
+
+  .navigation-hub-footer {
+    flex-wrap: wrap;
   }
 
   .navigation-hub-workspace {

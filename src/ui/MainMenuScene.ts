@@ -329,7 +329,7 @@ export class MainMenuScene implements Scene {
         ? 'Resume restarts the current operation from its safe entry checkpoint.'
         : this.resumeSummary.target === 'operationalMap'
           ? 'Resume returns to the settled operational map checkpoint.'
-          : 'Resume returns to the saved mission briefing checkpoint.';
+          : 'Resume returns to the saved constellation checkpoint.';
     const actions = document.createElement('div');
     actions.className = 'button-row';
     const resume = document.createElement('button');

@@ -100,7 +100,8 @@ export class SectorTransitionScene implements Scene {
     private readonly onOpenHardpoint: (() => void) | null = null,
     private readonly serviceLocks: SectorNavigationServiceLocks = {},
     private readonly postSectorChoice: PostSectorNavigationChoice | null = null,
-    private readonly routeChoice: NavigationRouteChoice | null = null
+    private readonly routeChoice: NavigationRouteChoice | null = null,
+    private readonly onSuspendAndExit: (() => void) | null = null
   ) {}
 
   public enter(): void {
@@ -168,15 +169,27 @@ export class SectorTransitionScene implements Scene {
     this.detailRoot.setAttribute('aria-live', 'polite');
     workspace.append(map, this.detailRoot);
 
-    const footer = document.createElement('p');
+    const footer = document.createElement('footer');
     footer.className = 'navigation-hub-footer';
-    footer.textContent = this.routeChoice
+    const footerCopy = document.createElement('p');
+    footerCopy.textContent = this.routeChoice
       ? this.postSectorChoice
         ? 'TWO READY SECTORS // Cleared node: one optional hold · Next node: three onward routes.'
         : 'ROUTE COMMIT // Choose one travel vector from the settled sector to the next mission signal.'
       : this.postSectorChoice
         ? 'POST-SECTOR HOLD // Optional challenge remains on the cleared node · The active destination continues the expedition.'
         : 'ACT CHART // Future sectors resolve only when travel opens · Unlinked carrier services remain locally available.';
+    footer.append(footerCopy);
+    if (this.onSuspendAndExit) {
+      const suspend = document.createElement('button');
+      suspend.className = 'secondary-button navigation-suspend-action';
+      suspend.type = 'button';
+      suspend.dataset.testid = 'suspend-navigation';
+      suspend.textContent = 'Suspend & Exit';
+      suspend.setAttribute('aria-label', 'Suspend expedition and exit to main menu');
+      suspend.addEventListener('click', this.onSuspendAndExit);
+      footer.append(suspend);
+    }
 
     shell.append(
       header,
@@ -200,6 +213,10 @@ export class SectorTransitionScene implements Scene {
   }
 
   public handleAction(action: InputAction): void {
+    if ((action === 'back' || action === 'pause') && this.onSuspendAndExit) {
+      this.onSuspendAndExit();
+      return;
+    }
     if (action === 'confirm') {
       const focused = this.uiRoot.ownerDocument.activeElement;
       if (focused instanceof HTMLButtonElement) focused.click();

@@ -2581,6 +2581,28 @@ Ordinary routes still acquire their deterministic component before calling the s
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 98 Vitest files and 604 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Focused act-junction, mission, and snapshot coverage passes with 3 files and 24 tests; deterministic checks identify only sector 5 as the immediate Act I-to-II handoff. Chromium reaches `Midpoint Refit` through Act I extraction and asserts that no mission briefing, navigation route options, or route cards are mounted. The build emits 917.78 kB minified/250.00 kB gzip initial JavaScript and 64.46/13.28 kB CSS, a 0.52/0.13 kB JavaScript increase over work order 140. No dependency, simulation cap, graph/schema version, snapshot version, CSS, or warning threshold changed.
 
+## Work order 142 - Safe constellation suspension
+
+Goal: let the player leave any constellation decision without abandoning the voyage, then resume at that exact safe decision boundary from the main menu.
+
+Prompt:
+
+> Add an explicit `Suspend & Exit` action to the shared constellation menu. It must checkpoint before returning to the main menu, expose the existing `Resume Expedition` action, and reconstruct the same briefing, post-sector optional/route board, or unresolved route plot without replaying rewards, branches, relief, route outcomes, or combat. Escape should invoke the same action. Preserve snapshot v11, keyboard/pointer accessibility, narrow layouts, failure safety, and static hosting.
+
+Acceptance criteria:
+
+- Every live `SectorTransitionScene` mode exposes one clearly labeled `Suspend & Exit` button; Escape performs the same action because pause has no separate meaning in this non-combat scene.
+- Suspension writes the mode's established safe target before leaving. A failed checkpoint leaves the constellation mounted rather than returning to a main menu with no resumable record.
+- An initial or ordinary post-sector constellation resumes through `sectorTransition`; an unresolved extraction-stage route plot resumes through `operationalMap`, preserving all pending node actions and three deterministic route choices.
+- The main menu identifies the saved constellation boundary and offers existing keyboard/pointer Resume and Discard actions. Resuming does not advance mission state, settle a payout, consume a route, or enter combat.
+- The footer action wraps on narrow viewports, remains distinct from destination actions, and introduces no gameplay-loop, generation, RNG, schema, or persistent-state work.
+
+Status: implemented. The shared constellation footer now includes an accessible `Suspend & Exit` control, and its non-combat `back`/`pause` action maps Escape to the same callback. `GameApp.suspendAtConstellation` first requests a successful `RunSnapshotCoordinator` checkpoint and only then returns to `MainMenuScene`, where the established summary, Resume Expedition, and Discard Expedition controls remain authoritative.
+
+Briefing and flat post-sector modes use the existing `sectorTransition` target, while an unresolved route-only plot uses its existing `operationalMap` compatibility target. Resume therefore reprojects the exact current constellation from run/session state: it neither serializes DOM state nor backs up across a reward, optional result, route outcome, branch, or relief transition. Snapshot v11 and permanent save v5 are unchanged.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 98 Vitest files and 604 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Focused Chromium coverage suspends the opening briefing with Escape, resumes it by keyboard, suspends an unresolved three-route plot by pointer, and resumes the same three options with the correct checkpoint copy. The build emits 918.80 kB minified/250.23 kB gzip initial JavaScript and 64.68/13.33 kB CSS, a 1.02/0.23 kB JavaScript and 0.22/0.05 kB CSS increase over work order 141. No dependency, simulation cap, generated plan, RNG stream, permanent-save version, snapshot version, or warning threshold changed.
+
 ## Review subagent prompt
 
 Use after a feature PR:

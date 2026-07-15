@@ -1701,7 +1701,12 @@ export class GameApp {
           sourceSectorIndex,
           targetSectorIndex,
           onChoose: chooseRoute
-        }
+        },
+        () =>
+          this.suspendAtConstellation(
+            'sectorTransition',
+            `Suspended at ${branchStage.label}`
+          )
       )
     );
     this.checkpointRun('sectorTransition', `${branchStage.label} checkpoint`);
@@ -1840,7 +1845,12 @@ export class GameApp {
           sourceSectorIndex,
           targetSectorIndex,
           onChoose: (route) => this.handleRouteChoice(route)
-        }
+        },
+        () =>
+          this.suspendAtConstellation(
+            'operationalMap',
+            `Suspended at route plot after sector ${sourceSectorIndex + 1}`
+          )
       )
     );
     this.checkpointRun('operationalMap', `Route plot after sector ${sourceSectorIndex + 1}`);
@@ -2243,7 +2253,15 @@ export class GameApp {
         () => void this.showFleetBay(() => this.showSectorTransition(), 'Return to Navigation'),
         () => void this.showApexDossier(),
         () => this.showNavigationShop(),
-        () => this.showNavigationFoundry()
+        () => this.showNavigationFoundry(),
+        {},
+        null,
+        null,
+        () =>
+          this.suspendAtConstellation(
+            'sectorTransition',
+            `Suspended at sector ${this.runSession.currentSectorIndex + 1} constellation`
+          )
       )
     );
   }
@@ -2880,8 +2898,8 @@ export class GameApp {
   private checkpointRun(
     target: 'sectorTransition' | 'gameplay' | 'operationalMap',
     label: string
-  ): void {
-    if (!this.snapshotEligible) return;
+  ): boolean {
+    if (!this.snapshotEligible) return false;
     try {
       this.runSnapshot = this.runSnapshotCoordinator.checkpoint({
         run: this.currentRun,
@@ -2891,12 +2909,23 @@ export class GameApp {
         label
       });
       this.runSnapshotNotice = null;
+      return true;
     } catch (error) {
       this.runSnapshotNotice =
         error instanceof Error
           ? `Run checkpoint failed: ${error.message}`
           : 'Run checkpoint failed.';
+      return false;
     }
+  }
+
+  private suspendAtConstellation(
+    target: 'sectorTransition' | 'operationalMap',
+    label: string
+  ): void {
+    if (!this.checkpointRun(target, label)) return;
+    this.runSnapshotNotice = 'Expedition suspended safely at the constellation.';
+    this.showMainMenu();
   }
 
   private resumeRunSnapshot(): void {

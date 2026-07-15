@@ -2055,3 +2055,15 @@ Acceptance:
 Status:
 
 - Implemented in work order 141. `getInterActHandoffAfterSector` identifies the Act I terminal boundary from immutable act plans. Fresh branch flow and restored extraction flow both bypass the constellation route presentation and reuse the existing extraction advance into `InterActJunctionScene`. The Act II debug fixture now exercises that real boundary; no run schema or generated graph changed.
+
+### BL10 - Safe constellation suspension
+
+Acceptance:
+
+- Every briefing, post-sector board, and unresolved route plot offers an explicit exit to the main menu without abandoning the expedition.
+- The checkpoint must succeed before the scene exits; Resume reconstructs the same pending constellation actions without replaying settlement or combat.
+- Pointer, Escape, keyboard Resume, narrow layout, snapshot v11, and permanent-save isolation remain valid.
+
+Status:
+
+- Implemented in work order 142. `SectorTransitionScene` owns one shared `Suspend & Exit` presentation and maps both non-combat back and pause actions to it. `GameApp` checkpoints ordinary constellation modes as `sectorTransition` and unresolved route plots as `operationalMap`, then returns to the existing resume-capable main menu only after storage succeeds. Chromium proves keyboard and pointer suspension plus exact briefing and three-route reconstruction; no schema or generated state changed.

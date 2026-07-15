@@ -333,6 +333,20 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('contract-theme-strip')).toContainText(
     'REDLINE CONTRACT | Debt Runner'
   );
+  await page.getByTestId('suspend-navigation').click();
+  await expect(page.getByRole('heading', { name: 'Starbreak Salvage' })).toBeVisible();
+  await expect(page.getByTestId('run-snapshot-summary')).toContainText(
+    'Suspended at route plot after sector 1'
+  );
+  await expect(page.getByTestId('run-snapshot-panel')).toContainText(
+    'settled operational map checkpoint'
+  );
+  await expect(page.getByTestId('run-snapshot-notice')).toContainText(
+    'suspended safely at the constellation'
+  );
+  await page.getByTestId('resume-expedition').click();
+  await expect(page.getByTestId('navigation-route-options')).toBeVisible();
+  await expect(page.locator('.navigation-route-card')).toHaveCount(3);
 
   await page.getByTestId('open-hardpoint-control').click();
   await expect(page.getByTestId('navigation-destination-detail')).toContainText(
@@ -1139,6 +1153,16 @@ test('suspends, reloads, resumes, and clears a versioned expedition snapshot', a
   await page.goto('./?debug=1&seed=VOYAGE-SNAPSHOT-ROUNDTRIP');
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('mission-briefing')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('heading', { name: 'Starbreak Salvage' })).toBeVisible();
+  await expect(page.getByTestId('run-snapshot-panel')).toContainText(
+    'saved constellation checkpoint'
+  );
+  await page.keyboard.press('Shift+Tab');
+  await page.keyboard.press('Shift+Tab');
+  await expect(page.getByTestId('resume-expedition')).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('mission-briefing')).toBeVisible();
   await page.keyboard.press('Enter');
