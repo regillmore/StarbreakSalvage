@@ -2067,3 +2067,16 @@ Acceptance:
 Status:
 
 - Implemented in work order 142. `SectorTransitionScene` owns one shared `Suspend & Exit` presentation and maps both non-combat back and pause actions to it. `GameApp` checkpoints ordinary constellation modes as `sectorTransition` and unresolved route plots as `operationalMap`, then returns to the existing resume-capable main menu only after storage succeeds. Chromium proves keyboard and pointer suspension plus exact briefing and three-route reconstruction; no schema or generated state changed.
+
+### BL11 - Forking act route constellations
+
+Acceptance:
+
+- Each act is a deterministic forward-only `1-2-3-2-1` graph containing nine sector candidates and exactly five visited layers.
+- Every middle-layer fork offers one easier and one harder destination, while each destination retains three approach routes and one paired optional challenge after completion.
+- Constellation state, mission contracts, bosses, set pieces, rewards, summaries, capacity, debug tools, and progression derive from explicit topology or route layer rather than array adjacency.
+- All legal paths reach convergence without backtracking, all nine nodes are reachable across paths, and incompatible pre-topology snapshots retire without touching permanent progression.
+
+Status:
+
+- Implemented in work order 143. `ActRouteGraph` supplies nine nodes and 14 edges per act, explicit difficulty/readout metadata, legal target queries, and exhaustive five-layer path coverage. Generation now creates 27 candidate sectors while the playable voyage remains 15 sectors. `SectorTransitionScene` plots both legal destination nodes and commits the selected node plus its route approach directly into combat. Mission contracts key off route layer, generated set pieces stay attached to semantic act roles, release accounting filters a legal canonical path, and snapshot v12 retires v11 safely.

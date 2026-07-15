@@ -30,6 +30,7 @@ import {
 import { formatSectorObjectiveVariantReadout } from '../../src/game/SectorObjectives';
 import { validateSectorFeaturePlan } from '../../src/game/SectorFeatures';
 import { createWaveDirectorPlan } from '../../src/game/WaveDirector';
+import { getNextActRouteSectorIndices } from '../../src/game/ActRouteGraph';
 
 describe('SectorPacing', () => {
   it('adds deterministic pressure and relief arcs to route-conditioned longer sectors', () => {
@@ -96,7 +97,7 @@ describe('SectorPacing', () => {
   });
 
   it('adds pacing landmarks and stretches boss approaches without mutating route conditions', () => {
-    const paced = getPacedSectorAfterRoute('LONG-SECTOR-BOSS', 2, 'glitch');
+    const paced = getPacedSectorAfterRoute('LONG-SECTOR-BOSS', 1, 'glitch');
 
     expect(paced.baseSector.objective.bossRequired).toBe(true);
     expect(paced.pacing.arcKind).toBe('glitchShear');
@@ -139,7 +140,11 @@ describe('SectorPacing', () => {
   });
 
   it('adds Act II length bands, pressure bands, objective variants, and relief windows', () => {
-    const paced = getUnroutedPacedSector('STARBREAK-SMOKE', 5);
+    const run = generateRunSkeleton('STARBREAK-SMOKE');
+    const sectorIndex = run.sectors.findIndex(
+      (sector) => sector.objective.variantId === 'act2DeepSweep'
+    );
+    const paced = getUnroutedPacedSector('STARBREAK-SMOKE', sectorIndex);
 
     expect(paced.baseSector.act.actShortLabel).toBe('Act II');
     expect(paced.baseSector.objective.variantId).toBe('act2DeepSweep');
@@ -147,7 +152,7 @@ describe('SectorPacing', () => {
       'Deep-sector sweep'
     );
     expect(paced.pacing.arcKind).toBe('act2Traverse');
-    expect(paced.pacing.lengthBand).toBe('extended');
+    expect(paced.pacing.lengthBand).toBe('deep');
     expect(paced.pacing.pressureBand).toBe('sustained');
     expect(paced.pacing.objectiveVariantLabel).toBe('Deep-sector sweep');
     expect(paced.pacing.waveDistanceRatios).toEqual([0.16, 0.46, 0.8]);
@@ -162,8 +167,29 @@ describe('SectorPacing', () => {
   });
 
   it('applies route-conditioned pacing modifiers without flat Act II density spikes', () => {
-    const pressured = getPacedSectorAfterRoute('ACT2-ROUTE-PACING', 6, 'glitch');
-    const quiet = getPacedSectorAfterRoute('ACT2-ROUTE-PACING', 6, 'repair');
+    const run = generateRunSkeleton('ACT2-ROUTE-PACING');
+    const actTwo = run.acts[1]!;
+    const routeEdge = run.actRouteGraph.edges.find(
+      (edge) =>
+        edge.sourceSectorIndex >= actTwo.startSectorIndex &&
+        edge.targetSectorIndex <= actTwo.endSectorIndex &&
+        run.sectors[edge.targetSectorIndex]?.objective.pressureBand === 'sustained'
+    );
+    if (!routeEdge) {
+      throw new Error('Expected an Act II route into a sustained-pressure node.');
+    }
+    const pressured = getPacedSectorAfterRoute(
+      'ACT2-ROUTE-PACING',
+      routeEdge.sourceSectorIndex,
+      'glitch',
+      routeEdge.targetSectorIndex
+    );
+    const quiet = getPacedSectorAfterRoute(
+      'ACT2-ROUTE-PACING',
+      routeEdge.sourceSectorIndex,
+      'repair',
+      routeEdge.targetSectorIndex
+    );
 
     expect(pressured.baseSector.act.actShortLabel).toBe('Act II');
     expect(pressured.baseSector.sectorId).toBe(quiet.baseSector.sectorId);
@@ -178,7 +204,8 @@ describe('SectorPacing', () => {
   });
 
   it('tunes Act II boss approach handoff while preserving arena lock and release ordering', () => {
-    const paced = getUnroutedPacedSector('STARBREAK-SMOKE', 9);
+    const run = generateRunSkeleton('STARBREAK-SMOKE');
+    const paced = getUnroutedPacedSector('STARBREAK-SMOKE', run.acts[1]!.endSectorIndex);
     const routeArena = applySectorConditionsToBossArena(
       paced.baseSector.arena,
       paced.baseSector.scroll,
@@ -205,7 +232,8 @@ describe('SectorPacing', () => {
   });
 
   it('keeps Act II distance-wave spawning catchup-safe under late-frame jumps', () => {
-    const paced = getUnroutedPacedSector('STARBREAK-SMOKE', 5);
+    const run = generateRunSkeleton('STARBREAK-SMOKE');
+    const paced = getUnroutedPacedSector('STARBREAK-SMOKE', run.acts[1]!.startSectorIndex);
     const encounterPacing = applySectorPacingToEncounterPacing(
       paced.baseSector.encounterPacing,
       paced.pacing
@@ -257,10 +285,10 @@ describe('SectorPacing', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
     const timeline = formatSectorPacingTimeline(run, []);
 
-    expect(timeline).toContain('S6 Core-depth traverse');
+    expect(timeline).toContain('S10 Core-depth traverse');
     expect(timeline).toContain('Deep-sector sweep');
     expect(timeline).toContain('sustained pressure');
-    expect(timeline).toContain('S10 Finale descent');
+    expect(timeline).toContain('S18 Finale descent');
     expect(timeline).toContain('finale pressure');
   });
 });
@@ -302,8 +330,18 @@ function getUnroutedPacedSector(seed: string, sectorIndex: number) {
   };
 }
 
-function getPacedSectorAfterRoute(seed: string, sourceSectorIndex: number, kind: RouteKind) {
-  const { run, session } = selectRouteIntoSector(seed, sourceSectorIndex, kind);
+function getPacedSectorAfterRoute(
+  seed: string,
+  sourceSectorIndex: number,
+  kind: RouteKind,
+  targetSectorIndex?: number
+) {
+  const { run, session } = selectRouteIntoSector(
+    seed,
+    sourceSectorIndex,
+    kind,
+    targetSectorIndex
+  );
   const baseSector = getCurrentSector(run, session);
   const conditions = createSectorConditionPlan({
     run,
@@ -338,7 +376,12 @@ function getPacedSectorAfterRoute(seed: string, sourceSectorIndex: number, kind:
   };
 }
 
-function selectRouteIntoSector(seed: string, sourceSectorIndex: number, kind: RouteKind) {
+function selectRouteIntoSector(
+  seed: string,
+  sourceSectorIndex: number,
+  kind: RouteKind,
+  requestedTargetSectorIndex?: number
+) {
   const run = generateRunSkeleton(seed);
   const contract = run.contracts[0];
 
@@ -350,15 +393,22 @@ function selectRouteIntoSector(seed: string, sourceSectorIndex: number, kind: Ro
   session.currentSectorIndex = sourceSectorIndex;
   const sector = getCurrentSector(run, session);
   const route = makeRoute(kind);
+  const targetSectorIndex =
+    requestedTargetSectorIndex ??
+    getNextActRouteSectorIndices(run.actRouteGraph, sourceSectorIndex)[0];
+  if (targetSectorIndex === undefined) {
+    throw new Error(`Expected a route target after sector ${sourceSectorIndex}.`);
+  }
   const outcome = generateRouteOutcome({
     run,
     sector,
     route,
+    targetSectorIndex,
     availableCredits: session.credits
   });
 
   applyRouteOutcome(session, sector, route, outcome);
-  expect(advanceSector(run, session)).toBe(true);
+  expect(advanceSector(run, session, targetSectorIndex)).toBe(true);
 
   return { run, session };
 }

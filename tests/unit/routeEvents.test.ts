@@ -56,7 +56,7 @@ describe('route events', () => {
     });
 
     expect(first).toEqual(second);
-    expect(first.id).toBe(`STARBREAK-SMOKE:${sector.sectorId}:${kind}`);
+    expect(first.id).toBe(`STARBREAK-SMOKE:s1:to-2:${sector.sectorId}:${kind}`);
     expect(first.details.length).toBeGreaterThan(0);
   });
 
@@ -107,6 +107,8 @@ describe('route events', () => {
     expect(getEffectiveShipStats(contract, session).maxHull).toBe(contract.shipStats.maxHull + 1);
     expect(session.routeHistory).toEqual([
       expect.objectContaining({
+        sectorIndex: 1,
+        targetSectorIndex: 2,
         routeKind: 'repair',
         outcomeTitle: 'Patch Bay Invoice'
       })

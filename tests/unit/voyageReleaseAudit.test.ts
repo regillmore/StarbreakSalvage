@@ -26,7 +26,7 @@ describe('VoyageReleaseAudit', () => {
     expect(first.freshStandardMinutes).toBe(first.progressedStandardMinutes);
     expect(first.caveat).toContain('not player stopwatch time');
     expect(first.summary).toBe(
-      'Fresh standard 16.82m | progressed standard 16.82m | early extraction 11.08m | completionist 21.07m'
+      'Fresh standard 16.88m | progressed standard 16.88m | early extraction 11.08m | completionist 21.13m'
     );
   });
 });

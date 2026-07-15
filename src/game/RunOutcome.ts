@@ -17,15 +17,26 @@ export function getSectorCompletionReason(
 }
 
 export function getSaveRecordSectorCount(
-  run: Pick<RunSkeleton, 'sectors'>,
+  run: Pick<RunSkeleton, 'sectors' | 'acts' | 'actRouteGraph'>,
   currentSectorIndex: number,
   routeHistoryLength: number,
   reason: CombatEndReason,
-  completedVictorySectors: number = run.sectors.length
+  completedVictorySectors: number = run.acts.reduce(
+    (total, act) => total + act.routeDepth,
+    0
+  )
 ): number {
+  const playableSectorCount = run.acts.reduce((total, act) => total + act.routeDepth, 0);
   if (reason === 'victory') {
-    return Math.min(run.sectors.length, Math.max(0, completedVictorySectors));
+    return Math.min(playableSectorCount, Math.max(0, completedVictorySectors));
   }
-
-  return Math.max(0, currentSectorIndex, routeHistoryLength);
+  const currentAct = run.acts.find(
+    (act) =>
+      currentSectorIndex >= act.startSectorIndex && currentSectorIndex <= act.endSectorIndex
+  );
+  const completedBeforeCurrent = routeHistoryLength + Math.max(0, (currentAct?.index ?? 1) - 1);
+  return Math.min(
+    playableSectorCount,
+    Math.max(0, completedBeforeCurrent + (reason === 'sectorComplete' ? 1 : 0))
+  );
 }

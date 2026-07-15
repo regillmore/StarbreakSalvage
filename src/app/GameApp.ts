@@ -46,9 +46,10 @@ import {
   type RunActPlan
 } from '../game/ActPlan';
 import { createActEconomyProfile } from '../game/ActEconomy';
+import { getNextActRouteSectorIndices } from '../game/ActRouteGraph';
 import {
   createActTwoDebugScenario,
-  createDebugRouteHistoryThroughSector,
+  createDebugRouteHistoryBeforeSector,
   createTwoActDebugSummaryResult
 } from '../game/ActTwoDebug';
 import { createInterActJunctionChoices } from '../game/InterActJunction';
@@ -152,7 +153,7 @@ import type { ScenarioLabId } from '../game/ScenarioLab';
 import {
   RunSnapshotCoordinator,
   createRunSnapshotSummary,
-  type RunSnapshotV11
+  type RunSnapshotV12
 } from '../game/RunSnapshot';
 import { getOperationalInfluence } from '../game/OperationalMap';
 import { createCarrierInfluence } from '../game/CarrierCommand';
@@ -193,7 +194,7 @@ export class GameApp {
   private lastSaveUpdate: SaveUpdateResult | null = null;
   private summarySaved = false;
   private scenarioLabSession = false;
-  private runSnapshot: RunSnapshotV11 | null = null;
+  private runSnapshot: RunSnapshotV12 | null = null;
   private runSnapshotNotice: string | null = null;
   private snapshotEligible = false;
   private frameStats: FrameStats = {
@@ -851,7 +852,7 @@ export class GameApp {
     this.runSession.distanceTraveled = scenario.distanceBeforeFinale;
     this.runSession.credits = Math.max(this.runSession.credits, 72);
     this.runSession.salvage = Math.max(this.runSession.salvage, 18);
-    this.runSession.routeHistory = createDebugRouteHistoryThroughSector(
+    this.runSession.routeHistory = createDebugRouteHistoryBeforeSector(
       this.currentRun,
       scenario.finaleSectorIndex
     );
@@ -884,7 +885,10 @@ export class GameApp {
 
   private showDebugMissionAnthology(): void {
     this.resetDebugRunState();
-    this.runSession.currentSectorIndex = Math.min(6, this.currentRun.sectors.length - 1);
+    this.runSession.currentSectorIndex =
+      this.currentRun.actRouteGraph.nodes.find(
+        (node) => node.actId === 'act_core_descent' && node.layerIndex === 1 && node.laneIndex === 0
+      )?.sectorIndex ?? 0;
     resetMissionForCurrentSector(this.currentRun, this.runSession);
     this.runSession.credits = Math.max(this.runSession.credits, 36);
     this.runSession.salvage = Math.max(this.runSession.salvage, 8);
@@ -894,7 +898,10 @@ export class GameApp {
 
   private showDebugMissionOptional(): void {
     this.resetDebugRunState();
-    this.runSession.currentSectorIndex = Math.min(2, this.currentRun.sectors.length - 1);
+    this.runSession.currentSectorIndex =
+      this.currentRun.actRouteGraph.nodes.find(
+        (node) => node.actId === 'act_outer_rim' && node.layerIndex === 2 && node.laneIndex === 1
+      )?.sectorIndex ?? 0;
     resetMissionForCurrentSector(this.currentRun, this.runSession);
     this.prepareDebugMissionCombat();
     const stageId = this.runSession.mission.currentStageId;
@@ -1623,7 +1630,7 @@ export class GameApp {
         this.showRouteChoice();
       }
     };
-    const chooseRoute = (route: RouteOption) => {
+    const chooseRoute = (targetSectorIndex: number, route: RouteOption) => {
       let stage = commitOption(direct.id);
       if (!stage) return;
       if (stage.kind === 'relief') {
@@ -1637,7 +1644,7 @@ export class GameApp {
       if (stage.kind !== 'extraction') {
         throw new Error(`Post-sector route advanced to unexpected mission stage ${stage.kind}.`);
       }
-      this.handleRouteChoice(route);
+      this.handleRouteChoice(targetSectorIndex, route);
     };
     if (
       getInterActHandoffAfterSector(
@@ -1649,8 +1656,10 @@ export class GameApp {
       return;
     }
     const sourceSectorIndex = this.runSession.currentSectorIndex;
-    const targetSectorIndex =
-      sourceSectorIndex + 1 < this.currentRun.sectors.length ? sourceSectorIndex + 1 : null;
+    const targetSectorIndices = getNextActRouteSectorIndices(
+      this.currentRun.actRouteGraph,
+      sourceSectorIndex
+    );
     this.sceneManager.switchTo(
       new SectorTransitionScene(
         this.uiRoot,
@@ -1690,16 +1699,13 @@ export class GameApp {
             summary: direct.summary,
             available: true,
             unavailableReason: null,
-            nextSectorIndex:
-              this.runSession.currentSectorIndex + 1 < this.currentRun.sectors.length
-                ? this.runSession.currentSectorIndex + 1
-                : null
+            nextSectorIndices: targetSectorIndices
           },
           onChoose: chooseOption
         },
         {
           sourceSectorIndex,
-          targetSectorIndex,
+          targetSectorIndices,
           onChoose: chooseRoute
         },
         () =>
@@ -1822,8 +1828,10 @@ export class GameApp {
     }
     const schedule = this.getCurrentMissionSchedule();
     const sourceSectorIndex = this.runSession.currentSectorIndex;
-    const targetSectorIndex =
-      sourceSectorIndex + 1 < this.currentRun.sectors.length ? sourceSectorIndex + 1 : null;
+    const targetSectorIndices = getNextActRouteSectorIndices(
+      this.currentRun.actRouteGraph,
+      sourceSectorIndex
+    );
     const returnToRoutePlot = () => this.showRouteChoice();
     this.sceneManager.switchTo(
       new SectorTransitionScene(
@@ -1843,8 +1851,9 @@ export class GameApp {
         null,
         {
           sourceSectorIndex,
-          targetSectorIndex,
-          onChoose: (route) => this.handleRouteChoice(route)
+          targetSectorIndices,
+          onChoose: (targetSectorIndex, route) =>
+            this.handleRouteChoice(targetSectorIndex, route)
         },
         () =>
           this.suspendAtConstellation(
@@ -1856,13 +1865,14 @@ export class GameApp {
     this.checkpointRun('operationalMap', `Route plot after sector ${sourceSectorIndex + 1}`);
   }
 
-  private handleRouteChoice(route: RouteOption): void {
+  private handleRouteChoice(targetSectorIndex: number, route: RouteOption): void {
     const sector = getCurrentSector(this.currentRun, this.runSession);
     const outcome = generateRouteOutcome({
       run: this.currentRun,
       sector,
       route,
-      availableCredits: this.runSession.credits
+      availableCredits: this.runSession.credits,
+      targetSectorIndex
     });
 
     applyRouteOutcome(
@@ -1875,22 +1885,26 @@ export class GameApp {
     );
 
     if (route.kind === 'shop') {
-      this.showShop(route);
+      this.showShop(targetSectorIndex, route);
       return;
     }
 
-    this.showRouteEvent(route, outcome);
+    this.showRouteEvent(targetSectorIndex, route, outcome);
   }
 
-  private showRouteEvent(route: RouteOption, outcome: AppliedRouteOutcome): void {
+  private showRouteEvent(
+    targetSectorIndex: number,
+    route: RouteOption,
+    outcome: AppliedRouteOutcome
+  ): void {
     this.sceneManager.switchTo(
       new RouteEventScene(this.uiRoot, outcome, this.selectedContract, () => {
-        this.acquireRouteComponentAndAdvance(route);
+        this.acquireRouteComponentAndAdvance(targetSectorIndex, route);
       })
     );
   }
 
-  private showShop(route: RouteOption): void {
+  private showShop(targetSectorIndex: number, route: RouteOption): void {
     this.sceneManager.switchTo(
       new ShopScene(
         this.uiRoot,
@@ -1900,7 +1914,7 @@ export class GameApp {
         (itemId, price) => this.buyShopItem(itemId, price),
         () => this.rerollShop(),
         () => {
-          this.acquireRouteComponentAndAdvance(route);
+          this.acquireRouteComponentAndAdvance(targetSectorIndex, route);
         }
       )
     );
@@ -1970,7 +1984,7 @@ export class GameApp {
     return result;
   }
 
-  private advanceAfterSectorExtraction(): void {
+  private advanceAfterSectorExtraction(targetSectorIndex?: number): void {
     const missionResult = this.dispatchCurrentMission({
       id: `${this.runSession.mission.currentStageId}:extraction-complete`,
       type: 'completeExtraction'
@@ -1988,7 +2002,7 @@ export class GameApp {
       return;
     }
 
-    if (!advanceSector(this.currentRun, this.runSession)) {
+    if (!advanceSector(this.currentRun, this.runSession, targetSectorIndex)) {
       const victory = this.lastRunResult
         ? { ...this.lastRunResult, reason: 'victory' as const }
         : undefined;
@@ -2018,9 +2032,9 @@ export class GameApp {
 
     this.runSession.currentSectorIndex = sourceAct.endSectorIndex;
     resetMissionForCurrentSector(this.currentRun, this.runSession);
-    this.runSession.routeHistory = createDebugRouteHistoryThroughSector(
+    this.runSession.routeHistory = createDebugRouteHistoryBeforeSector(
       this.currentRun,
-      sourceAct.endSectorIndex + 1
+      sourceAct.endSectorIndex
     );
     this.lastRunResult = {
       ...createTwoActDebugSummaryResult(this.currentRun),
@@ -2077,7 +2091,10 @@ export class GameApp {
     );
   }
 
-  private acquireRouteComponentAndAdvance(route: RouteOption): void {
+  private acquireRouteComponentAndAdvance(
+    targetSectorIndex: number,
+    route: RouteOption
+  ): void {
     const sector = getCurrentSector(this.currentRun, this.runSession);
     const component = generateComponentSalvage({
       seed: this.currentRun.seed,
@@ -2109,7 +2126,7 @@ export class GameApp {
       subjectId: component.id,
       detailId: component.moduleId
     });
-    this.advanceAfterSectorExtraction();
+    this.advanceAfterSectorExtraction(targetSectorIndex);
   }
 
   private showNavigationShop(onBack: () => void = () => this.showSectorTransition()): void {
@@ -2484,8 +2501,8 @@ export class GameApp {
       this.runSession.routeHistory.length,
       result.reason,
       this.runSession.frontierDecision.decision === 'extract'
-        ? this.runSession.frontierDecision.actTwoSectorIndex + 1
-        : this.currentRun.sectors.length
+        ? this.currentRun.acts.slice(0, 2).reduce((total, act) => total + act.routeDepth, 0)
+        : this.currentRun.acts.reduce((total, act) => total + act.routeDepth, 0)
     );
     const actSaveContext = createRunActSaveContext(this.currentRun.acts, sectorsCleared);
     const sector = this.currentRun.sectors[this.runSession.currentSectorIndex];

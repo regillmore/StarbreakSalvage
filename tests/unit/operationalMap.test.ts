@@ -208,7 +208,7 @@ describe('OperationalMap', () => {
     expect(getMissionStage(schedule, session.mission.currentStageId).kind).toBe('relief');
   });
 
-  it('settles and replays all sixty fifteen-sector operation boundaries without accumulation', () => {
+  it('settles and replays every generated-node operation boundary without accumulation', () => {
     const run = generateRunSkeleton('OPERATIONAL-ENDURANCE');
     const operationNodes = run.expedition.nodes.filter((node) =>
       ['advance', 'detour', 'gate', 'pursuit'].includes(node.operationalRole)
@@ -237,10 +237,10 @@ describe('OperationalMap', () => {
       replayAwarded += result.salvageAwarded;
     }
 
-    expect(operationNodes).toHaveLength(60);
-    expect(state.history).toHaveLength(60);
-    expect(state.processedOperationIds).toHaveLength(60);
-    expect(salvageAwarded).toBe(45);
+    expect(operationNodes).toHaveLength(108);
+    expect(state.history).toHaveLength(64);
+    expect(state.processedOperationIds).toHaveLength(108);
+    expect(salvageAwarded).toBe(81);
     expect(replayAwarded).toBe(0);
     expect(state.history.every((record) => record.cleanup.rewardSettled)).toBe(true);
     expect(validateOperationalProgressState(run.expedition, state)).toEqual([]);

@@ -31,6 +31,10 @@ import type {
 } from './ExpeditionTypes';
 import { validateExpeditionGraph } from './ExpeditionValidation';
 import type { BoardingOperationPlan } from './BoardingOperation';
+import {
+  getDefaultActRoutePathSectorIndices,
+  type ActRouteGraph
+} from './ActRouteGraph';
 
 export type * from './ExpeditionTypes';
 export { validateExpeditionGraph } from './ExpeditionValidation';
@@ -42,6 +46,7 @@ export function createExpeditionGraph(options: {
   readonly sectors: readonly ExpeditionGraphSourceSector[];
   readonly rng: Rng;
   readonly boardingOperations?: readonly BoardingOperationPlan[];
+  readonly actRouteGraph?: ActRouteGraph;
 }): ExpeditionGraph {
   if (options.acts.length === 0 || options.sectors.length === 0) {
     throw new Error('Expedition graph requires at least one act and sector.');
@@ -300,6 +305,7 @@ export function createExpeditionGraph(options: {
       sectorId: sector.sectorId,
       sectorName: sector.sectorName,
       actId: sector.act.actId,
+      actSectorIndex: sector.act.actSectorIndex,
       entryNodeId: ingressNodeId,
       exitNodeIds: [gateNodeId],
       missionLegIds: sectorMissionLegs.map((leg) => leg.id),
@@ -378,7 +384,12 @@ export function createExpeditionGraph(options: {
   };
   const graph: ExpeditionGraph = {
     ...partialGraph,
-    capacity: createExpeditionCapacity(partialGraph)
+    capacity: createExpeditionCapacity(
+      partialGraph,
+      options.actRouteGraph
+        ? getDefaultActRoutePathSectorIndices(options.actRouteGraph)
+        : options.sectors.map((_sector, index) => index)
+    )
   };
   const errors = validateExpeditionGraph(graph);
 
@@ -819,15 +830,22 @@ function createGateRewardHooks(
   ]) as ExpeditionRewardHook[];
 }
 
-function createExpeditionCapacity(graph: Omit<ExpeditionGraph, 'capacity'>): ExpeditionCapacity {
+function createExpeditionCapacity(
+  graph: Omit<ExpeditionGraph, 'capacity'>,
+  routeSectorIndices: readonly number[]
+): ExpeditionCapacity {
   const baseline = resolveExpeditionPath({ ...graph, capacity: createEmptyCapacity() }, []);
   const nodeById = new Map(graph.nodes.map((node) => [node.id, node]));
+  const routeSectors = new Set(routeSectorIndices);
   const baselineNodeIds = baseline.nodeIds.filter((nodeId) => {
     const node = nodeById.get(nodeId);
-    return node ? isFreshMissionExpeditionNode(node) : false;
+    return node ? routeSectors.has(node.sectorIndex) && isFreshMissionExpeditionNode(node) : false;
   });
   const optionalNodeIds = graph.nodes
-    .filter((node) => node.optional && isFreshMissionExpeditionNode(node))
+    .filter(
+      (node) =>
+        routeSectors.has(node.sectorIndex) && node.optional && isFreshMissionExpeditionNode(node)
+    )
     .map((node) => node.id);
 
   return {

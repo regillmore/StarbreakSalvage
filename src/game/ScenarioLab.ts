@@ -281,7 +281,10 @@ export function createScenarioLabLaunch(options: {
       ? (options.run.boardingCampaign.operations.find(
           (operation) => operation.operationalRole === 'detour'
         )?.sectorIndex ?? definition.sectorIndex)
-      : definition.sectorIndex;
+      : definition.id === 'lab_frontier_endings'
+        ? (options.run.acts.find((act) => act.id === 'act_core_descent')?.endSectorIndex ??
+          definition.sectorIndex)
+        : definition.sectorIndex;
   session.currentSectorIndex = Math.min(boardingSectorIndex, options.run.sectors.length - 1);
   resetMissionForCurrentSector(options.run, session);
   session.credits = 48;

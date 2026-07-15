@@ -163,8 +163,11 @@ describe('run summary details', () => {
     );
     advanceSector(run, session);
 
-    expect(formatSectorConditionTimeline(run, session.routeOutcomes)).toBe(
-      'S2 Glitch shear: +12% scroll, +2% distance, +1 hazard, landmark beacon_line, -10% boss approach'
+    expect(formatSectorConditionTimeline(run, session.routeOutcomes)).toContain(
+      'Sheltered vector + Glitch shear'
+    );
+    expect(formatSectorConditionTimeline(run, session.routeOutcomes)).toContain(
+      'landmark convoy_shadow/beacon_line'
     );
   });
 

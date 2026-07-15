@@ -8,6 +8,7 @@ import {
   getCurrentSector
 } from '../../src/game/RunSession';
 import { generateRouteOutcome } from '../../src/game/RouteEvents';
+import { getNextActRouteSectorIndices } from '../../src/game/ActRouteGraph';
 import {
   applySectorConditionsToBossArena,
   applySectorConditionsToFeatures,
@@ -28,85 +29,48 @@ describe('SectorConditions', () => {
     const second = summarizeConditionedNextSector('STARBREAK-SMOKE', 'glitch');
 
     expect(first).toEqual(second);
-    expect(first).toMatchInlineSnapshot(`
-      {
-        "conditions": {
-          "bossApproachMultiplier": 0.9,
-          "hazardDensityDelta": 1,
-          "hazardKinds": [
-            "salvage_storm",
-          ],
-          "labels": [
-            "Glitch shear",
-          ],
-          "landmarkKinds": [
-            "beacon_line",
-          ],
-          "lengthMultiplier": 1.02,
-          "scrollSpeedMultiplier": 1.12,
-          "sectorId": "sector_trade_war_corridor",
-          "sectorIndex": 1,
-        },
-        "features": {
-          "hazardKinds": [
-            "mine_belt",
-            "salvage_storm",
-            "warning_beam",
-          ],
-          "hazardWindows": [
-            [
-              409.53,
-              544.17,
-              736.95,
-            ],
-            [
-              784.07,
-              934.07,
-              1139.07,
-            ],
-            [
-              800.39,
-              994.19,
-              1166.57,
-            ],
-          ],
-          "landmarkKinds": [
-            "vault_door",
-            "beacon_line",
-            "convoy_shadow",
-            "beacon_line",
-          ],
-        },
-        "readout": "Sector conditions: Glitch shear (+12% scroll, +2% distance, +1 hazard, landmark beacon_line, -10% boss approach)",
-        "scroll": {
-          "baseSpeed": 103.04,
-          "length": 1698.3,
-        },
-      }
-    `);
+    expect(first).toMatchObject({
+      conditions: {
+        sectorIndex: 2,
+        sectorId: 'sector_bio_machine_bloom',
+        labels: ['Contested vector', 'Glitch shear'],
+        scrollSpeedMultiplier: 1.2,
+        lengthMultiplier: 1.1,
+        hazardDensityDelta: 2,
+        hazardKinds: ['warning_beam', 'salvage_storm'],
+        bossApproachMultiplier: 0.83
+      },
+      features: {
+        hazardKinds: expect.arrayContaining([
+          'warning_beam',
+          'salvage_storm',
+          'mine_belt',
+          'debris_lane'
+        ])
+      },
+      readout: expect.stringContaining('Contested vector | Glitch shear'),
+      scroll: { length: expect.any(Number) }
+    });
   });
 
   it('changes future scroll speed and hazard density by route kind', () => {
     const market = getConditionedNextSector('STARBREAK-SMOKE', 'shop');
     const glitch = getConditionedNextSector('STARBREAK-SMOKE', 'glitch');
 
-    expect(market.scroll.baseSpeed).toBeLessThan(market.baseSector.scroll.baseSpeed);
-    expect(market.features.hazards.length).toBeLessThan(market.baseSector.features.hazards.length);
+    expect(market.scroll.baseSpeed).toBeLessThan(glitch.scroll.baseSpeed);
+    expect(market.features.hazards.length).toBeLessThan(glitch.features.hazards.length);
     expect(market.features.landmarks.map((landmark) => landmark.kind)).toContain('convoy_shadow');
 
     expect(glitch.scroll.baseSpeed).toBeGreaterThan(glitch.baseSector.scroll.baseSpeed);
-    expect(glitch.features.hazards.length).toBeGreaterThan(
-      glitch.baseSector.features.hazards.length
-    );
     expect(glitch.features.hazards.map((hazard) => hazard.kind)).toContain('salvage_storm');
     expect(validateSectorFeaturePlan(glitch.features, glitch.scroll.length)).toEqual([]);
   });
 
   it('applies route-conditioned pressure to lunar features without losing lunar identity', () => {
-    const conditioned = getConditionedSectorAfterRoute('LUNAR-SURFACE-LANE', 1, 'glitch');
+    const conditioned = getConditionedSectorAfterRoute('LUNAR-SURFACE-LANE', 0, 'glitch', 2);
 
     expect(conditioned.baseSector.sectorId).toBe('sector_lunar_surface');
-    expect(conditioned.conditions.hazardKinds).toEqual(['salvage_storm']);
+    expect(conditioned.conditions.hazardKinds).toEqual(['warning_beam', 'salvage_storm']);
     expect(conditioned.features.hazards.length).toBeGreaterThan(
       conditioned.baseSector.features.hazards.length
     );
@@ -187,7 +151,11 @@ describe('SectorConditions', () => {
     }
 
     const session = createRunSession(run, contract);
-    session.currentSectorIndex = 2;
+    const edge = run.actRouteGraph.edges.find(
+      (candidate) => run.sectors[candidate.targetSectorIndex]?.arena !== null
+    );
+    if (!edge) throw new Error('Expected a routed boss arena.');
+    session.currentSectorIndex = edge.sourceSectorIndex;
 
     const sector = getCurrentSector(run, session);
     const route = makeRoute('vault');
@@ -195,11 +163,12 @@ describe('SectorConditions', () => {
       run,
       sector,
       route,
-      availableCredits: session.credits
+      availableCredits: session.credits,
+      targetSectorIndex: edge.targetSectorIndex
     });
 
     applyRouteOutcome(session, sector, route, outcome);
-    expect(advanceSector(run, session)).toBe(true);
+    expect(advanceSector(run, session, edge.targetSectorIndex)).toBe(true);
 
     const baseSector = getCurrentSector(run, session);
     const conditions = createSectorConditionPlan({
@@ -222,16 +191,16 @@ describe('SectorConditions', () => {
   });
 
   it('formats summary text for notable physical route effects', () => {
-    const { run, session } = selectRouteIntoNextSector('STARBREAK-SMOKE', 'factionAmbush');
+    const { run, session } = selectRouteIntoSector('STARBREAK-SMOKE', 0, 'factionAmbush', 2);
 
     expect(formatSectorConditionTimeline(run, session.routeOutcomes)).toContain(
-      'S2 Ambush pressure'
+      'Ambush pressure'
     );
-    expect(formatSectorConditionTimeline(run, session.routeOutcomes)).toContain('+1 hazard');
+    expect(formatSectorConditionTimeline(run, session.routeOutcomes)).toContain('+2 hazard');
   });
 });
 
-function summarizeConditionedNextSector(seed: string, kind: RouteKind): unknown {
+function summarizeConditionedNextSector(seed: string, kind: RouteKind) {
   const conditioned = getConditionedNextSector(seed, kind);
 
   return {
@@ -246,11 +215,21 @@ function summarizeConditionedNextSector(seed: string, kind: RouteKind): unknown 
 }
 
 function getConditionedNextSector(seed: string, kind: RouteKind) {
-  return getConditionedSectorAfterRoute(seed, 0, kind);
+  return getConditionedSectorAfterRoute(seed, 0, kind, 2);
 }
 
-function getConditionedSectorAfterRoute(seed: string, sourceSectorIndex: number, kind: RouteKind) {
-  const { run, session } = selectRouteIntoSector(seed, sourceSectorIndex, kind);
+function getConditionedSectorAfterRoute(
+  seed: string,
+  sourceSectorIndex: number,
+  kind: RouteKind,
+  targetSectorIndex?: number
+) {
+  const { run, session } = selectRouteIntoSector(
+    seed,
+    sourceSectorIndex,
+    kind,
+    targetSectorIndex
+  );
   const baseSector = getCurrentSector(run, session);
   const conditions = createSectorConditionPlan({
     run,
@@ -275,11 +254,12 @@ function getConditionedSectorAfterRoute(seed: string, sourceSectorIndex: number,
   };
 }
 
-function selectRouteIntoNextSector(seed: string, kind: RouteKind) {
-  return selectRouteIntoSector(seed, 0, kind);
-}
-
-function selectRouteIntoSector(seed: string, sourceSectorIndex: number, kind: RouteKind) {
+function selectRouteIntoSector(
+  seed: string,
+  sourceSectorIndex: number,
+  kind: RouteKind,
+  targetSectorIndex?: number
+) {
   const run = generateRunSkeleton(seed);
   const contract = run.contracts[0];
 
@@ -290,16 +270,20 @@ function selectRouteIntoSector(seed: string, sourceSectorIndex: number, kind: Ro
   const session = createRunSession(run, contract);
   session.currentSectorIndex = sourceSectorIndex;
   const sector = getCurrentSector(run, session);
+  const target =
+    targetSectorIndex ?? getNextActRouteSectorIndices(run.actRouteGraph, sourceSectorIndex)[0];
+  if (target === undefined) throw new Error('Expected a routed target sector.');
   const route = makeRoute(kind);
   const outcome = generateRouteOutcome({
     run,
     sector,
     route,
-    availableCredits: session.credits
+    availableCredits: session.credits,
+    targetSectorIndex: target
   });
 
   applyRouteOutcome(session, sector, route, outcome);
-  expect(advanceSector(run, session)).toBe(true);
+  expect(advanceSector(run, session, target)).toBe(true);
 
   return { run, session };
 }

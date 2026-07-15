@@ -10,14 +10,23 @@ import {
   validateSectorNavigationState
 } from '../../src/game/SectorNavigation';
 import { createRunSnapshot, restoreRunSnapshot } from '../../src/game/RunSnapshot';
+import {
+  getActRouteLocalNode,
+  getDefaultActRoutePathSectorIndices,
+  getNextActRouteLocalIndices
+} from '../../src/game/ActRouteGraph';
 
 describe('sector navigation hub', () => {
   it('keeps one deterministic sector constellation throughout an act and refreshes the next act', () => {
     const run = generateRunSkeleton('NAV-HUB-SMOKE');
     const first = createSectorNavigationPlan({ run, sectorIndex: 0 });
     const repeat = createSectorNavigationPlan({ run, sectorIndex: 0 });
-    const progressed = createSectorNavigationPlan({ run, sectorIndex: 1 });
-    const nextAct = createSectorNavigationPlan({ run, sectorIndex: 5 });
+    const progressed = createSectorNavigationPlan({
+      run,
+      sectorIndex: 1,
+      visitedSectorIndices: [0, 1]
+    });
+    const nextAct = createSectorNavigationPlan({ run, sectorIndex: 9 });
 
     expect(repeat).toEqual(first);
     expect(progressed.id).toBe(first.id);
@@ -37,18 +46,39 @@ describe('sector navigation hub', () => {
       'shop'
     ]);
     expect(first.destinations.every((destination) => destination.available)).toBe(true);
-    expect(first.constellation.edges).toHaveLength(4);
+    expect(first.constellation.nodes.filter((node) => node.kind === 'sector')).toHaveLength(9);
+    expect(first.constellation.edges).toHaveLength(14);
   });
 
   it('keeps every future sector unresolved until its travel choice opens', () => {
     const run = generateRunSkeleton('CONSTELLATION-REVEAL-SMOKE');
-    const first = createSectorNavigationPlan({ run, sectorIndex: 0 }).constellation;
-    const second = createSectorNavigationPlan({ run, sectorIndex: 1 }).constellation;
+    const first = createSectorNavigationPlan({
+      run,
+      sectorIndex: 0,
+      visitedSectorIndices: [0],
+      choiceSectorIndices: [1, 2]
+    }).constellation;
+    const second = createSectorNavigationPlan({
+      run,
+      sectorIndex: 1,
+      visitedSectorIndices: [0, 1],
+      choiceSectorIndices: [3, 4]
+    }).constellation;
 
     expect(first.nodes.filter((node) => node.kind === 'sector').map((node) => node.status)).toEqual(
-      ['current', 'hidden', 'hidden', 'hidden', 'hidden']
+      ['current', 'choice', 'choice', 'hidden', 'hidden', 'hidden', 'hidden', 'hidden', 'hidden']
     );
     expect(first.edges.map((edge) => edge.status)).toEqual([
+      'choice',
+      'choice',
+      'hidden',
+      'hidden',
+      'hidden',
+      'hidden',
+      'hidden',
+      'hidden',
+      'hidden',
+      'hidden',
       'hidden',
       'hidden',
       'hidden',
@@ -56,9 +86,29 @@ describe('sector navigation hub', () => {
     ]);
     expect(
       second.nodes.filter((node) => node.kind === 'sector').map((node) => node.status)
-    ).toEqual(['completed', 'current', 'hidden', 'hidden', 'hidden']);
+    ).toEqual([
+      'completed',
+      'current',
+      'bypassed',
+      'choice',
+      'choice',
+      'hidden',
+      'hidden',
+      'hidden',
+      'hidden'
+    ]);
     expect(second.edges.map((edge) => edge.status)).toEqual([
       'completed',
+      'bypassed',
+      'choice',
+      'choice',
+      'bypassed',
+      'hidden',
+      'hidden',
+      'hidden',
+      'hidden',
+      'hidden',
+      'hidden',
       'hidden',
       'hidden',
       'hidden'
@@ -74,14 +124,14 @@ describe('sector navigation hub', () => {
     const layouts = new Set<string>();
     for (let index = 0; index < 64; index += 1) {
       const run = generateRunSkeleton(`NAVIGATION-SWEEP-${index}`);
-      const plan = createSectorNavigationPlan({ run, sectorIndex: index % 15 });
+      const plan = createSectorNavigationPlan({ run, sectorIndex: index % 27 });
       layouts.add(plan.layoutId);
       const sectorNodes = plan.constellation.nodes.filter((node) => node.kind === 'sector');
       const allPositions = [
         ...sectorNodes.map(({ x, y }) => `${x}:${y}`),
         ...plan.destinations.map(({ x, y }) => `${x}:${y}`)
       ];
-      expect(new Set(allPositions).size).toBe(10);
+      expect(new Set(allPositions).size).toBe(14);
       expect(
         [...sectorNodes, ...plan.destinations].every(
           ({ x, y }) => x >= 7 && x <= 93 && y >= 7 && y <= 93
@@ -96,8 +146,17 @@ describe('sector navigation hub', () => {
       ).toBe(true);
 
       const connected = new Set([sectorNodes[0]!.id]);
-      for (const edge of plan.constellation.edges) connected.add(edge.toId);
-      expect(connected.size).toBe(5);
+      let changed = true;
+      while (changed) {
+        changed = false;
+        for (const edge of plan.constellation.edges) {
+          if (connected.has(edge.fromId) && !connected.has(edge.toId)) {
+            connected.add(edge.toId);
+            changed = true;
+          }
+        }
+      }
+      expect(connected.size).toBe(9);
     }
     expect(layouts.size).toBe(4);
   });
@@ -111,11 +170,19 @@ describe('sector navigation hub', () => {
         label: 'Smoke Act',
         shortLabel: 'Act S',
         summary: 'A test constellation.',
-        sectors: Array.from({ length: 5 }, (_, index) => ({
-          id: `sector-${index}`,
-          sectorIndex: index,
-          sectorName: `Sector ${index + 1}`
-        }))
+        sectors: Array.from({ length: 9 }, (_, index) => {
+          const node = getActRouteLocalNode(index);
+          return {
+            id: `sector-${index}`,
+            sectorIndex: index,
+            sectorName: `Sector ${index + 1}`,
+            nodeLabel: node.nodeLabel,
+            layerIndex: node.layerIndex,
+            laneIndex: node.laneIndex,
+            difficulty: node.difficulty,
+            nextSectorIndices: getNextActRouteLocalIndices(index)
+          };
+        })
       },
       currentSectorIndex: 2,
       approaches: [
@@ -177,7 +244,7 @@ describe('sector navigation hub', () => {
       target: 'sectorTransition',
       label: 'Navigation hub visit checkpoint'
     });
-    expect(snapshot.version).toBe(11);
+    expect(snapshot.version).toBe(12);
     expect(restoreRunSnapshot(snapshot).session.navigation).toEqual(session.navigation);
 
     expect(synchronizeSectorNavigationState(session.navigation, 1)).toEqual(
@@ -189,5 +256,19 @@ describe('sector navigation hub', () => {
         visitedDestinationIds: ['shop', 'shop']
       })
     ).toContain('visited destinations must be unique');
+  });
+
+  it('creates a deterministic five-node path through each nine-node act graph', () => {
+    const run = generateRunSkeleton('FORKING-ACT-SMOKE');
+    const defaultPath = getDefaultActRoutePathSectorIndices(run.actRouteGraph);
+
+    expect(run.sectors).toHaveLength(27);
+    expect(run.actRouteGraph.layerWidths).toEqual([1, 2, 3, 2, 1]);
+    expect(run.actRouteGraph.nodes).toHaveLength(27);
+    expect(run.actRouteGraph.edges).toHaveLength(42);
+    expect(defaultPath).toHaveLength(15);
+    expect(defaultPath.slice(0, 5)).toEqual([0, 1, 3, 6, 8]);
+    expect(defaultPath.slice(5, 10)).toEqual([9, 10, 12, 15, 17]);
+    expect(defaultPath.slice(10)).toEqual([18, 19, 21, 24, 26]);
   });
 });

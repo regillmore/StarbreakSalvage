@@ -352,7 +352,7 @@ export function formatSectorPacingSummary(pacing: SectorPacingPlan): string | nu
 }
 
 export function formatSectorPacingTimeline(
-  run: Pick<RunSkeleton, 'seed' | 'unlockedIds' | 'sectors'>,
+  run: Pick<RunSkeleton, 'seed' | 'unlockedIds' | 'sectors' | 'actRouteGraph'>,
   routeOutcomes: readonly AppliedRouteOutcome[]
 ): string {
   const entries = run.sectors

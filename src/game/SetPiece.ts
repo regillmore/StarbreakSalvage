@@ -136,10 +136,13 @@ export function createSetPiecePlan(options: {
   readonly sectorIndex: number;
   readonly scrollLength: number;
   readonly bossArena?: BossArenaPlan | null;
+  readonly definitionId?: SetPieceId | null;
   readonly layoutId?: string;
   readonly layoutSeed?: string;
 }): SetPiecePlan | null {
-  const definitionId = SET_PIECE_BY_SECTOR[options.sectorIndex];
+  const definitionId = Object.prototype.hasOwnProperty.call(options, 'definitionId')
+    ? options.definitionId
+    : SET_PIECE_BY_SECTOR[options.sectorIndex];
 
   if (!definitionId) {
     return null;

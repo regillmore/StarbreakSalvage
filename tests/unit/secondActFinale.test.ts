@@ -28,10 +28,11 @@ describe('SecondActFinale', () => {
     const first = generateRunSkeleton('FINALE-088-SMOKE');
     const second = generateRunSkeleton('FINALE-088-SMOKE');
     const finale = getRequiredFinale(first);
+    const finaleSectorIndex = first.acts[1]!.endSectorIndex;
 
-    expect(getSecondActFinaleSectorIndex(first)).toBe(9);
+    expect(getSecondActFinaleSectorIndex(first)).toBe(finaleSectorIndex);
     expect(first.sectors.filter((sector) => sector.finale !== null)).toHaveLength(1);
-    expect(second.sectors[9]?.finale).toEqual(finale);
+    expect(second.sectors[finaleSectorIndex]?.finale).toEqual(finale);
     expect(finale.bossId).toBe('boss_core_wreck');
     expect(finale.bossName).toBe('The Core Wreck');
     expect(finale.bossHullBonus).toBeGreaterThan(0);

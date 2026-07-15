@@ -141,15 +141,15 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   expect(briefingMetricCount).toBeGreaterThanOrEqual(2);
   expect(briefingMetricCount).toBeLessThanOrEqual(4);
   await expect(page.getByTestId('navigation-map')).toBeVisible();
-  await expect(page.locator('.constellation-node[data-node-kind="sector"]')).toHaveCount(5);
+  await expect(page.locator('.constellation-node[data-node-kind="sector"]')).toHaveCount(9);
   await expect(page.locator('.constellation-node[data-node-kind="service"]')).toHaveCount(5);
-  await expect(page.locator('.navigation-map-routes line')).toHaveCount(4);
+  await expect(page.locator('.navigation-map-routes line')).toHaveCount(14);
   await expect(
     page.locator('.constellation-node[data-constellation-status="revealed"]')
   ).toHaveCount(0);
   await expect(
     page.locator('.constellation-node[data-node-kind="sector"][data-constellation-status="hidden"]')
-  ).toHaveCount(4);
+  ).toHaveCount(8);
   await expect(page.getByTestId('navigation-sector-2')).toContainText('Unknown');
   await expect(page.getByTestId('navigation-sector-2')).toContainText('UNRESOLVED');
   await expect(page.getByTestId('navigation-sector-2')).toBeDisabled();
@@ -198,7 +198,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
     /ASSAULT|hostiles|fortification/i
   );
   await expect(page.getByTestId('expedition-readout')).toContainText(
-    'Expedition Outer Debris Field Gate Operation | nodes 2/60'
+    'Expedition Outer Debris Field Gate Operation | nodes 2/108'
   );
   await expect(page.getByTestId('hint-readout')).toContainText('Hint');
   await expect(page.getByTestId('verb-readout')).toContainText('Special');
@@ -208,13 +208,13 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.locator('.debug-overlay')).toContainText('Theme redline/Debt Runner');
   await expect(page.locator('.debug-overlay')).toContainText('HUD standard');
   await expect(page.locator('.debug-overlay')).toContainText(
-    'Expedition expedition_s01_gate_operation 2/60 decisions 0'
+    'Expedition expedition_s01_gate_operation 2/108 decisions 0'
   );
   await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
   await expect(page.locator('.debug-overlay')).toContainText(
     'Contract contract_breach_levy | Objective assault/objective_breach_assault'
   );
-  await expect(page.locator('.debug-overlay')).toContainText('Expedition capacity 16.8-21.1m');
+  await expect(page.locator('.debug-overlay')).toContainText('Expedition capacity 16.8-21.0m');
   await expect(page.locator('.debug-overlay')).toContainText(
     /Viewport \d+x\d+ \w+ @[0-9.]+ DPR [0-9.]+/
   );
@@ -270,9 +270,12 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('mission-briefing')).toBeVisible();
   await expect(page.getByTestId('navigation-destination-optional')).toContainText('OPTIONAL');
   await expect(page.getByTestId('navigation-destination-route')).toContainText(
-    'S2 · Trade War Corridor'
+    /2A .* Trade War Corridor/
   );
-  await expect(page.getByTestId('navigation-destination-route')).toContainText('CHOOSE ROUTE');
+  await expect(page.getByTestId('navigation-destination-route')).toContainText('EASIER');
+  await expect(
+    page.locator('.constellation-node[data-destination-id^="route:"]')
+  ).toHaveCount(2);
   await expect(page.getByTestId('navigation-destination-route')).toHaveAttribute(
     'data-constellation-status',
     'choice'
@@ -281,7 +284,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('navigation-destination-continue')).toHaveCount(0);
   await expect(
     page.locator('.constellation-node[data-node-kind="sector"][data-constellation-status="choice"]')
-  ).toHaveCount(2);
+  ).toHaveCount(3);
   expect(
     await page
       .getByTestId('navigation-destination-route')
@@ -315,7 +318,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByRole('heading', { name: 'Choose Reward' })).toHaveCount(0);
   await expect(page.getByTestId('mission-briefing')).toBeVisible();
   await expect(page.getByRole('heading', { name: /Running Audit briefing/ })).toBeVisible();
-  await expect(page.getByTestId('navigation-destination-route')).toContainText('CHOOSE ROUTE');
+  await expect(page.getByTestId('navigation-destination-route')).toContainText('EASIER');
   await expect(page.getByTestId('navigation-route-options')).toBeVisible();
   await expect(page.locator('.navigation-flight-option')).toHaveCount(3);
   await expect(page.locator('.navigation-route-card')).toHaveCount(3);
@@ -604,14 +607,11 @@ test('reaches and instruments the deterministic lunar sector smoke path', async 
   await expectGameplaySector(page, 'Outer Debris Field', 1);
   await expect(page.locator('.debug-overlay')).toContainText('Sector S1 Outer Debris Field');
 
-  await forceCompleteSectorAndEnterNext(page, 'Trade War Corridor');
-  await expect(page.locator('.debug-overlay')).toContainText('Sector S2 Trade War Corridor');
-  await page.keyboard.press('H');
-  await expect(page.locator('.debug-overlay')).toContainText('Scenario environment-stress');
-  await expect(page.locator('.debug-overlay')).toContainText(/Hazards \d+ zones/);
-
-  await forceCompleteSectorAndEnterNext(page, 'Lunar Surface', { takeOptional: true });
-  await expectGameplaySector(page, 'Lunar Surface');
+  await forceCompleteSectorAndEnterNext(page, 'Lunar Surface', {
+    takeOptional: true,
+    routeDifficulty: 'harder'
+  });
+  await expectGameplaySector(page, 'Lunar Surface', 3);
   await expect(page.locator('.debug-overlay')).toContainText('Sector S3 Lunar Surface');
   await expect(page.locator('.debug-overlay')).toContainText(
     'Plan sector_lunar_surface/background_lunar_surface/paced'
@@ -692,9 +692,10 @@ test('exposes enemy-rich formation pressure under high-contrast narrow smoke', a
   await page.keyboard.press('Enter');
   await expectGameplaySector(page, 'Outer Debris Field', 1);
 
-  await forceCompleteSectorAndEnterNext(page, 'Trade War Corridor');
-  await forceCompleteSectorAndEnterNext(page, 'Lunar Surface');
-  await expectGameplaySector(page, 'Lunar Surface');
+  await forceCompleteSectorAndEnterNext(page, 'Lunar Surface', {
+    routeDifficulty: 'harder'
+  });
+  await expectGameplaySector(page, 'Lunar Surface', 3);
   await expect(page.getByTestId('cockpit-hud')).toHaveAttribute('data-hud-mode', 'contrast');
   await expect(page.locator('.debug-overlay')).toContainText('Viewport 390x700 narrow');
   await expect(page.locator('.debug-overlay')).toContainText(
@@ -804,14 +805,14 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
   await expect(page.locator('.debug-overlay')).toContainText('Junction Core Descent choices');
 
   await page.keyboard.press('I');
-  await expectGameplaySector(page, 'Bio-Machine Bloom', 6);
+  await expectGameplaySector(page, 'Trade War Corridor', 10);
   await expect(page.getByTestId('cockpit-hud')).toHaveAttribute('data-hud-mode', 'contrast');
   await expect(page.locator('.debug-overlay')).toContainText('Viewport 390x700 narrow');
   await expect(page.locator('.debug-overlay')).toContainText(
     'Act Act II Core Descent 1/5 escalated/elevated'
   );
   await expect(page.locator('.debug-overlay')).toContainText('Act pressure');
-  await expect(page.locator('.debug-overlay')).toContainText('Sector S6 Bio-Machine Bloom');
+  await expect(page.locator('.debug-overlay')).toContainText('Sector S10 Trade War Corridor');
   await expect(page.locator('.debug-overlay')).toContainText(/Plan .*tags:/);
   await expect(page.locator('.debug-overlay')).toContainText(/Objective .+/);
 
@@ -821,7 +822,7 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
   await expect(page.locator('.debug-overlay')).toContainText('Enemy budget');
 
   await page.keyboard.press('F');
-  await expectGameplaySector(page, 'The Core Wreck', 10);
+  await expectGameplaySector(page, 'The Core Wreck', 18);
   await expect(page.getByTestId('boss-readout')).toContainText('The Core Wreck');
   await expect(page.locator('.debug-overlay')).toContainText('Scenario finale-smoke');
   await expect(page.locator('.debug-overlay')).toContainText('Finale');
@@ -837,7 +838,7 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
   await expect(
     page.getByText(/Debug: .* smoke path ended before official resolution/)
   ).toBeVisible();
-  await expect(page.getByText(/Act II 4\/5 S9 .* \[/)).toBeVisible();
+  await expect(page.getByText(/Act II 4\/5 S16 .* \[/)).toBeVisible();
   await expect(page.getByText(/Junction: [+-]?\d+c\/[+-]?\d+kg/)).toBeVisible();
 
   await page.keyboard.press('G');
@@ -1316,7 +1317,10 @@ test('keeps the gameplay HUD and safe frame readable in a narrow viewport', asyn
 async function forceCompleteSectorAndEnterNext(
   page: Page,
   nextSectorName: string,
-  options: { readonly takeOptional?: boolean } = {}
+  options: {
+    readonly takeOptional?: boolean;
+    readonly routeDifficulty?: 'easier' | 'harder';
+  } = {}
 ): Promise<void> {
   await page.keyboard.press('8');
   await expect(page.getByTestId('sector-exit-toast')).toContainText(
@@ -1344,6 +1348,14 @@ async function forceCompleteSectorAndEnterNext(
     await expect(page.getByTestId('mission-briefing')).toBeVisible();
     await expect(page.getByTestId('navigation-route-options')).toBeVisible();
     await expect(page.locator('.navigation-route-card')).toHaveCount(3);
+  }
+
+  if (options.routeDifficulty === 'harder') {
+    await page
+      .locator('.constellation-node[data-destination-id^="route:"]')
+      .filter({ hasText: 'HARDER' })
+      .click();
+    await expect(page.getByTestId('navigation-route-options')).toBeVisible();
   }
 
   await chooseFirstRouteAndDepart(page);

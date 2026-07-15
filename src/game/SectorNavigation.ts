@@ -5,6 +5,10 @@ import {
   type ActConstellationSource
 } from './ActConstellation';
 import type { RunSkeleton } from './Generation';
+import {
+  getActRouteNode,
+  getNextActRouteSectorIndices
+} from './ActRouteGraph';
 
 export const SECTOR_NAVIGATION_DESTINATION_IDS = [
   'launch',
@@ -152,8 +156,10 @@ export function recordSectorNavigationVisit(
 }
 
 export function createSectorNavigationPlan(options: {
-  readonly run: Pick<RunSkeleton, 'seed' | 'acts' | 'sectors'>;
+  readonly run: Pick<RunSkeleton, 'seed' | 'acts' | 'sectors' | 'actRouteGraph'>;
   readonly sectorIndex: number;
+  readonly visitedSectorIndices?: readonly number[];
+  readonly choiceSectorIndices?: readonly number[];
   readonly serviceLocks?: SectorNavigationServiceLocks;
 }): SectorNavigationPlan {
   const sectorIndex = sanitizeSectorIndex(options.sectorIndex);
@@ -170,16 +176,46 @@ export function createSectorNavigationPlan(options: {
     summary: act.summary,
     sectors: options.run.sectors
       .slice(act.startSectorIndex, act.endSectorIndex + 1)
-      .map((candidate) => ({
-        id: candidate.sectorId,
-        sectorIndex: candidate.index - 1,
-        sectorName: candidate.sectorName
-      }))
+      .map((candidate) => {
+        const candidateIndex = candidate.index - 1;
+        const routeNode = getActRouteNode(options.run.actRouteGraph, candidateIndex);
+        if (!routeNode) {
+          throw new Error(`Navigation route node ${candidateIndex + 1} is unavailable.`);
+        }
+        return {
+          id: candidate.sectorId,
+          sectorIndex: candidateIndex,
+          sectorName: candidate.sectorName,
+          nodeLabel: routeNode.nodeLabel,
+          layerIndex: routeNode.layerIndex,
+          laneIndex: routeNode.laneIndex,
+          difficulty: routeNode.difficulty,
+          nextSectorIndices: getNextActRouteSectorIndices(
+            options.run.actRouteGraph,
+            candidateIndex
+          )
+        };
+      })
   };
+  const visitedSectorIndices = options.visitedSectorIndices ?? [sectorIndex];
+  const choiceSectorIndices = options.choiceSectorIndices ?? [];
+  const knownSectorIndices = new Set<number>([...visitedSectorIndices, ...choiceSectorIndices]);
+  for (const visitedSectorIndex of visitedSectorIndices) {
+    if (visitedSectorIndex === sectorIndex) continue;
+    for (const targetSectorIndex of getNextActRouteSectorIndices(
+      options.run.actRouteGraph,
+      visitedSectorIndex
+    )) {
+      knownSectorIndices.add(targetSectorIndex);
+    }
+  }
   const constellation = createActConstellationPlan({
     seed: options.run.seed,
     act: constellationSource,
-    currentSectorIndex: sectorIndex
+    currentSectorIndex: sectorIndex,
+    visitedSectorIndices,
+    knownSectorIndices: [...knownSectorIndices],
+    choiceSectorIndices
   });
   const rng = createRng(`${options.run.seed}:navigation-services:${act.id}`);
   const serviceDefinitions = rng.fork('service-order').shuffle(DESTINATIONS);

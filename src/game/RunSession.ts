@@ -8,6 +8,10 @@ import {
   getActEconomyCombatSalvageBonus,
   type ActEconomyProfile
 } from './ActEconomy';
+import {
+  getNextActRouteSectorIndices,
+  isActRouteTransition
+} from './ActRouteGraph';
 import { applyCombinedHooks } from './CombinedHooks';
 import {
   acquireComponent,
@@ -156,6 +160,7 @@ import {
 
 export interface RouteHistoryEntry {
   readonly sectorIndex: number;
+  readonly targetSectorIndex?: number;
   readonly actId?: ActId;
   readonly actName?: string;
   readonly actShortLabel?: string;
@@ -909,6 +914,7 @@ export function recordRouteChoice(
 ): void {
   session.routeHistory.push({
     sectorIndex: sector.index,
+    targetSectorIndex: outcome ? outcome.sectorIndex + 1 : undefined,
     actId: sector.act.actId,
     actName: sector.act.actName,
     actShortLabel: sector.act.actShortLabel,
@@ -1332,14 +1338,18 @@ export function getRewardModifiersForSector(
   session: RunSessionState,
   sectorIndex: number
 ): RouteRewardModifier[] {
+  const incomingRoutes = session.routeOutcomes.filter(
+    (outcome) => outcome.sectorIndex === sectorIndex
+  );
+  const incomingSourceIndices = new Set(
+    incomingRoutes.map((outcome) => outcome.sourceSectorIndex ?? Math.max(0, sectorIndex - 1))
+  );
   return [
-    ...session.routeOutcomes
-      .filter((outcome) => outcome.sectorIndex === sectorIndex)
-      .map((outcome) => outcome.effects.reward),
+    ...incomingRoutes.map((outcome) => outcome.effects.reward),
     ...session.objectiveHistory
       .filter((outcome) =>
         outcome.optional
-          ? outcome.sectorIndex + 1 === sectorIndex
+          ? incomingSourceIndices.has(outcome.sectorIndex)
           : outcome.sectorIndex === sectorIndex
       )
       .map((outcome) => outcome.reward)
@@ -1473,8 +1483,24 @@ export function incrementShopRerollCount(session: RunSessionState, sectorIndex: 
   return nextCount;
 }
 
-export function advanceSector(run: RunSkeleton, session: RunSessionState): boolean {
-  session.currentSectorIndex += 1;
+export function advanceSector(
+  run: RunSkeleton,
+  session: RunSessionState,
+  targetSectorIndex?: number
+): boolean {
+  const previousSectorIndex = session.currentSectorIndex;
+  const routeTargets = getNextActRouteSectorIndices(run.actRouteGraph, previousSectorIndex);
+  if (
+    targetSectorIndex !== undefined &&
+    routeTargets.length > 0 &&
+    !isActRouteTransition(run.actRouteGraph, previousSectorIndex, targetSectorIndex)
+  ) {
+    throw new Error(
+      `Illegal act route transition from ${previousSectorIndex + 1} to ${targetSectorIndex + 1}.`
+    );
+  }
+  session.currentSectorIndex =
+    targetSectorIndex ?? routeTargets[0] ?? previousSectorIndex + 1;
   for (const threat of run.apexHunts.threats) {
     const finale = threat.encounters.find((encounter) => encounter.stage === 'finale');
     const state = session.apexHunts.threats.find(

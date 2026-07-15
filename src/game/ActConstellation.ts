@@ -1,13 +1,24 @@
 import { createRng } from '../core/rng';
+import type { ActRouteDifficulty } from './ActRouteGraph';
 
-export type ActConstellationNodeStatus = 'completed' | 'current' | 'hidden' | 'choice';
+export type ActConstellationNodeStatus =
+  | 'completed'
+  | 'current'
+  | 'hidden'
+  | 'choice'
+  | 'bypassed';
 
-export type ActConstellationEdgeStatus = 'completed' | 'hidden' | 'choice';
+export type ActConstellationEdgeStatus = 'completed' | 'hidden' | 'choice' | 'bypassed';
 
 export interface ActConstellationSectorSource {
   readonly id: string;
   readonly sectorIndex: number;
   readonly sectorName: string;
+  readonly nodeLabel: string;
+  readonly layerIndex: number;
+  readonly laneIndex: number;
+  readonly difficulty: ActRouteDifficulty;
+  readonly nextSectorIndices: readonly number[];
 }
 
 export interface ActConstellationSource {
@@ -41,6 +52,9 @@ export interface ActConstellationNode {
   readonly revealOrder: number;
   readonly approachId: string | null;
   readonly defaultApproach: boolean;
+  readonly layerIndex: number;
+  readonly laneIndex: number;
+  readonly difficulty: ActRouteDifficulty;
 }
 
 export interface ActConstellationEdge {
@@ -78,41 +92,57 @@ const CONSTELLATION_LAYOUTS: readonly ConstellationLayout[] = [
   {
     id: 'broken-lance',
     slots: [
-      { x: 31, y: 17 },
-      { x: 43, y: 34 },
-      { x: 35, y: 51 },
-      { x: 57, y: 68 },
-      { x: 70, y: 84 }
+      { x: 50, y: 14 },
+      { x: 38, y: 31 },
+      { x: 63, y: 31 },
+      { x: 29, y: 49 },
+      { x: 50, y: 49 },
+      { x: 71, y: 49 },
+      { x: 39, y: 67 },
+      { x: 62, y: 67 },
+      { x: 50, y: 85 }
     ]
   },
   {
     id: 'signal-zigzag',
     slots: [
-      { x: 66, y: 17 },
-      { x: 47, y: 33 },
-      { x: 62, y: 50 },
-      { x: 38, y: 67 },
-      { x: 50, y: 84 }
+      { x: 48, y: 14 },
+      { x: 36, y: 31 },
+      { x: 61, y: 30 },
+      { x: 28, y: 49 },
+      { x: 49, y: 48 },
+      { x: 70, y: 50 },
+      { x: 37, y: 67 },
+      { x: 63, y: 68 },
+      { x: 51, y: 85 }
     ]
   },
   {
     id: 'falling-crown',
     slots: [
-      { x: 50, y: 16 },
-      { x: 33, y: 34 },
-      { x: 51, y: 50 },
-      { x: 69, y: 67 },
-      { x: 47, y: 84 }
+      { x: 52, y: 14 },
+      { x: 40, y: 30 },
+      { x: 65, y: 32 },
+      { x: 30, y: 50 },
+      { x: 51, y: 48 },
+      { x: 72, y: 49 },
+      { x: 40, y: 68 },
+      { x: 64, y: 66 },
+      { x: 49, y: 85 }
     ]
   },
   {
     id: 'hollow-spiral',
     slots: [
-      { x: 38, y: 17 },
-      { x: 65, y: 33 },
-      { x: 54, y: 50 },
-      { x: 32, y: 68 },
-      { x: 61, y: 84 }
+      { x: 50, y: 14 },
+      { x: 37, y: 32 },
+      { x: 64, y: 30 },
+      { x: 29, y: 48 },
+      { x: 50, y: 50 },
+      { x: 72, y: 48 },
+      { x: 38, y: 66 },
+      { x: 63, y: 68 },
+      { x: 50, y: 85 }
     ]
   }
 ];
@@ -121,6 +151,9 @@ export function createActConstellationPlan(options: {
   readonly seed: string;
   readonly act: ActConstellationSource;
   readonly currentSectorIndex: number;
+  readonly visitedSectorIndices?: readonly number[];
+  readonly knownSectorIndices?: readonly number[];
+  readonly choiceSectorIndices?: readonly number[];
   readonly approaches?: readonly ActConstellationApproachSource[];
 }): ActConstellationPlan {
   if (options.act.sectors.length === 0) {
@@ -141,33 +174,60 @@ export function createActConstellationPlan(options: {
 
   const rng = createRng(`${options.seed}:act-constellation:${options.act.id}`);
   const layout = rng.fork('layout').choice(CONSTELLATION_LAYOUTS);
+  const visited = new Set(options.visitedSectorIndices ?? [options.currentSectorIndex]);
+  const known = new Set(options.knownSectorIndices ?? [options.currentSectorIndex]);
+  const choices = new Set(options.choiceSectorIndices ?? []);
+  known.add(options.currentSectorIndex);
+  for (const sectorIndex of visited) known.add(sectorIndex);
+  for (const sectorIndex of choices) known.add(sectorIndex);
+  const currentLayerIndex = options.act.sectors[currentOffset]!.layerIndex;
   const sectorNodes = options.act.sectors.map((sector, offset): ActConstellationNode => {
     const slot = layout.slots[offset]!;
-    const status = getSectorStatus(offset, currentOffset);
+    const status = getSectorStatus(
+      sector,
+      options.currentSectorIndex,
+      currentLayerIndex,
+      visited,
+      known,
+      choices
+    );
     return {
       id: createSectorNodeId(sector.sectorIndex),
       kind: 'sector',
       sectorIndex: sector.sectorIndex,
       label: status === 'hidden' ? 'Uncharted signal' : sector.sectorName,
-      shortLabel: status === 'hidden' ? 'Unknown' : `S${offset + 1} · ${sector.sectorName}`,
-      summary: getSectorSummary(status, sector.sectorName, offset + 1, options.act.sectors.length),
+      shortLabel: status === 'hidden' ? 'Unknown' : `${sector.nodeLabel} · ${sector.sectorName}`,
+      summary: getSectorSummary(status, sector.sectorName, sector.nodeLabel),
       glyph: getSectorGlyph(status),
-      x: clampPercent(slot.x + rng.fork(`sector-${offset}:x`).int(-2, 2)),
+      x: clampPercent(slot.x + rng.fork(`sector-${offset}:x`).int(-1, 1)),
       y: clampPercent(slot.y + rng.fork(`sector-${offset}:y`).int(-1, 1)),
       status,
       stateLabel: getSectorStateLabel(status),
       revealOrder: offset,
       approachId: null,
-      defaultApproach: false
+      defaultApproach: false,
+      layerIndex: sector.layerIndex,
+      laneIndex: sector.laneIndex,
+      difficulty: sector.difficulty
     };
   });
   const currentNode = sectorNodes[currentOffset]!;
-  const sectorEdges = sectorNodes.slice(1).map((node, offset): ActConstellationEdge => ({
-    fromId: sectorNodes[offset]!.id,
-    toId: node.id,
-    status: getSectorEdgeStatus(offset + 1, currentOffset),
-    revealOrder: offset
-  }));
+  const sectorByIndex = new Map(sectorNodes.map((node) => [node.sectorIndex, node]));
+  const sectorEdges = options.act.sectors.flatMap((sector, sourceOffset) =>
+    sector.nextSectorIndices.flatMap((targetSectorIndex): readonly ActConstellationEdge[] => {
+      const sourceNode = sectorByIndex.get(sector.sectorIndex);
+      const targetNode = sectorByIndex.get(targetSectorIndex);
+      if (!sourceNode || !targetNode) return [];
+      return [
+        {
+          fromId: sourceNode.id,
+          toId: targetNode.id,
+          status: getSectorEdgeStatus(sourceNode, targetNode, visited, choices, known),
+          revealOrder: sourceOffset
+        }
+      ];
+    })
+  );
   const approachNodes = createApproachNodes(currentNode, options.approaches ?? []);
   const approachEdges = approachNodes.map((node, index): ActConstellationEdge => ({
     fromId: currentNode.id,
@@ -226,42 +286,66 @@ function createApproachNodes(
       stateLabel: approach.default ? 'DIRECT' : 'OPTIONAL',
       revealOrder: currentNode.revealOrder + index + 1,
       approachId: approach.id,
-      defaultApproach: approach.default
+      defaultApproach: approach.default,
+      layerIndex: currentNode.layerIndex,
+      laneIndex: currentNode.laneIndex,
+      difficulty: currentNode.difficulty
     };
   });
 }
 
-function getSectorStatus(offset: number, currentOffset: number): ActConstellationNodeStatus {
-  if (offset < currentOffset) return 'completed';
-  if (offset === currentOffset) return 'current';
+function getSectorStatus(
+  sector: ActConstellationSectorSource,
+  currentSectorIndex: number,
+  currentLayerIndex: number,
+  visited: ReadonlySet<number>,
+  known: ReadonlySet<number>,
+  choices: ReadonlySet<number>
+): ActConstellationNodeStatus {
+  if (sector.sectorIndex === currentSectorIndex) return 'current';
+  if (visited.has(sector.sectorIndex)) return 'completed';
+  if (choices.has(sector.sectorIndex)) return 'choice';
+  if (known.has(sector.sectorIndex) && sector.layerIndex <= currentLayerIndex) return 'bypassed';
   return 'hidden';
 }
 
-function getSectorEdgeStatus(offset: number, currentOffset: number): ActConstellationEdgeStatus {
-  if (offset <= currentOffset) return 'completed';
+function getSectorEdgeStatus(
+  source: ActConstellationNode,
+  target: ActConstellationNode,
+  visited: ReadonlySet<number>,
+  choices: ReadonlySet<number>,
+  known: ReadonlySet<number>
+): ActConstellationEdgeStatus {
+  if (visited.has(source.sectorIndex) && visited.has(target.sectorIndex)) return 'completed';
+  if (source.status === 'current' && choices.has(target.sectorIndex)) return 'choice';
+  if (known.has(source.sectorIndex) && known.has(target.sectorIndex)) return 'bypassed';
   return 'hidden';
 }
 
 function getSectorSummary(
   status: ActConstellationNodeStatus,
   sectorName: string,
-  actSectorNumber: number,
-  actSectorCount: number
+  nodeLabel: string
 ): string {
   if (status === 'completed') return `${sectorName} is charted and settled for this run.`;
   if (status === 'current') return `${sectorName} is the active operation.`;
-  return `Act sector ${actSectorNumber}/${actSectorCount} remains beyond reliable sensor range.`;
+  if (status === 'choice') return `${sectorName} is open for route commitment.`;
+  if (status === 'bypassed') return `${sectorName} was left behind by the committed path.`;
+  return `Act signal ${nodeLabel} remains beyond reliable sensor range.`;
 }
 
 function getSectorGlyph(status: ActConstellationNodeStatus): string {
   if (status === 'completed') return '✓';
-  if (status === 'current') return '◆';
+  if (status === 'current' || status === 'choice') return '◆';
+  if (status === 'bypassed') return '×';
   return '·';
 }
 
 function getSectorStateLabel(status: ActConstellationNodeStatus): string {
   if (status === 'completed') return 'CHARTED';
   if (status === 'current') return 'CURRENT';
+  if (status === 'choice') return 'READY';
+  if (status === 'bypassed') return 'BYPASSED';
   return 'UNRESOLVED';
 }
 

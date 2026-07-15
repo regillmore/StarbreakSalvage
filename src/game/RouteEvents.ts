@@ -42,6 +42,7 @@ export interface RouteOutcomeEffects {
 
 export interface AppliedRouteOutcome {
   readonly id: string;
+  readonly sourceSectorIndex?: number;
   readonly sectorIndex: number;
   readonly routeKind: RouteKind;
   readonly routeLabel: string;
@@ -63,12 +64,17 @@ export function generateRouteOutcome(options: {
   readonly sector: SectorRoute;
   readonly route: RouteOption;
   readonly availableCredits: number;
+  readonly targetSectorIndex?: number | null;
 }): AppliedRouteOutcome {
+  const targetSectorIndex =
+    options.targetSectorIndex === undefined
+      ? options.sector.index < options.run.sectors.length
+        ? options.sector.index
+        : null
+      : options.targetSectorIndex;
   const rng = createRng(
     `${options.run.seed}:route-outcome:${options.sector.sectorId}:${options.route.kind}`
   );
-  const targetSectorIndex =
-    options.sector.index < options.run.sectors.length ? options.sector.index : null;
   const actEconomy = createActEconomyProfile(options.sector);
   const routeCreditBonus = getActEconomyRouteCreditBonus(actEconomy, options.route.kind);
   const routeSalvageBonus = getActEconomyRouteSalvageBonus(actEconomy, options.route.kind);
@@ -320,12 +326,21 @@ function createOutcome(
     readonly run: RunSkeleton;
     readonly sector: SectorRoute;
     readonly route: RouteOption;
+    readonly targetSectorIndex?: number | null;
   },
-  outcome: Omit<AppliedRouteOutcome, 'id' | 'sectorIndex' | 'routeKind' | 'routeLabel'>
+  outcome: Omit<
+    AppliedRouteOutcome,
+    'id' | 'sourceSectorIndex' | 'sectorIndex' | 'routeKind' | 'routeLabel'
+  >
 ): AppliedRouteOutcome {
+  const targetSectorIndex =
+    options.targetSectorIndex === undefined
+      ? options.sector.index
+      : (options.targetSectorIndex ?? options.sector.index);
   return {
-    id: `${options.run.seed}:${options.sector.sectorId}:${options.route.kind}`,
-    sectorIndex: options.sector.index,
+    id: `${options.run.seed}:s${options.sector.index}:to-${targetSectorIndex + 1}:${options.sector.sectorId}:${options.route.kind}`,
+    sourceSectorIndex: options.sector.index - 1,
+    sectorIndex: targetSectorIndex,
     routeKind: options.route.kind,
     routeLabel: options.route.label,
     ...outcome

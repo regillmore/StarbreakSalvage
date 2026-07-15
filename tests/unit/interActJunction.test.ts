@@ -49,15 +49,17 @@ describe('InterActJunction', () => {
     );
   });
 
-  it('detects the deterministic Act I to Act II handoff after sector five', () => {
+  it('detects the deterministic Act I to Act II handoff after the converged finale', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
-    const handoff = getInterActTransitionHandoff(run.acts, 4, 5);
+    const sourceIndex = run.acts[0]!.endSectorIndex;
+    const targetIndex = run.acts[1]!.startSectorIndex;
+    const handoff = getInterActTransitionHandoff(run.acts, sourceIndex, targetIndex);
 
     expect(handoff?.sourceAct.shortLabel).toBe('Act I');
     expect(handoff?.targetAct.shortLabel).toBe('Act II');
-    expect(getInterActTransitionHandoff(run.acts, 3, 4)).toBeNull();
-    expect(getInterActHandoffAfterSector(run.acts, 4)).toEqual(handoff);
-    expect(getInterActHandoffAfterSector(run.acts, 3)).toBeNull();
+    expect(getInterActTransitionHandoff(run.acts, sourceIndex - 1, sourceIndex)).toBeNull();
+    expect(getInterActHandoffAfterSector(run.acts, sourceIndex)).toEqual(handoff);
+    expect(getInterActHandoffAfterSector(run.acts, sourceIndex - 1)).toBeNull();
   });
 
   it('applies a selected choice once and exposes explicit Act II effects', () => {
@@ -65,7 +67,7 @@ describe('InterActJunction', () => {
     const contract = run.contracts[0];
     const sourceAct = run.acts[0];
     const targetAct = run.acts[1];
-    const targetSector = run.sectors[5];
+    const targetSector = run.sectors[targetAct?.startSectorIndex ?? -1];
 
     if (!contract || !sourceAct || !targetAct || !targetSector) {
       throw new Error('Expected generated run parts.');

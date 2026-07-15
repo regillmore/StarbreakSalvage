@@ -173,7 +173,7 @@ describe('MissionDirector', () => {
 
   it('reprojects the STARBREAK-SMOKE sector-10 set piece and boss lock inside the gate operation', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
-    const sectorIndex = 9;
+    const sectorIndex = run.acts[1]!.endSectorIndex;
     const sector = run.sectors[sectorIndex]!;
     const schedule = createMissionSchedule(run.expedition, sectorIndex);
     const state = reachGate(schedule);

@@ -170,7 +170,7 @@ describe('CarrierCommand', () => {
       label: 'Carrier transit'
     });
     const restored = restoreRunSnapshot(snapshot);
-    expect(snapshot.version).toBe(11);
+    expect(snapshot.version).toBe(12);
     expect(snapshot.extensions.carrier.planId).toBe(run.carrierPlan.id);
     expect(restored.session.carrier).toEqual(session.carrier);
     expect(restored.run.carrierPlan).toEqual(run.carrierPlan);

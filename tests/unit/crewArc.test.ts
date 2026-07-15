@@ -182,7 +182,7 @@ describe('CrewArc', () => {
       target: 'sectorTransition',
       label: 'Crew decision'
     });
-    expect(snapshot.version).toBe(11);
+    expect(snapshot.version).toBe(12);
     expect(snapshot.extensions.crewArcs.planId).toBe(run.crewArcs.id);
     expect(restoreRunSnapshot(snapshot).session.crewArcs).toEqual(session.crewArcs);
   });

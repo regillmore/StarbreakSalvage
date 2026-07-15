@@ -11,24 +11,24 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
   },
   "eliteRewards": [
     [
-      "item_missile_splinter_warrant",
-      "Elite pool",
+      "item_ambush_insurance_stamp",
+      "elite source",
     ],
     [
-      "item_regolith_scoop_array",
-      "lunar source",
+      "item_arc_window_invoice",
+      "vault source",
     ],
     [
-      "item_oathbound_deflector",
-      "boss source",
+      "item_exit_toll_transponder",
+      "route source",
     ],
     [
       "item_phase_breaker_subpoena",
       "boss source",
     ],
     [
-      "item_scrap_saints_relay",
-      "Elite pool",
+      "item_boss_bounty_stamp",
+      "elite source",
     ],
   ],
   "rerollCosts": [
@@ -39,35 +39,43 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
     "count": 5,
     "items": [
       [
-        "item_credit_reroute_fuse",
-        12,
+        "item_convoy_receipt_printer",
+        18,
+        "shop source",
+      ],
+      [
+        "item_boss_bounty_stamp",
+        19,
+        "boss source",
+      ],
+      [
+        "item_magnetized_tithe_box",
+        15,
         "Shop pool",
+      ],
+      [
+        "item_phase_anchor_spool",
+        19,
+        "vault source",
       ],
       [
         "item_coupon_cascade_fuse",
-        12,
+        17,
         "shop source",
-      ],
-      [
-        "item_convoy_receipt_printer",
-        14,
-        "shop source",
-      ],
-      [
-        "item_market_echo_locator",
-        15,
-        "shop source",
-      ],
-      [
-        "item_laser_tax_stamp",
-        13,
-        "Shop pool",
       ],
     ],
   },
   "vaultRewards": [
     [
+      "item_plasma_bloom_filter",
+      "vault source",
+    ],
+    [
       "item_phase_wake_suture",
+      "vault source",
+    ],
+    [
+      "item_mining_laser_transit",
       "vault source",
     ],
     [
@@ -75,15 +83,7 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
       "vault source",
     ],
     [
-      "item_phase_grazer",
-      "vault source",
-    ],
-    [
-      "item_arc_window_invoice",
-      "vault source",
-    ],
-    [
-      "item_plasma_bloom_filter",
+      "item_excess_warhead_clause",
       "vault source",
     ],
   ],
@@ -101,24 +101,24 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
   },
   "eliteRewards": [
     [
-      "item_missile_splinter_warrant",
-      "Elite pool",
+      "item_ambush_insurance_stamp",
+      "elite source",
     ],
     [
-      "item_regolith_scoop_array",
-      "lunar source",
+      "item_arc_window_invoice",
+      "vault source",
     ],
     [
-      "item_oathbound_deflector",
-      "boss source",
+      "item_exit_toll_transponder",
+      "route source",
     ],
     [
       "item_phase_breaker_subpoena",
       "boss source",
     ],
     [
-      "item_scrap_saints_relay",
-      "Elite pool",
+      "item_boss_bounty_stamp",
+      "elite source",
     ],
   ],
   "rerollCosts": [
@@ -129,40 +129,48 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
     "count": 6,
     "items": [
       [
+        "item_convoy_receipt_printer",
+        17,
+        "shop source",
+      ],
+      [
+        "item_boss_bounty_stamp",
+        18,
+        "boss source",
+      ],
+      [
+        "item_magnetized_tithe_box",
+        14,
+        "Shop pool",
+      ],
+      [
         "item_credit_reroute_fuse",
-        11,
+        16,
         "Shop pool",
       ],
       [
         "item_coupon_cascade_fuse",
-        11,
+        16,
         "shop source",
       ],
       [
-        "item_convoy_receipt_printer",
-        13,
-        "shop source",
-      ],
-      [
-        "item_market_echo_locator",
-        14,
-        "shop source",
-      ],
-      [
-        "item_laser_tax_stamp",
-        12,
-        "Shop pool",
-      ],
-      [
-        "item_magnetized_tithe_box",
-        13,
-        "Shop pool",
+        "item_shield_revenge_contract",
+        19,
+        "vault source",
       ],
     ],
   },
   "vaultRewards": [
     [
+      "item_plasma_bloom_filter",
+      "vault source",
+    ],
+    [
       "item_phase_wake_suture",
+      "vault source",
+    ],
+    [
+      "item_mining_laser_transit",
       "vault source",
     ],
     [
@@ -170,19 +178,11 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
       "vault source",
     ],
     [
-      "item_phase_grazer",
-      "vault source",
-    ],
-    [
-      "item_arc_window_invoice",
-      "vault source",
-    ],
-    [
-      "item_plasma_bloom_filter",
-      "vault source",
-    ],
-    [
       "item_excess_warhead_clause",
+      "vault source",
+    ],
+    [
+      "item_revenge_beam",
       "vault source",
     ],
   ],

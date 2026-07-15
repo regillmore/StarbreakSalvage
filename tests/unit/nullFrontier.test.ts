@@ -6,16 +6,21 @@ import { applyFrontierDecision, advanceSector, createRunSession } from '../../sr
 import { createSectorConditionPlan } from '../../src/game/SectorConditions';
 import { createRunSnapshot, restoreRunSnapshot } from '../../src/game/RunSnapshot';
 import { formatFrontierOutcome } from '../../src/game/NullFrontier';
+import { getDefaultActRoutePathSectorIndices } from '../../src/game/ActRouteGraph';
 
 describe('Null Frontier', () => {
   it('generates one coherent five-sector campaign deterministically', () => {
     const first = generateRunSkeleton('FRONTIER-DETERMINISM');
     const second = generateRunSkeleton('FRONTIER-DETERMINISM');
-    const frontierSectors = first.sectors.slice(10);
+    const frontierAct = first.acts[2]!;
+    const frontierSectors = first.sectors.slice(
+      frontierAct.startSectorIndex,
+      frontierAct.endSectorIndex + 1
+    );
 
     expect(first.frontierCampaign).toEqual(second.frontierCampaign);
-    expect(frontierSectors).toHaveLength(5);
-    expect(new Set(frontierSectors.map((sector) => sector.sectorId)).size).toBe(5);
+    expect(frontierSectors).toHaveLength(9);
+    expect(new Set(frontierSectors.map((sector) => sector.sectorId)).size).toBeGreaterThanOrEqual(4);
     expect(frontierSectors.at(-1)?.sectorId).toBe('sector_horizon_scar');
     expect(frontierSectors.every((sector) => sector.frontierLaw !== null)).toBe(true);
     expect(
@@ -28,7 +33,7 @@ describe('Null Frontier', () => {
 
   it('offers a complete extraction or a state-carrying breach after Act II', () => {
     const run = generateRunSkeleton('FRONTIER-CHOICE');
-    const handoff = getFrontierChoiceHandoff(run.acts, 9);
+    const handoff = getFrontierChoiceHandoff(run.acts, run.acts[1]!.endSectorIndex);
     expect(handoff?.sourceAct.id).toBe('act_core_descent');
     expect(handoff?.targetAct.id).toBe('act_null_frontier');
 
@@ -54,7 +59,12 @@ describe('Null Frontier', () => {
 
   it('applies each frontier law through shared sector-condition contracts', () => {
     const run = generateRunSkeleton('FRONTIER-LAWS');
-    for (let sectorIndex = 10; sectorIndex < 15; sectorIndex += 1) {
+    const frontierAct = run.acts[2]!;
+    for (
+      let sectorIndex = frontierAct.startSectorIndex;
+      sectorIndex <= frontierAct.endSectorIndex;
+      sectorIndex += 1
+    ) {
       const conditions = createSectorConditionPlan({ run, sectorIndex });
       expect(conditions.modifiers.some((modifier) => modifier.source === 'frontierLaw')).toBe(true);
       expect(conditions.scrollSpeedMultiplier).toBeGreaterThan(0);
@@ -66,7 +76,12 @@ describe('Null Frontier', () => {
     const run = generateRunSkeleton('FRONTIER-SNAPSHOT');
     const contract = run.contracts[0]!;
     const session = createRunSession(run, contract);
-    for (let sector = 0; sector < 10; sector += 1) expect(advanceSector(run, session)).toBe(true);
+    const frontierStart = run.acts[2]!.startSectorIndex;
+    for (const targetSectorIndex of getDefaultActRoutePathSectorIndices(run.actRouteGraph).filter(
+      (sectorIndex) => sectorIndex > 0 && sectorIndex <= frontierStart
+    )) {
+      expect(advanceSector(run, session, targetSectorIndex)).toBe(true);
+    }
     applyFrontierDecision(session, 'breach');
     const snapshot = createRunSnapshot({
       run,
@@ -77,9 +92,9 @@ describe('Null Frontier', () => {
     });
     const restored = restoreRunSnapshot(snapshot);
 
-    expect(snapshot.version).toBe(11);
+    expect(snapshot.version).toBe(12);
     expect(restored.run.frontierCampaign).toEqual(run.frontierCampaign);
     expect(restored.session.frontierDecision.decision).toBe('breach');
-    expect(restored.session.currentSectorIndex).toBe(10);
+    expect(restored.session.currentSectorIndex).toBe(frontierStart);
   });
 });

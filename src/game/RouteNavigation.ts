@@ -17,6 +17,8 @@ export interface RouteNavigationReadModel {
   readonly title: string;
   readonly summary: string;
   readonly objective: string;
+  readonly difficultyLabel: string;
+  readonly difficultySummary: string;
   readonly options: readonly RouteNavigationOptionReadModel[];
 }
 
@@ -54,6 +56,10 @@ export function createRouteNavigationReadModel(options: {
       ? `${finishSentence(contract.summary)} ${finishSentence(contract.routePreview)}`
       : 'The final combat lane is settled. Choose the last outbound vector before closing the expedition ledger.',
     objective: objective ? `${objective.hudVerb} · ${objective.label}` : 'FINAL EXTRACTION',
+    difficultyLabel: target ? formatDifficultyLabel(target.act.actRouteDifficulty) : 'FINAL',
+    difficultySummary: target
+      ? formatDifficultySummary(target.act.actRouteDifficulty)
+      : 'The expedition closes beyond this signal.',
     options: source.routeOptions.map((route) => ({
       route,
       riskLabel: formatRouteRisk(route.risk),
@@ -68,6 +74,22 @@ export function createRouteNavigationReadModel(options: {
         .slice(0, 2)
     }))
   };
+}
+
+function formatDifficultyLabel(difficulty: string): string {
+  if (difficulty === 'easier') return 'EASIER SIGNAL';
+  if (difficulty === 'harder') return 'HARDER SIGNAL';
+  if (difficulty === 'standard') return 'STANDARD SIGNAL';
+  if (difficulty === 'finale') return 'CONVERGENCE';
+  return 'ENTRY';
+}
+
+function formatDifficultySummary(difficulty: string): string {
+  if (difficulty === 'easier') return 'Shorter operation · one fewer hazard window';
+  if (difficulty === 'harder') return 'Longer operation · one added hazard window';
+  if (difficulty === 'standard') return 'Baseline operation pressure';
+  if (difficulty === 'finale') return 'All surviving paths converge here';
+  return 'Act entry vector';
 }
 
 function formatRouteRisk(risk: number): RouteNavigationOptionReadModel['riskLabel'] {

@@ -6,6 +6,10 @@ import {
   type ActConstellationPlan,
   type ActConstellationSource
 } from '../game/ActConstellation';
+import {
+  getActRouteLocalNode,
+  getNextActRouteLocalIndices
+} from '../game/ActRouteGraph';
 import type { ExpeditionBranchOption, ExpeditionGraph } from '../game/ExpeditionTypes';
 import {
   createOperationalMapReadModel,
@@ -177,13 +181,23 @@ export class OperationalMapScene implements Scene {
       label: actPlan.label,
       shortLabel: actPlan.shortLabel,
       summary: `A shared route chart for ${actPlan.label}.`,
-      sectors: actPlan.sectorPlanIds.map((sectorPlanId) => {
+      sectors: actPlan.sectorPlanIds.map((sectorPlanId, localIndex) => {
         const sector = this.graph.sectors.find((candidate) => candidate.id === sectorPlanId);
         if (!sector) throw new Error(`Constellation sector ${sectorPlanId} is unavailable.`);
+        const routeNode = getActRouteLocalNode(localIndex);
         return {
           id: sector.id,
           sectorIndex: sector.sectorIndex,
-          sectorName: sector.sectorName
+          sectorName: sector.sectorName,
+          nodeLabel: routeNode.nodeLabel,
+          layerIndex: routeNode.layerIndex,
+          laneIndex: routeNode.laneIndex,
+          difficulty: routeNode.difficulty,
+          nextSectorIndices: getNextActRouteLocalIndices(localIndex).map(
+            (targetIndex) => this.graph.sectors.find(
+              (candidate) => candidate.id === actPlan.sectorPlanIds[targetIndex]
+            )?.sectorIndex
+          ).filter((value): value is number => value !== undefined)
         };
       })
     };

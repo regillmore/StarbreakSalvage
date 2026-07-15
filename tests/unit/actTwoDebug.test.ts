@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   createActTwoDebugScenario,
-  createDebugRouteHistoryThroughSector,
+  createDebugRouteHistoryBeforeSector,
   createTwoActDebugSummaryResult,
   formatRouteTagSummary,
   getDistanceBeforeSector
@@ -13,19 +13,25 @@ describe('Act II debug helpers', () => {
   it('finds deterministic Act II entry, finale, and travel distances', () => {
     const run = generateRunSkeleton('ACT-II-DEBUG');
     const scenario = createActTwoDebugScenario(run);
+    const actOne = run.acts[0]!;
+    const actTwo = run.acts[1]!;
 
     expect(scenario).toMatchObject({
-      actOneFinalSectorIndex: 4,
-      actTwoEntrySectorIndex: 5,
-      finaleSectorIndex: 9
+      actOneFinalSectorIndex: actOne.endSectorIndex,
+      actTwoEntrySectorIndex: actTwo.startSectorIndex,
+      finaleSectorIndex: actTwo.endSectorIndex
     });
-    expect(scenario?.distanceBeforeActTwo).toBe(getDistanceBeforeSector(run, 5));
-    expect(scenario?.distanceBeforeFinale).toBe(getDistanceBeforeSector(run, 9));
+    expect(scenario?.distanceBeforeActTwo).toBe(
+      getDistanceBeforeSector(run, actTwo.startSectorIndex)
+    );
+    expect(scenario?.distanceBeforeFinale).toBe(
+      getDistanceBeforeSector(run, actTwo.endSectorIndex)
+    );
   });
 
   it('creates a two-act smoke route history with act labels and route tags', () => {
     const run = generateRunSkeleton('ACT-II-DEBUG');
-    const history = createDebugRouteHistoryThroughSector(run, 9);
+    const history = createDebugRouteHistoryBeforeSector(run, run.acts[1]!.endSectorIndex);
 
     expect(history).toHaveLength(9);
     expect(history[0]).toMatchObject({
@@ -34,7 +40,8 @@ describe('Act II debug helpers', () => {
       outcomeTitle: 'debug routed'
     });
     expect(history.at(-1)).toMatchObject({
-      sectorIndex: 9,
+      sectorIndex: 16,
+      targetSectorIndex: 18,
       actShortLabel: 'Act II',
       actSectorIndex: 4
     });
@@ -43,7 +50,7 @@ describe('Act II debug helpers', () => {
 
   it('formats Act II route tags and summary results for smoke screens', () => {
     const run = generateRunSkeleton('ACT-II-DEBUG');
-    const actTwoSector = run.sectors[5];
+    const actTwoSector = run.sectors[run.acts[1]!.startSectorIndex];
 
     expect(actTwoSector).toBeDefined();
     expect(formatRouteTagSummary(actTwoSector?.routeOptions ?? [])).toMatch(/core|hazard|economy/);

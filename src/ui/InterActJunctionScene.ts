@@ -56,7 +56,7 @@ export class InterActJunctionScene implements Scene {
 
     const targetLine = document.createElement('p');
     targetLine.className = 'transition-copy';
-    targetLine.textContent = `Next: ${this.targetAct.shortLabel} ${this.targetAct.label} | ${this.targetAct.sectorCount} sectors | ${this.targetAct.rewardTier} rewards | ${this.targetAct.pressureTier} pressure`;
+    targetLine.textContent = `Next: ${this.targetAct.shortLabel} ${this.targetAct.label} | ${this.targetAct.routeDepth}-sector route | ${this.targetAct.rewardTier} rewards | ${this.targetAct.pressureTier} pressure`;
 
     const choiceGrid = document.createElement('div');
     choiceGrid.className = 'junction-grid';
@@ -150,7 +150,7 @@ export class InterActJunctionScene implements Scene {
         shortLabel: this.targetAct.shortLabel,
         index: this.targetAct.index,
         sectorIndex: 1,
-        sectorCount: this.targetAct.sectorCount,
+        sectorCount: this.targetAct.routeDepth,
         rewardTier: this.targetAct.rewardTier,
         pressureTier: this.targetAct.pressureTier,
         bossGate: this.targetAct.bossGate.kind,

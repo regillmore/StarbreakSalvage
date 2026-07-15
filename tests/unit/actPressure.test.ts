@@ -43,8 +43,8 @@ import { createWaveDirectorPlan } from '../../src/game/WaveDirector';
 describe('ActPressure', () => {
   it('selects conservative pressure tiers from explicit act and pacing context', () => {
     const actOne = createPressureFixture('STARBREAK-SMOKE', 0);
-    const actTwo = createPressureFixture('STARBREAK-SMOKE', 5);
-    const finale = createPressureFixture('STARBREAK-SMOKE', 9);
+    const actTwo = createPressureFixture('STARBREAK-SMOKE', 'actTwoEntry');
+    const finale = createPressureFixture('STARBREAK-SMOKE', 'actTwoFinale');
 
     expect(actOne.model.pressureKind).toBe('baseline');
     expect(actOne.model.routePressure).toBe(false);
@@ -65,7 +65,7 @@ describe('ActPressure', () => {
   });
 
   it('summarizes act pressure across enemy, hazard, environment, pickup, and item budgets', () => {
-    const fixture = createPressureFixture('STARBREAK-SMOKE', 9);
+    const fixture = createPressureFixture('STARBREAK-SMOKE', 'actTwoFinale');
     const enemyRoles = createEnemyRolePressureSummaryFromEnemies(
       [
         {
@@ -117,7 +117,7 @@ describe('ActPressure', () => {
   });
 
   it('keeps act-aware environment placement deterministic and fixed-world across viewport shapes', () => {
-    const fixture = createPressureFixture('STARBREAK-SMOKE', 9);
+    const fixture = createPressureFixture('STARBREAK-SMOKE', 'actTwoFinale');
     const narrowViewportPlan = createEnvironmentObjectPlacementPlan({
       sectorId: fixture.sector.sectorId as SectorId,
       sectorIndex: fixture.sectorIndex,
@@ -147,7 +147,7 @@ describe('ActPressure', () => {
   });
 
   it('keeps combined enemy and environment stress below documented budgets', () => {
-    const fixture = createPressureFixture('STARBREAK-SMOKE', 5);
+    const fixture = createPressureFixture('STARBREAK-SMOKE', 'actTwoEntry');
     const wavePlan = createWaveDirectorPlan({
       seed: `${fixture.run.seed}:combat:${fixture.sector.sectorId}`,
       objective: fixture.sector.objective,
@@ -244,8 +244,17 @@ describe('ActPressure', () => {
   });
 });
 
-function createPressureFixture(seed: string, sectorIndex: number) {
+function createPressureFixture(
+  seed: string,
+  requestedSector: number | 'actTwoEntry' | 'actTwoFinale'
+) {
   const run = generateRunSkeleton(seed);
+  const sectorIndex =
+    requestedSector === 'actTwoEntry'
+      ? run.acts[1]!.startSectorIndex
+      : requestedSector === 'actTwoFinale'
+        ? run.acts[1]!.endSectorIndex
+        : requestedSector;
   const sector = run.sectors[sectorIndex];
 
   if (!sector) {

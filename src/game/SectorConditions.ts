@@ -13,13 +13,15 @@ import type {
 } from './SectorFeatures';
 import type { SectorScrollPlan } from './ScrollState';
 import type { FactionFrontInfluence } from './FactionFront';
+import { getActRouteNode } from './ActRouteGraph';
 
 export type SectorConditionSource =
   | RouteKind
   | 'challenge_debt_ceiling'
   | 'unlock_bloom_dossier'
   | 'frontierLaw'
-  | 'factionFront';
+  | 'factionFront'
+  | 'actRouteGraph';
 
 export interface SectorConditionModifier {
   readonly id: string;
@@ -49,7 +51,7 @@ export interface SectorConditionPlan {
 }
 
 export interface SectorConditionPlanOptions {
-  readonly run: Pick<RunSkeleton, 'seed' | 'unlockedIds' | 'sectors'>;
+  readonly run: Pick<RunSkeleton, 'seed' | 'unlockedIds' | 'sectors' | 'actRouteGraph'>;
   readonly sectorIndex: number;
   readonly routeOutcomes?: readonly AppliedRouteOutcome[];
   readonly factionFront?: FactionFrontInfluence | null;
@@ -184,6 +186,7 @@ export function createSectorConditionPlan(
   }
 
   const modifiers = [
+    ...createActRouteDifficultyModifiers(options),
     ...createRouteConditionModifiers(options),
     ...createMetaConditionModifiers(options),
     ...createFrontierLawModifiers(options),
@@ -397,7 +400,7 @@ export function formatSectorConditionReadout(conditions: SectorConditionPlan): s
 }
 
 export function formatSectorConditionTimeline(
-  run: Pick<RunSkeleton, 'seed' | 'unlockedIds' | 'sectors'>,
+  run: Pick<RunSkeleton, 'seed' | 'unlockedIds' | 'sectors' | 'actRouteGraph'>,
   routeOutcomes: readonly AppliedRouteOutcome[]
 ): string {
   const lastReachedSectorIndex = routeOutcomes.reduce(
@@ -418,6 +421,32 @@ export function formatSectorConditionTimeline(
     .filter((summary): summary is string => summary !== null);
 
   return entries.length > 0 ? entries.join(' | ') : 'standard conditions';
+}
+
+function createActRouteDifficultyModifiers(
+  options: SectorConditionPlanOptions
+): SectorConditionModifier[] {
+  const node = getActRouteNode(options.run.actRouteGraph, options.sectorIndex);
+  if (!node || (node.difficulty !== 'easier' && node.difficulty !== 'harder')) return [];
+  const easier = node.difficulty === 'easier';
+  return [
+    {
+      id: `${options.run.actRouteGraph.id}:difficulty:${options.sectorIndex}`,
+      targetSectorIndex: options.sectorIndex,
+      sourceSectorIndex: null,
+      source: 'actRouteGraph',
+      label: easier ? 'Sheltered vector' : 'Contested vector',
+      summary: easier
+        ? 'A quieter signal shortens the operation and suppresses one hazard window.'
+        : 'A hostile signal extends the operation and adds an active hazard window.',
+      scrollSpeedMultiplier: easier ? 0.95 : 1.07,
+      lengthMultiplier: easier ? 0.94 : 1.08,
+      hazardDensityDelta: easier ? -1 : 1,
+      landmarkKind: easier ? 'convoy_shadow' : 'beacon_line',
+      hazardKind: easier ? null : 'warning_beam',
+      bossApproachMultiplier: easier ? 1.08 : 0.92
+    }
+  ];
 }
 
 export function formatSectorConditionSummary(conditions: SectorConditionPlan): string | null {

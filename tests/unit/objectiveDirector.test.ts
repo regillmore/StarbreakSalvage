@@ -5,7 +5,12 @@ import { getEnvironmentObjectsForSector } from '../../src/content/environmentObj
 import { createRng } from '../../src/core/rng';
 import { createDefaultCombatBounds } from '../../src/game/CombatGeometry';
 import { createCombatState, type CombatState } from '../../src/game/CombatState';
-import { generateRunSkeleton } from '../../src/game/Generation';
+import { generateRunSkeleton, type RunSkeleton } from '../../src/game/Generation';
+import {
+  getDefaultActRoutePathSectorIndices,
+  getNextActRouteSectorIndices
+} from '../../src/game/ActRouteGraph';
+import { generateRouteOutcome } from '../../src/game/RouteEvents';
 import { createEnvironmentObjectPlacementPlan } from '../../src/game/EnvironmentObjectPlacement';
 import {
   createMissionCombatProjection,
@@ -25,20 +30,21 @@ import {
 } from '../../src/game/ObjectiveDirector';
 import {
   createRunSession,
+  applyRouteOutcome,
   getRewardModifiersForSector,
   recordMissionObjectiveOutcome
 } from '../../src/game/RunSession';
 
 describe('objective grammar and mission anthology', () => {
-  it('authors fifteen deterministic contracts across all acts and requested verbs', () => {
+  it('authors fifteen deterministic contracts across the five-node paths of all acts', () => {
     const first = generateRunSkeleton('OBJECTIVE-ANTHOLOGY-KNOWN-SEED');
     const second = generateRunSkeleton('OBJECTIVE-ANTHOLOGY-KNOWN-SEED');
-    const firstSchedule = first.expedition.sectors.map((_, index) => {
+    const firstSchedule = getDefaultActRoutePathSectorIndices(first.actRouteGraph).map((index) => {
       const schedule = createMissionSchedule(first.expedition, index);
       const objective = getMissionObjective(schedule.contract!.primaryObjectiveId);
       return [schedule.contract!.id, objective.verb, schedule.contract!.eligibleActIds[0]];
     });
-    const secondSchedule = second.expedition.sectors.map((_, index) => {
+    const secondSchedule = getDefaultActRoutePathSectorIndices(second.actRouteGraph).map((index) => {
       const schedule = createMissionSchedule(second.expedition, index);
       const objective = getMissionObjective(schedule.contract!.primaryObjectiveId);
       return [schedule.contract!.id, objective.verb, schedule.contract!.eligibleActIds[0]];
@@ -82,10 +88,11 @@ describe('objective grammar and mission anthology', () => {
     ).toBeGreaterThanOrEqual(8);
   });
 
-  it('keeps the sector-10 boss clause reachable in its single required operation', () => {
+  it('keeps the Act II convergence boss clause reachable in its single required operation', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
-    const sector = run.sectors[9]!;
-    const schedule = createMissionSchedule(run.expedition, 9);
+    const sectorIndex = run.acts[1]!.endSectorIndex;
+    const sector = run.sectors[sectorIndex]!;
+    const schedule = createMissionSchedule(run.expedition, sectorIndex);
     const projection = createMissionCombatProjection(schedule, reachCombat(schedule), sector);
     const plan = projection.missionObjective!;
     const observedCombatEndDistance = 2_499;
@@ -195,16 +202,22 @@ describe('objective grammar and mission anthology', () => {
 
   it('projects materially different pacing and world contracts for escape and sabotage play', () => {
     const run = generateRunSkeleton('OBJECTIVE-WORLD-PROJECTION');
-    const sabotageSchedule = createMissionSchedule(run.expedition, 6);
+    const sabotageIndex = findSectorIndexForVerb(run, 'sabotage');
+    const escapeIndex = findSectorIndexForVerb(run, 'escape');
+    const sabotageSchedule = createMissionSchedule(run.expedition, sabotageIndex);
     const sabotageState = reachCombat(sabotageSchedule);
     const sabotage = createMissionCombatProjection(
       sabotageSchedule,
       sabotageState,
-      run.sectors[6]!
+      run.sectors[sabotageIndex]!
     );
-    const escapeSchedule = createMissionSchedule(run.expedition, 7);
+    const escapeSchedule = createMissionSchedule(run.expedition, escapeIndex);
     const escapeState = reachCombat(escapeSchedule);
-    const escape = createMissionCombatProjection(escapeSchedule, escapeState, run.sectors[7]!);
+    const escape = createMissionCombatProjection(
+      escapeSchedule,
+      escapeState,
+      run.sectors[escapeIndex]!
+    );
 
     expect(sabotage.objectiveWorld).toMatchObject({
       environmentMode: 'destructibles',
@@ -212,13 +225,13 @@ describe('objective grammar and mission anthology', () => {
     });
     expect(sabotage.missionObjective?.verb).toBe('sabotage');
     expect(escape.missionObjective?.verb).toBe('escape');
-    expect(escape.sector.scroll.length).toBeLessThan(run.sectors[7]!.scroll.length);
+    expect(escape.sector.scroll.length).toBeLessThan(run.sectors[escapeIndex]!.scroll.length);
     expect(escape.sector.objective.requiredWaves).toBeLessThanOrEqual(
-      run.sectors[7]!.objective.requiredWaves
+      run.sectors[escapeIndex]!.objective.requiredWaves
     );
     const sabotageObjects = createEnvironmentObjectPlacementPlan({
       sectorId: sabotage.sector.sectorId,
-      sectorIndex: 6,
+      sectorIndex: sabotageIndex,
       scrollLength: sabotage.sector.scroll.length,
       rng: createRng('OBJECTIVE-SABOTAGE-PLACEMENT'),
       definitions: getEnvironmentObjectsForSector(sabotage.sector.sectorId).filter(
@@ -268,7 +281,7 @@ describe('objective grammar and mission anthology', () => {
     });
     state = result.state;
 
-    expect(schedule.contract?.branchPolicy).toBe('afterSuccess');
+    expect(schedule.contract?.branchPolicy).toBe('afterPartial');
     expect(state.currentStageId).toBe(schedule.branchStageId);
     expect(getMissionBranchOptions(schedule, state).map((option) => option.default)).toEqual([
       true,
@@ -334,13 +347,29 @@ describe('objective grammar and mission anthology', () => {
     });
 
     expect(getRewardModifiersForSector(session, 0)).toHaveLength(1);
-    expect(getRewardModifiersForSector(session, 1)).toContainEqual(
+    const targetSectorIndex = getNextActRouteSectorIndices(run.actRouteGraph, 0)[0]!;
+    const route = sector.routeOptions[0]!;
+    applyRouteOutcome(
+      session,
+      sector,
+      route,
+      generateRouteOutcome({
+        run,
+        sector,
+        route,
+        targetSectorIndex,
+        availableCredits: session.credits
+      })
+    );
+    expect(getRewardModifiersForSector(session, targetSectorIndex)).toContainEqual(
       expect.objectContaining({ choiceBonus: 2, creditBonus: 3 })
     );
   });
 
   it('applies an explicit failure consequence without corrupting run completion state', () => {
-    const { run, schedule, plan, sector, state } = createFixture(7);
+    const run = generateRunSkeleton('OBJECTIVE-FAILURE-POLICY');
+    const sectorIndex = findSectorIndexForFailurePolicy(run, 'continueWithPenalty');
+    const { schedule, plan, sector, state } = createFixtureForRun(run, sectorIndex);
     const session = createRunSession(run, run.contracts[0]!);
     state.scrollDistance = sector.scroll.length;
     state.nextSpawnIndex = state.spawnSchedule.length;
@@ -386,6 +415,10 @@ describe('objective grammar and mission anthology', () => {
 
 function createFixture(sectorIndex: number) {
   const run = generateRunSkeleton(`OBJECTIVE-FIXTURE-${sectorIndex}`);
+  return createFixtureForRun(run, sectorIndex);
+}
+
+function createFixtureForRun(run: RunSkeleton, sectorIndex: number) {
   const schedule = createMissionSchedule(run.expedition, sectorIndex);
   const contract = selectMissionContract(run.expedition, sectorIndex);
   const definition = getMissionObjective(contract.primaryObjectiveId);
@@ -397,6 +430,26 @@ function createFixture(sectorIndex: number) {
     sectorLength: sector.scroll.length
   });
   return { run, schedule, plan, sector, state };
+}
+
+function findSectorIndexForVerb(run: RunSkeleton, verb: string): number {
+  const sectorIndex = run.expedition.sectors.findIndex((_, index) => {
+    const schedule = createMissionSchedule(run.expedition, index);
+    return getMissionObjective(schedule.contract!.primaryObjectiveId).verb === verb;
+  });
+  if (sectorIndex < 0) throw new Error(`Expected mission verb ${verb}.`);
+  return sectorIndex;
+}
+
+function findSectorIndexForFailurePolicy(
+  run: RunSkeleton,
+  policy: NonNullable<MissionSchedule['contract']>['failurePolicy']
+): number {
+  const sectorIndex = run.expedition.sectors.findIndex((_, index) =>
+    createMissionSchedule(run.expedition, index).contract?.failurePolicy === policy
+  );
+  if (sectorIndex < 0) throw new Error(`Expected mission failure policy ${policy}.`);
+  return sectorIndex;
 }
 
 function reachCombat(schedule: MissionSchedule): MissionDirectorState {

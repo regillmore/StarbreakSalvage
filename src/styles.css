@@ -2534,6 +2534,12 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
   stroke-dasharray: 0.18 0.2;
 }
 
+.navigation-map-routes line[data-status='bypassed'] {
+  opacity: 0.18;
+  stroke: rgba(135, 171, 185, 0.42);
+  stroke-dasharray: 0.12 0.18;
+}
+
 @keyframes constellation-route-reveal {
   from {
     opacity: 0;
@@ -2657,6 +2663,15 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
   opacity: 0.18;
   border-style: dashed;
   filter: saturate(0.35);
+}
+
+.constellation-node[data-node-kind='sector'][data-constellation-status='bypassed'] {
+  opacity: 0.42;
+  border-color: rgba(135, 171, 185, 0.34);
+  border-style: dashed;
+  color: #87abb9;
+  background: rgba(9, 18, 31, 0.82);
+  filter: saturate(0.45);
 }
 
 .constellation-node[data-node-kind='approach'] {

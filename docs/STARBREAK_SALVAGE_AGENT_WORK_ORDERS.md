@@ -2603,6 +2603,36 @@ Briefing and flat post-sector modes use the existing `sectorTransition` target, 
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 98 Vitest files and 604 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Focused Chromium coverage suspends the opening briefing with Escape, resumes it by keyboard, suspends an unresolved three-route plot by pointer, and resumes the same three options with the correct checkpoint copy. The build emits 918.80 kB minified/250.23 kB gzip initial JavaScript and 64.68/13.33 kB CSS, a 1.02/0.23 kB JavaScript and 0.22/0.05 kB CSS increase over work order 141. No dependency, simulation cap, generated plan, RNG stream, permanent-save version, snapshot version, or warning threshold changed.
 
+## Work order 143 - Forking act route constellations
+
+Goal: replace each act's linear five-sector chain with a deterministic Star Fox-style 1-2-3-2-1 route graph that contains nine authored sector nodes but carries the player through exactly five without backtracking.
+
+Prompt:
+
+> Refit act structure, generation, routing, and constellation presentation around a 1-2-3-2-1 directed graph. Each act owns nine total sector nodes arranged across five forward-only layers, while one run path visits exactly one node per layer. Every middle-layer decision should present a clearly easier and harder destination, and route selection must commit both the destination node and one of its existing three approaches. Preserve one paired optional challenge per visited sector, direct same-act launch, act convergence/refit/frontier/victory handoffs, deterministic seeds, mission contracts, bosses, set pieces, route effects, rewards, summaries, capacity estimates, suspension, accessibility, and static hosting. Retire incompatible deployed run snapshots safely, add exhaustive graph and route regressions, update project documents, inspect the result, and run release checks.
+
+Acceptance criteria:
+
+- Every act contains nine deterministic nodes in layer widths `1-2-3-2-1`, with forward-only legal edges and no edge that remains in or returns to an earlier layer.
+- Every complete legal path contains exactly five unique nodes, reaches the single convergence finale, and can never visit an unchosen sibling later. All nine nodes are reachable across the act's legal paths.
+- At each of the first three route forks, the current node exposes exactly one easier and one harder destination. Selecting either destination then selects one of that destination's three established route approaches and launches it directly after settlement.
+- The constellation shows all nine positions while keeping unknown future signals anonymous. Legal destinations share the established beige ready state and pulse; bypassed siblings become readable non-actionable chart history.
+- Mission contract position, act-sector readouts, pressure, objective variants, boss gates, set pieces, inter-act handoffs, rewards, summaries, debug distance, and release-duration accounting use route layer or explicit topology rather than raw generated-array position.
+- Generation creates 27 sector candidates and 42 intra-act edges but standard/completionist estimates, save records, and victory accounting retain the 15-sector playable voyage. Operational idempotency remains valid across all generated candidates.
+- The changed generated plan uses snapshot v12 and safely retires v11 without altering permanent progression. Pointer, Tab, spatial arrows, reduced motion, performance, high contrast, narrow layout, Pages paths, and fixed-step combat remain valid.
+
+Status: implemented. `ActRouteGraph` is the explicit deterministic topology authority: it owns the five layer widths, nine-node act coordinates, 14 legal edges per act, node labels, difficulty signals, transition validation, default audit path, and route queries. The middle three layers now always resolve to an easier/harder pair; exhaustive tests enumerate eight legal paths per act, prove five unique forward layers per path, and prove all nine nodes remain reachable.
+
+Run generation now authors nine candidates per act and supplies the shared graph to expedition generation, sector navigation, route outcomes, progression, summaries, pacing, hazards, and release audit. `GameApp` and `SectorTransitionScene` carry an explicit target sector through route cards, shops/events, component salvage, and `advanceSector`, so choosing a sibling commits that node and enters its operation directly. The constellation renders nine nodes, simultaneous legal targets, completed/choice/hidden/bypassed states, and seeded destination difficulty copy; route-layer context keeps player-facing act progress at 1/5 through 5/5.
+
+Mission contracts now select from `actSectorIndex` rather than storage order, keeping convergence nodes on their authored finale objectives. Generated set pieces likewise use semantic act/node roles: the opening Hecaton remains on the Act I entry, Bloom Spindle occupies Act II 3B, and Court Wreck Train remains coupled to the Core Wreck convergence boss. Debug routes and distance summaries follow a legal graph path, early/full victory records remain 10/15 sectors, and expedition/release capacity filters the same five-node canonical path while retaining executable content for every candidate node.
+
+Snapshot v12 retires every pre-topology run snapshot independently of permanent save data. Operational history remains bounded while its idempotency keys scale to the generated graph. Deterministic generation, route conditions, graph validation, mission anthology, objective rewards, act economy/pressure, hazard cleanup, pacing, frontier handoffs, Scenario Lab, summaries, and suspension coverage all exercise topology-aware indices instead of weakening their prior assertions.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 99 Vitest files and 608 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Graph regressions enumerate all eight legal paths per act, prove every path visits five unique layers and the shared finale, prove all nine candidates are reachable, reject illegal sibling/backtracking transitions, and preserve deterministic generation. Chromium coverage exercises simultaneous easier/harder node choices, direct destination launch, bypassed siblings, optional holds, convergence, Act II/finale summaries, narrow/high-contrast/reduced-motion presentation, and constellation suspension/resume.
+
+The release audit now reports 16.88 minutes for the standard route, 11.08 minutes for early extraction, and 21.13 minutes with optional branches. The build emits 925.08 kB minified/252.44 kB gzip initial JavaScript and 64.97/13.38 kB CSS, a 6.28/2.21 kB JavaScript and 0.29/0.05 kB CSS increase over work order 142. The existing 500 kB chunk notice remains; no dependency or warning threshold changed. The in-app browser plugin was initialized for a manual visual pass, but this session reported an empty available-browser list, so deployed visual inspection remains a follow-up rather than a claimed verification result.
+
 ## Review subagent prompt
 
 Use after a feature PR:

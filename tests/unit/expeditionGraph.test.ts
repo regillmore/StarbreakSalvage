@@ -17,17 +17,17 @@ describe('ExpeditionGraph', () => {
     const graph = generateRunSkeleton('EXPEDITION-GRAPH-SMOKE').expedition;
     expect(validateExpeditionGraph(graph)).toEqual([]);
     expect(graph.acts).toHaveLength(3);
-    expect(graph.sectors).toHaveLength(15);
-    expect(graph.nodes).toHaveLength(105);
-    expect(graph.missionLegs).toHaveLength(90);
-    expect(graph.branches).toHaveLength(30);
+    expect(graph.sectors).toHaveLength(27);
+    expect(graph.nodes).toHaveLength(189);
+    expect(graph.missionLegs).toHaveLength(162);
+    expect(graph.branches).toHaveLength(54);
     expect(graph.gates.map((gate) => [gate.actId, gate.kind, gate.transitionKind])).toEqual([
       ['act_outer_rim', 'checkpoint', 'interActJunction'],
       ['act_core_descent', 'finale', 'frontierChoice'],
       ['act_null_frontier', 'finale', 'victory']
     ]);
     expect(graph.startNodeId).toBe('expedition_s01_ingress');
-    expect(graph.terminalNodeIds).toEqual(['expedition_s15_exit']);
+    expect(graph.terminalNodeIds).toEqual(['expedition_s27_exit']);
 
     for (const sector of graph.sectors) {
       expect(
@@ -113,10 +113,10 @@ describe('ExpeditionGraph', () => {
     expect(capacity).toEqual({
       requiredNodeCount: 45,
       optionalNodeCount: 15,
-      baselineMinSeconds: 654,
-      baselineTargetSeconds: 1009,
-      baselineMaxSeconds: 1371,
-      expandedTargetSeconds: 1264
+      baselineMinSeconds: 652,
+      baselineTargetSeconds: 1005,
+      baselineMaxSeconds: 1365,
+      expandedTargetSeconds: 1260
     });
     expect(capacity.baselineTargetSeconds).toBeGreaterThanOrEqual(15 * 60);
     expect(capacity.baselineTargetSeconds).toBeLessThanOrEqual(20 * 60);
@@ -139,8 +139,8 @@ describe('ExpeditionGraph', () => {
       {
         seed: 'STARBREAK-SMOKE',
         id: 'expedition_starbreak-smoke_53f226d4',
-        target: 1009,
-        optionalOpportunityCount: 30,
+        target: 1001,
+        optionalOpportunityCount: 54,
         gates: [
           'act_outer_rim:interActJunction',
           'act_core_descent:frontierChoice',
@@ -151,7 +151,7 @@ describe('ExpeditionGraph', () => {
         seed: 'LASER-TAX-404',
         id: 'expedition_laser-tax-404_60d04233',
         target: 1009,
-        optionalOpportunityCount: 30,
+        optionalOpportunityCount: 54,
         gates: [
           'act_outer_rim:interActJunction',
           'act_core_descent:frontierChoice',
@@ -161,8 +161,8 @@ describe('ExpeditionGraph', () => {
       {
         seed: 'EXPEDITION-GRAPH-SMOKE',
         id: 'expedition_expedition-graph-smoke_5bca58c1',
-        target: 1009,
-        optionalOpportunityCount: 30,
+        target: 1005,
+        optionalOpportunityCount: 54,
         gates: [
           'act_outer_rim:interActJunction',
           'act_core_descent:frontierChoice',

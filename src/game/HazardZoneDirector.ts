@@ -284,7 +284,7 @@ export function formatHazardZoneDirectorSummary(plan: HazardZoneDirectorPlan): s
 }
 
 export function formatHazardZoneDirectorTimeline(
-  run: Pick<RunSkeleton, 'seed' | 'unlockedIds' | 'sectors'>,
+  run: Pick<RunSkeleton, 'seed' | 'unlockedIds' | 'sectors' | 'actRouteGraph'>,
   routeOutcomes: readonly AppliedRouteOutcome[]
 ): string {
   const entries = run.sectors

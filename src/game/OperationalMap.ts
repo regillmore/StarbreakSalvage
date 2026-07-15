@@ -241,7 +241,7 @@ export function validateOperationalProgressState(
   const nodeIds = new Set(graph.nodes.map((node) => node.id));
   if (
     !Array.isArray(state.processedOperationIds) ||
-    state.processedOperationIds.length > 64 ||
+    state.processedOperationIds.length > graph.nodes.length ||
     new Set(state.processedOperationIds).size !== state.processedOperationIds.length
   ) {
     errors.push('Operational processed ids are invalid.');

@@ -17,11 +17,8 @@ describe('route navigation presentation', () => {
     });
 
     expect(repeat).toEqual(first);
-    expect(first).toMatchObject({
-      edgeLabel: 'Outer Debris Field → Trade War Corridor',
-      title: 'Running Audit briefing',
-      objective: 'PURSUE · Running Pursuit'
-    });
+    expect(first.edgeLabel).toBe(`${run.sectors[0]!.sectorName} → ${run.sectors[1]!.sectorName}`);
+    expect(first.difficultyLabel).toBe('EASIER SIGNAL');
     expect(first.options).toHaveLength(3);
     expect(first.options.map((option) => option.route.kind)).toEqual(
       run.sectors[0]!.routeOptions.map((route) => route.kind)
@@ -34,8 +31,8 @@ describe('route navigation presentation', () => {
     const run = generateRunSkeleton('ROUTE-NAV-FINALE');
     const crossAct = createRouteNavigationReadModel({
       run,
-      sourceSectorIndex: 4,
-      targetSectorIndex: 5
+      sourceSectorIndex: 8,
+      targetSectorIndex: 9
     });
     const sourceSectorIndex = run.sectors.length - 1;
     const model = createRouteNavigationReadModel({

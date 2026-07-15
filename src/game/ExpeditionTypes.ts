@@ -29,6 +29,7 @@ export interface ExpeditionGraphSourceSector {
     readonly actIndex: number;
     readonly actName: string;
     readonly actShortLabel: string;
+    readonly actSectorIndex: number;
     readonly pressureTier: ActPressureTier;
     readonly bossGate: { readonly kind: ActBossGateKind; readonly required: boolean };
     readonly transition: { readonly kind: ActTransitionKind };
@@ -113,6 +114,7 @@ export interface ExpeditionSectorPlan {
   readonly sectorId: SectorId;
   readonly sectorName: string;
   readonly actId: ActId;
+  readonly actSectorIndex: number;
   readonly entryNodeId: string;
   readonly exitNodeIds: readonly string[];
   readonly missionLegIds: readonly string[];

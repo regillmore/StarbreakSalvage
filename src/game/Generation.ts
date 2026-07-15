@@ -21,6 +21,7 @@ import {
 } from '../content/ships';
 import type { UnlockId } from '../content/unlocks';
 import type { UpgradeId } from '../content/upgrades';
+import type { SetPieceId } from '../content/setPieces';
 import { getWeaponById, type WeaponPatternId } from '../content/weapons';
 import { createRng, parseSeedLabel, type Rng, type WeightedChoice } from '../core/rng';
 import {
@@ -29,6 +30,7 @@ import {
   type ActSectorContext,
   type RunActPlan
 } from './ActPlan';
+import { createActRouteGraph, type ActRouteGraph } from './ActRouteGraph';
 import {
   getActRouteContractWeight,
   getEligibleActRouteContracts,
@@ -136,6 +138,7 @@ export interface RunSkeleton {
   readonly upgradeEffects: RunUpgradeEffects;
   readonly seedSurvey: string | null;
   readonly acts: readonly RunActPlan[];
+  readonly actRouteGraph: ActRouteGraph;
   readonly expedition: ExpeditionGraph;
   readonly factionCampaign: FactionCampaignPlan;
   readonly crewRoster: CrewRosterPlan;
@@ -200,7 +203,7 @@ const SEED_TAG_HINTS: ReadonlyArray<readonly [string, readonly string[]]> = [
 
 const OPENING_SECTOR_ID: SectorId = 'sector_outer_debris_field';
 const CORE_SECTOR_ID: SectorId = 'sector_core_wreck';
-const STANDARD_MIDDLE_SECTOR_IDS: readonly SectorId[] = [
+const STANDARD_ROUTE_SECTOR_IDS: readonly SectorId[] = [
   'sector_trade_war_corridor',
   'sector_bio_machine_bloom',
   'sector_corporate_kill_grid',
@@ -210,7 +213,7 @@ const STANDARD_MIDDLE_SECTOR_IDS: readonly SectorId[] = [
   'sector_trade_war_corridor',
   'sector_corporate_kill_grid'
 ];
-const LUNAR_MIDDLE_SECTOR_IDS: readonly SectorId[] = [
+const LUNAR_ROUTE_SECTOR_IDS: readonly SectorId[] = [
   'sector_trade_war_corridor',
   'sector_lunar_surface',
   'sector_bio_machine_bloom',
@@ -249,6 +252,7 @@ export function generateRunSkeleton(
   });
   const sectorSequence = selectSectorSequence(seed, frontierCampaign);
   const acts = createRunActPlan(sectorSequence);
+  const actRouteGraph = createActRouteGraph(seed, acts);
   const actContexts = createActSectorContexts(acts);
   const sectors = sectorSequence.map((sector, index) =>
     generateSectorRoute(
@@ -277,7 +281,8 @@ export function generateRunSkeleton(
     acts,
     sectors,
     rng: rootRng.fork('expedition-graph'),
-    boardingOperations: boardingCampaign.operations
+    boardingOperations: boardingCampaign.operations,
+    actRouteGraph
   });
   const factionCampaign = createFactionCampaignPlan({
     seed,
@@ -309,6 +314,7 @@ export function generateRunSkeleton(
     upgradeEffects,
     seedSurvey: createSeedSurveyText(upgradeEffects, sectors),
     acts,
+    actRouteGraph,
     expedition,
     factionCampaign,
     crewRoster,
@@ -348,16 +354,45 @@ function selectSectorSequence(
   seed: string,
   frontierCampaign: NullFrontierCampaignPlan
 ): readonly SectorDefinition[] {
-  const middleSectorIds = seed.includes('LUNAR')
-    ? LUNAR_MIDDLE_SECTOR_IDS
-    : STANDARD_MIDDLE_SECTOR_IDS;
+  const routeSectorIds = seed.includes('LUNAR')
+    ? LUNAR_ROUTE_SECTOR_IDS
+    : STANDARD_ROUTE_SECTOR_IDS;
+  const rng = createRng(`${seed}:act-route-sector-signals`);
+  const actOneMiddle = routeSectorIds.slice(0, 7);
+  const actTwoMiddle = createLayeredSectorPool(rng.fork('act-two'), routeSectorIds, 7);
+  const frontierIds = frontierCampaign.sectors.map((sector) => sector.sectorId);
+  const frontierMiddle = createLayeredSectorPool(
+    rng.fork('act-three'),
+    frontierIds.slice(1, -1),
+    7
+  );
 
   return [
     getSectorDefinition(OPENING_SECTOR_ID),
-    ...middleSectorIds.map((sectorId) => getSectorDefinition(sectorId)),
+    ...actOneMiddle.map((sectorId) => getSectorDefinition(sectorId)),
+    getSectorDefinition(routeSectorIds[7] ?? routeSectorIds[0]!),
+    getSectorDefinition(routeSectorIds[0]!),
+    ...actTwoMiddle.map((sectorId) => getSectorDefinition(sectorId)),
     getSectorDefinition(CORE_SECTOR_ID),
-    ...frontierCampaign.sectors.map((sector) => getSectorDefinition(sector.sectorId))
+    getSectorDefinition(frontierIds[0]!),
+    ...frontierMiddle.map((sectorId) => getSectorDefinition(sectorId)),
+    getSectorDefinition(frontierIds.at(-1)!)
   ];
+}
+
+function createLayeredSectorPool(
+  rng: Rng,
+  candidates: readonly SectorId[],
+  count: number
+): readonly SectorId[] {
+  if (candidates.length === 0) {
+    throw new Error('Act route sector pool requires at least one sector definition.');
+  }
+  const result: SectorId[] = [];
+  while (result.length < count) {
+    result.push(...rng.fork(`cycle-${result.length}`).shuffle(candidates));
+  }
+  return result.slice(0, count);
 }
 
 function getSectorDefinition(id: SectorId): SectorDefinition {
@@ -481,6 +516,7 @@ function generateSectorRoute(
     sectorIndex: index,
     scrollLength: scroll.length,
     bossArena: arena,
+    definitionId: getGeneratedSetPieceDefinitionId(sector.id, act),
     layoutSeed: rng.fork('set-piece-layout').seedLabel
   });
 
@@ -507,6 +543,22 @@ function generateSectorRoute(
     rewardPoolSeed: rng.fork('reward-pool').seedLabel,
     shopSeed: rng.fork('shop').seedLabel
   };
+}
+
+function getGeneratedSetPieceDefinitionId(
+  sectorId: SectorId,
+  act: ActSectorContext
+): SetPieceId | null {
+  if (sectorId === OPENING_SECTOR_ID && act.actId === 'act_outer_rim') {
+    return 'setpiece_ledger_hecaton';
+  }
+  if (sectorId === CORE_SECTOR_ID) {
+    return 'setpiece_court_wreck_train';
+  }
+  if (act.actId === 'act_core_descent' && act.actRouteNodeLabel === '3B') {
+    return 'setpiece_bloom_spindle';
+  }
+  return null;
 }
 
 function generateRouteOptions(
@@ -811,6 +863,14 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
         transition: gate.transitionKind
       })),
       capacity: run.expedition.capacity
+    },
+    actRouteGraph: {
+      id: run.actRouteGraph.id,
+      layerWidths: run.actRouteGraph.layerWidths,
+      routeDepth: run.actRouteGraph.routeDepth,
+      nodesPerAct: run.actRouteGraph.nodesPerAct,
+      nodeCount: run.actRouteGraph.nodes.length,
+      edgeCount: run.actRouteGraph.edges.length
     },
     factionCampaign: {
       id: run.factionCampaign.id,

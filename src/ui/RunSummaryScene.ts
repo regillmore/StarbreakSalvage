@@ -338,6 +338,12 @@ export class RunSummaryScene implements Scene {
               actIndex: actContext.actIndex,
               actSectorIndex: actContext.actSectorIndex,
               actSectorCount: actContext.actSectorCount ?? act.sectorCount,
+              actRouteNodeLabel: `${actContext.actSectorIndex}A`,
+              actRouteLaneIndex: 0,
+              actRouteDifficulty:
+                actContext.actSectorIndex === (actContext.actSectorCount ?? act.routeDepth)
+                  ? 'finale'
+                  : 'standard',
               runSectorIndex: Math.min(
                 this.run.sectors.length,
                 getSectorsCleared(this.run, this.routeHistory, this.result, this.frontierDecision) +
@@ -745,12 +751,21 @@ function getReachedSectorName(
   result: CombatRunResult | null,
   frontierDecision: FrontierDecisionState | null = null
 ): string {
-  const sectorsCleared = getSectorsCleared(run, routeHistory, result, frontierDecision);
-  const index = Math.min(
-    frontierDecision?.decision === 'extract' ? Math.max(0, sectorsCleared - 1) : sectorsCleared,
-    run.sectors.length - 1
+  const index =
+    frontierDecision?.decision === 'extract'
+      ? (run.acts.find((act) => act.id === 'act_core_descent')?.endSectorIndex ?? 0)
+      : result?.reason === 'victory'
+        ? run.sectors.length - 1
+        : null;
+  if (index !== null) {
+    return run.sectors[index]?.sectorName ?? 'Outer Debris Field';
+  }
+  const reachedSectorNumber =
+    routeHistory.at(-1)?.targetSectorIndex ?? routeHistory.at(-1)?.sectorIndex ?? 1;
+  return (
+    run.sectors.find((sector) => sector.index === reachedSectorNumber)?.sectorName ??
+    'Outer Debris Field'
   );
-  return run.sectors[index]?.sectorName ?? 'Outer Debris Field';
 }
 
 function formatActProgressSummary(
@@ -762,7 +777,7 @@ function formatActProgressSummary(
   if (result?.reason === 'victory' && frontierDecision?.decision === 'extract') {
     const act = run.acts.find((candidate) => candidate.id === 'act_core_descent');
     if (act) {
-      return `${act.shortLabel} ${act.label} ${act.sectorCount}/${act.sectorCount} | ${act.index}/${run.acts.length} acts secured`;
+      return `${act.shortLabel} ${act.label} ${act.routeDepth}/${act.routeDepth} | ${act.index}/${run.acts.length} acts secured`;
     }
   }
   const actContext = createRunActSaveContext(
@@ -787,14 +802,15 @@ function getSectorsCleared(
 ): number {
   if (result?.reason === 'victory') {
     if (frontierDecision?.decision === 'extract') {
-      return Math.min(run.sectors.length, frontierDecision.actTwoSectorIndex + 1);
+      return run.acts.slice(0, 2).reduce((total, act) => total + act.routeDepth, 0);
     }
-    return run.sectors.length;
+    return run.acts.reduce((total, act) => total + act.routeDepth, 0);
   }
 
+  const playableSectorCount = run.acts.reduce((total, act) => total + act.routeDepth, 0);
   if (result?.reason === 'sectorComplete') {
-    return Math.min(run.sectors.length, routeHistory.length + 1);
+    return Math.min(playableSectorCount, routeHistory.length + 1);
   }
 
-  return Math.min(run.sectors.length, routeHistory.length);
+  return Math.min(playableSectorCount, routeHistory.length);
 }

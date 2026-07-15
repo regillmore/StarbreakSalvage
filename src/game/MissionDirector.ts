@@ -942,6 +942,7 @@ function projectObjectiveSector(
         sectorIndex: sector.index,
         scrollLength: projectedScroll.length,
         bossArena: projectedArena,
+        definitionId: sector.setPiece?.definitionId ?? null,
         layoutId: sector.setPiece?.layoutId
       })
     : null;
@@ -999,12 +1000,10 @@ export function selectMissionContract(
   if (!sector || !resolvedActId) {
     throw new Error(`Cannot select mission contract for sector ${sectorIndex}.`);
   }
-  const actSectors = graph.sectors.filter((candidate) => candidate.actId === resolvedActId);
-  const actSectorIndex = actSectors.findIndex((candidate) => candidate.id === sector.id);
   const candidates = MISSION_CONTRACTS.filter((contract) =>
     contract.eligibleActIds.includes(resolvedActId)
   );
-  const contract = candidates[actSectorIndex % candidates.length];
+  const contract = candidates[(sector.actSectorIndex - 1) % candidates.length];
   if (!contract) {
     throw new Error(`No mission contract is eligible for ${resolvedActId}.`);
   }

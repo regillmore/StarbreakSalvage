@@ -9,6 +9,12 @@ import {
   type ActTransition
 } from '../content/acts';
 import type { SectorDefinition, SectorId } from '../content/sectors';
+import {
+  ACT_ROUTE_DEPTH,
+  ACT_ROUTE_NODE_COUNT,
+  formatActRouteNodeLabel,
+  type ActRouteDifficulty
+} from './ActRouteGraph';
 
 export interface RunActPlan {
   readonly id: ActId;
@@ -19,6 +25,7 @@ export interface RunActPlan {
   readonly startSectorIndex: number;
   readonly endSectorIndex: number;
   readonly sectorCount: number;
+  readonly routeDepth: number;
   readonly sectorIds: readonly SectorId[];
   readonly routeGrammar: ActRouteGrammar;
   readonly rewardTier: ActRewardTier;
@@ -35,6 +42,9 @@ export interface ActSectorContext {
   readonly actSummary: string;
   readonly actSectorIndex: number;
   readonly actSectorCount: number;
+  readonly actRouteNodeLabel: string;
+  readonly actRouteLaneIndex: number;
+  readonly actRouteDifficulty: ActRouteDifficulty;
   readonly runSectorIndex: number;
   readonly routeGrammar: ActRouteGrammar;
   readonly rewardTier: ActRewardTier;
@@ -134,6 +144,7 @@ export function createRunActPlan(
       startSectorIndex: cursor,
       endSectorIndex: cursor + actSectors.length - 1,
       sectorCount: actSectors.length,
+      routeDepth: ACT_ROUTE_DEPTH,
       sectorIds: actSectors.map((sector) => sector.id),
       routeGrammar: definition.routeGrammar,
       rewardTier: definition.rewardTier,
@@ -153,14 +164,18 @@ export function createActSectorContexts(acts: readonly RunActPlan[]): ActSectorC
 
   for (const act of acts) {
     for (let offset = 0; offset < act.sectorCount; offset += 1) {
+      const route = getLocalRouteContext(offset);
       contexts[act.startSectorIndex + offset] = {
         actId: act.id,
         actIndex: act.index,
         actName: act.label,
         actShortLabel: act.shortLabel,
         actSummary: act.summary,
-        actSectorIndex: offset + 1,
-        actSectorCount: act.sectorCount,
+        actSectorIndex: route.layerIndex + 1,
+        actSectorCount: act.routeDepth,
+        actRouteNodeLabel: formatActRouteNodeLabel(route.layerIndex, route.laneIndex),
+        actRouteLaneIndex: route.laneIndex,
+        actRouteDifficulty: route.difficulty,
         runSectorIndex: act.startSectorIndex + offset + 1,
         routeGrammar: act.routeGrammar,
         rewardTier: act.rewardTier,
@@ -190,10 +205,8 @@ export function getActContextForSector(
     throw new Error('No act plan exists for the generated run.');
   }
 
-  const actSectorIndex = Math.min(
-    act.sectorCount,
-    Math.max(1, safeSectorIndex - act.startSectorIndex + 1)
-  );
+  const route = getLocalRouteContext(safeSectorIndex - act.startSectorIndex);
+  const actSectorIndex = route.layerIndex + 1;
 
   return {
     actId: act.id,
@@ -202,7 +215,10 @@ export function getActContextForSector(
     actShortLabel: act.shortLabel,
     actSummary: act.summary,
     actSectorIndex,
-    actSectorCount: act.sectorCount,
+    actSectorCount: act.routeDepth,
+    actRouteNodeLabel: formatActRouteNodeLabel(route.layerIndex, route.laneIndex),
+    actRouteLaneIndex: route.laneIndex,
+    actRouteDifficulty: route.difficulty,
     runSectorIndex: safeSectorIndex + 1,
     routeGrammar: act.routeGrammar,
     rewardTier: act.rewardTier,
@@ -285,18 +301,25 @@ export function createRunActSaveContext(
     };
   }
 
-  const totalSectors = acts.reduce((total, act) => total + act.sectorCount, 0);
+  const totalSectors = acts.reduce((total, act) => total + act.routeDepth, 0);
   const safeSectorsCleared = Math.max(0, Math.floor(sectorsCleared));
-  const reachedSectorIndex = Math.min(safeSectorsCleared, Math.max(0, totalSectors - 1));
-  const context = getActContextForSector(acts, reachedSectorIndex);
+  const reachedActIndex = Math.min(
+    acts.length - 1,
+    Math.floor(Math.min(safeSectorsCleared, totalSectors - 1) / ACT_ROUTE_DEPTH)
+  );
+  const act = acts[reachedActIndex]!;
+  const actSectorIndex =
+    safeSectorsCleared >= totalSectors
+      ? act.routeDepth
+      : (safeSectorsCleared % ACT_ROUTE_DEPTH) + 1;
 
   return {
-    actId: context.actId,
-    actName: context.actName,
-    actShortLabel: context.actShortLabel,
-    actIndex: context.actIndex,
-    actSectorIndex: context.actSectorIndex,
-    actSectorCount: context.actSectorCount,
+    actId: act.id,
+    actName: act.label,
+    actShortLabel: act.shortLabel,
+    actIndex: act.index,
+    actSectorIndex,
+    actSectorCount: act.routeDepth,
     actsCompleted: countCompletedActs(acts, safeSectorsCleared)
   };
 }
@@ -306,7 +329,10 @@ export function countCompletedActs(
   sectorsCleared: number
 ): number {
   const safeSectorsCleared = Math.max(0, Math.floor(sectorsCleared));
-  return acts.filter((act) => safeSectorsCleared > act.endSectorIndex).length;
+  return Math.min(
+    acts.length,
+    Math.floor(safeSectorsCleared / Math.max(1, ACT_ROUTE_DEPTH))
+  );
 }
 
 export function formatActSectorLabel(context: ActSectorContext): string {
@@ -325,7 +351,7 @@ export function formatRunActTimeline(acts: readonly RunActPlan[]): string {
   return acts
     .map(
       (act) =>
-        `${act.shortLabel} ${act.label}: S${act.startSectorIndex + 1}-S${act.endSectorIndex + 1}`
+        `${act.shortLabel} ${act.label}: 5-layer route / nodes S${act.startSectorIndex + 1}-S${act.endSectorIndex + 1}`
     )
     .join(' | ');
 }
@@ -347,4 +373,33 @@ export function createActDebugState(context: ActSectorContext): ActDebugState {
 
 function clampInteger(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, Math.floor(value)));
+}
+
+function getLocalRouteContext(offset: number): {
+  readonly layerIndex: number;
+  readonly laneIndex: number;
+  readonly difficulty: ActRouteDifficulty;
+} {
+  const safeOffset = Math.max(0, Math.min(ACT_ROUTE_NODE_COUNT - 1, Math.floor(offset)));
+  const widths = [1, 2, 3, 2, 1] as const;
+  let cursor = 0;
+  for (let layerIndex = 0; layerIndex < widths.length; layerIndex += 1) {
+    const width = widths[layerIndex]!;
+    if (safeOffset < cursor + width) {
+      const laneIndex = safeOffset - cursor;
+      const difficulty: ActRouteDifficulty =
+        layerIndex === 0
+          ? 'entry'
+          : layerIndex === widths.length - 1
+            ? 'finale'
+            : width === 3 && laneIndex === 1
+              ? 'standard'
+              : laneIndex === 0
+                ? 'easier'
+                : 'harder';
+      return { layerIndex, laneIndex, difficulty };
+    }
+    cursor += width;
+  }
+  return { layerIndex: 4, laneIndex: 0, difficulty: 'finale' };
 }

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { generateRunSkeleton, summarizeRunSkeleton } from '../../src/game/Generation';
+import { getDefaultActRoutePathSectorIndices } from '../../src/game/ActRouteGraph';
 
 const TEST_SEEDS = [
   'LASER-TAX-404',
@@ -27,64 +28,23 @@ describe('generateRunSkeleton', () => {
     expect(new Set(signatures).size).toBeGreaterThan(1);
   });
 
-  it('creates three starting contracts and a fifteen-sector frontier route skeleton', () => {
+  it('creates three starting contracts and three nine-node act route graphs', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
 
     expect(run.seed).toBe('STARBREAK-SMOKE');
-    expect(run.acts.map((act) => [act.id, act.shortLabel, act.sectorIds])).toEqual([
-      [
-        'act_outer_rim',
-        'Act I',
-        [
-          'sector_outer_debris_field',
-          'sector_trade_war_corridor',
-          'sector_bio_machine_bloom',
-          'sector_corporate_kill_grid',
-          'sector_trade_war_corridor'
-        ]
-      ],
-      [
-        'act_core_descent',
-        'Act II',
-        [
-          'sector_bio_machine_bloom',
-          'sector_lunar_surface',
-          'sector_trade_war_corridor',
-          'sector_corporate_kill_grid',
-          'sector_core_wreck'
-        ]
-      ],
-      [
-        'act_null_frontier',
-        'Act III',
-        [
-          'sector_nullglass_expanse',
-          'sector_dead_signal_reef',
-          'sector_parallax_foundry',
-          'sector_gravity_choir',
-          'sector_horizon_scar'
-        ]
-      ]
+    expect(run.acts.map((act) => [act.id, act.shortLabel, act.sectorIds.length])).toEqual([
+      ['act_outer_rim', 'Act I', 9],
+      ['act_core_descent', 'Act II', 9],
+      ['act_null_frontier', 'Act III', 9]
     ]);
     expect(run.contracts).toHaveLength(3);
     expect(new Set(run.contracts.map((contract) => contract.shipId)).size).toBe(3);
-    expect(run.sectors.map((sector) => sector.sectorId)).toEqual([
-      'sector_outer_debris_field',
-      'sector_trade_war_corridor',
-      'sector_bio_machine_bloom',
-      'sector_corporate_kill_grid',
-      'sector_trade_war_corridor',
-      'sector_bio_machine_bloom',
-      'sector_lunar_surface',
-      'sector_trade_war_corridor',
-      'sector_corporate_kill_grid',
-      'sector_core_wreck',
-      'sector_nullglass_expanse',
-      'sector_dead_signal_reef',
-      'sector_parallax_foundry',
-      'sector_gravity_choir',
-      'sector_horizon_scar'
-    ]);
+    expect(run.sectors).toHaveLength(27);
+    expect(run.actRouteGraph.layerWidths).toEqual([1, 2, 3, 2, 1]);
+    expect(run.actRouteGraph.nodes).toHaveLength(27);
+    expect(run.actRouteGraph.edges).toHaveLength(42);
+    expect(getDefaultActRoutePathSectorIndices(run.actRouteGraph)).toHaveLength(15);
+    expect(run.sectors.filter((sector) => sector.setPiece !== null)).toHaveLength(3);
 
     for (const sector of run.sectors) {
       expect(sector.routeOptions).toHaveLength(3);
@@ -101,14 +61,15 @@ describe('generateRunSkeleton', () => {
 
     expect(run.sectors[0]?.objective.requiredEnemyKills).toBeGreaterThan(1);
     expect(run.sectors[0]?.act.actShortLabel).toBe('Act I');
-    expect(run.sectors[4]?.act.actSectorIndex).toBe(5);
-    expect(run.sectors[5]?.act.actShortLabel).toBe('Act II');
-    expect(run.sectors[9]?.act.rewardTier).toBe('escalated');
+    expect(run.sectors[8]?.act.actSectorIndex).toBe(5);
+    expect(run.sectors[9]?.act.actShortLabel).toBe('Act II');
+    expect(run.sectors[17]?.act.rewardTier).toBe('escalated');
     expect(run.sectors[3]?.objective.bossRequired).toBe(true);
-    expect(run.sectors[9]?.objective.bossSpawnAtSeconds).toBe(5.55);
+    expect(run.sectors[17]?.objective.bossSpawnAtSeconds).toBe(5.55);
+    expect(run.sectors[17]?.setPiece?.definitionId).toBe('setpiece_court_wreck_train');
   });
 
-  it('summarizes a deterministic three-act plan with five sectors per act', () => {
+  it('summarizes a deterministic three-act plan with nine nodes and five route layers per act', () => {
     const first = summarizeRunSkeleton(generateRunSkeleton('ACT2-GATE-SMOKE'));
     const second = summarizeRunSkeleton(generateRunSkeleton('ACT2-GATE-SMOKE'));
 
@@ -118,21 +79,21 @@ describe('generateRunSkeleton', () => {
         acts: [
           expect.objectContaining({
             id: 'act_outer_rim',
-            sectorRange: [1, 5],
+            sectorRange: [1, 9],
             rewardTier: 'standard',
             pressureTier: 'baseline',
             transition: 'interActJunction'
           }),
           expect.objectContaining({
             id: 'act_core_descent',
-            sectorRange: [6, 10],
+            sectorRange: [10, 18],
             rewardTier: 'escalated',
             pressureTier: 'elevated',
             transition: 'frontierChoice'
           }),
           expect.objectContaining({
             id: 'act_null_frontier',
-            sectorRange: [11, 15],
+            sectorRange: [19, 27],
             rewardTier: 'escalated',
             pressureTier: 'elevated',
             transition: 'victory'
@@ -155,7 +116,7 @@ describe('generateRunSkeleton', () => {
       'sector_lunar_surface',
       'sector_bio_machine_bloom',
       'sector_corporate_kill_grid',
-      'sector_core_wreck'
+      'sector_trade_war_corridor'
     ]);
     expect(run.sectors[2]?.sectorName).toBe('Lunar Surface');
     expect(run.sectors[2]?.background.id).toBe('background_lunar_surface');

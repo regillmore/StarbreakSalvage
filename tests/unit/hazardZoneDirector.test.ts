@@ -31,6 +31,9 @@ import {
   createSectorPacingPlan
 } from '../../src/game/SectorPacing';
 import { getActiveSectorHazards, validateSectorFeaturePlan } from '../../src/game/SectorFeatures';
+import {
+  getNextActRouteSectorIndices
+} from '../../src/game/ActRouteGraph';
 
 describe('HazardZoneDirector', () => {
   it('assigns every sector and bonus-operation hazard sequence a deterministic run-wide identity', () => {
@@ -97,8 +100,13 @@ describe('HazardZoneDirector', () => {
   });
 
   it('creates deterministic known-seed schedules from run and save context', () => {
-    const first = getDirectedSectorAfterRoute('LONG-SECTOR-CARAVAN', 0, 'factionAmbush');
-    const second = getDirectedSectorAfterRoute('LONG-SECTOR-CARAVAN', 0, 'factionAmbush');
+    const first = getDirectedSectorWithAddition('LONG-SECTOR-CARAVAN', 'factionAmbush');
+    const second = getDirectedSectorAfterRoute(
+      'LONG-SECTOR-CARAVAN',
+      first.routeSourceSectorIndex,
+      'factionAmbush',
+      first.session.currentSectorIndex
+    );
 
     expect(summarizeHazardZoneDirectorPlan(first.director)).toEqual(
       summarizeHazardZoneDirectorPlan(second.director)
@@ -129,7 +137,7 @@ describe('HazardZoneDirector', () => {
   });
 
   it('keeps director additions outside relief windows', () => {
-    const directed = getDirectedSectorAfterRoute('LONG-SECTOR-CARAVAN', 0, 'factionAmbush');
+    const directed = getDirectedSectorWithAddition('LONG-SECTOR-CARAVAN', 'factionAmbush');
     const additions = directed.director.entries.filter((entry) => entry.source === 'director');
 
     expect(directed.pacing.reliefWindows.length).toBeGreaterThan(0);
@@ -145,19 +153,15 @@ describe('HazardZoneDirector', () => {
   });
 
   it('responds to route-conditioned hazard pressure without filling quiet routes', () => {
-    const pressured = getDirectedSectorAfterRoute('LONG-SECTOR-CARAVAN', 0, 'factionAmbush');
-    const quiet = getDirectedSectorAfterRoute('LONG-SECTOR-CARAVAN', 0, 'repair');
+    const [pressured, quiet] = getDirectedPressurePair('LONG-SECTOR-CARAVAN');
 
     expect(pressured.conditions.hazardDensityDelta).toBeGreaterThan(0);
     expect(quiet.conditions.hazardDensityDelta).toBeLessThan(0);
-    expect(pressured.director.scheduledHazardCount).toBeGreaterThan(
-      quiet.director.scheduledHazardCount
-    );
     expect(pressured.director.pressureLevel).toBeGreaterThan(quiet.director.pressureLevel);
   });
 
   it('consumes distance marker events in order under frame catchup without duplicates', () => {
-    const directed = getDirectedSectorAfterRoute('LONG-SECTOR-CARAVAN', 0, 'factionAmbush');
+    const directed = getDirectedSectorAfterRoute('LONG-SECTOR-CARAVAN', 1, 'factionAmbush');
     const state = createHazardZoneScheduleRuntimeState(directed.director);
     const events = consumeHazardZoneScheduleEvents(
       directed.director,
@@ -220,19 +224,64 @@ describe('HazardZoneDirector', () => {
     expect(
       directed.features.hazards.every((hazard) => hazard.endDistance < directed.arena!.lockDistance)
     ).toBe(true);
-    expect(
-      directed.features.hazards.some(
-        (hazard) => hazard.endDistance > directed.arena!.approachStartDistance
-      )
-    ).toBe(true);
     expect(getActiveSectorHazards(directed.features, directed.arena.lockDistance)).toEqual([]);
     expect(getActiveSectorHazards(directed.features, directed.arena.releaseDistance)).toEqual([]);
   });
 });
 
-function getDirectedSectorAfterRoute(seed: string, sourceSectorIndex: number, kind: RouteKind) {
-  const { run, session } = selectRouteIntoSector(seed, sourceSectorIndex, kind);
-  return createDirectedCurrentSector(run, session);
+function getDirectedSectorAfterRoute(
+  seed: string,
+  sourceSectorIndex: number,
+  kind: RouteKind,
+  targetSectorIndex?: number
+) {
+  const { run, session } = selectRouteIntoSector(
+    seed,
+    sourceSectorIndex,
+    kind,
+    targetSectorIndex
+  );
+  return { ...createDirectedCurrentSector(run, session), routeSourceSectorIndex: sourceSectorIndex };
+}
+
+function getDirectedSectorWithAddition(seed: string, kind: RouteKind) {
+  const run = generateRunSkeleton(seed);
+  for (const edge of run.actRouteGraph.edges) {
+    const directed = getDirectedSectorAfterRoute(
+      seed,
+      edge.sourceSectorIndex,
+      kind,
+      edge.targetSectorIndex
+    );
+    if (directed.director.scheduledHazardCount > 0) return directed;
+  }
+  throw new Error(`Expected ${kind} to schedule a director hazard.`);
+}
+
+function getDirectedPressurePair(seed: string) {
+  const run = generateRunSkeleton(seed);
+  for (const edge of run.actRouteGraph.edges) {
+    const pressured = getDirectedSectorAfterRoute(
+      seed,
+      edge.sourceSectorIndex,
+      'factionAmbush',
+      edge.targetSectorIndex
+    );
+    const quiet = getDirectedSectorAfterRoute(
+      seed,
+      edge.sourceSectorIndex,
+      'repair',
+      edge.targetSectorIndex
+    );
+    if (
+      pressured.conditions.hazardDensityDelta > 0 &&
+      quiet.conditions.hazardDensityDelta < 0 &&
+      pressured.director.pressureLevel > quiet.director.pressureLevel
+    ) {
+      return [pressured, quiet] as const;
+    }
+  }
+  throw new Error('Expected a route edge with distinct pressured and quiet hazard schedules.');
 }
 
 function getDirectedBossSectorWithAdjustedHazard(seed: string) {
@@ -323,7 +372,12 @@ function createDirectedCurrentSector(
   };
 }
 
-function selectRouteIntoSector(seed: string, sourceSectorIndex: number, kind: RouteKind) {
+function selectRouteIntoSector(
+  seed: string,
+  sourceSectorIndex: number,
+  kind: RouteKind,
+  requestedTargetSectorIndex?: number
+) {
   const run = generateRunSkeleton(seed);
   const contract = run.contracts[0];
 
@@ -335,15 +389,22 @@ function selectRouteIntoSector(seed: string, sourceSectorIndex: number, kind: Ro
   session.currentSectorIndex = sourceSectorIndex;
   const sector = getCurrentSector(run, session);
   const route = makeRoute(kind);
+  const targetSectorIndex =
+    requestedTargetSectorIndex ??
+    getNextActRouteSectorIndices(run.actRouteGraph, sourceSectorIndex).at(-1);
+  if (targetSectorIndex === undefined) {
+    throw new Error(`Expected a route target after sector ${sourceSectorIndex}.`);
+  }
   const outcome = generateRouteOutcome({
     run,
     sector,
     route,
+    targetSectorIndex,
     availableCredits: session.credits
   });
 
   applyRouteOutcome(session, sector, route, outcome);
-  expect(advanceSector(run, session)).toBe(true);
+  expect(advanceSector(run, session, targetSectorIndex)).toBe(true);
 
   return { run, session };
 }

@@ -1,5 +1,6 @@
 import type { RunSkeleton } from './Generation';
 import { isFreshMissionExpeditionNode } from './ExpeditionGraph';
+import { getDefaultActRoutePathSectorIndices } from './ActRouteGraph';
 
 export type VoyageSaveProfile = 'fresh' | 'progressed';
 export type VoyageRouteProfile = 'earlyExtraction' | 'standard' | 'completionist';
@@ -72,34 +73,44 @@ function measureEarlyExtraction(
 ): VoyageDurationMeasurement {
   const act = run.acts.find((candidate) => candidate.id === 'act_core_descent');
   if (!act) throw new Error('Voyage release audit requires the Core Descent act.');
+  const routeSectors = new Set(
+    getDefaultActRoutePathSectorIndices(run.actRouteGraph).filter(
+      (sectorIndex) => sectorIndex <= act.endSectorIndex
+    )
+  );
   const nodes = run.expedition.nodes.filter(
     (node) =>
       !node.optional &&
-      node.sectorIndex <= act.endSectorIndex &&
+      routeSectors.has(node.sectorIndex) &&
       isFreshMissionExpeditionNode(node)
   );
-  return measurement(saveProfile, 'earlyExtraction', act.endSectorIndex + 1, nodes);
+  return measurement(saveProfile, 'earlyExtraction', routeSectors.size, nodes);
 }
 
 function measureStandard(
   run: RunSkeleton,
   saveProfile: VoyageSaveProfile
 ): VoyageDurationMeasurement {
+  const routeSectors = new Set(getDefaultActRoutePathSectorIndices(run.actRouteGraph));
   const nodes = run.expedition.nodes.filter(
-    (node) => !node.optional && isFreshMissionExpeditionNode(node)
+    (node) =>
+      routeSectors.has(node.sectorIndex) && !node.optional && isFreshMissionExpeditionNode(node)
   );
-  return measurement(saveProfile, 'standard', run.sectors.length, nodes);
+  return measurement(saveProfile, 'standard', routeSectors.size, nodes);
 }
 
 function measureCompletionist(
   run: RunSkeleton,
   saveProfile: VoyageSaveProfile
 ): VoyageDurationMeasurement {
+  const routeSectors = new Set(getDefaultActRoutePathSectorIndices(run.actRouteGraph));
   return measurement(
     saveProfile,
     'completionist',
-    run.sectors.length,
-    run.expedition.nodes.filter(isFreshMissionExpeditionNode)
+    routeSectors.size,
+    run.expedition.nodes.filter(
+      (node) => routeSectors.has(node.sectorIndex) && isFreshMissionExpeditionNode(node)
+    )
   );
 }
 

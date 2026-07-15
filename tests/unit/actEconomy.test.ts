@@ -22,8 +22,8 @@ describe('Act II economy tuning', () => {
   it('keeps Act I neutral and makes Act II economy stronger but pricier', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
     const actOne = createActEconomyProfile(getRequiredSector(run, 0));
-    const actTwo = createActEconomyProfile(getRequiredSector(run, 5));
-    const finale = createActEconomyProfile(getRequiredSector(run, 9));
+    const actTwo = createActEconomyProfile(getRequiredSector(run, run.acts[1]!.startSectorIndex));
+    const finale = createActEconomyProfile(getRequiredSector(run, run.acts[1]!.endSectorIndex));
 
     expect(actOne.escalated).toBe(false);
     expect(actOne.shopStockBonus).toBe(0);
@@ -113,7 +113,7 @@ describe('Act II economy tuning', () => {
   it('summarizes Act I, junction, Act II, and item-source economy separately', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
     const actOneSector = getRequiredSector(run, 0);
-    const actTwoSector = getRequiredSector(run, 5);
+    const actTwoSector = getRequiredSector(run, run.acts[1]!.startSectorIndex);
     const actOneRoute = { kind: 'shop' as const, label: 'Shop', risk: 1, rewardHint: 'test' };
     const actTwoRoute = {
       kind: 'elite' as const,
@@ -183,7 +183,7 @@ function createActEconomySnapshot(saveData: SaveData) {
   });
   const contract = getFirstContract(run);
   const session = createRunSession(run, contract, { unlockedIds: saveData.unlockedIds });
-  const sector = getRequiredSector(run, 5);
+  const sector = getRequiredSector(run, run.acts[1]!.startSectorIndex);
 
   session.currentSectorIndex = sector.index;
 

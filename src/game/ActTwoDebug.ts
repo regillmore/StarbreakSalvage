@@ -1,6 +1,7 @@
 import type { CombatRunResult } from './CombatState';
 import type { RouteOption, RunSkeleton } from './Generation';
 import type { RouteHistoryEntry } from './RunSession';
+import { getDefaultActRoutePathSectorIndices } from './ActRouteGraph';
 
 export interface ActTwoDebugScenario {
   readonly actOneFinalSectorIndex: number;
@@ -11,7 +12,7 @@ export interface ActTwoDebugScenario {
 }
 
 export function createActTwoDebugScenario(
-  run: Pick<RunSkeleton, 'acts' | 'sectors'>
+  run: Pick<RunSkeleton, 'acts' | 'sectors' | 'actRouteGraph'>
 ): ActTwoDebugScenario | null {
   const actTwo = run.acts.find((act) => act.id === 'act_core_descent');
   const actOne = run.acts.find((act) => act.index === 1);
@@ -31,19 +32,25 @@ export function createActTwoDebugScenario(
 }
 
 export function getDistanceBeforeSector(
-  run: Pick<RunSkeleton, 'sectors'>,
+  run: Pick<RunSkeleton, 'sectors' | 'actRouteGraph'>,
   sectorIndex: number
 ): number {
-  return run.sectors
-    .slice(0, Math.max(0, Math.floor(sectorIndex)))
-    .reduce((total, sector) => total + sector.scroll.length, 0);
+  const route = getDefaultActRoutePathSectorIndices(run.actRouteGraph);
+  const targetPosition = route.indexOf(Math.max(0, Math.floor(sectorIndex)));
+  const preceding = targetPosition >= 0 ? route.slice(0, targetPosition) : [];
+  return preceding.reduce((total, index) => total + (run.sectors[index]?.scroll.length ?? 0), 0);
 }
 
-export function createDebugRouteHistoryThroughSector(
-  run: Pick<RunSkeleton, 'sectors'>,
-  sectorsCleared: number
+export function createDebugRouteHistoryBeforeSector(
+  run: Pick<RunSkeleton, 'sectors' | 'actRouteGraph'>,
+  sectorIndex: number
 ): RouteHistoryEntry[] {
-  return run.sectors.slice(0, Math.max(0, sectorsCleared)).flatMap((sector) => {
+  const defaultRoute = getDefaultActRoutePathSectorIndices(run.actRouteGraph);
+  const targetPosition = defaultRoute.indexOf(Math.max(0, Math.floor(sectorIndex)));
+  const routeSectorIndices = targetPosition >= 0 ? defaultRoute.slice(0, targetPosition) : [];
+  return routeSectorIndices.flatMap((sectorIndex, position) => {
+    const sector = run.sectors[sectorIndex];
+    if (!sector) return [];
     const route = sector.routeOptions[0];
 
     if (!route) {
@@ -53,6 +60,7 @@ export function createDebugRouteHistoryThroughSector(
     return [
       {
         sectorIndex: sector.index,
+        targetSectorIndex: run.sectors[defaultRoute[position + 1] ?? -1]?.index,
         actId: sector.act.actId,
         actName: sector.act.actName,
         actShortLabel: sector.act.actShortLabel,
@@ -70,7 +78,7 @@ export function createDebugRouteHistoryThroughSector(
 }
 
 export function createTwoActDebugSummaryResult(
-  run: Pick<RunSkeleton, 'sectors'>
+  run: Pick<RunSkeleton, 'sectors' | 'actRouteGraph'>
 ): CombatRunResult {
   const finaleSector = run.sectors.find((sector) => sector.finale !== null) ?? run.sectors.at(-1);
   const sectorLength = finaleSector?.scroll.length ?? null;
@@ -78,7 +86,9 @@ export function createTwoActDebugSummaryResult(
   return {
     reason: 'debug',
     survivedSeconds: 420,
-    distanceTraveled: getDistanceBeforeSector(run, run.sectors.length - 1),
+    distanceTraveled: finaleSector
+      ? getDistanceBeforeSector(run, finaleSector.index - 1) + finaleSector.scroll.length
+      : 0,
     sectorLength,
     credits: 72,
     salvage: 18,
