@@ -2535,6 +2535,29 @@ Advance, approach, detour, and staging definitions remain in each generated sche
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 98 Vitest files and 603 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Focused schedule coverage walks every generated sector and proves direct gate entry, a full world profile, no compatibility-stage visit, one-combat branch arrival, and one playable optional. Operational, objective, Scenario Lab, snapshot, and browser journeys cover direct continuation, sector-2 optional play, partial outcomes, pursuit pressure on the next real gate, safe suspend/reload, and no Command Deck in the fresh path. Executable-node readouts now exclude compatibility records and project 16.82 minutes standard, 11.08 minutes at Act II extraction, and 21.07 minutes with all paired holds; these remain authored estimates pending a deployed stopwatch. The build emits 916.91 kB minified/249.76 kB gzip initial JavaScript and 64.46/13.28 kB CSS, a 0.28/0.14 kB JavaScript reduction from work order 138. No dependency, simulation cap, RNG stream, snapshot version, or warning threshold changed.
 
+## Work order 140 - Immediate required-sector rewards
+
+Goal: make the reward read as the settlement of the operation just completed by presenting it before the player chooses an optional hold or onward route.
+
+Prompt:
+
+> Move `Choose Reward` to immediately follow each first-pass required sector completion. The selected reward must settle before the flat constellation offers the cleared sector's optional challenge and the next sector's three routes. Optional challenges must not produce a duplicate reward screen, and route events or shops must advance directly into the next required sector after their existing component salvage. Preserve deterministic reward generation, incoming-route and optional-outcome influence, checkpoints, services, accessibility, and deployed snapshot compatibility.
+
+Acceptance criteria:
+
+- Completing a required gate operation enters `Choose Reward` after the sector-exit animation and before `SectorTransitionScene` exposes `OPTIONAL` and `CHOOSE ROUTE`.
+- Selecting an item or credits settles exactly once and then checkpoints the ordinary post-sector constellation with the selected result already present in run state.
+- Completing the paired optional challenge returns directly to the three-route plot and never opens a second `Choose Reward` for the same sector.
+- Choosing a route still resolves its event or shop and deterministic component salvage, then advances directly into the next sector operation without a late reward scene.
+- The route used to enter a sector and the previous sector's optional outcome modify that sector's reward when it is eventually cleared. The first sector uses a deterministic neutral sector-clear context.
+- Existing route-context reward seeds retain their prior streams; the new neutral context has its own named deterministic stream. Snapshot v11, fixed-step simulation, services, and static-hosting contracts remain unchanged.
+
+Status: implemented. `GameApp` now recognizes the fresh required gate's terminal branch as the reward boundary. `RewardScene` no longer depends on an onward `RouteOption`; it derives the incoming route context from settled history and uses the current zero-based mission index for reward and credit modifiers. Item or credit selection hands off to the flat flight board, whose checkpoint therefore contains the chosen payout before any optional or route commitment.
+
+`RunSession` aligns reward influence with that chronology: the incoming route outcome and the previous sector's optional objective outcome feed the current sector reward, while the current required objective settles immediately. Route shops/events now lead through deterministic component salvage to sector advance without reopening rewards. Optional completion returns straight to the route plot. Existing route reward seed suffixes remain stable, and `sectorClear` owns a separate deterministic suffix for the first operation.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 98 Vitest files and 604 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Focused reward, route-event, and objective tests cover neutral generation, incoming route influence, and next-sector optional influence. Chromium asserts required sector -> reward -> flat constellation, reward inventory visibility before route commitment, no reward after the optional hold, no reward after the route shop, direct next-sector combat, checkpoint restoration after reward selection, and no console errors. The build emits 917.26 kB minified/249.87 kB gzip initial JavaScript and 64.46/13.28 kB CSS, a 0.35/0.11 kB JavaScript increase over work order 139. No dependency, simulation cap, snapshot version, warning threshold, or established route-context RNG stream changed.
+
 ## Review subagent prompt
 
 Use after a feature PR:

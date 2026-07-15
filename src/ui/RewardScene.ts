@@ -3,9 +3,14 @@ import type { Scene, SceneDebugState } from '../app/Scene';
 import type { ItemId } from '../content/items';
 import { createActEconomyProfile } from '../game/ActEconomy';
 import { formatProspectiveBuildSynergy } from '../game/BuildSynergy';
-import type { RouteOption, RunSkeleton, StartingContract } from '../game/Generation';
+import type { RunSkeleton, StartingContract } from '../game/Generation';
 import { generateSectorRewardChoices } from '../game/SectorRewards';
-import { getCurrentSector, getRouteCreditReward, type RunSessionState } from '../game/RunSession';
+import {
+  getCurrentSector,
+  getIncomingRewardRouteKind,
+  getRouteCreditReward,
+  type RunSessionState
+} from '../game/RunSession';
 import { getRewardDossierReadout, getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import type { InputAction } from '../systems/InputSystem';
 import {
@@ -26,7 +31,6 @@ export class RewardScene implements Scene {
     private readonly run: RunSkeleton,
     private readonly session: RunSessionState,
     private readonly contract: StartingContract,
-    private readonly route: RouteOption,
     private readonly onSelectItem: (itemId: ItemId) => void,
     private readonly onTakeCredits: () => void
   ) {}
@@ -34,12 +38,20 @@ export class RewardScene implements Scene {
   public enter(): void {
     const sector = getCurrentSector(this.run, this.session);
     const actEconomy = createActEconomyProfile(sector);
-    const creditReward = getRouteCreditReward(this.session, sector.index, actEconomy);
+    const incomingRouteKind = getIncomingRewardRouteKind(
+      this.session,
+      this.session.currentSectorIndex
+    );
+    const creditReward = getRouteCreditReward(
+      this.session,
+      this.session.currentSectorIndex,
+      actEconomy
+    );
     const rewardChoices = generateSectorRewardChoices({
       run: this.run,
       session: this.session,
       contract: this.contract,
-      routeKind: this.route.kind
+      ...(incomingRouteKind ? { routeKind: incomingRouteKind } : {})
     });
 
     const shell = document.createElement('main');
@@ -53,13 +65,16 @@ export class RewardScene implements Scene {
 
     const eyebrow = document.createElement('p');
     eyebrow.className = 'eyebrow';
-    eyebrow.textContent = `${sector.sectorName} | ${this.route.label} Reward`;
+    eyebrow.textContent = `${sector.sectorName} | Operation Reward`;
 
     const title = document.createElement('h1');
     title.id = 'reward-title';
     title.textContent = 'Choose Reward';
 
-    const upgradeReadout = getRewardDossierReadout(this.run.upgradeEffects, this.route.kind);
+    const upgradeReadout = getRewardDossierReadout(
+      this.run.upgradeEffects,
+      incomingRouteKind ?? 'sectorClear'
+    );
     const upgradeNote = document.createElement('p');
     upgradeNote.className = 'screen-upgrade-note';
     upgradeNote.dataset.testid = 'reward-upgrade-note';
@@ -114,11 +129,15 @@ export class RewardScene implements Scene {
       return;
     }
 
+    const incomingRouteKind = getIncomingRewardRouteKind(
+      this.session,
+      this.session.currentSectorIndex
+    );
     const firstReward = generateSectorRewardChoices({
       run: this.run,
       session: this.session,
       contract: this.contract,
-      routeKind: this.route.kind
+      ...(incomingRouteKind ? { routeKind: incomingRouteKind } : {})
     })[0];
 
     if (firstReward) {

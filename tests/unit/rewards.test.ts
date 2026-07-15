@@ -30,6 +30,18 @@ describe('reward generation', () => {
     expect(first).toEqual(second);
   });
 
+  it('generates a deterministic sector-clear reward without an onward route', () => {
+    const run = generateRunSkeleton('SECTOR-CLEAR-REWARD');
+    const contract = getFirstContract(run);
+    const session = createRunSession(run, contract);
+    const first = generateSectorRewardChoices({ run, session, contract });
+    const replay = generateSectorRewardChoices({ run, session, contract });
+
+    expect(first).toEqual(replay);
+    expect(first).toHaveLength(3);
+    expect(first.every((choice) => choice.poolProfileId !== 'route')).toBe(true);
+  });
+
   it('creates a deterministic contract-biased starter loadout without a universal field kit', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
     const contract = run.contracts[0];

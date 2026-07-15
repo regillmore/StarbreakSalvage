@@ -1337,9 +1337,24 @@ export function getRewardModifiersForSector(
       .filter((outcome) => outcome.sectorIndex === sectorIndex)
       .map((outcome) => outcome.effects.reward),
     ...session.objectiveHistory
-      .filter((outcome) => outcome.sectorIndex === sectorIndex)
+      .filter((outcome) =>
+        outcome.optional
+          ? outcome.sectorIndex + 1 === sectorIndex
+          : outcome.sectorIndex === sectorIndex
+      )
       .map((outcome) => outcome.reward)
   ];
+}
+
+export function getIncomingRewardRouteKind(
+  session: RunSessionState,
+  sectorIndex: number
+): RouteKind | null {
+  return (
+    [...session.routeOutcomes]
+      .reverse()
+      .find((outcome) => outcome.sectorIndex === sectorIndex)?.routeKind ?? null
+  );
 }
 
 export function getShopModifiersForSector(

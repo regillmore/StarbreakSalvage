@@ -9,7 +9,11 @@ import {
 } from './RunSession';
 import { applyCombinedHooks } from './CombinedHooks';
 import { createEngineeringCombatProfile } from './Foundry';
-import { generateRewardChoices, type RewardChoice } from './Rewards';
+import {
+  generateRewardChoices,
+  type RewardChoice,
+  type RewardContextKind
+} from './Rewards';
 import { getRewardUpgradeBiasTags, getRewardUpgradeChoiceBonus } from './UpgradeEffects';
 import { createActEconomyProfile, getActEconomyRewardChoiceBonus } from './ActEconomy';
 import { createCarrierInfluence } from './CarrierCommand';
@@ -19,27 +23,31 @@ export function generateSectorRewardChoices(options: {
   readonly run: RunSkeleton;
   readonly session: RunSessionState;
   readonly contract: StartingContract;
-  readonly routeKind: RouteKind;
+  readonly routeKind?: RouteKind;
   readonly count?: number;
 }): RewardChoice[] {
   const sector = getCurrentSector(options.run, options.session);
+  const rewardContext: RewardContextKind = options.routeKind ?? 'sectorClear';
   const actEconomy = createActEconomyProfile(sector);
-  const modifiers = getRewardModifiersForSector(options.session, sector.index);
+  const modifiers = getRewardModifiersForSector(
+    options.session,
+    options.session.currentSectorIndex
+  );
   const interActEffects = getInterActEffectsForSector(options.session, sector);
   const poolOverride = [...modifiers]
     .reverse()
     .find((modifier) => modifier.poolIdOverride)?.poolIdOverride;
-  const poolId = poolOverride ?? (options.routeKind === 'vault' ? 'vault' : 'combat');
+  const poolId = poolOverride ?? (rewardContext === 'vault' ? 'vault' : 'combat');
   const choiceBonus = modifiers.reduce((total, modifier) => total + modifier.choiceBonus, 0);
   const modifierBiasTags = modifiers.flatMap((modifier) => modifier.biasTags);
   const upgradeChoiceBonus = getRewardUpgradeChoiceBonus(
     options.run.upgradeEffects,
-    options.routeKind
+    rewardContext
   );
-  const upgradeBiasTags = getRewardUpgradeBiasTags(options.run.upgradeEffects, options.routeKind);
+  const upgradeBiasTags = getRewardUpgradeBiasTags(options.run.upgradeEffects, rewardContext);
   const actRewardChoiceBonus = getActEconomyRewardChoiceBonus(
     actEconomy,
-    options.routeKind,
+    rewardContext,
     poolId,
     sector.objective.bossRequired
   );
@@ -53,7 +61,7 @@ export function generateSectorRewardChoices(options: {
     ),
     engineering.hooks,
     {
-      routeKind: options.routeKind,
+      routeKind: rewardContext,
       sectorIndex: sector.index,
       poolId,
       choiceCount:
@@ -66,7 +74,7 @@ export function generateSectorRewardChoices(options: {
           carrier.rewardChoiceBonus,
       biasTags: [
         ...options.contract.itemBias,
-        ...getRouteBiasTags(options.routeKind),
+        ...getRouteBiasTags(rewardContext),
         ...modifierBiasTags,
         ...upgradeBiasTags,
         ...interActEffects.rewardBiasTags,
@@ -78,12 +86,14 @@ export function generateSectorRewardChoices(options: {
   );
   const poolProfileId = getSectorRewardPoolProfileId(
     rewardPayload.poolId,
-    options.routeKind,
+    rewardContext,
     sector
   );
+  const rewardSeedSuffix =
+    rewardContext === 'sectorClear' ? 'reward-sectorClear' : `route-${rewardContext}`;
 
   return generateRewardChoices({
-    seed: `${sector.rewardPoolSeed}:sector-${sector.index}:route-${options.routeKind}`,
+    seed: `${sector.rewardPoolSeed}:sector-${sector.index}:${rewardSeedSuffix}`,
     poolId: rewardPayload.poolId,
     poolProfileId,
     count: Math.max(1, Math.floor(rewardPayload.choiceCount)),
@@ -91,7 +101,7 @@ export function generateSectorRewardChoices(options: {
     excludeItemIds: getOwnedItemIds(options.session),
     unlockedIds: options.run.unlockedIds,
     context: {
-      routeKind: options.routeKind,
+      routeKind: rewardContext,
       sectorId: sector.sectorId,
       sectorRole: sector.sectorName,
       bossFactionId: sector.bossFactionId,
@@ -103,7 +113,7 @@ export function generateSectorRewardChoices(options: {
 
 function getSectorRewardPoolProfileId(
   poolId: 'starter' | 'combat' | 'vault',
-  routeKind: RouteKind,
+  routeKind: RewardContextKind,
   sector: SectorRoute
 ): ItemPoolProfileId {
   if (poolId === 'vault') {
@@ -133,7 +143,7 @@ function getSectorRewardPoolProfileId(
   return 'combat';
 }
 
-function getRouteBiasTags(routeKind: RouteKind): readonly string[] {
+function getRouteBiasTags(routeKind: RewardContextKind): readonly string[] {
   if (routeKind === 'shop' || routeKind === 'repair') {
     return ['credit', 'shield'];
   }

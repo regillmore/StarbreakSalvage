@@ -1992,7 +1992,7 @@ Acceptance:
 
 Status:
 
-- Implemented in work order 136 and flattened with the paired hold in work order 138. `RouteNavigation` projects the completed-to-next-sector edge, next contract/objective, and three compact authored route options. `SectorTransitionScene` marks the destination `CHOOSE ROUTE` and labels the source `OPTIONAL`; each node exclusively renders its own action set. After optional resolution, the source becomes `DEPARTED`. Cross-act and terminal choices stay local rather than creating false edges. `GameApp` retains the existing route outcome/shop/event/reward/advance sequence, returns common services to the pending plot, checkpoints extraction-stage route plots through the compatible v11 operational-map target, and enters same-act combat directly once a route reward settles.
+- Implemented in work order 136 and flattened with the paired hold in work order 138. `RouteNavigation` projects the completed-to-next-sector edge, next contract/objective, and three compact authored route options. `SectorTransitionScene` marks the destination `CHOOSE ROUTE` and labels the source `OPTIONAL`; each node exclusively renders its own action set. After optional resolution, the source becomes `DEPARTED`. Cross-act and terminal choices stay local rather than creating false edges. Work order 140 moves required-sector rewards ahead of this plot; `GameApp` then retains route outcome, shop/event, component-salvage, and advance ordering, returns common services to the pending plot, checkpoints extraction-stage route plots through the compatible v11 operational-map target, and enters same-act combat directly once route settlement completes.
 
 ### BL5 - Unknown future signals and active destination emphasis
 
@@ -2012,12 +2012,12 @@ Acceptance:
 
 - The first post-sector view offers one local optional hold and three next-sector routes across two simultaneously actionable sector nodes, with no separate continuation commitment.
 - The source node exclusively owns the optional action, the target node exclusively owns the three routes, and both nodes use the same beige pulsing ready state. The source sublabel remains `OPTIONAL` instead of exposing availability as `HOLD ONCE` or `SETTLED`.
-- Direct route choice preserves default-branch, relief, route outcome, reward, service, and sector-advance ordering; optional choice preserves its guarded combat path and then returns to three routes.
-- Same-act route completion enters the next sector directly instead of reopening its constellation briefing. Each selected-node action set remains keyboard/pointer accessible and fits the standard detail pane without internal scrolling.
+- Direct route choice preserves default-branch, relief, route outcome, service, component-salvage, and sector-advance ordering; optional choice preserves its guarded combat path and then returns to three routes.
+- Required-sector reward settlement occurs before this board; same-act route completion enters the next sector directly without a second reward or constellation briefing. Each selected-node action set remains keyboard/pointer accessible and fits the standard detail pane without internal scrolling.
 
 Status:
 
-- Implemented in work order 138. `GameApp.showMissionBranch` exposes a shared branch-commit seam so direct route selection can settle the default branch and relief synchronously before entering the existing route pipeline. `SectorTransitionScene` composes the optional and route inputs in one map while keeping their actions in separate source and target details. `GameApp.beginCurrentSectorOperation` reuses the existing briefing/entry reducer events after same-act route rewards, avoiding a second hub visit. No mission, route, generation, or snapshot schema changed.
+- Implemented in work order 138 and reordered in work order 140. `GameApp.showMissionBranch` exposes a shared branch-commit seam so direct route selection can settle the default branch and relief synchronously before entering the existing route pipeline. `SectorTransitionScene` composes the optional and route inputs in one map while keeping their actions in separate source and target details. `GameApp.beginCurrentSectorOperation` reuses the existing briefing/entry reducer events after same-act route settlement, avoiding a second hub visit. Required rewards now settle before the board and optional/route paths do not duplicate them. No mission, route, generation, or snapshot schema changed.
 
 ### BL7 - One operation per sector node
 
@@ -2031,3 +2031,15 @@ Acceptance:
 Status:
 
 - Implemented in work order 139. `MissionDirector` sends fresh entry to a full-profile gate operation and marks advance, approach, detour, and staging stages as compatibility-only. Gate outcomes converge on the post-sector branch after their normal settlement, and `GameApp` keeps the generated pursuit option when optional campaign projections are unavailable. Deterministic schedule sweeps prove all 15 sectors follow required operation -> optional-or-route -> next required operation, with snapshot v11 and stable graph ids unchanged.
+
+### BL8 - Immediate operation reward settlement
+
+Acceptance:
+
+- Each first-pass required sector pays out before its optional hold and onward routes become actionable.
+- Optional holds and route events/shops do not create duplicate reward stops; route component salvage and direct next-sector entry remain intact.
+- Incoming route effects and the preceding optional outcome shape the next required sector's reward deterministically, while selected rewards persist in the following constellation checkpoint.
+
+Status:
+
+- Implemented in work order 140. `RewardScene` derives its context from settled incoming route history instead of an unchosen onward route, and `GameApp` opens it at required-gate settlement before the flat flight board. Optional outcomes are carried one sector forward into reward modifiers; route events and shops now lead directly through component salvage to sector advance. Existing route reward seed streams and snapshot v11 remain compatible.

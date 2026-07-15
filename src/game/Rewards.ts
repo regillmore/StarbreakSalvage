@@ -16,6 +16,8 @@ import { createRng, type Rng } from '../core/rng';
 import { filterUnlockedItemIds, type UnlockAccess } from './UnlockGates';
 import { getActEconomyRarityMultiplier, type ActEconomyProfile } from './ActEconomy';
 
+export type RewardContextKind = RouteKind | 'sectorClear';
+
 export interface ItemInstance {
   readonly itemId: ItemId;
   readonly acquisitionOrder: number;
@@ -36,7 +38,7 @@ export interface RewardChoice {
 }
 
 export interface RewardPoolContext {
-  readonly routeKind?: RouteKind;
+  readonly routeKind?: RewardContextKind;
   readonly sectorId?: string;
   readonly sectorRole?: string;
   readonly bossFactionId?: FactionId;

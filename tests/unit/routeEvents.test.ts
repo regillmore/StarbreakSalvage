@@ -14,6 +14,7 @@ import {
   getCombatModifiersForSector,
   getCurrentSector,
   getEffectiveShipStats,
+  getIncomingRewardRouteKind,
   getRewardModifiersForSector,
   getShopModifiersForSector
 } from '../../src/game/RunSession';
@@ -159,17 +160,21 @@ describe('route events', () => {
 
     applyRouteOutcome(session, sector, route, outcome);
 
-    expect(getRewardModifiersForSector(session, sector.index)[0]?.creditBonus).toBe(3);
+    expect(getRewardModifiersForSector(session, session.currentSectorIndex)).toEqual([]);
+
+    expect(advanceSector(run, session)).toBe(true);
+    expect(getIncomingRewardRouteKind(session, session.currentSectorIndex)).toBe(route.kind);
+    expect(
+      getRewardModifiersForSector(session, session.currentSectorIndex)[0]?.creditBonus
+    ).toBe(3);
     expect(
       generateSectorRewardChoices({
         run,
         session,
         contract,
-        routeKind: route.kind
+        routeKind: getIncomingRewardRouteKind(session, session.currentSectorIndex) ?? undefined
       }).length
     ).toBe(3);
-
-    expect(advanceSector(run, session)).toBe(true);
 
     const combatModifiers = getCombatModifiersForSector(session, session.currentSectorIndex);
     const spawnSchedule: readonly EnemySpawn[] = [

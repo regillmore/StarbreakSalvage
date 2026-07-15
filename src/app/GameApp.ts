@@ -1355,7 +1355,15 @@ export class GameApp {
     );
 
     if (nextStage.kind === 'branch') {
-      this.showMissionBranch();
+      if (
+        !completedStage.optional &&
+        completedStage.operationalRole === 'gate' &&
+        nextStage.id === schedule.branchStageId
+      ) {
+        this.showReward();
+      } else {
+        this.showMissionBranch();
+      }
       return;
     }
 
@@ -1839,7 +1847,7 @@ export class GameApp {
   private showRouteEvent(route: RouteOption, outcome: AppliedRouteOutcome): void {
     this.sceneManager.switchTo(
       new RouteEventScene(this.uiRoot, outcome, this.selectedContract, () => {
-        this.showReward(route);
+        this.acquireRouteComponentAndAdvance(route);
       })
     );
   }
@@ -1854,31 +1862,34 @@ export class GameApp {
         (itemId, price) => this.buyShopItem(itemId, price),
         () => this.rerollShop(),
         () => {
-          this.showReward(route);
+          this.acquireRouteComponentAndAdvance(route);
         }
       )
     );
   }
 
-  private showReward(route: RouteOption): void {
+  private showReward(): void {
     this.sceneManager.switchTo(
       new RewardScene(
         this.uiRoot,
         this.currentRun,
         this.runSession,
         this.selectedContract,
-        route,
         (itemId) => {
           addItemToSession(this.runSession, itemId);
-          this.acquireComponentAfterReward(route);
+          this.showMissionBranch();
         },
         () => {
           const sector = getCurrentSector(this.currentRun, this.runSession);
           addCredits(
             this.runSession,
-            getRouteCreditReward(this.runSession, sector.index, createActEconomyProfile(sector))
+            getRouteCreditReward(
+              this.runSession,
+              this.runSession.currentSectorIndex,
+              createActEconomyProfile(sector)
+            )
           );
-          this.acquireComponentAfterReward(route);
+          this.showMissionBranch();
         }
       )
     );
@@ -1921,7 +1932,7 @@ export class GameApp {
     return result;
   }
 
-  private advanceAfterReward(): void {
+  private advanceAfterRoute(): void {
     const missionResult = this.dispatchCurrentMission({
       id: `${this.runSession.mission.currentStageId}:extraction-complete`,
       type: 'completeExtraction'
@@ -2028,7 +2039,7 @@ export class GameApp {
     );
   }
 
-  private acquireComponentAfterReward(route: RouteOption): void {
+  private acquireRouteComponentAndAdvance(route: RouteOption): void {
     const sector = getCurrentSector(this.currentRun, this.runSession);
     const component = generateComponentSalvage({
       seed: this.currentRun.seed,
@@ -2060,7 +2071,7 @@ export class GameApp {
       subjectId: component.id,
       detailId: component.moduleId
     });
-    this.advanceAfterReward();
+    this.advanceAfterRoute();
   }
 
   private showNavigationShop(onBack: () => void = () => this.showSectorTransition()): void {

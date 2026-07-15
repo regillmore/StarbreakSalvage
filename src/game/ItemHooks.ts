@@ -4,7 +4,7 @@ import {
   type ItemTag,
   type RewardPoolDefinition
 } from '../content/items';
-import { getItemNames, type ItemInstance } from './Rewards';
+import { getItemNames, type ItemInstance, type RewardContextKind } from './Rewards';
 import type { BossId } from '../content/bosses';
 import type {
   EnvironmentObjectDamageSource,
@@ -126,7 +126,7 @@ export interface ShopEnteredPayload {
 }
 
 export interface RewardGeneratedPayload {
-  readonly routeKind: RouteKind;
+  readonly routeKind: RewardContextKind;
   readonly sectorIndex: number;
   readonly poolId: RewardPoolDefinition['id'];
   readonly choiceCount: number;

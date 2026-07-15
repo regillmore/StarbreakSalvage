@@ -10,6 +10,8 @@ Phases 1-10 and work orders 101-109 are deployed historical foundations. Work or
 
 Work order 139 refits the live Phase 11 itinerary so each constellation node owns one complete required sector operation and one paired optional challenge. Legacy advance/staging ids remain recoverable for deployed v11 snapshots, but no longer inflate fresh stage counts or insert a second required combat behind one sector node.
 
+Work order 140 settles each required-operation reward before the flat optional/route board. Optional challenges and route events no longer create a late duplicate reward stop; incoming route and prior optional outcomes deterministically shape the next sector's reward without changing snapshot v11.
+
 The deployed completionist measurement is approximately 12 minutes with every optional path taken. That doubles the roughly six-minute Phase 9 baseline and reaches the lower edge of Phase 10's 12-20 minute structural target through mission stages, decisions, foundry work, set pieces, factions/rivals, and crew—not global slowdown or durability inflation.
 
 ## Automated Release Evidence
@@ -18,7 +20,7 @@ The deployed completionist measurement is approximately 12 minutes with every op
 | ------------------------------ | ------ | ----------------------------------------------------------------------------------- |
 | TypeScript                     | Pass   | `npm run check`                                                                     |
 | ESLint                         | Pass   | `npm run check`                                                                     |
-| Unit/deterministic/integration | Pass   | 98 files, 603 tests                                                                 |
+| Unit/deterministic/integration | Pass   | 98 files, 604 tests                                                                 |
 | Production build               | Pass   | Vite emits `dist/` under `/StarbreakSalvage/`                                       |
 | Playwright Chromium            | Pass   | 13 smoke paths, including Scenario Lab and keyboard suspend/reload/resume coverage  |
 | Production preview paths       | Pass   | `npm run test:preview` checks the Pages base plus emitted hashed JavaScript and CSS |
@@ -42,7 +44,7 @@ Local Windows note: Playwright requires escalation because Chromium lives under 
 | Timeline and summaries     | Pass                  | Timeline keeps 96 display entries and 192 processed ids, uses explicit durations, remains local/save-safe, and appears in debug and summaries.                                                                                                                       |
 | Scenario Lab               | Pass                  | Sixteen declarative public-model fixtures reach every Phase 11 domain, including snapshot recovery, carrier staging, frontier endings, and apex dispositions, without private app-state mutation or a full run.                                                      |
 | Accessibility              | Pass with manual gaps | Automated smoke covers keyboard-only flow, 390x700, high contrast, reduced motion, performance mode, pointer controls, remapping precedence, and non-color readouts. Real devices and non-Chromium remain manual.                                                    |
-| Performance                | Pass with warning     | Combined stress caps and debug counts are explicit. Functional Chromium smoke passes. The 916.91 kB minified main bundle still exceeds Vite's 500 kB warning threshold; sustained frame-time/allocation profiling and further code splitting remain next-phase work. |
+| Performance                | Pass with warning     | Combined stress caps and debug counts are explicit. Functional Chromium smoke passes. The 917.26 kB minified main bundle still exceeds Vite's 500 kB warning threshold; sustained frame-time/allocation profiling and further code splitting remain next-phase work. |
 | Browser/Pages load         | Pass locally          | Vite base path and Pages workflow are correct; the repeatable preview smoke verifies base and hashed assets. Public deployment confirmation remains a user/deployment step.                                                                                          |
 
 ## Phase 11 Foundation Audit
@@ -54,7 +56,7 @@ Local Windows note: Playwright requires escalation because Chromium lives under 
 | Safe checkpoint UX    | Pass              | Briefing, operation-entry, and settled post-sector/route writes are automatic; main-menu resume/discard works by keyboard and pointer and explains the boundary.        |
 | Corruption recovery   | Pass              | Malformed, unsupported, oversized, or identity-drifted snapshots remove only the suspended record. Unit coverage pins permanent-save isolation.                         |
 | Endurance boundary    | Pass              | Public harness repeats all sixteen Scenario Lab setups plus the finale through deterministic snapshot round trips and separately restores both frontier decisions.      |
-| Loading boundary      | Pass with warning | Initial JavaScript is 916.91 kB minified/249.76 kB gzip; low-frequency audit and service scenes remain lazy and the existing warning remains active.                   |
+| Loading boundary      | Pass with warning | Initial JavaScript is 917.26 kB minified/249.87 kB gzip; low-frequency audit and service scenes remain lazy and the existing warning remains active.                   |
 | Executable topology   | Pass              | The 15-sector graph retains 105 stable compatibility nodes and 30 decisions; fresh schedules execute one full required gate plus at most one paired pursuit per sector. |
 | Operational cleanup   | Pass              | A 64-record idempotent ledger settles checkpoints and payouts once and asserts zero retained actors, projectiles, or hooks at each boundary.                            |
 | Consequence carry     | Pass              | Compatibility detour support still reduces its gate; paired pursuit outcomes now raise the next real sector operation and survive snapshot/decision replay.            |
@@ -94,7 +96,7 @@ Local Windows note: Playwright requires escalation because Chromium lives under 
 - Ally AI is bounded and objective-safe in automation, but target thrash, visual overlap, perceived usefulness, and command ergonomics still need long manual playtests.
 - Modular frames, items, evolved weapons, crew, factions, and set pieces create combinatorial builds that cannot be exhaustively balanced by current automated fixtures.
 - Twelve minutes is the last deployed real stopwatch measurement from Phase 10. Work order 139's executable-node audit now projects 11.08 minutes at Act II extraction, 16.82 minutes standard, and 21.07 minutes completionist; those figures describe authored capacity, not active play or fatigue. Full-voyage timing still needs a fresh manual measurement.
-- The current main JavaScript bundle is 916.91 kB minified (249.76 kB gzip) after work order 139 aligns fresh mission schedules and duration readouts with one required operation per constellation sector. CSS is 64.46 kB minified/13.28 kB gzip. Several integration modules remain large: `CombatState`, `CanvasRenderer`, `GameApp`, `GameplayScene`, and content validation. These are next-phase scaling warnings, not hidden release exceptions.
+- The current main JavaScript bundle is 917.26 kB minified (249.87 kB gzip) after work order 140 moves reward settlement ahead of the flat constellation. CSS is 64.46 kB minified/13.28 kB gzip. Several integration modules remain large: `CombatState`, `CanvasRenderer`, `GameApp`, `GameplayScene`, and content validation. These are next-phase scaling warnings, not hidden release exceptions.
 - Work order 102 raises the initial bundle baseline to 678.74 kB minified/183.34 kB gzip and CSS to 26.76 kB while retaining the three Scenario Lab chunks. Further splitting remains required rather than complete.
 - Work order 103 raises the initial bundle baseline to 704.95 kB minified/189.45 kB gzip with CSS unchanged at 26.76 kB. The 26.21 kB minified increase is measured and the existing split warning remains open.
 - Work order 104 raises the initial bundle baseline to 722.66 kB minified/194.63 kB gzip with CSS unchanged at 26.76 kB, while isolating the 3.42 kB command deck as a lazy chunk. The 17.71 kB minified core increase is measured and the existing split warning remains open.

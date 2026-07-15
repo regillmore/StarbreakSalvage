@@ -1,6 +1,7 @@
 import type { ItemRarity, ItemSource, ItemTag, RewardPoolId } from '../content/items';
 import type { RouteKind, SectorRoute } from './Generation';
 import type { CombatRunResult } from './CombatState';
+import type { RewardContextKind } from './Rewards';
 
 export interface ActEconomyProfile {
   readonly actId: string;
@@ -116,7 +117,7 @@ export function createActEconomyProfile(sector: SectorRoute): ActEconomyProfile 
 
 export function getActEconomyRewardChoiceBonus(
   profile: ActEconomyProfile | undefined,
-  routeKind: RouteKind,
+  routeKind: RewardContextKind,
   poolId: RewardPoolId,
   bossGate: boolean
 ): number {

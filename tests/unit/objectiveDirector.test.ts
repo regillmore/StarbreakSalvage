@@ -323,6 +323,20 @@ describe('objective grammar and mission anthology', () => {
     expect(getRewardModifiersForSector(session, 0)).toContainEqual(
       expect.objectContaining({ choiceBonus: 1, creditBonus: 2 })
     );
+
+    recordMissionObjectiveOutcome(session, schedule, {
+      ...result,
+      missionObjective: {
+        ...missionObjective,
+        stageId: schedule.optionalStageId!,
+        optional: true
+      }
+    });
+
+    expect(getRewardModifiersForSector(session, 0)).toHaveLength(1);
+    expect(getRewardModifiersForSector(session, 1)).toContainEqual(
+      expect.objectContaining({ choiceBonus: 2, creditBonus: 3 })
+    );
   });
 
   it('applies an explicit failure consequence without corrupting run completion state', () => {

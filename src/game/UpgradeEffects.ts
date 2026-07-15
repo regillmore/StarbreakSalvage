@@ -1,6 +1,6 @@
 import type { ItemTag } from '../content/items';
 import { UPGRADES, type UpgradeId } from '../content/upgrades';
-import type { RouteKind } from './Generation';
+import type { RewardContextKind } from './Rewards';
 
 export interface RunUpgradeEffects {
   readonly purchasedUpgradeIds: readonly UpgradeId[];
@@ -83,7 +83,7 @@ export function getMarketDecoderReadout(effects: RunUpgradeEffects): string | nu
 
 export function getRewardDossierReadout(
   effects: RunUpgradeEffects,
-  routeKind: RouteKind
+  routeKind: RewardContextKind
 ): string | null {
   const choiceBonus = getRewardUpgradeChoiceBonus(effects, routeKind);
 
@@ -96,14 +96,14 @@ export function getRewardDossierReadout(
 
 export function getRewardUpgradeChoiceBonus(
   effects: RunUpgradeEffects,
-  routeKind: RouteKind
+  routeKind: RewardContextKind
 ): number {
   return routeKind === 'vault' ? effects.rewardChoiceBonus : 0;
 }
 
 export function getRewardUpgradeBiasTags(
   effects: RunUpgradeEffects,
-  routeKind: RouteKind
+  routeKind: RewardContextKind
 ): readonly ItemTag[] {
   return getRewardUpgradeChoiceBonus(effects, routeKind) > 0 ? effects.rewardBiasTags : [];
 }

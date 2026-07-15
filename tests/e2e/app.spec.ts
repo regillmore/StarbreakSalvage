@@ -256,6 +256,17 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
     /Exit sectorComplete (ignition|boost|clear|transition) \d+%/
   );
   await expect(page.getByTestId('command-deck')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Choose Reward' })).toBeVisible();
+  await expect(page.locator('.reward-panel')).toHaveAttribute('data-contract-theme', 'redline');
+  await expect(page.locator('.reward-card').first()).toContainText('Build fit:');
+  await expect(
+    page
+      .locator('.reward-card')
+      .first()
+      .getByRole('img', { name: /item icon/ })
+  ).toBeVisible();
+  await expect(page.locator('.reward-card').first()).toContainText(/Live effect|Bridge effect/);
+  await page.getByRole('button', { name: /Take / }).first().click();
   await expect(page.getByTestId('mission-briefing')).toBeVisible();
   await expect(page.getByTestId('navigation-destination-optional')).toContainText('OPTIONAL');
   await expect(page.getByTestId('navigation-destination-route')).toContainText(
@@ -301,6 +312,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.getByTestId('navigation-optional-action').click();
   await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
   await page.keyboard.press('8');
+  await expect(page.getByRole('heading', { name: 'Choose Reward' })).toHaveCount(0);
   await expect(page.getByTestId('mission-briefing')).toBeVisible();
   await expect(page.getByRole('heading', { name: /Running Audit briefing/ })).toBeVisible();
   await expect(page.getByTestId('navigation-destination-route')).toContainText('CHOOSE ROUTE');
@@ -349,7 +361,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('foundry-attack-impact')).toBeVisible();
   const upgradeCircuit = page.getByTestId('foundry-upgrade-circuit');
   await expect(
-    upgradeCircuit.getByRole('heading', { name: /Upgrade Circuit \/ 3\/6/ })
+    upgradeCircuit.getByRole('heading', { name: /Upgrade Circuit \/ 4\/6/ })
   ).toBeVisible();
   await expect(upgradeCircuit).toContainText(/Signal order: .* > /);
   await expect(page.locator('.foundry-socket')).toHaveCount(6);
@@ -362,7 +374,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('foundry-status')).toContainText(/routed into/i);
   await page.getByTestId('foundry-undo').click();
   await expect(page.getByTestId('foundry-upgrade-circuit')).toContainText(
-    /Upgrade Circuit \/ 3\/6/
+    /Upgrade Circuit \/ 4\/6/
   );
   await expect(page.locator('.foundry-cargo-card')).toHaveCount(0);
   await expect(page.getByTestId('foundry-pending-history')).toContainText('Draft clean.');
@@ -386,18 +398,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
 
   await page.getByRole('button', { name: /Reroll/ }).click();
   await page.getByRole('button', { name: 'Leave Shop' }).click();
-  await expect(page.getByRole('heading', { name: 'Choose Reward' })).toBeVisible();
-  await expect(page.locator('.reward-panel')).toHaveAttribute('data-contract-theme', 'redline');
-  await expect(page.locator('.reward-card').first()).toContainText('Build fit:');
-  await expect(
-    page
-      .locator('.reward-card')
-      .first()
-      .getByRole('img', { name: /item icon/ })
-  ).toBeVisible();
-  await expect(page.locator('.reward-card').first()).toContainText(/Live effect|Bridge effect/);
-
-  await page.getByRole('button', { name: /Take / }).first().click();
+  await expect(page.getByRole('heading', { name: 'Choose Reward' })).toHaveCount(0);
   await expect(page.getByTestId('mission-briefing')).toHaveCount(0);
   await expectGameplaySector(page, 'Trade War Corridor');
 
@@ -1161,6 +1162,8 @@ test('suspends, reloads, resumes, and clears a versioned expedition snapshot', a
   await expect(page.locator('.debug-overlay')).toContainText('Scene gameplay');
 
   await page.keyboard.press('8');
+  await expect(page.getByRole('heading', { name: 'Choose Reward' })).toBeVisible();
+  await page.getByRole('button', { name: /Take / }).first().click();
   await expect(page.getByTestId('mission-briefing')).toBeVisible();
   await page.reload();
   await expect(page.getByTestId('run-snapshot-panel')).toContainText(
@@ -1293,6 +1296,8 @@ async function forceCompleteSectorAndEnterNext(
     /clear\. (Main thrusters igniting|Ship accelerating out of sector)/
   );
   await expect(page.getByTestId('command-deck')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Choose Reward' })).toBeVisible();
+  await page.getByRole('button', { name: /Take / }).first().click();
   await expect(page.getByTestId('mission-briefing')).toBeVisible();
   await expect(page.getByTestId('navigation-route-options')).toBeVisible();
   await expect(page.locator('.navigation-flight-option')).toHaveCount(3);
@@ -1308,12 +1313,13 @@ async function forceCompleteSectorAndEnterNext(
     await page.getByTestId('navigation-optional-action').click();
     await expect(page.locator('.debug-overlay')).toContainText('Mission combat active');
     await page.keyboard.press('8');
+    await expect(page.getByRole('heading', { name: 'Choose Reward' })).toHaveCount(0);
     await expect(page.getByTestId('mission-briefing')).toBeVisible();
     await expect(page.getByTestId('navigation-route-options')).toBeVisible();
     await expect(page.locator('.navigation-route-card')).toHaveCount(3);
   }
 
-  await chooseFirstRouteAndReward(page);
+  await chooseFirstRouteAndDepart(page);
   await expect(page.getByTestId('mission-briefing')).toHaveCount(0);
   await expectGameplaySector(page, nextSectorName);
 }
@@ -1329,7 +1335,7 @@ async function expectGameplaySector(
   await expect(page.locator('.hud-pill').filter({ hasText: expectedText })).toBeVisible();
 }
 
-async function chooseFirstRouteAndReward(page: Page): Promise<void> {
+async function chooseFirstRouteAndDepart(page: Page): Promise<void> {
   const firstRoute = page.locator('.route-card').first();
   const routeTestId = await firstRoute.getAttribute('data-testid');
 
@@ -1343,6 +1349,5 @@ async function chooseFirstRouteAndReward(page: Page): Promise<void> {
     await page.getByRole('button', { name: 'Continue' }).click();
   }
 
-  await expect(page.getByRole('heading', { name: 'Choose Reward' })).toBeVisible();
-  await page.getByRole('button', { name: /Take / }).first().click();
+  await expect(page.getByRole('heading', { name: 'Choose Reward' })).toHaveCount(0);
 }
