@@ -10,12 +10,12 @@ import { getItemById } from '../content/items';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import type { ItemInstance } from '../game/Rewards';
 import {
-  canFitItemInSocket,
+  canFitItemInCircuit,
   createItemSocketCircuitSummary,
-  fitItemInSocket,
+  fitItemInCircuit,
   getActiveFittedItems,
   getItemCompatibleSocketTypes,
-  getItemSocketSlots,
+  moveItemInCircuit,
   reconcileItemSockets,
   unfitItem
 } from '../game/ItemSockets';
@@ -150,7 +150,7 @@ export class FoundryScene implements Scene {
     workspace.className = 'foundry-workspace';
     workspace.append(this.createInstalledSection(frame), this.createCargoSection());
 
-    const sockets = this.createUpgradeCircuitSection();
+    const circuit = this.createUpgradeCircuitSection(dashboard);
     const fusion = this.createFusionSection();
     const pending = document.createElement('section');
     pending.className = 'foundry-history';
@@ -222,8 +222,8 @@ export class FoundryScene implements Scene {
       grid,
       console,
       issueList,
+      circuit,
       workspace,
-      sockets,
       fusion,
       pending,
       status,
@@ -294,9 +294,7 @@ export class FoundryScene implements Scene {
     projectileLayer.className = 'foundry-attack-projectile-layer';
     projectileLayer.dataset.testid = 'foundry-attack-projectile-layer';
     projectileLayer.dataset.volleySize = String(dashboard.attackSimulation.volleySize);
-    projectileLayer.dataset.fireCooldown = String(
-      dashboard.attackSimulation.fireCooldownSeconds
-    );
+    projectileLayer.dataset.fireCooldown = String(dashboard.attackSimulation.fireCooldownSeconds);
     projectileLayer.setAttribute('aria-hidden', 'true');
     for (const projectile of dashboard.attackSimulation.projectiles) {
       const shot = document.createElement('span');
@@ -503,7 +501,7 @@ export class FoundryScene implements Scene {
         card.append(
           componentName,
           this.createComponentStatStrip(component),
-          this.createComponentSocketStrip(component.id)
+          this.createComponentCircuitContribution(component)
         );
         const actions = document.createElement('div');
         actions.className = 'foundry-card-actions';
@@ -534,52 +532,94 @@ export class FoundryScene implements Scene {
     return section;
   }
 
-  private createComponentSocketStrip(componentId: string): HTMLElement {
-    const strip = document.createElement('div');
-    strip.className = 'foundry-socket-strip';
-    for (const slot of getItemSocketSlots(this.state.draft).filter(
-      (candidate) => candidate.componentId === componentId
-    )) {
-      const item = this.itemInstances.find(
-        (candidate) =>
-          candidate.socket?.componentId === componentId &&
-          candidate.socket.socketIndex === slot.socketIndex
-      );
-      const socket = document.createElement('span');
-      socket.className = `foundry-socket foundry-socket-${slot.type}`;
-      socket.dataset.testid = `foundry-socket-${componentId}-${slot.socketIndex}`;
-      socket.textContent = item
-        ? `${slot.circuitOrder + 1} ${slot.type.toUpperCase()} / ${getItemById(item.itemId).name}`
-        : `${slot.circuitOrder + 1} ${slot.type.toUpperCase()} / EMPTY`;
-      strip.append(socket);
-    }
-    return strip;
+  private createComponentCircuitContribution(component: FoundryComponentInstance): HTMLElement {
+    const module = getShipModuleById(component.moduleId);
+    const contribution = document.createElement('div');
+    contribution.className = 'foundry-circuit-contribution';
+    contribution.dataset.testid = `foundry-circuit-extension-${component.id}`;
+    const capacity = document.createElement('strong');
+    capacity.textContent = `CIRCUIT +${module.upgradeSockets.length}`;
+    const channels = document.createElement('span');
+    channels.textContent = module.upgradeSockets.map((type) => type.toUpperCase()).join(' + ');
+    contribution.append(capacity, channels);
+    return contribution;
   }
 
-  private createUpgradeCircuitSection(): HTMLElement {
+  private createUpgradeCircuitSection(dashboard: FoundryDashboardModel): HTMLElement {
     const section = document.createElement('section');
     section.className = 'foundry-section foundry-upgrade-circuit';
     section.dataset.testid = 'foundry-upgrade-circuit';
     const summary = createItemSocketCircuitSummary(this.itemInstances, this.state.draft);
+    const active = getActiveFittedItems(this.itemInstances, this.state.draft);
+    const idle = this.itemInstances
+      .filter((instance) => !instance.socket)
+      .sort((left, right) => left.acquisitionOrder - right.acquisitionOrder);
+
+    const header = document.createElement('header');
+    header.className = 'foundry-circuit-header';
     const title = document.createElement('h2');
-    title.textContent = `Upgrade Circuit / ${summary.fitted}/${summary.capacity}`;
+    title.textContent = 'Signal Circuit';
+    const budget = document.createElement('strong');
+    budget.className = 'foundry-circuit-budget';
+    budget.textContent = `${summary.fitted}/${summary.capacity} LIVE / ${summary.open} OPEN`;
+    header.append(title, budget);
     const copy = document.createElement('p');
     copy.className = 'foundry-circuit-copy';
     copy.textContent =
       summary.chain.length > 0
-        ? `Signal order: ${summary.chain.join(' > ')}. Later upgrades receive earlier transformations.`
-        : 'No live circuit. Fit upgrades to installed components.';
+        ? `CORE -> ${summary.chain.join(' -> ')} -> WEAPON. Each stage receives the signal built before it.`
+        : 'No live chain. Installed systems provide conduits; append upgrades from the rack.';
+
+    const extensions = document.createElement('div');
+    extensions.className = 'foundry-circuit-extensions';
+    extensions.setAttribute('aria-label', 'Installed component circuit extensions');
+    for (const extension of summary.extensions) {
+      const chip = document.createElement('span');
+      chip.className = 'foundry-circuit-extension';
+      chip.dataset.testid = 'foundry-circuit-extension';
+      chip.innerHTML = `<b>+${extension.capacity}</b><span>${extension.moduleName}</span><small>${extension.channels
+        .map((type) => type.toUpperCase())
+        .join(' / ')}</small>`;
+      extensions.append(chip);
+    }
+
+    const rail = document.createElement('div');
+    rail.className = 'foundry-circuit-rail';
+    rail.dataset.testid = 'foundry-circuit-rail';
+    rail.setAttribute('role', 'list');
+    rail.setAttribute('aria-label', 'Ordered active upgrade circuit');
+    for (const [index, instance] of active.entries()) {
+      rail.append(this.createCircuitNode(instance, index, active.length, dashboard));
+    }
+    for (let index = active.length; index < summary.capacity; index += 1) {
+      const empty = document.createElement('article');
+      empty.className = 'foundry-circuit-node foundry-circuit-node-empty';
+      empty.dataset.testid = 'foundry-circuit-open-node';
+      empty.setAttribute('role', 'listitem');
+      empty.innerHTML = `<span class="foundry-circuit-position">${String(index + 1).padStart(
+        2,
+        '0'
+      )}</span><strong>OPEN CONDUIT</strong><small>Append from rack</small>`;
+      rail.append(empty);
+    }
+
+    const rackHeader = document.createElement('h3');
+    rackHeader.className = 'foundry-rack-heading';
+    rackHeader.textContent = `Upgrade Rack / ${idle.length}`;
     const rack = document.createElement('div');
     rack.className = 'foundry-card-grid foundry-upgrade-rack';
 
-    for (const instance of [...this.itemInstances].sort(
-      (left, right) => left.acquisitionOrder - right.acquisitionOrder
-    )) {
+    if (idle.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'foundry-empty';
+      empty.textContent = 'Every owned upgrade is live.';
+      rack.append(empty);
+    }
+
+    for (const instance of idle) {
       const item = getItemById(instance.itemId);
       const card = document.createElement('article');
-      card.className = `foundry-card foundry-upgrade-card ${
-        instance.socket ? 'foundry-upgrade-fitted' : 'foundry-upgrade-idle'
-      }`;
+      card.className = 'foundry-card foundry-upgrade-card foundry-upgrade-idle';
       card.dataset.testid = `foundry-upgrade-${instance.acquisitionOrder}`;
       const heading = document.createElement('h3');
       heading.textContent = item.name;
@@ -588,73 +628,115 @@ export class FoundryScene implements Scene {
       const badges = document.createElement('div');
       badges.className = 'foundry-badge-row';
       badges.append(
-        this.createBadge(instance.socket ? `LIVE ${instance.socket.circuitOrder + 1}` : 'RACK'),
+        this.createBadge('RACK'),
         ...getItemCompatibleSocketTypes(item).map((type) =>
           this.createBadge(type.toUpperCase(), `foundry-badge-${type}`)
         )
       );
       const actions = document.createElement('div');
-      actions.className = 'foundry-card-actions foundry-socket-actions';
-      if (instance.socket) {
-        actions.append(
-          this.createActionButton('Eject', () => {
-            this.itemInstances = unfitItem(this.itemInstances, instance.acquisitionOrder);
-            this.status = `${item.name} returned to the upgrade rack.`;
-          })
-        );
-      }
-      const compatibleSlots = getItemSocketSlots(this.state.draft).filter(
-        (candidate) =>
-          canFitItemInSocket(item.id, candidate) &&
-          !(
-            instance.socket?.componentId === candidate.componentId &&
-            instance.socket.socketIndex === candidate.socketIndex
-          )
+      actions.className = 'foundry-card-actions';
+      const canFit = canFitItemInCircuit(
+        this.itemInstances,
+        this.state.draft,
+        instance.acquisitionOrder
       );
-      if (compatibleSlots.length > 0) {
-        const select = document.createElement('select');
-        select.className = 'foundry-socket-select';
-        select.setAttribute('aria-label', `Fit or move ${item.name}`);
-        const prompt = document.createElement('option');
-        prompt.value = '';
-        prompt.textContent = instance.socket ? 'Move / swap…' : 'Fit / swap…';
-        select.append(prompt);
-        for (const slot of compatibleSlots) {
-          const occupant = this.itemInstances.find(
-            (candidate) =>
-              candidate.socket?.componentId === slot.componentId &&
-              candidate.socket.socketIndex === slot.socketIndex
-          );
-          const option = document.createElement('option');
-          option.value = `${slot.componentId}:${slot.socketIndex}`;
-          option.textContent = `${slot.circuitOrder + 1} / ${slot.moduleName} / ${slot.type.toUpperCase()}${
-            occupant ? ` / swap ${getItemById(occupant.itemId).name}` : ''
-          }`;
-          select.append(option);
-        }
-        select.addEventListener('change', () => {
-          const slot = compatibleSlots.find(
-            (candidate) =>
-              `${candidate.componentId}:${candidate.socketIndex}` === select.value
-          );
-          if (!slot) return;
-          this.itemInstances = fitItemInSocket(
-            this.itemInstances,
-            this.state.draft,
-            instance.acquisitionOrder,
-            slot.componentId,
-            slot.socketIndex
-          );
-          this.status = `${item.name} routed into ${slot.moduleName} ${slot.type} socket.`;
-          this.enter();
-        });
-        actions.append(select);
+      const append = this.createActionButton('Append to chain', () => {
+        this.itemInstances = fitItemInCircuit(
+          this.itemInstances,
+          this.state.draft,
+          instance.acquisitionOrder
+        );
+        this.status = `${item.name} appended to the signal chain.`;
+      });
+      append.disabled = !canFit;
+      append.setAttribute('aria-label', `Append ${item.name} to the circuit`);
+      let fitNote: HTMLElement | null = null;
+      if (!canFit) {
+        const reason =
+          summary.open === 0
+            ? 'Circuit full. Eject a live stage first.'
+            : 'No compatible conduit is open in the installed systems.';
+        append.title = reason;
+        fitNote = document.createElement('small');
+        fitNote.className = 'foundry-circuit-fit-note';
+        fitNote.textContent = reason;
       }
-      card.append(heading, badges, effect, actions);
+      actions.append(append);
+      card.append(heading, badges, effect);
+      if (fitNote) card.append(fitNote);
+      card.append(actions);
       rack.append(card);
     }
-    section.append(title, copy, rack);
+    section.append(header, copy, extensions, rail, rackHeader, rack);
     return section;
+  }
+
+  private createCircuitNode(
+    instance: ItemInstance,
+    index: number,
+    activeCount: number,
+    dashboard: FoundryDashboardModel
+  ): HTMLElement {
+    const item = getItemById(instance.itemId);
+    const stage = dashboard.circuitStages.find(
+      (candidate) => candidate.acquisitionOrder === instance.acquisitionOrder
+    );
+    const node = document.createElement('article');
+    node.className = 'foundry-circuit-node';
+    node.dataset.testid = `foundry-circuit-node-${instance.acquisitionOrder}`;
+    node.setAttribute('role', 'listitem');
+    const header = document.createElement('header');
+    const position = document.createElement('span');
+    position.className = 'foundry-circuit-position';
+    position.textContent = String(index + 1).padStart(2, '0');
+    const domain = document.createElement('span');
+    domain.className = 'foundry-circuit-domain';
+    domain.textContent = stage?.domain ?? 'REACTIVE';
+    header.append(position, domain);
+    const heading = document.createElement('h3');
+    heading.textContent = item.name;
+    const effect = document.createElement('p');
+    effect.textContent = item.effect;
+    const output = document.createElement('div');
+    output.className = 'foundry-circuit-output';
+    output.dataset.changed = String(stage?.changed ?? false);
+    output.innerHTML = `<small>OUTPUT</small><strong>${stage?.outputLabel ?? 'signal armed'}</strong>`;
+    if (stage && stage.addedTags.length > 0) {
+      const tags = document.createElement('span');
+      tags.textContent = `+ ${stage.addedTags.join(' + ')}`;
+      output.append(tags);
+    }
+    const actions = document.createElement('div');
+    actions.className = 'foundry-card-actions foundry-circuit-actions';
+    const earlier = this.createActionButton('Earlier', () => {
+      this.itemInstances = moveItemInCircuit(
+        this.itemInstances,
+        this.state.draft,
+        instance.acquisitionOrder,
+        -1
+      );
+      this.status = `${item.name} moved earlier in the signal chain.`;
+    });
+    earlier.disabled = index === 0;
+    earlier.setAttribute('aria-label', `Move ${item.name} earlier in the circuit`);
+    const later = this.createActionButton('Later', () => {
+      this.itemInstances = moveItemInCircuit(
+        this.itemInstances,
+        this.state.draft,
+        instance.acquisitionOrder,
+        1
+      );
+      this.status = `${item.name} moved later in the signal chain.`;
+    });
+    later.disabled = index === activeCount - 1;
+    later.setAttribute('aria-label', `Move ${item.name} later in the circuit`);
+    const eject = this.createActionButton('Eject', () => {
+      this.itemInstances = unfitItem(this.itemInstances, instance.acquisitionOrder);
+      this.status = `${item.name} returned to the upgrade rack.`;
+    });
+    actions.append(earlier, later, eject);
+    node.append(header, heading, effect, output, actions);
+    return node;
   }
 
   private createCargoSection(): HTMLElement {
@@ -837,7 +919,7 @@ export class FoundryScene implements Scene {
     return items
       .map(
         (item) =>
-          `${item.acquisitionOrder}:${item.socket?.componentId ?? '-'}:${item.socket?.socketIndex ?? '-'}`
+          `${item.acquisitionOrder}:${item.socket?.componentId ?? '-'}:${item.socket?.socketIndex ?? '-'}:${item.socket?.circuitOrder ?? '-'}`
       )
       .join('|');
   }

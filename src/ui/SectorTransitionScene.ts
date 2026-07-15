@@ -111,10 +111,7 @@ export class SectorTransitionScene implements Scene {
   public enter(): void {
     const context = this.createBriefingContext();
     const choiceSectorIndices = this.routeChoice?.targetSectorIndices ?? [];
-    const visitedSectorIndices = getRunSessionVisitedActRouteSectorIndices(
-      this.run,
-      this.session
-    );
+    const visitedSectorIndices = getRunSessionVisitedActRouteSectorIndices(this.run, this.session);
     this.plan = createSectorNavigationPlan({
       run: this.run,
       sectorIndex: this.session.currentSectorIndex,
@@ -585,10 +582,10 @@ export class SectorTransitionScene implements Scene {
           ? 'Choose Route at Next Signal'
           : 'Begin Operation'
       : node.status === 'completed'
-          ? 'Operation Settled'
-          : node.status === 'bypassed'
-            ? 'Signal Bypassed'
-            : 'Complete Current Sector';
+        ? 'Operation Settled'
+        : node.status === 'bypassed'
+          ? 'Signal Bypassed'
+          : 'Complete Current Sector';
     if (current && this.postSectorChoice) action.dataset.testid = 'navigation-optional-action';
     action.addEventListener('click', () => this.activateNode(node.id));
     this.detailRoot.replaceChildren(heading, summary, body, action);
@@ -744,7 +741,7 @@ export class SectorTransitionScene implements Scene {
         this.createDetailCopy(
           cargo.length > 0
             ? 'Recovered component cargo is ready to install, fuse, scrap, or retain for fleet construction.'
-            : 'The loadout, socket circuit, and attack simulation remain available even with no loose hardware.'
+            : 'The loadout, ordered signal circuit, and attack simulation remain available even with no loose hardware.'
         )
       );
       return;
@@ -891,9 +888,7 @@ export class SectorTransitionScene implements Scene {
     if (!this.routeChoice) return [];
     const targetSectorIndices = new Set(this.routeChoice.targetSectorIndices);
     return plan.constellation.nodes
-      .filter(
-        (node) => node.kind === 'sector' && targetSectorIndices.has(node.sectorIndex)
-      )
+      .filter((node) => node.kind === 'sector' && targetSectorIndices.has(node.sectorIndex))
       .map((node) => node.id);
   }
 

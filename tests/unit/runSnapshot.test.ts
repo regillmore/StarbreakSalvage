@@ -264,7 +264,7 @@ describe('RunSnapshot', () => {
     ).toThrow(/carrier extension is invalid/);
   });
 
-  it('rejects duplicate or ghost item socket assignments', () => {
+  it('rejects duplicate, ghost, or ambiguous circuit assignments', () => {
     const run = generateRunSkeleton('SNAPSHOT-SOCKET-DRIFT');
     const contract = run.contracts[0]!;
     const snapshot = createRunSnapshot({
@@ -283,6 +283,11 @@ describe('RunSnapshot', () => {
         ? { ...item, socket: { componentId: 'missing', socketIndex: 0, circuitOrder: 0 } }
         : item
     );
+    const duplicateOrder = snapshot.session.itemInstances.map((item, index) =>
+      index === 1 && item.socket
+        ? { ...item, socket: { ...item.socket, circuitOrder: firstSocket.circuitOrder } }
+        : item
+    );
 
     expect(() =>
       restoreRunSnapshot({
@@ -294,6 +299,12 @@ describe('RunSnapshot', () => {
       restoreRunSnapshot({
         ...snapshot,
         session: { ...snapshot.session, itemInstances: ghost }
+      })
+    ).toThrow(/item socket state/);
+    expect(() =>
+      restoreRunSnapshot({
+        ...snapshot,
+        session: { ...snapshot.session, itemInstances: duplicateOrder }
       })
     ).toThrow(/item socket state/);
   });

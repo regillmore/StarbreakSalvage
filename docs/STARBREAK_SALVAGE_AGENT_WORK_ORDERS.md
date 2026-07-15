@@ -2654,6 +2654,28 @@ Status: implemented. `GameplayScene` already assigns the native `hidden` attribu
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 99 Vitest files and 609 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Chromium verifies both apex surfaces are hidden during an ordinary encounter-free opening sector and that an authored Grave Choir ambush still presents its populated apex contact banner. The build emits 925.31 kB minified/252.47 kB gzip initial JavaScript and 65.01/13.39 kB CSS, effectively unchanged JavaScript and a 0.04/0.01 kB CSS increase over work order 143. The existing 500 kB chunk notice remains; no dependency, gameplay state, generated plan, RNG stream, save/snapshot version, or warning threshold changed.
 
+## Work order 145 - Ship-level ordered signal circuit
+
+Goal: make the ordered upgrade circuit a legible, central build-crafting system without requiring players to manage item placement across every individual component card.
+
+Prompt:
+
+> Reimagine Hardpoint Control around one ship-level Noita-like upgrade circuit. Installed components should extend and characterize the circuit, while the player directly chooses which owned upgrades are live and in what order. Make append, eject, reorder, capacity growth, compatibility, cumulative transformation, and final weapon behavior easy to understand from one screen. Preserve real order-dependent hooks, deterministic reconciliation, engineering undo/skip/commit, component replacement, inactive inventory, snapshots, accessibility, bounded preview work, and static hosting.
+
+Acceptance criteria:
+
+- Hardpoint Control presents one numbered processing rail from core to weapon, not item-placement selectors and occupancy strips repeated across component cards. Live stages support direct earlier, later, and eject actions; inactive items support one append action with a visible reason when capacity or compatibility blocks it.
+- Installed components remain the source of limited typed capacity, but expose that role as compact `+capacity / channel` extensions. Physical conduit assignment is automatic, deterministic, and separate from the player's explicit logical order.
+- Engineering removal or replacement reroutes the live chain across compatible remaining conduits when possible, preserves deliberate rack choices, and drops items only when the new component graph cannot legally power the full chain. Undo, skip, commit, summaries, and snapshot validation preserve the resulting order.
+- The circuit previews cumulative cause and effect per stage on a representative complete firing cycle, including projectile-count, total-impact, and added-tag changes. Reordering immediately rebuilds both the stage readout and the existing production-projectile live-fire simulation.
+- Pointer and keyboard controls, disabled-state explanations, high contrast, reduced motion, performance mode, a 390x700 layout, route/shop/reward/gameplay hook consumers, deterministic generation, actor/proc budgets, save data, and GitHub Pages behavior remain valid.
+
+Status: implemented. `ItemSockets` now treats component and socket coordinates as internal conduit routing while preserving `circuitOrder` as the independent player-authored execution sequence. Append chooses a compatible native conduit before flex capacity, earlier/later swaps only logical order, and component graph changes invoke a deterministic bounded augmenting-path rematch across installed capacity. Fully valid stored routes round-trip exactly; deliberate rack choices remain inactive; malformed, duplicate, ghost, incompatible, or ambiguous snapshot assignments still fail exact reconciliation without changing the snapshot-v12 shape.
+
+Hardpoint Control moves the circuit ahead of component inventory and replaces six component-local occupancy rows plus per-item move/swap selectors with one responsive rail. Component cards and extension chips show how installed hardware contributes capacity and channel character. Each live node exposes its position, hook domain, effect, cumulative representative-volley output, added projectile tags, and earlier/later/eject controls; open nodes show remaining growth room, and the rack offers one append action with a visible blocked reason. `FoundryPresentation` derives every stage from cumulative prefixes of the same module/item hooks used by combat, while the existing live-fire pane continues to render actual production projectile blueprints after every edit. Run summaries translate sparse internal order values back into contiguous player-facing circuit positions.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 99 Vitest files and 610 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Focused socket/hook/foundry/snapshot coverage passes with 4 files and 39 tests. Chromium exercises the real post-sector Hardpoint Control at 390x700, verifies three component extensions, four live/two open nodes, cumulative output, reorder, eject, append, undo, no horizontal document overflow, return to navigation, and no console errors. The build emits 931.12 kB minified/254.01 kB gzip initial JavaScript and 67.84/13.90 kB CSS, increases of 5.81/1.54 kB and 2.83/0.51 kB over work order 144. The existing 500 kB chunk notice remains; no dependency, RNG stream, save schema, snapshot shape/version, proc budget, or warning threshold changed. The in-app browser runtime again reported no available target after its prescribed connection check, so no manual in-app screenshot is claimed.
+
 ## Review subagent prompt
 
 Use after a feature PR:

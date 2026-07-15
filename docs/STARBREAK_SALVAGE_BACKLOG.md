@@ -1955,7 +1955,7 @@ Acceptance:
 
 Status:
 
-- Implemented in work order 132. Every module provides a native and flex socket, `ItemSockets` owns fitting and active-loadout projection, and Hardpoint Control exposes occupancy plus compact rack controls and a signal-order readout. Snapshot v10 persists and validates the circuit while retiring v9. Six previously weak or placeholder upgrades now form order-sensitive phase, split, clone, ricochet, arc, curse, overkill, revenge, blast, and salvage interactions; only fitted items reach combat, route, reward, shop, or preview hooks.
+- Implemented in work order 132 and refitted in work order 145. Every module still provides a native and flex conduit, but physical component/socket coordinates are now automatic routing state rather than a player-facing placement puzzle. Hardpoint Control exposes one ordered ship-level signal rail with append, eject, and earlier/later controls; installed components advertise compact capacity/channel extensions, and cumulative stage output feeds the existing live-fire preview. `ItemSockets` preserves explicit circuit order, deterministically rematches live items across compatible remaining conduits after engineering changes, and leaves deliberately racked items inactive. The snapshot-v12 shape remains compatible while exact reconciliation rejects duplicate order, ghost components, invalid compatibility, and duplicate physical claims. Six previously weak or placeholder upgrades still form order-sensitive phase, split, clone, ricochet, arc, curse, overkill, revenge, blast, and salvage interactions; only live circuit items reach combat, route, reward, shop, or preview hooks.
 
 ### BL2 - Procedural carrier navigation hubs
 

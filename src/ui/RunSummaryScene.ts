@@ -383,6 +383,11 @@ export class RunSummaryScene implements Scene {
 
     const grid = document.createElement('div');
     grid.className = 'summary-item-grid';
+    const circuitPositions = new Map(
+      getActiveFittedItems(this.itemInstances, this.engineering.committed).map(
+        (instance, index) => [instance.acquisitionOrder, index + 1]
+      )
+    );
 
     for (const instance of this.itemInstances) {
       const card = document.createElement('article');
@@ -390,8 +395,8 @@ export class RunSummaryScene implements Scene {
       appendItemCardContent(
         card,
         createItemCardViewModel(getItemById(instance.itemId), {
-          sourceLabel: instance.socket
-            ? `Circuit ${instance.socket.circuitOrder + 1}`
+          sourceLabel: circuitPositions.has(instance.acquisitionOrder)
+            ? `Circuit ${circuitPositions.get(instance.acquisitionOrder)}`
             : 'Upgrade rack',
           acquisitionOrder: instance.acquisitionOrder
         }),

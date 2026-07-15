@@ -175,6 +175,55 @@ describe('foundry visual presentation', () => {
     );
   });
 
+  it('previews the cumulative output of each ordered circuit stage', () => {
+    const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
+      (candidate) => candidate.shipId === 'ship_debt_runner'
+    );
+    if (!contract) throw new Error('Expected a single-projectile contract.');
+    const phaseSplitClone = [
+      {
+        itemId: 'item_phase_grazer' as const,
+        acquisitionOrder: 0,
+        socket: { componentId: 'phase', socketIndex: 0, circuitOrder: 0 }
+      },
+      {
+        itemId: 'item_split_prism' as const,
+        acquisitionOrder: 1,
+        socket: { componentId: 'split', socketIndex: 0, circuitOrder: 1 }
+      },
+      {
+        itemId: 'item_signal_clone_stamp' as const,
+        acquisitionOrder: 2,
+        socket: { componentId: 'clone', socketIndex: 0, circuitOrder: 2 }
+      }
+    ];
+    const clonePhaseSplit = phaseSplitClone.map((item, index) => ({
+      ...item,
+      socket: { ...item.socket, circuitOrder: [1, 2, 0][index]! }
+    }));
+    const builtThenCloned = createFoundryDashboardModel(
+      createEngineeringState(contract.loadout),
+      phaseSplitClone
+    );
+    const clonedThenBuilt = createFoundryDashboardModel(
+      createEngineeringState(contract.loadout),
+      clonePhaseSplit
+    );
+
+    expect(builtThenCloned.circuitStages.map((stage) => stage.name)).toEqual([
+      'Phase Grazer',
+      'Split Prism',
+      'Signal Clone Stamp'
+    ]);
+    expect(builtThenCloned.circuitStages[1]).toMatchObject({
+      incomingProjectiles: 1,
+      outgoingProjectiles: 3,
+      outputLabel: '1 -> 3 shots'
+    });
+    expect(builtThenCloned.circuitStages.at(-1)?.outgoingProjectiles).toBe(6);
+    expect(clonedThenBuilt.circuitStages.at(-1)?.outgoingProjectiles).toBe(4);
+  });
+
   it('builds steady velocity-scaled flight copies inside the preview actor budget', () => {
     const volley = Array.from({ length: 12 }, (_value, index) =>
       projectile(index - 6, (index - 6) * 20, -500)

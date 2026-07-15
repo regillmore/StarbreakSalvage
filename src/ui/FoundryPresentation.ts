@@ -1,4 +1,5 @@
 import { getShipFrameById, getShipModuleById, type ShipModuleSlot } from '../content/shipModules';
+import { getItemById } from '../content/items';
 import { getWeaponById, type WeaponPatternId } from '../content/weapons';
 import {
   BASE_COMBINED_PROC_BUDGET,
@@ -10,7 +11,7 @@ import {
   type FoundryComponentInstance
 } from '../game/Foundry';
 import { applyCombinedHooks } from '../game/CombinedHooks';
-import type { ProjectileBlueprint } from '../game/ItemHooks';
+import { getOrderedItemInstances, type ProjectileBlueprint } from '../game/ItemHooks';
 import type { ItemInstance } from '../game/Rewards';
 import { createWeaponProjectileBlueprints } from '../game/WeaponProjectiles';
 
@@ -80,6 +81,20 @@ export interface FoundryAttackSimulationModel {
   readonly ariaLabel: string;
 }
 
+export interface FoundryCircuitStageModel {
+  readonly acquisitionOrder: number;
+  readonly position: number;
+  readonly name: string;
+  readonly domain: 'VOLLEY' | 'PROJECTILE' | 'REACTIVE' | 'ECONOMY';
+  readonly incomingProjectiles: number;
+  readonly outgoingProjectiles: number;
+  readonly incomingImpact: number;
+  readonly outgoingImpact: number;
+  readonly outputLabel: string;
+  readonly addedTags: readonly string[];
+  readonly changed: boolean;
+}
+
 export interface FoundryDashboardModel {
   readonly valid: boolean;
   readonly changed: boolean;
@@ -89,6 +104,7 @@ export interface FoundryDashboardModel {
   readonly frameName: string;
   readonly mountedModuleCount: number;
   readonly attackSimulation: FoundryAttackSimulationModel;
+  readonly circuitStages: readonly FoundryCircuitStageModel[];
   readonly meters: readonly FoundryMeterModel[];
   readonly attackStats: readonly FoundryAttackStatModel[];
   readonly traits: readonly FoundryTraitModel[];
@@ -156,6 +172,7 @@ export function createFoundryDashboardModel(
     procBudget,
     items
   );
+  const circuitStages = createFoundryCircuitStageModels(draftWeapon, draft, procBudget, items);
   const committedAttackSimulation = createFoundryAttackSimulationModel(
     committedWeapon,
     committed,
@@ -248,6 +265,7 @@ export function createFoundryDashboardModel(
     frameName: getShipFrameById(state.draft.frameId).name,
     mountedModuleCount: state.draft.mounts.length,
     attackSimulation,
+    circuitStages,
     meters,
     attackStats,
     traits,
@@ -255,6 +273,124 @@ export function createFoundryDashboardModel(
       .map((meter) => meter.ariaLabel)
       .join('. ')}. ${attackStats.map((stat) => stat.ariaLabel).join('. ')}`
   };
+}
+
+function createFoundryCircuitStageModels(
+  weapon: ReturnType<typeof getWeaponById>,
+  resolution: EngineeringResolution,
+  procBudget: number,
+  items: readonly ItemInstance[]
+): FoundryCircuitStageModel[] {
+  const ordered = getOrderedItemInstances(items);
+  let incoming = resolveCircuitPreviewVolley(weapon, resolution, procBudget, []);
+  return ordered.map((instance, index) => {
+    const prefix = ordered.slice(0, index + 1);
+    const outgoing = resolveCircuitPreviewVolley(weapon, resolution, procBudget, prefix);
+    const item = getItemById(instance.itemId);
+    const incomingImpact = sumProjectileImpact(incoming);
+    const outgoingImpact = sumProjectileImpact(outgoing);
+    const incomingTags = new Set(incoming.flatMap((projectile) => projectile.tags));
+    const addedTags = [
+      ...new Set(
+        outgoing.flatMap((projectile) => projectile.tags).filter((tag) => !incomingTags.has(tag))
+      )
+    ];
+    const changed =
+      incoming.length !== outgoing.length ||
+      Math.abs(incomingImpact - outgoingImpact) > 0.01 ||
+      addedTags.length > 0;
+    const model: FoundryCircuitStageModel = {
+      acquisitionOrder: instance.acquisitionOrder,
+      position: index + 1,
+      name: item.name,
+      domain: getCircuitStageDomain(item.hooks),
+      incomingProjectiles: incoming.length,
+      outgoingProjectiles: outgoing.length,
+      incomingImpact,
+      outgoingImpact,
+      outputLabel: createCircuitStageOutputLabel(
+        incoming.length,
+        outgoing.length,
+        incomingImpact,
+        outgoingImpact,
+        item.hooks
+      ),
+      addedTags,
+      changed
+    };
+    incoming = outgoing;
+    return model;
+  });
+}
+
+function resolveCircuitPreviewVolley(
+  weapon: ReturnType<typeof getWeaponById>,
+  resolution: EngineeringResolution,
+  procBudget: number,
+  items: readonly ItemInstance[]
+): ProjectileBlueprint[] {
+  const firePayload = applyCombinedHooks(
+    'onFire',
+    items,
+    resolution.hooks,
+    {
+      volleyIndex: 12,
+      projectiles: createWeaponProjectileBlueprints(weapon, { x: 0, y: 0, radius: 0 })
+    },
+    { maxApplications: procBudget }
+  );
+  return firePayload.projectiles.map(
+    (projectile) =>
+      applyCombinedHooks(
+        'onProjectileSpawn',
+        items,
+        resolution.hooks,
+        { projectile },
+        { maxApplications: procBudget }
+      ).projectile
+  );
+}
+
+function sumProjectileImpact(projectiles: readonly ProjectileBlueprint[]): number {
+  return projectiles.reduce((total, projectile) => total + projectile.damage, 0);
+}
+
+function getCircuitStageDomain(hooks: readonly string[]): FoundryCircuitStageModel['domain'] {
+  if (hooks.includes('onFire')) return 'VOLLEY';
+  if (hooks.includes('onProjectileSpawn')) return 'PROJECTILE';
+  if (
+    hooks.some((hook) =>
+      [
+        'onRouteChosen',
+        'onShopEntered',
+        'onRewardGenerated',
+        'onPickupCollected',
+        'onSectorStart'
+      ].includes(hook)
+    )
+  ) {
+    return 'ECONOMY';
+  }
+  return 'REACTIVE';
+}
+
+function createCircuitStageOutputLabel(
+  incomingProjectiles: number,
+  outgoingProjectiles: number,
+  incomingImpact: number,
+  outgoingImpact: number,
+  hooks: readonly string[]
+): string {
+  if (incomingProjectiles !== outgoingProjectiles) {
+    return `${incomingProjectiles} -> ${outgoingProjectiles} shots`;
+  }
+  if (Math.abs(incomingImpact - outgoingImpact) > 0.01) {
+    return `${incomingImpact.toFixed(1)} -> ${outgoingImpact.toFixed(1)} impact`;
+  }
+  if (hooks.includes('onProjectileSpawn')) return 'shot properties rewritten';
+  if (hooks.includes('onFire')) return 'conditional volley armed';
+  if (getCircuitStageDomain(hooks) === 'ECONOMY') return 'run economy signal armed';
+  return 'reactive signal armed';
 }
 
 function createFoundryAttackSimulationModel(

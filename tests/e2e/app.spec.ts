@@ -275,9 +275,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
     /2A .* Trade War Corridor/
   );
   await expect(page.getByTestId('navigation-destination-route')).toContainText('EASIER');
-  await expect(
-    page.locator('.constellation-node[data-destination-id^="route:"]')
-  ).toHaveCount(2);
+  await expect(page.locator('.constellation-node[data-destination-id^="route:"]')).toHaveCount(2);
   await expect(page.getByTestId('navigation-destination-route')).toHaveAttribute(
     'data-constellation-status',
     'choice'
@@ -359,6 +357,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   );
   await page.getByTestId('navigation-destination-action').click();
   await expect(page.getByTestId('salvage-foundry')).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 700 });
   await expect(page.getByRole('heading', { name: 'Hardpoint Control' })).toBeVisible();
   await expect(page.getByTestId('foundry-boundary')).toContainText(/Undo restores/i);
   await expect(page.getByTestId('foundry-grid-readout')).toContainText('LEGAL DRAFT');
@@ -379,22 +378,39 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('foundry-meter-power').getByRole('meter')).toBeVisible();
   await expect(page.getByTestId('foundry-attack-impact')).toBeVisible();
   const upgradeCircuit = page.getByTestId('foundry-upgrade-circuit');
-  await expect(
-    upgradeCircuit.getByRole('heading', { name: /Upgrade Circuit \/ 4\/6/ })
-  ).toBeVisible();
-  await expect(upgradeCircuit).toContainText(/Signal order: .* > /);
-  await expect(page.locator('.foundry-socket')).toHaveCount(6);
-  await expect(page.locator('.foundry-socket').first()).toContainText(/1 .* \/ /);
-  const firstUpgrade = upgradeCircuit.locator('.foundry-upgrade-card').first();
-  await expect(firstUpgrade).toContainText(/LIVE \d/);
-  const moveSelector = firstUpgrade.locator('.foundry-socket-select');
-  await expect(moveSelector).toHaveAttribute('aria-label', /Fit or move/);
-  await moveSelector.selectOption({ index: 1 });
-  await expect(page.getByTestId('foundry-status')).toContainText(/routed into/i);
-  await page.getByTestId('foundry-undo').click();
-  await expect(page.getByTestId('foundry-upgrade-circuit')).toContainText(
-    /Upgrade Circuit \/ 4\/6/
+  await expect(upgradeCircuit.getByRole('heading', { name: 'Signal Circuit' })).toBeVisible();
+  await expect(upgradeCircuit).toContainText('4/6 LIVE / 2 OPEN');
+  await expect(upgradeCircuit).toContainText(/CORE -> .* -> WEAPON/);
+  await expect(page.getByTestId('foundry-circuit-extension')).toHaveCount(3);
+  const activeCircuitNodes = upgradeCircuit.locator(
+    '.foundry-circuit-node:not(.foundry-circuit-node-empty)'
   );
+  await expect(activeCircuitNodes).toHaveCount(4);
+  await expect(page.getByTestId('foundry-circuit-open-node')).toHaveCount(2);
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
+    .toBe(true);
+  await expect(activeCircuitNodes.first().locator('.foundry-circuit-output')).toContainText(
+    'OUTPUT'
+  );
+  const originalFirstStage = await activeCircuitNodes.first().getByRole('heading').textContent();
+  await activeCircuitNodes
+    .first()
+    .getByRole('button', { name: /Move .* later/ })
+    .click();
+  await expect(page.getByTestId('foundry-status')).toContainText(/moved later/i);
+  await expect(activeCircuitNodes.first().getByRole('heading')).not.toHaveText(
+    originalFirstStage ?? ''
+  );
+  await activeCircuitNodes.first().getByRole('button', { name: 'Eject' }).click();
+  await expect(page.getByTestId('foundry-status')).toContainText(/upgrade rack/i);
+  const rackUpgrade = upgradeCircuit.locator('.foundry-upgrade-card').first();
+  await rackUpgrade.getByRole('button', { name: /Append .* to the circuit/ }).click();
+  await expect(page.getByTestId('foundry-status')).toContainText(/appended/i);
+  await expect(activeCircuitNodes).toHaveCount(4);
+  await page.getByTestId('foundry-undo').click();
+  await expect(page.getByTestId('foundry-upgrade-circuit')).toContainText('4/6 LIVE / 2 OPEN');
+  await page.setViewportSize({ width: 1280, height: 720 });
   await expect(page.locator('.foundry-cargo-card')).toHaveCount(0);
   await expect(page.getByTestId('foundry-pending-history')).toContainText('Draft clean.');
   await page.getByTestId('foundry-commit').click();
