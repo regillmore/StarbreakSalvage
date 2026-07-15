@@ -513,3 +513,9 @@ Required gate completion now mounts the existing `RewardScene` before the conste
 The new neutral first-sector context adds no catalog or reward choice volume. Existing route-context seed strings are retained byte-for-byte, and `reward-sectorClear` is evaluated only when no incoming route exists. Snapshot v11 stores the selected item/credits in the established post-sector checkpoint and adds no field, migration, actor, timer, DOM animation, or per-frame work.
 
 The release build emits 917.26 kB minified/249.87 kB gzip initial JavaScript and 64.46/13.28 kB CSS. Relative to work order 139, the explicit reward context and chronology helpers add 0.35/0.11 kB JavaScript with no CSS change. No dependency, simulation cap, snapshot version, warning threshold, or established route RNG stream changed.
+
+## Work order 141 direct inter-act handoff budgets
+
+The Act I terminal path replaces one constellation mount plus three route-card models and a route event/shop scene with two constant-time act-plan lookups and existing synchronous mission reducer calls. It also avoids route outcome generation, route/item hook dispatch, component generation, and an associated scene transition at that boundary. The lookups run only at post-sector scene boundaries and do not enter gameplay update, rendering, collision, targeting, projectile, or effect paths.
+
+The generated expedition graph and authored duration projection remain unchanged for deterministic v11 compatibility; this work changes presentation reachability at the Act I terminal handoff rather than graph identity or combat timing. The release build emits 917.78 kB minified/250.00 kB gzip initial JavaScript and 64.46/13.28 kB CSS. Relative to work order 140, the explicit boundary helper, recovery guard, and debug fixture add 0.52/0.13 kB JavaScript with no CSS change. No dependency, simulation cap, graph/schema version, snapshot version, RNG stream, or warning threshold changed.

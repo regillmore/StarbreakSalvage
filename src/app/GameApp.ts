@@ -41,6 +41,7 @@ import {
 import {
   createRunActSaveContext,
   getFrontierChoiceHandoff,
+  getInterActHandoffAfterSector,
   getInterActTransitionHandoff,
   type RunActPlan
 } from '../game/ActPlan';
@@ -802,12 +803,21 @@ export class GameApp {
       return;
     }
 
-    this.runSession.currentSectorIndex = scenario.actTwoEntrySectorIndex;
+    this.runSession.currentSectorIndex = scenario.actOneFinalSectorIndex;
     resetMissionForCurrentSector(this.currentRun, this.runSession);
+    const schedule = this.getCurrentMissionSchedule();
+    if (!schedule.extractionStageId) {
+      throw new Error('Act I finale debug fixture has no extraction stage.');
+    }
+    this.runSession.mission = {
+      ...this.runSession.mission,
+      currentStageId: schedule.extractionStageId,
+      visitedStageIds: [schedule.startStageId, schedule.extractionStageId]
+    };
     this.runSession.distanceTraveled = scenario.distanceBeforeActTwo;
     this.runSession.credits = Math.max(this.runSession.credits, 32);
     this.runSession.salvage = Math.max(this.runSession.salvage, 8);
-    this.showInterActJunction(sourceAct, targetAct);
+    this.showRouteChoice();
   }
 
   private showDebugActTwoEntry(): void {
@@ -1629,6 +1639,15 @@ export class GameApp {
       }
       this.handleRouteChoice(route);
     };
+    if (
+      getInterActHandoffAfterSector(
+        this.currentRun.acts,
+        this.runSession.currentSectorIndex
+      )
+    ) {
+      chooseOption(direct.id);
+      return;
+    }
     const sourceSectorIndex = this.runSession.currentSectorIndex;
     const targetSectorIndex =
       sourceSectorIndex + 1 < this.currentRun.sectors.length ? sourceSectorIndex + 1 : null;
@@ -1787,6 +1806,15 @@ export class GameApp {
   }
 
   private showRouteChoice(): void {
+    if (
+      getInterActHandoffAfterSector(
+        this.currentRun.acts,
+        this.runSession.currentSectorIndex
+      )
+    ) {
+      this.advanceAfterSectorExtraction();
+      return;
+    }
     const schedule = this.getCurrentMissionSchedule();
     const sourceSectorIndex = this.runSession.currentSectorIndex;
     const targetSectorIndex =
@@ -1932,7 +1960,7 @@ export class GameApp {
     return result;
   }
 
-  private advanceAfterRoute(): void {
+  private advanceAfterSectorExtraction(): void {
     const missionResult = this.dispatchCurrentMission({
       id: `${this.runSession.mission.currentStageId}:extraction-complete`,
       type: 'completeExtraction'
@@ -2071,7 +2099,7 @@ export class GameApp {
       subjectId: component.id,
       detailId: component.moduleId
     });
-    this.advanceAfterRoute();
+    this.advanceAfterSectorExtraction();
   }
 
   private showNavigationShop(onBack: () => void = () => this.showSectorTransition()): void {

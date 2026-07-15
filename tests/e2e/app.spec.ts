@@ -780,6 +780,9 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
 
   await page.keyboard.press('J');
   await expect(page.getByRole('heading', { name: 'Midpoint Refit' })).toBeVisible();
+  await expect(page.getByTestId('mission-briefing')).toHaveCount(0);
+  await expect(page.getByTestId('navigation-route-options')).toHaveCount(0);
+  await expect(page.locator('.route-card')).toHaveCount(0);
   await expect(page.locator('.debug-overlay')).toContainText('Scene inter-act-junction');
   await expect(page.locator('.debug-overlay')).toContainText(
     'Act Act II Core Descent 1/5 escalated/elevated'

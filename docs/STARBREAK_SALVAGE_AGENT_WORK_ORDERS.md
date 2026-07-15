@@ -2558,6 +2558,29 @@ Status: implemented. `GameApp` now recognizes the fresh required gate's terminal
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 98 Vitest files and 604 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Focused reward, route-event, and objective tests cover neutral generation, incoming route influence, and next-sector optional influence. Chromium asserts required sector -> reward -> flat constellation, reward inventory visibility before route commitment, no reward after the optional hold, no reward after the route shop, direct next-sector combat, checkpoint restoration after reward selection, and no console errors. The build emits 917.26 kB minified/249.87 kB gzip initial JavaScript and 64.46/13.28 kB CSS, a 0.35/0.11 kB JavaScript increase over work order 139. No dependency, simulation cap, snapshot version, warning threshold, or established route-context RNG stream changed.
 
+## Work order 141 - Direct Act I refit handoff
+
+Goal: stop presenting a route into an act that has already ended, and make the Act I finale flow directly into the established midpoint refit and Act II.
+
+Prompt:
+
+> After the Act I sector-5 required reward settles, skip the stale Act I constellation and the synthetic Act II route decision. Commit the mission's safe terminal branch and relief automatically, settle extraction without generating a route outcome, shop/event, or route component, advance into Act II, and open the existing midpoint refit. Preserve ordinary within-act route choices, deterministic act handoff detection, campaign settlement, deployed v11 branch/relief/extraction recovery, accessibility, and static hosting.
+
+Acceptance criteria:
+
+- Act I sector 5 follows required operation -> operation reward -> midpoint refit. No post-sector Act I constellation, optional/route plot, route card, route event, or shop appears between those scenes.
+- The authored default branch, rival/faction decision recording, relief, extraction, sector advance, carrier transit, and Act I-to-II handoff still settle through their existing reducers exactly once.
+- No route outcome, route-history entry, route-conditioned component salvage, or incoming-route reward modifier is invented for the boundary. Act II begins with its existing inter-act choice effects and neutral first-sector reward context.
+- Route choices and paired optional holds for ordinary within-act sectors remain unchanged. Act II's explicit frontier choice and final victory flow retain their established behavior.
+- A deployed v11 checkpoint at the Act I terminal branch, relief, or extraction stage resumes through the automatic refit handoff instead of reconstructing the stale route plot.
+- The public Act II junction fixture reaches the refit through the real Act I extraction boundary, and keyboard, narrow, reduced-motion, high-contrast, save, and Pages contracts remain valid.
+
+Status: implemented. `ActPlan.getInterActHandoffAfterSector` is the explicit deterministic boundary query for a completed sector and its immediate successor. `GameApp.showMissionBranch` uses it before mounting `SectorTransitionScene`; at the Act I terminal branch it commits the authored default option and reuses normal relief handling. `showRouteChoice` performs the same guard for extraction-stage recovery and calls the renamed route-neutral `advanceAfterSectorExtraction`, which advances to sector 6 and opens `InterActJunctionScene` through the existing handoff logic.
+
+Ordinary routes still acquire their deterministic component before calling the shared extraction advance. The Act I boundary creates no `RouteOption`, outcome, shop, component, or RNG draw. The `J` Scenario Lab/debug path now starts at the actual Act I extraction stage and proves the automatic handoff before rendering the refit; snapshot schema v11 and the generated expedition graph remain unchanged.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 98 Vitest files and 604 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Focused act-junction, mission, and snapshot coverage passes with 3 files and 24 tests; deterministic checks identify only sector 5 as the immediate Act I-to-II handoff. Chromium reaches `Midpoint Refit` through Act I extraction and asserts that no mission briefing, navigation route options, or route cards are mounted. The build emits 917.78 kB minified/250.00 kB gzip initial JavaScript and 64.46/13.28 kB CSS, a 0.52/0.13 kB JavaScript increase over work order 140. No dependency, simulation cap, graph/schema version, snapshot version, CSS, or warning threshold changed.
+
 ## Review subagent prompt
 
 Use after a feature PR:

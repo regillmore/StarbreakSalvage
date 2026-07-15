@@ -2043,3 +2043,15 @@ Acceptance:
 Status:
 
 - Implemented in work order 140. `RewardScene` derives its context from settled incoming route history instead of an unchosen onward route, and `GameApp` opens it at required-gate settlement before the flat flight board. Optional outcomes are carried one sector forward into reward modifiers; route events and shops now lead directly through component salvage to sector advance. Existing route reward seed streams and snapshot v11 remain compatible.
+
+### BL9 - Direct inter-act handoff
+
+Acceptance:
+
+- Clearing and claiming the Act I sector-5 reward enters the midpoint refit without showing an Act II route on the completed Act I chart.
+- Default branch, relief, extraction, sector advance, and inter-act reducers settle once without inventing a route outcome, shop/event, or route component.
+- Ordinary within-act routes, the Act II frontier decision, deployed extraction checkpoints, and snapshot v11 remain valid.
+
+Status:
+
+- Implemented in work order 141. `getInterActHandoffAfterSector` identifies the Act I terminal boundary from immutable act plans. Fresh branch flow and restored extraction flow both bypass the constellation route presentation and reuse the existing extraction advance into `InterActJunctionScene`. The Act II debug fixture now exercises that real boundary; no run schema or generated graph changed.

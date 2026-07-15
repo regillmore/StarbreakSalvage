@@ -249,6 +249,13 @@ export function getInterActTransitionHandoff(
   };
 }
 
+export function getInterActHandoffAfterSector(
+  acts: readonly RunActPlan[],
+  completedSectorIndex: number
+): InterActTransitionHandoff | null {
+  return getInterActTransitionHandoff(acts, completedSectorIndex, completedSectorIndex + 1);
+}
+
 export function getFrontierChoiceHandoff(
   acts: readonly RunActPlan[],
   currentSectorIndex: number

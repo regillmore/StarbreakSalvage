@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { getInterActTransitionHandoff } from '../../src/game/ActPlan';
+import {
+  getInterActHandoffAfterSector,
+  getInterActTransitionHandoff
+} from '../../src/game/ActPlan';
 import { generateRunSkeleton } from '../../src/game/Generation';
 import {
   createInterActJunctionChoices,
@@ -53,6 +56,8 @@ describe('InterActJunction', () => {
     expect(handoff?.sourceAct.shortLabel).toBe('Act I');
     expect(handoff?.targetAct.shortLabel).toBe('Act II');
     expect(getInterActTransitionHandoff(run.acts, 3, 4)).toBeNull();
+    expect(getInterActHandoffAfterSector(run.acts, 4)).toEqual(handoff);
+    expect(getInterActHandoffAfterSector(run.acts, 3)).toBeNull();
   });
 
   it('applies a selected choice once and exposes explicit Act II effects', () => {
