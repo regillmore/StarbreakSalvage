@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { createActConstellationPlan } from '../../src/game/ActConstellation';
 import { generateRunSkeleton } from '../../src/game/Generation';
-import { createRunSession } from '../../src/game/RunSession';
+import {
+  createRunSession,
+  getRunSessionVisitedActRouteSectorIndices
+} from '../../src/game/RunSession';
 import {
   createSectorNavigationPlan,
   createSectorNavigationState,
@@ -118,6 +121,46 @@ describe('sector navigation hub', () => {
         .filter((node) => node.status === 'hidden')
         .every((node) => node.label === 'Uncharted signal' && node.stateLabel === 'UNRESOLVED')
     ).toBe(true);
+  });
+
+  it('charts the committed hardest path instead of defaulting history to A nodes', () => {
+    const run = generateRunSkeleton('CONSTELLATION-HARDEST-PATH');
+    const session = createRunSession(run, run.contracts[0]!);
+    session.currentSectorIndex = 7;
+    session.routeHistory = [
+      { sectorIndex: 1, targetSectorIndex: 3, routeKind: 'elite', routeLabel: 'Elite' },
+      { sectorIndex: 3, targetSectorIndex: 6, routeKind: 'elite', routeLabel: 'Elite' },
+      { sectorIndex: 6, targetSectorIndex: 8, routeKind: 'elite', routeLabel: 'Elite' }
+    ];
+
+    const visitedSectorIndices = getRunSessionVisitedActRouteSectorIndices(run, session);
+    const constellation = createSectorNavigationPlan({
+      run,
+      sectorIndex: session.currentSectorIndex,
+      visitedSectorIndices,
+      choiceSectorIndices: [8]
+    }).constellation;
+    const statuses = Object.fromEntries(
+      constellation.nodes
+        .filter((node) => node.kind === 'sector')
+        .map((node) => [
+          `${node.layerIndex + 1}${String.fromCharCode(65 + node.laneIndex)}`,
+          node.status
+        ])
+    );
+
+    expect(visitedSectorIndices).toEqual([0, 2, 5, 7]);
+    expect(statuses).toMatchObject({
+      '1A': 'completed',
+      '2A': 'bypassed',
+      '2B': 'completed',
+      '3A': 'hidden',
+      '3B': 'bypassed',
+      '3C': 'completed',
+      '4A': 'bypassed',
+      '4B': 'current',
+      '5A': 'choice'
+    });
   });
 
   it('keeps floating services off the connected graph across many seeds', () => {

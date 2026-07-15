@@ -5,7 +5,11 @@ import type { RouteOption, RunSkeleton, StartingContract } from '../game/Generat
 import { createActDebugState, formatActSectorLabel } from '../game/ActPlan';
 import type { ActConstellationNode } from '../game/ActConstellation';
 import { formatRouteTagSummary } from '../game/ActTwoDebug';
-import { getCurrentSector, type RunSessionState } from '../game/RunSession';
+import {
+  getCurrentSector,
+  getRunSessionVisitedActRouteSectorIndices,
+  type RunSessionState
+} from '../game/RunSession';
 import { applySectorConditionsToScroll, createSectorConditionPlan } from '../game/SectorConditions';
 import { applySectorPacingToScroll, createSectorPacingPlan } from '../game/SectorPacing';
 import { formatSectorObjectiveVariantDebug } from '../game/SectorObjectives';
@@ -45,7 +49,6 @@ import {
   createRouteNavigationReadModel,
   type RouteNavigationReadModel
 } from '../game/RouteNavigation';
-import { getVisitedActRouteSectorIndices } from '../game/ActRouteGraph';
 
 interface NavigationBriefingContext {
   readonly sector: ReturnType<typeof getCurrentSector>;
@@ -108,11 +111,10 @@ export class SectorTransitionScene implements Scene {
   public enter(): void {
     const context = this.createBriefingContext();
     const choiceSectorIndices = this.routeChoice?.targetSectorIndices ?? [];
-    const visitedSectorIndices = getVisitedActRouteSectorIndices({
-      graph: this.run.actRouteGraph,
-      currentSectorIndex: this.session.currentSectorIndex,
-      routeTargetSectorIndices: this.session.routeHistory.map((entry) => entry.sectorIndex)
-    });
+    const visitedSectorIndices = getRunSessionVisitedActRouteSectorIndices(
+      this.run,
+      this.session
+    );
     this.plan = createSectorNavigationPlan({
       run: this.run,
       sectorIndex: this.session.currentSectorIndex,

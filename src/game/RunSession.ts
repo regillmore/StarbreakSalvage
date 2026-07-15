@@ -10,6 +10,7 @@ import {
 } from './ActEconomy';
 import {
   getNextActRouteSectorIndices,
+  getVisitedActRouteSectorIndices,
   isActRouteTransition
 } from './ActRouteGraph';
 import { applyCombinedHooks } from './CombinedHooks';
@@ -926,6 +927,31 @@ export function recordRouteChoice(
     routeTags: route.routeTags ?? [],
     outcomeTitle: outcome?.title,
     outcomeSummary: outcome?.summary
+  });
+}
+
+export function getRunSessionVisitedActRouteSectorIndices(
+  run: Pick<RunSkeleton, 'actRouteGraph'>,
+  session: Pick<
+    RunSessionState,
+    'currentSectorIndex' | 'routeHistory' | 'routeOutcomes'
+  >
+): readonly number[] {
+  const recordedTargets = [
+    ...session.routeOutcomes.map((outcome) => outcome.sectorIndex),
+    ...session.routeHistory.flatMap((entry) =>
+      entry.targetSectorIndex === undefined ? [] : [entry.targetSectorIndex - 1]
+    )
+  ];
+  const legacyTargets =
+    recordedTargets.length === 0
+      ? session.routeHistory.map((entry) => entry.sectorIndex)
+      : [];
+
+  return getVisitedActRouteSectorIndices({
+    graph: run.actRouteGraph,
+    currentSectorIndex: session.currentSectorIndex,
+    routeTargetSectorIndices: [...new Set([...recordedTargets, ...legacyTargets])]
   });
 }
 

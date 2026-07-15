@@ -621,6 +621,28 @@ test('reaches and instruments the deterministic lunar sector smoke path', async 
   await expect(page.locator('.debug-overlay')).toContainText(/Run Credits \d+ Salvage \d+/);
   await expect(page.getByTestId('distance-readout')).toContainText(/Distance \d+\/\d+u/);
 
+  await forceCompleteSectorAndEnterNext(page, 'Trade War Corridor', {
+    routeDifficulty: 'harder'
+  });
+  await expectGameplaySector(page, 'Trade War Corridor', 6);
+  await forceCompleteSectorAndEnterNext(page, 'Bio-Machine Bloom', {
+    routeDifficulty: 'harder'
+  });
+  await expectGameplaySector(page, 'Bio-Machine Bloom', 8);
+
+  await page.keyboard.press('8');
+  await expect(page.getByRole('heading', { name: 'Choose Reward' })).toBeVisible();
+  await page.getByRole('button', { name: /Take / }).first().click();
+  await expect(page.getByTestId('mission-briefing')).toBeVisible();
+  for (const sectorNumber of [1, 3, 6]) {
+    await expect(page.getByTestId(`navigation-sector-${sectorNumber}`)).toContainText('CHARTED');
+  }
+  for (const sectorNumber of [2, 5, 7]) {
+    await expect(page.getByTestId(`navigation-sector-${sectorNumber}`)).toContainText('BYPASSED');
+  }
+  await expect(page.getByTestId('navigation-destination-optional')).toContainText('4B');
+  await expect(page.getByTestId('navigation-destination-route')).toContainText('5A');
+
   expect(browserErrors).toEqual([]);
 });
 
