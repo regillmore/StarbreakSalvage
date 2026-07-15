@@ -21,21 +21,38 @@ describe('ActRouteGraph', () => {
     expect(run.actRouteGraph.nodes).toHaveLength(ACT_ROUTE_NODE_COUNT * 3);
   });
 
-  it('offers easier and harder destinations at every middle-layer fork', () => {
+  it('fans the second layer through a shared standard 3B signal', () => {
     const run = generateRunSkeleton('FORKING-CONSTELLATION');
     const graph = run.actRouteGraph;
 
     for (const act of run.acts) {
-      const forkNodes = graph.nodes.filter(
-        (node) =>
-          node.actId === act.id &&
-          node.layerIndex < ACT_ROUTE_DEPTH - 2
-      );
-      for (const source of forkNodes) {
-        const difficulties = getNextActRouteSectorIndices(graph, source.sectorIndex)
-          .map((sectorIndex) => getActRouteNode(graph, sectorIndex)?.difficulty)
-          .sort();
-        expect(difficulties).toEqual(['easier', 'harder']);
+      const nodes = graph.nodes.filter((node) => node.actId === act.id);
+      const optionsFrom = (nodeLabel: string) =>
+        getNextActRouteSectorIndices(
+          graph,
+          nodes.find((node) => node.nodeLabel === nodeLabel)!.sectorIndex
+        ).map((sectorIndex) => {
+          const node = getActRouteNode(graph, sectorIndex)!;
+          return [node.nodeLabel, node.difficulty];
+        });
+
+      expect(optionsFrom('1A')).toEqual([
+        ['2A', 'easier'],
+        ['2B', 'harder']
+      ]);
+      expect(optionsFrom('2A')).toEqual([
+        ['3A', 'easier'],
+        ['3B', 'standard']
+      ]);
+      expect(optionsFrom('2B')).toEqual([
+        ['3B', 'standard'],
+        ['3C', 'harder']
+      ]);
+      for (const nodeLabel of ['3A', '3B', '3C']) {
+        expect(optionsFrom(nodeLabel)).toEqual([
+          ['4A', 'easier'],
+          ['4B', 'harder']
+        ]);
       }
     }
   });

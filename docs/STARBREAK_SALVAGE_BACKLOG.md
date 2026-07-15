@@ -2073,7 +2073,7 @@ Status:
 Acceptance:
 
 - Each act is a deterministic forward-only `1-2-3-2-1` graph containing nine sector candidates and exactly five visited layers.
-- Every middle-layer fork offers one easier and one harder destination, while each destination retains three approach routes and one paired optional challenge after completion.
+- Route ranks form an easy/standard/hard spread: `2A -> 3A/3B`, `2B -> 3B/3C`, and shared `3B` is standard difficulty; each destination retains three approach routes and one paired optional challenge after completion.
 - Constellation state, mission contracts, bosses, set pieces, rewards, summaries, capacity, debug tools, and progression derive from explicit topology or route layer rather than array adjacency.
 - All legal paths reach convergence without backtracking, all nine nodes are reachable across paths, and incompatible pre-topology snapshots retire without touching permanent progression.
 

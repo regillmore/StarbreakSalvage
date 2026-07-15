@@ -152,7 +152,7 @@ export class SectorTransitionScene implements Scene {
     subtitle.className = 'navigation-hub-subtitle';
     subtitle.textContent = this.routeChoice
       ? this.postSectorChoice
-        ? `${this.run.carrierPlan.name} flight board · Hold the cleared node once, or choose an easier or harder destination and its approach.`
+        ? `${this.run.carrierPlan.name} flight board · Hold the cleared node once, or choose a ranked destination and its approach.`
         : `${this.run.carrierPlan.name} route plot · Choose the next signal, then choose how the ship reaches it.`
       : this.postSectorChoice
         ? `${this.run.carrierPlan.name} act chart · Hold this node once for its paired challenge, or continue along the newly resolved route.`
@@ -183,7 +183,7 @@ export class SectorTransitionScene implements Scene {
     const footerCopy = document.createElement('p');
     footerCopy.textContent = this.routeChoice
       ? this.postSectorChoice
-        ? 'READY SIGNALS // Cleared node: one optional hold · Next layer: easier and harder destinations.'
+        ? 'READY SIGNALS // Cleared node: one optional hold · Next layer: ranked destinations.'
         : 'ROUTE COMMIT // Choose a destination signal and one of its three travel vectors.'
       : this.postSectorChoice
         ? 'POST-SECTOR HOLD // Optional challenge remains on the cleared node · The active destination continues the expedition.'

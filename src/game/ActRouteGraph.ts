@@ -45,7 +45,7 @@ const LOCAL_EDGES: readonly (readonly [number, number])[] = [
   [0, 2],
   [1, 3],
   [1, 4],
-  [2, 3],
+  [2, 4],
   [2, 5],
   [3, 6],
   [3, 7],
@@ -206,6 +206,9 @@ function getDifficulty(
 ): Pick<ActRouteNode, 'difficulty' | 'difficultyRank'> {
   if (layerIndex === 0) return { difficulty: 'entry', difficultyRank: 0 };
   if (layerIndex === ACT_ROUTE_DEPTH - 1) return { difficulty: 'finale', difficultyRank: 0 };
+  if (layerIndex === 2 && laneIndex === 1) {
+    return { difficulty: 'standard', difficultyRank: 0 };
+  }
   return laneIndex === 0
     ? { difficulty: 'easier', difficultyRank: -1 }
     : { difficulty: 'harder', difficultyRank: 1 };
