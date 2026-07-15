@@ -2080,3 +2080,15 @@ Acceptance:
 Status:
 
 - Implemented in work order 143. `ActRouteGraph` supplies nine nodes and 14 edges per act, explicit difficulty/readout metadata, legal target queries, and exhaustive five-layer path coverage. Generation now creates 27 candidate sectors while the playable voyage remains 15 sectors. `SectorTransitionScene` plots both legal destination nodes, commits the selected node plus its route approach directly into combat, and reconstructs chart history from canonical recorded destinations so hard paths never appear as default A-node paths. Mission contracts key off route layer, generated set pieces stay attached to semantic act roles, release accounting filters a legal canonical path, and snapshot v12 retires v11 safely.
+
+### BL12 - Apex HUD stub visibility
+
+Acceptance:
+
+- Ordinary sectors without an apex encounter render neither an empty contact-banner frame nor an apex HUD pill.
+- Real apex contacts retain their authored timed banner, readable copy, contrast treatment, and responsive placement.
+- Apex plans, combat effects, progression, saves, and deterministic generation remain unchanged.
+
+Status:
+
+- Implemented in work order 144. The apex contact banner now has an explicit hidden-state display rule, preventing its grid layout from overriding the native `hidden` attribute when no encounter presentation exists.

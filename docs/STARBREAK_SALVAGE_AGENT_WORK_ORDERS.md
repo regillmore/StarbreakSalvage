@@ -2635,6 +2635,25 @@ Verification: `npm run verify:release` passes typecheck, ESLint, all 99 Vitest f
 
 The release audit now reports 16.88 minutes for the standard route, 11.08 minutes for early extraction, and 21.13 minutes with optional branches. The build emits 925.31 kB minified/252.46 kB gzip initial JavaScript and 64.97/13.38 kB CSS, a 6.51/2.23 kB JavaScript and 0.29/0.05 kB CSS increase over work order 142. The existing 500 kB chunk notice remains; no dependency or warning threshold changed. The in-app browser plugin was initialized for a manual visual pass, but this session reported an empty available-browser list, so deployed visual inspection remains a follow-up rather than a claimed verification result.
 
+## Work order 144 - Hide empty apex contact banners
+
+Goal: remove the empty apex popover frame from ordinary sectors that have no apex encounter.
+
+Prompt:
+
+> Hide the sector apex information banner whenever the current operation has no apex presentation. Preserve the timed contact banner and HUD apex readout when a real apex encounter is present, without changing apex generation, combat, progression, or disposition behavior.
+
+Acceptance criteria:
+
+- A sector with no apex encounter shows no visible apex contact frame or apex HUD pill.
+- The existing apex contact banner remains available for its authored encounter window and retains its text, accessibility live region, contrast treatment, and narrow layout.
+- The fix introduces no apex-plan, encounter-state, simulation, RNG, save, snapshot, or content changes.
+- Chromium covers the ordinary no-apex gameplay path and the release build remains valid for GitHub Pages.
+
+Status: implemented. `GameplayScene` already assigns the native `hidden` attribute to both apex surfaces when no encounter presentation exists. The contact banner's authored `display: grid` rule overrode the browser's native hidden presentation and exposed its empty bordered frame; the explicit `.apex-contact-banner[hidden]` rule now restores `display: none` without altering the active banner lifecycle.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 99 Vitest files and 609 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Chromium verifies both apex surfaces are hidden during an ordinary encounter-free opening sector and that an authored Grave Choir ambush still presents its populated apex contact banner. The build emits 925.31 kB minified/252.47 kB gzip initial JavaScript and 65.01/13.39 kB CSS, effectively unchanged JavaScript and a 0.04/0.01 kB CSS increase over work order 143. The existing 500 kB chunk notice remains; no dependency, gameplay state, generated plan, RNG stream, save/snapshot version, or warning threshold changed.
+
 ## Review subagent prompt
 
 Use after a feature PR:

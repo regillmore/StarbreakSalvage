@@ -2233,6 +2233,10 @@ button.apex-resolution-card[data-ready='true']:hover {
   pointer-events: none;
 }
 
+.apex-contact-banner[hidden] {
+  display: none;
+}
+
 .apex-contact-banner > span:first-child {
   color: #ffd166;
   font-size: 0.68rem;

@@ -179,6 +179,8 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.keyboard.press('Enter');
 
   await expectGameplaySector(page, 'Outer Debris Field');
+  await expect(page.getByTestId('apex-contact-banner')).toBeHidden();
+  await expect(page.getByTestId('apex-readout')).toBeHidden();
   await expect(page.getByTestId('distance-readout')).toContainText(/Distance \d+\/\d+u/);
   await expect(page.getByTestId('hull-readout')).toContainText('Hull');
   await expect(page.getByTestId('pickup-readout')).toContainText(/Credits .* Salvage/);
@@ -896,6 +898,8 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
   await expect(page.getByTestId('mission-objective-preview')).toContainText('SABOTAGE');
   await page.keyboard.press('N');
   await expect(page.getByTestId('objective-readout')).toContainText('SABOTAGE');
+  await expect(page.getByTestId('apex-contact-banner')).toBeVisible();
+  await expect(page.getByTestId('apex-contact-banner')).toContainText(/APEX|Grave Choir|Ambush/i);
 
   await page.keyboard.press('R');
   await expect(page.getByTestId('mission-briefing')).toBeVisible();
