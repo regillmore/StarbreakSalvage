@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import { SAVE_STORAGE_KEY } from '../../src/core/saveData';
+import { getActBoundaryHandoffAfterSector } from '../../src/game/ActPlan';
 import { generateRunSkeleton } from '../../src/game/Generation';
-import { createRunSession, dispatchMissionEvent } from '../../src/game/RunSession';
+import {
+  createRunSession,
+  dispatchMissionEvent,
+  resetMissionForCurrentSector
+} from '../../src/game/RunSession';
 import { createMissionSchedule, getMissionBranchOptions } from '../../src/game/MissionDirector';
 import {
   RUN_SNAPSHOT_MAX_BYTES,
@@ -189,6 +194,84 @@ describe('RunSnapshot', () => {
     const restored = restoreRunSnapshot(snapshot);
 
     expect(restored.session.mission.currentStageId).toBe(schedule.extractionStageId);
+    expect(createRunSnapshotSummary(snapshot).target).toBe('operationalMap');
+  });
+
+  it('restores a settled Act II finale optional at the frontier handoff instead of a route plot', () => {
+    const run = generateRunSkeleton('SNAPSHOT-ACT-TWO-FRONTIER');
+    const contract = run.contracts[0]!;
+    const session = createRunSession(run, contract);
+    const actTwoFinaleIndex = run.acts[1]!.endSectorIndex;
+    session.currentSectorIndex = actTwoFinaleIndex;
+    resetMissionForCurrentSector(run, session);
+    const schedule = createMissionSchedule(run.expedition, actTwoFinaleIndex);
+
+    dispatchMissionEvent(run, session, { id: 'briefing', type: 'confirmBriefing' });
+    dispatchMissionEvent(run, session, { id: 'entry', type: 'completeEntry' });
+    dispatchMissionEvent(run, session, {
+      id: 'advance',
+      type: 'completeCombat',
+      checkpoint: {
+        hull: 3,
+        scrollDistance: 640,
+        worldOffset: 10_640,
+        credits: session.credits,
+        salvage: session.salvage
+      }
+    });
+    dispatchMissionEvent(run, session, { id: 'staging', type: 'completeRelief' });
+    dispatchMissionEvent(run, session, {
+      id: 'gate',
+      type: 'completeCombat',
+      checkpoint: {
+        hull: 3,
+        scrollDistance: 1_540,
+        worldOffset: 11_540,
+        credits: session.credits,
+        salvage: session.salvage
+      }
+    });
+    const optional = getMissionBranchOptions(schedule, session.mission).find(
+      (option) => !option.default
+    )!;
+    dispatchMissionEvent(run, session, {
+      id: 'legacy-terminal-optional',
+      type: 'selectBranch',
+      optionId: optional.id
+    });
+    dispatchMissionEvent(run, session, {
+      id: 'legacy-terminal-optional-complete',
+      type: 'completeCombat',
+      checkpoint: {
+        hull: 3,
+        scrollDistance: 1_900,
+        worldOffset: 11_900,
+        credits: session.credits,
+        salvage: session.salvage
+      }
+    });
+    dispatchMissionEvent(run, session, {
+      id: 'legacy-terminal-relief',
+      type: 'completeRelief'
+    });
+
+    const snapshot = createRunSnapshot({
+      run,
+      contract,
+      session,
+      target: 'operationalMap',
+      label: 'Settled Act II finale optional'
+    });
+    const restored = restoreRunSnapshot(snapshot);
+
+    expect(restored.session.mission.currentStageId).toBe(schedule.extractionStageId);
+    expect(
+      getActBoundaryHandoffAfterSector(restored.run.acts, restored.session.currentSectorIndex)
+    ).toMatchObject({
+      kind: 'frontierChoice',
+      sourceAct: { id: 'act_core_descent' },
+      targetAct: { id: 'act_null_frontier' }
+    });
     expect(createRunSnapshotSummary(snapshot).target).toBe('operationalMap');
   });
 

@@ -881,6 +881,17 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
   await expect(page.locator('.debug-overlay')).toContainText(/Hazards 4 zones \+1 P4\/R\d/);
   await expect(page.locator('.debug-overlay')).toContainText(/Features L\d+\/H0/);
 
+  await page.keyboard.press('8');
+  await expect(page.getByRole('heading', { name: 'Choose Reward' })).toBeVisible();
+  await page.getByRole('button', { name: /Take / }).first().click();
+  await expect(page.getByRole('heading', { name: 'The Frontier Is Optional' })).toBeVisible();
+  await expect(page.getByTestId('navigation-destination-optional')).toHaveCount(0);
+  await expect(page.getByTestId('navigation-route-effect')).toHaveCount(0);
+  await expect(page.getByText(/Glass Meridian|Black Current|Silent Crown/)).toBeVisible();
+
+  await page.keyboard.press('F');
+  await expectGameplaySector(page, 'The Core Wreck', 18);
+
   await page.keyboard.press('Y');
   await expect(page.getByRole('heading', { name: 'Debug Run Ended' })).toBeVisible();
   await expect(page.getByText('Debug: forced test summary.')).toBeVisible();

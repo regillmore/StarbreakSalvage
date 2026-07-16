@@ -1031,6 +1031,26 @@ Verification: focused debrief, summary-label, and archive-progress coverage pass
 
 The build emits 926.14 kB minified/252.63 kB gzip initial JavaScript and 72.73/14.78 kB CSS. Relative to work order 146, removing the large runtime formatter surface from `RunSummaryScene` reduces JavaScript by 5.98/1.76 kB, while the full-browser responsive debrief adds 4.64/0.85 kB CSS. The existing 500 kB chunk notice remains; no dependency, RNG stream, gameplay system, save schema, snapshot version, or warning threshold changed.
 
+## Work order 148 - Direct Act II frontier handoff
+
+Goal: make the Core Descent convergence close Act II cleanly, matching Act I's terminal-sector structure and eliminating the terminal optional/empty-route soft lock.
+
+Prompt:
+
+> After the required Act II convergence sector and its reward, skip the paired optional challenge and ordinary same-act route presentation. Settle the authored default branch, relief, and extraction once, then open the existing extraction-or-Act-III frontier decision. Treat restored Act II extraction checkpoints the same way so a run that completed the previously exposed terminal optional cannot resume into a constellation with no onward node.
+
+Acceptance criteria:
+
+- Claiming the required Act II sector-5 reward opens `The Frontier Is Optional` directly; no Act II optional node, destination effect, or route commit is presented.
+- The established extraction choice still ends the run as a complete Act II victory, while breach still advances into Act III with its frontier state intact.
+- Act I's direct midpoint-refit handoff remains unchanged, ordinary same-act sectors retain their paired optional and destination choice, and Act III's final victory remains outside this boundary rule.
+- A current snapshot restored at Act II's branch or extraction stage follows the default terminal path into the frontier decision instead of rendering a zero-child route plot.
+- Mission settlement, reward timing, route history, deterministic generation, save data, snapshot v12, accessibility, and static hosting remain unchanged.
+
+Status: implemented. `ActPlan.getActBoundaryHandoffAfterSector` now classifies the two player-facing terminal transitions from immutable act plans: Act I's inter-act junction and Act II's frontier choice. `GameApp.showMissionBranch` uses that shared projection to commit the terminal default branch before any optional constellation is rendered, and `showRouteChoice` uses it again as a recovery seam before any destination read model is constructed. The existing extraction reducer remains authoritative: it opens `FrontierGateScene` for an unresolved Act II decision, preserves extraction and breach outcomes, and continues to own the Act I refit and Act III entry paths.
+
+Verification: focused act-boundary, frontier, and snapshot coverage passes with 3 files and 20 tests. The regression fixture restores the exact legacy shape produced after an Act II terminal optional and proves it remains a valid extraction checkpoint classified for the frontier choice. Chromium completes The Core Wreck through its real debug combat settlement, claims the required reward, and observes the frontier decision with no optional destination or route-effect dossier. `npm run verify:release` passes typecheck, ESLint, all 100 Vitest files and 617 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 926.27 kB minified/252.68 kB gzip initial JavaScript and 72.73/14.78 kB CSS, effectively unchanged from work order 147. The existing 500 kB chunk notice remains; no dependency, content RNG, mission schema, save/snapshot version, or warning threshold changed. The in-app browser runtime reported no available browser targets after its prescribed discovery check, so repository Playwright Chromium supplied the player-flow evidence and no separate in-app capture is claimed.
+
 ## Review subagent prompt
 
 Use after a feature PR:

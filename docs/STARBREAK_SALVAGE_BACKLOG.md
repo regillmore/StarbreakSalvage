@@ -2118,3 +2118,16 @@ Acceptance:
 Status:
 
 - Implemented in work order 147. `RunDebrief` provides the bounded pure read model, including explicit route-graph act/layer accounting, while `RunSummaryScene` renders the full-browser responsive debrief. Three-upgrade, three-turn, two-unlock-name, and highlight-length caps prevent run duration from controlling menu height. The legacy raw summary formatters remain available to tests and diagnostics but no longer feed the player scene.
+
+### BL15 - Direct Act II frontier handoff
+
+Acceptance:
+
+- Completing and claiming the Act II convergence reward settles its default branch and enters the extraction-or-breach frontier choice without exposing a paired Act II optional.
+- Fresh branch flow and restored extraction-stage snapshots bypass destination projection, preventing a terminal constellation with no legal child node.
+- Act I midpoint refit, ordinary same-act optionals and destinations, frontier extraction/breach outcomes, and Act III victory remain unchanged.
+- Reward timing, reducers, deterministic generation, saves, snapshot v12, accessibility, and static hosting remain valid.
+
+Status:
+
+- Implemented in work order 148. `getActBoundaryHandoffAfterSector` gives fresh and restored UI flow one immutable Act I/Act II boundary rule. Terminal branches commit their authored default path and extraction checkpoints advance through the existing handoff reducer, so Act II now reaches `FrontierGateScene` without an optional challenge or empty route plot.

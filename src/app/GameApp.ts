@@ -40,8 +40,8 @@ import {
 } from '../game/Foundry';
 import {
   createRunActSaveContext,
+  getActBoundaryHandoffAfterSector,
   getFrontierChoiceHandoff,
-  getInterActHandoffAfterSector,
   getInterActTransitionHandoff,
   type RunActPlan
 } from '../game/ActPlan';
@@ -1645,7 +1645,7 @@ export class GameApp {
       this.handleRouteChoice(targetSectorIndex, route);
     };
     if (
-      getInterActHandoffAfterSector(
+      getActBoundaryHandoffAfterSector(
         this.currentRun.acts,
         this.runSession.currentSectorIndex
       )
@@ -1816,7 +1816,7 @@ export class GameApp {
 
   private showRouteChoice(): void {
     if (
-      getInterActHandoffAfterSector(
+      getActBoundaryHandoffAfterSector(
         this.currentRun.acts,
         this.runSession.currentSectorIndex
       )
