@@ -1006,6 +1006,31 @@ Verification: `npm run verify:release` passes typecheck, ESLint, all 99 Vitest f
 
 The build emits 932.12 kB minified/254.39 kB gzip initial JavaScript and 68.09/13.93 kB CSS, increases of 1.00/0.38 kB JavaScript and 0.25/0.03 kB CSS over work order 145. The selector evaluates three bounded candidates only when a route read model is projected, and the DOM replaces three buttons with one dossier plus one commit button. The existing 500 kB chunk notice remains; no dependency, combat budget, route outcome schema, save/snapshot version, or warning threshold changed. Repository Playwright Chromium supplied runtime/layout evidence; no separate manual screenshot is claimed.
 
+## Work order 147 - Distilled full-browser run debrief
+
+Goal: replace the arena-width run ledger with a readable closeout that preserves the run's identity without making long voyages harder to summarize than short ones.
+
+Prompt:
+
+> Rebuild Run Summary as a full-browser debrief. Lead with outcome, location, route, final ship, circuit identity, defining upgrades and turns, a small set of performance totals, and permanent recovery. Keep every player-facing collection bounded so a long run cannot print engineering, mission, hazard, faction, crew, fleet, apex, or timeline debug histories into an ever-growing definition list. Retain seed sharing, archive progress, outcome variants, deterministic route truth, keyboard/pointer access, responsive layouts, and static hosting.
+
+Acceptance criteria:
+
+- Desktop closeout uses the browser presentation plane rather than the 520px combat-arena width and fits its complete ordinary debrief at 1280x720 without an internal scrollbar.
+- Exactly six stable totals replace the raw stat ledger. Final ship, current route node, act-layer progress, circuit identity, and archive settlement remain visible.
+- The flight path derives from recorded destination nodes and the explicit `1-2-3-2-1` graph, preserving hard/shared historic nodes and direct act handoffs.
+- At most three defining upgrades and three defining turns render. Extra upgrades collapse to a count; unlocks collapse to two names plus a count; long highlight copy is normalized and capped.
+- Full engineering, mission, objective, campaign, carrier, boarding, apex, faction-front, crew, fleet, pacing, hazard, economy, and timeline debug strings do not enter the player-facing DOM.
+- Victory, destruction, debug, sector-complete, and abandon labels; permanent recovery; seed sharing; Back to Menu; high contrast; responsive narrow layouts; and summary diagnostics remain valid.
+
+Status: implemented. `RunDebrief` is a pure bounded projection over the authoritative run, route graph, result, engineering state, items, refits, and save update. It derives exact current node/layer and prior-act completion without treating candidate-sector array adjacency or absent inter-act route records as progress. Metrics, route acts, highlights, selected upgrades, circuit identity, and copy lengths all have fixed output bounds.
+
+`RunSummaryScene` now composes a wide outcome header, six-card metric strip, two-column final-build/flight-path/upgrades/turns workspace, compact archive recovery, and low-emphasis seed/menu footer. The old forty-plus-row debug definition list and unlimited item grid are removed. Full underlying histories remain available to save state and debug projections but are not formatted into the closeout.
+
+Verification: focused debrief, summary-label, and archive-progress coverage passes with 3 files and 16 tests. A deterministic hard-path fixture proves `1A-2B-3C-4B-5A`, three-upgrade/three-highlight caps, copy truncation, and exact 5/10/15-sector act-boundary accounting. `npm run verify:release` passes typecheck, ESLint, all 100 Vitest files and 615 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Chromium exercises the real destroyed-run closeout at 1280x720, verifies a panel wider than 900px, six totals, final loadout, route path, bounded cards, absent `Engineering History`, archive recovery, seed copy, Back to Menu, and `scrollHeight <= clientHeight`; Act II debug and early-extraction victory paths assert their new topology-aware summaries. The inspected capture is fully visible without summary scrolling.
+
+The build emits 926.14 kB minified/252.63 kB gzip initial JavaScript and 72.73/14.78 kB CSS. Relative to work order 146, removing the large runtime formatter surface from `RunSummaryScene` reduces JavaScript by 5.98/1.76 kB, while the full-browser responsive debrief adds 4.64/0.85 kB CSS. The existing 500 kB chunk notice remains; no dependency, RNG stream, gameplay system, save schema, snapshot version, or warning threshold changed.
+
 ## Review subagent prompt
 
 Use after a feature PR:

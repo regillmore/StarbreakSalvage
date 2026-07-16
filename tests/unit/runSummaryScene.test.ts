@@ -4,6 +4,7 @@ import { createDefaultSaveData, type SaveUpdateResult } from '../../src/core/sav
 import {
   buildSeedShareUrl,
   formatActRouteHistory,
+  formatCompactUnlockSummary,
   formatDistanceSummary,
   formatRouteHistory,
   formatUnlockReasons,
@@ -182,5 +183,6 @@ describe('run summary details', () => {
     expect(formatUnlockReasons(update)).toContain('Liability Accepted');
     expect(formatUnlockSummary(update)).toContain('Unlocked: Phase Courier');
     expect(formatUnlockSummary(update)).toContain('complete any recorded contract outcome');
+    expect(formatCompactUnlockSummary(update)).toBe('Unlocked 1: Phase Courier.');
   });
 });

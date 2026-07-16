@@ -464,14 +464,29 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.locator('.debug-overlay')).toContainText(/Destruction standard \d+%/);
   await expect(page.getByRole('heading', { name: 'Ship Destroyed' })).toBeVisible();
   await expect(page.locator('.summary-panel')).toHaveAttribute('data-contract-theme', 'redline');
-  await expect(page.getByText(/redline theme \| needle silhouette/)).toBeVisible();
-  await expect(page.locator('.summary-stats')).toContainText('Redline Needle');
-  await expect(page.locator('.summary-stats')).toContainText('Primary: Light Needle Laser');
-  await expect(page.locator('.summary-stats')).toContainText(/Power \d+\/\d+ \| Heat \d+\/\d+/);
-  await expect(page.locator('.summary-stats')).toContainText('Engineering History');
-  await expect(page.locator('.summary-stats')).toContainText('Recovered');
+  await expect(page.getByText(/redline contract \| debt runner/i)).toBeVisible();
+  await expect(page.getByTestId('summary-final-build')).toContainText('Redline Needle');
+  await expect(page.getByTestId('summary-final-build')).toContainText(
+    'Primary: Light Needle Laser'
+  );
+  await expect(page.getByTestId('summary-final-build')).toContainText(
+    /Power \d+\/\d+ \| Heat \d+\/\d+/
+  );
+  await expect(page.getByTestId('summary-metrics').locator('.summary-metric')).toHaveCount(6);
+  await expect(page.getByTestId('summary-flight-path')).toContainText('Act I');
+  await expect(page.getByTestId('summary-flight-path')).toContainText('1A');
+  await expect(page.getByTestId('summary-highlight-list')).toBeVisible();
+  await expect(page.getByText('Engineering History', { exact: true })).toHaveCount(0);
   await expect(page.getByText('permadeath', { exact: true })).toBeVisible();
   await expect(page.getByText('Loss: ship destroyed and contract closed.')).toBeVisible();
+  const summaryBounds = await page.locator('.summary-panel').boundingBox();
+  expect(summaryBounds?.width ?? 0).toBeGreaterThan(900);
+  const summarySize = await page.locator('.summary-panel').evaluate((panel) => ({
+    clientHeight: panel.clientHeight,
+    scrollHeight: panel.scrollHeight
+  }));
+  expect(summarySize.scrollHeight).toBeLessThanOrEqual(summarySize.clientHeight);
+  expect(await page.locator('.summary-item-card').count()).toBeLessThanOrEqual(3);
   await expect(page.getByTestId('summary-item-list')).toContainText('Route Ledger Spool');
   await expect(page.getByTestId('summary-item-list')).toContainText('Route Economy');
   await expect(
@@ -483,9 +498,8 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
     /Earned \+\d+ kg \| Bank \d+ -> \d+ kg/
   );
   await expect(page.getByTestId('upgrade-progress-callout')).toContainText(/upgrade|next/i);
-  await expect(page.getByTestId('unlock-summary')).toContainText('Unlocked:');
+  await expect(page.getByTestId('unlock-summary')).toContainText('Unlocked');
   await expect(page.getByTestId('seed-share-link')).toHaveValue(/seed=STARBREAK-SMOKE/);
-  await expect(page.getByText(/Breach Levy\/Breach Assault: success/)).toBeVisible();
 
   await page.getByRole('button', { name: 'Copy Seed Link' }).click();
   await expect(page.getByTestId('seed-share-status')).toContainText(/Seed link/);
@@ -869,12 +883,20 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
 
   await page.keyboard.press('Y');
   await expect(page.getByRole('heading', { name: 'Debug Run Ended' })).toBeVisible();
-  await expect(page.getByText('Act II Core Descent 5/5 | 1/3 acts secured')).toBeVisible();
+  await expect(page.getByText('Debug: forced test summary.')).toBeVisible();
+  await expect(page.locator('.summary-reached')).toContainText(
+    'The Core Wreck · Act II 5A / layer 5 of 5'
+  );
   await expect(
-    page.getByText(/Debug: .* smoke path ended before official resolution/)
-  ).toBeVisible();
-  await expect(page.getByText(/Act II 4\/5 S16 .* \[/)).toBeVisible();
-  await expect(page.getByText(/Junction: [+-]?\d+c\/[+-]?\d+kg/)).toBeVisible();
+    page
+      .getByTestId('summary-metrics')
+      .locator('.summary-metric')
+      .filter({ hasText: 'Sectors' })
+      .locator('strong')
+  ).toHaveText('9');
+  await expect(page.getByTestId('summary-flight-path')).toContainText('Act II');
+  await expect(page.getByTestId('summary-flight-path')).toContainText('5A');
+  await expect(page.getByTestId('summary-highlight-list')).toContainText('Patch Hull');
 
   await page.keyboard.press('G');
   await expect(page.getByRole('heading', { name: 'The Frontier Is Optional' })).toBeVisible();
@@ -885,11 +907,17 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
   await page.keyboard.press('G');
   await page.getByTestId('frontier-choice-extract').click();
   await expect(page.getByRole('heading', { name: 'Victory Confirmed' })).toBeVisible();
-  await expect(page.getByText(/Core Extraction: complete victory/)).toBeVisible();
   await expect(
-    page.getByText('Sectors Cleared', { exact: true }).locator('xpath=following-sibling::dd[1]')
+    page
+      .getByTestId('summary-metrics')
+      .locator('.summary-metric')
+      .filter({ hasText: 'Sectors' })
+      .locator('strong')
   ).toHaveText('10');
-  await expect(page.getByText('Act II Core Descent 5/5 | 2/3 acts secured')).toBeVisible();
+  await expect(page.locator('.summary-reached')).toContainText(
+    'The Core Wreck · Act II 5A / layer 5 of 5'
+  );
+  await expect(page.getByText('final boss salvaged', { exact: true })).toBeVisible();
 
   await page.keyboard.press('Q');
   await expect(page.getByTestId('command-deck')).toBeVisible();
@@ -1241,7 +1269,14 @@ test('suspends, reloads, resumes, and clears a versioned expedition snapshot', a
   await expect(page.getByRole('heading', { name: 'The Frontier Is Optional' })).toBeVisible();
   await page.getByTestId('frontier-choice-extract').click();
   await expect(page.getByRole('heading', { name: 'Victory Confirmed' })).toBeVisible();
-  await expect(page.getByText(/Core Extraction: complete victory/)).toBeVisible();
+  await expect(page.getByText('final boss salvaged', { exact: true })).toBeVisible();
+  await expect(
+    page
+      .getByTestId('summary-metrics')
+      .locator('.summary-metric')
+      .filter({ hasText: 'Sectors' })
+      .locator('strong')
+  ).toHaveText('10');
   await page.getByRole('button', { name: 'Back to Menu' }).click();
   await expect(page.getByTestId('run-snapshot-panel')).toHaveCount(0);
 

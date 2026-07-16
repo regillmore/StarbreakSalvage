@@ -2105,3 +2105,16 @@ Acceptance:
 Status:
 
 - Implemented in work order 146. `RouteNavigation.selectNodeRouteEffect` owns a dedicated seed stream keyed to the target sector and weights normalized candidate risk by route-node difficulty. The constellation surfaces difficulty plus effect on every ready node, presents one bounded base-effect dossier, and commits it through the existing route settlement pipeline. Internal three-option content pools remain available to generation, validation, and debug tooling but no longer create a second player decision.
+
+### BL14 - Distilled run debrief
+
+Acceptance:
+
+- Run closeout uses a wide browser-scale composition and fits an ordinary 1280x720 summary without scrolling.
+- Outcome, six totals, final ship/circuit, topology-aware flight path, three defining upgrades, three defining turns, archive recovery, seed sharing, and menu return form the entire player-facing information hierarchy.
+- Long engineering, mission, campaign, crew, fleet, apex, hazard, pacing, economy, objective, and timeline ledgers remain diagnostic data and never expand the closeout DOM.
+- Direct act handoffs and forked route history produce exact route nodes and sector totals; long histories, upgrade inventories, and unlock batches collapse deterministically to bounded highlights and counts.
+
+Status:
+
+- Implemented in work order 147. `RunDebrief` provides the bounded pure read model, including explicit route-graph act/layer accounting, while `RunSummaryScene` renders the full-browser responsive debrief. Three-upgrade, three-turn, two-unlock-name, and highlight-length caps prevent run duration from controlling menu height. The legacy raw summary formatters remain available to tests and diagnostics but no longer feed the player scene.

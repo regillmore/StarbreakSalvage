@@ -97,13 +97,11 @@ import {
   createMissionDebugState,
   createMissionReadModel,
   createMissionSchedule,
-  formatMissionTimeline,
   getMissionBranchOptions,
   getMissionStage,
   type MissionEvent,
   type MissionTransitionResult
 } from '../game/MissionDirector';
-import { formatMissionObjectiveHistory } from '../game/ObjectiveDirector';
 import { generateRouteOutcome, type AppliedRouteOutcome } from '../game/RouteEvents';
 import { createSectorConditionPlan } from '../game/SectorConditions';
 import { getSecondActFinaleSectorIndex } from '../game/SecondActFinale';
@@ -2443,36 +2441,22 @@ export class GameApp {
       });
     }
     this.lastSaveUpdate = this.saveRunSummary(this.lastRunResult);
-    const schedule = this.getCurrentMissionSchedule();
     this.sceneManager.switchTo(
       new RunSummaryScene(
         this.uiRoot,
         this.currentRun,
         this.selectedContract,
         this.lastRunResult,
+        this.runSession.currentSectorIndex,
         this.runSession.routeHistory,
-        this.runSession.routeOutcomes,
         this.runSession.interActChoices,
-        this.runSession.expedition,
         this.runSession.itemInstances,
         this.runSession.engineering,
         this.saveData,
         this.lastSaveUpdate,
         () => {
           this.showMainMenu();
-        },
-        formatMissionTimeline(schedule, this.runSession.mission),
-        formatMissionObjectiveHistory(this.runSession.objectiveHistory),
-        this.runSession.factionCampaign,
-        this.runSession.crewRoster,
-        this.runSession.timeline,
-        this.runSession.frontierDecision,
-        this.runSession.carrier,
-        this.runSession.boarding,
-        this.runSession.factionFronts,
-        this.runSession.crewArcs,
-        this.runSession.fleet,
-        this.runSession.apexHunts
+        }
       )
     );
   }

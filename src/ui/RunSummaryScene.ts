@@ -4,64 +4,39 @@ import { ACHIEVEMENTS } from '../content/achievements';
 import { getItemById, type ItemSource } from '../content/items';
 import { getUnlockById } from '../content/unlocks';
 import type { SaveData, SaveUpdateResult } from '../core/saveData';
-import {
-  createActDebugState,
-  createRunActSaveContext,
-  formatRunActTimeline
-} from '../game/ActPlan';
-import { createBuildSynergyModel, formatBuildSynergySummary } from '../game/BuildSynergy';
+import { createActDebugState, createRunActSaveContext } from '../game/ActPlan';
 import type { CombatRunResult } from '../game/CombatState';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
-import {
-  createExpeditionPathReadModel,
-  formatExpeditionCapacity,
-  type ExpeditionProgressState
-} from '../game/ExpeditionGraph';
-import { formatInterActHistory, type InterActChoiceRecord } from '../game/InterActJunction';
+import type { InterActChoiceRecord } from '../game/InterActJunction';
 import type { RouteHistoryEntry } from '../game/RunSession';
 import type { AppliedRouteOutcome } from '../game/RouteEvents';
 import type { ItemInstance } from '../game/Rewards';
 import { getActiveFittedItems } from '../game/ItemSockets';
-import {
-  createEngineeringDebugState,
-  formatEngineeringHistory,
-  resolveEngineeringSnapshot,
-  type EngineeringState
-} from '../game/Foundry';
-import { formatSectorConditionTimeline } from '../game/SectorConditions';
-import { formatHazardZoneDirectorTimeline } from '../game/HazardZoneDirector';
-import { formatSectorPacingTimeline } from '../game/SectorPacing';
+import { createEngineeringDebugState, type EngineeringState } from '../game/Foundry';
 import { formatSecondActFinaleOutcome, getSecondActFinalePlan } from '../game/SecondActFinale';
-import { formatRunUpgradeEffects, getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
+import { getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
+import {
+  createRunDebriefModel,
+  formatDistanceSummary,
+  getRunDebriefSectorsCleared,
+  getOutcomeDetail,
+  getOutcomeLabel,
+  getSummaryTitle,
+  type RunDebriefModel
+} from '../game/RunDebrief';
 import type { InputAction } from '../systems/InputSystem';
 import {
   applyContractScreenTheme,
   createContractScreenThemeModel,
   createContractThemeDebugState,
   createContractThemeStrip,
-  formatContractThemeSummary,
   getContractThemeOptions
 } from './ContractTheme';
 import { appendItemCardContent } from './ItemCard';
 import { createItemCardViewModel } from './ItemCardViewModel';
 import { createRunSummaryProgressModel } from './RunSummaryProgress';
-import { formatFactionCampaignSummary, type FactionCampaignState } from '../game/FactionCampaign';
-import { formatCrewRosterSummary, type CrewRosterState } from '../game/CrewCommand';
-import { formatRunTimeline, type RunTimelineState } from '../game/RunTimeline';
-import {
-  formatFrontierCampaign,
-  formatFrontierOutcome,
-  type FrontierDecisionState
-} from '../game/NullFrontier';
-import { formatCarrierSummary, type CarrierState } from '../game/CarrierCommand';
-import {
-  formatBoardingCampaignSummary,
-  type BoardingCampaignState
-} from '../game/BoardingOperation';
-import { formatFactionFrontSummary, type FactionFrontState } from '../game/FactionFront';
-import { formatCrewArcSummary, type CrewArcState } from '../game/CrewArc';
-import { formatFleetSummary, type FleetState } from '../game/Fleetcraft';
-import { formatApexSummary, type ApexHuntState } from '../game/ApexHunt';
+
+export { formatDistanceSummary, getOutcomeDetail, getOutcomeLabel, getSummaryTitle };
 
 export class RunSummaryScene implements Scene {
   public readonly id = 'run-summary';
@@ -71,27 +46,14 @@ export class RunSummaryScene implements Scene {
     private readonly run: RunSkeleton,
     private readonly contract: StartingContract,
     private readonly result: CombatRunResult | null,
+    private readonly currentSectorIndex: number,
     private readonly routeHistory: readonly RouteHistoryEntry[],
-    private readonly routeOutcomes: readonly AppliedRouteOutcome[],
     private readonly interActChoices: readonly InterActChoiceRecord[],
-    private readonly expeditionProgress: ExpeditionProgressState,
     private readonly itemInstances: readonly ItemInstance[],
     private readonly engineering: EngineeringState,
     private readonly saveData: SaveData,
     private readonly saveUpdate: SaveUpdateResult | null,
-    private readonly onBackToMenu: () => void,
-    private readonly missionTimeline: string | null = null,
-    private readonly objectiveHistory: string | null = null,
-    private readonly factionCampaign: FactionCampaignState | null = null,
-    private readonly crewRoster: CrewRosterState | null = null,
-    private readonly runTimeline: RunTimelineState | null = null,
-    private readonly frontierDecision: FrontierDecisionState | null = null,
-    private readonly carrier: CarrierState | null = null,
-    private readonly boarding: BoardingCampaignState | null = null,
-    private readonly factionFronts: FactionFrontState | null = null,
-    private readonly crewArcs: CrewArcState | null = null,
-    private readonly fleet: FleetState | null = null,
-    private readonly apexHunts: ApexHuntState | null = null
+    private readonly onBackToMenu: () => void
   ) {}
 
   public enter(): void {
@@ -104,166 +66,18 @@ export class RunSummaryScene implements Scene {
     );
     applyContractScreenTheme(shell, theme);
 
-    const eyebrow = document.createElement('p');
-    eyebrow.className = 'eyebrow';
-    eyebrow.textContent = 'Run Summary';
-
-    const title = document.createElement('h1');
-    title.id = 'summary-title';
-    title.textContent = getSummaryTitle(this.result);
-
     const progress = createRunSummaryProgressModel(this.saveData, this.saveUpdate);
-    const expedition = createExpeditionPathReadModel(this.run.expedition, this.expeditionProgress);
-    const finalEngineering = resolveEngineeringSnapshot(this.engineering.committed);
-
-    const stats = document.createElement('dl');
-    stats.className = 'summary-stats';
-
-    const statEntries: ReadonlyArray<readonly [string, string]> = [
-      ['Seed', this.run.seed],
-      ['Contract', this.contract.shipName],
-      ['Frame', this.contract.loadout.summary.frame],
-      ['Starting Modules', this.contract.loadout.summary.modules],
-      ['Final Ship', finalEngineering.summary],
-      ['Final Modules', finalEngineering.loadout?.summary.modules ?? 'Invalid final loadout'],
-      ['Engineering History', formatEngineeringHistory(this.engineering.history)],
-      ['Power Grid', this.contract.loadout.summary.powerGrid],
-      ['Frame Systems', this.contract.loadout.summary.frameStats],
-      ['Ship Theme', formatContractThemeSummary(this.contract)],
-      [
-        'Reached',
-        getReachedSectorName(this.run, this.routeHistory, this.result, this.frontierDecision)
-      ],
-      [
-        'Act Progress',
-        formatActProgressSummary(this.run, this.routeHistory, this.result, this.frontierDecision)
-      ],
-      ['Outcome', getOutcomeLabel(this.result)],
-      ['Win/Loss', getOutcomeDetail(this.result)],
-      ['Finale', formatFinaleOutcomeSummary(this.run, this.result)],
-      ['Frontier Campaign', formatFrontierCampaign(this.run.frontierCampaign)],
-      [
-        'Mobile Carrier',
-        this.carrier
-          ? formatCarrierSummary(this.run.carrierPlan, this.carrier)
-          : 'Carrier state not recorded.'
-      ],
-      [
-        'Boarding Incursions',
-        this.boarding
-          ? formatBoardingCampaignSummary(this.run.boardingCampaign, this.boarding)
-          : 'Boarding state not recorded.'
-      ],
-      [
-        'Apex Hunts',
-        this.apexHunts
-          ? formatApexSummary(this.run.apexHunts, this.apexHunts)
-          : 'Apex state not recorded.'
-      ],
-      [
-        'Faction Fronts',
-        this.factionFronts
-          ? formatFactionFrontSummary(this.run.factionFronts, this.factionFronts)
-          : 'Faction front state not recorded.'
-      ],
-      [
-        'Voyage Ending',
-        this.frontierDecision
-          ? formatFrontierOutcome(
-              this.run.frontierCampaign,
-              this.frontierDecision,
-              this.result?.reason
-            )
-          : 'Frontier decision not recorded.'
-      ],
-      ['Survived', `${Math.floor(this.result?.survivedSeconds ?? 0)}s`],
-      ['Distance', formatDistanceSummary(this.result)],
-      [
-        'Sectors Cleared',
-        `${getSectorsCleared(this.run, this.routeHistory, this.result, this.frontierDecision)}`
-      ],
-      ['Destroyed', `${this.result?.enemiesDestroyed ?? 0}`],
-      ['Bosses', `${this.result?.bossesDefeated ?? 0}`],
-      [
-        'Set Piece',
-        this.result?.setPiece
-          ? `${this.result.setPiece.name} | ${this.result.setPiece.completed ? 'neutralized' : 'incomplete'} | components ${this.result.setPiece.destroyedComponents}/${this.result.setPiece.totalComponents} | stages ${this.result.setPiece.stagesCompleted}`
-          : 'No set-piece contract in final sector'
-      ],
-      ['Credits', `${this.result?.credits ?? 0}`],
-      ['Salvage', `${this.result?.salvage ?? 0} kg`],
-      ['Damage Taken', `${this.result?.damageTaken ?? 0}`],
-      ['Item Hooks', `${this.result?.itemTriggers ?? 0}`],
-      ['Routes', formatRouteHistory(this.routeHistory)],
-      ['Act Route', formatActRouteHistory(this.routeHistory)],
-      ['Act Timeline', formatRunActTimeline(this.run.acts)],
-      ['Expedition Path', expedition.summary],
-      ['Mission Timeline', this.missionTimeline ?? 'Legacy single-stage run'],
-      ['Objective History', this.objectiveHistory ?? 'No objective outcomes recorded.'],
-      [
-        'Faction Campaign',
-        this.factionCampaign
-          ? formatFactionCampaignSummary(this.run.factionCampaign, this.factionCampaign)
-          : 'No run-local faction campaign recorded.'
-      ],
-      [
-        'Crew And Wingmates',
-        this.crewRoster
-          ? formatCrewRosterSummary(this.run.crewRoster, this.crewRoster, this.result?.reason)
-          : 'No run-local crew roster recorded.'
-      ],
-      [
-        'Crew Arcs And Fates',
-        this.crewArcs
-          ? formatCrewArcSummary(this.run.crewArcs, this.crewArcs, this.run.crewRoster)
-          : 'No relationship arcs recorded.'
-      ],
-      [
-        'Support Fleet',
-        this.fleet
-          ? formatFleetSummary(this.run.fleet, this.fleet)
-          : 'No run-local support fleet recorded.'
-      ],
-      [
-        'Run Timeline',
-        this.runTimeline ? formatRunTimeline(this.runTimeline) : 'No timeline recorded.'
-      ],
-      ['Expedition Capacity', formatExpeditionCapacity(this.run.expedition.capacity)],
-      ['Inter-Act Refit', formatInterActHistory(this.interActChoices)],
-      [
-        'Economy By Act',
-        formatRunEconomyBreakdown(this.run, this.routeOutcomes, this.interActChoices, this.result)
-      ],
-      ['Sector Conditions', formatSectorConditionTimeline(this.run, this.routeOutcomes)],
-      ['Sector Pacing', formatSectorPacingTimeline(this.run, this.routeOutcomes)],
-      ['Hazard Zones', formatHazardZoneDirectorTimeline(this.run, this.routeOutcomes)],
-      ['Upgrade Effects', formatRunUpgradeEffects(this.run.upgradeEffects)],
-      ['Scrap Flow', progress.scrapBreakdownText],
-      ['Upgrade Economy', progress.economyScopeText],
-      ['Upgrade Outlook', progress.upgradeProgressText],
-      ['Banked Salvage', `${this.saveData.salvageBank} kg`],
-      [
-        'Active Circuit',
-        formatBuildSynergySummary(
-          createBuildSynergyModel(
-            getActiveFittedItems(this.itemInstances, this.engineering.committed)
-          )
-        )
-      ],
-      ['Item Sources', formatItemSourceSummary(this.itemInstances)],
-      ['Items', this.result?.itemNames.join(', ') ?? 'none'],
-      ['Unlock Reasons', formatUnlockReasons(this.saveUpdate)]
-    ];
-
-    for (const [label, value] of statEntries) {
-      const term = document.createElement('dt');
-      term.textContent = label;
-
-      const detail = document.createElement('dd');
-      detail.textContent = value;
-
-      stats.append(term, detail);
-    }
+    const model = createRunDebriefModel({
+      run: this.run,
+      contract: this.contract,
+      result: this.result,
+      currentSectorIndex: this.currentSectorIndex,
+      routeHistory: this.routeHistory,
+      interActChoices: this.interActChoices,
+      itemInstances: this.itemInstances,
+      engineering: this.engineering,
+      saveUpdate: this.saveUpdate
+    });
 
     const scrapBreakdown = document.createElement('p');
     scrapBreakdown.className = 'summary-note summary-callout';
@@ -286,21 +100,41 @@ export class RunSummaryScene implements Scene {
     menuButton.addEventListener('click', this.onBackToMenu);
 
     const unlockSummary = document.createElement('p');
-    unlockSummary.className = 'summary-note';
+    unlockSummary.className = 'summary-note summary-callout summary-unlock-callout';
     unlockSummary.dataset.testid = 'unlock-summary';
     unlockSummary.textContent = this.getUnlockSummaryText();
 
+    const archive = document.createElement('section');
+    archive.className = 'summary-archive';
+    archive.setAttribute('aria-labelledby', 'summary-archive-title');
+    const archiveTitle = document.createElement('h2');
+    archiveTitle.id = 'summary-archive-title';
+    archiveTitle.textContent = 'Archive recovery';
+    archive.append(archiveTitle, scrapBreakdown, upgradeCallout, unlockSummary);
+
+    const body = document.createElement('div');
+    body.className = 'summary-debrief-grid';
+    const voyageColumn = document.createElement('div');
+    voyageColumn.className = 'summary-debrief-column';
+    voyageColumn.append(this.createBuildSummary(model), this.createRouteSummary(model));
+    const detailColumn = document.createElement('div');
+    detailColumn.className = 'summary-debrief-column';
+    detailColumn.append(
+      this.createItemSummaryGrid(model.items, model.omittedItemCount),
+      this.createHighlightSummary(model)
+    );
+    body.append(voyageColumn, detailColumn);
+
+    const footer = document.createElement('footer');
+    footer.className = 'summary-footer';
+    footer.append(seedShare, menuButton);
+
     shell.append(
-      eyebrow,
-      createContractThemeStrip(this.uiRoot.ownerDocument, theme),
-      title,
-      stats,
-      this.createItemSummaryGrid(),
-      scrapBreakdown,
-      upgradeCallout,
-      seedShare,
-      unlockSummary,
-      menuButton
+      this.createSummaryHeader(model, theme),
+      this.createMetricGrid(model),
+      body,
+      archive,
+      footer
     );
     this.uiRoot.replaceChildren(shell);
     menuButton.focus();
@@ -321,7 +155,7 @@ export class RunSummaryScene implements Scene {
   public getDebugState(): SceneDebugState {
     const actContext = createRunActSaveContext(
       this.run.acts,
-      getSectorsCleared(this.run, this.routeHistory, this.result, this.frontierDecision)
+      getRunDebriefSectorsCleared(this.run, this.currentSectorIndex, this.routeHistory, this.result)
     );
     const act = this.run.acts.find((candidate) => candidate.id === actContext.actId);
 
@@ -346,8 +180,12 @@ export class RunSummaryScene implements Scene {
                   : 'standard',
               runSectorIndex: Math.min(
                 this.run.sectors.length,
-                getSectorsCleared(this.run, this.routeHistory, this.result, this.frontierDecision) +
-                  1
+                getRunDebriefSectorsCleared(
+                  this.run,
+                  this.currentSectorIndex,
+                  this.routeHistory,
+                  this.result
+                ) + 1
               ),
               routeGrammar: act.routeGrammar,
               rewardTier: act.rewardTier,
@@ -364,19 +202,169 @@ export class RunSummaryScene implements Scene {
   }
 
   private getUnlockSummaryText(): string {
-    return formatUnlockSummary(this.saveUpdate);
+    return formatCompactUnlockSummary(this.saveUpdate);
   }
 
-  private createItemSummaryGrid(): HTMLElement {
-    const wrapper = document.createElement('section');
-    wrapper.className = 'summary-item-section';
-    wrapper.dataset.testid = 'summary-item-list';
-    wrapper.setAttribute('aria-label', 'Run item cards');
+  private createSummaryHeader(
+    model: RunDebriefModel,
+    theme: ReturnType<typeof createContractScreenThemeModel>
+  ): HTMLElement {
+    const header = document.createElement('header');
+    header.className = 'summary-header';
 
-    if (this.itemInstances.length === 0) {
+    const identity = document.createElement('div');
+    identity.className = 'summary-header-identity';
+    const eyebrow = document.createElement('p');
+    eyebrow.className = 'eyebrow';
+    eyebrow.textContent = 'Run Debrief';
+    const title = document.createElement('h1');
+    title.id = 'summary-title';
+    title.textContent = model.title;
+    const themeStrip = createContractThemeStrip(this.uiRoot.ownerDocument, theme);
+    identity.append(eyebrow, title, themeStrip);
+
+    const outcome = document.createElement('div');
+    outcome.className = 'summary-outcome';
+    const outcomeLabel = document.createElement('p');
+    outcomeLabel.className = 'summary-outcome-label';
+    outcomeLabel.textContent = model.outcomeLabel;
+    const outcomeDetail = document.createElement('p');
+    outcomeDetail.className = 'summary-outcome-detail';
+    outcomeDetail.textContent = model.outcomeDetail;
+    const reached = document.createElement('p');
+    reached.className = 'summary-reached';
+    reached.textContent = `${model.reached} · ${model.actProgress}`;
+    outcome.append(outcomeLabel, outcomeDetail, reached);
+
+    header.append(identity, outcome);
+    return header;
+  }
+
+  private createMetricGrid(model: RunDebriefModel): HTMLElement {
+    const grid = document.createElement('section');
+    grid.className = 'summary-metric-grid';
+    grid.dataset.testid = 'summary-metrics';
+    grid.setAttribute('aria-label', 'Run totals');
+
+    for (const metric of model.metrics) {
+      const card = document.createElement('div');
+      card.className = 'summary-metric';
+      const label = document.createElement('span');
+      label.textContent = metric.label;
+      const value = document.createElement('strong');
+      value.textContent = metric.value;
+      card.append(label, value);
+      grid.append(card);
+    }
+
+    return grid;
+  }
+
+  private createBuildSummary(model: RunDebriefModel): HTMLElement {
+    const card = createSummaryCard('Final ship', 'summary-final-build');
+    const title = document.createElement('h3');
+    title.className = 'summary-build-name';
+    title.textContent = model.ship.name;
+
+    const stats = document.createElement('dl');
+    stats.className = 'summary-stats summary-build-stats';
+    appendSummaryStat(stats, 'Frame', model.ship.frame);
+    appendSummaryStat(stats, 'Modules', model.ship.modules);
+    appendSummaryStat(stats, 'Grid', model.ship.engineering);
+    appendSummaryStat(stats, 'Power', model.ship.powerGrid);
+
+    const circuit = document.createElement('div');
+    circuit.className = 'summary-circuit';
+    const circuitLabel = document.createElement('span');
+    circuitLabel.textContent = 'Circuit identity';
+    const circuitTitle = document.createElement('strong');
+    circuitTitle.textContent = model.ship.circuitTitle;
+    const circuitDetail = document.createElement('p');
+    circuitDetail.textContent = model.ship.circuitDetail;
+    circuit.append(circuitLabel, circuitTitle, circuitDetail);
+
+    card.append(title, stats, circuit);
+    return card;
+  }
+
+  private createRouteSummary(model: RunDebriefModel): HTMLElement {
+    const card = createSummaryCard('Flight path', 'summary-flight-path');
+    const routes = document.createElement('div');
+    routes.className = 'summary-route-acts';
+
+    if (model.routeActs.length === 0) {
       const note = document.createElement('p');
       note.className = 'summary-note';
-      note.textContent = 'No item cards recorded.';
+      note.textContent = 'No route nodes recorded.';
+      routes.append(note);
+    } else {
+      for (const act of model.routeActs) {
+        const row = document.createElement('div');
+        row.className = 'summary-route-act';
+        const label = document.createElement('strong');
+        label.textContent = act.actLabel;
+        const nodes = document.createElement('div');
+        nodes.className = 'summary-route-nodes';
+        for (const nodeLabel of act.nodeLabels) {
+          const node = document.createElement('span');
+          node.textContent = nodeLabel;
+          nodes.append(node);
+        }
+        row.append(label, nodes);
+        routes.append(row);
+      }
+    }
+
+    card.append(routes);
+    return card;
+  }
+
+  private createHighlightSummary(model: RunDebriefModel): HTMLElement {
+    const card = createSummaryCard('Defining turns', 'summary-highlight-list');
+    const list = document.createElement('ol');
+    list.className = 'summary-highlight-list';
+
+    if (model.highlights.length === 0) {
+      const note = document.createElement('p');
+      note.className = 'summary-note';
+      note.textContent = 'No major turn was recorded before closeout.';
+      card.append(note);
+      return card;
+    }
+
+    for (const highlight of model.highlights) {
+      const item = document.createElement('li');
+      const kicker = document.createElement('span');
+      kicker.textContent = highlight.kicker;
+      const title = document.createElement('strong');
+      title.textContent = highlight.title;
+      const detail = document.createElement('p');
+      detail.textContent = highlight.detail;
+      item.append(kicker, title, detail);
+      list.append(item);
+    }
+
+    card.append(list);
+    return card;
+  }
+
+  private createItemSummaryGrid(
+    itemInstances: readonly ItemInstance[],
+    omittedItemCount: number
+  ): HTMLElement {
+    const wrapper = document.createElement('section');
+    wrapper.className = 'summary-card summary-item-section';
+    wrapper.dataset.testid = 'summary-item-list';
+    wrapper.setAttribute('aria-labelledby', 'summary-items-title');
+    const heading = document.createElement('h2');
+    heading.id = 'summary-items-title';
+    heading.textContent = 'Defining upgrades';
+    wrapper.append(heading);
+
+    if (itemInstances.length === 0) {
+      const note = document.createElement('p');
+      note.className = 'summary-note';
+      note.textContent = 'No upgrades were recovered.';
       wrapper.append(note);
       return wrapper;
     }
@@ -389,7 +377,7 @@ export class RunSummaryScene implements Scene {
       )
     );
 
-    for (const instance of this.itemInstances) {
+    for (const instance of itemInstances) {
       const card = document.createElement('article');
       card.className = 'summary-item-card';
       appendItemCardContent(
@@ -406,6 +394,12 @@ export class RunSummaryScene implements Scene {
     }
 
     wrapper.append(grid);
+    if (omittedItemCount > 0) {
+      const remainder = document.createElement('p');
+      remainder.className = 'summary-item-remainder';
+      remainder.textContent = `+${omittedItemCount} more upgrade${omittedItemCount === 1 ? '' : 's'} carried in the rack.`;
+      wrapper.append(remainder);
+    }
     return wrapper;
   }
 
@@ -420,7 +414,7 @@ export class RunSummaryScene implements Scene {
 
     const input = document.createElement('input');
     input.id = 'seed-share-link';
-    input.className = 'seed-share-input';
+    input.className = 'seed-share-input sr-only';
     input.dataset.testid = 'seed-share-link';
     input.readOnly = true;
     input.value = buildSeedShareUrl(this.getCurrentHref(), this.run.seed);
@@ -433,7 +427,7 @@ export class RunSummaryScene implements Scene {
     const status = document.createElement('p');
     status.className = 'summary-note seed-share-status';
     status.dataset.testid = 'seed-share-status';
-    status.textContent = 'Seed link ready.';
+    status.textContent = `Seed ${this.run.seed}`;
 
     copyButton.addEventListener('click', () => {
       input.select();
@@ -453,6 +447,24 @@ export class RunSummaryScene implements Scene {
   }
 }
 
+function createSummaryCard(titleText: string, testId: string): HTMLElement {
+  const card = document.createElement('section');
+  card.className = 'summary-card';
+  card.dataset.testid = testId;
+  const title = document.createElement('h2');
+  title.textContent = titleText;
+  card.append(title);
+  return card;
+}
+
+function appendSummaryStat(stats: HTMLDListElement, labelText: string, valueText: string): void {
+  const label = document.createElement('dt');
+  label.textContent = labelText;
+  const value = document.createElement('dd');
+  value.textContent = valueText;
+  stats.append(label, value);
+}
+
 export function formatUnlockSummary(saveUpdate: SaveUpdateResult | null): string {
   if (!saveUpdate) {
     return 'Archive unchanged.';
@@ -466,6 +478,21 @@ export function formatUnlockSummary(saveUpdate: SaveUpdateResult | null): string
 
   const names = saveUpdate.newUnlockIds.map((unlockId) => getUnlockById(unlockId).name);
   return `Unlocked: ${names.join(', ')}. ${reasons}`;
+}
+
+export function formatCompactUnlockSummary(saveUpdate: SaveUpdateResult | null): string {
+  if (!saveUpdate) return 'Archive unchanged.';
+  if (saveUpdate.newUnlockIds.length === 0) {
+    return `Archive banked ${saveUpdate.salvageEarned} kg. No new unlocks.`;
+  }
+
+  const visibleNames = saveUpdate.newUnlockIds
+    .slice(0, 2)
+    .map((unlockId) => getUnlockById(unlockId).name);
+  const remainder = saveUpdate.newUnlockIds.length - visibleNames.length;
+  return `Unlocked ${saveUpdate.newUnlockIds.length}: ${visibleNames.join(', ')}${
+    remainder > 0 ? ` +${remainder} more` : ''
+  }.`;
 }
 
 export function buildSeedShareUrl(currentHref: string, seed: string): string {
@@ -496,74 +523,6 @@ async function writeSeedLinkToClipboard(
   } catch {
     return false;
   }
-}
-
-export function getSummaryTitle(result: CombatRunResult | null): string {
-  if (result?.reason === 'destroyed') {
-    return 'Ship Destroyed';
-  }
-
-  if (result?.reason === 'debug') {
-    return 'Debug Run Ended';
-  }
-
-  if (result?.reason === 'victory') {
-    return 'Victory Confirmed';
-  }
-
-  if (result?.reason === 'sectorComplete') {
-    return 'Contract Complete';
-  }
-
-  return 'Contract Suspended';
-}
-
-export function getOutcomeLabel(result: CombatRunResult | null): string {
-  if (!result) {
-    return 'pending';
-  }
-
-  if (result.reason === 'destroyed') {
-    return 'permadeath';
-  }
-
-  if (result.reason === 'debug') {
-    return 'forced test';
-  }
-
-  if (result.reason === 'victory') {
-    return 'final boss salvaged';
-  }
-
-  if (result.reason === 'sectorComplete') {
-    return 'sector survived';
-  }
-
-  return 'abandoned';
-}
-
-export function getOutcomeDetail(result: CombatRunResult | null): string {
-  if (!result) {
-    return 'Run pending.';
-  }
-
-  if (result.reason === 'victory') {
-    return 'Win: final boss salvaged.';
-  }
-
-  if (result.reason === 'destroyed') {
-    return 'Loss: ship destroyed and contract closed.';
-  }
-
-  if (result.reason === 'debug') {
-    return 'Debug: forced test summary.';
-  }
-
-  if (result.reason === 'sectorComplete') {
-    return 'Sector cleared: route selected for the next leg.';
-  }
-
-  return 'Abandoned: pilot exited before resolution.';
 }
 
 export function formatRouteHistory(routeHistory: readonly RouteHistoryEntry[]): string {
@@ -680,22 +639,6 @@ export function formatItemSourceSummary(itemInstances: readonly ItemInstance[]):
     .join(', ');
 }
 
-export function formatDistanceSummary(result: CombatRunResult | null): string {
-  if (!result) {
-    return '0u';
-  }
-
-  const distance = Math.floor(Math.max(0, result.distanceTraveled));
-  const sectorLength =
-    result.sectorLength === null ? null : Math.floor(Math.max(0, result.sectorLength));
-
-  if (!sectorLength) {
-    return `${distance}u`;
-  }
-
-  return `${distance}/${sectorLength}u`;
-}
-
 function formatSignedCredits(value: number): string {
   return `${value >= 0 ? '+' : ''}${value}c`;
 }
@@ -748,74 +691,4 @@ export function formatUnlockReasons(saveUpdate: SaveUpdateResult | null): string
         : `${achievementId}: archive trigger`;
     })
     .join(' | ');
-}
-
-function getReachedSectorName(
-  run: RunSkeleton,
-  routeHistory: readonly RouteHistoryEntry[],
-  result: CombatRunResult | null,
-  frontierDecision: FrontierDecisionState | null = null
-): string {
-  const index =
-    frontierDecision?.decision === 'extract'
-      ? (run.acts.find((act) => act.id === 'act_core_descent')?.endSectorIndex ?? 0)
-      : result?.reason === 'victory'
-        ? run.sectors.length - 1
-        : null;
-  if (index !== null) {
-    return run.sectors[index]?.sectorName ?? 'Outer Debris Field';
-  }
-  const reachedSectorNumber =
-    routeHistory.at(-1)?.targetSectorIndex ?? routeHistory.at(-1)?.sectorIndex ?? 1;
-  return (
-    run.sectors.find((sector) => sector.index === reachedSectorNumber)?.sectorName ??
-    'Outer Debris Field'
-  );
-}
-
-function formatActProgressSummary(
-  run: RunSkeleton,
-  routeHistory: readonly RouteHistoryEntry[],
-  result: CombatRunResult | null,
-  frontierDecision: FrontierDecisionState | null = null
-): string {
-  if (result?.reason === 'victory' && frontierDecision?.decision === 'extract') {
-    const act = run.acts.find((candidate) => candidate.id === 'act_core_descent');
-    if (act) {
-      return `${act.shortLabel} ${act.label} ${act.routeDepth}/${act.routeDepth} | ${act.index}/${run.acts.length} acts secured`;
-    }
-  }
-  const actContext = createRunActSaveContext(
-    run.acts,
-    getSectorsCleared(run, routeHistory, result, frontierDecision)
-  );
-
-  if (!actContext.actId || !actContext.actName || !actContext.actShortLabel) {
-    return 'Act progress unavailable';
-  }
-
-  return `${actContext.actShortLabel} ${actContext.actName} ${actContext.actSectorIndex}/${
-    actContext.actSectorCount ?? '?'
-  } | ${actContext.actsCompleted}/${run.acts.length} acts secured`;
-}
-
-function getSectorsCleared(
-  run: RunSkeleton,
-  routeHistory: readonly RouteHistoryEntry[],
-  result: CombatRunResult | null,
-  frontierDecision: FrontierDecisionState | null = null
-): number {
-  if (result?.reason === 'victory') {
-    if (frontierDecision?.decision === 'extract') {
-      return run.acts.slice(0, 2).reduce((total, act) => total + act.routeDepth, 0);
-    }
-    return run.acts.reduce((total, act) => total + act.routeDepth, 0);
-  }
-
-  const playableSectorCount = run.acts.reduce((total, act) => total + act.routeDepth, 0);
-  if (result?.reason === 'sectorComplete') {
-    return Math.min(playableSectorCount, routeHistory.length + 1);
-  }
-
-  return Math.min(playableSectorCount, routeHistory.length);
 }
