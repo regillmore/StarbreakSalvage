@@ -2172,3 +2172,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 151. `FoundryPresentation` normalizes real projectile geometry into a 640-by-260 preview camera and decouples shot flight time from the bounded cadence sample. `FoundryScene` derives combat-mode ship scale from contract hit radius, and CSS scales normalized ship, projectile, and trajectory geometry together at narrow and desktop widths.
+
+### BL19 - Live-fire seeded contract comparison
+
+Acceptance:
+
+- Choose Contract previews the highlighted candidate through the production weapon, engineering, ordered starter-item hooks, and combat-scale camera rather than a static loadout ledger.
+- All candidates expose the exact seeded ignition core they will auto-fit at launch, including icon, family, and concise effect copy, without mutating the run or consuming a second RNG path.
+- Hull, speed, bombs, economy, edge, and cost use bounded comparison components; empty upgrade boilerplate and raw component/resource/module text are absent.
+- Pointer and keyboard selection refresh the complete dossier, while narrow and desktop layouts preserve normalized firing geometry and avoid page overflow.
+- Reduced motion, performance mode, high contrast, unlock filtering, 48-projectile DOM cap, proc budget, saves, deterministic replay, and static hosting remain coherent.
+
+Status:
+
+- Implemented in work order 152. `ContractSelectionPresentation` joins deterministic starter-core generation and fitting to `FoundryPresentation`; shared `AttackSimulationPreview` renders the resulting bounded production cycle in both Contract Select and Hardpoint Control. `ContractSelectScene` now presents one live active dossier and three compact ignition-aware comparison cards, with formatted metrics and tradeoffs replacing the previous debug-style text wall.

@@ -54,7 +54,8 @@ import {
   type FoundryDashboardModel,
   type FoundryMeterModel
 } from './FoundryPresentation';
-import { createShipPreviewElement, createShipPreviewModel } from './ShipPreview';
+import { createAttackSimulationPreviewElement } from './AttackSimulationPreview';
+import { createShipPreviewModel } from './ShipPreview';
 
 export class FoundryScene implements Scene {
   public readonly id = 'foundry';
@@ -282,69 +283,15 @@ export class FoundryScene implements Scene {
       weaponPattern: dashboard.weaponPattern,
       ariaContext: 'Draft attack simulation'
     });
-    const previewFrame = document.createElement('div');
-    previewFrame.className = 'ship-preview-frame ship-preview-frame-hero foundry-attack-preview';
-    previewFrame.dataset.testid = 'foundry-attack-preview';
-    previewFrame.style.setProperty('--ship-primary', previewModel.primaryColor);
-    previewFrame.style.setProperty('--ship-secondary', previewModel.secondaryColor);
-    previewFrame.style.setProperty('--ship-trim', previewModel.trimColor);
-    previewFrame.style.setProperty('--ship-engine', previewModel.engineColor);
-    previewFrame.style.setProperty(
-      '--attack-camera-aspect',
-      `${dashboard.attackSimulation.cameraWidth} / ${dashboard.attackSimulation.cameraHeight}`
-    );
-    previewFrame.style.setProperty(
-      '--attack-ship-frame-width',
-      `${((this.contract.shipStats.hitRadius * 5) / dashboard.attackSimulation.cameraWidth) * 100}%`
-    );
-    previewFrame.dataset.cameraWidth = String(dashboard.attackSimulation.cameraWidth);
-    previewFrame.dataset.cameraHeight = String(dashboard.attackSimulation.cameraHeight);
-    previewFrame.dataset.shipRadius = String(this.contract.shipStats.hitRadius);
-    previewFrame.setAttribute('role', 'group');
-    previewFrame.setAttribute('aria-label', dashboard.attackSimulation.ariaLabel);
-    const projectileLayer = document.createElement('div');
-    projectileLayer.className = 'foundry-attack-projectile-layer';
-    projectileLayer.dataset.testid = 'foundry-attack-projectile-layer';
-    projectileLayer.dataset.volleySize = String(dashboard.attackSimulation.volleySize);
-    projectileLayer.dataset.fireCooldown = String(dashboard.attackSimulation.fireCooldownSeconds);
-    projectileLayer.setAttribute('aria-hidden', 'true');
-    for (const projectile of dashboard.attackSimulation.projectiles) {
-      const shot = document.createElement('span');
-      shot.className = 'foundry-attack-projectile';
-      if (projectile.waveIndex > 0) shot.classList.add('foundry-attack-projectile-echo');
-      shot.dataset.testid = 'foundry-attack-projectile';
-      shot.dataset.projectileIndex = String(projectile.projectileIndex);
-      shot.dataset.waveIndex = String(projectile.waveIndex);
-      shot.dataset.velocity = `${projectile.vx},${projectile.vy}`;
-      shot.dataset.damage = String(projectile.damage);
-      shot.dataset.radius = String(projectile.radius);
-      shot.dataset.ttl = String(projectile.ttl);
-      shot.dataset.tags = projectile.tags.join(' ');
-      shot.style.setProperty('--shot-start-x', `${projectile.startXPercent}%`);
-      shot.style.setProperty('--shot-end-x', `${projectile.endXPercent}%`);
-      shot.style.setProperty('--shot-end-rise', `${projectile.endRisePercent}%`);
-      shot.style.setProperty('--shot-rest-x', `${projectile.restXPercent}%`);
-      shot.style.setProperty('--shot-rest-rise', `${projectile.restRisePercent}%`);
-      shot.style.setProperty('--shot-performance-x', `${projectile.performanceXPercent}%`);
-      shot.style.setProperty('--shot-performance-rise', `${projectile.performanceRisePercent}%`);
-      shot.style.setProperty('--shot-size', `${projectile.displayDiameterPercent}%`);
-      shot.style.setProperty('--shot-duration', `${projectile.durationSeconds}s`);
-      shot.style.setProperty('--shot-delay', `${projectile.delaySeconds}s`);
-      projectileLayer.append(shot);
-    }
-    const targeting = document.createElement('span');
-    targeting.className = 'foundry-target-reticle';
-    targeting.setAttribute('aria-hidden', 'true');
-    const liveFire = document.createElement('span');
-    liveFire.className = 'foundry-live-fire-label';
-    liveFire.textContent = 'LIVE FIRE';
-    liveFire.setAttribute('aria-hidden', 'true');
-    previewFrame.append(
-      projectileLayer,
-      createShipPreviewElement(document, previewModel, { mode: 'combat' }),
-      targeting,
-      liveFire
-    );
+    const previewFrame = createAttackSimulationPreviewElement(document, {
+      previewModel,
+      shipRadius: this.contract.shipStats.hitRadius,
+      simulation: dashboard.attackSimulation,
+      testId: 'foundry-attack-preview',
+      projectileLayerTestId: 'foundry-attack-projectile-layer',
+      projectileTestId: 'foundry-attack-projectile',
+      className: 'foundry-attack-preview'
+    });
 
     const miniHud = document.createElement('div');
     miniHud.className = 'foundry-mini-hud';

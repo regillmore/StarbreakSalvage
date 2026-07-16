@@ -94,17 +94,29 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
 
   await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
   await expect(page.getByTestId('contract-ship-preview')).toHaveCount(3);
+  await expect(page.locator('[data-testid^="contract-ignition-ship_"]')).toHaveCount(3);
   await expect(page.getByTestId('selected-contract-preview')).toContainText(/.+/);
   await expect(page.getByTestId('selected-loadout-preview')).toContainText(/frame/i);
+  await expect(page.getByTestId('contract-attack-preview')).toBeVisible();
+  await expect(page.getByTestId('contract-attack-projectile-layer')).toHaveAttribute(
+    'data-volley-size',
+    /\d+/
+  );
+  expect(await page.getByTestId('contract-attack-projectile').count()).toBeGreaterThan(0);
+  await expect(page.getByTestId('selected-contract-ignition')).toBeVisible();
   await expect(
     page.getByTestId('selected-contract-preview').getByRole('img', { name: /ship preview/ })
   ).toBeVisible();
 
   const firstPreviewText = await page.getByTestId('selected-contract-preview').textContent();
+  const firstIgnitionText = await page.getByTestId('selected-contract-ignition').textContent();
   await page.keyboard.press('ArrowRight');
   await expect
     .poll(async () => page.getByTestId('selected-contract-preview').textContent())
     .not.toBe(firstPreviewText);
+  await expect
+    .poll(async () => page.getByTestId('selected-contract-ignition').textContent())
+    .not.toBe(firstIgnitionText);
 
   await page
     .locator('article')
@@ -125,9 +137,16 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
     .click();
   await expect(page.getByTestId('selected-contract-preview')).toContainText('Debt Runner');
   await expect(page.getByTestId('selected-contract-preview')).toContainText('Redline Needle frame');
-  await expect(page.getByTestId('selected-contract-preview')).toContainText(
-    /Power \d+\/\d+ \| Heat \d+\/\d+ \| Mass \d+\/\d+ \| Command \d+\/\d+/
-  );
+  await expect(
+    page.getByTestId('selected-contract-preview').locator('.contract-metric-grid-hero')
+  ).toBeVisible();
+  await expect(
+    page.getByTestId('selected-contract-preview').locator('.contract-metric')
+  ).toHaveCount(5);
+  await expect(
+    page.getByTestId('selected-contract-preview').locator('.contract-trait')
+  ).toHaveCount(2);
+  await expect(page.getByTestId('selected-contract-preview')).not.toContainText('Mounted:');
 
   await page.getByRole('button', { name: 'Launch Contract' }).click();
 
@@ -390,11 +409,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(upgradeCircuit).toContainText('2/3 LIVE / 1 OPEN');
   await expect(upgradeCircuit).toContainText(/CORE -> .* -> WEAPON/);
   await expect(page.getByTestId('foundry-circuit-extension')).toHaveCount(3);
-  await expect(page.getByTestId('foundry-circuit-extension')).toHaveText([
-    /\+1/,
-    /\+1/,
-    /\+1/
-  ]);
+  await expect(page.getByTestId('foundry-circuit-extension')).toHaveText([/\+1/, /\+1/, /\+1/]);
   const activeCircuitNodes = upgradeCircuit.locator(
     '.foundry-circuit-node:not(.foundry-circuit-node-empty)'
   );
@@ -422,9 +437,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('foundry-status')).toContainText(/appended/i);
   await expect(activeCircuitNodes).toHaveCount(2);
   await page.getByTestId('foundry-undo').click();
-  await expect(page.getByTestId('foundry-upgrade-circuit')).toContainText(
-    '2/3 LIVE / 1 OPEN'
-  );
+  await expect(page.getByTestId('foundry-upgrade-circuit')).toContainText('2/3 LIVE / 1 OPEN');
   await page.setViewportSize({ width: 1280, height: 720 });
   await expect(page.locator('.foundry-cargo-card')).toHaveCount(0);
   await expect(page.getByTestId('foundry-pending-history')).toContainText('Draft clean.');
@@ -1456,6 +1469,51 @@ test('keeps hardpoint live-fire geometry on one combat scale across viewport wid
   }
   expect(narrow.shipWidthRatio).toBeCloseTo(wide.shipWidthRatio, 2);
   expect(narrow.shotWidthRatio).toBeCloseTo(wide.shotWidthRatio, 2);
+});
+
+test('keeps contract live-fire comparison responsive and updates the seeded ignition', async ({
+  page
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('./?debug=1&seed=STARBREAK-SMOKE');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
+  await expect(page.locator('[data-testid^="contract-ignition-ship_"]')).toHaveCount(3);
+
+  const readPreviewGeometry = () =>
+    page.evaluate(() => {
+      const preview = document.querySelector<HTMLElement>(
+        '[data-testid="contract-attack-preview"]'
+      );
+      if (!preview) throw new Error('Contract attack preview is unavailable.');
+      const bounds = preview.getBoundingClientRect();
+      return {
+        aspect: bounds.width / bounds.height,
+        expectedAspect: Number(preview.dataset.cameraWidth) / Number(preview.dataset.cameraHeight),
+        horizontalOverflow:
+          document.documentElement.scrollWidth > document.documentElement.clientWidth
+      };
+    });
+
+  const narrow = await readPreviewGeometry();
+  expect(narrow.aspect).toBeCloseTo(narrow.expectedAspect, 2);
+  expect(narrow.horizontalOverflow).toBe(false);
+
+  await page
+    .getByTestId('contract-card-ship_drone_chaplain')
+    .getByRole('button', { name: 'Select' })
+    .click();
+  await expect(page.getByTestId('selected-contract-ignition')).toContainText('Signal Clone Stamp');
+  await expect(page.getByTestId('contract-attack-projectile-layer')).toHaveAttribute(
+    'data-volley-size',
+    '4'
+  );
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const wide = await readPreviewGeometry();
+  expect(wide.aspect).toBeCloseTo(wide.expectedAspect, 2);
+  expect(wide.aspect).toBeCloseTo(narrow.aspect, 2);
+  expect(wide.horizontalOverflow).toBe(false);
 });
 
 async function forceCompleteSectorAndEnterNext(

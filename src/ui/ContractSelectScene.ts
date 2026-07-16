@@ -1,8 +1,15 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene } from '../app/Scene';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
-import { formatRunUpgradeEffects, getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
+import { getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import type { InputAction } from '../systems/InputSystem';
+import { createAttackSimulationPreviewElement } from './AttackSimulationPreview';
+import {
+  createContractChoicePresentationModels,
+  type ContractChoicePresentationModel,
+  type ContractMetricModel
+} from './ContractSelectionPresentation';
+import { createItemIcon } from './ItemCard';
 import { createShipPreviewElement, createShipPreviewModel } from './ShipPreview';
 
 type ContractSelectionDirection = -1 | 1;
@@ -12,6 +19,7 @@ export class ContractSelectScene implements Scene {
   private selectedIndex = 0;
   private readonly contractCards: HTMLElement[] = [];
   private selectedPreviewElement: HTMLElement | null = null;
+  private choiceModels: readonly ContractChoicePresentationModel[] = [];
 
   public constructor(
     private readonly uiRoot: HTMLElement,
@@ -21,19 +29,26 @@ export class ContractSelectScene implements Scene {
   ) {}
 
   public enter(): void {
+    this.choiceModels = createContractChoicePresentationModels(this.run);
     const shell = document.createElement('main');
     shell.className = 'scene-panel contract-panel';
     shell.setAttribute('aria-labelledby', 'contract-title');
 
+    const header = document.createElement('header');
+    header.className = 'contract-board-header';
+    const heading = document.createElement('div');
     const eyebrow = document.createElement('p');
     eyebrow.className = 'eyebrow';
     eyebrow.textContent = `Contract Board | Seed ${this.run.seed}`;
-
     const title = document.createElement('h1');
     title.id = 'contract-title';
     title.textContent = 'Choose Contract';
-
-    const upgradeIntel = this.createUpgradeIntelLine();
+    const intro = document.createElement('p');
+    intro.className = 'contract-board-intro';
+    intro.textContent =
+      'Compare the hull, seeded ignition core, and real opening firing pattern. The highlighted contract launches.';
+    heading.append(eyebrow, title, intro);
+    header.append(heading, this.createUpgradeIntelLine());
 
     const selectedPreview = document.createElement('section');
     selectedPreview.className = 'contract-selected-preview';
@@ -44,95 +59,29 @@ export class ContractSelectScene implements Scene {
 
     const list = document.createElement('div');
     list.className = 'contract-list';
-
+    list.setAttribute('role', 'list');
+    list.setAttribute('aria-label', 'Available ship contracts');
     this.contractCards.length = 0;
 
-    for (const [index, contract] of this.run.contracts.entries()) {
-      const article = document.createElement('article');
-      article.className = 'contract-card';
-      article.dataset.selected = index === this.selectedIndex ? 'true' : 'false';
-      article.dataset.testid = `contract-card-${contract.shipId}`;
-      article.setAttribute('aria-selected', String(index === this.selectedIndex));
-      article.addEventListener('click', () => this.selectContract(index));
-
-      const header = document.createElement('div');
-      header.className = 'contract-card-header';
-
-      const preview = this.createPreviewFrame(contract, 'compact');
-
-      const titleGroup = document.createElement('div');
-      titleGroup.className = 'contract-card-title';
-
-      const name = document.createElement('h2');
-      name.textContent = contract.shipName;
-
-      const sponsor = document.createElement('p');
-      sponsor.className = 'contract-sponsor';
-      sponsor.textContent = contract.sponsor;
-      titleGroup.append(name, sponsor);
-      header.append(preview, titleGroup);
-
-      const summary = document.createElement('p');
-      summary.textContent = contract.summary;
-
-      const weapon = document.createElement('p');
-      weapon.className = 'contract-detail';
-      weapon.textContent = `Weapon: ${contract.startingWeaponName} | ${contract.startingWeaponPattern}`;
-
-      const frame = document.createElement('p');
-      frame.className = 'contract-detail';
-      frame.dataset.testid = `contract-loadout-${contract.shipId}`;
-      frame.textContent = `${contract.loadout.preview.title} | ${contract.loadout.preview.resourceLine}`;
-
-      const stats = document.createElement('p');
-      stats.className = 'contract-detail';
-      stats.textContent = `Hull ${contract.shipStats.maxHull} | Speed ${contract.shipStats.speed} | Hit ${contract.shipStats.hitRadius} | Bombs ${contract.shipStats.bombCapacity}`;
-
-      const economy = document.createElement('p');
-      economy.className = 'contract-detail';
-      economy.textContent = `Start: ${contract.startingCredits} credits | ${contract.startingSalvage} salvage`;
-
-      const survey = document.createElement('p');
-      survey.className = 'contract-detail contract-survey-note';
-      survey.textContent = contract.surveyNote ?? '';
-
-      const selectButton = document.createElement('button');
-      selectButton.className = 'secondary-button contract-select-button';
-      selectButton.type = 'button';
-      selectButton.textContent = index === this.selectedIndex ? 'Selected' : 'Select';
-      selectButton.addEventListener('click', () => this.selectContract(index));
-
-      article.append(
-        header,
-        summary,
-        weapon,
-        frame,
-        stats,
-        economy,
-        ...(contract.surveyNote ? [survey] : []),
-        selectButton
-      );
-      list.append(article);
-      this.contractCards.push(article);
+    for (const [index, choice] of this.choiceModels.entries()) {
+      list.append(this.createContractCard(choice, index));
     }
 
     const controls = document.createElement('div');
-    controls.className = 'button-row';
-
+    controls.className = 'button-row contract-controls';
     const launchButton = document.createElement('button');
     launchButton.className = 'primary-button';
     launchButton.type = 'button';
     launchButton.textContent = 'Launch Contract';
     launchButton.addEventListener('click', () => this.launchSelectedContract());
-
     const backButton = document.createElement('button');
     backButton.className = 'secondary-button';
     backButton.type = 'button';
     backButton.textContent = 'Back';
     backButton.addEventListener('click', this.onBack);
-
     controls.append(launchButton, backButton);
-    shell.append(eyebrow, title, upgradeIntel, selectedPreview, list, controls);
+
+    shell.append(header, selectedPreview, list, controls);
     this.uiRoot.replaceChildren(shell);
     launchButton.focus();
   }
@@ -176,22 +125,97 @@ export class ContractSelectScene implements Scene {
     };
   }
 
+  private createContractCard(choice: ContractChoicePresentationModel, index: number): HTMLElement {
+    const { contract } = choice;
+    const article = document.createElement('article');
+    article.className = 'contract-card';
+    article.dataset.selected = index === this.selectedIndex ? 'true' : 'false';
+    article.dataset.testid = `contract-card-${contract.shipId}`;
+    article.setAttribute('role', 'listitem');
+    article.setAttribute('aria-label', choice.ariaLabel);
+    article.addEventListener('click', () => this.selectContract(index));
+
+    const header = document.createElement('div');
+    header.className = 'contract-card-header';
+    const preview = this.createPreviewFrame(contract, 'compact');
+    const titleGroup = document.createElement('div');
+    titleGroup.className = 'contract-card-title';
+    const name = document.createElement('h2');
+    name.textContent = contract.shipName;
+    const sponsor = document.createElement('p');
+    sponsor.className = 'contract-sponsor';
+    sponsor.textContent = contract.sponsor;
+    titleGroup.append(name, sponsor);
+    header.append(preview, titleGroup);
+
+    const identity = document.createElement('p');
+    identity.className = 'contract-card-summary';
+    identity.textContent = contract.summary;
+    const summaryBlock = document.createElement('div');
+    summaryBlock.className = 'contract-card-summary-block';
+    summaryBlock.append(identity);
+    if (contract.surveyNote) {
+      const survey = document.createElement('p');
+      survey.className = 'contract-survey-note';
+      survey.textContent = contract.surveyNote;
+      summaryBlock.append(survey);
+    }
+
+    const weapon = document.createElement('div');
+    weapon.className = 'contract-card-weapon';
+    const weaponLabel = document.createElement('span');
+    weaponLabel.textContent = 'PRIMARY';
+    const weaponName = document.createElement('strong');
+    weaponName.textContent = contract.startingWeaponName;
+    const weaponPattern = document.createElement('small');
+    weaponPattern.textContent = contract.startingWeaponPattern.toUpperCase();
+    weapon.append(weaponLabel, weaponName, weaponPattern);
+
+    const ignition = this.createIgnitionPanel(choice, 'compact');
+    const metrics = this.createMetricGrid(choice.metrics.slice(0, 3), 'compact');
+
+    const selectButton = document.createElement('button');
+    selectButton.className = 'secondary-button contract-select-button';
+    selectButton.type = 'button';
+    selectButton.textContent = index === this.selectedIndex ? 'Selected' : 'Select';
+    selectButton.setAttribute('aria-pressed', String(index === this.selectedIndex));
+    selectButton.addEventListener('click', (event) => {
+      event.stopPropagation();
+      this.selectContract(index);
+    });
+
+    article.append(header, summaryBlock, weapon, ignition, metrics, selectButton);
+    this.contractCards.push(article);
+    return article;
+  }
+
   private createUpgradeIntelLine(): HTMLElement {
-    const upgradeIntel = document.createElement('p');
+    const upgradeIntel = document.createElement('aside');
     upgradeIntel.className = 'contract-upgrade-intel';
     upgradeIntel.dataset.testid = 'contract-upgrade-intel';
 
-    if (this.run.upgradeEffects.activeUpgradeIds.length === 0) {
-      upgradeIntel.textContent = 'Upgrades: none';
+    if (this.run.upgradeEffects.activeUpgradeNames.length === 0) {
+      upgradeIntel.hidden = true;
       return upgradeIntel;
     }
 
-    upgradeIntel.textContent = [
-      `Upgrades: ${formatRunUpgradeEffects(this.run.upgradeEffects)}`,
-      this.run.seedSurvey
-    ]
-      .filter((line): line is string => Boolean(line))
-      .join(' | ');
+    const label = document.createElement('strong');
+    label.textContent = 'ARCHIVE SUPPORT';
+    const chips = document.createElement('span');
+    chips.className = 'contract-upgrade-chip-row';
+    for (const upgradeName of this.run.upgradeEffects.activeUpgradeNames) {
+      const chip = document.createElement('span');
+      chip.textContent = upgradeName;
+      chips.append(chip);
+    }
+    upgradeIntel.append(label, chips);
+
+    if (this.run.seedSurvey) {
+      const survey = document.createElement('small');
+      survey.className = 'contract-survey-note';
+      survey.textContent = this.run.seedSurvey;
+      upgradeIntel.append(survey);
+    }
     return upgradeIntel;
   }
 
@@ -201,97 +225,171 @@ export class ContractSelectScene implements Scene {
     }
 
     this.selectedIndex = index;
-
     for (const [cardIndex, card] of this.contractCards.entries()) {
       card.dataset.selected = cardIndex === this.selectedIndex ? 'true' : 'false';
-      card.setAttribute('aria-selected', String(cardIndex === this.selectedIndex));
       const button = card.querySelector('button');
-
       if (button) {
         button.textContent = cardIndex === this.selectedIndex ? 'Selected' : 'Select';
+        button.setAttribute('aria-pressed', String(cardIndex === this.selectedIndex));
       }
     }
-
     this.updateSelectedPreview();
   }
 
   private launchSelectedContract(): void {
     const selectedContract = this.run.contracts[this.selectedIndex];
-
-    if (!selectedContract) {
-      throw new Error('No generated contract is selected.');
-    }
-
+    if (!selectedContract) throw new Error('No generated contract is selected.');
     this.onLaunch(selectedContract);
   }
 
   private updateSelectedPreview(): void {
-    if (!this.selectedPreviewElement) {
-      return;
-    }
-
-    const selectedContract = this.run.contracts[this.selectedIndex];
-
-    if (!selectedContract) {
+    if (!this.selectedPreviewElement) return;
+    const choice = this.choiceModels[this.selectedIndex];
+    if (!choice) {
       this.selectedPreviewElement.replaceChildren();
       return;
     }
 
-    const model = createShipPreviewModel(selectedContract, 'hero');
-    const preview = this.createPreviewFrame(selectedContract, 'hero');
-    const copy = document.createElement('div');
-    copy.className = 'contract-selected-copy';
+    const { contract } = choice;
+    const previewModel = createShipPreviewModel(contract, 'hero', {
+      ariaContext: 'Contract live-fire simulation'
+    });
+    const liveFire = document.createElement('div');
+    liveFire.className = 'contract-live-fire';
+    liveFire.dataset.testid = 'selected-ship-preview';
+    const preview = createAttackSimulationPreviewElement(document, {
+      previewModel,
+      shipRadius: contract.shipStats.hitRadius,
+      simulation: choice.attackSimulation,
+      testId: 'contract-attack-preview',
+      projectileLayerTestId: 'contract-attack-projectile-layer',
+      projectileTestId: 'contract-attack-projectile',
+      className: 'contract-attack-preview',
+      liveLabel: 'OPENING VOLLEY'
+    });
+    const liveFireCaption = document.createElement('div');
+    liveFireCaption.className = 'contract-live-fire-caption';
+    const weapon = document.createElement('strong');
+    weapon.textContent = contract.startingWeaponName;
+    const ignition = document.createElement('span');
+    ignition.textContent = `IGNITION // ${choice.ignition.name}`;
+    liveFireCaption.append(weapon, ignition);
+    liveFire.append(preview, liveFireCaption);
 
+    const dossier = document.createElement('div');
+    dossier.className = 'contract-selected-copy';
     const kicker = document.createElement('p');
     kicker.className = 'contract-preview-kicker';
-    kicker.textContent = `${model.themeKey.toUpperCase()} | ${model.patternLabel.toUpperCase()}`;
-
+    kicker.dataset.testid = 'selected-loadout-preview';
+    kicker.textContent = `${previewModel.themeKey} contract // ${contract.loadout.preview.title}`;
+    const titleRow = document.createElement('div');
+    titleRow.className = 'contract-selected-title';
     const title = document.createElement('h2');
-    title.textContent = model.shipName;
-
-    const weapon = document.createElement('p');
-    weapon.className = 'contract-detail';
-    weapon.textContent = `${model.weaponName} | Bias ${selectedContract.itemBias.slice(0, 3).join(' / ')}`;
-
-    const frame = document.createElement('p');
-    frame.className = 'contract-detail';
-    frame.dataset.testid = 'selected-loadout-preview';
-    frame.textContent = `${selectedContract.loadout.preview.title} | ${selectedContract.loadout.preview.role} | ${selectedContract.loadout.preview.hardpointLine}`;
-
-    const grid = document.createElement('p');
-    grid.className = 'contract-detail';
-    grid.textContent = selectedContract.loadout.preview.resourceLine;
-
-    const modules = document.createElement('p');
-    modules.className = 'contract-detail';
-    modules.textContent = `Mounted: ${selectedContract.loadout.preview.moduleLine}`;
-
-    const perk = document.createElement('p');
-    perk.textContent = `${selectedContract.perk}. Tradeoff: ${selectedContract.drawback}.`;
-
-    const survey = document.createElement('p');
-    survey.className = 'contract-detail contract-survey-note';
-    survey.textContent = selectedContract.surveyNote ?? '';
-
-    copy.append(
-      kicker,
-      title,
-      weapon,
-      frame,
-      grid,
-      modules,
-      perk,
-      ...(selectedContract.surveyNote ? [survey] : [])
+    title.textContent = contract.shipName;
+    const pattern = document.createElement('span');
+    pattern.textContent = contract.startingWeaponPattern.toUpperCase();
+    titleRow.append(title, pattern);
+    const sponsor = document.createElement('p');
+    sponsor.className = 'contract-selected-sponsor';
+    sponsor.textContent = `${contract.sponsor} // ${contract.loadout.preview.role}`;
+    const summary = document.createElement('p');
+    summary.className = 'contract-selected-summary';
+    summary.textContent = contract.summary;
+    const ignitionPanel = this.createIgnitionPanel(choice, 'hero');
+    const metrics = this.createMetricGrid(choice.metrics, 'hero');
+    const tradeoffs = document.createElement('div');
+    tradeoffs.className = 'contract-tradeoff-grid';
+    tradeoffs.append(
+      this.createContractTrait('EDGE', contract.perk, 'positive'),
+      this.createContractTrait('COST', contract.drawback, 'negative')
     );
-    this.selectedPreviewElement.replaceChildren(preview, copy);
+    dossier.append(kicker, titleRow, sponsor, summary, ignitionPanel, metrics, tradeoffs);
+    this.selectedPreviewElement.replaceChildren(liveFire, dossier);
   }
 
-  private createPreviewFrame(contract: StartingContract, variant: 'compact' | 'hero'): HTMLElement {
+  private createIgnitionPanel(
+    choice: ContractChoicePresentationModel,
+    variant: 'compact' | 'hero'
+  ): HTMLElement {
+    const panel = document.createElement('section');
+    panel.className = `contract-ignition contract-ignition-${variant}`;
+    panel.dataset.rarity = choice.ignition.rarity;
+    panel.dataset.family = choice.ignition.family;
+    panel.dataset.testid =
+      variant === 'compact'
+        ? `contract-ignition-${choice.contract.shipId}`
+        : 'selected-contract-ignition';
+    const header = document.createElement('div');
+    header.className = 'contract-ignition-header';
+    const copy = document.createElement('div');
+    const label = document.createElement('span');
+    label.textContent = 'SEEDED IGNITION';
+    const name = document.createElement('strong');
+    name.textContent = choice.ignition.name;
+    const family = document.createElement('small');
+    family.textContent = choice.ignition.familyLabel;
+    copy.append(label, name, family);
+    header.append(createItemIcon(document, choice.ignition), copy);
+    const effect = document.createElement('p');
+    effect.textContent = choice.ignition.effectText;
+    panel.append(header, effect);
+
+    if (variant === 'hero') {
+      const badges = document.createElement('div');
+      badges.className = 'contract-ignition-badges';
+      for (const badgeText of choice.ignition.badges.slice(0, 3)) {
+        const badge = document.createElement('span');
+        badge.textContent = badgeText;
+        badges.append(badge);
+      }
+      panel.append(badges);
+    }
+    return panel;
+  }
+
+  private createMetricGrid(
+    metrics: readonly ContractMetricModel[],
+    variant: 'compact' | 'hero'
+  ): HTMLElement {
+    const grid = document.createElement('div');
+    grid.className = `contract-metric-grid contract-metric-grid-${variant}`;
+    for (const metric of metrics) {
+      const item = document.createElement('span');
+      item.className = 'contract-metric';
+      item.dataset.metric = metric.id;
+      const glyph = document.createElement('small');
+      glyph.textContent = metric.glyph;
+      const value = document.createElement('strong');
+      value.textContent = metric.value;
+      const label = document.createElement('span');
+      label.textContent = metric.label;
+      item.append(glyph, value, label);
+      grid.append(item);
+    }
+    return grid;
+  }
+
+  private createContractTrait(
+    labelText: string,
+    bodyText: string,
+    tone: 'positive' | 'negative'
+  ): HTMLElement {
+    const trait = document.createElement('section');
+    trait.className = 'contract-trait';
+    trait.dataset.tone = tone;
+    const label = document.createElement('strong');
+    label.textContent = labelText;
+    const body = document.createElement('p');
+    body.textContent = bodyText;
+    trait.append(label, body);
+    return trait;
+  }
+
+  private createPreviewFrame(contract: StartingContract, variant: 'compact'): HTMLElement {
     const model = createShipPreviewModel(contract, variant);
     const frame = document.createElement('div');
     frame.className = `ship-preview-frame ship-preview-frame-${variant}`;
-    frame.dataset.testid =
-      variant === 'compact' ? 'contract-ship-preview' : 'selected-ship-preview';
+    frame.dataset.testid = 'contract-ship-preview';
     frame.style.setProperty('--ship-primary', model.primaryColor);
     frame.style.setProperty('--ship-secondary', model.secondaryColor);
     frame.style.setProperty('--ship-trim', model.trimColor);
@@ -306,9 +404,6 @@ export function getNextContractIndex(
   contractCount: number,
   direction: ContractSelectionDirection
 ): number {
-  if (contractCount <= 0) {
-    return 0;
-  }
-
+  if (contractCount <= 0) return 0;
   return (currentIndex + direction + contractCount) % contractCount;
 }
