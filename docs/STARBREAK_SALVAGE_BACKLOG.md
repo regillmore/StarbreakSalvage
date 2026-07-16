@@ -2158,3 +2158,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 150. `starterCore` is a validated bridge pool and weight profile. `generateStartingItemLoadout` issues one affinity-weighted item, starter auto-fit occupies one of three contract conduits, and normal sector rewards can immediately fill the remaining two.
+
+### BL18 - Combat-scale responsive hardpoint simulation
+
+Acceptance:
+
+- Hardpoint Control projects ship size, projectile diameter, lane spacing, spread, and travel through one bounded logical combat camera.
+- Ship size derives from the selected contract's hit radius; projectile size and trajectories derive from the production projectile blueprint.
+- Responsive layout changes preserve relative geometry instead of scaling the ship independently from fixed-pixel shots.
+- The representative firing cycle remains long enough to show periodic ordered-circuit effects while every shot crosses the visible camera.
+- Reduced motion, performance mode, high contrast, bounded DOM work, deterministic hooks, saves, snapshots, and static hosting remain coherent.
+
+Status:
+
+- Implemented in work order 151. `FoundryPresentation` normalizes real projectile geometry into a 640-by-260 preview camera and decouples shot flight time from the bounded cadence sample. `FoundryScene` derives combat-mode ship scale from contract hit radius, and CSS scales normalized ship, projectile, and trajectory geometry together at narrow and desktop widths.

@@ -1,6 +1,7 @@
 import { getShipFrameById, getShipModuleById, type ShipModuleSlot } from '../content/shipModules';
 import { getItemById } from '../content/items';
 import { getWeaponById, type WeaponPatternId } from '../content/weapons';
+import { COMBAT_ARENA_WIDTH } from '../game/CombatGeometry';
 import {
   BASE_COMBINED_PROC_BUDGET,
   MAX_COMBINED_PROC_BUDGET,
@@ -60,19 +61,21 @@ export interface FoundryAttackProjectileModel {
   readonly damage: number;
   readonly ttl: number;
   readonly tags: readonly string[];
-  readonly startX: number;
-  readonly endX: number;
-  readonly endY: number;
-  readonly restX: number;
-  readonly restY: number;
-  readonly performanceX: number;
-  readonly performanceY: number;
-  readonly displaySize: number;
+  readonly startXPercent: number;
+  readonly endXPercent: number;
+  readonly endRisePercent: number;
+  readonly restXPercent: number;
+  readonly restRisePercent: number;
+  readonly performanceXPercent: number;
+  readonly performanceRisePercent: number;
+  readonly displayDiameterPercent: number;
   readonly durationSeconds: number;
   readonly delaySeconds: number;
 }
 
 export interface FoundryAttackSimulationModel {
+  readonly cameraWidth: number;
+  readonly cameraHeight: number;
   readonly volleySize: number;
   readonly volleysPerSecond: number;
   readonly fireCooldownSeconds: number;
@@ -138,8 +141,9 @@ const ATTACK_CAPS = {
   velocity: 1_000,
   shotHeat: 0.6
 } as const;
-const ATTACK_PREVIEW_WORLD_SCALE = 0.24;
-const ATTACK_PREVIEW_TRAVEL_DISTANCE = 560;
+export const FOUNDRY_ATTACK_PREVIEW_WORLD_HEIGHT = 260;
+const ATTACK_PREVIEW_TRAVEL_DISTANCE = 250;
+const ATTACK_PREVIEW_SEQUENCE_DISTANCE = 560;
 const MAX_ATTACK_PREVIEW_WAVE_COPIES = 6;
 const MAX_ATTACK_PREVIEW_PROJECTILES = 48;
 
@@ -445,9 +449,10 @@ function createFoundryAttackPatternPreviewModel(
     Number.POSITIVE_INFINITY
   );
   const flightSeconds = ATTACK_PREVIEW_TRAVEL_DISTANCE / Math.max(1, slowestForwardSpeed);
+  const sequenceSeconds = ATTACK_PREVIEW_SEQUENCE_DISTANCE / Math.max(1, slowestForwardSpeed);
   const desiredWaveCopies = Math.max(
     1,
-    Math.min(MAX_ATTACK_PREVIEW_WAVE_COPIES, Math.ceil(flightSeconds / safeCooldown))
+    Math.min(MAX_ATTACK_PREVIEW_WAVE_COPIES, Math.ceil(sequenceSeconds / safeCooldown))
   );
   const selectedVolleys: (readonly ProjectileBlueprint[])[] = [];
   let projectileCount = 0;
@@ -465,7 +470,7 @@ function createFoundryAttackPatternPreviewModel(
   }
 
   const waveCopies = selectedVolleys.length;
-  const durationSeconds = safeCooldown * waveCopies;
+  const durationSeconds = Math.max(flightSeconds, safeCooldown * waveCopies);
   const projectiles = selectedVolleys.flatMap((volley, waveIndex) =>
     volley.map((projectile, projectileIndex) =>
       createFoundryAttackProjectileModel(
@@ -474,6 +479,7 @@ function createFoundryAttackPatternPreviewModel(
         waveIndex,
         waveCopies,
         durationSeconds,
+        flightSeconds,
         safeCooldown
       )
     )
@@ -487,6 +493,8 @@ function createFoundryAttackPatternPreviewModel(
       ? `${volleySize} projectile${volleySize === 1 ? '' : 's'} per volley`
       : `${minimumVolleySize}-${volleySize} projectiles per volley across the firing cycle`;
   return {
+    cameraWidth: COMBAT_ARENA_WIDTH,
+    cameraHeight: FOUNDRY_ATTACK_PREVIEW_WORLD_HEIGHT,
     volleySize,
     volleysPerSecond,
     fireCooldownSeconds: safeCooldown,
@@ -502,13 +510,18 @@ function createFoundryAttackProjectileModel(
   waveIndex: number,
   waveCopies: number,
   durationSeconds: number,
+  flightSeconds: number,
   fireCooldownSeconds: number
 ): FoundryAttackProjectileModel {
-  const startX = projectile.x * ATTACK_PREVIEW_WORLD_SCALE;
-  const endX = (projectile.x + projectile.vx * durationSeconds) * ATTACK_PREVIEW_WORLD_SCALE;
-  const endY = projectile.vy * durationSeconds * ATTACK_PREVIEW_WORLD_SCALE;
+  const startX = projectile.x;
+  const endX = projectile.x + projectile.vx * durationSeconds;
+  const endRise = -projectile.vy * durationSeconds;
   const restProgress = (waveIndex + 1) / (waveCopies + 1);
   const performanceProgress = 0.58;
+  const restX = projectile.x + projectile.vx * flightSeconds * restProgress;
+  const restRise = -projectile.vy * flightSeconds * restProgress;
+  const performanceX = projectile.x + projectile.vx * flightSeconds * performanceProgress;
+  const performanceRise = -projectile.vy * flightSeconds * performanceProgress;
   return {
     id: `preview-shot-${waveIndex}-${projectileIndex}`,
     projectileIndex,
@@ -520,17 +533,25 @@ function createFoundryAttackProjectileModel(
     damage: projectile.damage,
     ttl: projectile.ttl,
     tags: projectile.tags,
-    startX,
-    endX,
-    endY,
-    restX: startX + (endX - startX) * restProgress,
-    restY: endY * restProgress,
-    performanceX: startX + (endX - startX) * performanceProgress,
-    performanceY: endY * performanceProgress,
-    displaySize: Math.max(4, projectile.radius * 0.9),
+    startXPercent: toAttackPreviewHorizontalPercent(startX),
+    endXPercent: toAttackPreviewHorizontalPercent(endX),
+    endRisePercent: toAttackPreviewVerticalPercent(endRise),
+    restXPercent: toAttackPreviewHorizontalPercent(restX),
+    restRisePercent: toAttackPreviewVerticalPercent(restRise),
+    performanceXPercent: toAttackPreviewHorizontalPercent(performanceX),
+    performanceRisePercent: toAttackPreviewVerticalPercent(performanceRise),
+    displayDiameterPercent: toAttackPreviewHorizontalPercent(Math.max(4, projectile.radius * 2)),
     durationSeconds,
     delaySeconds: -waveIndex * fireCooldownSeconds
   };
+}
+
+function toAttackPreviewHorizontalPercent(worldUnits: number): number {
+  return (worldUnits / COMBAT_ARENA_WIDTH) * 100;
+}
+
+function toAttackPreviewVerticalPercent(worldUnits: number): number {
+  return (worldUnits / FOUNDRY_ATTACK_PREVIEW_WORLD_HEIGHT) * 100;
 }
 
 export function createFoundryComponentStatModel(

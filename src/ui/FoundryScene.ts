@@ -289,6 +289,17 @@ export class FoundryScene implements Scene {
     previewFrame.style.setProperty('--ship-secondary', previewModel.secondaryColor);
     previewFrame.style.setProperty('--ship-trim', previewModel.trimColor);
     previewFrame.style.setProperty('--ship-engine', previewModel.engineColor);
+    previewFrame.style.setProperty(
+      '--attack-camera-aspect',
+      `${dashboard.attackSimulation.cameraWidth} / ${dashboard.attackSimulation.cameraHeight}`
+    );
+    previewFrame.style.setProperty(
+      '--attack-ship-frame-width',
+      `${((this.contract.shipStats.hitRadius * 5) / dashboard.attackSimulation.cameraWidth) * 100}%`
+    );
+    previewFrame.dataset.cameraWidth = String(dashboard.attackSimulation.cameraWidth);
+    previewFrame.dataset.cameraHeight = String(dashboard.attackSimulation.cameraHeight);
+    previewFrame.dataset.shipRadius = String(this.contract.shipStats.hitRadius);
     previewFrame.setAttribute('role', 'group');
     previewFrame.setAttribute('aria-label', dashboard.attackSimulation.ariaLabel);
     const projectileLayer = document.createElement('div');
@@ -309,14 +320,14 @@ export class FoundryScene implements Scene {
       shot.dataset.radius = String(projectile.radius);
       shot.dataset.ttl = String(projectile.ttl);
       shot.dataset.tags = projectile.tags.join(' ');
-      shot.style.setProperty('--shot-start-x', `${projectile.startX}px`);
-      shot.style.setProperty('--shot-end-x', `${projectile.endX}px`);
-      shot.style.setProperty('--shot-end-y', `${projectile.endY}px`);
-      shot.style.setProperty('--shot-rest-x', `${projectile.restX}px`);
-      shot.style.setProperty('--shot-rest-y', `${projectile.restY}px`);
-      shot.style.setProperty('--shot-performance-x', `${projectile.performanceX}px`);
-      shot.style.setProperty('--shot-performance-y', `${projectile.performanceY}px`);
-      shot.style.setProperty('--shot-size', `${projectile.displaySize}px`);
+      shot.style.setProperty('--shot-start-x', `${projectile.startXPercent}%`);
+      shot.style.setProperty('--shot-end-x', `${projectile.endXPercent}%`);
+      shot.style.setProperty('--shot-end-rise', `${projectile.endRisePercent}%`);
+      shot.style.setProperty('--shot-rest-x', `${projectile.restXPercent}%`);
+      shot.style.setProperty('--shot-rest-rise', `${projectile.restRisePercent}%`);
+      shot.style.setProperty('--shot-performance-x', `${projectile.performanceXPercent}%`);
+      shot.style.setProperty('--shot-performance-rise', `${projectile.performanceRisePercent}%`);
+      shot.style.setProperty('--shot-size', `${projectile.displayDiameterPercent}%`);
       shot.style.setProperty('--shot-duration', `${projectile.durationSeconds}s`);
       shot.style.setProperty('--shot-delay', `${projectile.delaySeconds}s`);
       projectileLayer.append(shot);

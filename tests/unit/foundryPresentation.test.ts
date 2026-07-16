@@ -233,11 +233,29 @@ describe('foundry visual presentation', () => {
     expect(preview.volleySize).toBe(12);
     expect(preview.waveCopies).toBe(4);
     expect(preview.projectiles).toHaveLength(48);
-    expect(preview.projectiles[0]?.durationSeconds).toBeCloseTo(0.2);
-    expect(preview.projectiles[0]?.endY).toBeCloseTo(-24);
+    expect(preview.cameraWidth).toBe(640);
+    expect(preview.cameraHeight).toBe(260);
+    expect(preview.projectiles[0]?.durationSeconds).toBeCloseTo(0.5);
+    expect(preview.projectiles[0]?.endRisePercent).toBeCloseTo(96.1538);
+    expect(preview.projectiles[0]?.displayDiameterPercent).toBeCloseTo(1.25);
     expect(preview.projectiles[0]?.delaySeconds).toBeCloseTo(0);
     expect(preview.projectiles[12]?.delaySeconds).toBeCloseTo(-0.05);
     expect(preview.ariaLabel).toContain('12 projectiles per volley');
+  });
+
+  it('normalizes combat radius and lane spacing into one responsive camera scale', () => {
+    const preview = createFoundryAttackPreviewModel('Dual Geometry', 0.2, [
+      projectile(-8, 0, -660),
+      projectile(8, 0, -660)
+    ]);
+    const firstWave = preview.projectiles.filter((candidate) => candidate.waveIndex === 0);
+
+    expect(firstWave.map((candidate) => candidate.startXPercent)).toEqual([-1.25, 1.25]);
+    expect(firstWave[1]!.startXPercent - firstWave[0]!.startXPercent).toBeCloseTo(2.5);
+    expect(firstWave.every((candidate) => candidate.displayDiameterPercent === 1.25)).toBe(true);
+    expect(firstWave.every((candidate) => candidate.endRisePercent >= 96)).toBe(true);
+    expect(firstWave[0]!.durationSeconds).toBeCloseTo(1);
+    expect(firstWave[0]!.performanceRisePercent).toBeLessThan(60);
   });
 
   it('summarizes component costs and direct replacement deltas', () => {

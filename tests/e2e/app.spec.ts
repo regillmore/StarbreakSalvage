@@ -1404,6 +1404,60 @@ test('keeps the gameplay HUD and safe frame readable in a narrow viewport', asyn
   expect(browserErrors).toEqual([]);
 });
 
+test('keeps hardpoint live-fire geometry on one combat scale across viewport widths', async ({
+  page
+}) => {
+  await page.goto('./?debug=1&seed=FOUNDRY-PREVIEW-GEOMETRY');
+  await page.getByRole('button', { name: 'Scenario Lab [Debug]' }).click();
+  await page.getByTestId('scenario-lab-lab_engineering_foundry').click();
+  await expect(page.getByTestId('salvage-foundry')).toBeVisible();
+  await page.evaluate(() => {
+    document.documentElement.dataset.reducedMotion = 'true';
+  });
+
+  const readGeometry = () =>
+    page.evaluate(() => {
+      const preview = document.querySelector<HTMLElement>('[data-testid="foundry-attack-preview"]');
+      const ship = preview?.querySelector<SVGSVGElement>('.ship-preview-combat');
+      const shot = preview?.querySelector<HTMLElement>('[data-testid="foundry-attack-projectile"]');
+      if (!preview || !ship || !shot) throw new Error('Hardpoint preview geometry is unavailable.');
+      const previewRect = preview.getBoundingClientRect();
+      const shipRect = ship.getBoundingClientRect();
+      const shotRect = shot.getBoundingClientRect();
+      const cameraWidth = Number(preview.dataset.cameraWidth);
+      const cameraHeight = Number(preview.dataset.cameraHeight);
+      const shipRadius = Number(preview.dataset.shipRadius);
+      const projectileRadius = Number(shot.dataset.radius);
+      const shotStyle = shot.style;
+
+      return {
+        previewAspect: previewRect.width / previewRect.height,
+        expectedAspect: cameraWidth / cameraHeight,
+        shipWidthRatio: shipRect.width / previewRect.width,
+        expectedShipWidthRatio: (shipRadius * 5) / cameraWidth,
+        shotWidthRatio: shotRect.width / previewRect.width,
+        expectedShotWidthRatio: Math.max(4, projectileRadius * 2) / cameraWidth,
+        shotAspect: shotRect.width / shotRect.height,
+        endRisePercent: Number.parseFloat(shotStyle.getPropertyValue('--shot-end-rise'))
+      };
+    });
+
+  await page.setViewportSize({ width: 390, height: 700 });
+  const narrow = await readGeometry();
+  await page.setViewportSize({ width: 1280, height: 800 });
+  const wide = await readGeometry();
+
+  for (const geometry of [narrow, wide]) {
+    expect(geometry.previewAspect).toBeCloseTo(geometry.expectedAspect, 2);
+    expect(geometry.shipWidthRatio).toBeCloseTo(geometry.expectedShipWidthRatio, 2);
+    expect(geometry.shotWidthRatio).toBeCloseTo(geometry.expectedShotWidthRatio, 2);
+    expect(geometry.shotAspect).toBeCloseTo(1, 1);
+    expect(geometry.endRisePercent).toBeGreaterThanOrEqual(96);
+  }
+  expect(narrow.shipWidthRatio).toBeCloseTo(wide.shipWidthRatio, 2);
+  expect(narrow.shotWidthRatio).toBeCloseTo(wide.shotWidthRatio, 2);
+});
+
 async function forceCompleteSectorAndEnterNext(
   page: Page,
   nextSectorName: string,

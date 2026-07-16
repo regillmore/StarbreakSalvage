@@ -823,7 +823,7 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
 
 .foundry-attack-preview.ship-preview-frame-hero {
   width: 100%;
-  aspect-ratio: 12 / 4.7;
+  aspect-ratio: var(--attack-camera-aspect, 32 / 13);
   border-color: color-mix(in srgb, var(--ship-primary) 52%, transparent);
   background:
     linear-gradient(rgba(124, 247, 255, 0.055) 1px, transparent 1px),
@@ -839,11 +839,12 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
 
 .foundry-attack-preview .ship-preview-combat {
   position: absolute;
-  bottom: -5%;
+  bottom: -2%;
   left: 50%;
   z-index: 2;
-  width: 31%;
-  height: 58%;
+  width: var(--attack-ship-frame-width, 14.0625%);
+  height: auto;
+  aspect-ratio: 5 / 4;
   overflow: visible;
   transform: translateX(-50%);
   filter: drop-shadow(0 0 11px color-mix(in srgb, var(--ship-engine) 34%, transparent));
@@ -860,10 +861,12 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
 
 .foundry-attack-projectile {
   position: absolute;
-  bottom: 22%;
-  left: 50%;
+  bottom: 10%;
+  left: calc(50% + var(--shot-start-x));
   width: var(--shot-size);
-  height: var(--shot-size);
+  height: auto;
+  aspect-ratio: 1;
+  box-sizing: border-box;
   border: 1px solid rgba(3, 5, 13, 0.82);
   border-radius: 50%;
   opacity: 0;
@@ -871,7 +874,7 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   box-shadow:
     0 0 4px #ffffff,
     0 0 11px rgba(124, 247, 255, 0.9);
-  transform: translate(calc(-50% + var(--shot-start-x)), 0);
+  transform: translateX(-50%);
   animation: foundry-projectile-flight var(--shot-duration) linear infinite;
   animation-delay: var(--shot-delay);
 }
@@ -947,16 +950,20 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
 
 @keyframes foundry-projectile-flight {
   0% {
+    bottom: 10%;
+    left: calc(50% + var(--shot-start-x));
     opacity: 0;
-    transform: translate(calc(-50% + var(--shot-start-x)), 0);
+    transform: translateX(-50%);
   }
   4%,
   88% {
     opacity: 1;
   }
   100% {
+    bottom: calc(10% + var(--shot-end-rise));
+    left: calc(50% + var(--shot-end-x));
     opacity: 0;
-    transform: translate(calc(-50% + var(--shot-end-x)), var(--shot-end-y));
+    transform: translateX(-50%);
   }
 }
 
@@ -1670,15 +1677,19 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
 
 html[data-reduced-motion='true'] .foundry-attack-projectile {
   animation: none;
+  bottom: calc(10% + var(--shot-rest-rise));
+  left: calc(50% + var(--shot-rest-x));
   opacity: 0.94;
-  transform: translate(calc(-50% + var(--shot-rest-x)), var(--shot-rest-y));
+  transform: translateX(-50%);
 }
 
 html[data-performance-mode='true'] .foundry-attack-projectile {
   animation: none;
+  bottom: calc(10% + var(--shot-performance-rise));
+  left: calc(50% + var(--shot-performance-x));
   opacity: 0.94;
   box-shadow: none;
-  transform: translate(calc(-50% + var(--shot-performance-x)), var(--shot-performance-y));
+  transform: translateX(-50%);
 }
 
 html[data-performance-mode='true'] .foundry-attack-projectile-echo {
