@@ -4,6 +4,7 @@ import {
   type ShipModuleId,
   type ShipUpgradeSocketType
 } from '../content/shipModules';
+import { getComponentCircuitSlotTypes } from './ComponentCircuit';
 import type { EngineeringSnapshot } from './Foundry';
 import type { ItemInstance, ItemSocketAssignment } from './Rewards';
 
@@ -114,7 +115,7 @@ export function getItemSocketSlots(snapshot: EngineeringSnapshot): ItemSocketSlo
       const component = snapshot.components.find((candidate) => candidate.id === mount.componentId);
       if (!component) return [];
       const module = getShipModuleById(component.moduleId);
-      return module.upgradeSockets.map((type, socketIndex) => ({
+      return getComponentCircuitSlotTypes(component).map((type, socketIndex) => ({
         componentId: component.id,
         hardpointId: mount.hardpointId,
         moduleId: module.id,
@@ -174,16 +175,18 @@ export function autoFitItemSockets(
 ): ItemInstance[] {
   const reconciled = reconcileItemSockets(items, snapshot);
   const slots = getItemSocketSlots(snapshot);
-  const claimed = new Set(
-    reconciled.flatMap((item) => (item.socket ? [getAssignmentKey(item.socket)] : []))
-  );
+  const requestedOrders = new Map<number, number>();
   let nextOrder = getNextCircuitOrder(reconciled);
+  for (const item of reconciled) {
+    requestedOrders.set(
+      item.acquisitionOrder,
+      item.socket?.circuitOrder ?? nextOrder++
+    );
+  }
+  const assignments = routeCircuitItems(reconciled, slots, requestedOrders);
   return reconciled.map((item) => {
-    if (item.socket) return item;
-    const compatible = findOpenCircuitSlot(item.itemId, slots, claimed);
-    if (!compatible) return item;
-    claimed.add(getSlotKey(compatible));
-    return { ...item, socket: createAssignment(compatible, nextOrder++) };
+    const assignment = assignments.get(item.acquisitionOrder);
+    return assignment ? { ...item, socket: assignment } : { ...item, socket: null };
   });
 }
 

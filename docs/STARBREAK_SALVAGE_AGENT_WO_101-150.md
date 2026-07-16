@@ -1051,6 +1051,29 @@ Status: implemented. `ActPlan.getActBoundaryHandoffAfterSector` now classifies t
 
 Verification: focused act-boundary, frontier, and snapshot coverage passes with 3 files and 20 tests. The regression fixture restores the exact legacy shape produced after an Act II terminal optional and proves it remains a valid extraction checkpoint classified for the frontier choice. Chromium completes The Core Wreck through its real debug combat settlement, claims the required reward, and observes the frontier decision with no optional destination or route-effect dossier. `npm run verify:release` passes typecheck, ESLint, all 100 Vitest files and 617 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 926.27 kB minified/252.68 kB gzip initial JavaScript and 72.73/14.78 kB CSS, effectively unchanged from work order 147. The existing 500 kB chunk notice remains; no dependency, content RNG, mission schema, save/snapshot version, or warning threshold changed. The in-app browser runtime reported no available browser targets after its prescribed discovery check, so repository Playwright Chromium supplied the player-flow evidence and no separate in-app capture is claimed.
 
+## Work order 149 - Act-scaled component circuit capacity
+
+Goal: make recovered ship hardware the primary source of signal-circuit growth, with a simple one/two/three-slot progression from contract issue through the deeper acts.
+
+Prompt:
+
+> Reduce every contract-issued starter component to one circuit slot. Components recovered in Act I provide two slots, and components recovered in Act II or later provide three. Keep slot channels meaningful, make the tier visible in Hardpoint Control, preserve ordered-circuit routing across replacement, and retain deterministic generation and snapshot compatibility.
+
+Acceptance criteria:
+
+- Every component in every starter contract contributes exactly one universal circuit channel, preserving its three-item field kit while leaving no spare starting capacity.
+- Act I component drops contribute native plus flex channels; Act II and Act III drops contribute native, flex, and a second native channel.
+- Capacity depends on existing component provenance and one-based acquisition sector, not quality, rarity, route kind, or presentation state.
+- Replacing hardware reroutes the live chain deterministically across the new capacity, preserving deliberate order and racked choices where legal.
+- Initial auto-fit fills all three universal starter conduits deterministically, while later component replacement can still find a maximal legal assignment across mixed typed channels.
+- Hardpoint Control component cards, extension chips, circuit budget, open nodes, rack reasons, summary/debug consumers, pointer/keyboard controls, narrow layout, snapshots, and static hosting reflect the same capacity rule.
+
+Status: implemented. `ComponentCircuit` is the pure progression boundary. Contract-issued components project one universal channel, sectors 1-9 project native plus flex, and sectors 10+ project native plus flex plus native using `ACT_ROUTE_NODE_COUNT` rather than quality or route metadata. The universal starter tier keeps every three-item field kit live while still beginning at a hard three-stage ceiling. Because component source and one-based acquisition sector already live in `FoundryComponentInstance`, current snapshot-v12 payloads and deployed snapshots derive the new capacity without migration or persisted presentation state.
+
+`ItemSockets.getItemSocketSlots` and `FoundryScene` consume the same projection, so routing, capacity summaries, component cards, and extension chips cannot disagree. Initial field-kit auto-fit now uses the existing bounded augmenting-path router across all starter items, filling its three universal conduits and remaining valid once replacements introduce mixed typed channels; later single-item append remains explicit and therefore does not reactivate deliberately racked upgrades. Three-slot later hardware keeps a flex conduit for combination freedom and repeats its native channel to preserve component identity.
+
+Verification: focused circuit, foundry, presentation, and snapshot coverage passes with 4 files and 32 tests. The tier regression covers every starter contract, both Act I boundaries, Act II entry, Act III entry, exact channel order, deterministic replay, and rerouting through an Act I replacement. Chromium exercises the real Debt Runner opening and post-reward Hardpoint Control at 390x700, verifies three `+1` starter extensions, the reduced live/open budget, a visible rack item, reorder/eject/append/undo/commit behavior, and return to navigation without console errors. `npm run verify:release` passes typecheck, ESLint, all 100 Vitest files and 618 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 926.55 kB minified/252.77 kB gzip initial JavaScript and 72.73/14.78 kB CSS, increases of 0.28/0.09 kB JavaScript and no CSS over work order 148. The existing 500 kB chunk notice remains; no dependency, RNG stream, item/component schema, save/snapshot version, or warning threshold changed.
+
 ## Review subagent prompt
 
 Use after a feature PR:

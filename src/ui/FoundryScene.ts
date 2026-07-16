@@ -9,6 +9,7 @@ import { getShipFrameById, getShipModuleById } from '../content/shipModules';
 import { getItemById } from '../content/items';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import type { ItemInstance } from '../game/Rewards';
+import { getComponentCircuitSlotTypes } from '../game/ComponentCircuit';
 import {
   canFitItemInCircuit,
   createItemSocketCircuitSummary,
@@ -533,14 +534,14 @@ export class FoundryScene implements Scene {
   }
 
   private createComponentCircuitContribution(component: FoundryComponentInstance): HTMLElement {
-    const module = getShipModuleById(component.moduleId);
+    const slotTypes = getComponentCircuitSlotTypes(component);
     const contribution = document.createElement('div');
     contribution.className = 'foundry-circuit-contribution';
     contribution.dataset.testid = `foundry-circuit-extension-${component.id}`;
     const capacity = document.createElement('strong');
-    capacity.textContent = `CIRCUIT +${module.upgradeSockets.length}`;
+    capacity.textContent = `CIRCUIT +${slotTypes.length}`;
     const channels = document.createElement('span');
-    channels.textContent = module.upgradeSockets.map((type) => type.toUpperCase()).join(' + ');
+    channels.textContent = slotTypes.map((type) => type.toUpperCase()).join(' + ');
     contribution.append(capacity, channels);
     return contribution;
   }

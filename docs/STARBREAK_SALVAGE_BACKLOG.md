@@ -2131,3 +2131,16 @@ Acceptance:
 Status:
 
 - Implemented in work order 148. `getActBoundaryHandoffAfterSector` gives fresh and restored UI flow one immutable Act I/Act II boundary rule. Terminal branches commit their authored default path and extraction checkpoints advance through the existing handoff reducer, so Act II now reaches `FrontierGateScene` without an optional challenge or empty route plot.
+
+### BL16 - Act-scaled component circuit capacity
+
+Acceptance:
+
+- Contract-issued components provide one circuit slot, Act I salvage components provide two, and Act II/III salvage components provide three.
+- Contract slots are universal so the three-item field kit remains live; recovered slot types preserve component identity while adding flex capacity, and quality or route rarity do not alter the count.
+- Initial fitting maximizes compatible typed-channel use, while replacement reconciliation preserves live order and deliberate rack choices.
+- Hardpoint Control, circuit summaries, snapshots, deterministic generation, accessibility, and static hosting share the same capacity projection.
+
+Status:
+
+- Implemented in work order 149. `ComponentCircuit` derives one/two/three slot tiers from the existing component source and acquisition sector, so no snapshot migration is required. Item routing and Hardpoint presentation consume that projection directly, and starter auto-fit now uses the bounded circuit matcher to avoid greedy channel conflicts.

@@ -387,14 +387,19 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('foundry-attack-impact')).toBeVisible();
   const upgradeCircuit = page.getByTestId('foundry-upgrade-circuit');
   await expect(upgradeCircuit.getByRole('heading', { name: 'Signal Circuit' })).toBeVisible();
-  await expect(upgradeCircuit).toContainText('4/6 LIVE / 2 OPEN');
+  await expect(upgradeCircuit).toContainText('3/3 LIVE / 0 OPEN');
   await expect(upgradeCircuit).toContainText(/CORE -> .* -> WEAPON/);
   await expect(page.getByTestId('foundry-circuit-extension')).toHaveCount(3);
+  await expect(page.getByTestId('foundry-circuit-extension')).toHaveText([
+    /\+1/,
+    /\+1/,
+    /\+1/
+  ]);
   const activeCircuitNodes = upgradeCircuit.locator(
     '.foundry-circuit-node:not(.foundry-circuit-node-empty)'
   );
-  await expect(activeCircuitNodes).toHaveCount(4);
-  await expect(page.getByTestId('foundry-circuit-open-node')).toHaveCount(2);
+  await expect(activeCircuitNodes).toHaveCount(3);
+  await expect(page.getByTestId('foundry-circuit-open-node')).toHaveCount(0);
   await expect
     .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
     .toBe(true);
@@ -415,9 +420,11 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   const rackUpgrade = upgradeCircuit.locator('.foundry-upgrade-card').first();
   await rackUpgrade.getByRole('button', { name: /Append .* to the circuit/ }).click();
   await expect(page.getByTestId('foundry-status')).toContainText(/appended/i);
-  await expect(activeCircuitNodes).toHaveCount(4);
+  await expect(activeCircuitNodes).toHaveCount(3);
   await page.getByTestId('foundry-undo').click();
-  await expect(page.getByTestId('foundry-upgrade-circuit')).toContainText('4/6 LIVE / 2 OPEN');
+  await expect(page.getByTestId('foundry-upgrade-circuit')).toContainText(
+    '3/3 LIVE / 0 OPEN'
+  );
   await page.setViewportSize({ width: 1280, height: 720 });
   await expect(page.locator('.foundry-cargo-card')).toHaveCount(0);
   await expect(page.getByTestId('foundry-pending-history')).toContainText('Draft clean.');
