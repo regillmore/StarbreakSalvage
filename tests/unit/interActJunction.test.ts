@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   getActBoundaryHandoffAfterSector,
   getInterActHandoffAfterSector,
-  getInterActTransitionHandoff
+  getInterActTransitionHandoff,
+  getVictoryHandoffAfterSector
 } from '../../src/game/ActPlan';
 import { generateRunSkeleton } from '../../src/game/Generation';
 import {
@@ -63,10 +64,11 @@ describe('InterActJunction', () => {
     expect(getInterActHandoffAfterSector(run.acts, sourceIndex - 1)).toBeNull();
   });
 
-  it('classifies both player-facing act boundaries without treating ordinary sectors as handoffs', () => {
+  it('classifies all player-facing act boundaries without treating ordinary sectors as handoffs', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
     const actOne = run.acts[0]!;
     const actTwo = run.acts[1]!;
+    const actThree = run.acts[2]!;
 
     expect(getActBoundaryHandoffAfterSector(run.acts, actOne.endSectorIndex)).toMatchObject({
       kind: 'interActJunction',
@@ -76,10 +78,17 @@ describe('InterActJunction', () => {
     expect(getActBoundaryHandoffAfterSector(run.acts, actTwo.endSectorIndex)).toMatchObject({
       kind: 'frontierChoice',
       sourceAct: { id: actTwo.id },
-      targetAct: { id: run.acts[2]!.id }
+      targetAct: { id: actThree.id }
+    });
+    expect(getActBoundaryHandoffAfterSector(run.acts, actThree.endSectorIndex)).toMatchObject({
+      kind: 'victory',
+      sourceAct: { id: actThree.id }
     });
     expect(getActBoundaryHandoffAfterSector(run.acts, actTwo.endSectorIndex - 1)).toBeNull();
-    expect(getActBoundaryHandoffAfterSector(run.acts, run.acts[2]!.endSectorIndex)).toBeNull();
+    expect(getActBoundaryHandoffAfterSector(run.acts, actThree.endSectorIndex - 1)).toBeNull();
+    expect(getVictoryHandoffAfterSector(run.acts, actThree.endSectorIndex)).toEqual({
+      sourceAct: actThree
+    });
   });
 
   it('applies a selected choice once and exposes explicit Act II effects', () => {

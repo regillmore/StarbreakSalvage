@@ -86,11 +86,14 @@ export interface FrontierChoiceHandoff {
   readonly targetAct: RunActPlan;
 }
 
-export interface ActBoundaryHandoff {
-  readonly kind: 'interActJunction' | 'frontierChoice';
+export interface VictoryHandoff {
   readonly sourceAct: RunActPlan;
-  readonly targetAct: RunActPlan;
 }
+
+export type ActBoundaryHandoff =
+  | ({ readonly kind: 'interActJunction' } & InterActTransitionHandoff)
+  | ({ readonly kind: 'frontierChoice' } & FrontierChoiceHandoff)
+  | ({ readonly kind: 'victory' } & VictoryHandoff);
 
 export function createRunActPlan(
   sectors: readonly SectorDefinition[],
@@ -291,6 +294,16 @@ export function getFrontierChoiceHandoff(
   return sourceAct && targetAct ? { sourceAct, targetAct } : null;
 }
 
+export function getVictoryHandoffAfterSector(
+  acts: readonly RunActPlan[],
+  completedSectorIndex: number
+): VictoryHandoff | null {
+  const sourceAct = acts.find(
+    (act) => act.endSectorIndex === completedSectorIndex && act.transition.kind === 'victory'
+  );
+  return sourceAct ? { sourceAct } : null;
+}
+
 export function getActBoundaryHandoffAfterSector(
   acts: readonly RunActPlan[],
   completedSectorIndex: number
@@ -304,12 +317,15 @@ export function getActBoundaryHandoffAfterSector(
   }
 
   const frontierHandoff = getFrontierChoiceHandoff(acts, completedSectorIndex);
-  return frontierHandoff
-    ? {
-        kind: 'frontierChoice',
-        ...frontierHandoff
-      }
-    : null;
+  if (frontierHandoff) {
+    return {
+      kind: 'frontierChoice',
+      ...frontierHandoff
+    };
+  }
+
+  const victoryHandoff = getVictoryHandoffAfterSector(acts, completedSectorIndex);
+  return victoryHandoff ? { kind: 'victory', ...victoryHandoff } : null;
 }
 
 export function createRunActSaveContext(

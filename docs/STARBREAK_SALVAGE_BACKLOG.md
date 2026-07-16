@@ -2186,3 +2186,15 @@ Acceptance:
 Status:
 
 - Implemented in work order 152. `ContractSelectionPresentation` joins deterministic starter-core generation and fitting to `FoundryPresentation`; shared `AttackSimulationPreview` renders the resulting bounded production cycle in both Contract Select and Hardpoint Control. `ContractSelectScene` now presents one live active dossier and three compact ignition-aware comparison cards, with formatted metrics and tradeoffs replacing the previous debug-style text wall.
+
+### BL20 - Direct Act III victory handoff
+
+Acceptance:
+
+- Completing and claiming the Act III 5A convergence reward settles its default branch and concludes the run without exposing a paired terminal optional or route plot.
+- Fresh branch flow and restored extraction-stage snapshots share the same terminal classification and reach the existing victory summary once.
+- Act I and Act II boundary behavior, ordinary layer 1-4 optionals, rewards, summaries, saves, snapshots, determinism, accessibility, and static hosting remain valid.
+
+Status:
+
+- Implemented in work order 153. `getActBoundaryHandoffAfterSector` now includes the authored Act III `victory` transition, so the existing branch and extraction guards bypass terminal constellation projection and hand final completion to the unchanged run-exhaustion summary path.

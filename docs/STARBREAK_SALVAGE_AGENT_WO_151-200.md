@@ -56,3 +56,23 @@ Status: implemented. `ContractSelectionPresentation` creates one pure candidate 
 Verification: focused Vitest coverage proves that every displayed ignition is the exact deterministic item launch will fit and that conditional production volleys remain visible. Playwright covers pointer and keyboard selection, firing-model and ignition replacement, five bounded selected metrics, three candidate ignition dossiers, 390px/1280px attack-camera aspect parity, and absence of horizontal page overflow. Repository Chromium screenshots supplied desktop, multi-projectile, and narrow visual QA after the in-app browser runtime reported no available target.
 
 `npm run verify:release` passes typecheck, ESLint, all 101 Vitest files and 624 tests, the production build, all 15 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 931.94 kB minified/254.25 kB gzip initial JavaScript and 79.56/15.90 kB CSS, increases of 4.01/1.13 kB JavaScript and 6.61/1.06 kB CSS over work order 151. The existing 500 kB chunk notice remains; no dependency, gameplay actor path, RNG stream, proc budget, save/snapshot schema, or warning threshold changed.
+
+## Work order 153 - Direct Act III victory handoff
+
+Goal: make regular completion of the Null Frontier convergence sector close Act III immediately instead of exposing a terminal optional and dead route plot.
+
+Prompt:
+
+> Treat Act III's authored `victory` transition as a terminal act boundary alongside the established Act I refit and Act II frontier handoffs. After the required 5A sector and its reward, settle the default branch, relief, and extraction once, then conclude the run through the existing victory summary. Apply the same rule to restored branch/extraction checkpoints. Do not expose the paired Act III 5A optional, destination effect, or constellation route; preserve ordinary optionals on layers 1-4 and all existing reward, summary, deterministic, save, and snapshot behavior. Run checks.
+
+Acceptance criteria:
+
+- Claiming the required Act III 5A reward proceeds to `Victory Confirmed` without presenting the 5A optional challenge or another constellation route.
+- The existing default branch, relief, extraction, run-completion, summary, unlock, and permanent-save reducers remain authoritative and execute once.
+- Restored Act III terminal branch or extraction checkpoints follow the same direct victory handoff instead of rebuilding a zero-child route plot.
+- Act I's midpoint refit, Act II's extraction-or-breach choice, and ordinary layer 1-4 optionals/destination routes remain unchanged.
+- Generated topology, reward timing, route history, deterministic generation, accessibility, save v5, snapshot v12, and static hosting remain compatible.
+
+Status: implemented. `ActPlan.getActBoundaryHandoffAfterSector` now represents all three authored terminal transition kinds. A `victory` handoff carries only its completed source act, while the existing inter-act and frontier variants retain their target acts. The two existing `GameApp` guards therefore commit the terminal default branch before any optional constellation mount and advance a fresh or restored extraction stage through the ordinary completion reducer, where the final failed `advanceSector` result opens the established victory summary.
+
+Focused act-boundary and snapshot regressions cover ordinary pre-terminal sectors, all three transition kinds, a restored Act III 5A extraction checkpoint, one-shot extraction settlement, and final run exhaustion. No new player-facing scene, route outcome, RNG draw, snapshot field, or gameplay path was introduced.

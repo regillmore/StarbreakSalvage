@@ -5,6 +5,7 @@ import { getActBoundaryHandoffAfterSector } from '../../src/game/ActPlan';
 import { generateRunSkeleton } from '../../src/game/Generation';
 import {
   addItemToSession,
+  advanceSector,
   createRunSession,
   dispatchMissionEvent,
   resetMissionForCurrentSector
@@ -274,6 +275,75 @@ describe('RunSnapshot', () => {
       targetAct: { id: 'act_null_frontier' }
     });
     expect(createRunSnapshotSummary(snapshot).target).toBe('operationalMap');
+  });
+
+  it('restores the regular Act III finale extraction as a direct victory handoff', () => {
+    const run = generateRunSkeleton('SNAPSHOT-ACT-THREE-VICTORY');
+    const contract = run.contracts[0]!;
+    const session = createRunSession(run, contract);
+    const actThreeFinaleIndex = run.acts[2]!.endSectorIndex;
+    session.currentSectorIndex = actThreeFinaleIndex;
+    resetMissionForCurrentSector(run, session);
+    const schedule = createMissionSchedule(run.expedition, actThreeFinaleIndex);
+
+    dispatchMissionEvent(run, session, { id: 'briefing', type: 'confirmBriefing' });
+    dispatchMissionEvent(run, session, { id: 'entry', type: 'completeEntry' });
+    dispatchMissionEvent(run, session, {
+      id: 'advance',
+      type: 'completeCombat',
+      checkpoint: {
+        hull: 3,
+        scrollDistance: 640,
+        worldOffset: 20_640,
+        credits: session.credits,
+        salvage: session.salvage
+      }
+    });
+    dispatchMissionEvent(run, session, { id: 'staging', type: 'completeRelief' });
+    dispatchMissionEvent(run, session, {
+      id: 'gate',
+      type: 'completeCombat',
+      checkpoint: {
+        hull: 3,
+        scrollDistance: 1_540,
+        worldOffset: 21_540,
+        credits: session.credits,
+        salvage: session.salvage
+      }
+    });
+    const direct = getMissionBranchOptions(schedule, session.mission).find(
+      (option) => option.default
+    )!;
+    dispatchMissionEvent(run, session, {
+      id: 'continue',
+      type: 'selectBranch',
+      optionId: direct.id
+    });
+    dispatchMissionEvent(run, session, { id: 'final-relief', type: 'completeRelief' });
+
+    const snapshot = createRunSnapshot({
+      run,
+      contract,
+      session,
+      target: 'operationalMap',
+      label: 'Act III victory handoff'
+    });
+    const restored = restoreRunSnapshot(snapshot);
+
+    expect(restored.session.mission.currentStageId).toBe(schedule.extractionStageId);
+    expect(
+      getActBoundaryHandoffAfterSector(restored.run.acts, restored.session.currentSectorIndex)
+    ).toMatchObject({
+      kind: 'victory',
+      sourceAct: { id: 'act_null_frontier' }
+    });
+    expect(
+      dispatchMissionEvent(restored.run, restored.session, {
+        id: 'victory-extraction',
+        type: 'completeExtraction'
+      }).disposition
+    ).toBe('advanced');
+    expect(advanceSector(restored.run, restored.session)).toBe(false);
   });
 
   it('removes corrupt or unsupported snapshots without touching permanent save data', () => {
