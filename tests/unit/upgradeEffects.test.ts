@@ -92,7 +92,7 @@ describe('run upgrade effects', () => {
         },
         "vaultRewards": [
           "item_phase_grazer",
-          "item_prototype_vent_script",
+          "item_phase_wake_suture",
           "item_relic_ash_compass",
           "item_cursed_hull_plate",
         ],

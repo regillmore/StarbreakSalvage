@@ -15,6 +15,7 @@ import type { RouteKind, StartingContract } from './Generation';
 import { createRng, type Rng } from '../core/rng';
 import { filterUnlockedItemIds, type UnlockAccess } from './UnlockGates';
 import { getActEconomyRarityMultiplier, type ActEconomyProfile } from './ActEconomy';
+import { getWeaponById } from '../content/weapons';
 
 export type RewardContextKind = RouteKind | 'sectorClear';
 
@@ -88,10 +89,10 @@ export function generateStartingItemLoadout(
   options: UnlockAccess = {}
 ): ItemInstance[] {
   const rewardChoices = generateRewardChoices({
-    seed: `${seed}:${contract.id}:field-kit`,
-    poolId: 'starter',
-    count: 3,
-    biasTags: contract.itemBias,
+    seed: `${seed}:${contract.id}:ignition-core`,
+    poolId: 'starterCore',
+    count: 1,
+    biasTags: getStartingCoreAffinityTags(contract),
     unlockedIds: options.unlockedIds
   });
 
@@ -99,6 +100,15 @@ export function generateStartingItemLoadout(
     itemId: choice.item.id,
     acquisitionOrder
   }));
+}
+
+export function getStartingCoreAffinityTags(contract: StartingContract): readonly string[] {
+  return [
+    ...new Set([
+      ...contract.itemBias,
+      ...getWeaponById(contract.startingWeaponId).tags
+    ])
+  ];
 }
 
 export function getItemNames(instances: readonly ItemInstance[]): string[] {
@@ -184,10 +194,10 @@ export function getRewardWeight(
     ...(context.actEconomy?.tagWeights ?? {}),
     ...getContextTagWeights(context)
   });
-  const biasMultiplier =
-    1 +
+  const biasMatches =
     item.tags.filter((tag) => biasTags.includes(tag)).length +
     getSourceBiasCount(item, biasTags);
+  const biasMultiplier = 1 + biasMatches * (profile.biasWeight ?? 1);
 
   return (
     item.weight *

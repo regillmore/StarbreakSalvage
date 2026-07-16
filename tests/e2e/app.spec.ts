@@ -206,7 +206,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('verb-readout')).toContainText('Special');
   await expect(page.getByTestId('weapon-readout')).toContainText('Heat');
   await expect(page.getByTestId('boss-readout')).toContainText('Boss');
-  await expect(page.getByTestId('item-readout')).toContainText(/Build .+ \| 3 items/);
+  await expect(page.getByTestId('item-readout')).toContainText(/Build .+ \| 1 item/);
   await expect(page.locator('.debug-overlay')).toContainText('Theme redline/Debt Runner');
   await expect(page.locator('.debug-overlay')).toContainText('HUD standard');
   await expect(page.locator('.debug-overlay')).toContainText(
@@ -387,7 +387,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('foundry-attack-impact')).toBeVisible();
   const upgradeCircuit = page.getByTestId('foundry-upgrade-circuit');
   await expect(upgradeCircuit.getByRole('heading', { name: 'Signal Circuit' })).toBeVisible();
-  await expect(upgradeCircuit).toContainText('3/3 LIVE / 0 OPEN');
+  await expect(upgradeCircuit).toContainText('2/3 LIVE / 1 OPEN');
   await expect(upgradeCircuit).toContainText(/CORE -> .* -> WEAPON/);
   await expect(page.getByTestId('foundry-circuit-extension')).toHaveCount(3);
   await expect(page.getByTestId('foundry-circuit-extension')).toHaveText([
@@ -398,8 +398,8 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   const activeCircuitNodes = upgradeCircuit.locator(
     '.foundry-circuit-node:not(.foundry-circuit-node-empty)'
   );
-  await expect(activeCircuitNodes).toHaveCount(3);
-  await expect(page.getByTestId('foundry-circuit-open-node')).toHaveCount(0);
+  await expect(activeCircuitNodes).toHaveCount(2);
+  await expect(page.getByTestId('foundry-circuit-open-node')).toHaveCount(1);
   await expect
     .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
     .toBe(true);
@@ -420,10 +420,10 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   const rackUpgrade = upgradeCircuit.locator('.foundry-upgrade-card').first();
   await rackUpgrade.getByRole('button', { name: /Append .* to the circuit/ }).click();
   await expect(page.getByTestId('foundry-status')).toContainText(/appended/i);
-  await expect(activeCircuitNodes).toHaveCount(3);
+  await expect(activeCircuitNodes).toHaveCount(2);
   await page.getByTestId('foundry-undo').click();
   await expect(page.getByTestId('foundry-upgrade-circuit')).toContainText(
-    '3/3 LIVE / 0 OPEN'
+    '2/3 LIVE / 1 OPEN'
   );
   await page.setViewportSize({ width: 1280, height: 720 });
   await expect(page.locator('.foundry-cargo-card')).toHaveCount(0);
@@ -494,11 +494,11 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   }));
   expect(summarySize.scrollHeight).toBeLessThanOrEqual(summarySize.clientHeight);
   expect(await page.locator('.summary-item-card').count()).toBeLessThanOrEqual(3);
-  await expect(page.getByTestId('summary-item-list')).toContainText('Route Ledger Spool');
-  await expect(page.getByTestId('summary-item-list')).toContainText('Route Economy');
+  await expect(page.getByTestId('summary-item-list')).toContainText('Prototype Vent Script');
+  await expect(page.getByTestId('summary-item-list')).toContainText('Heat Prototype');
   await expect(
     page.getByTestId('summary-item-list').getByRole('img', {
-      name: 'Route Ledger Spool Route Economy item icon'
+      name: 'Prototype Vent Script Heat Prototype item icon'
     })
   ).toBeVisible();
   await expect(page.getByTestId('scrap-breakdown')).toContainText(
@@ -517,7 +517,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
 
   await page.getByRole('button', { name: 'Unlock Archive' }).click();
   await expect(page.getByRole('heading', { name: 'Unlock Archive' })).toBeVisible();
-  await expect(page.getByTestId('discovered-item-list')).toContainText('Route Ledger Spool');
+  await expect(page.getByTestId('discovered-item-list')).toContainText('Prototype Vent Script');
   await expect(page.getByTestId('discovered-item-list')).toContainText('Live effect');
 
   await page.getByRole('button', { name: 'Export Save' }).click();

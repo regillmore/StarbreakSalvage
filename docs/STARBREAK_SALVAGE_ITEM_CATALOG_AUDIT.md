@@ -24,7 +24,7 @@ Work order 052 formalized compact item metadata:
 - `stacking` records unique versus stackable intent before duplicate item rewards become possible.
 - `uiTags` gives item cards a short, validated badge vocabulary without parsing gameplay tags.
 
-Validation requires reward-pool membership to match source metadata, item pool weight profiles to reference valid pools/sources/rarities/families/tags, item and family unlock gates to reference valid unlocks and item tiers, every declared hook to have an implementation, and prototype/cursed items to stay out of starter sources.
+Validation requires ordinary reward-pool membership to match source metadata. A declared bridge pool may instead list the valid source lanes it composes; its entries must still match at least one of those lanes. Item pool weight profiles must reference valid pools/sources/rarities/families/tags and a positive optional bias weight, item and family unlock gates must reference valid unlocks and item tiers, every declared hook must have an implementation, and prototype/cursed items stay out of ordinary starter sources.
 
 ## Rarity Coverage
 
@@ -58,19 +58,21 @@ Work order 054 gave the work order 053 hook surface its first live users. Item d
 
 ## Candidate Reward Pool Coverage
 
-| Pool    | Items | Rarity mix                                   | Notes                                                                   |
-| ------- | ----- | -------------------------------------------- | ----------------------------------------------------------------------- |
-| Starter | 27    | 14 common, 9 uncommon, 4 rare                | No prototype or cursed entries, which keeps fresh starts readable.      |
-| Combat  | 51    | 14 common, 18 uncommon, 17 rare, 2 prototype | Feeds combat, shop, elite, boss, faction, lunar, and route profiles.    |
-| Vault   | 20    | 2 uncommon, 11 rare, 4 prototype, 3 cursed   | Feeds vault plus high-pressure profiles when rare/cursed pressure fits. |
+| Pool          | Items | Rarity mix                                   | Notes                                                                    |
+| ------------- | ----- | -------------------------------------------- | ------------------------------------------------------------------------ |
+| Starter       | 27    | 14 common, 9 uncommon, 4 rare                | Broad safe starter-source catalog; no prototype or cursed entries.       |
+| Ignition Core | 9     | 1 common, 4 uncommon, 3 rare, 1 cursed       | Shared one-per-family opening pool; unlock filtering gates the curse core. |
+| Combat        | 51    | 14 common, 18 uncommon, 17 rare, 2 prototype | Feeds combat, shop, elite, boss, faction, lunar, and route profiles.     |
+| Vault         | 20    | 2 uncommon, 11 rare, 4 prototype, 3 cursed   | Feeds vault plus high-pressure profiles when rare/cursed pressure fits.  |
 
 The broad candidate pools are intentionally small in number; source identity now comes from the weight profile layer rather than separate hard-filtered lists for every surface.
 
 ## Weight Profile Coverage
 
-| Profile | Candidate pools | Primary role                                                                             |
-| ------- | --------------- | ---------------------------------------------------------------------------------------- |
-| Starter | starter         | Safe fresh-run field kits; common/uncommon-forward, no prototype/cursed weights.         |
+| Profile      | Candidate pools | Primary role                                                                             |
+| ------------ | --------------- | ---------------------------------------------------------------------------------------- |
+| Starter      | starter         | Broad starter-source generation; common/uncommon-forward, no prototype/cursed weights.   |
+| Ignition Core | starterCore    | One seeded opening upgrade, strongly biased by contract and weapon affinity.              |
 | Combat  | combat          | Baseline post-sector rewards with moderate rare/prototype pressure.                      |
 | Shop    | combat          | Market inventory biased toward shop, route, credit, magnet, heat, and drone entries.     |
 | Vault   | vault           | Relic/cursed/prototype-leaning rewards with phase and curse identity.                    |

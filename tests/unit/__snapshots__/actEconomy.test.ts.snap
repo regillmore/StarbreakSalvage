@@ -15,8 +15,8 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
       "elite source",
     ],
     [
-      "item_arc_window_invoice",
-      "vault source",
+      "item_lane_splitter_chisel",
+      "Elite pool",
     ],
     [
       "item_exit_toll_transponder",
@@ -75,7 +75,7 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
       "vault source",
     ],
     [
-      "item_mining_laser_transit",
+      "item_telegraph_rewrite_quill",
       "vault source",
     ],
     [
@@ -105,8 +105,8 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
       "elite source",
     ],
     [
-      "item_arc_window_invoice",
-      "vault source",
+      "item_lane_splitter_chisel",
+      "Elite pool",
     ],
     [
       "item_exit_toll_transponder",
@@ -170,7 +170,7 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
       "vault source",
     ],
     [
-      "item_mining_laser_transit",
+      "item_telegraph_rewrite_quill",
       "vault source",
     ],
     [

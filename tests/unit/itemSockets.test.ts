@@ -19,8 +19,25 @@ import {
   unfitItem
 } from '../../src/game/ItemSockets';
 import type { ItemInstance } from '../../src/game/Rewards';
+import { createRunSession } from '../../src/game/RunSession';
 
 describe('ship signal circuit', () => {
+  it('fits one seeded starter core and leaves two contract conduits open', () => {
+    const run = generateRunSkeleton('STARTER-CORE-OPEN-SLOTS', { unlockedIds: [] });
+    const contract = run.contracts[0]!;
+    const session = createRunSession(run, contract, { unlockedIds: [] });
+    const summary = createItemSocketCircuitSummary(
+      session.itemInstances,
+      session.engineering.committed
+    );
+
+    expect(session.itemInstances).toHaveLength(1);
+    expect(summary).toMatchObject({ fitted: 1, capacity: 3, open: 2, unfitted: 0 });
+    expect(getActiveFittedItems(session.itemInstances, session.engineering.committed)).toHaveLength(
+      1
+    );
+  });
+
   it('auto-routes a starter circuit through deterministic component conduits', () => {
     const run = generateRunSkeleton('SOCKET-STARTER');
     const engineering = createEngineeringState(run.contracts[0]!.loadout);

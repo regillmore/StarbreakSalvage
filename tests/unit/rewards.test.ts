@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { getItemById } from '../../src/content/items';
-import { generateRunSkeleton } from '../../src/game/Generation';
+import { getItemById, STARTER_CORE_ITEM_IDS } from '../../src/content/items';
+import { SHIPS } from '../../src/content/ships';
+import { generateRunSkeleton, type StartingContract } from '../../src/game/Generation';
 import {
   generateRewardChoices,
   generateStartingItemLoadout,
+  getStartingCoreAffinityTags,
   getItemPoolWeightProfile,
   getRewardWeight
 } from '../../src/game/Rewards';
@@ -42,7 +44,7 @@ describe('reward generation', () => {
     expect(first.every((choice) => choice.poolProfileId !== 'route')).toBe(true);
   });
 
-  it('creates a deterministic contract-biased starter loadout without a universal field kit', () => {
+  it('creates one deterministic contract-biased ignition core', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
     const contract = run.contracts[0];
 
@@ -52,33 +54,55 @@ describe('reward generation', () => {
 
     const loadout = generateStartingItemLoadout(run.seed, contract);
     const replay = generateStartingItemLoadout(run.seed, contract);
-    const itemIds = loadout.map((item) => item.itemId);
 
     expect(loadout).toEqual(replay);
-    expect(loadout.map((item) => item.acquisitionOrder)).toEqual([0, 1, 2]);
-    expect(new Set(itemIds).size).toBe(3);
-    expect(
-      itemIds.some((itemId) =>
-        getItemById(itemId).tags.some((tag) => contract.itemBias.includes(tag))
-      )
-    ).toBe(true);
+    expect(loadout.map((item) => item.acquisitionOrder)).toEqual([0]);
+    expect(STARTER_CORE_ITEM_IDS).toContain(loadout[0]?.itemId);
   });
 
-  it('keeps baseline contract field kits distinct instead of forcing one firing silhouette', () => {
-    const run = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] });
-    const loadouts = run.contracts.map((contract) => ({
-      contract,
-      itemIds: generateStartingItemLoadout(run.seed, contract, { unlockedIds: [] }).map(
-        (item) => item.itemId
-      )
-    }));
-    const droneChaplain = loadouts.find(
-      ({ contract }) => contract.shipId === 'ship_drone_chaplain'
-    );
+  it('curates distinct, live, synergy-opening starter cores across item families', () => {
+    const frequentHooks = new Set([
+      'onFire',
+      'onEnemyKilled',
+      'onPlayerHit',
+      'onPickupCollected',
+      'onSpecialUsed'
+    ]);
+    const cores = STARTER_CORE_ITEM_IDS.map((itemId) => getItemById(itemId));
 
-    expect(new Set(loadouts.map(({ itemIds }) => itemIds.join('|'))).size).toBe(loadouts.length);
-    expect(loadouts.every(({ itemIds }) => itemIds.includes('item_split_prism'))).toBe(false);
-    expect(droneChaplain?.itemIds).not.toContain('item_split_prism');
+    expect(cores).toHaveLength(9);
+    expect(new Set(cores.map((item) => item.metadata.family)).size).toBe(cores.length);
+    expect(cores.every((item) => item.metadata.implementationStatus === 'live')).toBe(true);
+    expect(cores.every((item) => item.hooks.some((hook) => frequentHooks.has(hook)))).toBe(true);
+  });
+
+  it('strongly biases the shared core pool without hard-locking classes', () => {
+    for (const ship of SHIPS) {
+      const contract = {
+        id: `test_${ship.id}`,
+        itemBias: ship.itemBias,
+        startingWeaponId: ship.weapon
+      } as StartingContract;
+      const affinity = getStartingCoreAffinityTags(contract);
+      const selections = Array.from({ length: 40 }, (_value, index) =>
+        getItemById(generateStartingItemLoadout(`CORE-BIAS-${index}`, contract)[0]!.itemId)
+      );
+      const matching = selections.filter(
+        (item) =>
+          item.tags.some((tag) => affinity.includes(tag)) ||
+          item.metadata.sources.some((source) => affinity.includes(source))
+      );
+
+      expect(
+        STARTER_CORE_ITEM_IDS.map((itemId) => getItemById(itemId)).some(
+          (item) =>
+            item.tags.some((tag) => affinity.includes(tag)) ||
+            item.metadata.sources.some((source) => affinity.includes(source))
+        )
+      ).toBe(true);
+      expect(matching.length / selections.length).toBeGreaterThanOrEqual(0.65);
+      expect(new Set(selections.map((item) => item.id)).size).toBeGreaterThan(1);
+    }
   });
 
   it('weights source profiles by rarity, source, family, and context', () => {
@@ -191,7 +215,7 @@ describe('reward generation', () => {
       ],
       eliteRewards: [
         {
-          id: 'item_signal_clone_stamp',
+          id: 'item_sidecar_drone_bay',
           profile: 'elite',
           sourceHint: 'Elite pool'
         },
@@ -201,7 +225,7 @@ describe('reward generation', () => {
           sourceHint: 'Elite pool'
         },
         {
-          id: 'item_phase_wake_suture',
+          id: 'item_heat_signature_loop',
           profile: 'elite',
           sourceHint: 'Elite pool'
         }
@@ -225,7 +249,7 @@ describe('reward generation', () => {
       ],
       lunarRewards: [
         {
-          id: 'item_exit_toll_transponder',
+          id: 'item_convoy_receipt_printer',
           profile: 'lunar',
           sourceHint: 'route source'
         },

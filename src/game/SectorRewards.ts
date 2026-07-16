@@ -1,4 +1,4 @@
-import type { ItemPoolProfileId } from '../content/items';
+import type { ItemPoolProfileId, RewardPoolId } from '../content/items';
 import type { RouteKind, RunSkeleton, SectorRoute, StartingContract } from './Generation';
 import {
   getCurrentSector,
@@ -112,12 +112,16 @@ export function generateSectorRewardChoices(options: {
 }
 
 function getSectorRewardPoolProfileId(
-  poolId: 'starter' | 'combat' | 'vault',
+  poolId: RewardPoolId,
   routeKind: RewardContextKind,
   sector: SectorRoute
 ): ItemPoolProfileId {
   if (poolId === 'vault') {
     return 'vault';
+  }
+
+  if (poolId === 'starterCore') {
+    return 'starterCore';
   }
 
   if (routeKind === 'elite') {

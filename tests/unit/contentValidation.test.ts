@@ -1516,6 +1516,21 @@ describe('validateContent', () => {
     expect(errors).toContain('Reward pool starter references missing item: item_missing');
   });
 
+  it('validates bridged reward-pool source provenance', () => {
+    const errors = validateContent({
+      rewardPools: [
+        {
+          id: 'starterCore',
+          itemIds: ['item_split_prism'],
+          bridgeSources: ['combat', 'combat', 'moon']
+        }
+      ] as unknown as readonly RewardPoolDefinition[]
+    });
+
+    expect(errors).toContain('Reward pool starterCore bridges invalid source: moon');
+    expect(errors).toContain('Reward pool starterCore bridges duplicate source: combat');
+  });
+
   it('rejects invalid item pool weight profiles', () => {
     const baseProfile = ITEM_POOL_WEIGHT_PROFILES[0];
 
@@ -1547,7 +1562,8 @@ describe('validateContent', () => {
       tagWeights: {
         laser: 1,
         sparkle: 2
-      }
+      },
+      biasWeight: 0
     } as unknown as ItemPoolWeightProfileDefinition;
     const errors = validateContent({
       itemPoolWeightProfiles: [invalidProfile]
@@ -1562,6 +1578,7 @@ describe('validateContent', () => {
     expect(errors).toContain('Item pool profile moon-market has invalid source weight: moon');
     expect(errors).toContain('Item pool profile moon-market has invalid family weight: saucer');
     expect(errors).toContain('Item pool profile moon-market has invalid tag weight: sparkle');
+    expect(errors).toContain('Item pool profile moon-market has invalid bias weight');
     expect(errors).toContain('Item pool profile moon-market has invalid rarity weight: mythic');
     expect(errors).toContain('Missing item pool profile: starter');
   });

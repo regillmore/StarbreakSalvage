@@ -154,7 +154,7 @@ describe('foundry visual presentation', () => {
     const items = generateStartingItemLoadout(run.seed, contract, { unlockedIds: [] });
     const dashboard = createFoundryDashboardModel(createEngineeringState(contract.loadout), items);
 
-    expect(items.map((item) => item.itemId)).not.toContain('item_split_prism');
+    expect(items.map((item) => item.itemId)).toEqual(['item_signal_clone_stamp']);
     expect(dashboard.attackSimulation.volleySize).toBe(4);
     expect(
       Array.from(
@@ -164,14 +164,14 @@ describe('foundry visual presentation', () => {
             (projectile) => projectile.waveIndex === waveIndex
           ).length
       )
-    ).toEqual([3, 3, 3, 4, 3, 3]);
+    ).toEqual([2, 2, 4, 2, 2]);
     expect(
       dashboard.attackSimulation.projectiles
         .filter((projectile) => projectile.waveIndex === 0)
         .map((projectile) => projectile.vy)
-    ).toEqual([-660, -660, 495]);
+    ).toEqual([-660, -660]);
     expect(dashboard.attackSimulation.ariaLabel).toContain(
-      '3-4 projectiles per volley across the firing cycle'
+      '2-4 projectiles per volley across the firing cycle'
     );
   });
 

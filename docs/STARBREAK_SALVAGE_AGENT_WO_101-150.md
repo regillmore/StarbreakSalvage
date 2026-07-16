@@ -1074,6 +1074,33 @@ Status: implemented. `ComponentCircuit` is the pure progression boundary. Contra
 
 Verification: focused circuit, foundry, presentation, and snapshot coverage passes with 4 files and 32 tests. The tier regression covers every starter contract, both Act I boundaries, Act II entry, Act III entry, exact channel order, deterministic replay, and rerouting through an Act I replacement. Chromium exercises the real Debt Runner opening and post-reward Hardpoint Control at 390x700, verifies three `+1` starter extensions, the reduced live/open budget, a visible rack item, reorder/eject/append/undo/commit behavior, and return to navigation without console errors. `npm run verify:release` passes typecheck, ESLint, all 100 Vitest files and 618 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 926.55 kB minified/252.77 kB gzip initial JavaScript and 72.73/14.78 kB CSS, increases of 0.28/0.09 kB JavaScript and no CSS over work order 148. The existing 500 kB chunk notice remains; no dependency, RNG stream, item/component schema, save/snapshot version, or warning threshold changed.
 
+Work order 150 deliberately supersedes only the initial occupancy policy: the three universal contract conduits remain, but one ignition core now ships fitted and two begin open.
+
+## Work order 150 - Shared seeded ignition cores
+
+Goal: turn the starter upgrade from a three-item bundle into one legible, meaningful opening build direction while exposing room for the first two discoveries.
+
+Prompt:
+
+> Create or bridge a curated pool of moderately powerful, synergy-friendly, visually distinct starter upgrades. Seed one fitted choice per contract and leave two starter circuit slots open. Prefer one shared core pool with strong class and weapon affinity over separate class-exclusive pools, while preserving cross-class discoveries, unlock gates, deterministic replay, and the broad downstream reward catalog.
+
+Acceptance criteria:
+
+- Every new run starts with exactly one fitted ignition core and a `1/3 LIVE / 2 OPEN` contract circuit before any reward is claimed.
+- The shared core roster contains nine items from nine different families, so each has a distinct item-card icon and opens a recognized build-synergy lane.
+- Every core has a live frequent combat/economy hook and is useful from the opening sector; no route-only, lunar-only, boss-only, bridge, or planned stub can occupy the sole starter slot.
+- Selection is deterministic from seed and contract. Contract item bias plus the installed weapon's real tags strongly favor a thematic core, but every class retains more than one possible seeded result.
+- Existing item source provenance is retained through an explicit validated bridge pool. Normal unlock filtering keeps the advanced cursed core out of fresh saves until its family is unlocked.
+- Reward exclusion removes only the issued core; post-sector rewards can fill the two open conduits normally. Hardpoint preview, circuit management, snapshots, saves, accessibility, and GitHub Pages remain valid.
+
+Status: implemented. `STARTER_CORE_ITEM_IDS` defines one opening candidate for each of the laser/split, drone/copy, missile/overkill, phase/graze, shield/revenge, credit/shop, route/economy, heat/prototype, and curse/relic families. Their existing live hooks cover volley splitting, ordered-chain cloning, missile side shots, periodic phase shaping, shield counterfire, credit cadence, salvage dividends, special vent fire, and cursed retaliation. Shared family icons make the choices visually distinct without new bitmap assets.
+
+`starterCore` is a first-class reward pool and profile with declared starter/combat/vault bridge sources. Content validation checks those source lanes and the profile's positive affinity weight instead of falsifying item provenance. `Rewards` combines contract bias with the installed weapon tags, applies the strong shared-pool weighting, honors permanent unlock filtering, and issues one acquisition-order-zero item. `RunSession`'s existing maximal router fits that item into one universal contract conduit and leaves two open without a save or snapshot migration.
+
+Verification: focused reward, unlock, circuit, content-validation, catalog-audit, and live-fire presentation coverage passes with 6 files and 68 tests. The core audit proves nine live candidates, nine distinct families/icons, frequent opening hooks, deterministic replay, fresh-save curse exclusion, exact one-live/two-open initial capacity, and at least 65% affinity matches with more than one outcome across forty fixed seeds for every ship class. Known-seed reward snapshots were refreshed because downstream exclusion now removes one issued core instead of three field-kit items.
+
+`npm run verify:release` passes typecheck, ESLint, all 100 Vitest files and 621 tests, the production build, all 13 Playwright Chromium paths, and the Pages-base production-preview asset smoke. Chromium verifies the one-item opening HUD, the post-reward `2/3 LIVE / 1 OPEN` narrow Hardpoint circuit, ordered preview behavior, debrief/archive discovery, and no browser errors. The build emits 927.17 kB minified/252.92 kB gzip initial JavaScript and 72.73/14.78 kB CSS, increases of 0.62/0.15 kB JavaScript and no CSS over work order 149. The existing 500 kB chunk notice remains; no dependency, component schema, permanent-save version, snapshot version, or warning threshold changed.
+
 ## Review subagent prompt
 
 Use after a feature PR:

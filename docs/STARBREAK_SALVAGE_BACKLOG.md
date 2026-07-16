@@ -2137,10 +2137,24 @@ Status:
 Acceptance:
 
 - Contract-issued components provide one circuit slot, Act I salvage components provide two, and Act II/III salvage components provide three.
-- Contract slots are universal so the three-item field kit remains live; recovered slot types preserve component identity while adding flex capacity, and quality or route rarity do not alter the count.
+- Contract slots are universal; work order 150 fits one ignition core and intentionally leaves two open. Recovered slot types preserve component identity while adding flex capacity, and quality or route rarity do not alter the count.
 - Initial fitting maximizes compatible typed-channel use, while replacement reconciliation preserves live order and deliberate rack choices.
 - Hardpoint Control, circuit summaries, snapshots, deterministic generation, accessibility, and static hosting share the same capacity projection.
 
 Status:
 
 - Implemented in work order 149. `ComponentCircuit` derives one/two/three slot tiers from the existing component source and acquisition sector, so no snapshot migration is required. Item routing and Hardpoint presentation consume that projection directly, and starter auto-fit now uses the bounded circuit matcher to avoid greedy channel conflicts.
+
+### BL17 - Shared seeded ignition cores
+
+Acceptance:
+
+- A fresh run fits exactly one moderately powerful opening upgrade and exposes two open universal circuit conduits.
+- One shared curated pool spans nine distinct item families, live frequent hooks, and item-card silhouettes; it does not fragment into shallow class-exclusive tables.
+- Contract identity and actual weapon tags strongly bias the seeded choice without guaranteeing it, preserving rare cross-class build openings.
+- Bridged combat/vault provenance and existing unlock gates remain authoritative, so advanced cursed content cannot leak into fresh saves.
+- Reward exclusion, Hardpoint Control, deterministic replay, accessibility, saves, snapshots, and static hosting remain coherent.
+
+Status:
+
+- Implemented in work order 150. `starterCore` is a validated bridge pool and weight profile. `generateStartingItemLoadout` issues one affinity-weighted item, starter auto-fit occupies one of three contract conduits, and normal sector rewards can immediately fill the remaining two.

@@ -99,6 +99,7 @@ import {
   type ItemId,
   type ItemDefinition,
   type ItemPoolWeightProfileDefinition,
+  type ItemSource,
   type ItemUnlockTier,
   type RewardPoolDefinition
 } from './items';
@@ -980,6 +981,22 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
       errors.push(`Reward pool ${pool.id} must not be empty`);
     }
 
+    const allowedSources = pool.bridgeSources ?? [pool.id];
+
+    if (pool.bridgeSources?.length === 0) {
+      errors.push(`Reward pool ${pool.id} must bridge at least one source`);
+    }
+
+    for (const source of pool.bridgeSources ?? []) {
+      if (!itemSources.has(source)) {
+        errors.push(`Reward pool ${pool.id} bridges invalid source: ${String(source)}`);
+      }
+    }
+
+    for (const duplicateSource of getDuplicateStrings(pool.bridgeSources ?? [])) {
+      errors.push(`Reward pool ${pool.id} bridges duplicate source: ${duplicateSource}`);
+    }
+
     for (const itemId of pool.itemIds) {
       rewardedItemIds.add(itemId);
 
@@ -990,8 +1007,15 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
 
       const item = items.find((candidate) => candidate.id === itemId);
 
-      if (item && !item.metadata.sources.includes(pool.id)) {
-        errors.push(`Item ${item.id} appears in ${pool.id} pool without ${pool.id} source`);
+      if (
+        item &&
+        !allowedSources.some((source) => item.metadata.sources.includes(source as ItemSource))
+      ) {
+        errors.push(
+          pool.bridgeSources
+            ? `Item ${item.id} appears in ${pool.id} pool without a bridged source`
+            : `Item ${item.id} appears in ${pool.id} pool without ${pool.id} source`
+        );
       }
     }
   }
@@ -2923,6 +2947,13 @@ function validateItemPoolWeightProfiles(
     validateWeightMap(errors, owner, 'source', profile.sourceWeights, registries.sources);
     validateWeightMap(errors, owner, 'family', profile.familyWeights ?? {}, registries.families);
     validateWeightMap(errors, owner, 'tag', profile.tagWeights ?? {}, registries.tags);
+
+    if (
+      profile.biasWeight !== undefined &&
+      (!Number.isFinite(profile.biasWeight) || profile.biasWeight <= 0)
+    ) {
+      errors.push(`${owner} has invalid bias weight`);
+    }
 
     let hasPositiveRarity = false;
 

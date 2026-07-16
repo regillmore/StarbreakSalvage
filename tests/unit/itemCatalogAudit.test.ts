@@ -88,6 +88,11 @@ describe('item catalog audit', () => {
         rarityCounts: { common: 14, uncommon: 9, rare: 4, prototype: 0, cursed: 0 }
       },
       {
+        id: 'starterCore',
+        itemCount: 9,
+        rarityCounts: { common: 1, uncommon: 4, rare: 3, prototype: 0, cursed: 1 }
+      },
+      {
         id: 'combat',
         itemCount: 51,
         rarityCounts: { common: 14, uncommon: 18, rare: 17, prototype: 2, cursed: 0 }

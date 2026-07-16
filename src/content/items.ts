@@ -66,6 +66,7 @@ export const ITEM_SOURCES = [
 
 export const ITEM_POOL_PROFILE_IDS = [
   'starter',
+  'starterCore',
   'combat',
   'shop',
   'vault',
@@ -117,7 +118,7 @@ export type ItemImplementationStatus = (typeof ITEM_IMPLEMENTATION_STATUSES)[num
 export type ItemStackingMode = (typeof ITEM_STACKING_MODES)[number];
 export type ItemUiTag = (typeof ITEM_UI_TAGS)[number];
 export type ItemRarity = 'common' | 'uncommon' | 'rare' | 'prototype' | 'cursed';
-export type RewardPoolId = 'starter' | 'combat' | 'vault';
+export type RewardPoolId = 'starter' | 'starterCore' | 'combat' | 'vault';
 
 export type ItemId =
   | 'item_chain_arc_capacitor'
@@ -205,6 +206,7 @@ export interface ItemMetadata {
 export interface RewardPoolDefinition {
   readonly id: RewardPoolId;
   readonly itemIds: readonly ItemId[];
+  readonly bridgeSources?: readonly ItemSource[];
 }
 
 export interface ItemPoolWeightProfileDefinition {
@@ -215,6 +217,7 @@ export interface ItemPoolWeightProfileDefinition {
   readonly rarityWeights: Readonly<Record<ItemRarity, number>>;
   readonly familyWeights?: Readonly<Partial<Record<ItemFamily, number>>>;
   readonly tagWeights?: Readonly<Partial<Record<ItemTag, number>>>;
+  readonly biasWeight?: number;
 }
 
 export interface ItemArchetypeDefinition {
@@ -1297,6 +1300,18 @@ export const ITEMS: readonly ItemDefinition[] = [
   }
 ];
 
+export const STARTER_CORE_ITEM_IDS: readonly ItemId[] = [
+  'item_split_prism',
+  'item_signal_clone_stamp',
+  'item_missile_splinter_warrant',
+  'item_phase_grazer',
+  'item_shield_dynamo',
+  'item_coin_operated_cannon',
+  'item_salvage_dividend_chip',
+  'item_prototype_vent_script',
+  'item_cursed_hull_plate'
+];
+
 export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
   {
     id: 'starter',
@@ -1329,6 +1344,11 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_route_ledger_spool',
       'item_warning_siren_lattice'
     ]
+  },
+  {
+    id: 'starterCore',
+    itemIds: STARTER_CORE_ITEM_IDS,
+    bridgeSources: ['starter', 'combat', 'vault']
   },
   {
     id: 'combat',
@@ -1435,6 +1455,24 @@ export const ITEM_POOL_WEIGHT_PROFILES: readonly ItemPoolWeightProfileDefinition
       'shield-revenge': 1.1,
       'credit-shop': 1.1
     }
+  },
+  {
+    id: 'starterCore',
+    label: 'Ignition Core',
+    poolIds: ['starterCore'],
+    sourceWeights: {
+      starter: 1.1,
+      combat: 1,
+      vault: 1
+    },
+    rarityWeights: {
+      common: 0.9,
+      uncommon: 1,
+      rare: 1,
+      prototype: 0.8,
+      cursed: 1
+    },
+    biasWeight: 20
   },
   {
     id: 'combat',

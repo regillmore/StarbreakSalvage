@@ -4,6 +4,7 @@ import { SAVE_STORAGE_KEY } from '../../src/core/saveData';
 import { getActBoundaryHandoffAfterSector } from '../../src/game/ActPlan';
 import { generateRunSkeleton } from '../../src/game/Generation';
 import {
+  addItemToSession,
   createRunSession,
   dispatchMissionEvent,
   resetMissionForCurrentSector
@@ -350,10 +351,17 @@ describe('RunSnapshot', () => {
   it('rejects duplicate, ghost, or ambiguous circuit assignments', () => {
     const run = generateRunSkeleton('SNAPSHOT-SOCKET-DRIFT');
     const contract = run.contracts[0]!;
+    const session = createRunSession(run, contract);
+    addItemToSession(
+      session,
+      session.itemInstances[0]?.itemId === 'item_split_prism'
+        ? 'item_phase_grazer'
+        : 'item_split_prism'
+    );
     const snapshot = createRunSnapshot({
       run,
       contract,
-      session: createRunSession(run, contract),
+      session,
       target: 'sectorTransition',
       label: 'Socket circuit'
     });
