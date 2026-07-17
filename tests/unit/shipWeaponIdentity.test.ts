@@ -8,6 +8,7 @@ import {
 } from '../../src/game/CombatState';
 import { generateRunSkeleton } from '../../src/game/Generation';
 import { createRunSession } from '../../src/game/RunSession';
+import { getMissileTravelSeconds } from '../../src/game/MissileFlight';
 
 const bounds: CombatBounds = {
   width: 640,
@@ -97,6 +98,25 @@ describe('ship stats and weapon identity', () => {
     expect(missileShots).toHaveLength(1);
     expect(missileShots[0]?.tags).toContain('missile');
     expect(missileShots[0]?.radius).toBeGreaterThan(basicShots[0]?.radius ?? 0);
+  });
+
+  it('gives player missiles a deterministic two-stage motor in combat', () => {
+    const state = createCombatState(bounds, 'MISSILE-MOTOR', {
+      weaponId: 'weapon_dumbfire_missile_rack',
+      skipEnemyWaves: true
+    });
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: true }, 0, bounds);
+    const missile = state.projectiles.find((projectile) => projectile.owner === 'player');
+    if (!missile) throw new Error('Expected a missile projectile.');
+    const startY = missile.y;
+
+    for (let frame = 0; frame < 10; frame += 1) {
+      updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 0.1, bounds);
+    }
+
+    expect(missile.ageSeconds).toBeCloseTo(1, 8);
+    expect(startY - missile.y).toBeCloseTo(Math.abs(missile.vy) * getMissileTravelSeconds(1), 6);
   });
 
   it('builds heat and blocks fire during prototype overheat reload', () => {

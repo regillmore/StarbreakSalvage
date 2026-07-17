@@ -15,6 +15,11 @@ import { applyCombinedHooks } from '../game/CombinedHooks';
 import { getOrderedItemInstances, type ProjectileBlueprint } from '../game/ItemHooks';
 import type { ItemInstance } from '../game/Rewards';
 import { createWeaponProjectileBlueprints } from '../game/WeaponProjectiles';
+import {
+  getProjectileTravelSeconds,
+  getProjectileTravelTimeForDistance,
+  isMissileProjectile
+} from '../game/MissileFlight';
 
 export type FoundryComparisonTone = 'improved' | 'declined' | 'same' | 'danger';
 
@@ -61,6 +66,8 @@ export interface FoundryAttackProjectileModel {
   readonly damage: number;
   readonly ttl: number;
   readonly tags: readonly string[];
+  readonly flightKind: 'ballistic' | 'missile';
+  readonly headingDegrees: number;
   readonly startXPercent: number;
   readonly endXPercent: number;
   readonly endRisePercent: number;
@@ -444,12 +451,30 @@ function createFoundryAttackPatternPreviewModel(
   const safeCooldown = Math.max(0.05, fireCooldownSeconds);
   const safeVolleys = sourceVolleys.map((volley) => volley.slice(0, 12));
   const safeProjectiles = safeVolleys.flat();
-  const slowestForwardSpeed = safeProjectiles.reduce(
-    (slowest, projectile) => Math.min(slowest, Math.max(1, -projectile.vy)),
-    Number.POSITIVE_INFINITY
+  const flightSeconds = safeProjectiles.reduce(
+    (longest, projectile) =>
+      Math.max(
+        longest,
+        getProjectileTravelTimeForDistance(
+          ATTACK_PREVIEW_TRAVEL_DISTANCE,
+          -projectile.vy,
+          projectile.tags
+        )
+      ),
+    0
   );
-  const flightSeconds = ATTACK_PREVIEW_TRAVEL_DISTANCE / Math.max(1, slowestForwardSpeed);
-  const sequenceSeconds = ATTACK_PREVIEW_SEQUENCE_DISTANCE / Math.max(1, slowestForwardSpeed);
+  const sequenceSeconds = safeProjectiles.reduce(
+    (longest, projectile) =>
+      Math.max(
+        longest,
+        getProjectileTravelTimeForDistance(
+          ATTACK_PREVIEW_SEQUENCE_DISTANCE,
+          -projectile.vy,
+          projectile.tags
+        )
+      ),
+    0
+  );
   const desiredWaveCopies = Math.max(
     1,
     Math.min(MAX_ATTACK_PREVIEW_WAVE_COPIES, Math.ceil(sequenceSeconds / safeCooldown))
@@ -492,6 +517,11 @@ function createFoundryAttackPatternPreviewModel(
     minimumVolleySize === volleySize
       ? `${volleySize} projectile${volleySize === 1 ? '' : 's'} per volley`
       : `${minimumVolleySize}-${volleySize} projectiles per volley across the firing cycle`;
+  const missileDescription = safeProjectiles.some((projectile) =>
+    isMissileProjectile(projectile.tags)
+  )
+    ? ' Missile-tagged shots use their two-stage motor profile.'
+    : '';
   return {
     cameraWidth: COMBAT_ARENA_WIDTH,
     cameraHeight: FOUNDRY_ATTACK_PREVIEW_WORLD_HEIGHT,
@@ -500,7 +530,7 @@ function createFoundryAttackPatternPreviewModel(
     fireCooldownSeconds: safeCooldown,
     waveCopies,
     projectiles,
-    ariaLabel: `${weaponName} live-fire preview. ${volleyDescription} at ${volleysPerSecond.toFixed(1)} volleys per second. Projectile paths use the draft loadout's combat velocity, spread, radius, damage, engineering hooks, and owned item hooks.`
+    ariaLabel: `${weaponName} live-fire preview. ${volleyDescription} at ${volleysPerSecond.toFixed(1)} volleys per second.${missileDescription} Projectile paths use the draft loadout's combat velocity, spread, radius, damage, engineering hooks, and owned item hooks.`
   };
 }
 
@@ -514,14 +544,24 @@ function createFoundryAttackProjectileModel(
   fireCooldownSeconds: number
 ): FoundryAttackProjectileModel {
   const startX = projectile.x;
-  const endX = projectile.x + projectile.vx * durationSeconds;
-  const endRise = -projectile.vy * durationSeconds;
+  const endTravelSeconds = getProjectileTravelSeconds(durationSeconds, projectile.tags);
+  const endX = projectile.x + projectile.vx * endTravelSeconds;
+  const endRise = -projectile.vy * endTravelSeconds;
   const restProgress = (waveIndex + 1) / (waveCopies + 1);
   const performanceProgress = 0.58;
-  const restX = projectile.x + projectile.vx * flightSeconds * restProgress;
-  const restRise = -projectile.vy * flightSeconds * restProgress;
-  const performanceX = projectile.x + projectile.vx * flightSeconds * performanceProgress;
-  const performanceRise = -projectile.vy * flightSeconds * performanceProgress;
+  const restTravelSeconds = getProjectileTravelSeconds(
+    flightSeconds * restProgress,
+    projectile.tags
+  );
+  const performanceTravelSeconds = getProjectileTravelSeconds(
+    flightSeconds * performanceProgress,
+    projectile.tags
+  );
+  const restX = projectile.x + projectile.vx * restTravelSeconds;
+  const restRise = -projectile.vy * restTravelSeconds;
+  const performanceX = projectile.x + projectile.vx * performanceTravelSeconds;
+  const performanceRise = -projectile.vy * performanceTravelSeconds;
+  const flightKind = isMissileProjectile(projectile.tags) ? 'missile' : 'ballistic';
   return {
     id: `preview-shot-${waveIndex}-${projectileIndex}`,
     projectileIndex,
@@ -533,6 +573,8 @@ function createFoundryAttackProjectileModel(
     damage: projectile.damage,
     ttl: projectile.ttl,
     tags: projectile.tags,
+    flightKind,
+    headingDegrees: (Math.atan2(projectile.vx, -projectile.vy) * 180) / Math.PI,
     startXPercent: toAttackPreviewHorizontalPercent(startX),
     endXPercent: toAttackPreviewHorizontalPercent(endX),
     endRisePercent: toAttackPreviewVerticalPercent(endRise),

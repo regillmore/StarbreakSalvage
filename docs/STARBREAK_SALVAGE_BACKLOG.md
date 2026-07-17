@@ -2251,3 +2251,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 157. `ShopStock` persists bounded seeded racks by sector and reroll, `ShopScene` renders purchased positions as numbered empty slots, and the purchase path validates live stock before spending. Explicit rerolls alone open a fresh full rack; deterministic, snapshot, responsive Chromium, and production-preview coverage protect the complete flow.
+
+### BL25 - Powered missile flight identity
+
+Acceptance:
+
+- Player and allied missile-tagged projectiles share deterministic rack-ejection, boost, and cruise travel without changing authored aim, collision, damage, cadence, heat, or TTL.
+- Missile visuals follow the real velocity vector with an unmistakable nose, body, fins, and owner-readable exhaust while ordinary bullets remain compact orbs.
+- Circuit hooks inherit missile travel and presentation from the `missile` tag instead of weapon-specific branching.
+- Contract and Hardpoint live-fire previews use the production motor integral and matching missile silhouette across animated, reduced-motion, and performance presentations.
+- Hostile movement tuning, high contrast, actor caps, deterministic content, saves, snapshots, and static hosting remain compatible.
+
+Status:
+
+- Implemented in work order 158. `MissileFlight` supplies the closed-form motor integral and preview solver, `CombatState` applies it to friendly missile actors, and `CanvasRenderer` replaces their generic orb presentation with velocity-aligned powered ordnance. Shared attack previews consume the same travel model, so item-generated missiles and starter-rack missiles remain visually and mechanically consistent.

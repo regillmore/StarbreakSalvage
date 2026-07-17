@@ -129,6 +129,10 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
       .getByTestId('selected-contract-preview')
       .getByRole('img', { name: /Missile Accountant ship preview/ })
   ).toBeVisible();
+  const missilePreviewShots = page.getByTestId('contract-attack-projectile');
+  expect(await missilePreviewShots.count()).toBeGreaterThan(0);
+  await expect(missilePreviewShots.first()).toHaveAttribute('data-flight-kind', 'missile');
+  await expect(missilePreviewShots.first()).toHaveAttribute('data-tags', /missile/);
 
   await page
     .locator('article')

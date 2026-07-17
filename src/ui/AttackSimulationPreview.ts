@@ -66,6 +66,7 @@ export function createAttackSimulationPreviewElement(
     shot.dataset.radius = String(projectile.radius);
     shot.dataset.ttl = String(projectile.ttl);
     shot.dataset.tags = projectile.tags.join(' ');
+    shot.dataset.flightKind = projectile.flightKind;
     shot.style.setProperty('--shot-start-x', `${projectile.startXPercent}%`);
     shot.style.setProperty('--shot-end-x', `${projectile.endXPercent}%`);
     shot.style.setProperty('--shot-end-rise', `${projectile.endRisePercent}%`);
@@ -74,6 +75,7 @@ export function createAttackSimulationPreviewElement(
     shot.style.setProperty('--shot-performance-x', `${projectile.performanceXPercent}%`);
     shot.style.setProperty('--shot-performance-rise', `${projectile.performanceRisePercent}%`);
     shot.style.setProperty('--shot-size', `${projectile.displayDiameterPercent}%`);
+    shot.style.setProperty('--shot-heading', `${projectile.headingDegrees}deg`);
     shot.style.setProperty('--shot-duration', `${projectile.durationSeconds}s`);
     shot.style.setProperty('--shot-delay', `${projectile.delaySeconds}s`);
     projectileLayer.append(shot);

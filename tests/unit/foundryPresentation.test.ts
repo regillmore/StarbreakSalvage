@@ -258,6 +258,22 @@ describe('foundry visual presentation', () => {
     expect(firstWave[0]!.performanceRisePercent).toBeLessThan(60);
   });
 
+  it('projects missile previews through the production two-stage motor', () => {
+    const ballistic = createFoundryAttackPreviewModel('Ballistic', 0.05, [projectile(0, 0, -500)]);
+    const missile = createFoundryAttackPreviewModel('Missile', 0.05, [
+      { ...projectile(0, 0, -500), tags: ['missile'] }
+    ]);
+    const missileShot = missile.projectiles[0];
+
+    expect(missileShot?.flightKind).toBe('missile');
+    expect(missileShot?.headingDegrees).toBe(0);
+    expect(missileShot?.durationSeconds).toBeGreaterThan(
+      ballistic.projectiles[0]?.durationSeconds ?? 0
+    );
+    expect(missileShot?.endRisePercent).toBeCloseTo(96.1538, 3);
+    expect(missile.ariaLabel).toContain('two-stage motor profile');
+  });
+
   it('summarizes component costs and direct replacement deltas', () => {
     const contract = generateRunSkeleton('FOUNDRY-COMPARE-MODEL').contracts[0]!;
     const state = createEngineeringState(contract.loadout);

@@ -51,6 +51,11 @@ import {
   type SetPieceComponentTemplateId
 } from '../content/setPieces';
 import type { BoardingOperationPlan } from '../game/BoardingOperation';
+import {
+  getMissileFlightPhase,
+  getMissileThrustScale,
+  isMissileProjectile
+} from '../game/MissileFlight';
 
 const BACKGROUND_SEED = 'STARBREAK-SALVAGE-SHELL';
 const DEFAULT_PLAYER_SHIP_APPEARANCE: ShipAppearance = {
@@ -144,8 +149,12 @@ export interface BossRenderState {
 export interface ProjectileRenderState {
   readonly x: number;
   readonly y: number;
+  readonly vx: number;
+  readonly vy: number;
   readonly radius: number;
   readonly owner: 'player' | 'ally' | 'enemy';
+  readonly tags: readonly string[];
+  readonly ageSeconds?: number;
   readonly factionId?: FactionId;
 }
 
@@ -1395,29 +1404,37 @@ export class CanvasRenderer {
   public paintProjectile(projectile: ProjectileRenderState): void {
     const context = this.context;
     const velocityCues = getVelocityCueState(this.settings);
+    let projectileColor: string;
 
     context.save();
     context.translate(projectile.x, projectile.y);
 
     if (projectile.owner === 'player') {
-      context.fillStyle = this.settings.bulletContrast === 'high' ? '#ffffff' : '#7cf7ff';
-      context.shadowColor = this.settings.bulletContrast === 'high' ? '#ffffff' : '#7cf7ff';
+      projectileColor = this.settings.bulletContrast === 'high' ? '#ffffff' : '#7cf7ff';
     } else if (projectile.owner === 'ally') {
-      context.fillStyle = this.settings.bulletContrast === 'high' ? '#ffffff' : '#8dff9a';
-      context.shadowColor = this.settings.bulletContrast === 'high' ? '#ffffff' : '#8dff9a';
+      projectileColor = this.settings.bulletContrast === 'high' ? '#ffffff' : '#8dff9a';
     } else {
       const faction = projectile.factionId ? getFactionById(projectile.factionId) : null;
-      context.fillStyle =
-        this.settings.bulletContrast === 'high'
-          ? '#ffef5f'
-          : (faction?.palette.projectile ?? '#ff6bd6');
-      context.shadowColor =
+      projectileColor =
         this.settings.bulletContrast === 'high'
           ? '#ffef5f'
           : (faction?.palette.projectile ?? '#ff6bd6');
     }
 
+    context.fillStyle = projectileColor;
+    context.shadowColor = projectileColor;
     context.shadowBlur = velocityCues.highContrastProjectiles ? 14 : 10;
+
+    if (isMissileProjectile(projectile.tags)) {
+      this.paintMissileProjectile(
+        projectile,
+        projectileColor,
+        velocityCues.highContrastProjectiles
+      );
+      context.restore();
+      return;
+    }
+
     context.beginPath();
     context.arc(0, 0, projectile.radius, 0, Math.PI * 2);
     context.fill();
@@ -1429,6 +1446,95 @@ export class CanvasRenderer {
       context.stroke();
     }
 
+    context.restore();
+  }
+
+  private paintMissileProjectile(
+    projectile: ProjectileRenderState,
+    projectileColor: string,
+    highContrast: boolean
+  ): void {
+    const context = this.context;
+    const ageSeconds = Math.max(0, projectile.ageSeconds ?? 0);
+    const thrustScale = getMissileThrustScale(ageSeconds);
+    const phase = getMissileFlightPhase(ageSeconds);
+    const bodyWidth = Math.max(7, projectile.radius * 1.42);
+    const bodyLength = Math.max(18, projectile.radius * 3.25);
+    const tailY = bodyLength * 0.42;
+    const exhaustLength =
+      projectile.radius * (phase === 'ejection' ? 1.05 : 1.4 + thrustScale * 1.25);
+    const glowEnabled = !this.settings.performanceMode;
+
+    context.rotate(Math.atan2(projectile.vx, -projectile.vy));
+
+    if (glowEnabled) {
+      const exhaustGlow = context.createLinearGradient(0, tailY, 0, tailY + exhaustLength);
+      exhaustGlow.addColorStop(0, '#ffffff');
+      exhaustGlow.addColorStop(0.18, '#ffb14a');
+      exhaustGlow.addColorStop(0.58, projectile.owner === 'enemy' ? '#ff6bd6' : '#7cf7ff');
+      exhaustGlow.addColorStop(1, 'rgba(124, 247, 255, 0)');
+      context.save();
+      context.globalAlpha = this.settings.reducedMotion ? 0.7 : 0.88;
+      context.fillStyle = exhaustGlow;
+      context.shadowColor = projectile.owner === 'enemy' ? '#ff6bd6' : '#7cf7ff';
+      context.shadowBlur = highContrast ? 8 : 13;
+      context.beginPath();
+      context.moveTo(-bodyWidth * 0.24, tailY - 1);
+      context.lineTo(bodyWidth * 0.24, tailY - 1);
+      context.lineTo(bodyWidth * 0.11, tailY + exhaustLength * 0.62);
+      context.lineTo(0, tailY + exhaustLength);
+      context.lineTo(-bodyWidth * 0.11, tailY + exhaustLength * 0.62);
+      context.closePath();
+      context.fill();
+      context.restore();
+    }
+
+    context.save();
+    context.shadowColor = projectileColor;
+    context.shadowBlur = highContrast || this.settings.performanceMode ? 0 : 9;
+    context.fillStyle = highContrast ? '#ffffff' : projectileColor;
+    context.strokeStyle = '#03050d';
+    context.lineWidth = highContrast ? 2.2 : 1.25;
+
+    context.beginPath();
+    context.moveTo(-bodyWidth * 0.48, bodyLength * 0.2);
+    context.lineTo(-bodyWidth * 0.92, bodyLength * 0.48);
+    context.lineTo(-bodyWidth * 0.34, bodyLength * 0.4);
+    context.lineTo(bodyWidth * 0.34, bodyLength * 0.4);
+    context.lineTo(bodyWidth * 0.92, bodyLength * 0.48);
+    context.lineTo(bodyWidth * 0.48, bodyLength * 0.2);
+    context.closePath();
+    context.fill();
+    context.stroke();
+
+    context.beginPath();
+    context.moveTo(0, -bodyLength * 0.58);
+    context.quadraticCurveTo(
+      bodyWidth * 0.5,
+      -bodyLength * 0.35,
+      bodyWidth * 0.5,
+      -bodyLength * 0.04
+    );
+    context.lineTo(bodyWidth * 0.38, bodyLength * 0.4);
+    context.lineTo(-bodyWidth * 0.38, bodyLength * 0.4);
+    context.lineTo(-bodyWidth * 0.5, -bodyLength * 0.04);
+    context.quadraticCurveTo(-bodyWidth * 0.5, -bodyLength * 0.35, 0, -bodyLength * 0.58);
+    context.closePath();
+    context.fill();
+    context.stroke();
+
+    context.shadowBlur = 0;
+    context.strokeStyle = highContrast ? '#03050d' : 'rgba(255, 255, 255, 0.86)';
+    context.lineWidth = Math.max(1.1, projectile.radius * 0.16);
+    context.beginPath();
+    context.moveTo(0, -bodyLength * 0.3);
+    context.lineTo(0, bodyLength * 0.22);
+    context.stroke();
+
+    context.fillStyle = phase === 'ejection' ? '#ffef9a' : '#ffffff';
+    context.beginPath();
+    context.arc(0, -bodyLength * 0.29, Math.max(1.5, projectile.radius * 0.22), 0, Math.PI * 2);
+    context.fill();
     context.restore();
   }
 

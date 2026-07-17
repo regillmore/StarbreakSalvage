@@ -874,7 +874,7 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   box-shadow:
     0 0 4px #ffffff,
     0 0 11px rgba(124, 247, 255, 0.9);
-  transform: translateX(-50%);
+  transform: translateX(-50%) rotate(var(--shot-heading, 0deg));
   animation: foundry-projectile-flight var(--shot-duration) linear infinite;
   animation-delay: var(--shot-delay);
 }
@@ -891,12 +891,37 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   transform: translateX(-50%);
 }
 
-.attack-simulation-projectile[data-tags~='missile'] {
-  border-radius: 46% 46% 62% 62%;
-  background: #ffef9a;
+.attack-simulation-projectile[data-flight-kind='missile'] {
+  aspect-ratio: 0.44;
+  border-radius: 52% 52% 22% 22% / 30% 30% 14% 14%;
+  background:
+    linear-gradient(90deg, rgba(3, 5, 13, 0.6), transparent 25% 70%, rgba(3, 5, 13, 0.38)),
+    linear-gradient(180deg, #ffffff 0 8%, #ffef9a 18% 62%, #ff9c4a 78% 100%);
   box-shadow:
     0 0 4px #ffffff,
     0 0 12px rgba(255, 209, 102, 0.88);
+  transform-origin: 50% 22%;
+  animation-timing-function: linear(0, 0.045 16%, 0.69 82%, 1);
+}
+
+.attack-simulation-projectile[data-flight-kind='missile']::before {
+  position: absolute;
+  right: -38%;
+  bottom: 10%;
+  left: -38%;
+  height: 30%;
+  content: '';
+  background: #ffd166;
+  clip-path: polygon(0 100%, 22% 0, 36% 68%, 64% 68%, 78% 0, 100% 100%, 64% 82%, 36% 82%);
+  filter: drop-shadow(0 0 2px rgba(255, 209, 102, 0.8));
+}
+
+.attack-simulation-projectile[data-flight-kind='missile']::after {
+  top: 78%;
+  width: 48%;
+  height: 130%;
+  background: linear-gradient(#ffffff, #ff9c4a 24%, rgba(124, 247, 255, 0.72) 58%, transparent);
+  clip-path: polygon(18% 0, 82% 0, 100% 28%, 50% 100%, 0 28%);
 }
 
 .attack-simulation-projectile[data-tags~='arc'] {
@@ -953,7 +978,7 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
     bottom: 10%;
     left: calc(50% + var(--shot-start-x));
     opacity: 0;
-    transform: translateX(-50%);
+    transform: translateX(-50%) rotate(var(--shot-heading, 0deg));
   }
   4%,
   88% {
@@ -963,7 +988,7 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
     bottom: calc(10% + var(--shot-end-rise));
     left: calc(50% + var(--shot-end-x));
     opacity: 0;
-    transform: translateX(-50%);
+    transform: translateX(-50%) rotate(var(--shot-heading, 0deg));
   }
 }
 
@@ -1680,7 +1705,7 @@ html[data-reduced-motion='true'] .attack-simulation-projectile {
   bottom: calc(10% + var(--shot-rest-rise));
   left: calc(50% + var(--shot-rest-x));
   opacity: 0.94;
-  transform: translateX(-50%);
+  transform: translateX(-50%) rotate(var(--shot-heading, 0deg));
 }
 
 html[data-performance-mode='true'] .attack-simulation-projectile {
@@ -1689,7 +1714,7 @@ html[data-performance-mode='true'] .attack-simulation-projectile {
   left: calc(50% + var(--shot-performance-x));
   opacity: 0.94;
   box-shadow: none;
-  transform: translateX(-50%);
+  transform: translateX(-50%) rotate(var(--shot-heading, 0deg));
 }
 
 html[data-performance-mode='true'] .attack-simulation-projectile-echo {

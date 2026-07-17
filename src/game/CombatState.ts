@@ -54,6 +54,7 @@ import {
 } from './LooseCurrency';
 import { getItemNames, type ItemInstance } from './Rewards';
 import { createWeaponProjectileBlueprints } from './WeaponProjectiles';
+import { getProjectileTravelDeltaSeconds, isMissileProjectile } from './MissileFlight';
 import type { MissionObjectiveResultSnapshot } from './ObjectiveDirector';
 import type { BossPhaseUpgradeEffects } from './UpgradeEffects';
 import type { CrewCombatProfile } from './CrewCommand';
@@ -143,6 +144,7 @@ export interface ProjectileState {
   readonly radius: number;
   readonly damage: number;
   ttl: number;
+  ageSeconds?: number;
   readonly tags: readonly ItemTag[];
   readonly procDepth: number;
   ricochetBounces?: number;
@@ -3527,7 +3529,8 @@ function fireAllyAtTarget(state: CombatState, ally: AllyState, bounds: CombatBou
       return getDistanceSquared(candidate, ally) < getDistanceSquared(nearest, ally)
         ? candidate
         : nearest;
-    }, null) ?? state.boss;
+    }, null) ??
+    state.boss;
   if (!target) return;
   const dx = target.x - ally.x;
   const dy = target.y - ally.y;
@@ -3775,8 +3778,17 @@ function selectBossAttackPattern(boss: BossState): BossPatternId {
 
 function updateProjectiles(state: CombatState, dt: number, bounds: CombatBounds): void {
   for (const projectile of state.projectiles) {
-    projectile.x += projectile.vx * dt;
-    projectile.y += projectile.vy * dt;
+    const missile = isMissileProjectile(projectile.tags);
+    const ageSeconds = missile ? Math.max(0, projectile.ageSeconds ?? 0) : 0;
+    const nextAgeSeconds = ageSeconds + dt;
+    const travelSeconds =
+      missile && projectile.owner !== 'enemy'
+        ? getProjectileTravelDeltaSeconds(ageSeconds, nextAgeSeconds, projectile.tags)
+        : dt;
+
+    projectile.x += projectile.vx * travelSeconds;
+    projectile.y += projectile.vy * travelSeconds;
+    if (missile) projectile.ageSeconds = nextAgeSeconds;
     projectile.ttl -= dt;
 
     if (projectile.owner === 'player' && (projectile.ricochetBounces ?? 0) > 0) {

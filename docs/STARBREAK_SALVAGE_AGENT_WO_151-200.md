@@ -172,3 +172,28 @@ Purchased cards become disabled dashed `Empty Slot` placeholders with stable tes
 The optional `shopStockByRoll` session field keeps snapshot v12 backward-compatible. Snapshot validation bounds ledger count and rack size, verifies sector/reroll identity, slot and item uniqueness, prices, item IDs, provenance, and depletion flags. Deterministic coverage proves reopen persistence, repeat-purchase rejection, owned-item exclusion, and full reroll restock.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 101 Vitest files and 634 tests, the production build, all 16 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 939.72 kB minified/256.13 kB gzip initial JavaScript and 80.09/16.00 kB CSS, increases of 2.75/0.77 kB JavaScript and 0.53/0.10 kB CSS over work order 156. The existing 500 kB chunk notice remains; no dependency, RNG algorithm, snapshot version, static base path, or warning threshold changed.
+
+## Work order 158 - Powered missile flight identity
+
+Goal: make missile-tagged projectiles unmistakable in combat and give them a richer deterministic flight profile than ordinary bullet orbs.
+
+Prompt:
+
+> Refit missiles around one shared powered-flight model. Give player and allied missile-tagged projectiles a brief rack-ejection phase, a visible boost ramp, and a faster cruise while preserving their authored aim vector, dumbfire identity, collision radius, damage, cadence, TTL, and deterministic simulation. Replace the generic projectile orb with a directional nose, body, fins, and owner-readable exhaust treatment in combat, and project the same geometry and motor travel through Contract Select and Hardpoint Control. Missile-producing circuit items must inherit the behavior automatically. Preserve hostile movement tuning, high contrast, reduced motion, performance mode, bounded previews, saves, accessibility, and static hosting. Add simulation, renderer, presentation, and Chromium coverage and run release checks.
+
+Acceptance criteria:
+
+- Player and allied missile-tagged shots eject at half authored speed, accelerate through a bounded boost stage, and cruise at 1.24x authored speed through a fixed-step-independent closed-form travel integral.
+- The directional canvas treatment follows the actual velocity vector and presents a pointed body, fins, nose cue, and powered exhaust; ordinary projectiles retain the compact orb treatment.
+- Existing and future circuit hooks that add the `missile` tag automatically gain powered flight and missile presentation without weapon-ID special cases.
+- Hostile missile movement, collision radius, damage, cadence, heat, TTL, target selection, RNG, and content generation remain unchanged.
+- Contract Select and Hardpoint Control use the production motor integral for flight time, terminal position, reduced-motion position, and performance-mode position, with a matching finned projectile silhouette and accessible motor description.
+- High contrast, reduced motion, performance mode, ricochet direction changes, the 48-projectile preview cap, saves, snapshots, and static hosting remain compatible.
+
+Status: implemented. `MissileFlight` owns the shared ejection, linear boost, cruise, phase, travel integral, delta, and distance-to-time solver. `CombatState` ages missile actors and applies the exact integrated displacement to player and allied missile-tagged projectiles, so fixed-step subdivision cannot change their range. Hostile missile actors receive the visual age cue but retain their existing linear travel and difficulty.
+
+`CanvasRenderer` now rotates a layered missile body into its velocity vector and draws separate fins, nose light, owner-readable body color, and a performance-aware exhaust plume. Generic shots remain circular. `FoundryPresentation` uses the same motor solver for attack-camera timing and representative positions; `AttackSimulationPreview` adds a finned, accelerating missile treatment and exposes its flight kind to deterministic Chromium coverage. Any ordered-circuit hook that produces a missile tag inherits both paths automatically.
+
+Browser inspection on the clean `STARBREAK-SMOKE` Missile Accountant contract confirmed the projectile reads as a bright pointed missile with fins and a long motor plume at combat scale, and the accessibility tree identifies the two-stage profile. Focused tests cover motor phases, exact integration, preview inversion, combat displacement, canvas branch geometry, ordinary-orb preservation, and live-fire presentation.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 103 Vitest files and 641 tests, the production build, all 16 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 942.43 kB minified/257.05 kB gzip initial JavaScript and 80.98/16.26 kB CSS, increases of 2.71/0.92 kB JavaScript and 0.89/0.26 kB CSS over work order 157. The existing 500 kB chunk notice remains; no dependency, RNG stream, content table, save/snapshot schema, static base path, or warning threshold changed.
