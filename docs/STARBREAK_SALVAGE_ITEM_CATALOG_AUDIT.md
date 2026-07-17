@@ -1,30 +1,31 @@
 # Starbreak Salvage - Item Catalog Audit
 
-Work orders 051-056 baseline. This document records the current item catalog after the first Phase 6 expansion pack, source-weighted acquisition pass, and unlock-gated family tier pass. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
+Work orders 051-056 baseline, refreshed by work order 156. This document records the active item catalog after the Noita-style circuit pivot retired Boss Pressure from live rotation and replaced its five slots with weapon-chain upgrades. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
 
 ## Current Shape
 
 | Measure                | Current | Phase 6 target                                                                                |
 | ---------------------- | ------- | --------------------------------------------------------------------------------------------- |
-| Total item definitions | 60      | Reached the first expansion target                                                            |
-| Candidate reward pools | 3       | Starter, combat, and vault remain the broad candidate buckets                                 |
+| Active item definitions | 60      | Five Boss Pressure definitions remain retired for legacy-save compatibility                   |
+| Candidate reward pools | 4       | Starter, ignition core, combat, and vault remain the broad candidate buckets                  |
 | Weight profiles        | 9       | Starter, combat, shop, vault, elite, boss, faction, lunar, and route contexts are weighted    |
-| Hook names             | 13      | Add item discovery or collection hooks only if later systems need them                        |
-| Locked item ids        | 8       | Direct item gates plus advanced/classified family-tier gates                                  |
-| Archetype records      | 8       | Keep legacy archetypes and use metadata families for lunar, route, and boss-pressure identity |
+| Hook names             | 14      | Includes environment-object destruction alongside combat, route, and economy hooks            |
+| Locked item ids        | 7       | Direct item gates plus advanced/classified family-tier gates                                  |
+| Active family lanes    | 10      | Boss Pressure remains only as a compatibility label for retired items                          |
 
 ## Schema Metadata
 
 Work order 052 formalized compact item metadata:
 
-- `family` selects one Phase 6 family lane such as laser/split, curse/relic, lunar/surface, route/economy, or boss-pressure.
+- `family` selects one active lane such as laser/split, curse/relic, lunar/surface, route/economy, or heat/prototype.
 - `sources` records current and future acquisition intent, including starter, combat, shop, vault, elite, boss, faction, lunar, route, and unlock.
 - `unlockTier` separates baseline, advanced, and explicitly unlock-gated items.
 - `implementationStatus` distinguishes live, bridge, and planned effects; bridge/planned entries must explain the gap.
+- `retired` preserves an old item definition and hook for snapshot compatibility while excluding it from active pools, audits, and discovery progress.
 - `stacking` records unique versus stackable intent before duplicate item rewards become possible.
 - `uiTags` gives item cards a short, validated badge vocabulary without parsing gameplay tags.
 
-Validation requires ordinary reward-pool membership to match source metadata. A declared bridge pool may instead list the valid source lanes it composes; its entries must still match at least one of those lanes. Item pool weight profiles must reference valid pools/sources/rarities/families/tags and a positive optional bias weight, item and family unlock gates must reference valid unlocks and item tiers, every declared hook must have an implementation, and prototype/cursed items stay out of ordinary starter sources.
+Validation requires every active item to appear in a compatible reward pool and rejects retired items from live pools. A declared bridge pool may list the valid source lanes it composes; its entries must still match at least one of those lanes. Item pool weight profiles must reference valid pools/sources/rarities/families/tags and a positive optional bias weight, item and family unlock gates must reference valid unlocks and item tiers, every declared hook must have an implementation, and prototype/cursed items stay out of ordinary starter sources.
 
 ## Rarity Coverage
 
@@ -40,19 +41,20 @@ Validation requires ordinary reward-pool membership to match source metadata. A 
 
 | Hook                 | Item count | Current role                                                        |
 | -------------------- | ---------- | ------------------------------------------------------------------- |
-| `onFire`             | 11         | Volley shaping, drones, split shots, missiles, phase/heat variants. |
-| `onProjectileSpawn`  | 8          | Projectile tags, size, damage, TTL, and drift shaping.              |
+| `onFire`             | 14         | Volley shaping, drones, split shots, missiles, phase/heat variants. |
+| `onProjectileSpawn`  | 9          | Projectile tags, size, damage, TTL, and drift shaping.              |
 | `onEnemyKilled`      | 11         | Salvage payouts, arc/blast follow-ups, overkill/relic rewards.      |
 | `onPlayerHit`        | 6          | Shield, revenge, armor, and curse retaliation.                      |
 | `onPickupCollected`  | 5          | Credit/salvage pickup fire-rate boosts.                             |
 | `onGraze`            | 2          | Near-miss charge/rate/radius effects.                               |
 | `onSpecialUsed`      | 1          | Prototype special-use projectile and cooldown shaping.              |
-| `onBombUsed`         | 1          | Bomb damage/radius/boss-pressure shaping.                           |
+| `onBombUsed`         | 1          | Bomb damage, radius, and boss-ratio shaping.                        |
 | `onSectorStart`      | 3          | Lunar entry, sector-start resource, and toll effects.               |
 | `onRouteChosen`      | 4          | Route economy, curse interest, and ambush insurance effects.        |
 | `onShopEntered`      | 2          | Shop discount, stock, and bias effects.                             |
 | `onRewardGenerated`  | 3          | Reward choice and tag-bias effects.                                 |
-| `onBossPhaseChanged` | 5          | Boss telegraph, cooldown, clear, and charge pressure effects.       |
+| `onBossPhaseChanged` | 1          | One remaining active circuit hook; permanent counterplay moved to the Upgrade Bay. |
+| `onEnvironmentObjectDestroyed` | 1 | Salvage payout from eligible world-object destruction.             |
 
 Work order 054 gave the work order 053 hook surface its first live users. Item discovery is currently recorded from run inventory at summary time, so a dedicated collection hook remains optional unless future mid-run archive UI needs it.
 
@@ -77,7 +79,7 @@ The broad candidate pools are intentionally small in number; source identity now
 | Shop    | combat          | Market inventory biased toward shop, route, credit, magnet, heat, and drone entries.     |
 | Vault   | vault           | Relic/cursed/prototype-leaning rewards with phase and curse identity.                    |
 | Elite   | combat, vault   | Higher-pressure rewards biased toward elite, boss, overkill, missile, and drone entries. |
-| Boss    | combat, vault   | Boss-gated rewards biased toward boss-pressure, shield, overkill, and phase entries.     |
+| Boss    | combat, vault   | Boss rewards favor circuit-ready laser, heat, shield, overkill, and phase entries.       |
 | Faction | combat, vault   | Faction ambush rewards with faction-specific tag bias from boss faction context.         |
 | Lunar   | combat, vault   | Lunar Surface rewards biased toward lunar, route, scrap, laser, and phase entries.       |
 | Route   | combat, vault   | Repair/shop/glitch-style rewards biased toward route economy and credit flow.            |
@@ -103,24 +105,24 @@ Known-seed tests now sample shop, elite, vault, and lunar reward surfaces, and u
 
 | Tag        | Count |
 | ---------- | ----- |
-| `credit`   | 16    |
-| `phase`    | 12    |
-| `scrap`    | 9     |
+| `credit`   | 14    |
+| `phase`    | 9     |
+| `scrap`    | 8     |
 | `drone`    | 8     |
-| `plasma`   | 8     |
-| `shield`   | 6     |
+| `plasma`   | 9     |
+| `shield`   | 5     |
 | `curse`    | 5     |
-| `heat`     | 5     |
+| `heat`     | 6     |
 | `armor`    | 4     |
-| `arc`      | 4     |
-| `laser`    | 4     |
+| `arc`      | 5     |
+| `laser`    | 5     |
 | `magnet`   | 4     |
-| `missile`  | 4     |
+| `missile`  | 5     |
 | `overkill` | 4     |
 | `ricochet` | 4     |
 | `bomb`     | 3     |
 | `revenge`  | 3     |
-| `split`    | 3     |
+| `split`    | 5     |
 | `relic`    | 2     |
 
 `relic`, `split`, `revenge`, and `bomb` remain thinner tags even though their broader families are now represented.
@@ -129,32 +131,31 @@ Known-seed tests now sample shop, elite, vault, and lunar reward surfaces, and u
 
 | Family           | Count | Phase 6 note                                                                                                  |
 | ---------------- | ----- | ------------------------------------------------------------------------------------------------------------- |
-| Laser/Split      | 6     | Healthy enough for precision, arc, and split variants.                                                        |
-| Missile/Overkill | 6     | Reached the first expansion target; needs weighting and build identity next.                                  |
-| Drone/Copy       | 6     | Good base for side drones, mirror shots, escorts, and command effects.                                        |
+| Laser/Split      | 7     | Harmonic Fork Loom copies the current outer chain rather than a fixed base shot.                              |
+| Missile/Overkill | 7     | Warhead Echo Chamber turns the heaviest upstream shot into a periodic overkill echo.                          |
+| Drone/Copy       | 7     | Crossfeed Detonator rewards kills carrying two distinct circuit traits.                                       |
 | Shield/Revenge   | 5     | Reached the first expansion target; defensive balance should avoid rewarding intentional damage too strongly. |
 | Credit/Shop      | 6     | Healthy base; now has first-pass shop/source weighting rather than flat discounts only.                       |
 | Curse/Relic      | 6     | Advanced vault/route entries are locked behind the Relic Thief dossier; risk/reward tuning still needs work.  |
-| Phase/Graze      | 5     | Has direct graze hooks now.                                                                                   |
-| Heat/Prototype   | 5     | Has special-use and projectile heat behavior, but downside identity is still light.                           |
+| Phase/Graze      | 6     | Ricochet Branch Coupler extends split and drone branches with a real bounce.                                  |
+| Heat/Prototype   | 6     | Plasma Seed Crucible converts an earlier circuit trait into plasma/heat scaling.                              |
 | Lunar/Surface    | 5     | First source-driven sector family is present.                                                                 |
 | Route/Economy    | 5     | First route-choice economy family is present.                                                                 |
-| Boss-Pressure    | 5     | First boss-phase pressure family is present.                                                                  |
 
-The legacy archetype audit now reports no underrepresented rewarded archetypes. The metadata family audit is the better guide for lunar, route, and boss-pressure follow-up work.
+The five Boss Pressure definitions and their original hook implementations remain readable to restored snapshots, but they are absent from pools, unlock gates, discovery, stress fixtures, and the active audit. Boss Warning Lattice and Capital Relief Protocol preserve the worthwhile telegraph, delay, charge, and late-phase-clear mechanics as permanent scrap upgrades.
 
 ## Archetype Coverage
 
 | Archetype        | Rewarded count |
 | ---------------- | -------------- |
-| Laser/Split      | 10             |
+| Laser/Split      | 13             |
 | Missile/Overkill | 8              |
-| Drone/Copy       | 10             |
-| Shield/Revenge   | 6              |
-| Credit/Shop      | 17             |
+| Drone/Copy       | 11             |
+| Shield/Revenge   | 5              |
+| Credit/Shop      | 15             |
 | Curse/Relic      | 6              |
-| Phase/Graze      | 13             |
-| Heat/Prototype   | 12             |
+| Phase/Graze      | 11             |
+| Heat/Prototype   | 13             |
 
 ## Former Bridge Effects Promoted In Work Order 132
 

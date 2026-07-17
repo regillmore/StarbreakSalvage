@@ -87,8 +87,8 @@ export const UNLOCKS: readonly UnlockDefinition[] = [
     kind: 'bossPractice',
     name: 'Auditor Drill',
     summary: 'a future practice entry for direct boss rehearsal',
-    effect: 'Marks Auditor Drone XL as available for boss practice and opens boss-pressure files.',
-    grants: ['Boss Practice: Auditor Drone XL', 'Item Family: Boss Pressure Classified Tier']
+    effect: 'Marks Auditor Drone XL as available for direct boss practice.',
+    grants: ['Boss Practice: Auditor Drone XL']
   },
   {
     id: 'unlock_faction_bloom_hive',

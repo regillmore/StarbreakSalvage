@@ -21,7 +21,9 @@ export const UPGRADE_EFFECT_KINDS = [
   'shopTelemetry',
   'rewardVariety',
   'salvageLedger',
-  'seedSurvey'
+  'seedSurvey',
+  'bossWarning',
+  'bossRelief'
 ] as const;
 
 export type UpgradeCategory = (typeof UPGRADE_CATEGORIES)[number];
@@ -34,7 +36,9 @@ export type UpgradeId =
   | 'upgrade_route_ledger_uplink'
   | 'upgrade_market_decoder'
   | 'upgrade_relic_pattern_dossier'
-  | 'upgrade_seed_cartographer';
+  | 'upgrade_seed_cartographer'
+  | 'upgrade_boss_warning_lattice'
+  | 'upgrade_capital_relief_protocol';
 
 export interface UpgradeDefinition {
   readonly id: UpgradeId;
@@ -114,6 +118,28 @@ export const UPGRADES: readonly UpgradeDefinition[] = [
     effect: 'Future seed previews can show one sector modifier before launch.',
     cost: 10,
     prerequisites: ['upgrade_route_ledger_uplink']
+  },
+  {
+    id: 'upgrade_boss_warning_lattice',
+    category: 'navigation',
+    iconKey: 'route-radar',
+    effectKind: 'bossWarning',
+    name: 'Boss Warning Lattice',
+    summary: 'phase-change telemetry that makes capital attacks easier to read',
+    effect: 'Boss phase shifts add 0.20 sec of warning and delay the next attack by 0.15 sec.',
+    cost: 8,
+    prerequisites: ['upgrade_route_ledger_uplink']
+  },
+  {
+    id: 'upgrade_capital_relief_protocol',
+    category: 'hangar',
+    iconKey: 'contract-scope',
+    effectKind: 'bossRelief',
+    name: 'Capital Relief Protocol',
+    summary: 'a permanent pressure break for deep boss phases',
+    effect: 'Boss phase shifts feed 12% special charge; late phases also clear hostile shots.',
+    cost: 12,
+    prerequisites: ['upgrade_boss_warning_lattice']
   }
 ];
 

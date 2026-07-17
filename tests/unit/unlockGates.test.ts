@@ -60,6 +60,7 @@ describe('unlock gates', () => {
 
     expect(combatRewards).not.toContain('item_overheat_oracle');
     expect(combatRewards).not.toContain('item_capital_wound_ledger');
+    expect(combatRewards).toContain('item_crossfeed_detonator');
     expect(vaultRewards).not.toContain('item_curse_interest_bond');
     expect(starterLoadout).toHaveLength(1);
     expect(starterLoadout.map((item) => item.itemId)).not.toContain('item_cursed_hull_plate');
@@ -114,9 +115,11 @@ describe('unlock gates', () => {
     );
     expect(getAvailableFactionIds({ unlockedIds })).toContain('faction_bloom_hive');
     expect(combatRewards).toContain('item_overheat_oracle');
-    expect(combatRewards).toContain('item_capital_wound_ledger');
+    expect(combatRewards).toContain('item_warhead_echo_chamber');
+    expect(combatRewards).not.toContain('item_capital_wound_ledger');
     expect(vaultRewards).toContain('item_curse_interest_bond');
     expect(getItemFamilyGate('curse-relic')?.unlockId).toBe('unlock_ship_relic_thief');
+    expect(getItemFamilyGate('boss-pressure')).toBeUndefined();
     expect(getAvailableChallengeSeeds({ unlockedIds }).map((challenge) => challenge.id)).toEqual([
       'challenge_debt_ceiling'
     ]);

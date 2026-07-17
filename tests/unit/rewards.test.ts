@@ -193,9 +193,9 @@ describe('reward generation', () => {
     }).toEqual({
       shop: [
         {
-          id: 'item_ambush_insurance_stamp',
+          id: 'item_exit_toll_transponder',
           sourceHint: 'route source',
-          price: 6
+          price: 9
         },
         {
           id: 'item_laser_tax_stamp',
@@ -208,14 +208,14 @@ describe('reward generation', () => {
           price: 5
         },
         {
-          id: 'item_low_orbit_ore_scrip',
+          id: 'item_route_ledger_spool',
           sourceHint: 'route source',
           price: 4
         }
       ],
       eliteRewards: [
         {
-          id: 'item_sidecar_drone_bay',
+          id: 'item_excess_warhead_clause',
           profile: 'elite',
           sourceHint: 'Elite pool'
         },
@@ -225,31 +225,31 @@ describe('reward generation', () => {
           sourceHint: 'Elite pool'
         },
         {
-          id: 'item_heat_signature_loop',
+          id: 'item_market_echo_locator',
           profile: 'elite',
           sourceHint: 'Elite pool'
         }
       ],
       vaultRewards: [
         {
-          id: 'item_arc_window_invoice',
-          profile: 'vault',
-          sourceHint: 'vault source'
-        },
-        {
           id: 'item_plasma_bloom_filter',
           profile: 'vault',
           sourceHint: 'vault source'
         },
         {
-          id: 'item_curse_eater_gasket',
+          id: 'item_arc_window_invoice',
+          profile: 'vault',
+          sourceHint: 'vault source'
+        },
+        {
+          id: 'item_phase_anchor_spool',
           profile: 'vault',
           sourceHint: 'vault source'
         }
       ],
       lunarRewards: [
         {
-          id: 'item_convoy_receipt_printer',
+          id: 'item_exit_toll_transponder',
           profile: 'lunar',
           sourceHint: 'route source'
         },

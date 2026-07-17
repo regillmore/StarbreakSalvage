@@ -180,7 +180,12 @@ export type ItemId =
   | 'item_warning_siren_lattice'
   | 'item_capital_wound_ledger'
   | 'item_boss_bounty_stamp'
-  | 'item_telegraph_rewrite_quill';
+  | 'item_telegraph_rewrite_quill'
+  | 'item_harmonic_fork_loom'
+  | 'item_plasma_seed_crucible'
+  | 'item_ricochet_branch_coupler'
+  | 'item_warhead_echo_chamber'
+  | 'item_crossfeed_detonator';
 
 export interface ItemDefinition {
   readonly id: ItemId;
@@ -199,6 +204,7 @@ export interface ItemMetadata {
   readonly unlockTier: ItemUnlockTier;
   readonly implementationStatus: ItemImplementationStatus;
   readonly implementationNote?: string;
+  readonly retired?: boolean;
   readonly stacking: ItemStackingMode;
   readonly uiTags: readonly ItemUiTag[];
 }
@@ -1226,6 +1232,7 @@ export const ITEMS: readonly ItemDefinition[] = [
       sources: ['combat', 'boss'],
       unlockTier: 'baseline',
       implementationStatus: 'live',
+      retired: true,
       stacking: 'unique',
       uiTags: ['boss', 'phase']
     }
@@ -1243,6 +1250,7 @@ export const ITEMS: readonly ItemDefinition[] = [
       sources: ['starter', 'combat', 'boss'],
       unlockTier: 'baseline',
       implementationStatus: 'live',
+      retired: true,
       stacking: 'unique',
       uiTags: ['boss', 'shield']
     }
@@ -1260,6 +1268,7 @@ export const ITEMS: readonly ItemDefinition[] = [
       sources: ['combat', 'vault', 'boss'],
       unlockTier: 'advanced',
       implementationStatus: 'live',
+      retired: true,
       stacking: 'unique',
       uiTags: ['boss', 'overkill']
     }
@@ -1277,6 +1286,7 @@ export const ITEMS: readonly ItemDefinition[] = [
       sources: ['combat', 'boss', 'elite'],
       unlockTier: 'baseline',
       implementationStatus: 'live',
+      retired: true,
       stacking: 'unique',
       uiTags: ['boss', 'salvage']
     }
@@ -1294,11 +1304,105 @@ export const ITEMS: readonly ItemDefinition[] = [
       sources: ['combat', 'vault', 'boss'],
       unlockTier: 'baseline',
       implementationStatus: 'live',
+      retired: true,
       stacking: 'unique',
       uiTags: ['boss', 'phase']
     }
+  },
+  {
+    id: 'item_harmonic_fork_loom',
+    name: 'Harmonic Fork Loom',
+    rarity: 'common',
+    tags: ['laser', 'split'],
+    hooks: ['onFire'],
+    effect: 'every third volley mirrors the outer shots already woven into the circuit',
+    weight: 10,
+    metadata: {
+      family: 'laser-split',
+      sources: ['starter', 'combat', 'boss'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['laser', 'split']
+    }
+  },
+  {
+    id: 'item_plasma_seed_crucible',
+    name: 'Plasma Seed Crucible',
+    rarity: 'rare',
+    tags: ['plasma', 'heat'],
+    hooks: ['onProjectileSpawn'],
+    effect: 'tagged circuit shots bloom into larger, hotter plasma bolts',
+    weight: 5,
+    metadata: {
+      family: 'heat-prototype',
+      sources: ['combat', 'vault', 'boss'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['plasma', 'heat']
+    }
+  },
+  {
+    id: 'item_ricochet_branch_coupler',
+    name: 'Ricochet Branch Coupler',
+    rarity: 'uncommon',
+    tags: ['ricochet', 'split'],
+    hooks: ['onProjectileSpawn'],
+    effect: 'split and drone branches gain one wall bounce and a longer flight path',
+    weight: 7,
+    metadata: {
+      family: 'phase-graze',
+      sources: ['combat', 'elite', 'boss'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['phase', 'split']
+    }
+  },
+  {
+    id: 'item_warhead_echo_chamber',
+    name: 'Warhead Echo Chamber',
+    rarity: 'prototype',
+    tags: ['missile', 'overkill'],
+    hooks: ['onFire'],
+    effect: 'every fourth volley echoes its heaviest shot as a slower overkill warhead',
+    weight: 4,
+    metadata: {
+      family: 'missile-overkill',
+      sources: ['combat', 'vault', 'boss'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['missile', 'overkill', 'prototype']
+    }
+  },
+  {
+    id: 'item_crossfeed_detonator',
+    name: 'Crossfeed Detonator',
+    rarity: 'rare',
+    tags: ['arc', 'overkill'],
+    hooks: ['onEnemyKilled'],
+    effect: 'kills carrying two circuit traits discharge both an arc and a compact blast',
+    weight: 5,
+    metadata: {
+      family: 'drone-copy',
+      sources: ['combat', 'boss'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['arc', 'overkill']
+    }
   }
 ];
+
+export const ACTIVE_ITEMS: readonly ItemDefinition[] = ITEMS.filter(
+  (item) => !item.metadata.retired
+);
+
+export const ACTIVE_ITEM_FAMILIES: readonly ItemFamily[] = ITEM_FAMILIES.filter((family) =>
+  ACTIVE_ITEMS.some((item) => item.metadata.family === family)
+);
 
 export const STARTER_CORE_ITEM_IDS: readonly ItemId[] = [
   'item_split_prism',
@@ -1342,7 +1446,7 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_crater_shadow_lens',
       'item_low_orbit_ore_scrip',
       'item_route_ledger_spool',
-      'item_warning_siren_lattice'
+      'item_harmonic_fork_loom'
     ]
   },
   {
@@ -1399,11 +1503,11 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_ambush_insurance_stamp',
       'item_exit_toll_transponder',
       'item_convoy_receipt_printer',
-      'item_phase_breaker_subpoena',
-      'item_warning_siren_lattice',
-      'item_capital_wound_ledger',
-      'item_boss_bounty_stamp',
-      'item_telegraph_rewrite_quill'
+      'item_harmonic_fork_loom',
+      'item_plasma_seed_crucible',
+      'item_ricochet_branch_coupler',
+      'item_warhead_echo_chamber',
+      'item_crossfeed_detonator'
     ]
   },
   {
@@ -1427,8 +1531,8 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_phase_wake_suture',
       'item_prototype_vent_script',
       'item_mining_laser_transit',
-      'item_capital_wound_ledger',
-      'item_telegraph_rewrite_quill'
+      'item_warhead_echo_chamber',
+      'item_plasma_seed_crucible'
     ]
   }
 ];
@@ -1544,8 +1648,8 @@ export const ITEM_POOL_WEIGHT_PROFILES: readonly ItemPoolWeightProfileDefinition
     familyWeights: {
       'curse-relic': 3,
       'phase-graze': 1.6,
-      'heat-prototype': 1.3,
-      'boss-pressure': 1.2
+      'heat-prototype': 1.5,
+      'missile-overkill': 1.2
     },
     tagWeights: {
       curse: 2,
@@ -1575,7 +1679,7 @@ export const ITEM_POOL_WEIGHT_PROFILES: readonly ItemPoolWeightProfileDefinition
     familyWeights: {
       'missile-overkill': 1.8,
       'drone-copy': 1.5,
-      'boss-pressure': 1.4
+      'phase-graze': 1.4
     },
     tagWeights: {
       overkill: 1.8,
@@ -1602,10 +1706,11 @@ export const ITEM_POOL_WEIGHT_PROFILES: readonly ItemPoolWeightProfileDefinition
       cursed: 0.4
     },
     familyWeights: {
-      'boss-pressure': 4,
+      'laser-split': 1.6,
+      'heat-prototype': 1.5,
       'shield-revenge': 1.4,
-      'missile-overkill': 1.3,
-      'phase-graze': 1.2
+      'missile-overkill': 1.4,
+      'phase-graze': 1.3
     },
     tagWeights: {
       shield: 1.3,

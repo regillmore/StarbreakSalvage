@@ -346,7 +346,14 @@ export function createRunGenerationSaveFingerprint(
     .filter((unlockId) => !nonGenerationUnlocks.has(unlockId))
     .sort()
     .join(',') || 'fresh';
-  const upgrades = [...upgradeEffects.activeUpgradeIds].sort().join(',') || 'none';
+  const nonGenerationUpgrades = new Set<UpgradeId>([
+    'upgrade_boss_warning_lattice',
+    'upgrade_capital_relief_protocol'
+  ]);
+  const upgrades = upgradeEffects.activeUpgradeIds
+    .filter((upgradeId) => !nonGenerationUpgrades.has(upgradeId))
+    .sort()
+    .join(',') || 'none';
   return `unlocks=${unlocks}|upgrades=${upgrades}`;
 }
 

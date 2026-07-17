@@ -1,4 +1,6 @@
 import {
+  ACTIVE_ITEM_FAMILIES,
+  ACTIVE_ITEMS,
   ITEM_ARCHETYPES,
   ITEM_FAMILIES,
   ITEM_HOOKS,
@@ -7,7 +9,6 @@ import {
   ITEM_STACKING_MODES,
   ITEM_TAGS,
   ITEM_UNLOCK_TIERS,
-  ITEMS,
   REWARD_POOLS,
   type ItemFamily,
   type ItemDefinition,
@@ -31,7 +32,7 @@ import {
 const ITEM_RARITIES = ['common', 'uncommon', 'rare', 'prototype', 'cursed'] as const;
 
 export const PHASE_6_TARGET_ITEM_COUNT = 60;
-export const PHASE_6_TARGET_ITEM_FAMILIES = ITEM_FAMILIES;
+export const PHASE_6_TARGET_ITEM_FAMILIES = ACTIVE_ITEM_FAMILIES;
 export type Phase6TargetItemFamily = ItemFamily;
 
 export interface BridgeEffectAuditNote {
@@ -40,7 +41,7 @@ export interface BridgeEffectAuditNote {
 }
 
 export const BRIDGE_EFFECT_AUDIT_NOTES: readonly BridgeEffectAuditNote[] =
-  createBridgeEffectNotes(ITEMS);
+  createBridgeEffectNotes(ACTIVE_ITEMS);
 
 export interface ItemCatalogArchetypeAudit {
   readonly id: string;
@@ -83,7 +84,7 @@ export function createItemCatalogAudit(
     readonly itemFamilyGates?: readonly ItemFamilyGateDefinition[];
   } = {}
 ): ItemCatalogAudit {
-  const items = options.items ?? ITEMS;
+  const items = options.items ?? ACTIVE_ITEMS;
   const rewardPools = options.rewardPools ?? REWARD_POOLS;
   const itemUnlocks = options.itemUnlocks ?? ITEM_UNLOCKS;
   const itemFamilyGates = options.itemFamilyGates ?? ITEM_FAMILY_GATES;

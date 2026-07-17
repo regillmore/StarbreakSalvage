@@ -34,6 +34,7 @@ import {
 import { FACTIONS, type FactionDefinition } from '../../src/content/factions';
 import { HAZARD_ZONE_DEFINITIONS, type HazardZoneDefinition } from '../../src/content/hazardZones';
 import {
+  ACTIVE_ITEMS,
   ITEM_POOL_WEIGHT_PROFILES,
   ITEM_ARCHETYPES,
   ITEMS,
@@ -80,13 +81,14 @@ describe('validateContent', () => {
   it('ships the current content breadth targets', () => {
     const rewardedItemIds = new Set(REWARD_POOLS.flatMap((pool) => pool.itemIds));
     const representedArchetypes = ITEM_ARCHETYPES.filter((archetype) =>
-      ITEMS.some(
+      ACTIVE_ITEMS.some(
         (item) =>
           rewardedItemIds.has(item.id) && item.tags.some((tag) => archetype.tags.includes(tag))
       )
     );
 
-    expect(ITEMS).toHaveLength(60);
+    expect(ITEMS).toHaveLength(65);
+    expect(ACTIVE_ITEMS).toHaveLength(60);
     expect(ACT_DEFINITIONS).toHaveLength(3);
     expect(ACT_ROUTE_CONTRACTS.length).toBeGreaterThanOrEqual(13);
     expect(FACTIONS).toHaveLength(4);
@@ -1499,6 +1501,23 @@ describe('validateContent', () => {
 
     expect(errors).toContain(
       'Item item_salvage_dividend_chip must appear in at least one reward pool'
+    );
+  });
+
+  it('keeps retired compatibility items out of live reward pools', () => {
+    const errors = validateContent({
+      rewardPools: REWARD_POOLS.map((pool) =>
+        pool.id === 'combat'
+          ? { ...pool, itemIds: [...pool.itemIds, 'item_phase_breaker_subpoena'] }
+          : pool
+      )
+    });
+
+    expect(errors).toContain(
+      'Retired item item_phase_breaker_subpoena must not appear in reward pool combat'
+    );
+    expect(errors).not.toContain(
+      'Item item_phase_breaker_subpoena must appear in at least one reward pool'
     );
   });
 

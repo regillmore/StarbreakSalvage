@@ -69,14 +69,6 @@ export const ITEM_FAMILY_GATES: readonly ItemFamilyGateDefinition[] = [
     label: 'Executive Prototype Waiver',
     summary: 'permits classified heat prototypes to enter combat and vault rewards',
     lockedHint: 'Recover a larger credit float to convince sponsors to release prototypes.'
-  },
-  {
-    family: 'boss-pressure',
-    unlockId: 'unlock_boss_auditor_drill',
-    unlockTiers: ['advanced'],
-    label: 'Boss Pressure Brief',
-    summary: 'adds high-pressure boss countermeasures after a confirmed boss salvage',
-    lockedHint: 'Defeat a boss to unlock pressure analysis for future contracts.'
   }
 ];
 

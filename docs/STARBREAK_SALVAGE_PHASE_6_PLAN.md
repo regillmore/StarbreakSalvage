@@ -78,6 +78,8 @@ Exit criteria:
 
 Status: implemented by work orders 055 and 056. Reward generation now uses validated item pool weight profiles for starter, combat, shop, vault, elite, boss, faction, lunar, and route contexts. Weights combine source metadata, rarity, family, tags, route kind, sector identity, boss/faction context, contract bias, upgrade bias, and save/unlock filtering while keeping known-seed shop/reward/vault outputs reproducible. Advanced curse/relic, classified heat/prototype, and advanced boss-pressure tiers now enter future pools only after their related permanent unlocks, while fresh saves retain baseline item variety.
 
+Work order 156 supersedes the Boss Pressure portion of this historical status: that family is retired from live pools and unlock gates, with its useful boss counterplay moved into permanent scrap upgrades. Curse/relic and classified heat/prototype gating remain active.
+
 ### P6.5 - Synergy And Build Identity
 
 Turn item tags into visible build identity and richer combinations.
@@ -89,6 +91,8 @@ Exit criteria:
 - Synergies remain bounded and readable in dense combat.
 
 Status: implemented by work order 057. `BuildSynergy` defines eleven named clusters from item families and tags, including the legacy archetype lanes plus lunar, route, and boss-pressure identities. Acquisition order breaks ties deterministically, the HUD shows compact primary/secondary build identity, reward and shop cards show prospective build fit, and run summaries record the final build identity.
+
+Work order 156 leaves the Boss Pressure cluster readable only for restored legacy loadouts; the active item audit and discovery archive now expose ten live family lanes.
 
 ### P6.6 - Item Discovery And Presentation
 

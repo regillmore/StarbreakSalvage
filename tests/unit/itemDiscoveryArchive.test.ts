@@ -21,8 +21,10 @@ describe('item discovery archive', () => {
     expect(curseRelic?.hintText).not.toContain('Relic Ash Compass');
     expect(heatPrototype?.state).toBe('partial');
     expect(heatPrototype?.statusText).toBe(
-      'Core available, classified tier locked | 0/5 discovered'
+      'Core available, classified tier locked | 0/6 discovered'
     );
+    expect(model.totalFamilyCount).toBe(10);
+    expect(model.entries.some((entry) => entry.family === 'boss-pressure')).toBe(false);
   });
 
   it('shows unlocked family progress from discovery records', () => {
@@ -48,5 +50,16 @@ describe('item discovery archive', () => {
       })
     );
     expect(curseRelic?.hintText).toContain('Recorded: Relic Ash Compass');
+  });
+
+  it('does not count retired boss-pressure records from legacy saves', () => {
+    const model = createItemDiscoveryArchiveModel({
+      ...createDefaultSaveData(),
+      discoveredItemIds: ['item_phase_breaker_subpoena'],
+      discoveredItemFamilyIds: ['boss-pressure']
+    });
+
+    expect(model.discoveredItemCount).toBe(0);
+    expect(model.discoveredFamilyCount).toBe(0);
   });
 });

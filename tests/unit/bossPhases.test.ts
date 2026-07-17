@@ -6,6 +6,7 @@ import {
   updateCombatState,
   type CombatBounds
 } from '../../src/game/CombatState';
+import { resolveRunUpgradeEffects } from '../../src/game/UpgradeEffects';
 
 const bounds: CombatBounds = {
   width: 640,
@@ -86,6 +87,56 @@ describe('boss phases', () => {
     });
     expect(firstVolley.enemyProjectileCount).toBeGreaterThan(0);
     expect(firstVolley.enemyProjectileCount).toBeLessThanOrEqual(12);
+  });
+
+  it('applies permanent warning and relief upgrades at boss phase changes', () => {
+    const definition = getBossById('boss_core_wreck');
+    const finalPhase = definition.phases[2];
+
+    if (!finalPhase) {
+      throw new Error('Core Wreck is missing its late phase.');
+    }
+
+    const state = createCombatState(bounds, 'PERMANENT-BOSS-RELIEF', {
+      bossId: definition.id,
+      bossSpawnAtSeconds: 0,
+      skipEnemyWaves: true,
+      bossPhaseUpgradeEffects: resolveRunUpgradeEffects([
+        'upgrade_boss_warning_lattice',
+        'upgrade_capital_relief_protocol'
+      ]).bossPhase
+    });
+    const boss = state.boss;
+
+    if (!boss) {
+      throw new Error('Core Wreck did not spawn.');
+    }
+
+    state.player.specialCharge = 0;
+    state.projectiles.push({
+      id: 777,
+      owner: 'enemy',
+      x: bounds.width / 2,
+      y: bounds.height / 2,
+      vx: 0,
+      vy: 0,
+      radius: 4,
+      damage: 1,
+      ttl: 2,
+      tags: [],
+      procDepth: 0
+    });
+    boss.hull = boss.maxHull * 0.28;
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
+
+    expect(state.boss?.phaseIndex).toBe(2);
+    expect(state.boss?.currentTelegraphDuration).toBeCloseTo(
+      definition.telegraphSeconds * finalPhase.telegraphMultiplier + 0.2
+    );
+    expect(state.boss?.attackCooldown).toBeGreaterThan(0.65);
+    expect(state.player.specialCharge).toBeCloseTo(0.12);
+    expect(state.projectiles.some((projectile) => projectile.owner === 'enemy')).toBe(false);
   });
 });
 

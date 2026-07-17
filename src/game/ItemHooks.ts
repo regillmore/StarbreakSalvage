@@ -189,7 +189,9 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_lane_splitter_chisel',
     'item_wake_missile_abacus',
     'item_sidecar_drone_bay',
-    'item_signal_clone_stamp'
+    'item_signal_clone_stamp',
+    'item_harmonic_fork_loom',
+    'item_warhead_echo_chamber'
   ],
   onProjectileSpawn: [
     'item_chain_arc_capacitor',
@@ -198,7 +200,9 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_phase_anchor_spool',
     'item_plasma_bloom_filter',
     'item_arc_window_invoice',
-    'item_heat_signature_loop'
+    'item_heat_signature_loop',
+    'item_plasma_seed_crucible',
+    'item_ricochet_branch_coupler'
   ],
   onEnemyKilled: [
     'item_chain_arc_capacitor',
@@ -211,7 +215,8 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_relic_index_codex',
     'item_salvage_dividend_chip',
     'item_excess_warhead_clause',
-    'item_boss_bounty_stamp'
+    'item_boss_bounty_stamp',
+    'item_crossfeed_detonator'
   ],
   onPlayerHit: [
     'item_shield_dynamo',
@@ -493,6 +498,35 @@ function applyOnProjectileSpawn(
         damage: payload.projectile.damage * 1.05,
         ttl: payload.projectile.ttl + 0.18,
         tags: addTags(payload.projectile.tags, ['heat'])
+      }
+    };
+  }
+
+  if (
+    itemId === 'item_plasma_seed_crucible' &&
+    hasAnyTag(payload.projectile.tags, ['arc', 'split', 'phase', 'ricochet', 'drone', 'missile'])
+  ) {
+    return {
+      projectile: {
+        ...payload.projectile,
+        damage: payload.projectile.damage * 1.16,
+        radius: payload.projectile.radius + 1,
+        ttl: payload.projectile.ttl + 0.12,
+        tags: addTags(payload.projectile.tags, ['plasma', 'heat'])
+      }
+    };
+  }
+
+  if (
+    itemId === 'item_ricochet_branch_coupler' &&
+    hasAnyTag(payload.projectile.tags, ['split', 'drone'])
+  ) {
+    return {
+      projectile: {
+        ...payload.projectile,
+        ttl: payload.projectile.ttl + 0.55,
+        tags: addTags(payload.projectile.tags, ['ricochet']),
+        ricochetBounces: (payload.projectile.ricochetBounces ?? 0) + 1
       }
     };
   }
@@ -787,6 +821,59 @@ function applyOnFire(
     };
   }
 
+  if (itemId === 'item_harmonic_fork_loom' && payload.volleyIndex % 3 === 0) {
+    const outerProjectiles = [...payload.projectiles]
+      .sort((left, right) => Math.abs(right.vx) - Math.abs(left.vx))
+      .slice(0, 2);
+
+    return {
+      ...payload,
+      projectiles: [
+        ...payload.projectiles,
+        ...outerProjectiles.map((projectile, index) => {
+          const side = index === 0 ? -1 : 1;
+          return {
+            ...projectile,
+            x: projectile.x + side * 12,
+            vx: -projectile.vx + side * 54,
+            damage: Math.max(0.35, projectile.damage * 0.52),
+            radius: Math.max(3, projectile.radius * 0.78),
+            tags: addTags(projectile.tags, ['laser', 'split']),
+            procDepth: projectile.procDepth + 1
+          };
+        })
+      ]
+    };
+  }
+
+  if (itemId === 'item_warhead_echo_chamber' && payload.volleyIndex % 4 === 0) {
+    const seedProjectile = payload.projectiles.reduce<ProjectileBlueprint | null>(
+      (heaviest, projectile) =>
+        !heaviest || projectile.damage > heaviest.damage ? projectile : heaviest,
+      null
+    );
+
+    if (!seedProjectile) {
+      return payload;
+    }
+
+    return {
+      ...payload,
+      projectiles: [
+        ...payload.projectiles,
+        {
+          ...seedProjectile,
+          vy: seedProjectile.vy * 0.72,
+          damage: Math.max(0.7, seedProjectile.damage * 0.78),
+          radius: seedProjectile.radius + 2,
+          ttl: seedProjectile.ttl + 0.5,
+          tags: addTags(seedProjectile.tags, ['missile', 'overkill']),
+          procDepth: seedProjectile.procDepth + 1
+        }
+      ]
+    };
+  }
+
   return payload;
 }
 
@@ -905,6 +992,22 @@ function applyOnEnemyKilled(
       ...payload,
       bonusSalvage: payload.bonusSalvage + 1
     };
+  }
+
+  if (itemId === 'item_crossfeed_detonator') {
+    const circuitTraitCount = new Set(
+      payload.projectileTags.filter((tag) =>
+        ['arc', 'drone', 'missile', 'phase', 'ricochet', 'split'].includes(tag)
+      )
+    ).size;
+
+    if (circuitTraitCount >= 2) {
+      return {
+        ...payload,
+        blastDamage: payload.blastDamage + 0.55,
+        arcDamage: payload.arcDamage + 0.45
+      };
+    }
   }
 
   return payload;

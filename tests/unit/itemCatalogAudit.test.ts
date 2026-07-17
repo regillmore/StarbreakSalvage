@@ -21,8 +21,8 @@ describe('item catalog audit', () => {
       cursed: 3
     });
     expect(audit.hookCounts).toEqual({
-      onFire: 12,
-      onProjectileSpawn: 7,
+      onFire: 14,
+      onProjectileSpawn: 9,
       onEnemyKilled: 11,
       onPlayerHit: 6,
       onPickupCollected: 5,
@@ -33,28 +33,28 @@ describe('item catalog audit', () => {
       onRouteChosen: 4,
       onShopEntered: 2,
       onRewardGenerated: 3,
-      onBossPhaseChanged: 5,
+      onBossPhaseChanged: 1,
       onEnvironmentObjectDestroyed: 1
     });
     expect(audit.tagCounts).toMatchObject({
-      credit: 16,
-      phase: 12,
-      plasma: 8,
+      credit: 14,
+      phase: 9,
+      plasma: 9,
       overkill: 4,
       relic: 2
     });
     expect(audit.familyCounts).toEqual({
-      'laser-split': 6,
-      'missile-overkill': 6,
-      'drone-copy': 6,
+      'laser-split': 7,
+      'missile-overkill': 7,
+      'drone-copy': 7,
       'shield-revenge': 5,
       'credit-shop': 6,
       'curse-relic': 6,
-      'phase-graze': 5,
-      'heat-prototype': 5,
+      'phase-graze': 6,
+      'heat-prototype': 6,
       'lunar-surface': 5,
       'route-economy': 5,
-      'boss-pressure': 5
+      'boss-pressure': 0
     });
     expect(audit.implementationStatusCounts).toEqual({
       live: 60,
@@ -62,8 +62,8 @@ describe('item catalog audit', () => {
       planned: 0
     });
     expect(audit.unlockTierCounts).toEqual({
-      baseline: 52,
-      advanced: 7,
+      baseline: 53,
+      advanced: 6,
       unlock: 1
     });
     expect(audit.stackingCounts).toEqual({
@@ -116,7 +116,6 @@ describe('item catalog audit', () => {
       route: 6
     });
     expect(audit.lockedItemIds).toEqual([
-      'item_capital_wound_ledger',
       'item_curse_eater_gasket',
       'item_curse_interest_bond',
       'item_cursed_hull_plate',
@@ -148,13 +147,12 @@ describe('item catalog audit', () => {
       'phase-graze',
       'heat-prototype',
       'lunar-surface',
-      'route-economy',
-      'boss-pressure'
+      'route-economy'
     ]);
     expect(getImplementedHookItemIds('onFire')).toContain('item_split_prism');
     expect(getImplementedHookItemIds('onGraze')).toContain('item_near_miss_tachometer');
-    expect(getImplementedHookItemIds('onBossPhaseChanged')).toContain(
-      'item_telegraph_rewrite_quill'
+    expect(getImplementedHookItemIds('onProjectileSpawn')).toContain(
+      'item_plasma_seed_crucible'
     );
   });
 });

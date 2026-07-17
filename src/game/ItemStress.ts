@@ -38,9 +38,11 @@ export const ITEM_STORM_ITEM_IDS: readonly ItemId[] = [
   'item_market_echo_locator',
   'item_relic_ash_compass',
   'item_oathbound_deflector',
-  'item_phase_breaker_subpoena',
-  'item_warning_siren_lattice',
-  'item_capital_wound_ledger'
+  'item_harmonic_fork_loom',
+  'item_plasma_seed_crucible',
+  'item_ricochet_branch_coupler',
+  'item_warhead_echo_chamber',
+  'item_crossfeed_detonator'
 ];
 
 export interface ItemHookPressureEntry {

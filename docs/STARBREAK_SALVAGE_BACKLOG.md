@@ -2224,3 +2224,16 @@ Acceptance:
 Status:
 
 - Implemented in work order 155. `shouldOfferSectorCompletionReward` suppresses only the authored victory sector, and `GameApp` routes that completed gate directly into the work-order-153 terminal handoff instead of mounting `RewardScene`.
+
+### BL23 - Circuit rotation and permanent boss support
+
+Acceptance:
+
+- Retire Boss Pressure from live rewards, weighting, discovery, and unlock gates while keeping old IDs loadable by existing snapshots.
+- Preserve useful boss telegraph, delay, special-charge, and late-phase relief mechanics as permanent scrap upgrades outside the run circuit.
+- Add five ungated, mechanically distinct weapon upgrades that reward ordered circuit construction without unbounded proc growth.
+- Keep 60 active items, deterministic known-seed reward behavior, save compatibility, and static release behavior validated.
+
+Status:
+
+- Implemented in work order 156. Five compatibility-only Boss Pressure definitions remain outside the active catalog, Boss Warning Lattice and Capital Relief Protocol carry forward the useful permanent support, and five new live circuit items refill starter/combat/vault rotation with bounded fork, transform, ricochet, echo, and kill-discharge mechanics.

@@ -499,4 +499,85 @@ describe('item synergies', () => {
     expect(payload.specialChargeGain).toBeGreaterThan(0.35);
     expect(payload.clearEnemyProjectiles).toBe(true);
   });
+
+  it('builds the five replacement weapon upgrades into bounded circuit chains', () => {
+    const firePayload = applyItemHooks(
+      'onFire',
+      [
+        { itemId: 'item_split_prism', acquisitionOrder: 0 },
+        { itemId: 'item_harmonic_fork_loom', acquisitionOrder: 1 },
+        { itemId: 'item_warhead_echo_chamber', acquisitionOrder: 2 }
+      ],
+      {
+        volleyIndex: 12,
+        projectiles: [baseProjectile]
+      }
+    );
+    const spawnPayload = applyItemHooks(
+      'onProjectileSpawn',
+      [
+        { itemId: 'item_chain_arc_capacitor', acquisitionOrder: 0 },
+        { itemId: 'item_plasma_seed_crucible', acquisitionOrder: 1 },
+        { itemId: 'item_ricochet_branch_coupler', acquisitionOrder: 2 }
+      ],
+      {
+        projectile: {
+          ...baseProjectile,
+          tags: ['laser', 'split']
+        }
+      }
+    );
+    const killPayload = applyItemHooks(
+      'onEnemyKilled',
+      [{ itemId: 'item_crossfeed_detonator', acquisitionOrder: 0 }],
+      {
+        projectileTags: ['arc', 'missile'],
+        overkillDamage: 0,
+        bonusSalvage: 0,
+        blastDamage: 0,
+        arcDamage: 0
+      }
+    );
+
+    expect(firePayload.projectiles).toHaveLength(6);
+    expect(firePayload.projectiles.filter((shot) => shot.tags.includes('split')).length).toBe(4);
+    expect(firePayload.projectiles.some((shot) => shot.tags.includes('overkill'))).toBe(true);
+    expect(spawnPayload.projectile.tags).toEqual(
+      expect.arrayContaining(['arc', 'plasma', 'heat', 'ricochet'])
+    );
+    expect(spawnPayload.projectile.damage).toBeGreaterThan(1);
+    expect(spawnPayload.projectile.ricochetBounces).toBe(1);
+    expect(killPayload.blastDamage).toBe(0.55);
+    expect(killPayload.arcDamage).toBe(0.45);
+  });
+
+  it('makes Plasma Seed Crucible depend on an earlier projectile trait', () => {
+    const chainThenCrucible: ItemInstance[] = [
+      {
+        itemId: 'item_chain_arc_capacitor',
+        acquisitionOrder: 0,
+        socket: { componentId: 'a', socketIndex: 0, circuitOrder: 0 }
+      },
+      {
+        itemId: 'item_plasma_seed_crucible',
+        acquisitionOrder: 1,
+        socket: { componentId: 'a', socketIndex: 1, circuitOrder: 1 }
+      }
+    ];
+    const crucibleThenChain = chainThenCrucible.map((item, index) => ({
+      ...item,
+      socket: { ...item.socket!, circuitOrder: index === 0 ? 1 : 0 }
+    }));
+    const first = applyItemHooks('onProjectileSpawn', chainThenCrucible, {
+      projectile: baseProjectile
+    });
+    const second = applyItemHooks('onProjectileSpawn', crucibleThenChain, {
+      projectile: baseProjectile
+    });
+
+    expect(first.projectile.tags).toEqual(expect.arrayContaining(['arc', 'plasma', 'heat']));
+    expect(first.projectile.damage).toBeGreaterThan(second.projectile.damage);
+    expect(second.projectile.tags).toContain('arc');
+    expect(second.projectile.tags).not.toContain('heat');
+  });
 });

@@ -1007,6 +1007,10 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
 
       const item = items.find((candidate) => candidate.id === itemId);
 
+      if (item?.metadata.retired) {
+        errors.push(`Retired item ${item.id} must not appear in reward pool ${pool.id}`);
+      }
+
       if (
         item &&
         !allowedSources.some((source) => item.metadata.sources.includes(source as ItemSource))
@@ -1021,7 +1025,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   }
 
   for (const item of items) {
-    if (!rewardedItemIds.has(item.id)) {
+    if (!item.metadata.retired && !rewardedItemIds.has(item.id)) {
       errors.push(`Item ${item.id} must appear in at least one reward pool`);
     }
   }

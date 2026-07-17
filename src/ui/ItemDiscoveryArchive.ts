@@ -1,4 +1,9 @@
-import { ITEM_FAMILIES, ITEMS, type ItemDefinition, type ItemFamily } from '../content/items';
+import {
+  ACTIVE_ITEM_FAMILIES,
+  ACTIVE_ITEMS,
+  type ItemDefinition,
+  type ItemFamily
+} from '../content/items';
 import { getUnlockById } from '../content/unlocks';
 import type { SaveData } from '../core/saveData';
 import { getItemFamilyGate, isItemFamilyTierUnlocked } from '../game/UnlockGates';
@@ -42,15 +47,23 @@ const ITEM_FAMILY_LABELS: Readonly<Record<ItemFamily, string>> = {
 
 export function createItemDiscoveryArchiveModel(
   saveData: SaveData,
-  items: readonly ItemDefinition[] = ITEMS
+  items: readonly ItemDefinition[] = ACTIVE_ITEMS
 ): ItemDiscoveryArchiveModel {
-  const discoveredItemIds = new Set(saveData.discoveredItemIds);
-  const discoveredFamilyIds = new Set(saveData.discoveredItemFamilyIds);
-  const entries = ITEM_FAMILIES.map((family) =>
+  const activeItemIds = new Set(items.map((item) => item.id));
+  const activeFamilies = ACTIVE_ITEM_FAMILIES.filter((family) =>
+    items.some((item) => item.metadata.family === family)
+  );
+  const discoveredItemIds = new Set(
+    saveData.discoveredItemIds.filter((itemId) => activeItemIds.has(itemId))
+  );
+  const discoveredFamilyIds = new Set(
+    saveData.discoveredItemFamilyIds.filter((family) => activeFamilies.includes(family))
+  );
+  const entries = activeFamilies.map((family) =>
     createItemFamilyArchiveEntry(family, saveData, items, discoveredItemIds, discoveredFamilyIds)
   );
   const discoveredFamilyCount = new Set([
-    ...saveData.discoveredItemFamilyIds,
+    ...discoveredFamilyIds,
     ...entries.filter((entry) => entry.discoveredItemCount > 0).map((entry) => entry.family)
   ]).size;
 
@@ -58,7 +71,7 @@ export function createItemDiscoveryArchiveModel(
     discoveredItemCount: discoveredItemIds.size,
     totalItemCount: items.length,
     discoveredFamilyCount,
-    totalFamilyCount: ITEM_FAMILIES.length,
+    totalFamilyCount: activeFamilies.length,
     entries
   };
 }

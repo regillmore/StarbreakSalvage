@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
 import type { UpgradeId } from '../../src/content/upgrades';
-import { generateRunSkeleton, type RunSkeleton } from '../../src/game/Generation';
+import {
+  createRunGenerationSaveFingerprint,
+  generateRunSkeleton,
+  type RunSkeleton
+} from '../../src/game/Generation';
 import { createRunSession, getCurrentSector } from '../../src/game/RunSession';
 import { generateSectorRewardChoices } from '../../src/game/SectorRewards';
 import { generateShopInventory } from '../../src/game/Shops';
+import { resolveRunUpgradeEffects } from '../../src/game/UpgradeEffects';
 
 const UPGRADED_SAVE_IDS: readonly UpgradeId[] = [
   'upgrade_contract_survey_rig',
@@ -112,6 +117,30 @@ describe('run upgrade effects', () => {
     expect(freshRun.sectors).toHaveLength(27);
     expect(freshRun.sectors[0]?.routeOptions.every((route) => !route.intelHint)).toBe(true);
     expect(createRunSession(freshRun, contract).itemInstances.length).toBeGreaterThan(0);
+  });
+
+  it('projects permanent boss counterplay without occupying a run circuit', () => {
+    const warning = resolveRunUpgradeEffects(['upgrade_boss_warning_lattice']);
+    const relief = resolveRunUpgradeEffects([
+      'upgrade_boss_warning_lattice',
+      'upgrade_capital_relief_protocol'
+    ]);
+
+    expect(warning.bossPhase).toEqual({
+      attackCooldownSeconds: 0.15,
+      telegraphSeconds: 0.2,
+      specialChargeGain: 0,
+      clearEnemyProjectilesAtPhase: null
+    });
+    expect(relief.bossPhase).toEqual({
+      attackCooldownSeconds: 0.15,
+      telegraphSeconds: 0.2,
+      specialChargeGain: 0.12,
+      clearEnemyProjectilesAtPhase: 2
+    });
+    expect(createRunGenerationSaveFingerprint([], relief)).toBe(
+      createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
+    );
   });
 });
 

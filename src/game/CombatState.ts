@@ -55,6 +55,7 @@ import {
 import { getItemNames, type ItemInstance } from './Rewards';
 import { createWeaponProjectileBlueprints } from './WeaponProjectiles';
 import type { MissionObjectiveResultSnapshot } from './ObjectiveDirector';
+import type { BossPhaseUpgradeEffects } from './UpgradeEffects';
 import type { CrewCombatProfile } from './CrewCommand';
 import {
   MAX_COMBINED_ALLIES,
@@ -396,6 +397,7 @@ export interface CombatState {
   readonly weapon: WeaponDefinition;
   items: readonly ItemInstance[];
   readonly engineering: EngineeringCombatProfile | null;
+  readonly bossPhaseUpgradeEffects: BossPhaseUpgradeEffects | null;
   procTelemetry: CombinedProcTelemetry;
   volleyIndex: number;
   stats: CombatStats;
@@ -594,6 +596,7 @@ export interface CombatStateOptions {
   readonly setPieceOwnerFactionId?: FactionId;
   readonly looseCurrencyPlan?: LooseCurrencyPlan | null;
   readonly engineering?: EngineeringCombatProfile | null;
+  readonly bossPhaseUpgradeEffects?: BossPhaseUpgradeEffects | null;
   readonly crew?: CrewCombatProfile | null;
   readonly fleet?: FleetCombatProfile | null;
 }
@@ -730,6 +733,7 @@ export function createCombatState(
     weapon,
     items: options.items ?? [],
     engineering: options.engineering ?? null,
+    bossPhaseUpgradeEffects: options.bossPhaseUpgradeEffects ?? null,
     procTelemetry: {
       budget: options.engineering?.procBudget ?? BASE_COMBINED_PROC_BUDGET,
       totalApplied: 0,
@@ -3704,15 +3708,19 @@ function refreshBossPhase(state: CombatState, boss: BossState): void {
   );
   state.telegraphs = [];
 
+  const upgradeEffects = state.bossPhaseUpgradeEffects;
+  const clearEnemyProjectilesAtPhase = upgradeEffects?.clearEnemyProjectilesAtPhase ?? null;
+
   const phasePayload = applyCombatHooks(state, 'onBossPhaseChanged', {
     bossId: boss.bossId,
     previousPhaseIndex,
     phaseIndex,
     phaseLabel: phase.label,
-    attackCooldownSeconds: boss.attackCooldown,
-    telegraphSeconds: boss.currentTelegraphDuration,
-    specialChargeGain: 0,
-    clearEnemyProjectiles: false
+    attackCooldownSeconds: boss.attackCooldown + (upgradeEffects?.attackCooldownSeconds ?? 0),
+    telegraphSeconds: boss.currentTelegraphDuration + (upgradeEffects?.telegraphSeconds ?? 0),
+    specialChargeGain: upgradeEffects?.specialChargeGain ?? 0,
+    clearEnemyProjectiles:
+      clearEnemyProjectilesAtPhase !== null && phaseIndex >= clearEnemyProjectilesAtPhase
   });
 
   boss.attackCooldown = Math.max(0.1, phasePayload.attackCooldownSeconds);

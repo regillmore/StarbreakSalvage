@@ -1476,6 +1476,7 @@ export class GameplayScene implements Scene {
       setPiecePlan,
       setPieceOwnerFactionId: this.campaignInfluence?.setPieceOwnerFactionId,
       looseCurrencyPlan: this.getLooseCurrencyPlan(),
+      bossPhaseUpgradeEffects: this.run.upgradeEffects.bossPhase,
       crew: this.crewProfile,
       fleet: this.fleetProfile
     });

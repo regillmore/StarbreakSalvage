@@ -121,3 +121,29 @@ Status: implemented. `ActPlan.shouldOfferSectorCompletionReward` makes the autho
 Focused boundary and snapshot coverage confirms Act I and Act II finales still offer rewards, the Act III pre-terminal sector still offers one, only Act III 5A suppresses it, and restored terminal extraction remains a one-shot victory handoff.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 101 Vitest files and 626 tests, the production build, all 15 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 932.21 kB minified/254.27 kB gzip initial JavaScript and unchanged 79.56/15.90 kB CSS, increases of 0.10/0.01 kB JavaScript over work order 154. The existing 500 kB chunk notice remains; no dependency, reward table, RNG stream, mission/save/snapshot schema, or warning threshold changed.
+
+## Work order 156 - Circuit rotation and permanent boss support
+
+Goal: retire the low-value Boss Pressure reward category after the ordered-circuit pivot, preserve its worthwhile counterplay outside run circuits, and refill the active item rotation with five weapon-chain upgrades.
+
+Prompt:
+
+> Remove all five Boss Pressure items from live starter, combat, vault, weighted, discovery, unlock, and stress rotation without breaking restored runs that already contain their IDs. Move useful phase-warning and late-phase-relief behavior into purchasable permanent scrap upgrades. Add five distinct, ungated, circuit-friendly weapon items with bounded deterministic hooks and clear ordered-chain interactions. Keep the active catalog at 60 items, validate retirement rules, refresh deterministic reward snapshots and catalog documentation, and run release checks.
+
+Acceptance criteria:
+
+- No fresh or progressed reward surface offers a Boss Pressure item, and the active archive has ten family lanes with no Boss Pressure entry.
+- Legacy snapshots containing any retired Boss Pressure ID can still resolve its definition and original hook behavior.
+- Boss Warning Lattice and Capital Relief Protocol are visible in the Upgrade Bay and apply phase warning/delay plus special-charge/late-phase projectile relief without occupying circuit slots.
+- Harmonic Fork Loom, Plasma Seed Crucible, Ricochet Branch Coupler, Warhead Echo Chamber, and Crossfeed Detonator are baseline-unlocked, live, pool-valid, and mechanically distinct.
+- Ordered hooks remain bounded: fork/echo effects copy finite shots, projectile transformers respect upstream traits, and the kill payoff requires two circuit traits.
+- Boss-only permanent upgrades do not perturb the seeded content-generation fingerprint.
+- Catalog validation, discovery counts, unlock copy, item-storm fixtures, known-seed reward/economy snapshots, saves, static hosting, and accessibility remain coherent.
+
+Status: implemented. The five former Boss Pressure definitions are marked retired and retained only for snapshot lookup and hook compatibility. `ACTIVE_ITEMS` and `ACTIVE_ITEM_FAMILIES` now drive the 60-item live audit and ten-family archive, while validation rejects retired reward entries and requires pool coverage only for active items. Boss Pressure weighting and its family gate are gone.
+
+Two new permanent scrap upgrades carry the worthwhile counterplay into every run: Boss Warning Lattice extends phase warnings and delays the next boss attack, while Capital Relief Protocol grants phase-change special charge and clears hostile shots in late phases. Combat receives their resolved profile directly, and generation fingerprints explicitly ignore these non-generative upgrades.
+
+The replacement rotation adds a periodic outer-shot fork, an upstream-trait plasma transformer, a split/drone ricochet transformer, a heaviest-shot warhead echo, and a two-trait kill discharge. Focused coverage exercises their order sensitivity, caps, active-pool placement, legacy retirement, permanent boss runtime behavior, and save-fingerprint isolation.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 101 Vitest files and 632 tests, the production build, all 15 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 936.97 kB minified/255.36 kB gzip initial JavaScript and unchanged 79.56/15.90 kB CSS, increases of 4.76/1.09 kB JavaScript over work order 155. The existing 500 kB chunk notice remains; no dependency, RNG algorithm, save/snapshot schema, static base path, or warning threshold changed.

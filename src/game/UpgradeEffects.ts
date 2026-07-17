@@ -2,6 +2,13 @@ import type { ItemTag } from '../content/items';
 import { UPGRADES, type UpgradeId } from '../content/upgrades';
 import type { RewardContextKind } from './Rewards';
 
+export interface BossPhaseUpgradeEffects {
+  readonly attackCooldownSeconds: number;
+  readonly telegraphSeconds: number;
+  readonly specialChargeGain: number;
+  readonly clearEnemyProjectilesAtPhase: number | null;
+}
+
 export interface RunUpgradeEffects {
   readonly purchasedUpgradeIds: readonly UpgradeId[];
   readonly activeUpgradeIds: readonly UpgradeId[];
@@ -15,6 +22,7 @@ export interface RunUpgradeEffects {
   readonly rewardChoiceBonus: number;
   readonly rewardBiasTags: readonly ItemTag[];
   readonly seedSurvey: boolean;
+  readonly bossPhase: BossPhaseUpgradeEffects;
 }
 
 export function resolveRunUpgradeEffects(
@@ -26,6 +34,8 @@ export function resolveRunUpgradeEffects(
   const hasContractSurvey = hasUpgrade('upgrade_contract_survey_rig');
   const hasMarketDecoder = hasUpgrade('upgrade_market_decoder');
   const hasRelicDossier = hasUpgrade('upgrade_relic_pattern_dossier');
+  const hasBossWarning = hasUpgrade('upgrade_boss_warning_lattice');
+  const hasCapitalRelief = hasUpgrade('upgrade_capital_relief_protocol');
 
   return {
     purchasedUpgradeIds: activeUpgrades.map((upgrade) => upgrade.id),
@@ -39,7 +49,13 @@ export function resolveRunUpgradeEffects(
     shopBiasTags: hasMarketDecoder ? ['credit', 'heat'] : [],
     rewardChoiceBonus: hasRelicDossier ? 1 : 0,
     rewardBiasTags: hasRelicDossier ? ['relic', 'curse', 'phase'] : [],
-    seedSurvey: hasUpgrade('upgrade_seed_cartographer')
+    seedSurvey: hasUpgrade('upgrade_seed_cartographer'),
+    bossPhase: {
+      attackCooldownSeconds: hasBossWarning ? 0.15 : 0,
+      telegraphSeconds: hasBossWarning ? 0.2 : 0,
+      specialChargeGain: hasCapitalRelief ? 0.12 : 0,
+      clearEnemyProjectilesAtPhase: hasCapitalRelief ? 2 : null
+    }
   };
 }
 
@@ -68,6 +84,14 @@ export function getRunUpgradeDebugLabels(effects: RunUpgradeEffects): string[] {
 
   if (effects.seedSurvey) {
     labels.push('seed map');
+  }
+
+  if (effects.bossPhase.telegraphSeconds > 0) {
+    labels.push('boss warning');
+  }
+
+  if (effects.bossPhase.clearEnemyProjectilesAtPhase !== null) {
+    labels.push('capital relief');
   }
 
   return labels;
