@@ -56,6 +56,7 @@ import {
 } from './InterActJunction';
 import { generateStartingItemLoadout, type ItemInstance } from './Rewards';
 import { autoFitItemSocket, autoFitItemSockets, getActiveFittedItems } from './ItemSockets';
+import type { ShopStockLedger } from './ShopStock';
 import type {
   AppliedRouteOutcome,
   RouteCombatModifier,
@@ -195,6 +196,7 @@ export interface RunSessionState {
   boarding: BoardingCampaignState;
   factionFronts: FactionFrontState;
   shopRerollsBySector: Record<number, number>;
+  shopStockByRoll?: ShopStockLedger;
   lastCombatResult: CombatRunResult | null;
   objectiveHistory: MissionObjectiveOutcomeRecord[];
   engineering: EngineeringState;
@@ -261,6 +263,7 @@ export function createRunSession(
     boarding: createBoardingCampaignState(run.boardingCampaign),
     factionFronts: createFactionFrontState(run.factionFronts),
     shopRerollsBySector: {},
+    shopStockByRoll: {},
     lastCombatResult: null,
     objectiveHistory: [],
     engineering,

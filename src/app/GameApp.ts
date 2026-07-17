@@ -71,6 +71,7 @@ import {
   getCurrentSector,
   getEffectiveShipStats,
   getRouteCreditReward,
+  getShopRerollCount,
   hasInterActChoiceForSourceAct,
   incrementShopRerollCount,
   recordSectorCombatResult,
@@ -90,6 +91,7 @@ import {
   stowCarrierCargo,
   type RunSessionState
 } from '../game/RunSession';
+import { depleteShopStockItem, getAvailableShopStockItem } from '../game/ShopStock';
 import { getSaveRecordSectorCount } from '../game/RunOutcome';
 import { getActiveFittedItems } from '../game/ItemSockets';
 import { createExpeditionDebugState, createExpeditionPathReadModel } from '../game/ExpeditionGraph';
@@ -1951,10 +1953,17 @@ export class GameApp {
   }
 
   private buyShopItem(itemId: ItemId, price: number): boolean {
+    const sector = getCurrentSector(this.currentRun, this.runSession);
+    const rerollCount = getShopRerollCount(this.runSession, sector.index);
+    if (!getAvailableShopStockItem(this.runSession, sector.index, rerollCount, itemId, price)) {
+      return false;
+    }
+
     if (!spendCredits(this.runSession, price)) {
       return false;
     }
 
+    depleteShopStockItem(this.runSession, sector.index, rerollCount, itemId, price);
     addItemToSession(this.runSession, itemId);
     return true;
   }
@@ -1963,7 +1972,7 @@ export class GameApp {
     const sector = getCurrentSector(this.currentRun, this.runSession);
     const rerollCost = getShopRerollCost(
       createActEconomyProfile(sector),
-      this.runSession.shopRerollsBySector[sector.index] ?? 0
+      getShopRerollCount(this.runSession, sector.index)
     );
 
     if (!spendCredits(this.runSession, rerollCost)) {

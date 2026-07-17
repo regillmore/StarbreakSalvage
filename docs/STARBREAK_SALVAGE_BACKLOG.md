@@ -2237,3 +2237,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 156. Five compatibility-only Boss Pressure definitions remain outside the active catalog, Boss Warning Lattice and Capital Relief Protocol carry forward the useful permanent support, and five new live circuit items refill starter/combat/vault rotation with bounded fork, transform, ricochet, echo, and kill-discharge mechanics.
+
+### BL24 - Depleting seeded shop racks
+
+Acceptance:
+
+- Each sector/reroll combination generates one fixed shop rack; purchases leave disabled empty placeholders instead of immediately drawing replacement items.
+- Leaving and revisiting preserves slot depletion, item order, prices, and source labels for the current roll.
+- Paying the established reroll cost advances deterministic stock and fully repopulates the rack while excluding owned items.
+- Empty placeholders keep the grid legible and accessible across desktop and narrow layouts without becoming focus or purchase targets.
+- Depletion survives run checkpoints, malformed stock is rejected, and older v12 snapshots without the optional ledger remain compatible.
+
+Status:
+
+- Implemented in work order 157. `ShopStock` persists bounded seeded racks by sector and reroll, `ShopScene` renders purchased positions as numbered empty slots, and the purchase path validates live stock before spending. Explicit rerolls alone open a fresh full rack; deterministic, snapshot, responsive Chromium, and production-preview coverage protect the complete flow.

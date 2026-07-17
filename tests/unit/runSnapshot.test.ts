@@ -8,9 +8,12 @@ import {
   advanceSector,
   createRunSession,
   dispatchMissionEvent,
+  getOwnedItemIds,
   resetMissionForCurrentSector
 } from '../../src/game/RunSession';
 import { createMissionSchedule, getMissionBranchOptions } from '../../src/game/MissionDirector';
+import { depleteShopStockItem, initializeShopStockForRoll } from '../../src/game/ShopStock';
+import { generateShopInventory } from '../../src/game/Shops';
 import {
   RUN_SNAPSHOT_MAX_BYTES,
   RUN_SNAPSHOT_STORAGE_KEY,
@@ -74,6 +77,51 @@ describe('RunSnapshot', () => {
       sectorNumber: 1,
       target: 'gameplay'
     });
+  });
+
+  it('round-trips depleted shop stock without changing the v12 checkpoint schema', () => {
+    const run = generateRunSkeleton('SNAPSHOT-SHOP-STOCK');
+    const contract = run.contracts[0]!;
+    const session = createRunSession(run, contract);
+    const sector = run.sectors[0]!;
+    const inventory = generateShopInventory({
+      seed: sector.shopSeed,
+      sectorIndex: sector.index,
+      rerollCount: 0,
+      biasTags: contract.itemBias,
+      excludeItemIds: getOwnedItemIds(session)
+    });
+    const stock = initializeShopStockForRoll(
+      session,
+      sector.index,
+      0,
+      inventory.map((item) => ({
+        slot: item.slot,
+        itemId: item.item.id,
+        price: item.price,
+        sourceHint: item.sourceHint,
+        depleted: false
+      }))
+    );
+    const purchased = stock[0]!;
+    expect(depleteShopStockItem(session, sector.index, 0, purchased.itemId, purchased.price)).toBe(
+      true
+    );
+    const snapshot = createRunSnapshot({
+      run,
+      contract,
+      session,
+      target: 'sectorTransition',
+      label: 'Shop stock checkpoint'
+    });
+
+    const restored = restoreRunSnapshot(importRunSnapshot(exportRunSnapshot(snapshot)));
+
+    expect(restored.session.shopStockByRoll?.[`${sector.index}:0`]).toEqual([
+      { ...purchased, depleted: true },
+      ...stock.slice(1)
+    ]);
+    expect(restored.snapshot.version).toBe(12);
   });
 
   it('stores suspended mission state separately from permanent progression', () => {

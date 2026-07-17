@@ -1,6 +1,6 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene, SceneDebugState } from '../app/Scene';
-import type { ItemId } from '../content/items';
+import { getItemById, type ItemId } from '../content/items';
 import { createActEconomyProfile, getActEconomyShopReadout } from '../game/ActEconomy';
 import { formatProspectiveBuildSynergy } from '../game/BuildSynergy';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
@@ -12,6 +12,7 @@ import {
   getShopRerollCount,
   type RunSessionState
 } from '../game/RunSession';
+import { getShopStockForRoll, initializeShopStockForRoll } from '../game/ShopStock';
 import { generateShopInventory, getShopRerollCost } from '../game/Shops';
 import { createEngineeringCombatProfile } from '../game/Foundry';
 import { getMarketDecoderReadout, getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
@@ -78,27 +79,40 @@ export class ShopScene implements Scene {
       ...carrier.rewardBiasTags
     ];
     const engineering = createEngineeringCombatProfile(this.session.engineering);
-    const inventory = generateShopInventory({
-      seed: sector.shopSeed,
-      sectorIndex: sector.index,
-      rerollCount,
-      biasTags: [...this.contract.itemBias, ...shopBiasTags],
-      excludeItemIds: getOwnedItemIds(this.session),
-      priceDiscount,
-      count: 4 + stockBonus,
-      unlockedIds: this.run.unlockedIds,
-      itemInstances: getActiveFittedItems(
-        this.session.itemInstances,
-        this.session.engineering.committed
-      ),
-      sectorId: sector.sectorId,
-      sectorRole: sector.sectorName,
-      bossFactionId: sector.bossFactionId,
-      bossGate: sector.objective.bossRequired,
-      actEconomy,
-      engineeringHooks: engineering.hooks,
-      procBudget: engineering.procBudget
-    });
+    const stock =
+      getShopStockForRoll(this.session, sector.index, rerollCount) ??
+      initializeShopStockForRoll(
+        this.session,
+        sector.index,
+        rerollCount,
+        generateShopInventory({
+          seed: sector.shopSeed,
+          sectorIndex: sector.index,
+          rerollCount,
+          biasTags: [...this.contract.itemBias, ...shopBiasTags],
+          excludeItemIds: getOwnedItemIds(this.session),
+          priceDiscount,
+          count: 4 + stockBonus,
+          unlockedIds: this.run.unlockedIds,
+          itemInstances: getActiveFittedItems(
+            this.session.itemInstances,
+            this.session.engineering.committed
+          ),
+          sectorId: sector.sectorId,
+          sectorRole: sector.sectorName,
+          bossFactionId: sector.bossFactionId,
+          bossGate: sector.objective.bossRequired,
+          actEconomy,
+          engineeringHooks: engineering.hooks,
+          procBudget: engineering.procBudget
+        }).map((item) => ({
+          slot: item.slot,
+          itemId: item.item.id,
+          price: item.price,
+          sourceHint: item.sourceHint,
+          depleted: false
+        }))
+      );
     const rerollCost = getShopRerollCost(actEconomy, rerollCount);
     const actEconomyReadout = getActEconomyShopReadout(actEconomy);
     const shell = document.createElement('main');
@@ -140,23 +154,31 @@ export class ShopScene implements Scene {
     const shopGrid = document.createElement('div');
     shopGrid.className = 'shop-grid';
 
-    for (const item of inventory) {
+    for (const stockItem of stock) {
+      if (stockItem.depleted) {
+        shopGrid.append(createEmptyShopSlot(stockItem.slot));
+        continue;
+      }
+
+      const item = getItemById(stockItem.itemId);
       const buyButton = document.createElement('button');
       buyButton.className = 'choice-card shop-card';
       buyButton.type = 'button';
-      buyButton.disabled = this.session.credits < item.price;
+      buyButton.dataset.testid = `shop-slot-${stockItem.slot}`;
+      buyButton.dataset.state = 'available';
+      buyButton.disabled = this.session.credits < stockItem.price;
       buyButton.addEventListener('click', () => {
-        if (this.onBuyItem(item.item.id, item.price)) {
+        if (this.onBuyItem(item.id, stockItem.price)) {
           this.enter();
         }
       });
 
       appendItemCardContent(
         buyButton,
-        createItemCardViewModel(item.item, {
-          sourceLabel: item.sourceHint,
-          price: item.price,
-          synergyText: formatProspectiveBuildSynergy(this.session.itemInstances, item.item.id)
+        createItemCardViewModel(item, {
+          sourceLabel: stockItem.sourceHint,
+          price: stockItem.price,
+          synergyText: formatProspectiveBuildSynergy(this.session.itemInstances, item.id)
         })
       );
       shopGrid.append(buyButton);
@@ -227,4 +249,29 @@ export class ShopScene implements Scene {
       upgradeEffects: getRunUpgradeDebugLabels(this.run.upgradeEffects)
     };
   }
+}
+
+function createEmptyShopSlot(slot: number): HTMLButtonElement {
+  const emptySlot = document.createElement('button');
+  emptySlot.className = 'choice-card shop-card shop-card-empty';
+  emptySlot.type = 'button';
+  emptySlot.disabled = true;
+  emptySlot.dataset.testid = `shop-slot-${slot}`;
+  emptySlot.dataset.state = 'empty';
+  emptySlot.setAttribute('aria-label', `Inventory slot ${slot + 1}, empty`);
+
+  const label = document.createElement('span');
+  label.className = 'shop-empty-label';
+  label.textContent = `Inventory Slot ${String(slot + 1).padStart(2, '0')}`;
+
+  const title = document.createElement('strong');
+  title.className = 'shop-empty-title';
+  title.textContent = 'Empty Slot';
+
+  const note = document.createElement('span');
+  note.className = 'shop-empty-note';
+  note.textContent = 'Purchased. Reroll to restock.';
+
+  emptySlot.append(label, title, note);
+  return emptySlot;
 }

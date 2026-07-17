@@ -147,3 +147,28 @@ Two new permanent scrap upgrades carry the worthwhile counterplay into every run
 The replacement rotation adds a periodic outer-shot fork, an upstream-trait plasma transformer, a split/drone ricochet transformer, a heaviest-shot warhead echo, and a two-trait kill discharge. Focused coverage exercises their order sensitivity, caps, active-pool placement, legacy retirement, permanent boss runtime behavior, and save-fingerprint isolation.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 101 Vitest files and 632 tests, the production build, all 15 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 936.97 kB minified/255.36 kB gzip initial JavaScript and unchanged 79.56/15.90 kB CSS, increases of 4.76/1.09 kB JavaScript over work order 155. The existing 500 kB chunk notice remains; no dependency, RNG algorithm, save/snapshot schema, static base path, or warning threshold changed.
+
+## Work order 157 - Depleting seeded shop racks
+
+Goal: make each generated shop a finite local inventory whose purchased cards stay empty until the player explicitly pays to reroll.
+
+Prompt:
+
+> Stop regenerating shop inventory after each purchase. Persist one fixed seeded rack per sector and reroll count, replace purchased cards with clearly labeled disabled empty slots, and preserve that depletion when the player leaves and revisits the service. Keep reroll as the sole restock action: it should spend the established cost, advance the deterministic roll, and present a full new rack that excludes items already owned. Preserve pricing, stock modifiers, item hooks, accessibility, responsive layout, old v12 snapshots, and static hosting. Add deterministic, snapshot, and Chromium coverage and run release checks.
+
+Acceptance criteria:
+
+- Buying an item depletes exactly its original slot; no replacement item appears during the purchase redraw or after leaving and revisiting the same shop.
+- Empty slots retain the shop grid position, identify their inventory number, explain that reroll restocks them, and cannot receive focus or another purchase.
+- Other cards retain their original seeded item, price, provenance, and order for the life of that roll.
+- Reroll remains credit-gated and creates a full deterministic rack under the next reroll count, excluding all items the run already owns.
+- Depleted racks survive run checkpoints. Pre-work-order-157 v12 snapshots without a stock ledger remain loadable, while malformed ledgers are rejected.
+- Desktop and narrow layouts avoid horizontal overflow; keyboard focus advances to an available card, existing shop modifiers/hooks remain authoritative, and static hosting remains compatible.
+
+Status: implemented. `ShopStock` owns a bounded per-sector/per-reroll stock ledger containing slot identity, item, price, provenance, and depletion state. `ShopScene` generates that ledger only on the first visit to a roll, then renders it directly. `GameApp` verifies the requested item and price against live stock before spending credits, marks the slot depleted, and leaves reroll as the only operation that advances to a fresh ledger.
+
+Purchased cards become disabled dashed `Empty Slot` placeholders with stable test IDs, slot numbers, and explicit restock copy. Desktop browser inspection measured all four post-purchase cards at the same 215-by-301-pixel geometry; the 390-pixel layout collapses cleanly to one column with no horizontal overflow. Reroll restores four available cards and browser logs remain clear.
+
+The optional `shopStockByRoll` session field keeps snapshot v12 backward-compatible. Snapshot validation bounds ledger count and rack size, verifies sector/reroll identity, slot and item uniqueness, prices, item IDs, provenance, and depletion flags. Deterministic coverage proves reopen persistence, repeat-purchase rejection, owned-item exclusion, and full reroll restock.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 101 Vitest files and 634 tests, the production build, all 16 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 939.72 kB minified/256.13 kB gzip initial JavaScript and 80.09/16.00 kB CSS, increases of 2.75/0.77 kB JavaScript and 0.53/0.10 kB CSS over work order 156. The existing 500 kB chunk notice remains; no dependency, RNG algorithm, snapshot version, static base path, or warning threshold changed.

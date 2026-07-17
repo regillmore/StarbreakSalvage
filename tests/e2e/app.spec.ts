@@ -1516,6 +1516,49 @@ test('keeps contract live-fire comparison responsive and updates the seeded igni
   expect(wide.horizontalOverflow).toBe(false);
 });
 
+test('depletes fixed shop slots until reroll restocks the rack', async ({ page }) => {
+  await page.goto('./?debug=1&seed=SHOP-DEPLETION-SMOKE');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
+  const droneCard = page.getByTestId('contract-card-ship_drone_chaplain');
+  const selectDrone = droneCard.getByRole('button', { name: 'Select' });
+  if ((await selectDrone.count()) > 0) await selectDrone.click();
+  await page.getByRole('button', { name: 'Launch Contract' }).click();
+  await expect(page.getByTestId('mission-briefing')).toBeVisible();
+
+  await page.getByTestId('open-shop').click();
+  await page.getByTestId('navigation-destination-action').click();
+  await expect(page.getByRole('heading', { name: 'Shop' })).toBeVisible();
+
+  const shopSlots = page.locator('[data-testid^="shop-slot-"]');
+  const initialSlotCount = await shopSlots.count();
+  expect(initialSlotCount).toBeGreaterThanOrEqual(4);
+  const affordableCards = page.locator('.shop-card[data-state="available"]:not(:disabled)');
+  const affordablePrices = await affordableCards.evaluateAll((cards) =>
+    cards.map((card) => Number(/(\d+) credits/i.exec(card.textContent ?? '')?.[1] ?? Infinity))
+  );
+  const purchaseIndex = affordablePrices.findIndex((price) => price <= 14);
+  expect(purchaseIndex).toBeGreaterThanOrEqual(0);
+  const purchasedSlot = affordableCards.nth(purchaseIndex);
+  const purchasedTestId = await purchasedSlot.getAttribute('data-testid');
+  await purchasedSlot.click();
+
+  expect(await shopSlots.count()).toBe(initialSlotCount);
+  const emptySlot = page.getByTestId(purchasedTestId!);
+  await expect(emptySlot).toHaveAttribute('data-state', 'empty');
+  await expect(emptySlot).toContainText('Empty Slot');
+  await expect(emptySlot).toContainText('Reroll to restock');
+
+  await page.getByRole('button', { name: 'Leave Shop' }).click();
+  await page.getByTestId('open-shop').click();
+  await page.getByTestId('navigation-destination-action').click();
+  await expect(page.getByTestId(purchasedTestId!)).toHaveAttribute('data-state', 'empty');
+
+  await page.getByRole('button', { name: /Reroll -/ }).click();
+  await expect(page.locator('.shop-card[data-state="empty"]')).toHaveCount(0);
+  await expect(shopSlots).toHaveCount(initialSlotCount);
+});
+
 async function forceCompleteSectorAndEnterNext(
   page: Page,
   nextSectorName: string,

@@ -402,6 +402,7 @@ function validateSnapshotSession(
   if (validateFactionFrontState(run.factionFronts, session.factionFronts).length > 0) {
     throw new Error('Run snapshot faction-front state is invalid.');
   }
+  validateShopState(session, run);
   if (validateCrewArcState(run.crewArcs, session.crewArcs).length > 0) {
     throw new Error('Run snapshot crew-arc state is invalid.');
   }
@@ -546,6 +547,73 @@ function validateSnapshotSession(
     }
   } catch {
     throw new Error('Run snapshot committed engineering or item socket state is invalid.');
+  }
+}
+
+function validateShopState(session: RunSessionState, run: RunSkeleton): void {
+  if (
+    !isRecord(session.shopRerollsBySector) ||
+    Object.entries(session.shopRerollsBySector).some(
+      ([sectorIndex, rerollCount]) =>
+        !isNonNegativeInteger(Number(sectorIndex)) ||
+        Number(sectorIndex) >= run.sectors.length ||
+        !isNonNegativeInteger(rerollCount)
+    )
+  ) {
+    throw new Error('Run snapshot shop reroll state is invalid.');
+  }
+  if (session.shopStockByRoll === undefined) return;
+  if (!isRecord(session.shopStockByRoll)) {
+    throw new Error('Run snapshot shop stock state is invalid.');
+  }
+
+  const stockEntries = Object.entries(session.shopStockByRoll);
+  if (stockEntries.length > 256) {
+    throw new Error('Run snapshot shop stock state is invalid.');
+  }
+  for (const [key, stock] of stockEntries) {
+    const match = /^(\d+):(\d+)$/.exec(key);
+    const sectorIndex = Number(match?.[1]);
+    const rerollCount = Number(match?.[2]);
+    if (
+      !match ||
+      !isNonNegativeInteger(sectorIndex) ||
+      sectorIndex >= run.sectors.length ||
+      !isNonNegativeInteger(rerollCount) ||
+      rerollCount > (session.shopRerollsBySector[sectorIndex] ?? 0) ||
+      !Array.isArray(stock) ||
+      stock.length < 1 ||
+      stock.length > 32
+    ) {
+      throw new Error('Run snapshot shop stock state is invalid.');
+    }
+
+    const slots = new Set<number>();
+    const itemIds = new Set<string>();
+    for (const entry of stock) {
+      if (
+        !isRecord(entry) ||
+        !isNonNegativeInteger(entry.slot) ||
+        entry.slot >= stock.length ||
+        slots.has(entry.slot) ||
+        typeof entry.itemId !== 'string' ||
+        itemIds.has(entry.itemId) ||
+        !isNonNegativeInteger(entry.price) ||
+        entry.price < 2 ||
+        typeof entry.sourceHint !== 'string' ||
+        entry.sourceHint.length > 160 ||
+        typeof entry.depleted !== 'boolean'
+      ) {
+        throw new Error('Run snapshot shop stock state is invalid.');
+      }
+      try {
+        getItemById(entry.itemId as Parameters<typeof getItemById>[0]);
+      } catch {
+        throw new Error('Run snapshot shop stock state is invalid.');
+      }
+      slots.add(entry.slot);
+      itemIds.add(entry.itemId);
+    }
   }
 }
 

@@ -6,6 +6,7 @@ import {
   addItemToSession,
   createRunSession,
   getCurrentSector,
+  getOwnedItemIds,
   getShopRerollCount,
   incrementShopRerollCount,
   recordRouteChoice,
@@ -13,6 +14,12 @@ import {
   spendCredits
 } from '../../src/game/RunSession';
 import { generateSectorRewardChoices } from '../../src/game/SectorRewards';
+import {
+  depleteShopStockItem,
+  getAvailableShopStockItem,
+  getShopStockForRoll,
+  initializeShopStockForRoll
+} from '../../src/game/ShopStock';
 import { generateShopInventory, SHOP_REROLL_COST } from '../../src/game/Shops';
 
 const TEST_SEEDS = ['LASER-TAX-404', 'ORBITAL-JUNK-PROPHET', 'STARBREAK-SMOKE'] as const;
@@ -91,6 +98,79 @@ describe('sector route, reward, and shop loop generation', () => {
     }).map((item) => item.item.id);
 
     expect(rerolledInventory).not.toEqual(initialInventory);
+  });
+
+  it('keeps purchased rack slots empty until reroll creates fresh stock', () => {
+    const run = generateRunSkeleton('SHOP-DEPLETION-SMOKE');
+    const contract = getFirstContract(run);
+    const session = createRunSession(run, contract);
+    const sector = getCurrentSector(run, session);
+    session.credits = 100;
+
+    const openingInventory = generateShopInventory({
+      seed: sector.shopSeed,
+      sectorIndex: sector.index,
+      rerollCount: 0,
+      biasTags: contract.itemBias,
+      excludeItemIds: getOwnedItemIds(session)
+    });
+    const openingStock = initializeShopStockForRoll(
+      session,
+      sector.index,
+      0,
+      openingInventory.map((item) => ({
+        slot: item.slot,
+        itemId: item.item.id,
+        price: item.price,
+        sourceHint: item.sourceHint,
+        depleted: false
+      }))
+    );
+    const purchase = openingStock[1]!;
+
+    expect(
+      getAvailableShopStockItem(session, sector.index, 0, purchase.itemId, purchase.price)
+    ).toEqual(purchase);
+    expect(spendCredits(session, purchase.price)).toBe(true);
+    expect(depleteShopStockItem(session, sector.index, 0, purchase.itemId, purchase.price)).toBe(
+      true
+    );
+    addItemToSession(session, purchase.itemId);
+
+    const reopenedStock = getShopStockForRoll(session, sector.index, 0)!;
+    expect(reopenedStock).toHaveLength(openingStock.length);
+    expect(reopenedStock.map((entry) => entry.itemId)).toEqual(
+      openingStock.map((entry) => entry.itemId)
+    );
+    expect(reopenedStock[purchase.slot]?.depleted).toBe(true);
+    expect(
+      getAvailableShopStockItem(session, sector.index, 0, purchase.itemId, purchase.price)
+    ).toBeNull();
+
+    const rerollCount = incrementShopRerollCount(session, sector.index);
+    const rerolledInventory = generateShopInventory({
+      seed: sector.shopSeed,
+      sectorIndex: sector.index,
+      rerollCount,
+      biasTags: contract.itemBias,
+      excludeItemIds: getOwnedItemIds(session)
+    });
+    const rerolledStock = initializeShopStockForRoll(
+      session,
+      sector.index,
+      rerollCount,
+      rerolledInventory.map((item) => ({
+        slot: item.slot,
+        itemId: item.item.id,
+        price: item.price,
+        sourceHint: item.sourceHint,
+        depleted: false
+      }))
+    );
+
+    expect(rerolledStock).toHaveLength(openingStock.length);
+    expect(rerolledStock.every((entry) => !entry.depleted)).toBe(true);
+    expect(rerolledStock.map((entry) => entry.itemId)).not.toContain(purchase.itemId);
   });
 
   it('records route, combat payout, and shop purchases in the session', () => {

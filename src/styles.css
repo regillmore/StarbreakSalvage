@@ -2302,6 +2302,47 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
   cursor: not-allowed;
 }
 
+.shop-card-empty,
+.contract-themed-panel .shop-card-empty {
+  place-content: center;
+  justify-items: center;
+  min-width: 0;
+  border-style: dashed;
+  color: rgba(219, 232, 238, 0.58);
+  text-align: center;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      rgba(124, 247, 255, 0.025) 0,
+      rgba(124, 247, 255, 0.025) 8px,
+      transparent 8px,
+      transparent 18px
+    ),
+    rgba(4, 8, 20, 0.56);
+  cursor: default;
+}
+
+.shop-empty-label {
+  color: rgba(124, 247, 255, 0.56);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.shop-empty-title {
+  color: rgba(248, 251, 255, 0.72);
+  font-size: 1.1rem;
+  text-transform: uppercase;
+}
+
+.shop-empty-note {
+  max-width: 12rem;
+  color: rgba(219, 232, 238, 0.54);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
 .apex-dossier-panel {
   width: min(96vw, 1180px);
   max-height: min(95vh, 940px);
