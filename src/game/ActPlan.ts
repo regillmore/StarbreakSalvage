@@ -328,6 +328,13 @@ export function getActBoundaryHandoffAfterSector(
   return victoryHandoff ? { kind: 'victory', ...victoryHandoff } : null;
 }
 
+export function shouldOfferSectorCompletionReward(
+  acts: readonly RunActPlan[],
+  completedSectorIndex: number
+): boolean {
+  return getVictoryHandoffAfterSector(acts, completedSectorIndex) === null;
+}
+
 export function createRunActSaveContext(
   acts: readonly RunActPlan[],
   sectorsCleared: number

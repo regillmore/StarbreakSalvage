@@ -43,6 +43,7 @@ import {
   getActBoundaryHandoffAfterSector,
   getFrontierChoiceHandoff,
   getInterActTransitionHandoff,
+  shouldOfferSectorCompletionReward,
   type RunActPlan
 } from '../game/ActPlan';
 import { createActEconomyProfile } from '../game/ActEconomy';
@@ -1373,7 +1374,11 @@ export class GameApp {
       if (
         !completedStage.optional &&
         completedStage.operationalRole === 'gate' &&
-        nextStage.id === schedule.branchStageId
+        nextStage.id === schedule.branchStageId &&
+        shouldOfferSectorCompletionReward(
+          this.currentRun.acts,
+          this.runSession.currentSectorIndex
+        )
       ) {
         this.showReward();
       } else {

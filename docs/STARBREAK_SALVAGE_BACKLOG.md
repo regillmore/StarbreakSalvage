@@ -2191,13 +2191,13 @@ Status:
 
 Acceptance:
 
-- Completing and claiming the Act III 5A convergence reward settles its default branch and concludes the run without exposing a paired terminal optional or route plot.
+- Completing Act III 5A settles its default branch and concludes the run without exposing a terminal reward, paired optional, or route plot.
 - Fresh branch flow and restored extraction-stage snapshots share the same terminal classification and reach the existing victory summary once.
 - Act I and Act II boundary behavior, ordinary layer 1-4 optionals, rewards, summaries, saves, snapshots, determinism, accessibility, and static hosting remain valid.
 
 Status:
 
-- Implemented in work order 153. `getActBoundaryHandoffAfterSector` now includes the authored Act III `victory` transition, so the existing branch and extraction guards bypass terminal constellation projection and hand final completion to the unchanged run-exhaustion summary path.
+- Implemented in work order 153 and moved ahead of reward presentation in work order 155. `getActBoundaryHandoffAfterSector` identifies the authored Act III `victory` transition, while the terminal reward policy bypasses `RewardScene` before the existing branch and extraction guards hand final completion to the unchanged run-exhaustion summary path.
 
 ### BL21 - Standard proximity-mine blast damage
 
@@ -2211,3 +2211,16 @@ Acceptance:
 Status:
 
 - Implemented in work order 154. The proximity-mine definition now uses the standard one-unit blast payload instead of its original three-unit payload, with fixed-step runtime coverage for the exact player hull and telemetry result.
+
+### BL22 - Rewardless Act III victory debrief
+
+Acceptance:
+
+- Required completion of Act III 5A reaches `Victory Confirmed` without presenting or granting a final circuit/credit reward.
+- Act I, Act II, and ordinary Act III sector rewards remain unchanged.
+- The established terminal branch, relief, extraction, run completion, summary, unlock, save, and snapshot paths execute once.
+- Combat payout, route history, reward RNG elsewhere, accessibility, determinism, and static hosting remain coherent.
+
+Status:
+
+- Implemented in work order 155. `shouldOfferSectorCompletionReward` suppresses only the authored victory sector, and `GameApp` routes that completed gate directly into the work-order-153 terminal handoff instead of mounting `RewardScene`.

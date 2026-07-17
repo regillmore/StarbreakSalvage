@@ -4,7 +4,8 @@ import {
   getActBoundaryHandoffAfterSector,
   getInterActHandoffAfterSector,
   getInterActTransitionHandoff,
-  getVictoryHandoffAfterSector
+  getVictoryHandoffAfterSector,
+  shouldOfferSectorCompletionReward
 } from '../../src/game/ActPlan';
 import { generateRunSkeleton } from '../../src/game/Generation';
 import {
@@ -89,6 +90,10 @@ describe('InterActJunction', () => {
     expect(getVictoryHandoffAfterSector(run.acts, actThree.endSectorIndex)).toEqual({
       sourceAct: actThree
     });
+    expect(shouldOfferSectorCompletionReward(run.acts, actOne.endSectorIndex)).toBe(true);
+    expect(shouldOfferSectorCompletionReward(run.acts, actTwo.endSectorIndex)).toBe(true);
+    expect(shouldOfferSectorCompletionReward(run.acts, actThree.endSectorIndex - 1)).toBe(true);
+    expect(shouldOfferSectorCompletionReward(run.acts, actThree.endSectorIndex)).toBe(false);
   });
 
   it('applies a selected choice once and exposes explicit Act II effects', () => {

@@ -99,3 +99,25 @@ Status: implemented. The Anchor Mine's shared blast payload is now one damage un
 Focused runtime coverage confirms a complete fixed-step fuse records one detonation, one damage taken, and exactly one hull lost by an unmodified player while a standard one-hull enemy remains vulnerable to the same indiscriminate blast.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 101 Vitest files and 626 tests, the production build, all 15 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build remains 932.11 kB minified/254.26 kB gzip initial JavaScript and 79.56/15.90 kB CSS. The existing 500 kB chunk notice remains; no dependency, runtime path, RNG stream, save/snapshot schema, or warning threshold changed.
+
+## Work order 155 - Rewardless Act III victory debrief
+
+Goal: remove the strategically irrelevant circuit choice after the final Act III operation and carry the completed run directly into its victory debrief.
+
+Prompt:
+
+> Skip the ordinary sector reward after required completion of Act III 5A. Settle its default branch, relief, extraction, and run completion through the existing work-order-153 handoff, then open `Victory Confirmed` without mounting `Choose Reward`. Preserve rewards at Act I and Act II boundaries and every ordinary Act III sector, along with combat payout, summary, unlock, save, snapshot, deterministic, and accessibility behavior. Cover the terminal reward policy and run checks.
+
+Acceptance criteria:
+
+- Completing required Act III 5A proceeds directly to `Victory Confirmed`; no item or credit circuit reward is presented or granted.
+- The terminal default branch, relief, extraction, completion, summary, unlock, and permanent-save reducers remain authoritative and execute once.
+- Act I and Act II convergence rewards and Act III layer 1-4 rewards remain available.
+- A resumed final-operation gameplay checkpoint follows the same policy when combat completes; existing branch/extraction compatibility checkpoints still reach the debrief.
+- Reward generation elsewhere, combat payout, route history, RNG, saves, snapshots, accessibility, and static hosting remain compatible.
+
+Status: implemented. `ActPlan.shouldOfferSectorCompletionReward` makes the authored victory boundary the sole rewardless sector completion. `GameApp` consults that policy before mounting `RewardScene`; the Act III 5A branch therefore falls straight through the existing automatic terminal branch, relief, extraction, and victory-summary path.
+
+Focused boundary and snapshot coverage confirms Act I and Act II finales still offer rewards, the Act III pre-terminal sector still offers one, only Act III 5A suppresses it, and restored terminal extraction remains a one-shot victory handoff.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 101 Vitest files and 626 tests, the production build, all 15 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 932.21 kB minified/254.27 kB gzip initial JavaScript and unchanged 79.56/15.90 kB CSS, increases of 0.10/0.01 kB JavaScript over work order 154. The existing 500 kB chunk notice remains; no dependency, reward table, RNG stream, mission/save/snapshot schema, or warning threshold changed.
