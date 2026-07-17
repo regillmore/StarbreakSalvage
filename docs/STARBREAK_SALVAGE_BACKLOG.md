@@ -2198,3 +2198,16 @@ Acceptance:
 Status:
 
 - Implemented in work order 153. `getActBoundaryHandoffAfterSector` now includes the authored Act III `victory` transition, so the existing branch and extraction guards bypass terminal constellation projection and hand final completion to the unchanged run-exhaustion summary path.
+
+### BL21 - Standard proximity-mine blast damage
+
+Acceptance:
+
+- One Anchor Mine blast applies one ordinary damage unit to the player before existing engineering mitigation.
+- Player invulnerability, hit hooks, damage telemetry, and objectives continue to use the shared damage path.
+- Indiscriminate enemy, boss, ally, and set-piece damage plus telegraphed mine chaining remain intact.
+- Trigger geometry, blast radius, fuses, toughness, placement, rendering, accessibility, determinism, saves, and snapshots remain compatible.
+
+Status:
+
+- Implemented in work order 154. The proximity-mine definition now uses the standard one-unit blast payload instead of its original three-unit payload, with fixed-step runtime coverage for the exact player hull and telemetry result.

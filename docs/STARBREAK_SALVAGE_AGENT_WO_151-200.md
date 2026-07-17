@@ -78,3 +78,24 @@ Status: implemented. `ActPlan.getActBoundaryHandoffAfterSector` now represents a
 Focused act-boundary and snapshot regressions cover ordinary pre-terminal sectors, all three transition kinds, a restored Act III 5A extraction checkpoint, one-shot extraction settlement, and final run exhaustion. No new player-facing scene, route outcome, RNG draw, snapshot field, or gameplay path was introduced.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 101 Vitest files and 625 tests, the production build, all 15 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 932.11 kB minified/254.26 kB gzip initial JavaScript and unchanged 79.56/15.90 kB CSS, increases of 0.17/0.01 kB JavaScript over work order 152. The existing 500 kB chunk notice remains; no dependency, content RNG, mission schema, save/snapshot version, or warning threshold changed.
+
+## Work order 154 - Standard proximity-mine blast damage
+
+Goal: bring the destructible pink mine's blast in line with the ordinary one-hit damage language used by combat and active hazards.
+
+Prompt:
+
+> Reduce Anchor Mine detonations from three hull damage to one standard damage unit. Preserve proximity, damaged, and chain fuse behavior; blast radius; indiscriminate actor and set-piece interaction; destructibility; deterministic placement; telegraphing; accessibility; and rendering. Add focused runtime coverage for the player-facing damage result and run checks.
+
+Acceptance criteria:
+
+- A player caught in one proximity-mine blast loses one ordinary damage unit before engineering mitigation, not three.
+- The normal player-damage path remains authoritative for invulnerability, hooks, telemetry, and run objectives.
+- Mine blasts still damage enemies, bosses, allies, and set-piece components and can still chain nearby mines through telegraphed fuses.
+- Mine toughness, trigger and blast geometry, fuse timings, placement, visuals, accessibility, RNG, saves, and snapshots remain unchanged.
+
+Status: implemented. The Anchor Mine's shared blast payload is now one damage unit, matching ordinary hostile projectiles, contacts, and active hazards. Detonations continue to dispatch through the existing player, enemy, boss, ally, and set-piece damage paths; only the authored payload changed.
+
+Focused runtime coverage confirms a complete fixed-step fuse records one detonation, one damage taken, and exactly one hull lost by an unmodified player while a standard one-hull enemy remains vulnerable to the same indiscriminate blast.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 101 Vitest files and 626 tests, the production build, all 15 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build remains 932.11 kB minified/254.26 kB gzip initial JavaScript and 79.56/15.90 kB CSS. The existing 500 kB chunk notice remains; no dependency, runtime path, RNG stream, save/snapshot schema, or warning threshold changed.

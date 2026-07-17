@@ -158,7 +158,7 @@ describe('environment object runtime', () => {
   it('arms on proximity, telegraphs through a fixed-step fuse, and damages enemies', () => {
     const plan = createPlan([{ definitionId: 'proximity_mine', x: 320, y: 562 }]);
     const state = createState('MINE-PROXIMITY-SEED', plan);
-    state.enemies.push(createEnemy(390, 562, 2));
+    state.enemies.push(createEnemy(390, 562, 1));
 
     updateCombatState(
       state,
@@ -180,6 +180,24 @@ describe('environment object runtime', () => {
     expect(state.stats.enemiesDestroyed).toBe(1);
     expect(state.enemies).toHaveLength(0);
     expect(state.effects.some((effect) => effect.kind === 'chainReaction')).toBe(true);
+  });
+
+  it('applies one standard player-damage unit per proximity mine blast', () => {
+    const plan = createPlan([{ definitionId: 'proximity_mine', x: 320, y: 562 }]);
+    const state = createState('MINE-PLAYER-DAMAGE-SEED', plan);
+    const startingHull = state.player.hull;
+
+    updateCombatState(
+      state,
+      { movement: { x: 0, y: 0 }, fire: false, scrollDistance: 40 },
+      0,
+      bounds
+    );
+    advanceCombat(state, 9);
+
+    expect(state.stats.proximityMinesDetonated).toBe(1);
+    expect(state.stats.damageTaken).toBe(1);
+    expect(state.player.hull).toBe(startingHull - 1);
   });
 
   it('arms quickly from explosions while remaining tough against ordinary fire', () => {

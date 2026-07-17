@@ -454,7 +454,7 @@ export const ENVIRONMENT_OBJECT_DEFINITIONS: readonly EnvironmentObjectDefinitio
       damagedFuseSeconds: 0.48,
       chainFuseSeconds: 0.24,
       blastRadius: 104,
-      blastDamage: 3
+      blastDamage: 1
     }
   }
 ];
