@@ -412,8 +412,13 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(upgradeCircuit.getByRole('heading', { name: 'Signal Circuit' })).toBeVisible();
   await expect(upgradeCircuit).toContainText('2/3 LIVE / 1 OPEN');
   await expect(upgradeCircuit).toContainText(/CORE -> .* -> WEAPON/);
+  await expect(upgradeCircuit).toContainText('Every upgrade fits every conduit');
   await expect(page.getByTestId('foundry-circuit-extension')).toHaveCount(3);
-  await expect(page.getByTestId('foundry-circuit-extension')).toHaveText([/\+1/, /\+1/, /\+1/]);
+  await expect(page.getByTestId('foundry-circuit-extension')).toHaveText([
+    /\+1.*UNIVERSAL/,
+    /\+1.*UNIVERSAL/,
+    /\+1.*UNIVERSAL/
+  ]);
   const activeCircuitNodes = upgradeCircuit.locator(
     '.foundry-circuit-node:not(.foundry-circuit-node-empty)'
   );
@@ -437,6 +442,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await activeCircuitNodes.first().getByRole('button', { name: 'Eject' }).click();
   await expect(page.getByTestId('foundry-status')).toContainText(/upgrade rack/i);
   const rackUpgrade = upgradeCircuit.locator('.foundry-upgrade-card').first();
+  await expect(rackUpgrade.getByRole('button', { name: /Append .* to the circuit/ })).toBeEnabled();
   await rackUpgrade.getByRole('button', { name: /Append .* to the circuit/ }).click();
   await expect(page.getByTestId('foundry-status')).toContainText(/appended/i);
   await expect(activeCircuitNodes).toHaveCount(2);

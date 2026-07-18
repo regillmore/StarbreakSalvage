@@ -1955,7 +1955,7 @@ Acceptance:
 
 Status:
 
-- Implemented in work order 132 and refitted in work order 145. Every module still provides a native and flex conduit, but physical component/socket coordinates are now automatic routing state rather than a player-facing placement puzzle. Hardpoint Control exposes one ordered ship-level signal rail with append, eject, and earlier/later controls; installed components advertise compact capacity/channel extensions, and cumulative stage output feeds the existing live-fire preview. `ItemSockets` preserves explicit circuit order, deterministically rematches live items across compatible remaining conduits after engineering changes, and leaves deliberately racked items inactive. The snapshot-v12 shape remains compatible while exact reconciliation rejects duplicate order, ghost components, invalid compatibility, and duplicate physical claims. Six previously weak or placeholder upgrades still form order-sensitive phase, split, clone, ricochet, arc, curse, overkill, revenge, blast, and salvage interactions; only live circuit items reach combat, route, reward, shop, or preview hooks.
+- Implemented in work order 132, refitted in work order 145, and made universally routable in work order 159. Physical component/socket coordinates are automatic routing state rather than a player-facing placement puzzle, and native channel labels are affinity metadata rather than item gates. Hardpoint Control exposes one ordered ship-level signal rail with universal append, eject, and earlier/later controls; installed components advertise compact capacity extensions, and cumulative stage output feeds the existing live-fire preview. `ItemSockets` preserves explicit circuit order, deterministically rematches live items across any remaining conduits after engineering changes, and leaves deliberately racked items inactive. The snapshot-v12 shape remains compatible while exact reconciliation rejects duplicate order, ghost components, insufficient capacity, and duplicate physical claims. Only live circuit items reach combat, route, reward, shop, or preview hooks.
 
 ### BL2 - Procedural carrier navigation hubs
 
@@ -2137,13 +2137,13 @@ Status:
 Acceptance:
 
 - Contract-issued components provide one circuit slot, Act I salvage components provide two, and Act II/III salvage components provide three.
-- Contract slots are universal; work order 150 fits one ignition core and intentionally leaves two open. Recovered slot types preserve component identity while adding flex capacity, and quality or route rarity do not alter the count.
-- Initial fitting maximizes compatible typed-channel use, while replacement reconciliation preserves live order and deliberate rack choices.
+- Contract slots are universal; work order 150 fits one ignition core and intentionally leaves two open. Recovered channel labels preserve component affinity while every conduit accepts every upgrade, and quality or route rarity do not alter the count.
+- Initial fitting uses deterministic installed-component order, while replacement reconciliation preserves live order and deliberate rack choices up to the remaining total capacity.
 - Hardpoint Control, circuit summaries, snapshots, deterministic generation, accessibility, and static hosting share the same capacity projection.
 
 Status:
 
-- Implemented in work order 149. `ComponentCircuit` derives one/two/three slot tiers from the existing component source and acquisition sector, so no snapshot migration is required. Item routing and Hardpoint presentation consume that projection directly, and starter auto-fit now uses the bounded circuit matcher to avoid greedy channel conflicts.
+- Implemented in work order 149 and flattened in work order 159. `ComponentCircuit` derives one/two/three slot tiers from the existing component source and acquisition sector, so no snapshot migration is required. Item routing and Hardpoint presentation consume that projection directly; all projected slots are universal for fitting while their internal affinity labels remain available for component identity.
 
 ### BL17 - Shared seeded ignition cores
 
@@ -2265,3 +2265,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 158. `MissileFlight` supplies the closed-form motor integral and preview solver, `CombatState` applies it to friendly missile actors, and `CanvasRenderer` replaces their generic orb presentation with velocity-aligned powered ordnance. Shared attack previews consume the same travel model, so item-generated missiles and starter-rack missiles remain visually and mechanically consistent.
+
+### BL26 - Universal signal conduits
+
+Acceptance:
+
+- Every upgrade item can occupy every installed circuit conduit; module-native channel labels never disable append or eject a live stage during reconciliation.
+- Installed components still define limited one/two/three-slot capacity, physical occupancy remains exclusive, and player-authored circuit order remains mechanically significant.
+- Engineering replacement deterministically preserves or rematches live stages up to total remaining capacity while deliberately racked upgrades stay inactive.
+- Hardpoint Control communicates universal capacity and uses item domains only as synergy cues; circuit-full state is the only normal append lock.
+- Snapshot v12 shape, save compatibility, item mechanics, deterministic content, accessibility, and static hosting remain coherent.
+
+Status:
+
+- Implemented in work order 159. `ItemSockets` routes all upgrade domains across the same installed conduit pool, retains stable physical and logical order contracts, and no longer rejects a stored assignment for retired type compatibility. Hardpoint Control presents every component extension as universal and enables every rack append while capacity remains open.

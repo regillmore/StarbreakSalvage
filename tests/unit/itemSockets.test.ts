@@ -14,6 +14,8 @@ import {
   createItemSocketCircuitSummary,
   fitItemInCircuit,
   getActiveFittedItems,
+  getItemCircuitDomains,
+  getItemSocketSlots,
   moveItemInCircuit,
   reconcileItemSockets,
   unfitItem
@@ -174,5 +176,56 @@ describe('ship signal circuit', () => {
     expect(acquired.find((item) => item.acquisitionOrder === 0)?.socket).toBeNull();
     expect(acquired.find((item) => item.acquisitionOrder === 2)?.socket).not.toBeNull();
     expect(getActiveFittedItems(acquired, engineering.committed).at(-1)?.acquisitionOrder).toBe(2);
+  });
+
+  it('fits every upgrade domain into any open installed conduit', () => {
+    const run = generateRunSkeleton('SOCKET-UNIVERSAL-CONDUITS', { unlockedIds: [] });
+    const contract = run.contracts.find(
+      (candidate) => candidate.shipId === 'ship_missile_accountant'
+    );
+    if (!contract) throw new Error('Expected the Missile Accountant circuit fixture.');
+    const engineering = createEngineeringState(contract.loadout);
+    const secondaryHardpoint = contract.loadout.mounts.find((mount) => mount.slot === 'secondary');
+    const secondaryMount = engineering.committed.mounts.find(
+      (mount) => mount.hardpointId === secondaryHardpoint?.hardpointId
+    );
+    const secondaryComponent = engineering.committed.components.find(
+      (component) => component.id === secondaryMount?.componentId
+    );
+    if (!secondaryMount || !secondaryComponent) {
+      throw new Error('Expected installed secondary ordnance hardware.');
+    }
+    const universalSnapshot = {
+      ...engineering.committed,
+      components: [
+        {
+          ...secondaryComponent,
+          source: 'combat' as const,
+          sourceLabel: 'Act I salvage',
+          acquiredSectorIndex: 1
+        }
+      ],
+      mounts: [{ ...secondaryMount, installationOrder: 0 }]
+    };
+    const slots = getItemSocketSlots(universalSnapshot);
+    const items: ItemInstance[] = [
+      {
+        itemId: 'item_split_prism',
+        acquisitionOrder: 0,
+        socket: { componentId: secondaryComponent.id, socketIndex: 1, circuitOrder: 0 }
+      },
+      { itemId: 'item_signal_clone_stamp', acquisitionOrder: 1, socket: null }
+    ];
+
+    expect(slots.map((slot) => slot.type)).toEqual(['ordnance', 'flex']);
+    expect(getItemCircuitDomains('item_signal_clone_stamp')).not.toContain('ordnance');
+    expect(canFitItemInCircuit(items, universalSnapshot, 1)).toBe(true);
+
+    const fitted = fitItemInCircuit(items, universalSnapshot, 1);
+    expect(fitted.find((item) => item.acquisitionOrder === 1)?.socket).toMatchObject({
+      componentId: secondaryComponent.id,
+      socketIndex: 0,
+      circuitOrder: 1
+    });
   });
 });

@@ -48,7 +48,7 @@ const DEFENSE_TAGS = new Set(['armor', 'revenge', 'shield']);
 const DRIVE_TAGS = new Set(['heat', 'phase']);
 const UTILITY_TAGS = new Set(['credit', 'magnet', 'relic', 'scrap']);
 
-export function getItemCompatibleSocketTypes(
+export function getItemCircuitDomains(
   itemOrId: ItemDefinition | ItemId
 ): readonly Exclude<ShipUpgradeSocketType, 'flex'>[] {
   const item = typeof itemOrId === 'string' ? getItemById(itemOrId) : itemOrId;
@@ -133,10 +133,6 @@ export function getItemSocketSlots(snapshot: EngineeringSnapshot): ItemSocketSlo
     );
 }
 
-export function canFitItemInSocket(itemId: ItemId, slot: ItemSocketSlot): boolean {
-  return slot.type === 'flex' || getItemCompatibleSocketTypes(itemId).includes(slot.type);
-}
-
 export function reconcileItemSockets(
   items: readonly ItemInstance[],
   snapshot: EngineeringSnapshot
@@ -178,10 +174,7 @@ export function autoFitItemSockets(
   const requestedOrders = new Map<number, number>();
   let nextOrder = getNextCircuitOrder(reconciled);
   for (const item of reconciled) {
-    requestedOrders.set(
-      item.acquisitionOrder,
-      item.socket?.circuitOrder ?? nextOrder++
-    );
+    requestedOrders.set(item.acquisitionOrder, item.socket?.circuitOrder ?? nextOrder++);
   }
   const assignments = routeCircuitItems(reconciled, slots, requestedOrders);
   return reconciled.map((item) => {
@@ -212,7 +205,7 @@ export function canFitItemInCircuit(
   const claimed = new Set(
     reconciled.flatMap((item) => (item.socket ? [getAssignmentKey(item.socket)] : []))
   );
-  return Boolean(findOpenCircuitSlot(selected.itemId, getItemSocketSlots(snapshot), claimed));
+  return Boolean(findOpenCircuitSlot(getItemSocketSlots(snapshot), claimed));
 }
 
 export function fitItemInCircuit(
@@ -226,7 +219,7 @@ export function fitItemInCircuit(
   const claimed = new Set(
     reconciled.flatMap((item) => (item.socket ? [getAssignmentKey(item.socket)] : []))
   );
-  const target = findOpenCircuitSlot(selected.itemId, getItemSocketSlots(snapshot), claimed);
+  const target = findOpenCircuitSlot(getItemSocketSlots(snapshot), claimed);
   if (!target) return reconciled;
   const circuitOrder = getNextCircuitOrder(reconciled);
   return reconciled.map((item) =>
@@ -274,7 +267,7 @@ export function fitItemInSocket(
     (slot) => slot.componentId === componentId && slot.socketIndex === socketIndex
   );
   const selected = reconciled.find((item) => item.acquisitionOrder === acquisitionOrder);
-  if (!target || !selected || !canFitItemInSocket(selected.itemId, target)) return reconciled;
+  if (!target || !selected) return reconciled;
   const oldAssignment = selected.socket ?? null;
   const occupant = reconciled.find(
     (item) => item.socket && getAssignmentKey(item.socket) === getSlotKey(target)
@@ -296,10 +289,7 @@ export function fitItemInSocket(
     if (occupant && item.acquisitionOrder === occupant.acquisitionOrder) {
       return {
         ...item,
-        socket:
-          oldSlot && canFitItemInSocket(item.itemId, oldSlot)
-            ? createAssignment(oldSlot, occupant.socket?.circuitOrder)
-            : null
+        socket: oldSlot ? createAssignment(oldSlot, occupant.socket?.circuitOrder) : null
       };
     }
     return item;
@@ -379,7 +369,7 @@ function routeCircuitItems(
         candidate.componentId === item.socket?.componentId &&
         candidate.socketIndex === item.socket.socketIndex
     );
-    if (!slot || claimed.has(getSlotKey(slot)) || !canFitItemInSocket(item.itemId, slot)) {
+    if (!slot || claimed.has(getSlotKey(slot))) {
       return false;
     }
     claimed.add(getSlotKey(slot));
@@ -396,14 +386,11 @@ function routeCircuitItems(
   const routedSlots = new Map<number, ItemSocketSlot>();
   const tryRoute = (item: ItemInstance, visited: Set<string>): boolean => {
     const preferredKey = item.socket ? getAssignmentKey(item.socket) : '';
-    const options = slots
-      .filter((slot) => canFitItemInSocket(item.itemId, slot))
-      .sort(
-        (left, right) =>
-          Number(getSlotKey(left) !== preferredKey) - Number(getSlotKey(right) !== preferredKey) ||
-          Number(left.type === 'flex') - Number(right.type === 'flex') ||
-          left.circuitOrder - right.circuitOrder
-      );
+    const options = [...slots].sort(
+      (left, right) =>
+        Number(getSlotKey(left) !== preferredKey) - Number(getSlotKey(right) !== preferredKey) ||
+        left.circuitOrder - right.circuitOrder
+    );
     for (const slot of options) {
       const key = getSlotKey(slot);
       if (visited.has(key)) continue;
@@ -432,20 +419,10 @@ function routeCircuitItems(
 }
 
 function findOpenCircuitSlot(
-  itemId: ItemId,
   slots: readonly ItemSocketSlot[],
   claimed: ReadonlySet<string>
 ): ItemSocketSlot | undefined {
-  return (
-    slots.find(
-      (slot) =>
-        slot.type !== 'flex' && !claimed.has(getSlotKey(slot)) && canFitItemInSocket(itemId, slot)
-    ) ??
-    slots.find(
-      (slot) =>
-        slot.type === 'flex' && !claimed.has(getSlotKey(slot)) && canFitItemInSocket(itemId, slot)
-    )
-  );
+  return slots.find((slot) => !claimed.has(getSlotKey(slot)));
 }
 
 function getNextCircuitOrder(items: readonly ItemInstance[]): number {

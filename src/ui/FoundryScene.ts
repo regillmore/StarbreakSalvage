@@ -15,7 +15,7 @@ import {
   createItemSocketCircuitSummary,
   fitItemInCircuit,
   getActiveFittedItems,
-  getItemCompatibleSocketTypes,
+  getItemCircuitDomains,
   moveItemInCircuit,
   reconcileItemSockets,
   unfitItem
@@ -499,7 +499,7 @@ export class FoundryScene implements Scene {
     const capacity = document.createElement('strong');
     capacity.textContent = `CIRCUIT +${slotTypes.length}`;
     const channels = document.createElement('span');
-    channels.textContent = slotTypes.map((type) => type.toUpperCase()).join(' + ');
+    channels.textContent = `UNIVERSAL CONDUIT${slotTypes.length === 1 ? '' : 'S'}`;
     contribution.append(capacity, channels);
     return contribution;
   }
@@ -526,8 +526,8 @@ export class FoundryScene implements Scene {
     copy.className = 'foundry-circuit-copy';
     copy.textContent =
       summary.chain.length > 0
-        ? `CORE -> ${summary.chain.join(' -> ')} -> WEAPON. Each stage receives the signal built before it.`
-        : 'No live chain. Installed systems provide conduits; append upgrades from the rack.';
+        ? `CORE -> ${summary.chain.join(' -> ')} -> WEAPON. Every upgrade fits every conduit; each stage receives the signal built before it.`
+        : 'No live chain. Every upgrade fits every installed conduit; append from the rack.';
 
     const extensions = document.createElement('div');
     extensions.className = 'foundry-circuit-extensions';
@@ -536,9 +536,7 @@ export class FoundryScene implements Scene {
       const chip = document.createElement('span');
       chip.className = 'foundry-circuit-extension';
       chip.dataset.testid = 'foundry-circuit-extension';
-      chip.innerHTML = `<b>+${extension.capacity}</b><span>${extension.moduleName}</span><small>${extension.channels
-        .map((type) => type.toUpperCase())
-        .join(' / ')}</small>`;
+      chip.innerHTML = `<b>+${extension.capacity}</b><span>${extension.moduleName}</span><small>UNIVERSAL</small>`;
       extensions.append(chip);
     }
 
@@ -588,7 +586,7 @@ export class FoundryScene implements Scene {
       badges.className = 'foundry-badge-row';
       badges.append(
         this.createBadge('RACK'),
-        ...getItemCompatibleSocketTypes(item).map((type) =>
+        ...getItemCircuitDomains(item).map((type) =>
           this.createBadge(type.toUpperCase(), `foundry-badge-${type}`)
         )
       );
@@ -611,10 +609,7 @@ export class FoundryScene implements Scene {
       append.setAttribute('aria-label', `Append ${item.name} to the circuit`);
       let fitNote: HTMLElement | null = null;
       if (!canFit) {
-        const reason =
-          summary.open === 0
-            ? 'Circuit full. Eject a live stage first.'
-            : 'No compatible conduit is open in the installed systems.';
+        const reason = 'Circuit full. Eject a live stage first.';
         append.title = reason;
         fitNote = document.createElement('small');
         fitNote.className = 'foundry-circuit-fit-note';

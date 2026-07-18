@@ -197,3 +197,26 @@ Status: implemented. `MissileFlight` owns the shared ejection, linear boost, cru
 Browser inspection on the clean `STARBREAK-SMOKE` Missile Accountant contract confirmed the projectile reads as a bright pointed missile with fins and a long motor plume at combat scale, and the accessibility tree identifies the two-stage profile. Focused tests cover motor phases, exact integration, preview inversion, combat displacement, canvas branch geometry, ordinary-orb preservation, and live-fire presentation.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 103 Vitest files and 641 tests, the production build, all 16 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 942.43 kB minified/257.05 kB gzip initial JavaScript and 80.98/16.26 kB CSS, increases of 2.71/0.92 kB JavaScript and 0.89/0.26 kB CSS over work order 157. The existing 500 kB chunk notice remains; no dependency, RNG stream, content table, save/snapshot schema, static base path, or warning threshold changed.
+
+## Work order 159 - Universal signal conduits
+
+Goal: remove conduit-domain lockouts from the ordered signal circuit so every owned upgrade can use every installed open slot.
+
+Prompt:
+
+> Treat component conduit types as affinity metadata rather than fitting restrictions. Any upgrade item may append into any open installed conduit while total capacity, exclusive occupancy, explicit chain order, eject/undo behavior, deterministic engineering reconciliation, and snapshot validation remain authoritative. Make Hardpoint Control state the universal rule, remove misleading compatibility failures, keep item-domain badges useful for synergy reading, and add focused reducer plus Chromium coverage.
+
+Acceptance criteria:
+
+- Every inactive upgrade can append whenever the installed circuit has at least one open conduit, regardless of item tags, hook family, module slot, native channel, or flex label.
+- Append chooses a deterministic open physical conduit and adds the item at the end of the logical chain; earlier/later ordering remains independent of physical routing.
+- Engineering replacement preserves valid assignments and deterministically rematches the live chain up to total installed capacity without domain-based ejection.
+- Hardpoint component and extension summaries identify their capacity as universal, while item badges remain effect-domain and synergy cues rather than eligibility requirements.
+- A full circuit is the only ordinary reason an inactive owned upgrade cannot append; duplicate claims, missing components, insufficient capacity, and ambiguous order remain invalid snapshot state.
+- The snapshot shape, save version, item mechanics, circuit proc bounds, content RNG, accessibility, and static hosting remain compatible.
+
+Status: implemented. `ItemSockets` no longer filters routing, appending, swaps, or reconciliation by native/flex channel compatibility. The deterministic router preserves valid stored locations first, then matches by installed circuit order; the first unclaimed conduit receives an appended stage. Capacity and one-item-per-conduit occupancy remain unchanged.
+
+Item classification is now exposed as circuit-domain metadata for badges and synergy reading. Hardpoint Control labels component contributions and extension chips `UNIVERSAL`, states the rule beside the live chain, and reserves its disabled append explanation for a genuinely full circuit. Focused coverage leaves an ordnance conduit as the only open slot and successfully appends a weapon/drone-domain upgrade into it.
+
+Browser inspection confirmed three universal component extensions, concise universal-rule copy, an enabled rack action whenever capacity remained, a successful append, and no console errors. `npm run verify:release` passes typecheck, ESLint, all 103 Vitest files and 642 tests, the production build, all 16 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 942.11 kB minified/256.93 kB gzip initial JavaScript and 80.98/16.26 kB CSS, reductions of 0.32/0.12 kB JavaScript from work order 158. The existing 500 kB chunk notice remains; no dependency, item mechanics, RNG stream, save/snapshot version, static base path, or warning threshold changed.
