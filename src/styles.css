@@ -1163,14 +1163,12 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
 }
 
 .foundry-attack-stat[data-tone='improved'] > small,
-.foundry-meter[data-tone='improved'] .foundry-comparison-delta,
-.foundry-install-action[data-tone='improved'] small {
+.foundry-meter[data-tone='improved'] .foundry-comparison-delta {
   color: #72f2a7;
 }
 
 .foundry-attack-stat[data-tone='declined'] > small,
-.foundry-meter[data-tone='declined'] .foundry-comparison-delta,
-.foundry-install-action[data-tone='declined'] small {
+.foundry-meter[data-tone='declined'] .foundry-comparison-delta {
   color: #ffd166;
 }
 
@@ -1260,10 +1258,27 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   background: #ff6b6b;
 }
 
-.foundry-workspace {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
+.foundry-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.38rem;
+  border: 1px solid rgba(124, 247, 255, 0.18);
+  border-radius: 7px;
+  background: rgba(2, 5, 14, 0.58);
+}
+
+.foundry-menu-button {
+  min-width: min(15rem, 100%);
+  padding: 0.52rem 0.72rem;
+  font-size: 0.7rem;
+}
+
+.foundry-menu-button[aria-current='page'] {
+  border-color: var(--screen-engine, #ffd166);
+  color: #07101d;
+  background: linear-gradient(90deg, var(--screen-engine, #ffd166), var(--screen-primary, #7cf7ff));
+  opacity: 1;
 }
 
 .foundry-section,
@@ -1286,6 +1301,18 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   text-transform: uppercase;
 }
 
+.foundry-section-header {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.foundry-section-header > p {
+  margin: 0;
+  color: #aebcc5;
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
 .foundry-section > p,
 .foundry-history p {
   margin: 0;
@@ -1296,6 +1323,14 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
 .foundry-card-grid {
   display: grid;
   gap: 0.55rem;
+}
+
+.foundry-hardpoint-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.foundry-cargo-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .foundry-card {
@@ -1342,6 +1377,46 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   color: #c6f7ff;
   font-size: 0.73rem;
   line-height: 1.3;
+}
+
+.foundry-hardpoint-assignment {
+  display: grid;
+  gap: 0.24rem;
+}
+
+.foundry-hardpoint-assignment > span {
+  color: #8eb8c5;
+  font-family: 'Cascadia Mono', 'Consolas', monospace;
+  font-size: 0.54rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.foundry-hardpoint-assignment select {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.35rem;
+  padding: 0.45rem 2rem 0.45rem 0.55rem;
+  border: 1px solid rgba(124, 247, 255, 0.44);
+  border-radius: 5px;
+  color: #f8fbff;
+  background: #081123;
+  font-family: 'Cascadia Mono', 'Consolas', monospace;
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+}
+
+.foundry-hardpoint-assignment select:focus-visible {
+  border-color: var(--screen-engine, #ffd166);
+  outline: 2px solid color-mix(in srgb, var(--screen-primary, #7cf7ff) 58%, white);
+  outline-offset: 2px;
+}
+
+.foundry-installed-card[data-state='empty'] {
+  border-color: rgba(255, 107, 107, 0.32);
+  border-left-color: #ff8f8f;
 }
 
 .foundry-badge-row {
@@ -1700,6 +1775,27 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   letter-spacing: 0.1em;
 }
 
+.foundry-cargo-fit {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.4rem;
+  padding: 0.34rem 0.42rem;
+  border-left: 2px solid var(--screen-primary, #7cf7ff);
+  color: #bcd1da !important;
+  background: rgba(124, 247, 255, 0.05);
+  font-family: 'Cascadia Mono', 'Consolas', monospace;
+  font-size: 0.59rem !important;
+}
+
+.foundry-cargo-fit strong {
+  color: var(--screen-primary, #7cf7ff);
+  font-size: 0.52rem;
+}
+
+.foundry-cargo-card .foundry-action {
+  flex: 1 1 100%;
+}
+
 .foundry-card-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1711,19 +1807,6 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   min-height: 2.15rem;
   padding: 0.38rem 0.55rem;
   font-size: 0.72rem;
-}
-
-.foundry-install-action {
-  display: grid;
-  flex: 1 1 9.5rem;
-  gap: 0.14rem;
-  text-align: left;
-}
-
-.foundry-install-action small {
-  color: #aebcc5;
-  font-family: 'Cascadia Mono', 'Consolas', monospace;
-  font-size: 0.58rem;
 }
 
 .foundry-history {
@@ -4842,7 +4925,8 @@ html[data-bullet-contrast='high'] .hud-meter-track {
     min-height: auto;
   }
 
-  .foundry-workspace,
+  .foundry-hardpoint-grid,
+  .foundry-cargo-grid,
   .foundry-upgrade-rack {
     grid-template-columns: 1fr;
   }
@@ -5039,6 +5123,17 @@ html[data-bullet-contrast='high'] .hud-meter-track {
     width: min(98vw, 32rem);
     max-height: 98vh;
     padding: 0.65rem;
+  }
+
+  .foundry-menu {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .foundry-menu-button {
+    min-width: 0;
+    padding-inline: 0.35rem;
+    font-size: 0.6rem;
   }
 
   .foundry-history {

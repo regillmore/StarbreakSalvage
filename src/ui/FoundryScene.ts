@@ -52,12 +52,15 @@ import {
 import { createAttackSimulationPreviewElement } from './AttackSimulationPreview';
 import { createShipPreviewModel } from './ShipPreview';
 
+type FoundryView = 'hardpoints' | 'cargo';
+
 export class FoundryScene implements Scene {
   public readonly id = 'foundry';
   private state: EngineeringState;
   private itemInstances: ItemInstance[];
   private readonly committedItemInstances: ItemInstance[];
   private status = 'Component secured. Draft is reversible.';
+  private view: FoundryView = 'hardpoints';
 
   public constructor(
     private readonly uiRoot: HTMLElement,
@@ -84,6 +87,7 @@ export class FoundryScene implements Scene {
   public enter(): void {
     const frame = getShipFrameById(this.state.draft.frameId);
     const resolution = resolveEngineeringSnapshot(this.state.draft);
+    const cargo = getCargoComponents(this.state.draft);
     this.itemInstances = reconcileItemSockets(this.itemInstances, this.state.draft);
     const dashboard = createFoundryDashboardModel(
       this.state,
@@ -92,6 +96,7 @@ export class FoundryScene implements Scene {
     const shell = document.createElement('main');
     shell.className = 'scene-panel scene-panel-wide foundry-panel';
     shell.dataset.testid = 'salvage-foundry';
+    shell.dataset.foundryView = this.view;
     shell.setAttribute('aria-labelledby', 'foundry-title');
     const theme = createContractScreenThemeModel(
       this.contract,
@@ -101,16 +106,24 @@ export class FoundryScene implements Scene {
 
     const eyebrow = document.createElement('p');
     eyebrow.className = 'eyebrow';
-    eyebrow.textContent = `Sector ${this.sectorIndex} / ${frame.name} / Salvage Foundry`;
+    eyebrow.textContent = `Sector ${this.sectorIndex} / ${frame.name} / ${
+      this.view === 'cargo' ? 'Cargo Bay' : 'Salvage Foundry'
+    }`;
 
     const title = document.createElement('h1');
     title.id = 'foundry-title';
-    title.textContent = 'Hardpoint Control';
+    title.textContent = this.view === 'cargo' ? 'Cargo Management' : 'Hardpoint Control';
+
+    const menu = this.createEngineeringMenu(cargo.length);
 
     const boundary = document.createElement('p');
     boundary.className = 'foundry-boundary';
     boundary.dataset.testid = 'foundry-boundary';
-    boundary.textContent = `DRAFT BAY // Commit launches. Undo restores.${this.crewAssist ? ` Crew: ${this.crewAssist}` : ''}`;
+    boundary.textContent = `${
+      this.view === 'cargo'
+        ? 'SHARED DRAFT // Loose hardware only. Assignments remain in Hardpoint Control.'
+        : 'DRAFT BAY // Assign at each hardpoint. Commit launches. Undo restores.'
+    }${this.crewAssist ? ` Crew: ${this.crewAssist}` : ''}`;
 
     const grid = document.createElement('div');
     grid.className = `foundry-grid-readout ${resolution.valid ? '' : 'foundry-grid-invalid'}`;
@@ -141,13 +154,15 @@ export class FoundryScene implements Scene {
       issueList.append(issueTitle, issues);
     }
 
-    const console = this.createCommandConsole(dashboard);
-
-    const workspace = document.createElement('div');
-    workspace.className = 'foundry-workspace';
-    workspace.append(this.createInstalledSection(frame), this.createCargoSection());
-
-    const circuit = this.createUpgradeCircuitSection(dashboard);
+    const content =
+      this.view === 'cargo'
+        ? [issueList, this.createCargoSection()]
+        : [
+            this.createCommandConsole(dashboard),
+            issueList,
+            this.createUpgradeCircuitSection(dashboard),
+            this.createInstalledSection(frame)
+          ];
     const pending = document.createElement('section');
     pending.className = 'foundry-history';
     pending.setAttribute('aria-label', 'Pending engineering operations');
@@ -214,18 +229,20 @@ export class FoundryScene implements Scene {
       eyebrow,
       createContractThemeStrip(this.uiRoot.ownerDocument, theme),
       title,
+      menu,
       boundary,
       grid,
-      console,
-      issueList,
-      circuit,
-      workspace,
+      ...content,
       pending,
       status,
       controls
     );
     this.uiRoot.replaceChildren(shell);
-    shell.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
+    const focusTarget =
+      this.view === 'cargo'
+        ? shell.querySelector<HTMLButtonElement>('[data-testid="foundry-open-hardpoints"]')
+        : shell.querySelector<HTMLButtonElement>('[data-testid="foundry-open-cargo"]');
+    (focusTarget ?? shell.querySelector<HTMLButtonElement>('button:not(:disabled)'))?.focus();
   }
 
   public update(_dt: number): void {}
@@ -239,6 +256,12 @@ export class FoundryScene implements Scene {
       this.commit();
     }
     if (action === 'back' || action === 'pause') {
+      if (this.view === 'cargo') {
+        this.view = 'hardpoints';
+        this.status = 'Cargo draft retained. Hardpoint assignments restored to view.';
+        this.enter();
+        return;
+      }
       this.onComplete(undoFoundryDraft(this.state), this.committedItemInstances, 0);
     }
   }
@@ -416,19 +439,60 @@ export class FoundryScene implements Scene {
     return badge;
   }
 
+  private createEngineeringMenu(cargoCount: number): HTMLElement {
+    const menu = document.createElement('nav');
+    menu.className = 'foundry-menu';
+    menu.setAttribute('aria-label', 'Engineering menus');
+
+    const hardpoints = document.createElement('button');
+    hardpoints.className = 'secondary-button foundry-menu-button';
+    hardpoints.type = 'button';
+    hardpoints.dataset.testid = 'foundry-open-hardpoints';
+    hardpoints.textContent = 'Hardpoint Control';
+    hardpoints.disabled = this.view === 'hardpoints';
+    if (this.view === 'hardpoints') hardpoints.setAttribute('aria-current', 'page');
+    hardpoints.addEventListener('click', () => {
+      this.view = 'hardpoints';
+      this.enter();
+    });
+
+    const cargo = document.createElement('button');
+    cargo.className = 'secondary-button foundry-menu-button';
+    cargo.type = 'button';
+    cargo.dataset.testid = 'foundry-open-cargo';
+    cargo.textContent = `Cargo Management / ${cargoCount}`;
+    cargo.disabled = this.view === 'cargo';
+    if (this.view === 'cargo') cargo.setAttribute('aria-current', 'page');
+    cargo.addEventListener('click', () => {
+      this.view = 'cargo';
+      this.enter();
+    });
+
+    menu.append(hardpoints, cargo);
+    return menu;
+  }
+
   private createInstalledSection(frame: ReturnType<typeof getShipFrameById>): HTMLElement {
     const section = document.createElement('section');
-    section.className = 'foundry-section';
+    section.className = 'foundry-section foundry-hardpoint-section';
+    section.dataset.testid = 'foundry-hardpoint-assignments';
+    const sectionHeader = document.createElement('header');
+    sectionHeader.className = 'foundry-section-header';
     const title = document.createElement('h2');
-    title.textContent = 'Hardpoints';
+    title.textContent = 'Hardpoint Assignments';
+    const copy = document.createElement('p');
+    copy.textContent =
+      'Choose mounted, loose, or transferable hardware at the mount itself. Empty assignments remain reversible until commit.';
+    sectionHeader.append(title, copy);
     const list = document.createElement('div');
-    list.className = 'foundry-card-grid';
+    list.className = 'foundry-card-grid foundry-hardpoint-grid';
 
     for (const hardpoint of frame.hardpoints) {
       const component = getInstalledComponent(this.state.draft, hardpoint.id);
       const card = document.createElement('article');
       card.className = 'foundry-card foundry-installed-card';
       card.dataset.testid = `foundry-hardpoint-${hardpoint.id}`;
+      card.dataset.state = component ? 'assigned' : 'empty';
       const header = document.createElement('header');
       header.className = 'foundry-card-header';
       const heading = document.createElement('h3');
@@ -441,32 +505,106 @@ export class FoundryScene implements Scene {
       );
       if (hardpoint.required) badges.append(this.createBadge('CORE', 'foundry-badge-required'));
       header.append(heading, badges);
-      card.append(header);
+      card.append(header, this.createHardpointAssignmentSelect(frame, hardpoint, component));
 
       if (component) {
-        const componentName = document.createElement('strong');
-        componentName.className = 'foundry-component-name';
-        componentName.textContent = formatComponentName(component);
-        card.append(componentName, this.createComponentStatStrip(component));
-        const actions = document.createElement('div');
-        actions.className = 'foundry-card-actions';
-        actions.append(
-          this.createActionButton('Remove', () => {
-            this.state = planRemoveComponent(this.state, hardpoint.id, this.sectorIndex);
-            this.status = `${formatComponentName(component)} moved to cargo.`;
-          })
-        );
-        card.append(actions);
+        card.append(this.createComponentStatStrip(component));
       } else {
         const empty = document.createElement('strong');
         empty.className = 'foundry-hardpoint-empty';
-        empty.textContent = 'EMPTY';
+        empty.textContent = hardpoint.required ? 'EMPTY / REQUIRED' : 'EMPTY / OPTIONAL';
         card.append(empty);
       }
       list.append(card);
     }
-    section.append(title, list);
+    section.append(sectionHeader, list);
     return section;
+  }
+
+  private createHardpointAssignmentSelect(
+    frame: ReturnType<typeof getShipFrameById>,
+    hardpoint: ReturnType<typeof getShipFrameById>['hardpoints'][number],
+    installed: FoundryComponentInstance | null
+  ): HTMLElement {
+    const field = document.createElement('label');
+    field.className = 'foundry-hardpoint-assignment';
+    const fieldLabel = document.createElement('span');
+    fieldLabel.textContent = 'Assignment';
+    const select = document.createElement('select');
+    select.dataset.testid = `foundry-hardpoint-assignment-${hardpoint.id}`;
+    select.setAttribute('aria-label', `Assign hardware to ${hardpoint.label}`);
+
+    const empty = document.createElement('option');
+    empty.value = '';
+    empty.textContent = 'EMPTY - Move assignment to cargo';
+    empty.selected = installed === null;
+    select.append(empty);
+
+    const mountByComponent = new Map(
+      this.state.draft.mounts.map((mount) => [mount.componentId, mount.hardpointId])
+    );
+    const hardpointNameById = new Map(
+      frame.hardpoints.map((candidate) => [candidate.id, candidate.label])
+    );
+    const candidates = this.state.draft.components
+      .filter((component) => component.compatibility.compatibleHardpointIds.includes(hardpoint.id))
+      .sort((left, right) => {
+        const rank = (component: FoundryComponentInstance): number => {
+          if (component.id === installed?.id) return 0;
+          return mountByComponent.has(component.id) ? 2 : 1;
+        };
+        return rank(left) - rank(right) || left.acquisitionOrder - right.acquisitionOrder;
+      });
+
+    for (const component of candidates) {
+      const option = document.createElement('option');
+      const mountedHardpointId = mountByComponent.get(component.id);
+      const source =
+        component.id === installed?.id
+          ? 'MOUNTED'
+          : mountedHardpointId
+            ? `MOVE FROM ${hardpointNameById.get(mountedHardpointId) ?? mountedHardpointId}`
+            : 'CARGO';
+      option.value = component.id;
+      option.selected = component.id === installed?.id;
+      option.textContent =
+        component.id === installed?.id
+          ? `${source} - ${formatComponentName(component)}`
+          : `${source} - ${formatComponentName(component)} - ${compareFoundryComponents(component, installed).label}`;
+      select.append(option);
+    }
+
+    select.addEventListener('change', () => {
+      const previous = getInstalledComponent(this.state.draft, hardpoint.id);
+      if (select.value === '') {
+        this.state = planRemoveComponent(this.state, hardpoint.id, this.sectorIndex);
+        this.status = previous
+          ? `${formatComponentName(previous)} moved from ${hardpoint.label} to cargo.`
+          : `${hardpoint.label} remains empty.`;
+        this.enter();
+        return;
+      }
+
+      const component = this.state.draft.components.find(
+        (candidate) => candidate.id === select.value
+      );
+      if (!component) return;
+      const sourceMount = this.state.draft.mounts.find(
+        (mount) => mount.componentId === component.id
+      );
+      this.state = planInstallComponent(this.state, component.id, hardpoint.id, this.sectorIndex);
+      const displacement =
+        previous && previous.id !== component.id
+          ? ` ${formatComponentName(previous)} returned to cargo.`
+          : sourceMount && sourceMount.hardpointId !== hardpoint.id
+            ? ` Its former mount is now empty.`
+            : '';
+      this.status = `${formatComponentName(component)} assigned to ${hardpoint.label}.${displacement}`;
+      this.enter();
+    });
+
+    field.append(fieldLabel, select);
+    return field;
   }
 
   private createUpgradeCircuitSection(dashboard: FoundryDashboardModel): HTMLElement {
@@ -660,12 +798,19 @@ export class FoundryScene implements Scene {
 
   private createCargoSection(): HTMLElement {
     const section = document.createElement('section');
-    section.className = 'foundry-section';
+    section.className = 'foundry-section foundry-cargo-management';
+    section.dataset.testid = 'foundry-cargo-menu';
     const cargo = getCargoComponents(this.state.draft);
+    const header = document.createElement('header');
+    header.className = 'foundry-section-header';
     const title = document.createElement('h2');
-    title.textContent = `Cargo / ${cargo.length}`;
+    title.textContent = `Loose Hardware / ${cargo.length}`;
+    const copy = document.createElement('p');
+    copy.textContent =
+      'Inspect recovered components, preserve future options, or mark hardware for scrap. Assignments are made in Hardpoint Control.';
+    header.append(title, copy);
     const list = document.createElement('div');
-    list.className = 'foundry-card-grid';
+    list.className = 'foundry-card-grid foundry-cargo-grid';
 
     if (cargo.length === 0) {
       const empty = document.createElement('p');
@@ -675,7 +820,7 @@ export class FoundryScene implements Scene {
     }
 
     for (const component of cargo) list.append(this.createCargoCard(component));
-    section.append(title, list);
+    section.append(header, list);
     return section;
   }
 
@@ -717,40 +862,32 @@ export class FoundryScene implements Scene {
     }
     if (modifiers.childElementCount === 0) modifiers.append(this.createBadge('CLEAN'));
 
+    const frame = getShipFrameById(this.state.draft.frameId);
+    const compatibleHardpoints = frame.hardpoints.filter((hardpoint) =>
+      component.compatibility.compatibleHardpointIds.includes(hardpoint.id)
+    );
+    const fit = document.createElement('p');
+    fit.className = 'foundry-cargo-fit';
+    fit.innerHTML = `<strong>FITS</strong><span>${
+      compatibleHardpoints.map((hardpoint) => hardpoint.label).join(' / ') || 'No current mount'
+    }</span>`;
+
     const actions = document.createElement('div');
     actions.className = 'foundry-card-actions';
-    const frame = getShipFrameById(this.state.draft.frameId);
-    for (const hardpointId of component.compatibility.compatibleHardpointIds) {
-      const hardpoint = frame.hardpoints.find((candidate) => candidate.id === hardpointId);
-      const installed = getInstalledComponent(this.state.draft, hardpointId);
-      const comparison = compareFoundryComponents(component, installed);
-      const install = document.createElement('button');
-      install.className = 'secondary-button foundry-action foundry-install-action';
-      install.type = 'button';
-      install.dataset.tone = comparison.tone;
-      install.setAttribute(
-        'aria-label',
-        `Install ${formatComponentName(component)} in ${hardpoint?.label ?? hardpointId}. Resource change ${comparison.label}`
-      );
-      const installLabel = document.createElement('strong');
-      installLabel.textContent = `Install / ${hardpoint?.label ?? hardpointId}`;
-      const comparisonLabel = document.createElement('small');
-      comparisonLabel.textContent = comparison.label;
-      install.append(installLabel, comparisonLabel);
-      install.addEventListener('click', () => {
-        this.state = planInstallComponent(this.state, component.id, hardpointId, this.sectorIndex);
-        this.status = `${formatComponentName(component)} installed in ${hardpoint?.label ?? hardpointId}.`;
-        this.enter();
-      });
-      actions.append(install);
-    }
     actions.append(
       this.createActionButton(`Scrap +${component.salvageValue}`, () => {
         this.state = planScrapComponent(this.state, component.id, this.sectorIndex);
         this.status = `+${component.salvageValue} salvage on commit.`;
       })
     );
-    card.append(header, identity, this.createComponentStatStrip(component), modifiers, actions);
+    card.append(
+      header,
+      identity,
+      this.createComponentStatStrip(component),
+      modifiers,
+      fit,
+      actions
+    );
     return card;
   }
 

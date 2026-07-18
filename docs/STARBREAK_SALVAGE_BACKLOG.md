@@ -2362,3 +2362,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 165. `FoundryScene` removes its reroute/overclock planner imports and all four component-card tuning entry points. Existing domain behavior remains available only to resolve compatible historical state, while Chromium coverage protects absent tuning controls and retained cargo Scrap actions.
+
+### BL33 - Mount-first assignments and separate cargo management
+
+Acceptance:
+
+- Every ship hardpoint owns one native assignment select containing its current component, compatible loose cargo, transferable mounted hardware, an empty state, and concise replacement deltas.
+- Hardpoint selection stages the existing install/remove reducers; compatibility, displaced cargo, required-mount validation, circuit reconciliation, undo, and commit remain authoritative.
+- Hardpoint Control renders no cargo inventory block. Cargo Management is a distinct shared-draft menu containing loose-hardware identity, stats, fit destinations, and Scrap actions without Install controls, attack simulation, or circuit editing.
+- Switching between engineering menus never commits, discards, duplicates, or forks state; Back from cargo returns to Hardpoint Control, and both responsive pointer/keyboard paths remain free of horizontal overflow.
+- Saves, snapshots, component progression, combat, deterministic content generation, accessibility, and static hosting remain coherent.
+
+Status:
+
+- Implemented in work order 166. `FoundryScene` keeps one engineering/item draft while projecting separate hardpoint and cargo modes. Mount cards own compatible assignment selects and retain direct `P/H/M/C/!/S` comparison copy; the standalone cargo manifest owns fit summaries and Scrap only. The existing foundry planners, legality resolver, circuit reconciliation, undo, commit, and exit callbacks remain the sole mutation boundary.

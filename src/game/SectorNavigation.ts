@@ -84,7 +84,8 @@ const DESTINATIONS: ReadonlyArray<
     shortLabel: 'Hardpoint',
     deckLabel: 'Engineering Cradle',
     glyph: '⬡',
-    summary: 'Fit recovered components, route upgrade sockets, and simulate the live loadout.',
+    summary:
+      'Assign recovered hardware at each mount, order the signal circuit, and inspect cargo separately.',
     actionLabel: 'Open Hardpoint Control'
   },
   {

@@ -742,8 +742,8 @@ export class SectorTransitionScene implements Scene {
         ),
         this.createDetailCopy(
           cargo.length > 0
-            ? 'Recovered component cargo is ready to install, fuse, scrap, or retain for fleet construction.'
-            : 'The loadout, ordered signal circuit, and attack simulation remain available even with no loose hardware.'
+            ? 'Assign compatible hardware from each mount. Cargo Management keeps loose-component inspection and scrapping in a separate shared-draft menu.'
+            : 'Mount assignments, the ordered signal circuit, attack simulation, and separate Cargo Management remain available even with no loose hardware.'
         )
       );
       return;

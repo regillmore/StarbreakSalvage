@@ -406,6 +406,10 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByRole('button', { name: /^Route \// })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /^Clock \// })).toHaveCount(0);
   await expect(page.getByTestId('foundry-boundary')).toContainText(/Undo restores/i);
+  await expect(page.getByTestId('foundry-hardpoint-assignments')).toBeVisible();
+  await expect(page.locator('[data-testid^="foundry-hardpoint-assignment-"]')).toHaveCount(3);
+  await expect(page.getByTestId('foundry-cargo-menu')).toHaveCount(0);
+  await expect(page.getByTestId('foundry-open-cargo')).toContainText('Cargo Management / 0');
   await expect(page.getByTestId('foundry-grid-readout')).toContainText('LEGAL DRAFT');
   await expect(page.getByTestId('foundry-command-console')).toBeVisible();
   const attackPreview = page.getByTestId('foundry-attack-preview');
@@ -1214,6 +1218,44 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
   for (let index = 0; index < 2; index += 1) await page.keyboard.press('Tab');
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('salvage-foundry')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Hardpoint Control' })).toBeVisible();
+  await expect(page.getByTestId('foundry-hardpoint-assignments')).toBeVisible();
+  await expect(page.getByTestId('foundry-cargo-menu')).toHaveCount(0);
+  await expect(page.locator('.foundry-cargo-card')).toHaveCount(0);
+
+  const assignmentSelects = page.locator('[data-testid^="foundry-hardpoint-assignment-"]');
+  const assignmentIndex = await assignmentSelects.evaluateAll((selects) =>
+    selects.findIndex((select) =>
+      Array.from((select as HTMLSelectElement).options).some((option) =>
+        option.textContent?.startsWith('CARGO -')
+      )
+    )
+  );
+  expect(assignmentIndex).toBeGreaterThanOrEqual(0);
+  const assignment = assignmentSelects.nth(assignmentIndex);
+  const cargoOption = await assignment
+    .locator('option')
+    .evaluateAll(
+      (options) =>
+        (
+          options.find((option) => option.textContent?.startsWith('CARGO -')) as
+            HTMLOptionElement | undefined
+        )?.value ?? ''
+    );
+  expect(cargoOption).not.toBe('');
+  await assignment.selectOption(cargoOption);
+  await expect(page.getByTestId('foundry-status')).toContainText(/assigned to/i);
+  await expect(assignmentSelects.nth(assignmentIndex)).toHaveValue(cargoOption);
+
+  await page.getByTestId('foundry-open-cargo').click();
+  await expect(page.getByRole('heading', { name: 'Cargo Management' })).toBeVisible();
+  await expect(page.getByTestId('foundry-cargo-menu')).toBeVisible();
+  await expect(page.getByTestId('foundry-hardpoint-assignments')).toHaveCount(0);
+  await expect(page.getByTestId('foundry-command-console')).toHaveCount(0);
+  await expect(page.getByTestId('foundry-upgrade-circuit')).toHaveCount(0);
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
+    .toBe(true);
   const cargoCards = page.locator('.foundry-cargo-card');
   const cargoCount = await cargoCards.count();
   expect(cargoCount).toBeGreaterThan(0);
@@ -1221,8 +1263,13 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
   await expect(cargoCards.locator('[data-stat="salvage"]')).toHaveCount(0);
   await expect(cargoCards.getByRole('button', { name: /^Route \// })).toHaveCount(0);
   await expect(cargoCards.getByRole('button', { name: /^Clock \// })).toHaveCount(0);
+  await expect(cargoCards.getByRole('button', { name: /^Install \// })).toHaveCount(0);
   await expect(cargoCards.getByRole('button', { name: /^Scrap \+/ })).toHaveCount(cargoCount);
+  await expect(cargoCards.locator('.foundry-cargo-fit')).toHaveCount(cargoCount);
   await expect(page.getByTestId('foundry-boundary')).toContainText('Scenario Lab fixture');
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('heading', { name: 'Hardpoint Control' })).toBeVisible();
+  await expect(assignmentSelects.nth(assignmentIndex)).toHaveValue(cargoOption);
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('scenario-lab')).toBeVisible();
 
