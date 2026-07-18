@@ -236,6 +236,41 @@ describe('foundry visual presentation', () => {
     expect(clonedThenBuilt.circuitStages.at(-1)?.outgoingProjectiles).toBe(4);
   });
 
+  it('projects prototype-vent cadence shifts onto affected earlier circuit cards', () => {
+    const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
+      (candidate) => candidate.shipId === 'ship_debt_runner'
+    );
+    if (!contract) throw new Error('Expected a single-projectile contract.');
+    const dashboard = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+      {
+        itemId: 'item_phase_grazer',
+        acquisitionOrder: 0,
+        socket: { componentId: 'phase', socketIndex: 0, circuitOrder: 0 }
+      },
+      {
+        itemId: 'item_prototype_vent_script',
+        acquisitionOrder: 1,
+        socket: { componentId: 'vent', socketIndex: 0, circuitOrder: 1 }
+      }
+    ]);
+
+    expect(dashboard.circuitStages[0]).toMatchObject({
+      name: 'Phase Grazer',
+      changed: true,
+      cadenceShiftLabel: 'VENT SCRIPT · EVERY 4TH -> 5TH VOLLEY · +1 HEAT SHOT'
+    });
+    expect(dashboard.circuitStages[1]).toMatchObject({
+      name: 'Prototype Vent Script',
+      cadenceShiftLabel: null
+    });
+    expect(dashboard.attackSimulation.waveCopies).toBeGreaterThanOrEqual(5);
+    expect(
+      dashboard.attackSimulation.projectiles.filter(
+        (projectile) => projectile.waveIndex === 4 && projectile.tags.includes('heat')
+      )
+    ).toHaveLength(1);
+  });
+
   it('builds steady velocity-scaled flight copies inside the preview actor budget', () => {
     const volley = Array.from({ length: 12 }, (_value, index) =>
       projectile(index - 6, (index - 6) * 20, -500)

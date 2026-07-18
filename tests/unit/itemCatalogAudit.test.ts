@@ -21,13 +21,13 @@ describe('item catalog audit', () => {
       cursed: 3
     });
     expect(audit.hookCounts).toEqual({
-      onFire: 14,
+      onFire: 15,
       onProjectileSpawn: 9,
       onEnemyKilled: 11,
       onPlayerHit: 6,
       onPickupCollected: 5,
       onGraze: 2,
-      onSpecialUsed: 1,
+      onSpecialUsed: 0,
       onBombUsed: 1,
       onSectorStart: 3,
       onRouteChosen: 4,

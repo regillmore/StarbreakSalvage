@@ -51,6 +51,11 @@ describe('ScenarioLab', () => {
 
     const foundry = launch('lab_engineering_foundry');
     expect(foundry.session.engineering.history).toHaveLength(3);
+    expect(foundry.session.itemInstances.map((item) => item.itemId)).toEqual([
+      'item_phase_grazer',
+      'item_prototype_vent_script'
+    ]);
+    expect(foundry.session.itemInstances.every((item) => item.socket !== null)).toBe(true);
 
     const rival = launch('lab_rival_return');
     expect(rival.session.factionCampaign.history.length).toBeGreaterThan(3);

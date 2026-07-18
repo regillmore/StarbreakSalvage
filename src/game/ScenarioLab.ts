@@ -118,7 +118,7 @@ export const SCENARIO_LAB_DEFINITIONS: readonly ScenarioLabDefinition[] = [
   scenario(
     'lab_engineering_foundry',
     'Engineering Foundry',
-    'Open a deterministic foundry inventory with contract modules and three generated components.',
+    'Open a deterministic foundry inventory with an ordered Prototype Vent cadence synergy.',
     ['frame', 'modules', 'foundry', 'engineering'],
     4,
     'foundry',
@@ -308,6 +308,15 @@ export function createScenarioLabLaunch(options: {
       seed: `${options.run.seed}:${definition.id}`,
       sectorIndex: session.currentSectorIndex
     });
+  }
+  if (definition.id === 'lab_engineering_foundry') {
+    session.itemInstances = autoFitItemSockets(
+      [
+        { itemId: 'item_phase_grazer', acquisitionOrder: 0 },
+        { itemId: 'item_prototype_vent_script', acquisitionOrder: 1 }
+      ],
+      session.engineering.committed
+    );
   }
   if (definition.fleetFixture) {
     session.fleet = createDebugFleetState(options.run.fleet);

@@ -456,3 +456,31 @@ Focused coverage validates all nine layouts at both their authored anchor and li
 Browser inspection of the actual Act I opening Hecaton Ledger Ark reproduced the Starboard Ledger layout and used the ordinary debug approach. The encounter stopped at 444/1607u with scroll speed 0, all seven components active, the lowest locked structure above the recovery band, and the ship free to occupy the bottom-left lane. Browser logs contain only local Vite connection messages.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 105 Vitest files and 658 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 956.14 kB minified/261.10 kB gzip initial JavaScript and unchanged 84.04/16.91 kB CSS, increases of 0.03/0.01 kB JavaScript over work order 167. The existing 500 kB chunk notice remains; no dependency, component content table, mission anchor, combat cap, RNG stream, save/snapshot schema, static base path, or warning threshold changed.
+
+## Work order 169 - Ordered Prototype Vent cadence synergy
+
+Goal: turn Prototype Vent Script into an order-sensitive circuit multiplier that trades slower periodic triggers for a growing heat-shot branch, with its consequences legible directly on affected Hardpoint cards.
+
+Prompt:
+
+> Replace Prototype Vent Script's old Special-duration behavior with a passive ordered-circuit rule. Every fitted upgrade before the script whose effect triggers every `n`th volley should instead trigger every `(n+1)`th volley, and each completed shifted cycle should add one additional generic heat shot. Upgrades after the script retain their authored cadence. Apply the new shot at the affected stage so later circuit items can transform it normally. Show the original-to-effective cadence and added heat shot on every affected Hardpoint upgrade card, update immediately when circuit order changes, and defer the richer heat-shot identity to the next work order. Preserve fixed-step determinism, proc and projectile caps, preview/combat parity, saves, snapshots, accessibility, and static hosting.
+
+Acceptance criteria:
+
+- Prototype Vent Script no longer modifies Special duration, cooldown, or projectiles and is described as an ordered periodic-volley modifier.
+- Every active periodic `onFire` stage earlier than the script resolves at its authored cadence plus one; periodic stages after the script remain unchanged.
+- Each affected stage appends exactly one generic `heat`-tagged projectile on its shifted cycle before later item hooks execute, so multiple affected cycles and downstream transforms compose through normal circuit order.
+- The cadence rule is explicit shared data rather than parsed prose, local counters, or RNG, and the normal 48-hook dispatch budget plus existing preview/projectile caps remain authoritative.
+- Hardpoint circuit cards show `EVERY nTH -> (n+1)TH VOLLEY` and `+1 HEAT SHOT` only for affected earlier stages; moving Vent before or after a stage updates the card and live-fire cycle immediately.
+- Contract/Hangar and Hardpoint live-fire previews continue using production item hooks, while representative circuit cards receive passive later-stage context without falsely depicting a damage loss on an arbitrary sample volley.
+- Saves, snapshots, content generation, accessibility modes, static base path, and the still-unassigned rich heat-shot identity remain unchanged.
+
+Status: implemented. `ItemHooks` now owns the periodic cadence table and exports the profile used by simulation and presentation. Eleven authored periodic volley upgrades query that authority, and a later Prototype Vent Script changes only their effective divisor. On a completed shifted cycle the affected stage clones one bounded upstream projectile, tags it `heat`, and returns it to the ordinary ordered hook pipeline; Vent no longer has a Special-use reducer or saved timing state.
+
+`FoundryPresentation` consumes the same ordered profile for every circuit stage and emits a compact original-to-effective cadence line. Its cumulative sample receives later Vent as passive context without executing unrelated downstream upgrades, avoiding the misleading appearance that the script removes an upstream effect. The normal attack simulation evaluates consecutive production volleys and therefore shows the shifted cycle and added shot without a second preview implementation.
+
+The Engineering Foundry Scenario Lab fixture now fits Phase Grazer before Prototype Vent Script. Focused unit coverage proves positional cadence, the old-cycle miss, the shifted-cycle phase plus heat branch, reverse-order immunity, retired Special behavior, card annotation, attack-preview parity, and deterministic fixture fitting. Chromium coverage reorders Vent in the live Hardpoint rail and protects the annotation's disappearance and return.
+
+Browser inspection of that fixture confirms a stable two-stage rail: Phase Grazer reports `VENT SCRIPT · EVERY 4TH -> 5TH VOLLEY · +1 HEAT SHOT`, the representative output remains `conditional volley armed`, moving Vent earlier removes the annotation, and moving it later restores it. The live attack simulation reports a two-to-three-shot firing cycle, showing that the fifth volley adds one shot without changing the fixed preview scale.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 105 Vitest files and 660 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 957.27 kB minified/261.57 kB gzip initial JavaScript and 84.21/16.94 kB CSS, increases of 1.13/0.47 kB JavaScript and 0.17/0.03 kB CSS over work order 168. The existing 500 kB chunk notice remains; no dependency, projectile cap, RNG stream, content-generation order, save/snapshot schema, static base path, or warning threshold changed.

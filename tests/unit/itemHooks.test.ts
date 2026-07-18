@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   applyItemHooks,
   applyItemHooksWithReport,
+  getItemVolleyCadenceProfile,
   getOrderedItemInstances
 } from '../../src/game/ItemHooks';
 import type { ItemInstance } from '../../src/game/Rewards';
@@ -161,6 +162,57 @@ describe('item synergies', () => {
     expect(builtThenCloned.projectiles.filter((shot) => shot.tags.includes('drone'))).toHaveLength(
       3
     );
+  });
+
+  it('vents only earlier periodic stages one volley later and adds one heat shot per cycle', () => {
+    const vented: ItemInstance[] = [
+      {
+        itemId: 'item_phase_grazer',
+        acquisitionOrder: 0,
+        socket: { componentId: 'a', socketIndex: 0, circuitOrder: 0 }
+      },
+      {
+        itemId: 'item_prototype_vent_script',
+        acquisitionOrder: 1,
+        socket: { componentId: 'a', socketIndex: 1, circuitOrder: 1 }
+      }
+    ];
+    const ventFirst = vented.map((instance, index) => ({
+      ...instance,
+      socket: { ...instance.socket!, circuitOrder: 1 - index }
+    }));
+
+    expect(getItemVolleyCadenceProfile('item_phase_grazer', vented)).toEqual({
+      baseCadence: 4,
+      effectiveCadence: 5,
+      prototypeVented: true
+    });
+    expect(getItemVolleyCadenceProfile('item_phase_grazer', ventFirst)).toEqual({
+      baseCadence: 4,
+      effectiveCadence: 4,
+      prototypeVented: false
+    });
+
+    const delayedOldCycle = applyItemHooks('onFire', vented, {
+      volleyIndex: 4,
+      projectiles: [baseProjectile]
+    });
+    const ventedCycle = applyItemHooks('onFire', vented, {
+      volleyIndex: 5,
+      projectiles: [baseProjectile]
+    });
+    const unaffectedLaterStage = applyItemHooks('onFire', ventFirst, {
+      volleyIndex: 4,
+      projectiles: [baseProjectile]
+    });
+
+    expect(delayedOldCycle.projectiles).toEqual([baseProjectile]);
+    expect(ventedCycle.projectiles).toHaveLength(2);
+    expect(ventedCycle.projectiles.filter((shot) => shot.tags.includes('heat'))).toHaveLength(1);
+    expect(ventedCycle.projectiles.some((shot) => shot.tags.includes('phase'))).toBe(true);
+    expect(unaffectedLaterStage.projectiles).toHaveLength(1);
+    expect(unaffectedLaterStage.projectiles[0]?.tags).toContain('phase');
+    expect(unaffectedLaterStage.projectiles[0]?.tags).not.toContain('heat');
   });
 
   it('applies missile plus overkill synergy', () => {
@@ -340,7 +392,7 @@ describe('item synergies', () => {
     expect(payload.projectile.ttl).toBeGreaterThan(1);
   });
 
-  it('applies first expansion graze, special, and bomb hooks', () => {
+  it('applies first expansion graze and bomb hooks without the retired vent special', () => {
     const grazePayload = applyItemHooks(
       'onGraze',
       [
@@ -381,9 +433,12 @@ describe('item synergies', () => {
     expect(grazePayload.specialChargeGain).toBeGreaterThan(0.1);
     expect(grazePayload.fireRateMultiplier).toBeLessThan(1);
     expect(grazePayload.effectRadius).toBeGreaterThan(34);
-    expect(specialPayload.projectiles).toHaveLength(2);
-    expect(specialPayload.cooldownSeconds).toBeLessThan(2);
-    expect(specialPayload.fireRateMultiplier).toBeLessThan(1);
+    expect(specialPayload).toEqual({
+      projectiles: [baseProjectile],
+      activeSeconds: 1,
+      cooldownSeconds: 2,
+      fireRateMultiplier: 1
+    });
     expect(bombPayload.damage).toBeGreaterThan(5);
     expect(bombPayload.bossDamageRatio).toBeGreaterThan(0.05);
     expect(bombPayload.effectRadius).toBeGreaterThan(120);

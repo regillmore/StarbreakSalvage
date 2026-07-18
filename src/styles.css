@@ -1692,6 +1692,15 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   font-size: 0.56rem;
 }
 
+.foundry-circuit-output .foundry-circuit-cadence-shift {
+  margin-top: 0.12rem;
+  padding-top: 0.2rem;
+  border-top: 1px solid rgba(255, 209, 102, 0.28);
+  color: #ffd166;
+  font-weight: 850;
+  line-height: 1.35;
+}
+
 .foundry-circuit-output[data-changed='true'] {
   border-left-color: #ffd166;
   color: #fff0bd;

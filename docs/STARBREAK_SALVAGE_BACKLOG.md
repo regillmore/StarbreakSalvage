@@ -2402,3 +2402,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 168. `SetPiece` derives the earlier engagement stop and validates translated top bounds plus a conservative bottom-clearance envelope for every layout. `GameplayScene` consumes that distance only as its incomplete-assembly travel lock, leaving authored anchors and every downstream combat authority unchanged.
+
+### BL36 - Ordered Prototype Vent cadence synergy
+
+Acceptance:
+
+- Prototype Vent Script changes each earlier periodic volley stage from every `n`th volley to every `(n+1)`th volley; later periodic stages remain at their authored cadence.
+- Every completed shifted cycle adds exactly one generic heat-tagged shot at the affected stage, allowing all later circuit upgrades to transform it through ordinary hook order.
+- Combat and both live-fire previews consume the same explicit cadence model without duplicated timers, RNG draws, saved counters, or item-copy parsing.
+- Each affected Hardpoint circuit card identifies its original and effective cadence plus the added heat shot, and reordering the script updates the annotation immediately.
+- Existing proc limits, projectile caps, determinism, saves, snapshots, accessibility modes, and static hosting remain compatible; the heat shot's richer mechanical and visual identity is deferred.
+
+Status:
+
+- Implemented in work order 169. `ItemHooks` centralizes periodic item cadences and applies the script only across an earlier-to-later circuit edge. Shifted cycles append one bounded heat-tagged projectile before downstream stages. `FoundryPresentation` and Hardpoint circuit cards consume the same profile, and the Engineering Foundry Scenario Lab fixture protects the positional interaction.

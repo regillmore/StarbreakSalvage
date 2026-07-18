@@ -165,6 +165,26 @@ export type ItemHookName = keyof ItemHookPayloadByName;
 
 export const DEFAULT_ITEM_HOOK_APPLICATION_LIMIT = 48;
 
+const PERIODIC_VOLLEY_CADENCES = {
+  item_drone_uplink: 3,
+  item_phase_grazer: 4,
+  item_signal_clone_stamp: 3,
+  item_missile_splinter_warrant: 4,
+  item_overheat_oracle: 5,
+  item_arc_welder_drone: 3,
+  item_lane_splitter_chisel: 6,
+  item_wake_missile_abacus: 5,
+  item_sidecar_drone_bay: 4,
+  item_harmonic_fork_loom: 3,
+  item_warhead_echo_chamber: 4
+} as const satisfies Partial<Record<ItemId, number>>;
+
+export interface ItemVolleyCadenceProfile {
+  readonly baseCadence: number;
+  readonly effectiveCadence: number;
+  readonly prototypeVented: boolean;
+}
+
 export interface ItemHookDispatchOptions {
   readonly maxApplications?: number;
 }
@@ -191,7 +211,8 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_sidecar_drone_bay',
     'item_signal_clone_stamp',
     'item_harmonic_fork_loom',
-    'item_warhead_echo_chamber'
+    'item_warhead_echo_chamber',
+    'item_prototype_vent_script'
   ],
   onProjectileSpawn: [
     'item_chain_arc_capacitor',
@@ -234,7 +255,7 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_regolith_scoop_array'
   ],
   onGraze: ['item_near_miss_tachometer', 'item_phase_wake_suture'],
-  onSpecialUsed: ['item_prototype_vent_script'],
+  onSpecialUsed: [],
   onBombUsed: ['item_excess_warhead_clause'],
   onSectorStart: [
     'item_crater_shadow_lens',
@@ -317,6 +338,29 @@ export function getOrderedItemInstances(instances: readonly ItemInstance[]): Ite
       a.acquisitionOrder - b.acquisitionOrder ||
       a.itemId.localeCompare(b.itemId)
   );
+}
+
+export function getItemVolleyCadenceProfile(
+  itemId: ItemId,
+  instances: readonly ItemInstance[]
+): ItemVolleyCadenceProfile | null {
+  const baseCadence = PERIODIC_VOLLEY_CADENCES[itemId as keyof typeof PERIODIC_VOLLEY_CADENCES];
+  if (!baseCadence) {
+    return null;
+  }
+
+  const ordered = getOrderedItemInstances(instances);
+  const itemIndex = ordered.findIndex((instance) => instance.itemId === itemId);
+  const ventIndex = ordered.findIndex(
+    (instance) => instance.itemId === 'item_prototype_vent_script'
+  );
+  const prototypeVented = itemIndex >= 0 && ventIndex > itemIndex;
+
+  return {
+    baseCadence,
+    effectiveCadence: baseCadence + (prototypeVented ? 1 : 0),
+    prototypeVented
+  };
 }
 
 export function describeItemLoadout(instances: readonly ItemInstance[]): string {
@@ -578,9 +622,9 @@ function applyOnFire(
   if (
     itemId === 'item_drone_uplink' &&
     hasItem(instances, 'item_mirror_turret') &&
-    payload.volleyIndex % 3 === 0
+    isItemVolleyCycle(itemId, instances, payload.volleyIndex)
   ) {
-    return {
+    return addPrototypeVentCycleShot(itemId, instances, payload, {
       ...payload,
       projectiles: [
         ...payload.projectiles,
@@ -603,7 +647,7 @@ function applyOnFire(
           }
         ])
       ]
-    };
+    });
   }
 
   if (itemId === 'item_mirror_turret') {
@@ -634,8 +678,11 @@ function applyOnFire(
     };
   }
 
-  if (itemId === 'item_phase_grazer' && payload.volleyIndex % 4 === 0) {
-    return {
+  if (
+    itemId === 'item_phase_grazer' &&
+    isItemVolleyCycle(itemId, instances, payload.volleyIndex)
+  ) {
+    return addPrototypeVentCycleShot(itemId, instances, payload, {
       ...payload,
       projectiles: payload.projectiles.map((projectile) => ({
         ...projectile,
@@ -643,14 +690,17 @@ function applyOnFire(
         ttl: projectile.ttl + 0.35,
         tags: addTags(projectile.tags, ['phase'])
       }))
-    };
+    });
   }
 
-  if (itemId === 'item_signal_clone_stamp' && payload.volleyIndex % 3 === 0) {
+  if (
+    itemId === 'item_signal_clone_stamp' &&
+    isItemVolleyCycle(itemId, instances, payload.volleyIndex)
+  ) {
     const sources = payload.projectiles
       .filter((projectile) => !projectile.tags.includes('drone'))
       .slice(0, 8);
-    return {
+    return addPrototypeVentCycleShot(itemId, instances, payload, {
       ...payload,
       projectiles: [
         ...payload.projectiles,
@@ -664,17 +714,20 @@ function applyOnFire(
           procDepth: projectile.procDepth + 1
         }))
       ]
-    };
+    });
   }
 
-  if (itemId === 'item_missile_splinter_warrant' && payload.volleyIndex % 4 === 0) {
+  if (
+    itemId === 'item_missile_splinter_warrant' &&
+    isItemVolleyCycle(itemId, instances, payload.volleyIndex)
+  ) {
     const seedProjectile = payload.projectiles[0];
 
     if (!seedProjectile) {
       return payload;
     }
 
-    return {
+    return addPrototypeVentCycleShot(itemId, instances, payload, {
       ...payload,
       projectiles: [
         ...payload.projectiles,
@@ -689,17 +742,20 @@ function applyOnFire(
           procDepth: seedProjectile.procDepth + 1
         }))
       ]
-    };
+    });
   }
 
-  if (itemId === 'item_overheat_oracle' && payload.volleyIndex % 5 === 0) {
+  if (
+    itemId === 'item_overheat_oracle' &&
+    isItemVolleyCycle(itemId, instances, payload.volleyIndex)
+  ) {
     const seedProjectile = payload.projectiles[0];
 
     if (!seedProjectile) {
       return payload;
     }
 
-    return {
+    return addPrototypeVentCycleShot(itemId, instances, payload, {
       ...payload,
       projectiles: [
         ...payload.projectiles,
@@ -714,12 +770,12 @@ function applyOnFire(
           procDepth: seedProjectile.procDepth + 1
         }
       ]
-    };
+    });
   }
 
   if (
     itemId === 'item_arc_welder_drone' &&
-    payload.volleyIndex % 3 === 0 &&
+    isItemVolleyCycle(itemId, instances, payload.volleyIndex) &&
     (hasItem(instances, 'item_chain_arc_capacitor') ||
       payload.projectiles.some((projectile) => projectile.tags.includes('arc')))
   ) {
@@ -731,7 +787,7 @@ function applyOnFire(
 
     const side = payload.volleyIndex % 2 === 0 ? -1 : 1;
 
-    return {
+    return addPrototypeVentCycleShot(itemId, instances, payload, {
       ...payload,
       projectiles: [
         ...payload.projectiles,
@@ -745,17 +801,20 @@ function applyOnFire(
           procDepth: seedProjectile.procDepth + 1
         }
       ]
-    };
+    });
   }
 
-  if (itemId === 'item_lane_splitter_chisel' && payload.volleyIndex % 6 === 0) {
+  if (
+    itemId === 'item_lane_splitter_chisel' &&
+    isItemVolleyCycle(itemId, instances, payload.volleyIndex)
+  ) {
     const seedProjectile = payload.projectiles[0];
 
     if (!seedProjectile || seedProjectile.procDepth > 0) {
       return payload;
     }
 
-    return {
+    return addPrototypeVentCycleShot(itemId, instances, payload, {
       ...payload,
       projectiles: [
         ...payload.projectiles,
@@ -768,17 +827,20 @@ function applyOnFire(
           procDepth: seedProjectile.procDepth + 1
         }))
       ]
-    };
+    });
   }
 
-  if (itemId === 'item_wake_missile_abacus' && payload.volleyIndex % 5 === 0) {
+  if (
+    itemId === 'item_wake_missile_abacus' &&
+    isItemVolleyCycle(itemId, instances, payload.volleyIndex)
+  ) {
     const seedProjectile = payload.projectiles[0];
 
     if (!seedProjectile) {
       return payload;
     }
 
-    return {
+    return addPrototypeVentCycleShot(itemId, instances, payload, {
       ...payload,
       projectiles: [
         ...payload.projectiles,
@@ -792,10 +854,13 @@ function applyOnFire(
           procDepth: seedProjectile.procDepth + 1
         }
       ]
-    };
+    });
   }
 
-  if (itemId === 'item_sidecar_drone_bay' && payload.volleyIndex % 4 === 0) {
+  if (
+    itemId === 'item_sidecar_drone_bay' &&
+    isItemVolleyCycle(itemId, instances, payload.volleyIndex)
+  ) {
     const seedProjectile = payload.projectiles[0];
 
     if (!seedProjectile) {
@@ -804,7 +869,7 @@ function applyOnFire(
 
     const side = payload.volleyIndex % 8 === 0 ? -1 : 1;
 
-    return {
+    return addPrototypeVentCycleShot(itemId, instances, payload, {
       ...payload,
       projectiles: [
         ...payload.projectiles,
@@ -818,15 +883,18 @@ function applyOnFire(
           procDepth: seedProjectile.procDepth + 1
         }
       ]
-    };
+    });
   }
 
-  if (itemId === 'item_harmonic_fork_loom' && payload.volleyIndex % 3 === 0) {
+  if (
+    itemId === 'item_harmonic_fork_loom' &&
+    isItemVolleyCycle(itemId, instances, payload.volleyIndex)
+  ) {
     const outerProjectiles = [...payload.projectiles]
       .sort((left, right) => Math.abs(right.vx) - Math.abs(left.vx))
       .slice(0, 2);
 
-    return {
+    return addPrototypeVentCycleShot(itemId, instances, payload, {
       ...payload,
       projectiles: [
         ...payload.projectiles,
@@ -843,10 +911,13 @@ function applyOnFire(
           };
         })
       ]
-    };
+    });
   }
 
-  if (itemId === 'item_warhead_echo_chamber' && payload.volleyIndex % 4 === 0) {
+  if (
+    itemId === 'item_warhead_echo_chamber' &&
+    isItemVolleyCycle(itemId, instances, payload.volleyIndex)
+  ) {
     const seedProjectile = payload.projectiles.reduce<ProjectileBlueprint | null>(
       (heaviest, projectile) =>
         !heaviest || projectile.damage > heaviest.damage ? projectile : heaviest,
@@ -857,7 +928,7 @@ function applyOnFire(
       return payload;
     }
 
-    return {
+    return addPrototypeVentCycleShot(itemId, instances, payload, {
       ...payload,
       projectiles: [
         ...payload.projectiles,
@@ -871,10 +942,49 @@ function applyOnFire(
           procDepth: seedProjectile.procDepth + 1
         }
       ]
-    };
+    });
   }
 
   return payload;
+}
+
+function isItemVolleyCycle(
+  itemId: ItemId,
+  instances: readonly ItemInstance[],
+  volleyIndex: number
+): boolean {
+  const cadence = getItemVolleyCadenceProfile(itemId, instances);
+  return cadence !== null && volleyIndex % cadence.effectiveCadence === 0;
+}
+
+function addPrototypeVentCycleShot(
+  itemId: ItemId,
+  instances: readonly ItemInstance[],
+  input: FirePayload,
+  output: FirePayload
+): FirePayload {
+  const cadence = getItemVolleyCadenceProfile(itemId, instances);
+  const seedProjectile = input.projectiles[0];
+  if (!cadence?.prototypeVented || !seedProjectile) {
+    return output;
+  }
+
+  return {
+    ...output,
+    projectiles: [
+      ...output.projectiles,
+      {
+        ...seedProjectile,
+        vx: seedProjectile.vx * 0.35,
+        vy: seedProjectile.vy * 0.94,
+        damage: Math.max(0.45, seedProjectile.damage * 0.58),
+        radius: Math.max(3, seedProjectile.radius * 0.82),
+        ttl: seedProjectile.ttl + 0.12,
+        tags: addTags(seedProjectile.tags, ['heat']),
+        procDepth: seedProjectile.procDepth + 1
+      }
+    ]
+  };
 }
 
 function applyOnEnemyKilled(
@@ -1238,40 +1348,7 @@ function applyOnGraze(itemId: ItemId, payload: GrazePayload): GrazePayload {
   return payload;
 }
 
-function applyOnSpecialUsed(itemId: ItemId, payload: SpecialUsedPayload): SpecialUsedPayload {
-  if (itemId === 'item_prototype_vent_script') {
-    const seedProjectile = payload.projectiles[0];
-
-    if (!seedProjectile) {
-      return {
-        ...payload,
-        activeSeconds: payload.activeSeconds + 0.3,
-        cooldownSeconds: Math.max(0.4, payload.cooldownSeconds - 0.15),
-        fireRateMultiplier: payload.fireRateMultiplier * 0.92
-      };
-    }
-
-    return {
-      ...payload,
-      projectiles: [
-        ...payload.projectiles,
-        {
-          ...seedProjectile,
-          vx: 0,
-          vy: seedProjectile.vy * 1.08,
-          damage: Math.max(0.5, seedProjectile.damage * 0.75),
-          radius: Math.max(4, seedProjectile.radius * 0.9),
-          ttl: seedProjectile.ttl + 0.1,
-          tags: addTags(seedProjectile.tags, ['heat', 'plasma']),
-          procDepth: seedProjectile.procDepth + 1
-        }
-      ],
-      activeSeconds: payload.activeSeconds + 0.3,
-      cooldownSeconds: Math.max(0.4, payload.cooldownSeconds - 0.15),
-      fireRateMultiplier: payload.fireRateMultiplier * 0.92
-    };
-  }
-
+function applyOnSpecialUsed(_itemId: ItemId, payload: SpecialUsedPayload): SpecialUsedPayload {
   return payload;
 }
 

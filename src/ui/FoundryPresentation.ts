@@ -12,7 +12,11 @@ import {
   type FoundryComponentInstance
 } from '../game/Foundry';
 import { applyCombinedHooks } from '../game/CombinedHooks';
-import { getOrderedItemInstances, type ProjectileBlueprint } from '../game/ItemHooks';
+import {
+  getItemVolleyCadenceProfile,
+  getOrderedItemInstances,
+  type ProjectileBlueprint
+} from '../game/ItemHooks';
 import type { ItemInstance } from '../game/Rewards';
 import { createWeaponProjectileBlueprints } from '../game/WeaponProjectiles';
 import {
@@ -104,6 +108,7 @@ export interface FoundryCircuitStageModel {
   readonly incomingImpact: number;
   readonly outgoingImpact: number;
   readonly outputLabel: string;
+  readonly cadenceShiftLabel: string | null;
   readonly addedTags: readonly string[];
   readonly changed: boolean;
 }
@@ -304,7 +309,12 @@ function createFoundryCircuitStageModels(
   let incoming = resolveCircuitPreviewVolley(weapon, resolution, procBudget, []);
   return ordered.map((instance, index) => {
     const prefix = ordered.slice(0, index + 1);
-    const outgoing = resolveCircuitPreviewVolley(weapon, resolution, procBudget, prefix);
+    const outgoing = resolveCircuitPreviewVolley(
+      weapon,
+      resolution,
+      procBudget,
+      addLaterCircuitContext(prefix, ordered)
+    );
     const item = getItemById(instance.itemId);
     const incomingImpact = sumProjectileImpact(incoming);
     const outgoingImpact = sumProjectileImpact(outgoing);
@@ -314,10 +324,12 @@ function createFoundryCircuitStageModels(
         outgoing.flatMap((projectile) => projectile.tags).filter((tag) => !incomingTags.has(tag))
       )
     ];
+    const cadence = getItemVolleyCadenceProfile(instance.itemId, ordered);
     const changed =
       incoming.length !== outgoing.length ||
       Math.abs(incomingImpact - outgoingImpact) > 0.01 ||
-      addedTags.length > 0;
+      addedTags.length > 0 ||
+      cadence?.prototypeVented === true;
     const model: FoundryCircuitStageModel = {
       acquisitionOrder: instance.acquisitionOrder,
       position: index + 1,
@@ -334,12 +346,34 @@ function createFoundryCircuitStageModels(
         outgoingImpact,
         item.hooks
       ),
+      cadenceShiftLabel: cadence?.prototypeVented
+        ? `VENT SCRIPT · EVERY ${formatOrdinal(cadence.baseCadence)} -> ${formatOrdinal(cadence.effectiveCadence)} VOLLEY · +1 HEAT SHOT`
+        : null,
       addedTags,
       changed
     };
     incoming = outgoing;
     return model;
   });
+}
+
+function addLaterCircuitContext(
+  prefix: readonly ItemInstance[],
+  ordered: readonly ItemInstance[]
+): ItemInstance[] {
+  const prototypeVent = ordered.find(
+    (instance) => instance.itemId === 'item_prototype_vent_script'
+  );
+  return prototypeVent && !prefix.includes(prototypeVent) ? [...prefix, prototypeVent] : [...prefix];
+}
+
+function formatOrdinal(value: number): string {
+  const modulo100 = value % 100;
+  if (modulo100 >= 11 && modulo100 <= 13) return `${value}TH`;
+  if (value % 10 === 1) return `${value}ST`;
+  if (value % 10 === 2) return `${value}ND`;
+  if (value % 10 === 3) return `${value}RD`;
+  return `${value}TH`;
 }
 
 function resolveCircuitPreviewVolley(

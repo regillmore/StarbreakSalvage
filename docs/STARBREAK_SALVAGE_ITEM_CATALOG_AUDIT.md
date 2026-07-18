@@ -1,6 +1,6 @@
 # Starbreak Salvage - Item Catalog Audit
 
-Work orders 051-056 baseline, refreshed by work order 156. This document records the active item catalog after the Noita-style circuit pivot retired Boss Pressure from live rotation and replaced its five slots with weapon-chain upgrades. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
+Work orders 051-056 baseline, refreshed by work orders 156 and 169. This document records the active item catalog after the Noita-style circuit pivot retired Boss Pressure from live rotation, replaced its five slots with weapon-chain upgrades, and converted Prototype Vent Script into an ordered cadence modifier. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
 
 ## Current Shape
 
@@ -41,13 +41,13 @@ Validation requires every active item to appear in a compatible reward pool and 
 
 | Hook                 | Item count | Current role                                                        |
 | -------------------- | ---------- | ------------------------------------------------------------------- |
-| `onFire`             | 14         | Volley shaping, drones, split shots, missiles, phase/heat variants. |
+| `onFire`             | 15         | Volley shaping, drones, split shots, missiles, phase/heat variants, and ordered cadence. |
 | `onProjectileSpawn`  | 9          | Projectile tags, size, damage, TTL, and drift shaping.              |
 | `onEnemyKilled`      | 11         | Salvage payouts, arc/blast follow-ups, overkill/relic rewards.      |
 | `onPlayerHit`        | 6          | Shield, revenge, armor, and curse retaliation.                      |
 | `onPickupCollected`  | 5          | Credit/salvage pickup fire-rate boosts.                             |
 | `onGraze`            | 2          | Near-miss charge/rate/radius effects.                               |
-| `onSpecialUsed`      | 1          | Prototype special-use projectile and cooldown shaping.              |
+| `onSpecialUsed`      | 0          | Reserved hook surface; Prototype Vent Script moved to ordered volley cadence. |
 | `onBombUsed`         | 1          | Bomb damage, radius, and boss-ratio shaping.                        |
 | `onSectorStart`      | 3          | Lunar entry, sector-start resource, and toll effects.               |
 | `onRouteChosen`      | 4          | Route economy, curse interest, and ambush insurance effects.        |
@@ -169,6 +169,10 @@ These former bridge entries now have live, order-sensitive circuit behavior:
 | Cursed Hull Plate | Amplifies retaliation already built before it, adds curse/overkill, and emits a fan. | Live in work order 132; socket order changes the amplified set. |
 
 No shipped item is a pure no-op or bridge: current validation requires every declared hook to have an implementation, and work order 132 promoted the final four bridge entries to live mechanics. Work order 052 formalized live, bridge, and planned implementation status in item metadata.
+
+## Ordered cadence modifier in Work Order 169
+
+Prototype Vent Script now reads the fitted signal chain instead of modifying Special use. Every periodic volley stage earlier than the script changes from every `n`th volley to every `(n+1)`th volley and adds one generic heat-tagged shot on that completed cycle. A script placed before a periodic stage has no effect on it. The shared cadence profile drives combat hooks, Contract/Hardpoint live-fire previews, and the explicit cadence-change line on each affected Hardpoint card; later stages can still transform the new heat shot in normal circuit order.
 
 ## Risks For 057-060
 

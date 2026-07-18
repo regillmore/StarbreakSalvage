@@ -24,7 +24,7 @@ describe('item stress instrumentation', () => {
 
     expect(model.itemCount).toBe(ITEM_STORM_ITEM_IDS.length);
     expect(model.uniqueItemCount).toBe(ITEM_STORM_ITEM_IDS.length);
-    expect(model.activeHookTypes).toBe(model.totalHookTypes);
+    expect(model.activeHookTypes).toBe(model.totalHookTypes - 1);
     expect(model.hookApplications).toBeGreaterThan(model.itemCount);
     expect(model.peakHookApplications).toBeLessThanOrEqual(model.procBudget);
     expect(model.skippedHookApplications).toBe(0);
@@ -34,6 +34,7 @@ describe('item stress instrumentation', () => {
     expect(activeHookNames).toContain('onShopEntered');
     expect(activeHookNames).toContain('onRewardGenerated');
     expect(activeHookNames).toContain('onBossPhaseChanged');
+    expect(activeHookNames).not.toContain('onSpecialUsed');
   });
 
   it('reports skipped applications when duplicate pressure exceeds the proc budget', () => {

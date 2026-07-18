@@ -803,7 +803,7 @@ test('exposes item-heavy hook storm debug instrumentation', async ({ page }) => 
   await expect(page.getByTestId('boss-warning')).toContainText('ITEM HOOK STORM');
   await expect(page.locator('.debug-overlay')).toContainText('Scenario item-storm');
   await expect(page.locator('.debug-overlay')).toContainText('Items 25 (25 unique)');
-  await expect(page.locator('.debug-overlay')).toContainText(/Hooks 14\/14 \d+ apps/);
+  await expect(page.locator('.debug-overlay')).toContainText(/Hooks 13\/14 \d+ apps/);
   await expect(page.locator('.debug-overlay')).toContainText(/Proc on[A-Za-z]+ \d+\/48 skip 0/);
   await expect(page.locator('.debug-overlay')).toContainText(/Build .+ \| 25 items/);
   await expect(page.locator('.debug-overlay')).toContainText('Projectiles 30 (P0/E30)');
@@ -1568,6 +1568,14 @@ test('keeps hardpoint live-fire geometry on one combat scale across viewport wid
   await page.getByRole('button', { name: 'Scenario Lab [Debug]' }).click();
   await page.getByTestId('scenario-lab-lab_engineering_foundry').click();
   await expect(page.getByTestId('salvage-foundry')).toBeVisible();
+  const cadenceShift = page.getByTestId('foundry-circuit-cadence-shift');
+  await expect(cadenceShift).toHaveText(
+    'VENT SCRIPT · EVERY 4TH -> 5TH VOLLEY · +1 HEAT SHOT'
+  );
+  await page.getByRole('button', { name: 'Move Prototype Vent Script earlier in the circuit' }).click();
+  await expect(cadenceShift).toHaveCount(0);
+  await page.getByRole('button', { name: 'Move Prototype Vent Script later in the circuit' }).click();
+  await expect(cadenceShift).toHaveCount(1);
   await page.evaluate(() => {
     document.documentElement.dataset.reducedMotion = 'true';
   });

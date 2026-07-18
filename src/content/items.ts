@@ -1054,8 +1054,9 @@ export const ITEMS: readonly ItemDefinition[] = [
     name: 'Prototype Vent Script',
     rarity: 'rare',
     tags: ['heat'],
-    hooks: ['onSpecialUsed'],
-    effect: 'special bursts vent longer and add one prototype heat shot',
+    hooks: ['onFire'],
+    effect:
+      'earlier periodic volley upgrades trigger one volley later and add one heat shot each cycle',
     weight: 6,
     metadata: {
       family: 'heat-prototype',
