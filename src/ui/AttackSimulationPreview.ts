@@ -1,5 +1,6 @@
 import type { FoundryAttackSimulationModel } from './FoundryPresentation';
 import { createShipPreviewElement, type ShipPreviewModel } from './ShipPreview';
+import { isPhaseProjectile } from '../game/PhaseProjectile';
 
 export interface AttackSimulationPreviewOptions {
   readonly previewModel: ShipPreviewModel;
@@ -78,6 +79,13 @@ export function createAttackSimulationPreviewElement(
     shot.style.setProperty('--shot-heading', `${projectile.headingDegrees}deg`);
     shot.style.setProperty('--shot-duration', `${projectile.durationSeconds}s`);
     shot.style.setProperty('--shot-delay', `${projectile.delaySeconds}s`);
+    if (isPhaseProjectile(projectile.tags)) {
+      shot.classList.add('attack-simulation-projectile-phase');
+      const phaseShell = ownerDocument.createElement('span');
+      phaseShell.className = 'attack-simulation-phase-shell';
+      phaseShell.setAttribute('aria-hidden', 'true');
+      shot.append(phaseShell);
+    }
     projectileLayer.append(shot);
   }
 

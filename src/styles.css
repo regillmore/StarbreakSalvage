@@ -891,7 +891,7 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   transform: translateX(-50%);
 }
 
-.attack-simulation-projectile[data-flight-kind='missile'] {
+.attack-simulation-projectile:is([data-flight-kind='missile'], [data-flight-kind='phaseMissile']) {
   aspect-ratio: 0.44;
   border-radius: 52% 52% 22% 22% / 30% 30% 14% 14%;
   background:
@@ -904,7 +904,10 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   animation-timing-function: linear(0, 0.045 16%, 0.69 82%, 1);
 }
 
-.attack-simulation-projectile[data-flight-kind='missile']::before {
+.attack-simulation-projectile:is(
+    [data-flight-kind='missile'],
+    [data-flight-kind='phaseMissile']
+  )::before {
   position: absolute;
   right: -38%;
   bottom: 10%;
@@ -916,12 +919,95 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   filter: drop-shadow(0 0 2px rgba(255, 209, 102, 0.8));
 }
 
-.attack-simulation-projectile[data-flight-kind='missile']::after {
+.attack-simulation-projectile:is(
+    [data-flight-kind='missile'],
+    [data-flight-kind='phaseMissile']
+  )::after {
   top: 78%;
   width: 48%;
   height: 130%;
   background: linear-gradient(#ffffff, #ff9c4a 24%, rgba(124, 247, 255, 0.72) 58%, transparent);
   clip-path: polygon(18% 0, 82% 0, 100% 28%, 50% 100%, 0 28%);
+}
+
+.attack-simulation-projectile-phase:not([data-flight-kind='phaseMissile']) {
+  aspect-ratio: 0.72;
+  border-radius: 18% 82% 20% 80%;
+  clip-path: polygon(50% 0, 100% 44%, 72% 62%, 50% 100%, 28% 62%, 0 44%);
+  background:
+    linear-gradient(90deg, rgba(255, 107, 214, 0.9), #ffffff 46% 54%, rgba(124, 247, 255, 0.94)),
+    #7cf7ff;
+  box-shadow:
+    -4px 0 8px rgba(255, 107, 214, 0.72),
+    4px 0 8px rgba(124, 247, 255, 0.82),
+    0 0 5px #ffffff;
+}
+
+.attack-simulation-projectile-phase:not([data-flight-kind='phaseMissile'])::after {
+  top: 76%;
+  width: 64%;
+  height: 320%;
+  border-radius: 0;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.88) 0 8%,
+    rgba(124, 247, 255, 0.58) 8% 17%,
+    transparent 17% 32%
+  );
+  clip-path: polygon(30% 0, 70% 0, 100% 100%, 58% 74%, 44% 100%, 0 82%);
+}
+
+.attack-simulation-phase-shell {
+  position: absolute;
+  inset: -72%;
+  border: max(1px, calc(var(--shot-size) * 0.09)) solid rgba(255, 107, 214, 0.78);
+  border-radius: 28% 72% 32% 68%;
+  content: '';
+  opacity: 0.8;
+  transform: rotate(45deg);
+  box-shadow:
+    0 0 0 1px rgba(124, 247, 255, 0.5),
+    0 0 7px rgba(255, 107, 214, 0.62);
+  animation: phase-projectile-interference 0.48s steps(4, end) infinite;
+  animation-delay: var(--shot-delay);
+}
+
+.attack-simulation-phase-shell::before,
+.attack-simulation-phase-shell::after {
+  position: absolute;
+  inset: 12%;
+  border: 1px solid rgba(124, 247, 255, 0.76);
+  border-radius: inherit;
+  content: '';
+  transform: translate(58%, -18%);
+}
+
+.attack-simulation-phase-shell::after {
+  border-color: rgba(255, 107, 214, 0.72);
+  transform: translate(-58%, 18%);
+}
+
+@keyframes phase-projectile-interference {
+  0%,
+  100% {
+    opacity: 0.82;
+    transform: rotate(45deg) scale(0.88);
+  }
+
+  25% {
+    opacity: 0.46;
+    transform: translateX(24%) rotate(78deg) scale(1.08);
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: translateX(-18%) rotate(132deg) scale(0.94);
+  }
+
+  75% {
+    opacity: 0.38;
+    transform: rotate(194deg) scale(1.14);
+  }
 }
 
 .attack-simulation-projectile[data-tags~='arc'] {
@@ -1684,6 +1770,13 @@ html[data-reduced-motion='true'] .attack-simulation-projectile {
   transform: translateX(-50%) rotate(var(--shot-heading, 0deg));
 }
 
+html[data-reduced-motion='true'] .attack-simulation-phase-shell,
+html[data-performance-mode='true'] .attack-simulation-phase-shell {
+  opacity: 0.72;
+  transform: rotate(45deg);
+  animation: none;
+}
+
 html[data-performance-mode='true'] .attack-simulation-projectile {
   animation: none;
   bottom: calc(10% + var(--shot-performance-rise));
@@ -1694,6 +1787,10 @@ html[data-performance-mode='true'] .attack-simulation-projectile {
 }
 
 html[data-performance-mode='true'] .attack-simulation-projectile-echo {
+  display: none;
+}
+
+html[data-performance-mode='true'] .attack-simulation-phase-shell::after {
   display: none;
 }
 
@@ -1729,6 +1826,11 @@ html[data-bullet-contrast='high'] .attack-simulation-projectile {
   border: 2px solid #03050d;
   background: #ffffff;
   box-shadow: 0 0 7px #ffffff;
+}
+
+html[data-bullet-contrast='high'] .attack-simulation-phase-shell {
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 2px #03050d;
 }
 
 .contract-panel {

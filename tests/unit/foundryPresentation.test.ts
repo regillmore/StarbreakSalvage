@@ -286,6 +286,21 @@ describe('foundry visual presentation', () => {
     expect(missile.ariaLabel).toContain('two-stage motor profile');
   });
 
+  it('marks phase and phase-missile shots for their shared refracted preview treatment', () => {
+    const phase = createFoundryAttackPreviewModel('Phase', 0.14, [
+      { ...projectile(0, 0, -820), tags: ['laser', 'phase'] }
+    ]);
+    const phaseMissile = createFoundryAttackPreviewModel('Phase Missile', 0.2, [
+      { ...projectile(0, 0, -500), tags: ['missile', 'phase'] }
+    ]);
+
+    expect(phase.projectiles[0]?.flightKind).toBe('phase');
+    expect(phaseMissile.projectiles[0]?.flightKind).toBe('phaseMissile');
+    expect(phase.ariaLabel).toContain('refracted core, displaced afterimages, and a broken wake');
+    expect(phaseMissile.ariaLabel).toContain('two-stage motor profile');
+    expect(phaseMissile.ariaLabel).toContain('refracted core');
+  });
+
   it('summarizes component costs and direct replacement deltas', () => {
     const contract = generateRunSkeleton('FOUNDRY-COMPARE-MODEL').contracts[0]!;
     const state = createEngineeringState(contract.loadout);

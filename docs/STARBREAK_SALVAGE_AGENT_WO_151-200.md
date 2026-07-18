@@ -270,3 +270,30 @@ Status: implemented. `ConfinedEnvironment` derives a bounded structural plan fro
 Browser inspection of the station fixture confirmed that the full viewport now reads as a sealed industrial traversal: large opaque hull panels, scrolling transverse ribs, inset service channels, conduits, lamps, and shadowed outer structure replace every visible star/nebula layer, while the central combat lane remains brighter and legible. The 390-by-700 high-contrast/performance fixture identifies the enclosed environment, retains clipped side walls and bulkheads, and reports no browser errors.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 104 Vitest files and 647 tests, the production build, all 16 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 949.80 kB minified/259.19 kB gzip initial JavaScript and unchanged 80.62/16.20 kB CSS, increases of 7.68/2.22 kB JavaScript over work order 160. The existing 500 kB chunk notice remains; no dependency, combat geometry, content RNG stream, save/snapshot schema, static base path, or warning threshold changed.
+
+## Work order 162 - Refracted phase-projectile identity
+
+Goal: make phase-tagged shots immediately distinct from ordinary ballistic projectiles in combat and live-fire previews without quietly changing their balance or collision rules.
+
+Prompt:
+
+> Give every phase-tagged projectile one shared deterministic interference identity: a refracted directional core, displaced afterimages, a broken wake, and a cycling aperture. Phase missiles should retain their powered body and motor profile while inheriting the interference treatment. Drive the cycle from fixed-step visual age, align Canvas combat with Contract Select and Hardpoint Control, and preserve authored travel, aim, damage, radius, cadence, heat, TTL, collision, and hook order. Respect owner readability, high contrast, reduced motion, performance mode, actor caps, saves, snapshots, accessibility, and static hosting. Add focused simulation, renderer, presentation, and Chromium coverage.
+
+Acceptance criteria:
+
+- Any projectile with the `phase` tag inherits the treatment without a weapon- or item-ID special case.
+- One bounded deterministic 0.48-second phase cycle supplies the coherent, splitting, translated, and rejoining presentation bands without RNG or gameplay-state mutation.
+- Non-missile phase shots align their refracted core, displaced echoes, broken wake, and aperture to their actual velocity; phase missiles combine those cues with the existing nose, fins, and powered exhaust.
+- Tracking a phase shot's visual age does not alter its authored linear displacement, damage, collision radius, TTL, cadence, targeting, or hook behavior.
+- Contract Select and Hardpoint Control identify phase and phase-missile flight kinds, render the same interference language, and describe the cue in their accessible live-fire summary.
+- High contrast keeps a bright core and dark separation, reduced motion freezes a readable phase, performance mode reduces echoes and glow, and the existing 48-projectile preview cap remains authoritative.
+
+Status: implemented. `PhaseProjectile` owns a pure age/radius/velocity presentation model with a repeating 0.48-second clock and bounded geometry. `CombatState` now advances visual age for phase-tagged actors, but only missiles continue through the powered-flight displacement branch; ordinary phase shots retain their original linear travel and every collision/damage rule.
+
+`CanvasRenderer` replaces the generic orb for phase shots with a velocity-aligned refracted shard, offset shells, segmented wake, and rotating aperture. Phase missiles retain their existing powered silhouette and add those interference layers. Owner-aware accent colors, high-contrast outlines, reduced-motion freezing, and performance-mode reductions keep the treatment readable without adding gameplay actors.
+
+`FoundryPresentation` classifies `phase` and `phaseMissile` flights from tags, and the shared `AttackSimulationPreview` projects the same asymmetric core, split-color shells, and broken trail in both Contract Select and Hardpoint Control. The live-fire accessibility description now explains the phase cue. Focused coverage proves deterministic cycle bounds, ordinary phase displacement parity, missile composition, canvas geometry, preview classification, and the selected Phase Courier ignition presentation.
+
+Browser inspection with the corrected `RANDOM-1UB0590-26CZ9L` seed and complete ship roster reproduced the reported Phase Courier + Phase Grazer board. The representative fourth volley contains three `phase`-tagged shots, three interference shells, `phase` flight classification, and the accessible refracted-core description; standard animation visibly cycles the split shells and wake, while high-contrast reduced-motion/performance presentation freezes a clean bounded state. The dedicated Chromium path reports no console or page errors.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 105 Vitest files and 652 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 953.24 kB minified/260.07 kB gzip initial JavaScript and 82.59/16.64 kB CSS, increases of 3.44/0.88 kB JavaScript and 1.97/0.44 kB CSS over work order 161. The existing 500 kB chunk notice remains; no dependency, projectile actor cap, RNG stream, content table, save/snapshot schema, static base path, or warning threshold changed.

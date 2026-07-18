@@ -2307,3 +2307,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 161. `ConfinedEnvironment` owns the deterministic target/layout-derived presentation plan, `GameplayScene` selects it instead of the sector background for boarding, and `CanvasRenderer` consumes it as an opaque world backdrop plus clipped room passage. Ordinary open-flight backgrounds and all combat state remain unchanged.
+
+### BL29 - Refracted phase-projectile identity
+
+Acceptance:
+
+- Every `phase`-tagged projectile inherits a deterministic velocity-aligned refracted core, displaced echoes, broken wake, and cycling aperture without weapon-specific presentation branches.
+- Phase missiles combine the interference treatment with the existing powered missile body and motor profile.
+- Visual-age tracking does not alter ordinary phase travel, damage, collision, cadence, heat, TTL, targeting, hook order, or deterministic content.
+- Contract Select and Hardpoint Control share the phase and phase-missile identity with Canvas combat and describe it through their accessible live-fire summary.
+- High contrast, reduced motion, performance mode, preview actor limits, saves, snapshots, and static hosting remain compatible.
+
+Status:
+
+- Implemented in work order 162. `PhaseProjectile` supplies the bounded 0.48-second interference read model, `CombatState` tracks presentation age without changing linear phase-shot motion, and `CanvasRenderer` draws a directional shard, split shells, broken wake, and aperture. Shared attack previews classify phase flights from tags, so the Phase Courier ignition and every circuit-generated phase shot remain visually consistent.

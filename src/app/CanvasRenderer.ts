@@ -58,6 +58,7 @@ import {
   getMissileThrustScale,
   isMissileProjectile
 } from '../game/MissileFlight';
+import { getPhaseProjectilePresentation, isPhaseProjectile } from '../game/PhaseProjectile';
 
 const BACKGROUND_SEED = 'STARBREAK-SALVAGE-SHELL';
 const DEFAULT_PLAYER_SHIP_APPEARANCE: ShipAppearance = {
@@ -1696,6 +1697,7 @@ export class CanvasRenderer {
   public paintProjectile(projectile: ProjectileRenderState): void {
     const context = this.context;
     const velocityCues = getVelocityCueState(this.settings);
+    const phased = isPhaseProjectile(projectile.tags);
     let projectileColor: string;
 
     context.save();
@@ -1717,8 +1719,26 @@ export class CanvasRenderer {
     context.shadowColor = projectileColor;
     context.shadowBlur = velocityCues.highContrastProjectiles ? 14 : 10;
 
+    if (phased) {
+      this.paintPhaseProjectileWake(
+        projectile,
+        projectileColor,
+        velocityCues.highContrastProjectiles
+      );
+    }
+
     if (isMissileProjectile(projectile.tags)) {
       this.paintMissileProjectile(
+        projectile,
+        projectileColor,
+        velocityCues.highContrastProjectiles
+      );
+      context.restore();
+      return;
+    }
+
+    if (phased) {
+      this.paintPhaseProjectileCore(
         projectile,
         projectileColor,
         velocityCues.highContrastProjectiles
@@ -1738,6 +1758,130 @@ export class CanvasRenderer {
       context.stroke();
     }
 
+    context.restore();
+  }
+
+  private paintPhaseProjectileWake(
+    projectile: ProjectileRenderState,
+    projectileColor: string,
+    highContrast: boolean
+  ): void {
+    const context = this.context;
+    const presentation = getPhaseProjectilePresentation({
+      ageSeconds: this.settings.reducedMotion ? 0.12 : projectile.ageSeconds,
+      radius: projectile.radius,
+      vx: projectile.vx,
+      vy: projectile.vy
+    });
+    const echoCount = this.settings.performanceMode ? 1 : this.settings.reducedMotion ? 2 : 3;
+    const phaseAccent =
+      projectile.owner === 'enemy'
+        ? '#ffdf70'
+        : projectile.owner === 'ally'
+          ? '#9bffb0'
+          : '#ff6bd6';
+
+    context.save();
+    context.rotate(presentation.headingRadians);
+    context.globalAlpha = highContrast ? 0.82 : presentation.visibility * 0.7;
+    context.strokeStyle = highContrast ? '#ffffff' : phaseAccent;
+    context.fillStyle = highContrast ? '#ffffff' : projectileColor;
+    context.lineWidth = highContrast ? 1.8 : Math.max(1, projectile.radius * 0.24);
+    context.setLineDash([
+      Math.max(2, projectile.radius * 0.72),
+      Math.max(2, projectile.radius * 0.58)
+    ]);
+    context.beginPath();
+    context.moveTo(0, projectile.radius * 1.1);
+    context.lineTo(0, presentation.wakeLength);
+    context.stroke();
+    context.setLineDash([]);
+
+    for (let index = echoCount; index > 0; index -= 1) {
+      const depth = index / echoCount;
+      const y = presentation.echoDistance * depth;
+      const x = (index % 2 === 0 ? -1 : 1) * presentation.lateralOffset * depth;
+      const radius = projectile.radius * (0.72 - depth * 0.16);
+      context.globalAlpha = (highContrast ? 0.46 : 0.38) * (1 - depth * 0.38);
+      context.beginPath();
+      context.moveTo(x, y - radius * 1.25);
+      context.lineTo(x + radius, y);
+      context.lineTo(x, y + radius * 1.25);
+      context.lineTo(x - radius, y);
+      context.closePath();
+      context.stroke();
+    }
+
+    context.globalAlpha = highContrast ? 0.76 : 0.58;
+    context.strokeStyle = highContrast ? '#ffffff' : projectileColor;
+    context.lineWidth = highContrast ? 2 : Math.max(1.2, projectile.radius * 0.28);
+    context.rotate(presentation.apertureRotation);
+    context.beginPath();
+    context.arc(0, 0, presentation.apertureRadius, Math.PI * 0.12, Math.PI * 0.74);
+    context.moveTo(presentation.apertureRadius, 0);
+    context.arc(0, 0, presentation.apertureRadius, Math.PI * 1.08, Math.PI * 1.68);
+    context.stroke();
+    context.restore();
+  }
+
+  private paintPhaseProjectileCore(
+    projectile: ProjectileRenderState,
+    projectileColor: string,
+    highContrast: boolean
+  ): void {
+    const context = this.context;
+    const presentation = getPhaseProjectilePresentation({
+      ageSeconds: this.settings.reducedMotion ? 0.12 : projectile.ageSeconds,
+      radius: projectile.radius,
+      vx: projectile.vx,
+      vy: projectile.vy
+    });
+    const radius = Math.max(3.5, projectile.radius) * presentation.coreScale;
+    const phaseAccent = projectile.owner === 'enemy' ? '#ffdf70' : '#ff6bd6';
+    const shellOffset = presentation.lateralOffset * 0.42;
+
+    context.save();
+    context.rotate(presentation.headingRadians);
+    context.shadowColor = highContrast ? '#ffffff' : phaseAccent;
+    context.shadowBlur = this.settings.performanceMode ? 0 : highContrast ? 8 : 14;
+    context.globalAlpha = highContrast ? 0.58 : 0.46;
+    context.fillStyle = highContrast ? '#ffffff' : phaseAccent;
+    for (const offset of [-shellOffset, shellOffset]) {
+      context.beginPath();
+      context.moveTo(offset, -radius * 1.34);
+      context.lineTo(offset + radius * 0.82, 0);
+      context.lineTo(offset, radius * 1.34);
+      context.lineTo(offset - radius * 0.82, 0);
+      context.closePath();
+      context.fill();
+    }
+
+    context.globalAlpha = 1;
+    context.fillStyle = highContrast ? '#ffffff' : projectileColor;
+    context.strokeStyle = '#03050d';
+    context.lineWidth = highContrast ? 2.4 : Math.max(1.2, projectile.radius * 0.28);
+    context.beginPath();
+    context.moveTo(0, -radius * 1.62);
+    context.lineTo(radius * 0.98, -radius * 0.08);
+    context.lineTo(radius * 0.42, radius * 0.34);
+    context.lineTo(0, radius * 1.55);
+    context.lineTo(-radius * 0.42, radius * 0.34);
+    context.lineTo(-radius * 0.98, -radius * 0.08);
+    context.closePath();
+    context.fill();
+    context.shadowBlur = 0;
+    context.stroke();
+
+    context.strokeStyle = highContrast ? '#03050d' : '#ffffff';
+    context.lineWidth = Math.max(1, projectile.radius * 0.2);
+    context.beginPath();
+    context.moveTo(-radius * 0.58, 0);
+    context.lineTo(radius * 0.58, 0);
+    context.stroke();
+    context.fillStyle = '#ffffff';
+    context.beginPath();
+    context.arc(0, -radius * 0.28, Math.max(1.2, projectile.radius * 0.22), 0, Math.PI * 2);
+    context.fill();
     context.restore();
   }
 

@@ -26,6 +26,18 @@ const SCRAP_BAY_SAVE = {
   lastRun: null
 } as const;
 
+const PHASE_PREVIEW_SAVE = {
+  ...SCRAP_BAY_SAVE,
+  salvageBank: 0,
+  unlockedIds: [
+    'unlock_ship_phase_courier',
+    'unlock_ship_shield_bruiser',
+    'unlock_ship_scrap_monk',
+    'unlock_ship_corporate_test_pilot',
+    'unlock_ship_relic_thief'
+  ]
+} as const;
+
 const HIGH_CONTRAST_SETTINGS = {
   version: 1,
   keyBindings: {
@@ -570,6 +582,56 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByRole('heading', { name: 'Starbreak Salvage' })).toBeVisible();
   await expect(page.getByTestId('boot-status')).toContainText(/Bank [1-9]\d* kg/);
 
+  expect(browserErrors).toEqual([]);
+});
+
+test('renders a real Phase Grazer volley with the shared phase identity', async ({ page }) => {
+  const browserErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') {
+      browserErrors.push(message.text());
+    }
+  });
+  page.on('pageerror', (error) => browserErrors.push(error.message));
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.addInitScript(
+    ({ save, settings }) => {
+      window.localStorage.setItem('starbreak.save.v5', JSON.stringify(save));
+      window.localStorage.setItem('starbreak.settings.v1', JSON.stringify(settings));
+    },
+    { save: PHASE_PREVIEW_SAVE, settings: HIGH_CONTRAST_SETTINGS }
+  );
+
+  await page.goto('./?debug=1&seed=RANDOM-1UB0590-26CZ9L');
+  await expect(page.locator('html')).toHaveAttribute('data-bullet-contrast', 'high');
+  await expect(page.locator('html')).toHaveAttribute('data-reduced-motion', 'true');
+  await expect(page.locator('html')).toHaveAttribute('data-performance-mode', 'true');
+  await page.getByRole('button', { name: 'Start Seeded Expedition' }).click();
+  await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
+  const phaseContract = page.locator('article').filter({ hasText: 'Phase Courier' });
+  await expect(phaseContract).toContainText('Phase Grazer');
+  await phaseContract.getByRole('button', { name: /Select|Selected/ }).click();
+  await expect(page.getByTestId('selected-contract-preview')).toContainText('Phase Courier');
+  await expect(page.getByTestId('selected-contract-ignition')).toContainText('Phase Grazer');
+
+  const phasePreviewShots = page.locator(
+    '[data-testid="contract-attack-projectile"][data-tags~="phase"]'
+  );
+  expect(await phasePreviewShots.count()).toBeGreaterThan(0);
+  await expect(phasePreviewShots.first()).toHaveAttribute('data-flight-kind', 'phase');
+  await expect(phasePreviewShots.first().locator('.attack-simulation-phase-shell')).toHaveCount(1);
+  await expect
+    .poll(async () =>
+      phasePreviewShots
+        .first()
+        .locator('.attack-simulation-phase-shell')
+        .evaluate((shell) => getComputedStyle(shell).animationName)
+    )
+    .toBe('none');
+  await expect(page.getByTestId('contract-attack-preview')).toHaveAttribute(
+    'aria-label',
+    /refracted core, displaced afterimages, and a broken wake/i
+  );
   expect(browserErrors).toEqual([]);
 });
 

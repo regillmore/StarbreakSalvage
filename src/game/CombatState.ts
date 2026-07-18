@@ -55,6 +55,7 @@ import {
 import { getItemNames, type ItemInstance } from './Rewards';
 import { createWeaponProjectileBlueprints } from './WeaponProjectiles';
 import { getProjectileTravelDeltaSeconds, isMissileProjectile } from './MissileFlight';
+import { isPhaseProjectile } from './PhaseProjectile';
 import type { MissionObjectiveResultSnapshot } from './ObjectiveDirector';
 import type { BossPhaseUpgradeEffects } from './UpgradeEffects';
 import type { CrewCombatProfile } from './CrewCommand';
@@ -3779,7 +3780,8 @@ function selectBossAttackPattern(boss: BossState): BossPatternId {
 function updateProjectiles(state: CombatState, dt: number, bounds: CombatBounds): void {
   for (const projectile of state.projectiles) {
     const missile = isMissileProjectile(projectile.tags);
-    const ageSeconds = missile ? Math.max(0, projectile.ageSeconds ?? 0) : 0;
+    const tracksVisualAge = missile || isPhaseProjectile(projectile.tags);
+    const ageSeconds = tracksVisualAge ? Math.max(0, projectile.ageSeconds ?? 0) : 0;
     const nextAgeSeconds = ageSeconds + dt;
     const travelSeconds =
       missile && projectile.owner !== 'enemy'
@@ -3788,7 +3790,7 @@ function updateProjectiles(state: CombatState, dt: number, bounds: CombatBounds)
 
     projectile.x += projectile.vx * travelSeconds;
     projectile.y += projectile.vy * travelSeconds;
-    if (missile) projectile.ageSeconds = nextAgeSeconds;
+    if (tracksVisualAge) projectile.ageSeconds = nextAgeSeconds;
     projectile.ttl -= dt;
 
     if (projectile.owner === 'player' && (projectile.ricochetBounces ?? 0) > 0) {

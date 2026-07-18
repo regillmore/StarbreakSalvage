@@ -22,6 +22,7 @@ import {
 } from '../game/MissileFlight';
 import { getComponentCircuitCapacity } from '../game/ComponentCircuit';
 import { getItemSocketSlots } from '../game/ItemSockets';
+import { isPhaseProjectile } from '../game/PhaseProjectile';
 
 export type FoundryComparisonTone = 'improved' | 'declined' | 'same' | 'danger';
 
@@ -68,7 +69,7 @@ export interface FoundryAttackProjectileModel {
   readonly damage: number;
   readonly ttl: number;
   readonly tags: readonly string[];
-  readonly flightKind: 'ballistic' | 'missile';
+  readonly flightKind: 'ballistic' | 'missile' | 'phase' | 'phaseMissile';
   readonly headingDegrees: number;
   readonly startXPercent: number;
   readonly endXPercent: number;
@@ -529,6 +530,9 @@ function createFoundryAttackPatternPreviewModel(
   )
     ? ' Missile-tagged shots use their two-stage motor profile.'
     : '';
+  const phaseDescription = safeProjectiles.some((projectile) => isPhaseProjectile(projectile.tags))
+    ? ' Phase-tagged shots carry a refracted core, displaced afterimages, and a broken wake.'
+    : '';
   return {
     cameraWidth: COMBAT_ARENA_WIDTH,
     cameraHeight: FOUNDRY_ATTACK_PREVIEW_WORLD_HEIGHT,
@@ -537,7 +541,7 @@ function createFoundryAttackPatternPreviewModel(
     fireCooldownSeconds: safeCooldown,
     waveCopies,
     projectiles,
-    ariaLabel: `${weaponName} live-fire preview. ${volleyDescription} at ${volleysPerSecond.toFixed(1)} volleys per second.${missileDescription} Projectile paths use the draft loadout's combat velocity, spread, radius, damage, engineering hooks, and owned item hooks.`
+    ariaLabel: `${weaponName} live-fire preview. ${volleyDescription} at ${volleysPerSecond.toFixed(1)} volleys per second.${missileDescription}${phaseDescription} Projectile paths use the draft loadout's combat velocity, spread, radius, damage, engineering hooks, and owned item hooks.`
   };
 }
 
@@ -568,7 +572,15 @@ function createFoundryAttackProjectileModel(
   const restRise = -projectile.vy * restTravelSeconds;
   const performanceX = projectile.x + projectile.vx * performanceTravelSeconds;
   const performanceRise = -projectile.vy * performanceTravelSeconds;
-  const flightKind = isMissileProjectile(projectile.tags) ? 'missile' : 'ballistic';
+  const missile = isMissileProjectile(projectile.tags);
+  const phased = isPhaseProjectile(projectile.tags);
+  const flightKind = phased
+    ? missile
+      ? 'phaseMissile'
+      : 'phase'
+    : missile
+      ? 'missile'
+      : 'ballistic';
   return {
     id: `preview-shot-${waveIndex}-${projectileIndex}`,
     projectileIndex,
