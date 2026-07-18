@@ -407,6 +407,10 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   );
   await expect(page.getByTestId('foundry-mini-hud')).toContainText(/BASELINE|DRAFT DELTA/);
   await expect(page.getByTestId('foundry-meter-power').getByRole('meter')).toBeVisible();
+  await expect(page.getByTestId('foundry-meter-circuit')).toContainText('Circuit');
+  await expect(page.getByTestId('foundry-meter-circuit').getByRole('meter')).toBeVisible();
+  await expect(page.locator('.foundry-installed-card [data-stat="circuit"]')).toHaveCount(3);
+  await expect(page.locator('.foundry-circuit-contribution')).toHaveCount(0);
   await expect(page.getByTestId('foundry-attack-impact')).toBeVisible();
   const upgradeCircuit = page.getByTestId('foundry-upgrade-circuit');
   await expect(upgradeCircuit.getByRole('heading', { name: 'Signal Circuit' })).toBeVisible();
@@ -1135,6 +1139,11 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
   for (let index = 0; index < 2; index += 1) await page.keyboard.press('Tab');
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('salvage-foundry')).toBeVisible();
+  const cargoCards = page.locator('.foundry-cargo-card');
+  const cargoCount = await cargoCards.count();
+  expect(cargoCount).toBeGreaterThan(0);
+  await expect(cargoCards.locator('[data-stat="circuit"]')).toHaveCount(cargoCount);
+  await expect(cargoCards.locator('[data-stat="salvage"]')).toHaveCount(0);
   await expect(page.getByTestId('foundry-boundary')).toContainText('Scenario Lab fixture');
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('scenario-lab')).toBeVisible();

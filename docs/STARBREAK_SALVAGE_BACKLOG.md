@@ -1955,7 +1955,7 @@ Acceptance:
 
 Status:
 
-- Implemented in work order 132, refitted in work order 145, and made universally routable in work order 159. Physical component/socket coordinates are automatic routing state rather than a player-facing placement puzzle, and native channel labels are affinity metadata rather than item gates. Hardpoint Control exposes one ordered ship-level signal rail with universal append, eject, and earlier/later controls; installed components advertise compact capacity extensions, and cumulative stage output feeds the existing live-fire preview. `ItemSockets` preserves explicit circuit order, deterministically rematches live items across any remaining conduits after engineering changes, and leaves deliberately racked items inactive. The snapshot-v12 shape remains compatible while exact reconciliation rejects duplicate order, ghost components, insufficient capacity, and duplicate physical claims. Only live circuit items reach combat, route, reward, shop, or preview hooks.
+- Implemented in work order 132, refitted in work order 145, made universally routable in work order 159, and visually consolidated in work order 160. Physical component/socket coordinates are automatic routing state rather than a player-facing placement puzzle, and native channel labels are affinity metadata rather than item gates. Hardpoint Control exposes one ordered ship-level signal rail with universal append, eject, and earlier/later controls; every installed or cargo component carries circuit capacity as its sixth standard stat, and Grid Envelope reports live stages against total capacity. `ItemSockets` preserves explicit circuit order, deterministically rematches live items across any remaining conduits after engineering changes, and leaves deliberately racked items inactive. The snapshot-v12 shape remains compatible while exact reconciliation rejects duplicate order, ghost components, insufficient capacity, and duplicate physical claims. Only live circuit items reach combat, route, reward, shop, or preview hooks.
 
 ### BL2 - Procedural carrier navigation hubs
 
@@ -2139,11 +2139,11 @@ Acceptance:
 - Contract-issued components provide one circuit slot, Act I salvage components provide two, and Act II/III salvage components provide three.
 - Contract slots are universal; work order 150 fits one ignition core and intentionally leaves two open. Recovered channel labels preserve component affinity while every conduit accepts every upgrade, and quality or route rarity do not alter the count.
 - Initial fitting uses deterministic installed-component order, while replacement reconciliation preserves live order and deliberate rack choices up to the remaining total capacity.
-- Hardpoint Control, circuit summaries, snapshots, deterministic generation, accessibility, and static hosting share the same capacity projection.
+- Hardpoint Control component stats, install comparisons, Grid Envelope, circuit summaries, snapshots, deterministic generation, accessibility, and static hosting share the same capacity projection.
 
 Status:
 
-- Implemented in work order 149 and flattened in work order 159. `ComponentCircuit` derives one/two/three slot tiers from the existing component source and acquisition sector, so no snapshot migration is required. Item routing and Hardpoint presentation consume that projection directly; all projected slots are universal for fitting while their internal affinity labels remain available for component identity.
+- Implemented in work order 149, flattened in work order 159, and consolidated into standard engineering readouts in work order 160. `ComponentCircuit` derives one/two/three slot tiers from the existing component source and acquisition sector, so no snapshot migration is required. Item routing, component stat strips, install comparisons, Grid Envelope, and Hardpoint circuit presentation consume that projection directly; all projected slots are universal for fitting while their internal affinity labels remain available for component identity.
 
 ### BL17 - Shared seeded ignition cores
 
@@ -2279,3 +2279,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 159. `ItemSockets` routes all upgrade domains across the same installed conduit pool, retains stable physical and logical order contracts, and no longer rejects a stored assignment for retired type compatibility. Hardpoint Control presents every component extension as universal and enables every rack append while capacity remains open.
+
+### BL27 - Consolidated circuit engineering stats
+
+Acceptance:
+
+- Installed Hardpoint cards show circuit capacity as a sixth standard component stat beside power, heat, mass, command, and instability, without a second universal-conduit strip.
+- Cargo cards use the same six-stat row; circuit capacity replaces the duplicate scrap-value cell while the `Scrap +N` action retains the authoritative payout.
+- Component install comparisons include signed circuit-capacity deltas and treat added capacity as beneficial.
+- Grid Envelope adds an accessible Circuit meter showing live ordered stages against total installed capacity and comparing capacity against the committed draft.
+- Desktop and narrow layouts avoid horizontal overflow, existing rail extension chips remain compact, and saves, snapshots, determinism, and static hosting remain compatible.
+
+Status:
+
+- Implemented in work order 160. `FoundryPresentation` adds circuit capacity to the shared component/readout models and aggregates the installed conduit pool into a sixth Grid Envelope meter. `FoundryScene` renders one six-cell component strip for installed and cargo hardware, removes the redundant contribution bar, and leaves scrap value on the existing action. Focused unit and Chromium coverage protect capacity tiers, signed comparisons, cargo replacement, the missing legacy indicator, and responsive layout.

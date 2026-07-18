@@ -34,7 +34,13 @@ describe('foundry visual presentation', () => {
 
     expect(baseline.valid).toBe(true);
     expect(baseline.changed).toBe(false);
-    expect(baseline.meters).toHaveLength(5);
+    expect(baseline.meters).toHaveLength(6);
+    expect(baseline.meters.find((meter) => meter.id === 'circuit')).toMatchObject({
+      value: 0,
+      capacity: 3,
+      delta: 0,
+      tone: 'same'
+    });
     expect(baseline.attackStats).toHaveLength(5);
     expect(baseline.attackSimulation.volleySize).toBe(
       baseline.attackStats.find((stat) => stat.id === 'volley')?.value
@@ -155,6 +161,12 @@ describe('foundry visual presentation', () => {
     const dashboard = createFoundryDashboardModel(createEngineeringState(contract.loadout), items);
 
     expect(items.map((item) => item.itemId)).toEqual(['item_signal_clone_stamp']);
+    expect(dashboard.meters.find((meter) => meter.id === 'circuit')).toMatchObject({
+      value: 1,
+      capacity: 3,
+      delta: 0,
+      tone: 'same'
+    });
     expect(dashboard.attackSimulation.volleySize).toBe(4);
     expect(
       Array.from(
@@ -291,11 +303,32 @@ describe('foundry visual presentation', () => {
     const comparison = compareFoundryComponents(tunedCandidate, installed);
 
     expect(stats.slot).toBe(contract.loadout.mounts[0]!.slot);
+    expect(stats.circuit).toBe(1);
     expect(comparison.power).toBe(0);
     expect(comparison.heat).toBe(4);
     expect(comparison.instability).toBe(2);
+    expect(comparison.circuit).toBe(0);
     expect(comparison.tone).toBe('declined');
     expect(comparison.label).toContain('H+4');
+  });
+
+  it('treats recovered circuit capacity as a standard beneficial component delta', () => {
+    const contract = generateRunSkeleton('FOUNDRY-CIRCUIT-COMPARE').contracts[0]!;
+    const state = createEngineeringState(contract.loadout);
+    const installed = getInstalledComponent(state.draft, contract.loadout.mounts[0]!.hardpointId);
+    if (!installed) throw new Error('Expected installed circuit comparison hardware.');
+    const recovered = {
+      ...installed,
+      id: 'recovered-circuit-candidate',
+      source: 'combat' as const,
+      sourceLabel: 'Act I salvage',
+      acquiredSectorIndex: 1
+    };
+    const comparison = compareFoundryComponents(recovered, installed);
+
+    expect(createFoundryComponentStatModel(recovered).circuit).toBe(2);
+    expect(comparison).toMatchObject({ circuit: 1, tone: 'improved' });
+    expect(comparison.label).toContain('S+1');
   });
 });
 

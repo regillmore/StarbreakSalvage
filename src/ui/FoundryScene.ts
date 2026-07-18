@@ -9,7 +9,6 @@ import { getShipFrameById, getShipModuleById } from '../content/shipModules';
 import { getItemById } from '../content/items';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import type { ItemInstance } from '../game/Rewards';
-import { getComponentCircuitSlotTypes } from '../game/ComponentCircuit';
 import {
   canFitItemInCircuit,
   createItemSocketCircuitSummary,
@@ -391,16 +390,13 @@ export class FoundryScene implements Scene {
     return item;
   }
 
-  private createComponentStatStrip(
-    component: FoundryComponentInstance,
-    includeSalvage = false
-  ): HTMLElement {
+  private createComponentStatStrip(component: FoundryComponentInstance): HTMLElement {
     const stats = createFoundryComponentStatModel(component);
     const strip = document.createElement('div');
     strip.className = 'foundry-component-stats';
     strip.setAttribute(
       'aria-label',
-      `Power ${stats.power}, heat ${stats.heat}, mass ${stats.mass}, command ${stats.command}, instability ${stats.instability}${includeSalvage ? `, scrap ${stats.salvage}` : ''}`
+      `Power ${stats.power}, heat ${stats.heat}, mass ${stats.mass}, command ${stats.command}, instability ${stats.instability}, circuit ${stats.circuit}`
     );
     const values: readonly (readonly [string, string, number])[] = [
       ['power', 'P', stats.power],
@@ -408,7 +404,7 @@ export class FoundryScene implements Scene {
       ['mass', 'M', stats.mass],
       ['command', 'C', stats.command],
       ['instability', '!', stats.instability],
-      ...(includeSalvage ? ([['salvage', '$', stats.salvage]] as const) : [])
+      ['circuit', 'S', stats.circuit]
     ];
     for (const [id, glyph, value] of values) {
       const stat = document.createElement('span');
@@ -457,11 +453,7 @@ export class FoundryScene implements Scene {
         const componentName = document.createElement('strong');
         componentName.className = 'foundry-component-name';
         componentName.textContent = formatComponentName(component);
-        card.append(
-          componentName,
-          this.createComponentStatStrip(component),
-          this.createComponentCircuitContribution(component)
-        );
+        card.append(componentName, this.createComponentStatStrip(component));
         const actions = document.createElement('div');
         actions.className = 'foundry-card-actions';
         actions.append(
@@ -489,19 +481,6 @@ export class FoundryScene implements Scene {
     }
     section.append(title, list);
     return section;
-  }
-
-  private createComponentCircuitContribution(component: FoundryComponentInstance): HTMLElement {
-    const slotTypes = getComponentCircuitSlotTypes(component);
-    const contribution = document.createElement('div');
-    contribution.className = 'foundry-circuit-contribution';
-    contribution.dataset.testid = `foundry-circuit-extension-${component.id}`;
-    const capacity = document.createElement('strong');
-    capacity.textContent = `CIRCUIT +${slotTypes.length}`;
-    const channels = document.createElement('span');
-    channels.textContent = `UNIVERSAL CONDUIT${slotTypes.length === 1 ? '' : 'S'}`;
-    contribution.append(capacity, channels);
-    return contribution;
   }
 
   private createUpgradeCircuitSection(dashboard: FoundryDashboardModel): HTMLElement {
@@ -793,13 +772,7 @@ export class FoundryScene implements Scene {
         this.status = `+${component.salvageValue} salvage on commit.`;
       })
     );
-    card.append(
-      header,
-      identity,
-      this.createComponentStatStrip(component, true),
-      modifiers,
-      actions
-    );
+    card.append(header, identity, this.createComponentStatStrip(component), modifiers, actions);
     return card;
   }
 

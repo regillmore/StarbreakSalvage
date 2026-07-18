@@ -20,11 +20,13 @@ import {
   getProjectileTravelTimeForDistance,
   isMissileProjectile
 } from '../game/MissileFlight';
+import { getComponentCircuitCapacity } from '../game/ComponentCircuit';
+import { getItemSocketSlots } from '../game/ItemSockets';
 
 export type FoundryComparisonTone = 'improved' | 'declined' | 'same' | 'danger';
 
 export interface FoundryMeterModel {
-  readonly id: 'power' | 'heat' | 'mass' | 'command' | 'instability';
+  readonly id: 'power' | 'heat' | 'mass' | 'command' | 'instability' | 'circuit';
   readonly glyph: string;
   readonly label: string;
   readonly value: number;
@@ -128,6 +130,7 @@ export interface FoundryComponentStatModel {
   readonly mass: number;
   readonly command: number;
   readonly instability: number;
+  readonly circuit: number;
   readonly salvage: number;
 }
 
@@ -137,6 +140,7 @@ export interface FoundryInstallComparisonModel {
   readonly mass: number;
   readonly command: number;
   readonly instability: number;
+  readonly circuit: number;
   readonly tone: FoundryComparisonTone;
   readonly label: string;
 }
@@ -190,6 +194,8 @@ export function createFoundryDashboardModel(
     committedProcBudget,
     items
   );
+  const draftCircuitCapacity = getItemSocketSlots(state.draft).length;
+  const committedCircuitCapacity = getItemSocketSlots(state.committed).length;
   const meters: FoundryMeterModel[] = [
     createCapacityMeter(
       'power',
@@ -230,7 +236,8 @@ export function createFoundryDashboardModel(
       draft.instability,
       draft.instabilityCapacity,
       committed.instability
-    )
+    ),
+    createCircuitMeter(items.length, draftCircuitCapacity, committedCircuitCapacity)
   ];
   const draftVolley = attackSimulation.volleySize;
   const committedVolley = committedAttackSimulation.volleySize;
@@ -608,6 +615,7 @@ export function createFoundryComponentStatModel(
     mass: module.mass + delta.mass,
     command: module.commandDraw + delta.command,
     instability: component.instability,
+    circuit: getComponentCircuitCapacity(component),
     salvage: component.salvageValue
   };
 }
@@ -619,23 +627,47 @@ export function compareFoundryComponents(
   const candidateStats = createFoundryComponentStatModel(candidate);
   const installedStats = installed
     ? createFoundryComponentStatModel(installed)
-    : { power: 0, heat: 0, mass: 0, command: 0, instability: 0 };
+    : { power: 0, heat: 0, mass: 0, command: 0, instability: 0, circuit: 0 };
   const power = candidateStats.power - installedStats.power;
   const heat = candidateStats.heat - installedStats.heat;
   const mass = candidateStats.mass - installedStats.mass;
   const command = candidateStats.command - installedStats.command;
   const instability = candidateStats.instability - installedStats.instability;
-  const burden = power + heat + mass + command + instability;
+  const circuit = candidateStats.circuit - installedStats.circuit;
+  const burden = power + heat + mass + command + instability - circuit;
   return {
     power,
     heat,
     mass,
     command,
     instability,
+    circuit,
     tone: burden < 0 ? 'improved' : burden > 0 ? 'declined' : 'same',
     label: `P${formatSigned(power)} H${formatSigned(heat)} M${formatSigned(mass)} C${formatSigned(
       command
-    )} !${formatSigned(instability)}`
+    )} !${formatSigned(instability)} S${formatSigned(circuit)}`
+  };
+}
+
+function createCircuitMeter(
+  live: number,
+  capacity: number,
+  committedCapacity: number
+): FoundryMeterModel {
+  const delta = capacity - committedCapacity;
+  const tone: FoundryComparisonTone =
+    live > capacity ? 'danger' : delta > 0 ? 'improved' : delta < 0 ? 'declined' : 'same';
+  return {
+    id: 'circuit',
+    glyph: 'S',
+    label: 'Circuit',
+    value: live,
+    capacity,
+    committedValue: committedCapacity,
+    ratio: clamp01(live / Math.max(1, capacity)),
+    delta,
+    tone,
+    ariaLabel: `Circuit ${live} live of ${capacity}${delta === 0 ? ', unchanged capacity' : `, ${formatSigned(delta)} capacity from committed`}`
   };
 }
 

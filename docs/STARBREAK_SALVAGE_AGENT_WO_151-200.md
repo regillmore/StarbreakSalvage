@@ -220,3 +220,28 @@ Status: implemented. `ItemSockets` no longer filters routing, appending, swaps, 
 Item classification is now exposed as circuit-domain metadata for badges and synergy reading. Hardpoint Control labels component contributions and extension chips `UNIVERSAL`, states the rule beside the live chain, and reserves its disabled append explanation for a genuinely full circuit. Focused coverage leaves an ordnance conduit as the only open slot and successfully appends a weapon/drone-domain upgrade into it.
 
 Browser inspection confirmed three universal component extensions, concise universal-rule copy, an enabled rack action whenever capacity remained, a successful append, and no console errors. `npm run verify:release` passes typecheck, ESLint, all 103 Vitest files and 642 tests, the production build, all 16 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 942.11 kB minified/256.93 kB gzip initial JavaScript and 80.98/16.26 kB CSS, reductions of 0.32/0.12 kB JavaScript from work order 158. The existing 500 kB chunk notice remains; no dependency, item mechanics, RNG stream, save/snapshot version, static base path, or warning threshold changed.
+
+## Work order 160 - Consolidated circuit engineering stats
+
+Goal: make component circuit capacity read like a normal engineering stat instead of a secondary compatibility warning.
+
+Prompt:
+
+> Remove the separate universal-conduit indicator from installed Hardpoint cards. Add circuit capacity to the standard component stat strip, use that same stat in cargo instead of the redundant scrap-value cell, and aggregate the circuit into Grid Envelope. Preserve the ordered rail, universal fitting, component capacity tiers, scrap payout, deterministic reconciliation, responsive layout, accessibility, and snapshot compatibility. Add focused presentation and Chromium coverage.
+
+Acceptance criteria:
+
+- Every installed component displays six compact stats: power, heat, mass, command, instability, and circuit capacity.
+- The separate `CIRCUIT +N / UNIVERSAL CONDUIT(S)` strip is absent from Hardpoint cards.
+- Cargo components use the identical six-stat row; no `$` scrap stat remains, and the existing `Scrap +N` action continues to communicate and award the value.
+- Install comparison buttons include signed `S` circuit deltas, with added capacity classified as a benefit when other values are equal.
+- Grid Envelope includes an accessible Circuit row whose value is `live stages / installed capacity`; its delta compares total capacity with the committed loadout.
+- Rail extension chips, universal append behavior, circuit order, capacity progression, saves, snapshots, deterministic content, narrow layout, and static hosting remain compatible.
+
+Status: implemented. `FoundryComponentStatModel` now includes progression-derived circuit capacity, and the single component stat renderer always emits `P/H/M/C/!/S`. Installed cards no longer mount a separate contribution strip. Cargo replaces its redundant salvage cell with the same circuit stat while retaining exact scrap value on the existing action.
+
+Component comparisons carry signed `S` deltas and recognize increased capacity as beneficial. Grid Envelope adds a sixth Circuit meter derived from the authoritative installed socket pool and current active item projection, reporting live stages over capacity while its delta tracks engineering capacity changes.
+
+Browser inspection of the cargo-rich Scenario Lab fixture confirmed three installed and three cargo cards each use aligned six-cell rows, no legacy contribution or cargo scrap-stat elements remain, the Circuit meter reads `1/3`, the panel has no horizontal overflow, and console logs remain clear.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 103 Vitest files and 643 tests, the production build, all 16 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 942.12 kB minified/256.97 kB gzip initial JavaScript and 80.62/16.20 kB CSS, a 0.01/0.04 kB JavaScript increase and 0.36/0.06 kB CSS reduction from work order 159. The existing 500 kB chunk notice remains; no dependency, circuit capacity rule, RNG stream, save/snapshot version, static base path, or warning threshold changed.

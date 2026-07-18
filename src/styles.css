@@ -1325,8 +1325,8 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   color: #ff8f8f;
 }
 
-.foundry-component-stats [data-stat='salvage'] b {
-  color: #ffd166;
+.foundry-component-stats [data-stat='circuit'] b {
+  color: #ff9aeb;
 }
 
 .foundry-badge-weapon {
@@ -1375,30 +1375,6 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   border-color: rgba(255, 114, 225, 0.34);
   background:
     linear-gradient(135deg, rgba(255, 114, 225, 0.055), transparent 44%), rgba(4, 6, 18, 0.62);
-}
-
-.foundry-circuit-contribution {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.3rem 0.42rem;
-  border: 1px solid rgba(255, 114, 225, 0.24);
-  border-radius: 4px;
-  color: #d8e7ed;
-  background: rgba(255, 114, 225, 0.05);
-  font:
-    800 0.57rem/1.25 'Cascadia Mono',
-    'Consolas',
-    monospace;
-}
-
-.foundry-circuit-contribution strong {
-  color: #ff9aeb;
-}
-
-.foundry-circuit-contribution span {
-  text-align: right;
 }
 
 .foundry-circuit-header {
