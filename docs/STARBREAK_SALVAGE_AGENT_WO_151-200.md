@@ -402,3 +402,30 @@ Cargo Management is a separate top-level foundry surface with its own heading an
 Browser inspection of the cargo-rich Scenario Lab fixture confirmed that a cargo-origin replacement updates its hardpoint select, Grid Envelope, circuit capacity, draft log, and manifest immediately, then survives switching to Cargo Management and back. Desktop presents the loose manifest as one stable three-card row; the 390-by-700 layout reports a 390-pixel document and 382-pixel panel with no horizontal overflow. The accessibility tree exposes three labeled assignment comboboxes, explicit mounted/cargo origins and deltas, distinct menu headings, fit summaries, and Scrap-only cargo actions. Browser logs remain clear.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 105 Vitest files and 655 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 954.71 kB minified/260.64 kB gzip initial JavaScript and 84.04/16.91 kB CSS, increases of 3.28/0.96 kB JavaScript and 1.68/0.30 kB CSS over work order 165. The existing 500 kB chunk notice remains; no dependency, foundry reducer, component compatibility rule, content table, RNG stream, save/snapshot schema, static base path, or warning threshold changed.
+
+## Work order 167 - Stable confined-environment structure
+
+Goal: stop indoor structural variants from replacing one another while they are already visible, so the hull reads as one continuously scrolling place rather than a cycling backdrop.
+
+Prompt:
+
+> Give every repeated confined-environment panel, conduit, lamp, and transverse rib a stable world/cycle identity for its entire visible lifetime. Render all intersecting copies across a wrap seam instead of teleporting one screen-relative copy, including on tall viewports where an asset can exceed the old fixed overscan. Project authored boarding-room treatments into clipped world bands so adjacent room styles enter and leave through the camera rather than replacing the whole arena at a distance threshold. Preserve the work-order-161 palettes, opacity, parallax rates, performance priorities, room geometry, doors, combat bounds, high contrast, reduced motion, saves, deterministic content, and static hosting. Add focused continuity coverage and visually inspect active scrolling.
+
+Acceptance criteria:
+
+- A panel, conduit, lamp, or rib that remains visible across adjacent scroll frames keeps the same immutable source/cycle identity and translates only by its authored parallax delta.
+- Tall viewports render both intersecting copies through a wrap seam; no decoration teleports from one visible edge to the other or changes variant in place.
+- Ribs are enumerated by absolute world index instead of a modulo screen slot, so later rib-family variation cannot flap when the offset wraps.
+- Each visible authored room owns a clipped, continuously translating treatment band; crossing a room threshold never repaints already-visible room structure as another room kind.
+- Existing deck seams, rail markers, room patterns, doors, palettes, priority filtering, high contrast, reduced motion, and performance mode retain their visual and mechanical contracts.
+- Combat simulation, collision, objective progress, scroll timing, content generation, RNG streams, saves, snapshots, and static hosting remain unchanged.
+
+Status: implemented. `ConfinedEnvironmentPresentation` now projects the immutable environment plan into a frame of source/cycle-addressed panels, conduits, lamps, and world-indexed ribs. It enumerates every copy whose true rendered extent intersects the viewport, eliminating the former fixed 110-pixel wrap seam without adding runtime RNG or persistent state.
+
+The same read-model boundary maps authored boarding rooms into clipped screen bands at the established 0.82 world-to-canvas scale. `CanvasRenderer` paints each visible room kind only inside its moving band and uses the shared scale for doors, so multiple room styles can coexist while crossing the camera instead of one `currentRoom` selection replacing the arena.
+
+Focused coverage forces a 3000-pixel-tall viewport across the former panel seam, proves both stable copies survive and translate continuously, tracks rib IDs across frames, and verifies multiple room identities move by the exact world delta.
+
+Browser comparison of the Boarding Incursion fixture at 15u and 63u confirms the same outer panels, transverse ribs, conduit traces, and clipped reactor/service-room markings translate between frames without variant replacement. Multiple room treatments remain spatially separated, the arena stays clipped and legible, and browser logs contain only the local Vite connection messages.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 105 Vitest files and 657 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 956.11 kB minified/261.09 kB gzip initial JavaScript and unchanged 84.04/16.91 kB CSS, increases of 1.40/0.45 kB JavaScript over work order 166. The existing 500 kB chunk notice remains; no dependency, environment content plan, combat geometry, RNG stream, save/snapshot schema, static base path, or warning threshold changed.

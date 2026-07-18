@@ -2376,3 +2376,16 @@ Acceptance:
 Status:
 
 - Implemented in work order 166. `FoundryScene` keeps one engineering/item draft while projecting separate hardpoint and cargo modes. Mount cards own compatible assignment selects and retain direct `P/H/M/C/!/S` comparison copy; the standalone cargo manifest owns fit summaries and Scrap only. The existing foundry planners, legality resolver, circuit reconciliation, undo, commit, and exit callbacks remain the sole mutation boundary.
+
+### BL34 - Stable confined-environment structure
+
+Acceptance:
+
+- Repeated confined panels, conduits, lamps, and ribs keep immutable source/world identities while visible instead of cycling through screen-relative slots.
+- Tall viewports show every intersecting copy through a wrap seam, with entry and exit occurring fully across the camera edges.
+- Authored boarding-room treatments occupy clipped world bands and may coexist on screen; a room threshold never replaces already-visible structure.
+- Existing palettes, parallax, priority modes, doors, combat geometry, deterministic content, saves, snapshots, and static hosting remain compatible.
+
+Status:
+
+- Implemented in work order 167. `ConfinedEnvironmentPresentation` enumerates true-extent structure copies and absolute rib indices, while `CanvasRenderer` consumes continuously moving room bands at the shared boarding projection scale. Focused tall-viewport and adjacent-frame coverage protects identity and translation continuity.

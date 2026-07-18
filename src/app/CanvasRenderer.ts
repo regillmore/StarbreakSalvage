@@ -54,6 +54,11 @@ import {
 import type { BoardingOperationPlan } from '../game/BoardingOperation';
 import type { ConfinedEnvironmentPlan } from '../game/ConfinedEnvironment';
 import {
+  BOARDING_WORLD_TO_CANVAS,
+  createConfinedBackgroundFrame,
+  createVisibleBoardingRoomBands
+} from '../game/ConfinedEnvironmentPresentation';
+import {
   getMissileFlightPhase,
   getMissileThrustScale,
   isMissileProjectile
@@ -415,10 +420,16 @@ export class CanvasRenderer {
     const { width, height } = this.size;
     const context = this.context;
     const velocityCues = getVelocityCueState(this.settings);
-    const effectiveScrollOffset = scrollOffset * velocityCues.parallaxScale;
     const maxPriority = this.settings.performanceMode || this.settings.reducedMotion ? 2 : 3;
-    const wrapSpan = height + 220;
     const unit = Math.min(width, height);
+    const frame = createConfinedBackgroundFrame({
+      plan,
+      scrollOffset,
+      parallaxScale: velocityCues.parallaxScale,
+      viewportHeight: height,
+      maxPriority
+    });
+    const effectiveScrollOffset = scrollOffset * velocityCues.parallaxScale;
     const background = context.createLinearGradient(0, 0, width, height);
 
     background.addColorStop(0, plan.palette.deep);
@@ -447,16 +458,11 @@ export class CanvasRenderer {
     }
     context.restore();
 
-    for (const panel of plan.panels) {
-      if (panel.priority > maxPriority) continue;
+    for (const instance of frame.panels) {
+      const { panel, y } = instance;
       const panelWidth = Math.max(72, panel.width * width);
       const panelHeight = Math.max(42, panel.height * height);
       const x = panel.x * width;
-      const y =
-        wrapCanvasValue(
-          panel.y * wrapSpan + effectiveScrollOffset * plan.panelScrollRatio,
-          wrapSpan
-        ) - 110;
       const bevel = Math.min(panelWidth, panelHeight) * panel.bevel;
 
       context.save();
@@ -482,14 +488,9 @@ export class CanvasRenderer {
       context.restore();
     }
 
-    for (const conduit of plan.conduits) {
-      if (conduit.priority > maxPriority) continue;
+    for (const instance of frame.conduits) {
+      const { conduit, y } = instance;
       const x = conduit.x * width;
-      const y =
-        wrapCanvasValue(
-          conduit.y * wrapSpan + effectiveScrollOffset * (plan.panelScrollRatio + 0.08),
-          wrapSpan
-        ) - 110;
       const length = Math.max(90, conduit.length * width);
       const bend = Math.max(18, conduit.bend * height) * conduit.side;
 
@@ -506,12 +507,9 @@ export class CanvasRenderer {
       context.restore();
     }
 
-    const ribSpacing = Math.max(96, plan.ribSpacing);
-    const ribSpan = height + ribSpacing * 2;
-    const ribOffset = wrapCanvasValue(plan.ribOffset + effectiveScrollOffset * 0.42, ribSpacing);
     context.save();
-    for (let y = -ribSpacing; y <= ribSpan; y += ribSpacing) {
-      const ribY = y + ribOffset;
+    for (const rib of frame.ribs) {
+      const ribY = rib.y;
       context.globalAlpha = 0.82;
       context.fillStyle = plan.palette.trench;
       context.fillRect(0, ribY - 10, width, 20);
@@ -532,14 +530,9 @@ export class CanvasRenderer {
     }
     context.restore();
 
-    for (const lamp of plan.lamps) {
-      if (lamp.priority > maxPriority) continue;
+    for (const instance of frame.lamps) {
+      const { lamp, y } = instance;
       const x = lamp.x * width;
-      const y =
-        wrapCanvasValue(
-          lamp.y * wrapSpan + effectiveScrollOffset * (plan.panelScrollRatio + 0.16),
-          wrapSpan
-        ) - 110;
       const color = lamp.warning ? plan.palette.warning : plan.palette.lamp;
       context.save();
       context.globalAlpha = lamp.warning ? 0.82 : 0.9;
@@ -599,7 +592,7 @@ export class CanvasRenderer {
     const context = this.context;
     const railWidth = Math.max(24, bounds.width * 0.09);
     const highContrast = this.settings.bulletContrast === 'high';
-    const passageOffset = wrapCanvasValue(distance * 0.82, 112);
+    const passageOffset = wrapCanvasValue(distance * BOARDING_WORLD_TO_CANVAS, 112);
     context.save();
     context.fillStyle = highContrast ? '#020303' : environment.palette.far;
     context.globalAlpha = highContrast ? 0.92 : 0.86;
@@ -625,17 +618,15 @@ export class CanvasRenderer {
       context.lineTo(x, bounds.height);
       context.stroke();
     }
-    const currentRoom =
-      operation.rooms.find(
-        (room) => distance >= room.startDistance && distance < room.endDistance
-      ) ?? operation.rooms.at(-1);
-    this.paintBoardingRoomTreatment(
-      currentRoom?.kind ?? 'corridor',
-      environment,
-      bounds,
-      passageOffset,
-      highContrast
-    );
+    for (const room of createVisibleBoardingRoomBands(operation, distance, bounds.height)) {
+      if (room.bottom <= room.top) continue;
+      context.save();
+      context.beginPath();
+      context.rect(0, room.top, bounds.width, room.bottom - room.top);
+      context.clip();
+      this.paintBoardingRoomTreatment(room.kind, environment, bounds, passageOffset, highContrast);
+      context.restore();
+    }
 
     context.fillStyle = highContrast ? '#000000' : environment.palette.trench;
     context.globalAlpha = 0.96;
@@ -669,7 +660,7 @@ export class CanvasRenderer {
     }
 
     for (const door of operation.doors) {
-      const y = bounds.height - (door.atDistance - distance) * 0.82;
+      const y = bounds.height - (door.atDistance - distance) * BOARDING_WORLD_TO_CANVAS;
       if (y < -32 || y > bounds.height + 32) continue;
       context.fillStyle = highContrast ? '#000000' : environment.palette.trench;
       context.strokeStyle = highContrast ? '#ffec6e' : environment.palette.warning;
