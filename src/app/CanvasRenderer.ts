@@ -10,6 +10,7 @@ import { getEnemyFormationById, type EnemyFormationId } from '../content/enemyFo
 import { getEnemyVariantById, type EnemyVariantId } from '../content/enemyVariants';
 import { getHazardZoneColor } from '../content/hazardZones';
 import type { ShipAppearance, ShipSilhouette, ShipWeaponMountHint } from '../content/ships';
+import type { BoardingRoomKind } from '../content/boarding';
 import type { BulletContrast } from '../core/settingsData';
 import { clamp } from '../core/math';
 import type {
@@ -51,6 +52,7 @@ import {
   type SetPieceComponentTemplateId
 } from '../content/setPieces';
 import type { BoardingOperationPlan } from '../game/BoardingOperation';
+import type { ConfinedEnvironmentPlan } from '../game/ConfinedEnvironment';
 import {
   getMissileFlightPhase,
   getMissileThrustScale,
@@ -402,6 +404,161 @@ export class CanvasRenderer {
     this.paintVelocityStreaks(effectiveScrollOffset);
   }
 
+  public paintConfinedBackground(plan: ConfinedEnvironmentPlan, scrollOffset = 0): void {
+    const { width, height } = this.size;
+    const context = this.context;
+    const velocityCues = getVelocityCueState(this.settings);
+    const effectiveScrollOffset = scrollOffset * velocityCues.parallaxScale;
+    const maxPriority = this.settings.performanceMode || this.settings.reducedMotion ? 2 : 3;
+    const wrapSpan = height + 220;
+    const unit = Math.min(width, height);
+    const background = context.createLinearGradient(0, 0, width, height);
+
+    background.addColorStop(0, plan.palette.deep);
+    background.addColorStop(0.5, plan.palette.far);
+    background.addColorStop(1, plan.palette.deep);
+    context.fillStyle = background;
+    context.fillRect(0, 0, width, height);
+
+    context.save();
+    context.globalAlpha = this.settings.bulletContrast === 'high' ? 0.42 : 0.68;
+    context.strokeStyle = plan.palette.seam;
+    context.lineWidth = 1;
+    const gridSize = Math.max(54, Math.round(unit * 0.095));
+    const gridOffset = wrapCanvasValue(effectiveScrollOffset * 0.08, gridSize);
+    for (let x = 0; x <= width + gridSize; x += gridSize) {
+      context.beginPath();
+      context.moveTo(x, 0);
+      context.lineTo(x, height);
+      context.stroke();
+    }
+    for (let y = -gridSize; y <= height + gridSize; y += gridSize) {
+      context.beginPath();
+      context.moveTo(0, y + gridOffset);
+      context.lineTo(width, y + gridOffset);
+      context.stroke();
+    }
+    context.restore();
+
+    for (const panel of plan.panels) {
+      if (panel.priority > maxPriority) continue;
+      const panelWidth = Math.max(72, panel.width * width);
+      const panelHeight = Math.max(42, panel.height * height);
+      const x = panel.x * width;
+      const y =
+        wrapCanvasValue(
+          panel.y * wrapSpan + effectiveScrollOffset * plan.panelScrollRatio,
+          wrapSpan
+        ) - 110;
+      const bevel = Math.min(panelWidth, panelHeight) * panel.bevel;
+
+      context.save();
+      context.globalAlpha = panel.priority === 1 ? 0.76 : 0.54;
+      context.fillStyle = panel.alternate ? plan.palette.panelAlt : plan.palette.panel;
+      context.strokeStyle = plan.palette.seam;
+      context.lineWidth = panel.priority === 1 ? 1.6 : 1;
+      context.beginPath();
+      context.moveTo(x - panelWidth / 2 + bevel, y - panelHeight / 2);
+      context.lineTo(x + panelWidth / 2, y - panelHeight / 2);
+      context.lineTo(x + panelWidth / 2 - bevel * 0.65, y + panelHeight / 2);
+      context.lineTo(x - panelWidth / 2, y + panelHeight / 2);
+      context.closePath();
+      context.fill();
+      context.stroke();
+      context.globalAlpha *= 0.55;
+      context.strokeStyle = panel.alternate ? plan.palette.warning : plan.palette.accent;
+      context.beginPath();
+      context.moveTo(x - panelWidth * 0.34, y - panelHeight * 0.22);
+      context.lineTo(x + panelWidth * 0.3, y - panelHeight * 0.22);
+      context.lineTo(x + panelWidth * 0.23, y + panelHeight * 0.22);
+      context.stroke();
+      context.restore();
+    }
+
+    for (const conduit of plan.conduits) {
+      if (conduit.priority > maxPriority) continue;
+      const x = conduit.x * width;
+      const y =
+        wrapCanvasValue(
+          conduit.y * wrapSpan + effectiveScrollOffset * (plan.panelScrollRatio + 0.08),
+          wrapSpan
+        ) - 110;
+      const length = Math.max(90, conduit.length * width);
+      const bend = Math.max(18, conduit.bend * height) * conduit.side;
+
+      context.save();
+      context.globalAlpha = conduit.priority === 1 ? 0.76 : 0.5;
+      context.strokeStyle = conduit.priority === 1 ? plan.palette.accent : plan.palette.warning;
+      context.lineWidth = conduit.priority === 1 ? 3 : 2;
+      context.beginPath();
+      context.moveTo(x - length / 2, y);
+      context.lineTo(x - length * 0.12, y);
+      context.quadraticCurveTo(x, y, x, y + bend);
+      context.lineTo(x + length / 2, y + bend);
+      context.stroke();
+      context.restore();
+    }
+
+    const ribSpacing = Math.max(96, plan.ribSpacing);
+    const ribSpan = height + ribSpacing * 2;
+    const ribOffset = wrapCanvasValue(plan.ribOffset + effectiveScrollOffset * 0.42, ribSpacing);
+    context.save();
+    for (let y = -ribSpacing; y <= ribSpan; y += ribSpacing) {
+      const ribY = y + ribOffset;
+      context.globalAlpha = 0.82;
+      context.fillStyle = plan.palette.trench;
+      context.fillRect(0, ribY - 10, width, 20);
+      context.globalAlpha = 0.78;
+      context.strokeStyle = plan.palette.seam;
+      context.lineWidth = 2;
+      context.beginPath();
+      context.moveTo(0, ribY - 10);
+      context.lineTo(width, ribY - 10);
+      context.moveTo(0, ribY + 10);
+      context.lineTo(width, ribY + 10);
+      context.stroke();
+      context.globalAlpha = 0.5;
+      context.fillStyle = plan.palette.warning;
+      for (let x = 18; x < width; x += 96) {
+        context.fillRect(x, ribY - 2, 36, 4);
+      }
+    }
+    context.restore();
+
+    for (const lamp of plan.lamps) {
+      if (lamp.priority > maxPriority) continue;
+      const x = lamp.x * width;
+      const y =
+        wrapCanvasValue(
+          lamp.y * wrapSpan + effectiveScrollOffset * (plan.panelScrollRatio + 0.16),
+          wrapSpan
+        ) - 110;
+      const color = lamp.warning ? plan.palette.warning : plan.palette.lamp;
+      context.save();
+      context.globalAlpha = lamp.warning ? 0.82 : 0.9;
+      context.fillStyle = color;
+      if (!this.settings.performanceMode) {
+        context.shadowColor = color;
+        context.shadowBlur = lamp.warning ? 12 : 18;
+      }
+      context.fillRect(x - 12, y - 2, 24, 4);
+      context.restore();
+    }
+
+    const leftOcclusion = context.createLinearGradient(0, 0, width * 0.28, 0);
+    leftOcclusion.addColorStop(0, plan.palette.trench);
+    leftOcclusion.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    context.fillStyle = leftOcclusion;
+    context.globalAlpha = 0.86;
+    context.fillRect(0, 0, width * 0.28, height);
+    const rightOcclusion = context.createLinearGradient(width, 0, width * 0.72, 0);
+    rightOcclusion.addColorStop(0, plan.palette.trench);
+    rightOcclusion.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    context.fillStyle = rightOcclusion;
+    context.fillRect(width * 0.72, 0, width * 0.28, height);
+    context.globalAlpha = 1;
+  }
+
   public paintSectorLandmarks(
     landmarks: readonly VisibleSectorLandmark[],
     bounds: CombatBounds = createDefaultCombatBounds()
@@ -428,17 +585,56 @@ export class CanvasRenderer {
 
   public paintBoardingInterior(
     operation: BoardingOperationPlan,
+    environment: ConfinedEnvironmentPlan,
     distance: number,
     bounds: CombatBounds = createDefaultCombatBounds()
   ): void {
     const context = this.context;
     const railWidth = Math.max(24, bounds.width * 0.09);
     const highContrast = this.settings.bulletContrast === 'high';
+    const passageOffset = wrapCanvasValue(distance * 0.82, 112);
     context.save();
-    context.fillStyle = highContrast ? 'rgba(0, 0, 0, 0.82)' : 'rgba(5, 13, 20, 0.72)';
+    context.fillStyle = highContrast ? '#020303' : environment.palette.far;
+    context.globalAlpha = highContrast ? 0.92 : 0.86;
+    context.fillRect(0, 0, bounds.width, bounds.height);
+
+    context.globalAlpha = highContrast ? 0.5 : 0.62;
+    context.strokeStyle = highContrast ? '#ffffff' : environment.palette.seam;
+    context.lineWidth = 1;
+    for (let y = -112; y < bounds.height + 112; y += 112) {
+      const seamY = y + passageOffset;
+      context.beginPath();
+      context.moveTo(railWidth, seamY);
+      context.lineTo(bounds.width - railWidth, seamY);
+      context.stroke();
+      context.fillStyle = environment.palette.panel;
+      context.globalAlpha = highContrast ? 0.18 : 0.24;
+      context.fillRect(railWidth + 8, seamY + 8, bounds.width - railWidth * 2 - 16, 88);
+      context.globalAlpha = highContrast ? 0.5 : 0.62;
+    }
+    for (const x of [bounds.width * 0.34, bounds.width * 0.5, bounds.width * 0.66]) {
+      context.beginPath();
+      context.moveTo(x, 0);
+      context.lineTo(x, bounds.height);
+      context.stroke();
+    }
+    const currentRoom =
+      operation.rooms.find(
+        (room) => distance >= room.startDistance && distance < room.endDistance
+      ) ?? operation.rooms.at(-1);
+    this.paintBoardingRoomTreatment(
+      currentRoom?.kind ?? 'corridor',
+      environment,
+      bounds,
+      passageOffset,
+      highContrast
+    );
+
+    context.fillStyle = highContrast ? '#000000' : environment.palette.trench;
+    context.globalAlpha = 0.96;
     context.fillRect(0, 0, railWidth, bounds.height);
     context.fillRect(bounds.width - railWidth, 0, railWidth, bounds.height);
-    context.strokeStyle = highContrast ? '#ffffff' : '#54d8df';
+    context.strokeStyle = highContrast ? '#ffffff' : environment.palette.accent;
     context.lineWidth = highContrast ? 2.5 : 1.4;
     context.setLineDash([16, 10]);
     context.beginPath();
@@ -449,11 +645,27 @@ export class CanvasRenderer {
     context.stroke();
     context.setLineDash([]);
 
+    context.globalAlpha = highContrast ? 0.72 : 0.86;
+    context.fillStyle = highContrast ? '#ffffff' : environment.palette.warning;
+    for (let y = -48; y < bounds.height + 48; y += 76) {
+      const markerY = y + wrapCanvasValue(distance * 0.56, 76);
+      context.save();
+      context.translate(railWidth * 0.5, markerY);
+      context.rotate(-0.58);
+      context.fillRect(-12, -2, 24, 4);
+      context.restore();
+      context.save();
+      context.translate(bounds.width - railWidth * 0.5, markerY);
+      context.rotate(0.58);
+      context.fillRect(-12, -2, 24, 4);
+      context.restore();
+    }
+
     for (const door of operation.doors) {
       const y = bounds.height - (door.atDistance - distance) * 0.82;
       if (y < -32 || y > bounds.height + 32) continue;
-      context.fillStyle = highContrast ? '#000000' : 'rgba(17, 38, 48, 0.9)';
-      context.strokeStyle = highContrast ? '#ffec6e' : '#ff9f43';
+      context.fillStyle = highContrast ? '#000000' : environment.palette.trench;
+      context.strokeStyle = highContrast ? '#ffec6e' : environment.palette.warning;
       context.lineWidth = 3;
       context.fillRect(railWidth, y - 12, bounds.width - railWidth * 2, 24);
       context.strokeRect(railWidth, y - 12, bounds.width - railWidth * 2, 24);
@@ -464,10 +676,90 @@ export class CanvasRenderer {
     }
 
     context.globalAlpha = 0.76;
-    context.fillStyle = highContrast ? '#ffffff' : '#8ff7ff';
+    context.fillStyle = highContrast ? '#ffffff' : environment.palette.lamp;
     context.font = '11px monospace';
     context.textAlign = 'left';
-    context.fillText(`BOARDING: ${operation.title.toUpperCase()}`, railWidth + 8, 18);
+    context.fillText(
+      `BOARDING: ${operation.title.toUpperCase()} / ${environment.label.toUpperCase()}`,
+      railWidth + 8,
+      18
+    );
+    context.restore();
+  }
+
+  private paintBoardingRoomTreatment(
+    kind: BoardingRoomKind,
+    environment: ConfinedEnvironmentPlan,
+    bounds: CombatBounds,
+    passageOffset: number,
+    highContrast: boolean
+  ): void {
+    const context = this.context;
+    const railWidth = Math.max(24, bounds.width * 0.09);
+    const left = railWidth + 18;
+    const right = bounds.width - railWidth - 18;
+    const center = bounds.width / 2;
+
+    context.save();
+    context.globalAlpha = highContrast ? 0.24 : 0.34;
+    context.strokeStyle = highContrast ? '#ffffff' : environment.palette.accent;
+    context.fillStyle = highContrast ? '#ffffff' : environment.palette.accent;
+    context.lineWidth = 2;
+
+    if (kind === 'reactor') {
+      for (let y = -160; y < bounds.height + 160; y += 240) {
+        const centerY = y + passageOffset * 1.6;
+        for (const radius of [34, 48, 62]) {
+          context.beginPath();
+          context.arc(center, centerY, radius, 0, Math.PI * 2);
+          context.stroke();
+        }
+      }
+    } else if (kind === 'hangar' || kind === 'cargo') {
+      for (let y = -100; y < bounds.height + 100; y += 92) {
+        const markerY = y + passageOffset;
+        context.beginPath();
+        context.moveTo(left, markerY + 20);
+        context.lineTo(center - 20, markerY);
+        context.lineTo(right, markerY + 20);
+        context.stroke();
+      }
+    } else if (kind === 'brig' || kind === 'quarters') {
+      for (let y = -120; y < bounds.height + 120; y += 144) {
+        const cellY = y + passageOffset;
+        context.strokeRect(left + 12, cellY, 92, 78);
+        context.strokeRect(right - 104, cellY, 92, 78);
+      }
+    } else if (kind === 'subsystem' || kind === 'bridge') {
+      for (let y = -80; y < bounds.height + 80; y += 104) {
+        const traceY = y + passageOffset;
+        context.beginPath();
+        context.moveTo(left, traceY);
+        context.lineTo(center - 56, traceY);
+        context.lineTo(center - 28, traceY + 22);
+        context.lineTo(center + 48, traceY + 22);
+        context.lineTo(center + 72, traceY);
+        context.lineTo(right, traceY);
+        context.stroke();
+      }
+    } else if (kind === 'airlock' || kind === 'extraction') {
+      for (let y = -120; y < bounds.height + 120; y += 164) {
+        const gateY = y + passageOffset;
+        context.beginPath();
+        context.moveTo(left, gateY + 28);
+        context.lineTo(center, gateY);
+        context.lineTo(right, gateY + 28);
+        context.stroke();
+      }
+    } else {
+      context.setLineDash([8, 22]);
+      context.beginPath();
+      context.moveTo(center, 0);
+      context.lineTo(center, bounds.height);
+      context.stroke();
+      context.setLineDash([]);
+    }
+
     context.restore();
   }
 

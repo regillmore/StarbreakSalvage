@@ -2293,3 +2293,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 160. `FoundryPresentation` adds circuit capacity to the shared component/readout models and aggregates the installed conduit pool into a sixth Grid Envelope meter. `FoundryScene` renders one six-cell component strip for installed and cargo hardware, removes the redundant contribution bar, and leaves scrap value on the existing action. Focused unit and Chromium coverage protect capacity tiers, signed comparisons, cargo replacement, the missing legacy indicator, and responsive layout.
+
+### BL28 - Confined-sector environment identity
+
+Acceptance:
+
+- Boarding replaces ordinary space/parallax strata with one opaque, deterministic full-viewport environment.
+- Capital hull, industrial station, rock-cut wreck, and abandoned underdeck targets carry distinct palettes and structural plans derived from immutable operation data.
+- Bounded panels, ribs, conduits, lamps, trenches, deck seams, and room-specific markings enrich motion and place without compromising projectile readability.
+- Existing 60-unit collision rails, world-anchored bulkheads, room progress, objectives, hazards, actors, and combat geometry remain authoritative.
+- High contrast, reduced motion, performance mode, narrow viewports, determinism, saves, snapshots, and static hosting remain compatible.
+
+Status:
+
+- Implemented in work order 161. `ConfinedEnvironment` owns the deterministic target/layout-derived presentation plan, `GameplayScene` selects it instead of the sector background for boarding, and `CanvasRenderer` consumes it as an opaque world backdrop plus clipped room passage. Ordinary open-flight backgrounds and all combat state remain unchanged.

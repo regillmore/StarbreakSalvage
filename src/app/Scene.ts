@@ -108,6 +108,8 @@ export interface SceneDebugState {
     readonly loot: number;
     readonly extractionSeconds: number | null;
     readonly integrations: readonly string[];
+    readonly environmentKind: string;
+    readonly environmentLabel: string;
   };
   readonly factionFronts?: FactionFrontDebugState;
   readonly crewArcs?: CrewArcDebugState;

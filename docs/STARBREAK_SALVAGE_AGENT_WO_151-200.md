@@ -245,3 +245,28 @@ Component comparisons carry signed `S` deltas and recognize increased capacity a
 Browser inspection of the cargo-rich Scenario Lab fixture confirmed three installed and three cargo cards each use aligned six-cell rows, no legacy contribution or cargo scrap-stat elements remain, the Circuit meter reads `1/3`, the panel has no horizontal overflow, and console logs remain clear.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 103 Vitest files and 643 tests, the production build, all 16 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 942.12 kB minified/256.97 kB gzip initial JavaScript and 80.62/16.20 kB CSS, a 0.01/0.04 kB JavaScript increase and 0.36/0.06 kB CSS reduction from work order 159. The existing 500 kB chunk notice remains; no dependency, circuit capacity rule, RNG stream, save/snapshot version, static base path, or warning threshold changed.
+
+## Work order 161 - Confined-sector environment identity
+
+Goal: make boarding and related enclosed operations read as continuous interiors instead of narrow collision walls laid over open space.
+
+Prompt:
+
+> Replace ordinary sky/parallax presentation during boarding with deterministic, opaque confined environments. Give capital ships, stations, wreck interiors, and derelict underdecks distinct structural palettes; enrich their passage with panels, ribs, conduits, lamps, service trenches, room-specific floor language, and existing world-anchored bulkheads. Preserve combat visibility, side-wall collision, authored room/door progress, reduced motion, performance mode, high contrast, deterministic content, saves, snapshots, accessibility, and static hosting. Cover the plan and renderer boundaries, inspect desktop/narrow presentation, and run release checks.
+
+Acceptance criteria:
+
+- Boarding never exposes sector stars, nebulae, terrain, or parallax strata inside or outside the arena; an opaque confined environment owns the full viewport first.
+- Capital ships, stations, wrecks, and derelicts derive distinct deterministic treatments from immutable operation layout without per-frame random generation.
+- Repeating hull panels, transverse ribs, recessed trenches, conduits, service lamps, and moving seams establish depth and forward travel without obscuring combat actors or projectiles.
+- Airlock/extraction, corridor, cargo/hangar, quarters/brig, subsystem/bridge, and reactor rooms receive distinct low-contrast passage markings while the existing doors remain world anchored and authoritative.
+- Side-wall collision, door/environment objectives, scroll distance, hazards, enemy and player behavior, rewards, saves, snapshots, and content RNG remain unchanged.
+- High contrast preserves bright boundary and door cues; reduced motion and performance mode bound decorative strata; desktop and narrow layouts remain clipped and free of horizontal overflow.
+
+Status: implemented. `ConfinedEnvironment` derives a bounded structural plan from the boarding operation's stable target, room, hazard, and door fingerprint. Four target families receive separate palettes and labels, while panel, conduit, lamp, and rib counts remain deterministic and capped.
+
+`GameplayScene` now chooses that plan before any background paint. `CanvasRenderer.paintConfinedBackground` fills the entire viewport with opaque panelwork, ribs, service conduits, lighting, and edge occlusion rather than calling the generated space-background path. The clipped passage adds scrolling deck seams, service trenches, warning markers, target-readable rails, and room-specific floor treatments before repainting the existing world-anchored bulkheads.
+
+Browser inspection of the station fixture confirmed that the full viewport now reads as a sealed industrial traversal: large opaque hull panels, scrolling transverse ribs, inset service channels, conduits, lamps, and shadowed outer structure replace every visible star/nebula layer, while the central combat lane remains brighter and legible. The 390-by-700 high-contrast/performance fixture identifies the enclosed environment, retains clipped side walls and bulkheads, and reports no browser errors.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 104 Vitest files and 647 tests, the production build, all 16 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 949.80 kB minified/259.19 kB gzip initial JavaScript and unchanged 80.62/16.20 kB CSS, increases of 7.68/2.22 kB JavaScript over work order 160. The existing 500 kB chunk notice remains; no dependency, combat geometry, content RNG stream, save/snapshot schema, static base path, or warning threshold changed.

@@ -1050,8 +1050,14 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
   for (let index = 0; index < 7; index += 1) await page.keyboard.press('Tab');
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('cockpit-hud')).toHaveAttribute('data-operation-mode', 'boarding');
+  await expect(page.getByTestId('cockpit-hud')).not.toHaveAttribute(
+    'data-environment-kind',
+    'openSpace'
+  );
   await expect(page.getByTestId('boarding-readout')).toContainText(/rooms .* bulkheads/);
+  await expect(page.getByTestId('boarding-readout')).toContainText(/interior/i);
   await expect(page.locator('.debug-overlay')).toContainText('Boarding');
+  await expect(page.locator('.debug-overlay')).toContainText('Boarding environment');
 
   await page.keyboard.press('B');
   await expect(page.getByTestId('scenario-lab')).toBeVisible();

@@ -200,6 +200,10 @@ import {
   createBoardingTranslatedLoadout,
   type BoardingOperationPlan
 } from '../game/BoardingOperation';
+import {
+  createConfinedEnvironmentPlan,
+  type ConfinedEnvironmentPlan
+} from '../game/ConfinedEnvironment';
 import { createFactionFrontDebugState, type FactionFrontState } from '../game/FactionFront';
 import {
   createApexEncounterReadModel,
@@ -277,6 +281,7 @@ export class GameplayScene implements Scene {
   private readonly specialMeter: HudMeterElements;
   private readonly bombMeter: HudMeterElements;
   private readonly heatMeter: HudMeterElements;
+  private readonly confinedEnvironment: ConfinedEnvironmentPlan | null;
   private hudRoot: HTMLElement | null = null;
   private apexContactBanner: HTMLElement | null = null;
   private readonly apexEncounterPresentation: ApexEncounterReadModel | null;
@@ -322,6 +327,9 @@ export class GameplayScene implements Scene {
     private readonly apexProfile: ApexFinaleProfile | null = null,
     private readonly apexState: ApexHuntState | null = null
   ) {
+    this.confinedEnvironment = this.missionContext?.projection.boardingOperation
+      ? createConfinedEnvironmentPlan(this.missionContext.projection.boardingOperation)
+      : null;
     this.apexEncounterPresentation = this.apexEncounter
       ? createApexEncounterReadModel(this.apexEncounter)
       : null;
@@ -413,6 +421,7 @@ export class GameplayScene implements Scene {
     hud.dataset.hudTheme = hudTheme.themeKey;
     hud.dataset.hudMode = hudTheme.mode;
     hud.dataset.operationMode = this.missionContext?.projection.operationMode ?? 'flight';
+    hud.dataset.environmentKind = this.confinedEnvironment?.kind ?? 'openSpace';
     hud.setAttribute('aria-label', `${this.contract.shipName} cockpit status`);
 
     for (const [property, value] of Object.entries(hudTheme.cssVariables)) {
@@ -472,7 +481,7 @@ export class GameplayScene implements Scene {
         moduleSummary: engineering.moduleSummary,
         crewCount: this.crewProfile?.members.length ?? 0
       });
-      boarding.textContent = `${boardingOperation.title} | ${boardingOperation.rooms.length} rooms / ${boardingOperation.doors.length} bulkheads | ${translation.summary}`;
+      boarding.textContent = `${boardingOperation.title} | ${this.confinedEnvironment?.label ?? 'Confined interior'} | ${boardingOperation.rooms.length} rooms / ${boardingOperation.doors.length} bulkheads | ${translation.summary}`;
       boarding.setAttribute(
         'aria-label',
         `${boardingOperation.title} boarding incursion. ${boardingOperation.summary}. ${translation.primary}. ${translation.modules}. ${translation.crew}. ${translation.bomb}. ${translation.special}. ${translation.collision}.`
@@ -694,11 +703,16 @@ export class GameplayScene implements Scene {
       ? getSectorExitPresentation(this.exitSequence)
       : null;
 
-    renderer.paintBackground(scroll.cameraOffset, this.getCurrentSector().background);
+    if (this.confinedEnvironment) {
+      renderer.paintConfinedBackground(this.confinedEnvironment, scroll.cameraOffset);
+    } else {
+      renderer.paintBackground(scroll.cameraOffset, this.getCurrentSector().background);
+    }
     renderer.beginGameplayLayer();
-    if (this.missionContext?.projection.boardingOperation) {
+    if (this.missionContext?.projection.boardingOperation && this.confinedEnvironment) {
       renderer.paintBoardingInterior(
         this.missionContext.projection.boardingOperation,
+        this.confinedEnvironment,
         scroll.distance,
         bounds
       );
@@ -1089,7 +1103,9 @@ export class GameplayScene implements Scene {
             ).length,
             loot: this.missionContext.projection.boardingOperation.loot.length,
             extractionSeconds: this.missionContext.projection.boardingOperation.extractionSeconds,
-            integrations: this.missionContext.projection.boardingOperation.integrations
+            integrations: this.missionContext.projection.boardingOperation.integrations,
+            environmentKind: this.confinedEnvironment?.kind ?? 'capitalHull',
+            environmentLabel: this.confinedEnvironment?.label ?? 'Confined interior'
           }
         : undefined,
       backgroundPrimitives: background.primitiveCount,
@@ -1837,9 +1853,7 @@ export class GameplayScene implements Scene {
     const apexContact = this.apexEncounterPresentation;
     this.objectiveReadout.textContent = [
       getObjectiveProgress(this.getWavePlan(), state).readout,
-      apexContact
-        ? `APEX HUNT · ${apexContact.stageLabel}: ${apexContact.label}`
-        : null,
+      apexContact ? `APEX HUNT · ${apexContact.stageLabel}: ${apexContact.label}` : null,
       this.campaignInfluence?.rival
         ? `Rival ${this.campaignInfluence.rival.name} | ${this.campaignInfluence.rival.shipName} | appearance ${this.campaignInfluence.rival.appearance}`
         : null,

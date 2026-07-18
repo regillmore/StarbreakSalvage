@@ -2776,6 +2776,7 @@ export class GameApp {
     const boardingDebug = debugState.boarding
       ? [
           `Boarding ${debugState.boarding.title} ${debugState.boarding.target} rooms ${debugState.boarding.rooms} doors ${debugState.boarding.doors} hazards ${debugState.boarding.hazards} loot ${debugState.boarding.loot}`,
+          `Boarding environment ${debugState.boarding.environmentLabel} / ${debugState.boarding.environmentKind}`,
           `Boarding integrations ${debugState.boarding.integrations.join('/')} extraction ${debugState.boarding.extractionSeconds ?? 'untimed'}`
         ]
       : [];
