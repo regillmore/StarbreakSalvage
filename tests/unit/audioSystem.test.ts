@@ -20,6 +20,11 @@ describe('AudioSystem helpers', () => {
     expect(getAudioCueDefinition('environmentDestroyed').gain).toBeLessThan(
       getAudioCueDefinition('enemyDestroyed').gain
     );
+    expect(getAudioCueDefinition('phaseCollapse')).toMatchObject({
+      waveform: 'triangle',
+      frequency: 1180,
+      endFrequency: 510
+    });
   });
 
   it('applies mute and master volume to cue gain', () => {

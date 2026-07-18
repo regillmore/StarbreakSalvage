@@ -297,3 +297,31 @@ Status: implemented. `PhaseProjectile` owns a pure age/radius/velocity presentat
 Browser inspection with the corrected `RANDOM-1UB0590-26CZ9L` seed and complete ship roster reproduced the reported Phase Courier + Phase Grazer board. The representative fourth volley contains three `phase`-tagged shots, three interference shells, `phase` flight classification, and the accessible refracted-core description; standard animation visibly cycles the split shells and wake, while high-contrast reduced-motion/performance presentation freezes a clean bounded state. The dedicated Chromium path reports no console or page errors.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 105 Vitest files and 652 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 953.24 kB minified/260.07 kB gzip initial JavaScript and 82.59/16.64 kB CSS, increases of 3.44/0.88 kB JavaScript and 1.97/0.44 kB CSS over work order 161. The existing 500 kB chunk notice remains; no dependency, projectile actor cap, RNG stream, content table, save/snapshot schema, static base path, or warning threshold changed.
+
+## Work order 163 - Consumed phase piercing
+
+Goal: turn phase from a visual/synergy tag into a legible one-use traversal charge that damages through its first contact and then becomes an ordinary projectile.
+
+Prompt:
+
+> Let every phase-tagged projectile damage and continue through one valid combatant, set-piece component, or destructible obstacle. Consume the `phase` tag on that first contact while retaining every other projectile trait, remember the traversed collider so a large target cannot be damaged twice, and let the next distinct contact remove the now-ordinary shot. Apply the same bounded rule to player, allied, and hostile phase fire. Telegraph the phase collapse with an unmistakable split-color impact, procedural cue, and restrained shake. Preserve normal damage dispatch, targetability, armor, kill hooks, powered missiles, ricochets, proc order, actor/effect caps, accessibility modes, saves, determinism, and static hosting. Align live-fire descriptions and add focused collision, obstacle, renderer, audio, and Chromium coverage.
+
+Acceptance criteria:
+
+- A phase-tagged shot applies its ordinary authored damage to the first valid target, remains alive, and loses only the `phase` tag; missile, plasma, split, drone, heat, source, damage, radius, velocity, TTL, ricochet, and proc metadata remain intact.
+- The projectile records one namespaced penetrated-target key and cannot damage that same enemy, boss, set-piece component, obstacle, ally, or player again while exiting its collision volume.
+- The next distinct target follows ordinary collision behavior and consumes the projectile after normal damage dispatch.
+- Player and allied phase fire shares the rule across enemies, bosses, set-piece parts under their existing targetability rules, and damageable environment objects; hostile phase fire shares it across allies and the player.
+- Phase consumption creates one capped 0.3-second collapse effect with opposed magenta/cyan apertures, an expanding impact ring, a bright central knot, a short descending procedural cue, and restrained screen shake.
+- The collapse remains visible in high contrast, freezes expansion under reduced motion, respects the existing 80-effect ceiling, and adds no gameplay actor or RNG draw.
+- Contract Select and Hardpoint Control explain the one-contact pierce in the existing accessible phase-flight description; saves, snapshots, content generation, and static hosting remain compatible.
+
+Status: implemented. `PhaseProjectile` now owns phase-tag removal, collapse duration, and bounded impact radius alongside the existing interference cycle. `CombatState.resolveProjectileImpact` dispatches normal damage first, then either removes an ordinary shot or consumes a phase shot, records its namespaced traversed target, increments monotonic feedback telemetry, and emits one capped collapse effect. Collision scans skip only that first target, so the projectile exits large hulls and obstacles without double damage before its next distinct contact consumes it.
+
+The shared impact boundary covers player, ally, and hostile projectiles. Enemy, boss, set-piece, and environment damage functions remain authoritative for targetability, armor, kills, rewards, and hooks; consuming phase mutates no other projectile trait. Phase missiles therefore continue under their powered motor after losing interference, and first-contact kill hooks still see the phase trait that caused the hit.
+
+`CanvasRenderer` presents consumption as two opposed magenta/cyan aperture halves around an expanding ring and bright diamond knot, with white/yellow high-contrast treatment and reduced-motion-safe radius. `CombatFeedback` adds a monotonic phase-collapse cue with restrained shake, while `AudioSystem` supplies a short original descending triangle tone. Live-fire accessibility copy now states that first damaging contact pierces and collapses the phase. Focused coverage exercises enemy and obstacle traversal, same-target suppression, next-target removal, tag preservation, effect geometry, feedback order, audio identity, and accessibility text.
+
+Browser inspection with the corrected `RANDOM-1UB0590-26CZ9L` seed and complete ship roster reproduces the Phase Courier + Phase Grazer board, confirms the consumed-pierce description in the live-fire region, and exercises the effect in an enemy-rich combat-scale capture without layout or console regressions. The focused Chromium path also verifies the high-contrast, reduced-motion, performance-mode phase preview and its accessible collapse description.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 105 Vitest files and 655 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 955.16 kB minified/260.61 kB gzip initial JavaScript and 82.59/16.64 kB CSS, increases of 1.92/0.54 kB JavaScript with CSS unchanged from work order 162. The existing 500 kB chunk notice remains; no dependency, content table, projectile actor cap, RNG stream, save/snapshot schema, static base path, or warning threshold changed.

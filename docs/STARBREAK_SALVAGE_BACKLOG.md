@@ -2321,3 +2321,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 162. `PhaseProjectile` supplies the bounded 0.48-second interference read model, `CombatState` tracks presentation age without changing linear phase-shot motion, and `CanvasRenderer` draws a directional shard, split shells, broken wake, and aperture. Shared attack previews classify phase flights from tags, so the Phase Courier ignition and every circuit-generated phase shot remain visually consistent.
+
+### BL30 - Consumed phase piercing
+
+Acceptance:
+
+- Phase-tagged shots apply normal damage and traverse one valid combatant, set-piece component, or destructible obstacle before losing only their phase trait.
+- One namespaced penetrated-target record prevents repeated damage while the spent shot exits a large collider; its next distinct contact removes it normally.
+- Player, ally, and hostile phase fire share the rule without bypassing existing targetability, armor, damage, kill, reward, or hook reducers.
+- A capped split-color collapse aperture, bright impact knot, procedural audio cue, and restrained shake clearly communicate that the traversal charge was spent.
+- High contrast, reduced motion, performance budgets, powered missiles, ricochets, proc order, saves, snapshots, deterministic content, accessibility, and static hosting remain compatible.
+
+Status:
+
+- Implemented in work order 163. `CombatState.resolveProjectileImpact` consumes the phase tag after the first normal damage dispatch, remembers the traversed target, and removes the spent shot on its next distinct collision. The existing effect pool carries a 0.3-second magenta/cyan collapse telegraph, `CombatFeedback` and `AudioSystem` add restrained impact feedback, and shared live-fire descriptions explain the one-contact pierce.

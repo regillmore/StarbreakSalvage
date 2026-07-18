@@ -11,6 +11,7 @@ const emptySnapshot: CombatFeedbackSnapshot = {
   specialsUsed: 0,
   bombsUsed: 0,
   grazes: 0,
+  phaseCollapses: 0,
   enemiesDestroyed: 0,
   environmentObjectsDestroyed: 0,
   bossesDefeated: 0,
@@ -28,6 +29,7 @@ describe('CombatFeedback', () => {
         specialsUsed: 1,
         bombsUsed: 1,
         grazes: 1,
+        phaseCollapses: 1,
         enemiesDestroyed: 1,
         environmentObjectsDestroyed: 1,
         bossesDefeated: 0,
@@ -41,6 +43,7 @@ describe('CombatFeedback', () => {
       'specialActivated',
       'bombUsed',
       'graze',
+      'phaseCollapse',
       'playerHit',
       'enemyDestroyed',
       'environmentDestroyed',
@@ -69,5 +72,8 @@ describe('CombatFeedback', () => {
       getFeedbackShakeIntensity('playerHit')
     );
     expect(getFeedbackShakeIntensity('pickupCollected')).toBe(0);
+    expect(getFeedbackShakeIntensity('phaseCollapse')).toBeGreaterThan(
+      getFeedbackShakeIntensity('graze')
+    );
   });
 });

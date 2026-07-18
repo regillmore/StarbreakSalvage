@@ -531,7 +531,7 @@ function createFoundryAttackPatternPreviewModel(
     ? ' Missile-tagged shots use their two-stage motor profile.'
     : '';
   const phaseDescription = safeProjectiles.some((projectile) => isPhaseProjectile(projectile.tags))
-    ? ' Phase-tagged shots carry a refracted core, displaced afterimages, and a broken wake.'
+    ? ' Phase-tagged shots carry a refracted core, displaced afterimages, and a broken wake; their first damaging contact pierces and collapses the phase.'
     : '';
   return {
     cameraWidth: COMBAT_ARENA_WIDTH,

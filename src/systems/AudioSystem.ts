@@ -49,6 +49,13 @@ const CUE_DEFINITIONS: Readonly<Record<CombatFeedbackCue, AudioCueDefinition>> =
     durationSeconds: 0.055,
     gain: 0.032
   },
+  phaseCollapse: {
+    waveform: 'triangle',
+    frequency: 1180,
+    endFrequency: 510,
+    durationSeconds: 0.09,
+    gain: 0.052
+  },
   enemyDestroyed: {
     waveform: 'sawtooth',
     frequency: 180,

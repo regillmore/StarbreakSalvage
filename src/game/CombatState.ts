@@ -55,7 +55,12 @@ import {
 import { getItemNames, type ItemInstance } from './Rewards';
 import { createWeaponProjectileBlueprints } from './WeaponProjectiles';
 import { getProjectileTravelDeltaSeconds, isMissileProjectile } from './MissileFlight';
-import { isPhaseProjectile } from './PhaseProjectile';
+import {
+  PHASE_COLLAPSE_EFFECT_SECONDS,
+  consumePhaseProjectileTag,
+  getPhaseCollapseRadius,
+  isPhaseProjectile
+} from './PhaseProjectile';
 import type { MissionObjectiveResultSnapshot } from './ObjectiveDirector';
 import type { BossPhaseUpgradeEffects } from './UpgradeEffects';
 import type { CrewCombatProfile } from './CrewCommand';
@@ -146,9 +151,10 @@ export interface ProjectileState {
   readonly damage: number;
   ttl: number;
   ageSeconds?: number;
-  readonly tags: readonly ItemTag[];
+  tags: readonly ItemTag[];
   readonly procDepth: number;
   ricochetBounces?: number;
+  phasePiercedTargetKey?: string;
   readonly environmentDamageSource?: EnvironmentObjectDamageSource;
   readonly factionId?: FactionId;
   readonly setPieceSourceId?: string;
@@ -306,7 +312,13 @@ export interface EnvironmentObjectState {
 }
 
 export type CombatEffectKind =
-  'special' | 'bomb' | 'graze' | 'environmentHit' | 'environmentBreak' | 'chainReaction';
+  | 'special'
+  | 'bomb'
+  | 'graze'
+  | 'environmentHit'
+  | 'environmentBreak'
+  | 'chainReaction'
+  | 'phaseCollapse';
 
 export interface CombatEffectState {
   readonly id: number;
@@ -391,6 +403,7 @@ export interface CombatState {
   environmentObjects: EnvironmentObjectState[];
   setPiece: SetPieceState | null;
   effects: CombatEffectState[];
+  phaseCollapseCount: number;
   grazedProjectileIds: Set<number>;
   formationRewardsClaimed: Set<string>;
   hazardActorCooldowns: Map<string, number>;
@@ -725,6 +738,7 @@ export function createCombatState(
     environmentObjects: [],
     setPiece: createSetPieceState(options.setPiecePlan ?? null, options.setPieceOwnerFactionId),
     effects: [],
+    phaseCollapseCount: 0,
     grazedProjectileIds: new Set<number>(),
     formationRewardsClaimed: new Set<string>(),
     hazardActorCooldowns: new Map<string, number>(),
@@ -3928,51 +3942,79 @@ function resolveCombatCollisions(state: CombatState): void {
   for (const projectile of state.projectiles) {
     if (projectile.owner === 'ally') {
       for (const enemy of state.enemies) {
-        if (enemyIdsToRemove.has(enemy.id) || !circlesOverlap(projectile, enemy)) continue;
+        const targetKey = getProjectileTargetKey('enemy', enemy.id);
+        if (
+          enemyIdsToRemove.has(enemy.id) ||
+          projectile.phasePiercedTargetKey === targetKey ||
+          !circlesOverlap(projectile, enemy)
+        ) {
+          continue;
+        }
         damageEnemyWithAllyProjectile(state, enemy, projectile, enemyIdsToRemove);
-        projectileIdsToRemove.add(projectile.id);
+        resolveProjectileImpact(state, projectile, targetKey, projectileIdsToRemove);
         break;
       }
       const boss = state.boss;
-      if (boss && !projectileIdsToRemove.has(projectile.id) && circlesOverlap(projectile, boss)) {
-        damageBossWithAllyProjectile(state, boss, projectile);
-        projectileIdsToRemove.add(projectile.id);
-      }
+      const bossTargetKey = boss ? getProjectileTargetKey('boss', boss.bossId) : null;
       if (
+        boss &&
+        bossTargetKey &&
         !projectileIdsToRemove.has(projectile.id) &&
-        damageSetPieceWithProjectile(state, projectile)
+        projectile.phasePiercedTargetKey !== bossTargetKey &&
+        circlesOverlap(projectile, boss)
       ) {
-        projectileIdsToRemove.add(projectile.id);
+        damageBossWithAllyProjectile(state, boss, projectile);
+        resolveProjectileImpact(state, projectile, bossTargetKey, projectileIdsToRemove);
+      }
+      if (!projectileIdsToRemove.has(projectile.id)) {
+        const setPieceTargetKey = damageSetPieceWithProjectile(state, projectile);
+        if (setPieceTargetKey) {
+          resolveProjectileImpact(state, projectile, setPieceTargetKey, projectileIdsToRemove);
+        }
       }
     }
 
     if (projectile.owner === 'player') {
       for (const enemy of state.enemies) {
-        if (enemyIdsToRemove.has(enemy.id) || !circlesOverlap(projectile, enemy)) {
+        const targetKey = getProjectileTargetKey('enemy', enemy.id);
+        if (
+          enemyIdsToRemove.has(enemy.id) ||
+          projectile.phasePiercedTargetKey === targetKey ||
+          !circlesOverlap(projectile, enemy)
+        ) {
           continue;
         }
 
         damageEnemyWithProjectile(state, enemy, projectile, enemyIdsToRemove);
-        projectileIdsToRemove.add(projectile.id);
+        resolveProjectileImpact(state, projectile, targetKey, projectileIdsToRemove);
         break;
       }
 
       const boss = state.boss;
-      if (boss && !projectileIdsToRemove.has(projectile.id) && circlesOverlap(projectile, boss)) {
+      const bossTargetKey = boss ? getProjectileTargetKey('boss', boss.bossId) : null;
+      if (
+        boss &&
+        bossTargetKey &&
+        !projectileIdsToRemove.has(projectile.id) &&
+        projectile.phasePiercedTargetKey !== bossTargetKey &&
+        circlesOverlap(projectile, boss)
+      ) {
         damageBossWithProjectile(state, boss, projectile);
-        projectileIdsToRemove.add(projectile.id);
+        resolveProjectileImpact(state, projectile, bossTargetKey, projectileIdsToRemove);
       }
 
-      if (
-        !projectileIdsToRemove.has(projectile.id) &&
-        damageSetPieceWithProjectile(state, projectile)
-      ) {
-        projectileIdsToRemove.add(projectile.id);
+      if (!projectileIdsToRemove.has(projectile.id)) {
+        const setPieceTargetKey = damageSetPieceWithProjectile(state, projectile);
+        if (setPieceTargetKey) {
+          resolveProjectileImpact(state, projectile, setPieceTargetKey, projectileIdsToRemove);
+        }
       }
 
       if (!projectileIdsToRemove.has(projectile.id)) {
         for (const object of getActiveEnvironmentObjects(state)) {
+          const targetKey = getProjectileTargetKey('environment', object.id);
           if (
+            projectile.phasePiercedTargetKey === targetKey ||
             !environmentObjectOverlapsCircle(
               state,
               object,
@@ -3996,7 +4038,7 @@ function resolveCombatCollisions(state: CombatState): void {
           );
 
           if (damaged) {
-            projectileIdsToRemove.add(projectile.id);
+            resolveProjectileImpact(state, projectile, targetKey, projectileIdsToRemove);
             break;
           }
         }
@@ -4005,13 +4047,30 @@ function resolveCombatCollisions(state: CombatState): void {
 
     if (projectile.owner === 'enemy') {
       const ally = state.allies.find(
-        (candidate) => candidate.status === 'active' && circlesOverlap(projectile, candidate)
+        (candidate) =>
+          candidate.status === 'active' &&
+          projectile.phasePiercedTargetKey !==
+            getProjectileTargetKey('ally', candidate.candidateId) &&
+          circlesOverlap(projectile, candidate)
       );
       if (ally) {
-        projectileIdsToRemove.add(projectile.id);
+        resolveProjectileImpact(
+          state,
+          projectile,
+          getProjectileTargetKey('ally', ally.candidateId),
+          projectileIdsToRemove
+        );
         damageAlly(state, ally, projectile.damage);
-      } else if (circlesOverlap(projectile, state.player)) {
-        projectileIdsToRemove.add(projectile.id);
+      } else if (
+        projectile.phasePiercedTargetKey !== getProjectileTargetKey('player', 'ship') &&
+        circlesOverlap(projectile, state.player)
+      ) {
+        resolveProjectileImpact(
+          state,
+          projectile,
+          getProjectileTargetKey('player', 'ship'),
+          projectileIdsToRemove
+        );
         damagePlayer(state, projectile.damage);
       }
     }
@@ -4076,6 +4135,40 @@ function resolveCombatCollisions(state: CombatState): void {
   );
   state.enemies = state.enemies.filter((enemy) => !enemyIdsToRemove.has(enemy.id));
   state.pickups = state.pickups.filter((pickup) => !pickupIdsToRemove.has(pickup.id));
+}
+
+function resolveProjectileImpact(
+  state: CombatState,
+  projectile: ProjectileState,
+  targetKey: string,
+  projectileIdsToRemove: Set<number>
+): void {
+  if (!isPhaseProjectile(projectile.tags)) {
+    projectileIdsToRemove.add(projectile.id);
+    return;
+  }
+
+  projectile.tags = consumePhaseProjectileTag(projectile.tags);
+  projectile.phasePiercedTargetKey = targetKey;
+  state.phaseCollapseCount += 1;
+  if (state.effects.length < MAX_ENVIRONMENT_FEEDBACK_EFFECTS) {
+    state.effects.push({
+      id: getNextEntityId(state),
+      kind: 'phaseCollapse',
+      x: projectile.x,
+      y: projectile.y,
+      radius: getPhaseCollapseRadius(projectile.radius),
+      ttl: PHASE_COLLAPSE_EFFECT_SECONDS,
+      maxTtl: PHASE_COLLAPSE_EFFECT_SECONDS
+    });
+  }
+}
+
+function getProjectileTargetKey(
+  kind: 'enemy' | 'boss' | 'environment' | 'setPiece' | 'ally' | 'player',
+  id: string | number
+): string {
+  return `${kind}:${id}`;
 }
 
 function damageEnemyWithProjectile(
@@ -4264,9 +4357,14 @@ function cleanupEntities(state: CombatState, bounds: CombatBounds): void {
   }
 }
 
-function damageSetPieceWithProjectile(state: CombatState, projectile: ProjectileState): boolean {
+function damageSetPieceWithProjectile(
+  state: CombatState,
+  projectile: ProjectileState
+): string | null {
   for (const component of getActiveSetPieceComponents(state.setPiece, state.scrollDistance)) {
+    const targetKey = getProjectileTargetKey('setPiece', component.id);
     if (
+      projectile.phasePiercedTargetKey === targetKey ||
       !setPieceComponentOverlapsCircle(
         state.scrollDistance,
         component,
@@ -4289,10 +4387,10 @@ function damageSetPieceWithProjectile(state: CombatState, projectile: Projectile
         )
       );
     }
-    return true;
+    return targetKey;
   }
 
-  return false;
+  return null;
 }
 
 function spawnDueLooseCurrency(state: CombatState, bounds: CombatBounds): void {

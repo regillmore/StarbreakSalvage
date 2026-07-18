@@ -1,4 +1,5 @@
 export const PHASE_PROJECTILE_CYCLE_SECONDS = 0.48;
+export const PHASE_COLLAPSE_EFFECT_SECONDS = 0.3;
 
 export type PhaseProjectileBand = 'coherent' | 'splitting' | 'translated' | 'rejoining';
 
@@ -17,6 +18,16 @@ export interface PhaseProjectilePresentation {
 
 export function isPhaseProjectile(tags: readonly string[]): boolean {
   return tags.includes('phase');
+}
+
+export function consumePhaseProjectileTag<TTag extends string>(
+  tags: readonly TTag[]
+): readonly TTag[] {
+  return tags.filter((tag) => tag !== 'phase');
+}
+
+export function getPhaseCollapseRadius(projectileRadius: number): number {
+  return Math.max(18, sanitizePositive(projectileRadius) * 5.2);
 }
 
 export function getPhaseProjectilePresentation(options: {

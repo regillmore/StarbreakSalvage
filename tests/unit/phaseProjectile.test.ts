@@ -7,7 +7,10 @@ import {
   type CombatBounds
 } from '../../src/game/CombatState';
 import {
+  PHASE_COLLAPSE_EFFECT_SECONDS,
   PHASE_PROJECTILE_CYCLE_SECONDS,
+  consumePhaseProjectileTag,
+  getPhaseCollapseRadius,
   getPhaseProjectilePresentation,
   isPhaseProjectile
 } from '../../src/game/PhaseProjectile';
@@ -39,6 +42,8 @@ describe('phase projectile identity', () => {
     expect(first.headingRadians).toBeCloseTo(Math.atan2(120, 600));
     expect(isPhaseProjectile(['laser', 'phase'])).toBe(true);
     expect(isPhaseProjectile(['laser'])).toBe(false);
+    expect(consumePhaseProjectileTag(['laser', 'phase', 'plasma'])).toEqual(['laser', 'plasma']);
+    expect(getPhaseCollapseRadius(5)).toBe(26);
   });
 
   it('tracks visual age for phase-tagged shots without changing linear travel', () => {
@@ -77,6 +82,52 @@ describe('phase projectile identity', () => {
     expect(state.projectiles[0]).toMatchObject({ x: 204, y: 280, ageSeconds: 0.1 });
     expect(state.projectiles[1]).toMatchObject({ x: 304, y: 280 });
     expect(state.projectiles[1]?.ageSeconds).toBeUndefined();
+  });
+
+  it('damages through one enemy, consumes phase, and expires on the next distinct contact', () => {
+    const state = createCombatState(bounds, 'PHASE-PIERCE-SMOKE', {
+      skipEnemyWaves: true,
+      bossSpawnAtSeconds: null
+    });
+    state.enemies.push(createEnemy(8101, 240, 280), createEnemy(8102, 240, 280));
+    state.projectiles.push({
+      id: 9101,
+      owner: 'player',
+      x: 240,
+      y: 280,
+      vx: 0,
+      vy: 0,
+      radius: 5,
+      damage: 1,
+      ttl: 2,
+      tags: ['laser', 'phase'],
+      procDepth: 0
+    });
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 0, bounds);
+
+    expect(state.enemies.map((enemy) => enemy.hull)).toEqual([1, 2]);
+    expect(state.projectiles).toHaveLength(1);
+    expect(state.projectiles[0]).toMatchObject({
+      tags: ['laser'],
+      phasePiercedTargetKey: 'enemy:8101'
+    });
+    expect(state.effects).toContainEqual(
+      expect.objectContaining({
+        kind: 'phaseCollapse',
+        radius: 26,
+        ttl: PHASE_COLLAPSE_EFFECT_SECONDS,
+        maxTtl: PHASE_COLLAPSE_EFFECT_SECONDS
+      })
+    );
+    expect(state.phaseCollapseCount).toBe(1);
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 0, bounds);
+
+    expect(state.enemies.map((enemy) => enemy.hull)).toEqual([1, 1]);
+    expect(state.projectiles).toHaveLength(0);
+    expect(state.effects.filter((effect) => effect.kind === 'phaseCollapse')).toHaveLength(1);
+    expect(state.phaseCollapseCount).toBe(1);
   });
 
   it('renders a refracted shard, broken wake, aperture, and displaced echoes', () => {
@@ -122,7 +173,46 @@ describe('phase projectile identity', () => {
     expect(context.quadraticCurveTo).toHaveBeenCalledTimes(2);
     expect(context.arc.mock.calls.length).toBeGreaterThanOrEqual(3);
   });
+
+  it('renders a split-color phase-collapse aperture and central hit knot', () => {
+    const context = createContext();
+    const renderer = createRenderer(context);
+
+    renderer.paintCombatEffect({
+      kind: 'phaseCollapse',
+      x: 210,
+      y: 190,
+      radius: 26,
+      ttl: 0.18,
+      maxTtl: PHASE_COLLAPSE_EFFECT_SECONDS
+    });
+
+    expect(context.translate).toHaveBeenCalledWith(210, 190);
+    expect(context.rotate).toHaveBeenCalled();
+    expect(context.arc.mock.calls.length).toBeGreaterThanOrEqual(3);
+    expect(context.lineTo.mock.calls.length).toBeGreaterThanOrEqual(3);
+    expect(context.fill).toHaveBeenCalled();
+  });
 });
+
+function createEnemy(
+  id: number,
+  x: number,
+  y: number
+): ReturnType<typeof createCombatState>['enemies'][number] {
+  return {
+    id,
+    factionId: 'faction_corporate_ledger',
+    x,
+    y,
+    radius: 16,
+    hull: 2,
+    maxHull: 2,
+    drift: 0,
+    targetY: y,
+    fireCooldown: 10
+  };
+}
 
 function createRenderer(context: ReturnType<typeof createContext>): CanvasRenderer {
   const renderer = Object.create(CanvasRenderer.prototype) as CanvasRenderer;

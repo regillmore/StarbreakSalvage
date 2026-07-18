@@ -5,6 +5,7 @@ export type CombatFeedbackCue =
   | 'specialActivated'
   | 'bombUsed'
   | 'graze'
+  | 'phaseCollapse'
   | 'enemyDestroyed'
   | 'environmentDestroyed'
   | 'bossDefeated'
@@ -21,6 +22,7 @@ export interface CombatFeedbackSnapshot {
   readonly specialsUsed: number;
   readonly bombsUsed: number;
   readonly grazes: number;
+  readonly phaseCollapses: number;
   readonly enemiesDestroyed: number;
   readonly environmentObjectsDestroyed: number;
   readonly bossesDefeated: number;
@@ -35,6 +37,7 @@ const SHAKE_INTENSITY_BY_CUE: Readonly<Record<CombatFeedbackCue, number>> = {
   specialActivated: 0.24,
   bombUsed: 0.7,
   graze: 0.04,
+  phaseCollapse: 0.1,
   enemyDestroyed: 0.2,
   environmentDestroyed: 0.13,
   bossDefeated: 0.72,
@@ -53,6 +56,7 @@ export function createCombatFeedbackSnapshot(state: CombatState): CombatFeedback
     specialsUsed: state.stats.specialsUsed,
     bombsUsed: state.stats.bombsUsed,
     grazes: state.stats.grazes,
+    phaseCollapses: state.phaseCollapseCount,
     enemiesDestroyed: state.stats.enemiesDestroyed,
     environmentObjectsDestroyed: state.stats.environmentObjectsDestroyed,
     bossesDefeated: state.stats.bossesDefeated,
@@ -83,6 +87,10 @@ export function diffCombatFeedback(
 
   if (after.grazes > before.grazes) {
     cues.push('graze');
+  }
+
+  if (after.phaseCollapses > before.phaseCollapses) {
+    cues.push('phaseCollapse');
   }
 
   if (after.damageTaken > before.damageTaken) {

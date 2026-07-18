@@ -632,6 +632,10 @@ test('renders a real Phase Grazer volley with the shared phase identity', async 
     'aria-label',
     /refracted core, displaced afterimages, and a broken wake/i
   );
+  await expect(page.getByTestId('contract-attack-preview')).toHaveAttribute(
+    'aria-label',
+    /first damaging contact pierces and collapses the phase/i
+  );
   expect(browserErrors).toEqual([]);
 });
 

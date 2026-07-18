@@ -216,7 +216,13 @@ export interface SetPieceComponentRenderState {
 
 export interface CombatEffectRenderState {
   readonly kind:
-    'special' | 'bomb' | 'graze' | 'environmentHit' | 'environmentBreak' | 'chainReaction';
+    | 'special'
+    | 'bomb'
+    | 'graze'
+    | 'environmentHit'
+    | 'environmentBreak'
+    | 'chainReaction'
+    | 'phaseCollapse';
   readonly x: number;
   readonly y: number;
   readonly radius: number;
@@ -2216,6 +2222,7 @@ export class CanvasRenderer {
     const context = this.context;
     const alpha = clamp(effect.ttl / effect.maxTtl, 0, 1);
     const radius = getCombatEffectRenderRadius(effect, this.settings.reducedMotion);
+    const velocityCues = getVelocityCueState(this.settings);
     const color =
       effect.kind === 'bomb'
         ? '#ffd166'
@@ -2227,8 +2234,9 @@ export class CanvasRenderer {
               ? '#ffef5f'
               : effect.kind === 'environmentHit'
                 ? '#8aa4b8'
-                : '#ff6bd6';
-    const velocityCues = getVelocityCueState(this.settings);
+                : effect.kind === 'phaseCollapse' && velocityCues.highContrastProjectiles
+                  ? '#ffffff'
+                  : '#ff6bd6';
 
     context.save();
     context.translate(effect.x, effect.y);
@@ -2245,10 +2253,20 @@ export class CanvasRenderer {
       }
     }
 
-    context.globalAlpha = effect.kind === 'graze' ? alpha * 0.78 : alpha * 0.62;
+    context.globalAlpha =
+      effect.kind === 'graze'
+        ? alpha * 0.78
+        : effect.kind === 'phaseCollapse'
+          ? alpha * 0.9
+          : alpha * 0.62;
     context.strokeStyle = color;
     context.fillStyle = color;
-    context.lineWidth = effect.kind === 'bomb' || effect.kind === 'environmentBreak' ? 4 : 2;
+    context.lineWidth =
+      effect.kind === 'bomb' || effect.kind === 'environmentBreak'
+        ? 4
+        : effect.kind === 'phaseCollapse'
+          ? 3
+          : 2;
     context.shadowColor = color;
     context.shadowBlur = this.settings.reducedMotion ? 0 : 14;
     context.beginPath();
@@ -2269,6 +2287,40 @@ export class CanvasRenderer {
       context.globalAlpha = alpha * 0.18;
       context.beginPath();
       context.arc(0, 0, Math.max(10, radius * 0.64), 0, Math.PI * 2);
+      context.fill();
+    } else if (effect.kind === 'phaseCollapse') {
+      const collapseProgress = 1 - alpha;
+      const highContrast = velocityCues.highContrastProjectiles;
+      context.shadowBlur = this.settings.reducedMotion ? 0 : 10;
+      context.save();
+      context.rotate(collapseProgress * Math.PI * 0.85);
+      context.lineWidth = highContrast ? 3 : 2.4;
+      for (const [offset, strokeColor] of [
+        [-1, highContrast ? '#ffffff' : '#ff6bd6'],
+        [1, highContrast ? '#ffef5f' : '#7cf7ff']
+      ] as const) {
+        context.globalAlpha = alpha * 0.9;
+        context.strokeStyle = strokeColor;
+        context.beginPath();
+        context.arc(
+          offset * radius * 0.13,
+          0,
+          radius * 0.72,
+          offset < 0 ? Math.PI * 0.12 : Math.PI * 1.12,
+          offset < 0 ? Math.PI * 0.88 : Math.PI * 1.88
+        );
+        context.stroke();
+      }
+      context.restore();
+
+      context.globalAlpha = alpha;
+      context.fillStyle = highContrast ? '#ffffff' : '#f8fbff';
+      context.beginPath();
+      context.moveTo(0, -Math.max(3, radius * 0.18));
+      context.lineTo(Math.max(3, radius * 0.18), 0);
+      context.lineTo(0, Math.max(3, radius * 0.18));
+      context.lineTo(-Math.max(3, radius * 0.18), 0);
+      context.closePath();
       context.fill();
     }
 

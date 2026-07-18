@@ -297,6 +297,7 @@ describe('foundry visual presentation', () => {
     expect(phase.projectiles[0]?.flightKind).toBe('phase');
     expect(phaseMissile.projectiles[0]?.flightKind).toBe('phaseMissile');
     expect(phase.ariaLabel).toContain('refracted core, displaced afterimages, and a broken wake');
+    expect(phase.ariaLabel).toContain('first damaging contact pierces and collapses the phase');
     expect(phaseMissile.ariaLabel).toContain('two-stage motor profile');
     expect(phaseMissile.ariaLabel).toContain('refracted core');
   });

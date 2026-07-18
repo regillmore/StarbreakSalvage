@@ -42,6 +42,52 @@ describe('environment object runtime', () => {
     expect(getPickupSignature(first.pickups)).toEqual(getPickupSignature(second.pickups));
   });
 
+  it('lets a phase shot traverse one obstacle before the next distinct obstacle consumes it', () => {
+    const plan = createPlan([
+      { definitionId: 'salvage_cache', x: 320, y: 260 },
+      { definitionId: 'salvage_cache', x: 320, y: 260 }
+    ]);
+    const state = createState('ENV-PHASE-PIERCE-SEED', plan);
+    state.scrollDistance = 40;
+    state.projectiles.push({
+      id: 9001,
+      owner: 'player',
+      x: 320,
+      y: 260,
+      vx: 0,
+      vy: 0,
+      radius: 8,
+      damage: 1,
+      ttl: 1,
+      tags: ['phase'],
+      procDepth: 0
+    });
+
+    updateCombatState(
+      state,
+      { movement: { x: 0, y: 0 }, fire: false, scrollDistance: 40 },
+      0,
+      bounds
+    );
+
+    expect(state.environmentObjects.map((object) => object.hull)).toEqual([3, 4]);
+    expect(state.projectiles[0]).toMatchObject({
+      tags: [],
+      phasePiercedTargetKey: 'environment:1'
+    });
+    expect(state.effects.some((effect) => effect.kind === 'phaseCollapse')).toBe(true);
+
+    updateCombatState(
+      state,
+      { movement: { x: 0, y: 0 }, fire: false, scrollDistance: 40 },
+      0,
+      bounds
+    );
+
+    expect(state.environmentObjects.map((object) => object.hull)).toEqual([3, 3]);
+    expect(state.projectiles).toHaveLength(0);
+  });
+
   it('dispatches explicit environment destruction hooks through item payloads', () => {
     const plan = createPlan([{ definitionId: 'salvage_cache', x: 320, y: 260 }]);
     const withoutDividend = createState('ENV-HOOK-SEED', plan);
