@@ -14,9 +14,12 @@ import {
   getSetPieceComponentRect,
   getSetPieceComponentScreenState,
   getSetPieceDebugJumpDistance,
+  getSetPieceEngagementDistance,
   getSetPieceForwardFireLane,
+  getSetPieceLayoutBottomRecoveryHeight,
   getSetPieceReadModel,
   isSetPieceBossLockReleased,
+  SET_PIECE_BOTTOM_RECOVERY_HEIGHT,
   validateSetPieceContent
 } from '../../src/game/SetPiece';
 
@@ -154,6 +157,28 @@ describe('SetPiece', () => {
     );
   });
 
+  it('rejects an arrangement that crowds the bottom recovery envelope', () => {
+    const source = SET_PIECES[0];
+    const layout = source?.layouts[0];
+    if (!source || !layout) throw new Error('Expected a set-piece layout fixture.');
+    const crowded: SetPieceDefinition = {
+      ...source,
+      layouts: [
+        {
+          ...layout,
+          componentPlacements: layout.componentPlacements.map((placement) =>
+            placement.componentId === 'hecaton-core' ? { ...placement, y: 650 } : placement
+          )
+        },
+        ...source.layouts.slice(1)
+      ]
+    };
+
+    expect(validateSetPieceContent([crowded, ...SET_PIECES.slice(1)]).errors).toContain(
+      `Set piece ${source.id} layout ${layout.id} must retain at least ${SET_PIECE_BOTTOM_RECOVERY_HEIGHT}px of bottom recovery room at its engagement stop.`
+    );
+  });
+
   it('enforces dependency target order and advances exterior, interior, and destruction beats once', () => {
     const state = requireState(createSetPiecePlan({ sectorIndex: 1, scrollLength: 2400 }));
     const armor = requireComponent(state, 'hecaton-armor');
@@ -232,11 +257,16 @@ describe('SetPiece', () => {
           layoutId: layout.id
         });
         const state = requireState(plan);
+        const engagementDistance = getSetPieceEngagementDistance(plan!);
 
         expect(getSetPieceLayoutById(definition, plan!.layoutId)).toBe(layout);
         expect(plan!.safeLane.maxX - plan!.safeLane.minX).toBeGreaterThanOrEqual(128);
+        expect(getSetPieceLayoutBottomRecoveryHeight(definition, layout)).toBeGreaterThanOrEqual(
+          SET_PIECE_BOTTOM_RECOVERY_HEIGHT
+        );
         for (const component of state.components) {
           const rect = getSetPieceComponentRect(plan!.anchorDistance, component);
+          const engagementRect = getSetPieceComponentRect(engagementDistance, component);
           const normal = getSetPieceComponentScreenState(plan!.anchorDistance, component);
           const reducedMotion = getSetPieceComponentScreenState(plan!.anchorDistance, component);
 
@@ -245,6 +275,10 @@ describe('SetPiece', () => {
           expect(rect.right).toBeLessThanOrEqual(640);
           expect(rect.top).toBeGreaterThanOrEqual(0);
           expect(rect.bottom).toBeLessThanOrEqual(720);
+          expect(engagementRect.top).toBeGreaterThanOrEqual(0);
+          expect(engagementRect.bottom).toBeLessThanOrEqual(
+            720 - SET_PIECE_BOTTOM_RECOVERY_HEIGHT
+          );
           expect(normal).toEqual(reducedMotion);
         }
         for (const component of definition.components.filter(
@@ -265,7 +299,9 @@ describe('SetPiece', () => {
       expect(spawns.every((spawn) => spawn.formationId === plan!.reinforcement.formationId)).toBe(
         true
       );
-      expect(getSetPieceDebugJumpDistance(plan)).toBe(plan!.anchorDistance - 120);
+      expect(getSetPieceDebugJumpDistance(plan)).toBe(
+        getSetPieceEngagementDistance(plan!) - 120
+      );
     }
   });
 });

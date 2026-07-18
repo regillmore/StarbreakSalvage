@@ -120,6 +120,9 @@ const ACTIVE_LEAD_DISTANCE = 210;
 const ACTIVE_TRAIL_DISTANCE = 210;
 const HAZARD_COOLDOWN_SECONDS = 0.35;
 const MIN_SAFE_LANE_WIDTH = 128;
+export const SET_PIECE_ENGAGEMENT_LEAD_DISTANCE = 80;
+export const SET_PIECE_BOTTOM_RECOVERY_HEIGHT = 150;
+const SET_PIECE_SCROLL_LOCK_OVERSHOOT_ALLOWANCE = 16;
 const FORWARD_FIRE_PROJECTILE_RADIUS = Math.max(
   ...WEAPONS.map((weapon) => weapon.projectileRadius)
 );
@@ -259,6 +262,37 @@ export function getSetPieceComponentScreenY(
   component: Pick<SetPieceComponentState, 'y' | 'distance'>
 ): number {
   return component.y + scrollDistance - component.distance;
+}
+
+export function getSetPieceEngagementDistance(plan: SetPiecePlan): number {
+  return Math.max(0, plan.anchorDistance - SET_PIECE_ENGAGEMENT_LEAD_DISTANCE);
+}
+
+export function getSetPieceLayoutBottomRecoveryHeight(
+  definition: SetPieceDefinition,
+  layout: SetPieceLayoutDefinition
+): number {
+  const componentById = new Map(
+    definition.components.map((component) => [component.id, component])
+  );
+  const lowestCollisionEdge = layout.componentPlacements.reduce((lowest, placement) => {
+    const component = componentById.get(placement.componentId);
+    if (!component) {
+      return lowest;
+    }
+
+    const template = getSetPieceComponentTemplate(component.templateId);
+    return Math.max(
+      lowest,
+      placement.y -
+        SET_PIECE_ENGAGEMENT_LEAD_DISTANCE +
+        getCollisionHalfHeight(template.collision)
+    );
+  }, 0);
+
+  return (
+    COMBAT_ARENA_HEIGHT - lowestCollisionEdge - SET_PIECE_SCROLL_LOCK_OVERSHOOT_ALLOWANCE
+  );
 }
 
 export function getActiveSetPieceComponents(
@@ -495,7 +529,7 @@ export function getSetPieceReadModel(state: SetPieceState | null): SetPieceReadM
 }
 
 export function getSetPieceDebugJumpDistance(plan: SetPiecePlan | null): number | null {
-  return plan ? Math.max(0, plan.anchorDistance - 120) : null;
+  return plan ? Math.max(0, getSetPieceEngagementDistance(plan) - 120) : null;
 }
 
 export function createSetPieceReinforcementSpawns(
@@ -762,12 +796,27 @@ export function validateSetPieceContent(
           );
         }
 
+        if (placement.y - SET_PIECE_ENGAGEMENT_LEAD_DISTANCE - extentY < 0) {
+          errors.push(
+            `${layoutOwner} component ${component.id} leaves the fixed arena at its engagement stop.`
+          );
+        }
+
         if (
           placement.x + extentX > layout.safeLane.minX &&
           placement.x - extentX < layout.safeLane.maxX
         ) {
           errors.push(`${layoutOwner} component ${component.id} intrudes on its safe lane.`);
         }
+      }
+
+      if (
+        getSetPieceLayoutBottomRecoveryHeight(definition, layout) <
+        SET_PIECE_BOTTOM_RECOVERY_HEIGHT
+      ) {
+        errors.push(
+          `${layoutOwner} must retain at least ${SET_PIECE_BOTTOM_RECOVERY_HEIGHT}px of bottom recovery room at its engagement stop.`
+        );
       }
 
       for (const component of definition.components.filter(

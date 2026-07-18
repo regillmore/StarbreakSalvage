@@ -429,3 +429,30 @@ Focused coverage forces a 3000-pixel-tall viewport across the former panel seam,
 Browser comparison of the Boarding Incursion fixture at 15u and 63u confirms the same outer panels, transverse ribs, conduit traces, and clipped reactor/service-room markings translate between frames without variant replacement. Multiple room treatments remain spatially separated, the arena stays clipped and legible, and browser logs contain only the local Vite connection messages.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 105 Vitest files and 657 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 956.11 kB minified/261.09 kB gzip initial JavaScript and unchanged 84.04/16.91 kB CSS, increases of 1.40/0.45 kB JavaScript over work order 166. The existing 500 kB chunk notice remains; no dependency, environment content plan, combat geometry, RNG stream, save/snapshot schema, static base path, or warning threshold changed.
+
+## Work order 168 - Set-piece bottom recovery envelope
+
+Goal: keep a useful lower-arena maneuvering band open when multi-part assemblies halt sector travel, instead of letting their lowest locked structures pin the player against the bottom edge.
+
+Prompt:
+
+> Stop ordinary set-piece travel before the assembly's authored world anchor so the whole arrangement settles higher in the camera while preserving its relative puzzle geometry. Treat the lower arena as an explicit recovery envelope and reject future seeded layouts that crowd it, including a fixed-step scroll-lock overshoot allowance. Preserve horizontal safe lanes, objective forward-fire access, component dependencies, reinforcements, collision silhouettes, rewards, boss locks, deterministic layout selection, saves, and static hosting. Validate every authored arrangement and visually inspect a live engagement stop.
+
+Acceptance criteria:
+
+- An incomplete set piece locks sector scrolling 80 world units before its authored component anchor; the component arrangement moves as one and retains its internal coordinates, dependencies, target order, collision, and rendering.
+- Every seeded layout conservatively retains at least 150 logical units of clear bottom recovery space after allowing 16 units for fixed-step lock overshoot.
+- Every component remains fully inside the fixed 640-by-720 camera at the earlier stop, including the inverted layouts.
+- Horizontal safe-lane widths, straight-shot objective access, reinforcement timing, component actor/projectile/effect caps, and stage/reward accounting remain authoritative.
+- Finale assemblies release travel after completion and then continue to the unchanged boss lock; mission generation and boss anchors do not move.
+- The debug set-piece jump targets the new engagement approach, while layout selection, RNG streams, saves, snapshots, content fingerprints, and static hosting remain compatible.
+
+Status: implemented. `SetPiece` now derives a pure engagement distance 80 units before each generated anchor and exposes a conservative layout recovery measurement. Content validation applies the translated camera geometry to every component, rejects engagement-top clipping, and requires 150 units below the lowest collision edge after a 16-unit scroll-step allowance. The existing component states keep their authored anchor distance, so the adjustment is one world-to-camera translation rather than a second layout system.
+
+`GameplayScene` uses the derived engagement distance only for its incomplete-set-piece travel lock. Component activation, damage, dependencies, safe lanes, reinforcement schedule, rewards, completion, and boss-lock authority continue to use their existing plans; after a finale assembly is neutralized, travel resumes over the remaining 80 units to the unchanged boss arena.
+
+Focused coverage validates all nine layouts at both their authored anchor and live engagement transform, protects the bottom envelope and camera bounds, rejects a deliberately crowded core placement, and keeps the debug approach aligned with the new stop.
+
+Browser inspection of the actual Act I opening Hecaton Ledger Ark reproduced the Starboard Ledger layout and used the ordinary debug approach. The encounter stopped at 444/1607u with scroll speed 0, all seven components active, the lowest locked structure above the recovery band, and the ship free to occupy the bottom-left lane. Browser logs contain only local Vite connection messages.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 105 Vitest files and 658 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 956.14 kB minified/261.10 kB gzip initial JavaScript and unchanged 84.04/16.91 kB CSS, increases of 0.03/0.01 kB JavaScript over work order 167. The existing 500 kB chunk notice remains; no dependency, component content table, mission anchor, combat cap, RNG stream, save/snapshot schema, static base path, or warning threshold changed.

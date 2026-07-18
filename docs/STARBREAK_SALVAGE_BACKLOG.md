@@ -2389,3 +2389,16 @@ Acceptance:
 Status:
 
 - Implemented in work order 167. `ConfinedEnvironmentPresentation` enumerates true-extent structure copies and absolute rib indices, while `CanvasRenderer` consumes continuously moving room bands at the shared boarding projection scale. Focused tall-viewport and adjacent-frame coverage protects identity and translation continuity.
+
+### BL35 - Set-piece bottom recovery envelope
+
+Acceptance:
+
+- Incomplete assemblies stop 80 world units before their authored anchor so the whole set-piece arrangement settles higher without changing its internal puzzle geometry.
+- Every seeded layout retains at least 150 logical units of conservative lower-arena recovery room, including fixed-step scroll overshoot allowance.
+- Components remain inside the camera at the engagement stop while horizontal safe lanes, forward-fire access, dependency order, reinforcement pressure, rewards, and caps remain intact.
+- Finale completion releases the early assembly stop and continues to the unchanged boss lock; deterministic generation, saves, snapshots, and static hosting remain compatible.
+
+Status:
+
+- Implemented in work order 168. `SetPiece` derives the earlier engagement stop and validates translated top bounds plus a conservative bottom-clearance envelope for every layout. `GameplayScene` consumes that distance only as its incomplete-assembly travel lock, leaving authored anchors and every downstream combat authority unchanged.

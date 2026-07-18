@@ -176,6 +176,7 @@ import {
   getActiveSetPieceComponents,
   getSetPieceComponentScreenState,
   getSetPieceDebugJumpDistance,
+  getSetPieceEngagementDistance,
   getSetPieceReadModel,
   isSetPieceBossLockReleased
 } from '../game/SetPiece';
@@ -584,7 +585,7 @@ export class GameplayScene implements Scene {
     const setPieceTravelLocked = Boolean(
       state.setPiece &&
       !state.setPiece.completed &&
-      scrollState.distance >= state.setPiece.plan.anchorDistance
+      scrollState.distance >= getSetPieceEngagementDistance(state.setPiece.plan)
     );
     const scrollAdvance = advanceSectorCooldownScroll(
       scrollState,
