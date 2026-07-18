@@ -2335,3 +2335,16 @@ Acceptance:
 Status:
 
 - Implemented in work order 163. `CombatState.resolveProjectileImpact` consumes the phase tag after the first normal damage dispatch, remembers the traversed target, and removes the spent shot on its next distinct collision. The existing effect pool carries a 0.3-second magenta/cyan collapse telegraph, `CombatFeedback` and `AudioSystem` add restrained impact feedback, and shared live-fire descriptions explain the one-contact pierce.
+
+### BL31 - Suppressed hardpoint Evolution block
+
+Acceptance:
+
+- Hardpoint Control omits the Evolution heading, count, catalyst copy, empty placeholder, and fusion choice cards.
+- Signal Circuit flows directly into installed hardware and cargo, followed by Draft Log and controls without reserved blank space.
+- Existing evolution recipes, validation, deterministic foundry reducers, ancestry, signatures, and evolved-component badges remain compatible but are no longer operated through this menu.
+- Component engineering, circuit ordering, previews, resource envelopes, saves, snapshots, responsive layouts, and static hosting remain unchanged.
+
+Status:
+
+- Implemented in work order 164. `FoundryScene` no longer builds or inserts the fusion section and no longer imports its option/planning functions. Block-specific responsive CSS is removed, while the underlying domain system and existing evolution badges remain intact. Chromium coverage protects the absent Evolution heading in the normal Hardpoint Control flow.

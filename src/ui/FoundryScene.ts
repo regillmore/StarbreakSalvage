@@ -24,9 +24,7 @@ import {
   createEngineeringDebugState,
   formatComponentName,
   getCargoComponents,
-  getFusionOptions,
   getInstalledComponent,
-  planFuseComponents,
   planInstallComponent,
   planOverclockComponent,
   planRemoveComponent,
@@ -152,7 +150,6 @@ export class FoundryScene implements Scene {
     workspace.append(this.createInstalledSection(frame), this.createCargoSection());
 
     const circuit = this.createUpgradeCircuitSection(dashboard);
-    const fusion = this.createFusionSection();
     const pending = document.createElement('section');
     pending.className = 'foundry-history';
     pending.setAttribute('aria-label', 'Pending engineering operations');
@@ -225,7 +222,6 @@ export class FoundryScene implements Scene {
       issueList,
       circuit,
       workspace,
-      fusion,
       pending,
       status,
       controls
@@ -774,46 +770,6 @@ export class FoundryScene implements Scene {
     );
     card.append(header, identity, this.createComponentStatStrip(component), modifiers, actions);
     return card;
-  }
-
-  private createFusionSection(): HTMLElement {
-    const section = document.createElement('section');
-    section.className = 'foundry-section foundry-fusion';
-    const options = getFusionOptions(this.state.draft);
-    const title = document.createElement('h2');
-    title.textContent = `Evolution / ${options.length}`;
-    const copy = document.createElement('p');
-    copy.textContent = 'BASE + CATALYST -> NEW FIRE';
-    const list = document.createElement('div');
-    list.className = 'foundry-fusion-list';
-    if (options.length === 0) {
-      const empty = document.createElement('p');
-      empty.textContent = 'No compatible pair in cargo.';
-      list.append(empty);
-    }
-    for (const option of options.slice(0, 8)) {
-      const button = document.createElement('button');
-      button.className = 'choice-card foundry-fusion-card';
-      button.type = 'button';
-      const optionTitle = document.createElement('span');
-      optionTitle.className = 'choice-title';
-      optionTitle.textContent = option.title;
-      const preview = document.createElement('span');
-      preview.className = 'choice-body';
-      preview.textContent = option.preview;
-      const risk = document.createElement('span');
-      risk.className = 'choice-meta';
-      risk.textContent = `RISK / ${option.risk}`;
-      button.append(optionTitle, preview, risk);
-      button.addEventListener('click', () => {
-        this.state = planFuseComponents(this.state, option, this.sectorIndex);
-        this.status = `${option.title} staged.`;
-        this.enter();
-      });
-      list.append(button);
-    }
-    section.append(title, copy, list);
-    return section;
   }
 
   private createActionButton(label: string, action: () => void): HTMLButtonElement {

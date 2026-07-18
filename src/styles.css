@@ -1726,22 +1726,6 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   font-size: 0.58rem;
 }
 
-.foundry-fusion-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.55rem;
-}
-
-.foundry-fusion-card {
-  min-height: auto;
-  font-size: 0.78rem;
-  line-height: 1.4;
-}
-
-.foundry-fusion-card .choice-meta {
-  font-size: 0.62rem;
-}
-
 .foundry-history {
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
@@ -4859,7 +4843,6 @@ html[data-bullet-contrast='high'] .hud-meter-track {
   }
 
   .foundry-workspace,
-  .foundry-fusion-list,
   .foundry-upgrade-rack {
     grid-template-columns: 1fr;
   }

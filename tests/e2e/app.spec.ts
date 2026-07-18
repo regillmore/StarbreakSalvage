@@ -402,6 +402,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('salvage-foundry')).toBeVisible();
   await page.setViewportSize({ width: 390, height: 700 });
   await expect(page.getByRole('heading', { name: 'Hardpoint Control' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /^Evolution(?: \/ \d+)?$/ })).toHaveCount(0);
   await expect(page.getByTestId('foundry-boundary')).toContainText(/Undo restores/i);
   await expect(page.getByTestId('foundry-grid-readout')).toContainText('LEGAL DRAFT');
   await expect(page.getByTestId('foundry-command-console')).toBeVisible();

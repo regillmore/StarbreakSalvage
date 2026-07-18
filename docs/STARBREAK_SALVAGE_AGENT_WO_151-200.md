@@ -325,3 +325,28 @@ The shared impact boundary covers player, ally, and hostile projectiles. Enemy, 
 Browser inspection with the corrected `RANDOM-1UB0590-26CZ9L` seed and complete ship roster reproduces the Phase Courier + Phase Grazer board, confirms the consumed-pierce description in the live-fire region, and exercises the effect in an enemy-rich combat-scale capture without layout or console regressions. The focused Chromium path also verifies the high-contrast, reduced-motion, performance-mode phase preview and its accessible collapse description.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 105 Vitest files and 655 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 955.16 kB minified/260.61 kB gzip initial JavaScript and 82.59/16.64 kB CSS, increases of 1.92/0.54 kB JavaScript with CSS unchanged from work order 162. The existing 500 kB chunk notice remains; no dependency, content table, projectile actor cap, RNG stream, save/snapshot schema, static base path, or warning threshold changed.
+
+## Work order 164 - Suppressed hardpoint Evolution block
+
+Goal: remove the obsolete fusion-recipe block from Hardpoint Control so the menu stays focused on the ordered signal circuit, installed hardware, cargo, and the current reversible draft.
+
+Prompt:
+
+> Suppress the Hardpoint Control Evolution block, including its recipe count, catalyst copy, empty placeholder, and fusion choice cards. Let the signal circuit flow directly into installed hardpoints and cargo, then the draft log and controls. Preserve existing evolution data, deterministic reducers, component ancestry, evolved-component badges, saves, snapshots, and compatibility; this is a presentation rollback rather than a destructive system migration. Remove dormant block-specific styling, protect desktop and narrow layouts, and add Chromium coverage proving the block no longer appears.
+
+Acceptance criteria:
+
+- Hardpoint Control contains no `Evolution` heading, recipe count, `BASE + CATALYST` copy, compatible-pair placeholder, or fusion choice cards.
+- Signal Circuit flows directly into the installed Hardpoints/Cargo workspace, followed by Draft Log, status, and sticky commit controls without a blank section or spacer.
+- The menu no longer queries fusion options or stages fusion actions, while the underlying recipe content, validation, foundry reducers, component evolution ancestry, and deterministic signatures remain available and unchanged.
+- Existing evolved components retain their evolution badges and tooltips on hardware cards.
+- Component install, remove, route, overclock, scrap, circuit ordering, undo, commit, attack preview, resource envelope, saves, snapshots, RNG streams, and static hosting remain unchanged.
+- Narrow and desktop Hardpoint Control layouts remain free of horizontal overflow, and Chromium coverage explicitly protects the absent Evolution heading.
+
+Status: implemented. `FoundryScene` no longer imports fusion option/planning functions, creates the Evolution section, or inserts it into the hardpoint document flow. The ordered circuit now leads directly to the installed/cargo workspace and Draft Log. Evolution recipe content and all pure foundry-domain fusion behavior remain intact, and cargo cards still resolve authored evolution ancestry into compact badges for already-evolved components.
+
+The block-only fusion list/card CSS and its narrow-layout selector were removed. Existing responsive workspace, circuit, history, and sticky-control rules now close the released space naturally rather than reserving a hidden placeholder. The main Hardpoint Chromium flow asserts that no Evolution heading is exposed while retaining its circuit, component, preview, undo, and commit checks.
+
+Browser inspection of the cargo-rich Scenario Lab fixture confirms that Signal Circuit now closes directly into Hardpoints/Cargo and then Draft Log on desktop and 390-by-700 layouts. No Evolution heading or placeholder is present, the narrow document reports no horizontal overflow, sticky controls remain reachable, and browser logs remain clear.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 105 Vitest files and 655 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 952.61 kB minified/259.95 kB gzip initial JavaScript and 82.36/16.61 kB CSS, reductions of 2.55/0.66 kB JavaScript and 0.23/0.03 kB CSS from work order 163. The existing 500 kB chunk notice remains; no dependency, foundry-domain recipe, content fingerprint, RNG stream, save/snapshot schema, static base path, or warning threshold changed.
