@@ -26,9 +26,7 @@ import {
   getCargoComponents,
   getInstalledComponent,
   planInstallComponent,
-  planOverclockComponent,
   planRemoveComponent,
-  planRerouteComponent,
   planScrapComponent,
   resolveEngineeringSnapshot,
   undoFoundryDraft,
@@ -456,14 +454,6 @@ export class FoundryScene implements Scene {
           this.createActionButton('Remove', () => {
             this.state = planRemoveComponent(this.state, hardpoint.id, this.sectorIndex);
             this.status = `${formatComponentName(component)} moved to cargo.`;
-          }),
-          this.createActionButton(`Route / ${component.routingMode}`, () => {
-            this.state = planRerouteComponent(this.state, component.id, this.sectorIndex);
-            this.status = 'Routing changed.';
-          }),
-          this.createActionButton(`Clock / ${component.overclockLevel}`, () => {
-            this.state = planOverclockComponent(this.state, component.id, this.sectorIndex);
-            this.status = 'Overclock staged.';
           })
         );
         card.append(actions);
@@ -755,14 +745,6 @@ export class FoundryScene implements Scene {
       actions.append(install);
     }
     actions.append(
-      this.createActionButton(`Route / ${component.routingMode}`, () => {
-        this.state = planRerouteComponent(this.state, component.id, this.sectorIndex);
-        this.status = 'Cargo routing staged.';
-      }),
-      this.createActionButton(`Clock / ${component.overclockLevel}`, () => {
-        this.state = planOverclockComponent(this.state, component.id, this.sectorIndex);
-        this.status = 'Cargo overclock staged.';
-      }),
       this.createActionButton(`Scrap +${component.salvageValue}`, () => {
         this.state = planScrapComponent(this.state, component.id, this.sectorIndex);
         this.status = `+${component.salvageValue} salvage on commit.`;

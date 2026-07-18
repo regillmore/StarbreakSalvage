@@ -350,3 +350,30 @@ The block-only fusion list/card CSS and its narrow-layout selector were removed.
 Browser inspection of the cargo-rich Scenario Lab fixture confirms that Signal Circuit now closes directly into Hardpoints/Cargo and then Draft Log on desktop and 390-by-700 layouts. No Evolution heading or placeholder is present, the narrow document reports no horizontal overflow, sticky controls remain reachable, and browser logs remain clear.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 105 Vitest files and 655 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 952.61 kB minified/259.95 kB gzip initial JavaScript and 82.36/16.61 kB CSS, reductions of 2.55/0.66 kB JavaScript and 0.23/0.03 kB CSS from work order 163. The existing 500 kB chunk notice remains; no dependency, foundry-domain recipe, content fingerprint, RNG stream, save/snapshot schema, static base path, or warning threshold changed.
+
+## Work order 165 - Suppressed component Route and Clock controls
+
+Goal: remove the low-value per-component Route and Clock tuning controls from Hardpoint Control so hardware cards emphasize consequential install, remove, scrap, and circuit decisions.
+
+Prompt:
+
+> Suppress the `Route / ...` and `Clock / ...` mechanics on installed and cargo component cards. Installed hardware should retain only Remove; cargo should retain its compatible Install comparisons and Scrap payout. Preserve the historical routing/overclock fields, deterministic signatures, pure reducers, snapshot compatibility, and resolution of already-tuned legacy components rather than destructively rewriting an active run. New components continue to enter at balanced routing and clock zero, but Hardpoint Control must expose no way to stage new reroute or overclock actions. Protect component stats, comparisons, circuit engineering, undo/commit, responsive layout, accessibility, saves, determinism, and static hosting with focused Chromium coverage.
+
+Acceptance criteria:
+
+- No installed or cargo component card exposes a `Route / ...` or `Clock / ...` button.
+- Installed component action rows contain Remove only; empty hardpoints remain unchanged.
+- Cargo action rows retain every compatible Install comparison and exactly one Scrap action, without reserved gaps for removed tuning controls.
+- `FoundryScene` no longer imports or calls reroute/overclock planning functions, so no new action of either kind can be staged through Hardpoint Control.
+- New and generated components still default to balanced routing and overclock level zero.
+- Existing routing/overclock fields, deterministic signatures, history records, reducers, resource/effect resolution, and restored legacy snapshots remain compatible and are not silently normalized.
+- Evolution ancestry, component quality/affix stats, circuit capacity, attack preview, grid envelope, install/remove/scrap, undo/commit, saves, RNG streams, and static hosting remain unchanged.
+- Desktop and 390-by-700 layouts remain free of horizontal overflow; Chromium coverage explicitly protects absent Route/Clock controls and retained cargo Scrap actions.
+
+Status: implemented. `FoundryScene` no longer imports `planRerouteComponent` or `planOverclockComponent` and no longer creates tuning buttons for installed or cargo cards. Installed action rows now contain Remove; cargo combines its compatible Install comparisons with one Scrap action. The browser surface therefore cannot create new reroute or overclock draft records.
+
+The underlying fields, action types, pure planners, signatures, resource/effect resolution, history formatting, tests, and content defaults remain intact as a compatibility boundary for active run snapshots and previously tuned components. This is a focused menu-mechanic suppression rather than a snapshot migration or destructive data rewrite. The ordinary route and clock values remain absent from card copy, while existing stat strips and comparisons continue to report their resolved consequences.
+
+Browser inspection of the cargo-rich Scenario Lab fixture confirms that installed cards now end in one full-width Remove action and cargo cards stack their compatible Install comparison with one Scrap action. Desktop and 390-by-700 layouts contain no Route or Clock controls, no reserved gaps, and no horizontal overflow; all three installed and all three cargo cards remain readable, and browser logs remain clear.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 105 Vitest files and 655 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 951.43 kB minified/259.68 kB gzip initial JavaScript and unchanged 82.36/16.61 kB CSS, reductions of 1.18/0.27 kB JavaScript from work order 164. The existing 500 kB chunk notice remains; no dependency, foundry snapshot/signature field, content fingerprint, RNG stream, save/snapshot schema, static base path, or warning threshold changed.

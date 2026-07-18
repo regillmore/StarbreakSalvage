@@ -403,6 +403,8 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.setViewportSize({ width: 390, height: 700 });
   await expect(page.getByRole('heading', { name: 'Hardpoint Control' })).toBeVisible();
   await expect(page.getByRole('heading', { name: /^Evolution(?: \/ \d+)?$/ })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^Route \// })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^Clock \// })).toHaveCount(0);
   await expect(page.getByTestId('foundry-boundary')).toContainText(/Undo restores/i);
   await expect(page.getByTestId('foundry-grid-readout')).toContainText('LEGAL DRAFT');
   await expect(page.getByTestId('foundry-command-console')).toBeVisible();
@@ -1217,6 +1219,9 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
   expect(cargoCount).toBeGreaterThan(0);
   await expect(cargoCards.locator('[data-stat="circuit"]')).toHaveCount(cargoCount);
   await expect(cargoCards.locator('[data-stat="salvage"]')).toHaveCount(0);
+  await expect(cargoCards.getByRole('button', { name: /^Route \// })).toHaveCount(0);
+  await expect(cargoCards.getByRole('button', { name: /^Clock \// })).toHaveCount(0);
+  await expect(cargoCards.getByRole('button', { name: /^Scrap \+/ })).toHaveCount(cargoCount);
   await expect(page.getByTestId('foundry-boundary')).toContainText('Scenario Lab fixture');
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('scenario-lab')).toBeVisible();

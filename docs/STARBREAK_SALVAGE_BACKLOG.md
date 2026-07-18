@@ -2348,3 +2348,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 164. `FoundryScene` no longer builds or inserts the fusion section and no longer imports its option/planning functions. Block-specific responsive CSS is removed, while the underlying domain system and existing evolution badges remain intact. Chromium coverage protects the absent Evolution heading in the normal Hardpoint Control flow.
+
+### BL32 - Suppressed component Route and Clock controls
+
+Acceptance:
+
+- Installed and cargo component cards expose no Route or Clock tuning buttons.
+- Installed hardware retains Remove; cargo retains compatible Install comparisons and exactly one Scrap action.
+- Hardpoint Control cannot stage new reroute or overclock actions, and the compacted action rows reserve no blank controls.
+- Historical routing/overclock fields, signatures, reducers, effects, resource resolution, and active snapshot compatibility remain intact without silent normalization.
+- New components remain balanced at clock zero; circuit engineering, previews, comparisons, undo/commit, responsive layouts, saves, determinism, and static hosting remain unchanged.
+
+Status:
+
+- Implemented in work order 165. `FoundryScene` removes its reroute/overclock planner imports and all four component-card tuning entry points. Existing domain behavior remains available only to resolve compatible historical state, while Chromium coverage protects absent tuning controls and retained cargo Scrap actions.
