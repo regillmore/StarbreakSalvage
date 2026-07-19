@@ -62,6 +62,7 @@ import {
   isPhaseProjectile
 } from './PhaseProjectile';
 import { HEAT_EXHAUST_EFFECT_SECONDS, getHeatShotCost } from './HeatShot';
+import { getLaserProjectileKind } from './LaserProjectile';
 import type { MissionObjectiveResultSnapshot } from './ObjectiveDirector';
 import type { BossPhaseUpgradeEffects } from './UpgradeEffects';
 import type { CrewCombatProfile } from './CrewCommand';
@@ -158,6 +159,7 @@ export interface ProjectileState {
   phasePiercedTargetKey?: string;
   readonly environmentDamageSource?: EnvironmentObjectDamageSource;
   readonly visualKind?: ProjectileBlueprint['visualKind'];
+  readonly laserKind?: ProjectileBlueprint['laserKind'];
   readonly factionId?: FactionId;
   readonly setPieceSourceId?: string;
   readonly allyId?: string;
@@ -3843,7 +3845,10 @@ function updateProjectiles(state: CombatState, dt: number, bounds: CombatBounds)
   for (const projectile of state.projectiles) {
     const missile = isMissileProjectile(projectile.tags);
     const tracksVisualAge =
-      missile || isPhaseProjectile(projectile.tags) || projectile.visualKind === 'heatShot';
+      missile ||
+      isPhaseProjectile(projectile.tags) ||
+      projectile.visualKind === 'heatShot' ||
+      getLaserProjectileKind(projectile.tags, projectile.laserKind) !== null;
     const ageSeconds = tracksVisualAge ? Math.max(0, projectile.ageSeconds ?? 0) : 0;
     const nextAgeSeconds = ageSeconds + dt;
     const travelSeconds =

@@ -163,6 +163,16 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
     page.getByTestId('selected-contract-preview').locator('.contract-trait')
   ).toHaveCount(2);
   await expect(page.getByTestId('selected-contract-preview')).not.toContainText('Mounted:');
+  const needlePreviewShots = page.locator(
+    '[data-testid="contract-attack-projectile"][data-laser-kind="needle"]'
+  );
+  expect(await needlePreviewShots.count()).toBeGreaterThan(0);
+  await expect(needlePreviewShots.first()).toHaveAttribute('data-tags', /laser/);
+  await expect(needlePreviewShots.first().locator('.attack-simulation-laser-core')).toHaveCount(1);
+  await expect(page.getByTestId('contract-attack-preview')).toHaveAttribute(
+    'aria-label',
+    /velocity-aligned luminous bodies.*needle/i
+  );
 
   await page.getByRole('button', { name: 'Launch Contract' }).click();
 

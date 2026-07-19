@@ -37,7 +37,7 @@ describe('missile projectile rendering', () => {
       vy: -700,
       radius: 4,
       owner: 'player',
-      tags: ['laser']
+      tags: ['plasma']
     });
 
     expect(context.rotate).not.toHaveBeenCalled();

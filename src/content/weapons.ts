@@ -1,5 +1,6 @@
 import type { ItemTag } from './items';
 import type { WeaponId } from './ships';
+import type { LaserProjectileKind } from '../game/LaserProjectile';
 
 export type WeaponPatternId = 'single' | 'dual' | 'spread' | 'split' | 'missile' | 'beam';
 
@@ -8,6 +9,7 @@ export interface WeaponDefinition {
   readonly name: string;
   readonly tags: readonly ItemTag[];
   readonly pattern: WeaponPatternId;
+  readonly laserKind?: LaserProjectileKind;
   readonly damage: number;
   readonly projectileSpeed: number;
   readonly projectileRadius: number;
@@ -24,6 +26,7 @@ export const WEAPONS: readonly WeaponDefinition[] = [
     name: 'Light Needle Laser',
     tags: ['laser'],
     pattern: 'single',
+    laserKind: 'needle',
     damage: 1,
     projectileSpeed: 760,
     projectileRadius: 4,
@@ -66,6 +69,7 @@ export const WEAPONS: readonly WeaponDefinition[] = [
     name: 'Needle Splitter',
     tags: ['laser', 'split'],
     pattern: 'split',
+    laserKind: 'split',
     damage: 0.9,
     projectileSpeed: 820,
     projectileRadius: 3.5,
@@ -108,6 +112,7 @@ export const WEAPONS: readonly WeaponDefinition[] = [
     name: 'Prototype Beam',
     tags: ['laser', 'heat'],
     pattern: 'beam',
+    laserKind: 'beam',
     damage: 1.4,
     projectileSpeed: 780,
     projectileRadius: 5,

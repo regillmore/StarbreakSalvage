@@ -72,7 +72,7 @@ describe('phase projectile identity', () => {
         radius: 5,
         damage: 1,
         ttl: 2,
-        tags: ['laser'],
+        tags: ['plasma'],
         procDepth: 0
       }
     );
@@ -130,7 +130,7 @@ describe('phase projectile identity', () => {
     expect(state.phaseCollapseCount).toBe(1);
   });
 
-  it('renders a refracted shard, broken wake, aperture, and displaced echoes', () => {
+  it('composes the refracted wake and aperture around a laser core', () => {
     const context = createContext();
     const renderer = createRenderer(context);
 
@@ -148,9 +148,9 @@ describe('phase projectile identity', () => {
     expect(context.translate).toHaveBeenCalledWith(120, 240);
     expect(context.rotate).toHaveBeenCalledWith(Math.atan2(80, 600));
     expect(context.setLineDash).toHaveBeenCalledWith(expect.arrayContaining([expect.any(Number)]));
-    expect(context.lineTo.mock.calls.length).toBeGreaterThanOrEqual(20);
-    expect(context.arc.mock.calls.length).toBeGreaterThanOrEqual(3);
-    expect(context.fill.mock.calls.length).toBeGreaterThanOrEqual(4);
+    expect(context.lineTo.mock.calls.length).toBeGreaterThanOrEqual(14);
+    expect(context.arc.mock.calls.length).toBeGreaterThanOrEqual(2);
+    expect(context.fill).toHaveBeenCalledOnce();
   });
 
   it('adds phase interference around missiles while retaining powered ordnance geometry', () => {

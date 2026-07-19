@@ -14,6 +14,7 @@ import type {
 } from '../content/environmentObjects';
 import type { RouteKind } from './Generation';
 import type { ProjectileVisualKind } from './HeatShot';
+import type { LaserProjectileKind } from './LaserProjectile';
 
 export interface ProjectileBlueprint {
   readonly x: number;
@@ -28,6 +29,7 @@ export interface ProjectileBlueprint {
   readonly ricochetBounces?: number;
   readonly environmentDamageSource?: EnvironmentObjectDamageSource;
   readonly visualKind?: ProjectileVisualKind;
+  readonly laserKind?: LaserProjectileKind;
 }
 
 export interface HeatShotEvent {
@@ -835,6 +837,7 @@ function applyOnFire(
           damage: Math.max(0.35, seedProjectile.damage * 0.48),
           radius: Math.max(3, seedProjectile.radius * 0.72),
           tags: addTags(seedProjectile.tags, ['split', 'laser']),
+          laserKind: 'lane' as const,
           procDepth: seedProjectile.procDepth + 1
         }))
       ]
@@ -918,6 +921,7 @@ function applyOnFire(
             damage: Math.max(0.35, projectile.damage * 0.52),
             radius: Math.max(3, projectile.radius * 0.78),
             tags: addTags(projectile.tags, ['laser', 'split']),
+            laserKind: 'fork' as const,
             procDepth: projectile.procDepth + 1
           };
         })

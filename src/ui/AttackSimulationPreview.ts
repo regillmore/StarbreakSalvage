@@ -68,6 +68,7 @@ export function createAttackSimulationPreviewElement(
     shot.dataset.ttl = String(projectile.ttl);
     shot.dataset.tags = projectile.tags.join(' ');
     shot.dataset.flightKind = projectile.flightKind;
+    if (projectile.laserKind) shot.dataset.laserKind = projectile.laserKind;
     shot.style.setProperty('--shot-start-x', `${projectile.startXPercent}%`);
     shot.style.setProperty('--shot-end-x', `${projectile.endXPercent}%`);
     shot.style.setProperty('--shot-end-rise', `${projectile.endRisePercent}%`);
@@ -85,6 +86,13 @@ export function createAttackSimulationPreviewElement(
       heatCore.className = 'attack-simulation-heat-core';
       heatCore.setAttribute('aria-hidden', 'true');
       shot.append(heatCore);
+    }
+    if (projectile.laserKind && projectile.flightKind !== 'heatShot') {
+      shot.classList.add('attack-simulation-projectile-laser');
+      const laserCore = ownerDocument.createElement('span');
+      laserCore.className = 'attack-simulation-laser-core';
+      laserCore.setAttribute('aria-hidden', 'true');
+      shot.append(laserCore);
     }
     if (isPhaseProjectile(projectile.tags)) {
       shot.classList.add('attack-simulation-projectile-phase');

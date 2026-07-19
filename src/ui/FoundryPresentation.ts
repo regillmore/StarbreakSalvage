@@ -28,6 +28,7 @@ import { getComponentCircuitCapacity } from '../game/ComponentCircuit';
 import { getItemSocketSlots } from '../game/ItemSockets';
 import { isPhaseProjectile } from '../game/PhaseProjectile';
 import { HEAT_SHOT_COST_RATIO, getHeatShotCost } from '../game/HeatShot';
+import { getLaserProjectileKind, type LaserProjectileKind } from '../game/LaserProjectile';
 import type { HeatShotEvent } from '../game/ItemHooks';
 
 export type FoundryComparisonTone = 'improved' | 'declined' | 'same' | 'danger';
@@ -76,6 +77,7 @@ export interface FoundryAttackProjectileModel {
   readonly ttl: number;
   readonly tags: readonly string[];
   readonly flightKind: 'ballistic' | 'missile' | 'phase' | 'phaseMissile' | 'heatShot';
+  readonly laserKind: LaserProjectileKind | null;
   readonly headingDegrees: number;
   readonly startXPercent: number;
   readonly endXPercent: number;
@@ -633,6 +635,17 @@ function createFoundryAttackPatternPreviewModel(
     heatEvents.length > 0
       ? ` Vent heat shots spend ${(HEAT_SHOT_COST_RATIO * 100).toFixed(0)}% of overheat capacity; this cool-start cycle generates ${heatShotsFired} and replaces ${heatShotsExhausted} underfunded attempt${heatShotsExhausted === 1 ? '' : 's'} with visible exhaust.`
       : '';
+  const laserKinds = [
+    ...new Set(
+      safeProjectiles
+        .map((projectile) => getLaserProjectileKind(projectile.tags, projectile.laserKind))
+        .filter((kind): kind is LaserProjectileKind => kind !== null)
+    )
+  ];
+  const laserDescription =
+    laserKinds.length > 0
+      ? ` Laser-tagged shots use velocity-aligned luminous bodies; active profiles: ${laserKinds.join(', ')}.`
+      : '';
   return {
     cameraWidth: COMBAT_ARENA_WIDTH,
     cameraHeight: FOUNDRY_ATTACK_PREVIEW_WORLD_HEIGHT,
@@ -642,7 +655,7 @@ function createFoundryAttackPatternPreviewModel(
     waveCopies,
     projectiles,
     heatExhausts,
-    ariaLabel: `${weaponName} live-fire preview. ${volleyDescription} at ${volleysPerSecond.toFixed(1)} volleys per second.${missileDescription}${phaseDescription}${heatDescription} Projectile paths use the draft loadout's combat velocity, spread, radius, damage, engineering hooks, and owned item hooks.`
+    ariaLabel: `${weaponName} live-fire preview. ${volleyDescription} at ${volleysPerSecond.toFixed(1)} volleys per second.${missileDescription}${laserDescription}${phaseDescription}${heatDescription} Projectile paths use the draft loadout's combat velocity, spread, radius, damage, engineering hooks, and owned item hooks.`
   };
 }
 
@@ -675,6 +688,7 @@ function createFoundryAttackProjectileModel(
   const performanceRise = -projectile.vy * performanceTravelSeconds;
   const missile = isMissileProjectile(projectile.tags);
   const phased = isPhaseProjectile(projectile.tags);
+  const laserKind = getLaserProjectileKind(projectile.tags, projectile.laserKind);
   const flightKind =
     projectile.visualKind === 'heatShot'
       ? 'heatShot'
@@ -697,6 +711,7 @@ function createFoundryAttackProjectileModel(
     ttl: projectile.ttl,
     tags: projectile.tags,
     flightKind,
+    laserKind,
     headingDegrees: (Math.atan2(projectile.vx, -projectile.vy) * 180) / Math.PI,
     startXPercent: toAttackPreviewHorizontalPercent(startX),
     endXPercent: toAttackPreviewHorizontalPercent(endX),

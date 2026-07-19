@@ -65,6 +65,11 @@ import {
 } from '../game/MissileFlight';
 import { getPhaseProjectilePresentation, isPhaseProjectile } from '../game/PhaseProjectile';
 import { getHeatShotPresentation, type ProjectileVisualKind } from '../game/HeatShot';
+import {
+  getLaserProjectileKind,
+  getLaserProjectilePresentation,
+  type LaserProjectileKind
+} from '../game/LaserProjectile';
 
 const BACKGROUND_SEED = 'STARBREAK-SALVAGE-SHELL';
 const DEFAULT_PLAYER_SHIP_APPEARANCE: ShipAppearance = {
@@ -166,6 +171,7 @@ export interface ProjectileRenderState {
   readonly ageSeconds?: number;
   readonly factionId?: FactionId;
   readonly visualKind?: ProjectileVisualKind;
+  readonly laserKind?: LaserProjectileKind;
 }
 
 export interface TelegraphRenderState {
@@ -1698,6 +1704,7 @@ export class CanvasRenderer {
     const context = this.context;
     const velocityCues = getVelocityCueState(this.settings);
     const phased = isPhaseProjectile(projectile.tags);
+    const laserKind = getLaserProjectileKind(projectile.tags, projectile.laserKind);
     let projectileColor: string;
 
     context.save();
@@ -1741,10 +1748,31 @@ export class CanvasRenderer {
     }
 
     if (isMissileProjectile(projectile.tags)) {
+      if (laserKind) {
+        this.paintLaserProjectile(
+          projectile,
+          projectileColor,
+          velocityCues.highContrastProjectiles,
+          laserKind
+        );
+        context.restore();
+        return;
+      }
       this.paintMissileProjectile(
         projectile,
         projectileColor,
         velocityCues.highContrastProjectiles
+      );
+      context.restore();
+      return;
+    }
+
+    if (laserKind) {
+      this.paintLaserProjectile(
+        projectile,
+        projectileColor,
+        velocityCues.highContrastProjectiles,
+        laserKind
       );
       context.restore();
       return;
@@ -1768,6 +1796,128 @@ export class CanvasRenderer {
       context.shadowBlur = 0;
       context.strokeStyle = '#03050d';
       context.lineWidth = Math.max(2, projectile.radius * 0.55);
+      context.stroke();
+    }
+
+    context.restore();
+  }
+
+  private paintLaserProjectile(
+    projectile: ProjectileRenderState,
+    projectileColor: string,
+    highContrast: boolean,
+    kind: LaserProjectileKind
+  ): void {
+    const context = this.context;
+    const presentation = getLaserProjectilePresentation({
+      ageSeconds: this.settings.reducedMotion ? 0.12 : projectile.ageSeconds,
+      radius: projectile.radius,
+      vx: projectile.vx,
+      vy: projectile.vy,
+      kind
+    });
+    const accentColor = highContrast
+      ? '#ffef5f'
+      : kind === 'beam'
+        ? '#ffef5f'
+        : kind === 'fork'
+          ? '#ff6bd6'
+          : kind === 'lane'
+            ? '#62ffcb'
+            : projectileColor;
+    const halfLength = presentation.coreLength * 0.5;
+    const halfWidth = presentation.coreWidth * 0.5;
+    const glowEnabled = !this.settings.performanceMode;
+
+    context.save();
+    context.rotate(presentation.headingRadians);
+
+    context.globalAlpha = highContrast ? 0.88 : presentation.pulse * 0.7;
+    context.strokeStyle = accentColor;
+    context.lineWidth = Math.max(1.2, presentation.coreWidth * 0.62);
+    context.beginPath();
+    context.moveTo(0, halfLength * 0.56);
+    context.lineTo(0, halfLength + presentation.wakeLength);
+    context.stroke();
+
+    context.globalAlpha = highContrast ? 1 : 0.78;
+    context.strokeStyle = accentColor;
+    context.lineWidth = highContrast ? 2.5 : Math.max(1.2, presentation.shellWidth * 0.42);
+    context.shadowColor = accentColor;
+    context.shadowBlur = glowEnabled ? (kind === 'beam' ? 18 : 11) : 0;
+
+    if (kind === 'beam') {
+      context.beginPath();
+      context.moveTo(0, -halfLength);
+      context.lineTo(presentation.shellWidth * 0.5, halfLength * 0.62);
+      context.lineTo(0, halfLength);
+      context.lineTo(-presentation.shellWidth * 0.5, halfLength * 0.62);
+      context.closePath();
+      context.stroke();
+    } else if (kind === 'lane') {
+      const rail = Math.max(2.2, presentation.branchSpread * 0.48);
+      context.beginPath();
+      context.moveTo(-rail, -halfLength);
+      context.lineTo(-rail, halfLength);
+      context.moveTo(rail, -halfLength);
+      context.lineTo(rail, halfLength);
+      context.moveTo(-rail * 1.45, -halfLength * 0.78);
+      context.lineTo(rail * 1.45, -halfLength * 0.78);
+      context.stroke();
+    } else if (kind === 'split') {
+      const split = Math.max(1.8, presentation.branchSpread * 0.45);
+      context.beginPath();
+      context.moveTo(-split, halfLength * 0.8);
+      context.lineTo(-split, -halfLength * 0.5);
+      context.lineTo(0, -halfLength);
+      context.lineTo(split, -halfLength * 0.5);
+      context.lineTo(split, halfLength * 0.8);
+      context.stroke();
+    } else if (kind === 'fork') {
+      context.beginPath();
+      context.moveTo(0, halfLength);
+      context.lineTo(0, -halfLength * 0.12);
+      context.lineTo(-presentation.branchSpread, -halfLength);
+      context.moveTo(0, -halfLength * 0.12);
+      context.lineTo(presentation.branchSpread, -halfLength);
+      context.stroke();
+    }
+
+    context.globalAlpha = 1;
+    context.fillStyle = highContrast ? '#ffffff' : projectileColor;
+    context.strokeStyle = highContrast ? '#03050d' : '#ffffff';
+    context.lineWidth = highContrast ? 2 : Math.max(0.8, presentation.coreWidth * 0.22);
+    context.beginPath();
+    context.moveTo(0, -halfLength);
+    context.lineTo(halfWidth, halfLength * 0.5);
+    context.lineTo(0, halfLength);
+    context.lineTo(-halfWidth, halfLength * 0.5);
+    context.closePath();
+    context.fill();
+    context.shadowBlur = 0;
+    context.stroke();
+
+    if (kind === 'beam') {
+      context.strokeStyle = highContrast ? '#03050d' : '#ff9c4a';
+      context.lineWidth = Math.max(1, presentation.coreWidth * 0.28);
+      context.beginPath();
+      context.moveTo(0, -halfLength * 0.72);
+      context.lineTo(0, halfLength * 0.62);
+      context.stroke();
+    }
+
+    if (projectile.tags.includes('arc')) {
+      context.globalAlpha = highContrast ? 0.92 : 0.78;
+      context.strokeStyle = highContrast ? '#ffef5f' : '#ff6bd6';
+      context.lineWidth = highContrast ? 2 : 1.25;
+      context.beginPath();
+      context.moveTo(-presentation.shellWidth * 0.65, halfLength * 0.2);
+      context.quadraticCurveTo(
+        presentation.shellWidth * 0.75,
+        -halfLength * 0.08,
+        -presentation.shellWidth * 0.28,
+        -halfLength * 0.46
+      );
       context.stroke();
     }
 

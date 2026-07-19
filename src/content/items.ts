@@ -800,7 +800,7 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'uncommon',
     tags: ['split', 'laser'],
     hooks: ['onFire'],
-    effect: 'every sixth volley carves two narrow side-lane laser cuts',
+    effect: 'every sixth volley carves two long, parallel side-lane laser cuts',
     weight: 8,
     metadata: {
       family: 'laser-split',
@@ -1317,7 +1317,7 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'common',
     tags: ['laser', 'split'],
     hooks: ['onFire'],
-    effect: 'every third volley mirrors the outer shots already woven into the circuit',
+    effect: 'every third volley mirrors the outer shots as crossing harmonic fork lasers',
     weight: 10,
     metadata: {
       family: 'laser-split',

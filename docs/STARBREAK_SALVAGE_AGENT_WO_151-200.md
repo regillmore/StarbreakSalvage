@@ -512,3 +512,31 @@ The Engineering Foundry Scenario Lab fixture now identifies its cool-start fifth
 Browser inspection confirms that the revised Hardpoint rail, accessible preview summary, and exhaust replacement remain legible without stretching the attack console. Focused unit coverage proves proportional cost, pre-volley settlement, sequential no-double-spend behavior, funded and underfunded branches, molten Canvas geometry, phase composition, preview classification, and exhaust rendering. Focused Chromium coverage protects responsive plume bounds, reduced-motion visibility, circuit reorder copy, and the live hot/cool cycle.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 106 Vitest files and 666 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 962.93 kB minified/263.23 kB gzip initial JavaScript and 86.83/17.48 kB CSS, increases of 5.66/1.66 kB JavaScript and 2.62/0.54 kB CSS over work order 169. The existing 500 kB chunk notice remains; no dependency, RNG stream, content-generation order, actor/proc cap, save/snapshot schema, static base path, or warning threshold changed.
+
+## Work order 171 - Coherent laser weapon family
+
+Goal: replace the generic cyan bullet-dot treatment for laser fire with a coherent family of distinct weapon and circuit-branch identities.
+
+Prompt:
+
+> Give laser-tagged fire a shared velocity-aligned luminous language while preserving the important differences between the Light Needle Laser, Needle Splitter, and Prototype Beam. Let circuit upgrades author their own recognizable laser branches: Split Prism should preserve its source profile, Lane Splitter should cut parallel rails, Harmonic Fork should cross into forked blades, and Chain Arc should remain visible as a charge layered over the coherent body. Compose phase interference around the laser core and let authored heat shots retain their stronger molten identity. Align Canvas combat with Contract Select and Hardpoint Control, preserve projectile counts, travel, damage, collision, cadence, hook order, actor caps, determinism, accessibility modes, saves, and static hosting, and add focused renderer, simulation, and Chromium coverage.
+
+Acceptance criteria:
+
+- Light Needle Laser emits a narrow tapered lance, Needle Splitter emits smaller refracted split blades, and Prototype Beam emits a substantially longer, wider, warmer coherent packet.
+- Weapon content authors the laser profile explicitly; a generic `laser` tag receives the needle fallback without weapon-ID checks in rendering code.
+- Split Prism copies retain their upstream laser profile, while Lane Splitter and Harmonic Fork stamp `lane` and `fork` profiles only onto the branches they create.
+- Arc-tagged laser bodies add a visible electrical crossing; phase-tagged lasers keep their coherent core inside the existing refracted wake; heat shots continue to use the molten shell and split wake.
+- Laser visual age drives only a bounded coherence pulse and never changes linear displacement, TTL, damage, collision radius, cadence, proc order, or content RNG.
+- Contract Select and Hardpoint Control expose the same profile metadata, geometry, trail, and accessible velocity-aligned laser summary used by combat.
+- High contrast retains a dark-separated white/yellow body, reduced motion freezes the pulse, performance mode removes decorative glow and duplicate preview waves, and responsive attack-preview scale remains authoritative.
+
+Status: implemented. `LaserProjectile` owns five pure presentation profiles (`needle`, `split`, `beam`, `lane`, and `fork`) with bounded velocity-aligned core, shell, wake, branch, and pulse geometry. The three laser weapon definitions now author their base profile, and `WeaponProjectiles` carries it through ordinary topology without changing any gameplay value.
+
+`ItemHooks` preserves that metadata through existing copies and transforms. Lane Splitter and Harmonic Fork explicitly identify only their generated branches, so even a plasma or missile source produces recognizable laser cuts rather than inheriting an unrelated body. Chain Arc remains tag-composed, letting `CanvasRenderer` add a charged crossing over the profile. Heat-shot precedence remains authoritative, while phase interference wraps the coherent laser core instead of replacing it.
+
+`CanvasRenderer` replaces laser orbs with tapered directional bodies, distinct shell geometry, bright cores, bounded wakes, and profile-specific accents. `FoundryPresentation` and `AttackSimulationPreview` carry the same profile into Contract Select and Hardpoint Control, including accessible profile names and matching needle, split, beam, lane, and fork silhouettes. The established high-contrast, reduced-motion, performance-mode, responsive camera, and projectile-cap rules continue to bound the treatment.
+
+Browser inspection of the seeded Debt Runner contract confirms that the Light Needle preview now reads as a long, narrow luminous lance rather than the former cyan dot, stays inside the normalized combat camera, and identifies its needle profile in the live region. The full Chromium flow protects the profile attribute, laser core, accessible summary, responsive hardpoint geometry, phase composition, and clean console behavior.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 107 Vitest files and 671 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 966.44 kB minified/264.15 kB gzip initial JavaScript and 89.57/18.07 kB CSS, increases of 3.51/0.92 kB JavaScript and 2.74/0.59 kB CSS over work order 170. The existing 500 kB chunk notice remains; no dependency, projectile topology, combat balance, actor/proc cap, RNG stream, save/snapshot schema, static base path, or warning threshold changed.
