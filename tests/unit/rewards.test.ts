@@ -193,7 +193,7 @@ describe('reward generation', () => {
     }).toEqual({
       shop: [
         {
-          id: 'item_exit_toll_transponder',
+          id: 'item_coastdown_capacitor',
           sourceHint: 'route source',
           price: 9
         },
@@ -249,7 +249,7 @@ describe('reward generation', () => {
       ],
       lunarRewards: [
         {
-          id: 'item_exit_toll_transponder',
+          id: 'item_ambush_insurance_stamp',
           profile: 'lunar',
           sourceHint: 'route source'
         },

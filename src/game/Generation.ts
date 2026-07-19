@@ -348,7 +348,8 @@ export function createRunGenerationSaveFingerprint(
     .join(',') || 'fresh';
   const nonGenerationUpgrades = new Set<UpgradeId>([
     'upgrade_boss_warning_lattice',
-    'upgrade_capital_relief_protocol'
+    'upgrade_capital_relief_protocol',
+    'upgrade_exit_toll_transponder'
   ]);
   const upgrades = upgradeEffects.activeUpgradeIds
     .filter((upgradeId) => !nonGenerationUpgrades.has(upgradeId))

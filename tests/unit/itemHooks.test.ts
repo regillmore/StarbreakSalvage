@@ -425,6 +425,27 @@ describe('item synergies', () => {
     expect(payload.hasteSourceIds).toEqual(['item_coin_operated_cannon']);
   });
 
+  it('fills Coastdown haste from either kind of collected currency', () => {
+    const instances: ItemInstance[] = [
+      { itemId: 'item_coastdown_capacitor', acquisitionOrder: 0 }
+    ];
+    const collect = (kind: 'credit' | 'salvage') =>
+      applyItemHooks('onPickupCollected', instances, {
+        kind,
+        hasteFillSeconds: 0,
+        hasteSourceIds: []
+      });
+
+    expect(collect('credit')).toMatchObject({
+      hasteFillSeconds: 0.55,
+      hasteSourceIds: ['item_coastdown_capacitor']
+    });
+    expect(collect('salvage')).toMatchObject({
+      hasteFillSeconds: 0.55,
+      hasteSourceIds: ['item_coastdown_capacitor']
+    });
+  });
+
   it('applies first expansion volley hooks for split, missile, and sidecar items', () => {
     const instances: ItemInstance[] = [
       { itemId: 'item_lane_splitter_chisel', acquisitionOrder: 0 },
@@ -524,8 +545,7 @@ describe('item synergies', () => {
       'onSectorStart',
       [
         { itemId: 'item_crater_shadow_lens', acquisitionOrder: 0 },
-        { itemId: 'item_surface_beacon_drone', acquisitionOrder: 1 },
-        { itemId: 'item_exit_toll_transponder', acquisitionOrder: 2 }
+        { itemId: 'item_surface_beacon_drone', acquisitionOrder: 1 }
       ],
       {
         sectorIndex: 2,
@@ -587,7 +607,7 @@ describe('item synergies', () => {
       }
     );
 
-    expect(sectorPayload.creditsBonus).toBe(2);
+    expect(sectorPayload.creditsBonus).toBe(0);
     expect(sectorPayload.salvageBonus).toBe(1);
     expect(sectorPayload.specialChargeBonus).toBeGreaterThan(0.1);
     expect(routePayload.salvageDelta).toBe(2);
@@ -599,6 +619,22 @@ describe('item synergies', () => {
     expect(shopPayload.biasTags).toContain('drone');
     expect(rewardPayload.choiceCount).toBe(5);
     expect(rewardPayload.biasTags).toEqual(['relic', 'phase', 'laser', 'plasma']);
+  });
+
+  it('preserves the retired Exit Toll hook for restored run snapshots', () => {
+    const payload = applyItemHooks(
+      'onSectorStart',
+      [{ itemId: 'item_exit_toll_transponder', acquisitionOrder: 0 }],
+      {
+        sectorIndex: 4,
+        sectorId: 'sector_core_wreck',
+        creditsBonus: 0,
+        salvageBonus: 0,
+        specialChargeBonus: 0
+      }
+    );
+
+    expect(payload.creditsBonus).toBe(3);
   });
 
   it('applies first expansion boss phase pressure hooks', () => {

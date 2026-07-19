@@ -107,12 +107,12 @@ Known-seed tests now sample shop, elite, vault, and lunar reward surfaces, and u
 | ---------- | ----- |
 | `credit`   | 14    |
 | `phase`    | 9     |
-| `scrap`    | 8     |
+| `scrap`    | 7     |
 | `drone`    | 8     |
 | `plasma`   | 9     |
 | `shield`   | 5     |
 | `curse`    | 5     |
-| `heat`     | 6     |
+| `heat`     | 7     |
 | `armor`    | 4     |
 | `arc`      | 5     |
 | `laser`    | 5     |
@@ -135,12 +135,12 @@ Known-seed tests now sample shop, elite, vault, and lunar reward surfaces, and u
 | Missile/Overkill | 7     | Warhead Echo Chamber turns the heaviest upstream shot into a periodic overkill echo.                          |
 | Drone/Copy       | 7     | Crossfeed Detonator rewards kills carrying two distinct circuit traits.                                       |
 | Shield/Revenge   | 5     | Reached the first expansion target; defensive balance should avoid rewarding intentional damage too strongly. |
-| Credit/Shop      | 6     | Healthy base; now has first-pass shop/source weighting rather than flat discounts only.                       |
+| Credit/Shop      | 7     | Coastdown Capacitor turns broad pickup play into a conserved shared-haste reserve.                            |
 | Curse/Relic      | 6     | Advanced vault/route entries are locked behind the Relic Thief dossier; risk/reward tuning still needs work.  |
 | Phase/Graze      | 6     | Ricochet Branch Coupler extends split and drone branches with a real bounce.                                  |
 | Heat/Prototype   | 6     | Plasma Seed Crucible converts an earlier circuit trait into plasma/heat scaling.                              |
 | Lunar/Surface    | 5     | First source-driven sector family is present.                                                                 |
-| Route/Economy    | 5     | First route-choice economy family is present.                                                                 |
+| Route/Economy    | 4     | Exit Toll moved to permanent scrap progression; four active route-circuit items remain.                       |
 
 The five Boss Pressure definitions and their original hook implementations remain readable to restored snapshots, but they are absent from pools, unlock gates, discovery, stress fixtures, and the active audit. Boss Warning Lattice and Capital Relief Protocol preserve the worthwhile telegraph, delay, charge, and late-phase-clear mechanics as permanent scrap upgrades.
 
@@ -173,6 +173,10 @@ No shipped item is a pure no-op or bridge: current validation requires every dec
 ## Ordered heat converter in Work Orders 169-170
 
 Prototype Vent Script now reads the fitted signal chain instead of modifying Special use. Every periodic volley stage earlier than the script changes from every `n`th volley to every `(n+1)`th volley and attempts one heavy heat/plasma shot on that completed cycle. A funded attempt spends 32% of the weapon's overheat capacity from heat stored before the ordinary volley; a cool reserve skips the shot and displays non-damaging exhaust. One carried budget prevents simultaneous stages from double-spending it. A script placed before a periodic stage has no effect on it. The shared cadence and heat-event payload drives combat hooks, Contract/Hardpoint live-fire previews, and the explicit cadence/cost line on each affected Hardpoint card; later stages can still transform a funded heat shot in normal circuit order.
+
+## Permanent economy and conserved haste in Work Order 176
+
+Exit Toll Transponder is now a permanent 9 kg Salvage upgrade rather than an active run item. Its retired catalog definition and sector-start hook remain only for restored snapshot compatibility. Coastdown Capacitor occupies the released rare combat/route slot: either currency pickup adds 0.55 seconds to the shared haste reservoir, and releasing fire pauses drain. It adds capacity as one distinct source but never strengthens the standard active haste cadence. This shifts one active item from Route/Economy and `scrap` into Credit/Shop and `heat` without changing the 60-item active breadth target.
 
 ## Risks For 057-060
 

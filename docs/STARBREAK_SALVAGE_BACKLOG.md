@@ -2474,3 +2474,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 175. `scripts/smoke-host.mjs` owns Vite directly, writes atomic ignored state, resolves the current routed IPv4 address, verifies a token-bearing health endpoint, and shuts down through an authenticated request. Package scripts, `AGENTS.md`, README guidance, isolated lifecycle coverage, and a real in-app-browser pass establish the repeatable workflow.
+
+### BL41 - Permanent Exit Toll and Coastdown haste
+
+Acceptance:
+
+- Exit Toll Transponder leaves active item rewards and becomes a 9 kg permanent Salvage upgrade gated by Salvage Escrow Index.
+- Its 1-3 credit sector-start refund remains deterministic, restored run snapshots retain the retired item behavior, and the two representations cannot double-pay.
+- Rare Coastdown Capacitor replaces the active item slot, adds one shared-reservoir source, and contributes charge on either currency pickup.
+- Coastdown pauses haste drain while fire is released and resumes standard fixed-step drain while fire is held without altering the shared 0.75 cadence.
+- HUD, debug, item-storm, Upgrade Bay, catalog/reward snapshots, generation fingerprints, saves, accessibility, performance limits, and static hosting remain coherent.
+
+Status:
+
+- Implemented in work order 176. `UpgradeEffects` and `CombatState` own the permanent payout with legacy precedence, while `HasteReservoir` owns Coastdown's any-pickup source and idle-hold drain rule. The active catalog remains at 60 items; the 29-item stress fixture now exposes six haste sources, the 6.4-second cap, `COAST`, and `coast-hold` diagnostics.

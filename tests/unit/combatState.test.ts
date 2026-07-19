@@ -80,6 +80,40 @@ describe('CombatState', () => {
     expect(stacked.player.fireCooldown).toBeCloseTo(expectedCooldown);
   });
 
+  it('holds Coastdown haste while idle and drains it only while firing', () => {
+    const state = createCombatState(bounds, 'HASTE-COASTDOWN', {
+      items: [{ itemId: 'item_coastdown_capacitor', acquisitionOrder: 0 }],
+      skipEnemyWaves: true
+    });
+    state.player.hasteSeconds = 1.5;
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 0.4, bounds);
+    expect(state.player.hasteSeconds).toBe(1.5);
+
+    for (let step = 0; step < 4; step += 1) {
+      updateCombatState(state, { movement: { x: 0, y: 0 }, fire: true }, 0.1, bounds);
+    }
+    expect(state.player.hasteSeconds).toBeCloseTo(1.1);
+  });
+
+  it('applies the permanent Exit Toll refund without doubling a restored item copy', () => {
+    const sectorStartUpgradeEffects = { exitTollRefund: true } as const;
+    const upgraded = createCombatState(bounds, 'EXIT-TOLL-UPGRADE', {
+      sectorIndex: 4,
+      sectorStartUpgradeEffects,
+      skipEnemyWaves: true
+    });
+    const restored = createCombatState(bounds, 'EXIT-TOLL-RESTORED', {
+      sectorIndex: 4,
+      sectorStartUpgradeEffects,
+      items: [{ itemId: 'item_exit_toll_transponder', acquisitionOrder: 0 }],
+      skipEnemyWaves: true
+    });
+
+    expect(upgraded.player.credits).toBe(3);
+    expect(restored.player.credits).toBe(3);
+  });
+
   it('spends stored heat on a Vent shot and exhausts visibly when the reserve is cool', () => {
     const items = [
       {

@@ -69,6 +69,7 @@ export interface SceneDebugState {
     readonly chargeSeconds: number;
     readonly capacitySeconds: number;
     readonly sourceCount: number;
+    readonly pauseDrainWhileNotFiring: boolean;
     readonly fireCooldownMultiplier: number;
   };
   readonly inputMode?: string;

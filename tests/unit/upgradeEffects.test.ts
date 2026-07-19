@@ -142,6 +142,15 @@ describe('run upgrade effects', () => {
       createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
     );
   });
+
+  it('projects the Exit Toll refund as a non-generation permanent effect', () => {
+    const toll = resolveRunUpgradeEffects(['upgrade_exit_toll_transponder']);
+
+    expect(toll.sectorStart).toEqual({ exitTollRefund: true });
+    expect(createRunGenerationSaveFingerprint([], toll)).toBe(
+      createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
+    );
+  });
 });
 
 function projectUpgradedRun(run: RunSkeleton) {

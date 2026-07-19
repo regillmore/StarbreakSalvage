@@ -1105,6 +1105,7 @@ export class GameplayScene implements Scene {
         chargeSeconds: haste.chargeSeconds,
         capacitySeconds: haste.capacitySeconds,
         sourceCount: haste.sourceCount,
+        pauseDrainWhileNotFiring: haste.pauseDrainWhileNotFiring,
         fireCooldownMultiplier: haste.fireCooldownMultiplier
       },
       mission: this.missionContext?.debugState,
@@ -1510,6 +1511,7 @@ export class GameplayScene implements Scene {
       setPieceOwnerFactionId: this.campaignInfluence?.setPieceOwnerFactionId,
       looseCurrencyPlan: this.getLooseCurrencyPlan(),
       bossPhaseUpgradeEffects: this.run.upgradeEffects.bossPhase,
+      sectorStartUpgradeEffects: this.run.upgradeEffects.sectorStart,
       crew: this.crewProfile,
       fleet: this.fleetProfile
     });
@@ -2028,7 +2030,7 @@ export class GameplayScene implements Scene {
     const haste = createHasteReservoirReadModel(state.items, state.player.hasteSeconds);
     const hasteStatus =
       haste.sourceCount > 0
-        ? ` | ${haste.active ? 'HASTE' : 'Haste'} ${haste.chargeSeconds.toFixed(1)}/${haste.capacitySeconds.toFixed(1)}s`
+        ? ` | ${haste.active ? 'HASTE' : 'Haste'} ${haste.chargeSeconds.toFixed(1)}/${haste.capacitySeconds.toFixed(1)}s${haste.pauseDrainWhileNotFiring ? ' COAST' : ''}`
         : '';
 
     return `${state.weapon.name}${

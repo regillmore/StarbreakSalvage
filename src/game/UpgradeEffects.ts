@@ -9,6 +9,10 @@ export interface BossPhaseUpgradeEffects {
   readonly clearEnemyProjectilesAtPhase: number | null;
 }
 
+export interface SectorStartUpgradeEffects {
+  readonly exitTollRefund: boolean;
+}
+
 export interface RunUpgradeEffects {
   readonly purchasedUpgradeIds: readonly UpgradeId[];
   readonly activeUpgradeIds: readonly UpgradeId[];
@@ -22,6 +26,7 @@ export interface RunUpgradeEffects {
   readonly rewardChoiceBonus: number;
   readonly rewardBiasTags: readonly ItemTag[];
   readonly seedSurvey: boolean;
+  readonly sectorStart: SectorStartUpgradeEffects;
   readonly bossPhase: BossPhaseUpgradeEffects;
 }
 
@@ -50,6 +55,9 @@ export function resolveRunUpgradeEffects(
     rewardChoiceBonus: hasRelicDossier ? 1 : 0,
     rewardBiasTags: hasRelicDossier ? ['relic', 'curse', 'phase'] : [],
     seedSurvey: hasUpgrade('upgrade_seed_cartographer'),
+    sectorStart: {
+      exitTollRefund: hasUpgrade('upgrade_exit_toll_transponder')
+    },
     bossPhase: {
       attackCooldownSeconds: hasBossWarning ? 0.15 : 0,
       telegraphSeconds: hasBossWarning ? 0.2 : 0,
@@ -86,6 +94,10 @@ export function getRunUpgradeDebugLabels(effects: RunUpgradeEffects): string[] {
     labels.push('seed map');
   }
 
+  if (effects.sectorStart.exitTollRefund) {
+    labels.push('exit toll refund');
+  }
+
   if (effects.bossPhase.telegraphSeconds > 0) {
     labels.push('boss warning');
   }
@@ -95,6 +107,13 @@ export function getRunUpgradeDebugLabels(effects: RunUpgradeEffects): string[] {
   }
 
   return labels;
+}
+
+export function getExitTollCreditRefund(
+  effects: SectorStartUpgradeEffects | null,
+  sectorIndex: number
+): number {
+  return effects?.exitTollRefund ? Math.min(3, Math.max(1, Math.floor(sectorIndex))) : 0;
 }
 
 export function getMarketDecoderReadout(effects: RunUpgradeEffects): string | null {

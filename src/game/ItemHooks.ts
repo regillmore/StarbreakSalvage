@@ -270,7 +270,8 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_salvage_magnet',
     'item_credit_reroute_fuse',
     'item_magnetized_tithe_box',
-    'item_regolith_scoop_array'
+    'item_regolith_scoop_array',
+    'item_coastdown_capacitor'
   ],
   onGraze: ['item_near_miss_tachometer', 'item_phase_wake_suture'],
   onSpecialUsed: [],
@@ -1331,11 +1332,12 @@ function applyOnPickupCollected(
   itemId: ItemId,
   payload: PickupCollectedPayload
 ): PickupCollectedPayload {
-  return applyHasteSource(
+  const matchingPickup = applyHasteSource(
     itemId,
     payload.kind === 'credit' ? 'creditPickup' : 'salvagePickup',
     payload
   );
+  return applyHasteSource(itemId, 'anyPickup', matchingPickup);
 }
 
 function applyOnGraze(itemId: ItemId, payload: GrazePayload): GrazePayload {

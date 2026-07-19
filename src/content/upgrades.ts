@@ -23,7 +23,8 @@ export const UPGRADE_EFFECT_KINDS = [
   'salvageLedger',
   'seedSurvey',
   'bossWarning',
-  'bossRelief'
+  'bossRelief',
+  'sectorTollRefund'
 ] as const;
 
 export type UpgradeCategory = (typeof UPGRADE_CATEGORIES)[number];
@@ -38,7 +39,8 @@ export type UpgradeId =
   | 'upgrade_relic_pattern_dossier'
   | 'upgrade_seed_cartographer'
   | 'upgrade_boss_warning_lattice'
-  | 'upgrade_capital_relief_protocol';
+  | 'upgrade_capital_relief_protocol'
+  | 'upgrade_exit_toll_transponder';
 
 export interface UpgradeDefinition {
   readonly id: UpgradeId;
@@ -140,6 +142,17 @@ export const UPGRADES: readonly UpgradeDefinition[] = [
     effect: 'Boss phase shifts feed 12% special charge; late phases also clear hostile shots.',
     cost: 12,
     prerequisites: ['upgrade_boss_warning_lattice']
+  },
+  {
+    id: 'upgrade_exit_toll_transponder',
+    category: 'salvage',
+    iconKey: 'scrap-ledger',
+    effectKind: 'sectorTollRefund',
+    name: 'Exit Toll Transponder',
+    summary: 'a permanent customs refund wired into every expedition hull',
+    effect: 'Each sector begins with a 1-3 credit refund, scaling through the act.',
+    cost: 9,
+    prerequisites: ['upgrade_salvage_escrow_index']
   }
 ];
 

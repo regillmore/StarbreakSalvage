@@ -644,3 +644,31 @@ The command family now covers human output and JSON automation, exact Pages-subp
 Focused lifecycle coverage launches the real tool with an isolated state file and ephemeral port, fetches the app, verifies status identity, proves start reuse, stops it through the authenticated endpoint, waits for a clean host exit, and repeats stop safely. A real Codex managed-shell run published `http://192.168.40.7:4175/StarbreakSalvage/`; the in-app browser loaded its debug title screen to complete state with no captured console errors, after which `smoke:stop` closed the listener and the original host cell returned exit code 0.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 110 Vitest files and 680 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. A separate post-build `smoke:host -- --mode preview --port 0` run selected port 58886, returned the correct preview state and LAN URL, served the Pages title with HTTP 200, and shut down with both controller and managed-host exit code 0. The browser tooling is development-only and leaves the production bundle unchanged at 970.25 kB minified/265.66 kB gzip JavaScript and 91.27/18.37 kB CSS. The existing 500 kB chunk notice remains; no dependency, gameplay code, content RNG, save/snapshot schema, static base path, or warning threshold changed.
+
+## Work order 176 - Permanent Exit Toll and Coastdown haste
+
+Goal: move Exit Toll Transponder out of the run-item rotation and turn its dependable route economy into permanent progression, while replacing the rare slot with a circuit-friendly haste conservation tool.
+
+Prompt:
+
+> Retire Exit Toll Transponder from active item rewards and install its sector-start refund through the permanent scrap Upgrade Bay. Add one rare replacement item that owns a shared haste reservoir source, fills from broadly useful pickup play, and stops reservoir drain whenever the player releases fire. Keep one standard haste cadence, restored-run compatibility, deterministic pools, readable UI, and full release coverage.
+
+Acceptance criteria:
+
+- Exit Toll Transponder is absent from active discovery and reward pools and appears as a 9 kg permanent Salvage upgrade gated by Salvage Escrow Index.
+- The permanent transponder grants the existing deterministic 1-3 credit sector-start refund as the player advances through an act.
+- Restored snapshots carrying the retired run item retain its refund; owning both forms never pays twice.
+- Coastdown Capacitor replaces the rare combat/route slot, contributes one distinct haste source, and adds 0.55 seconds of shared charge on either a credit or salvage pickup.
+- A fitted Coastdown Capacitor freezes positive reservoir charge while fire is released and resumes ordinary one-second-per-second drain while fire is held.
+- Coastdown never changes the standard active 0.75 cooldown multiplier. Duplicate copies remain subject to unique-source capacity and per-dispatch fill rules.
+- Combat identifies the passive with `COAST`; debug instrumentation distinguishes `coast-hold` from continuous drain and reports the same charge, cap, source count, and cadence authority.
+- The item-storm fixture includes Coastdown, reaches six sources and the 6.4-second cap, and protects its HUD/debug presentation in Chromium.
+- The permanent gameplay effect is excluded from content-generation fingerprints; save schemas, seeded ordering, fixed-step simulation, accessibility modes, static hosting, and dependency set remain compatible.
+
+Status: implemented. Exit Toll remains in the catalog solely as a retired compatibility record and retains its legacy hook for restored snapshots. The active combat pool now carries Coastdown Capacitor in the same rare slot. `UpgradeEffects` exposes a separate sector-start surface, `GameplayScene` passes it into combat, and `CombatState` resolves the permanent refund with explicit legacy-item precedence. The upgrade is deliberately non-generative, so installing it does not perturb sector, route, shop, or reward RNG streams.
+
+`HasteReservoir` now owns the Coastdown source, its any-pickup fill, and the pure fixed-step drain rule. The existing ordered pickup hook applies its contribution once on both currency kinds. Combat uses the current fire input as the drain gate; held fire spends reservoir time normally, while released fire banks it indefinitely. The weapon pill appends `COAST`, the debug line reports `drain coast-hold`, and the expanded 29-item stress fixture reaches `HASTE 6.4/6.4s` with six distinct sources.
+
+Focused coverage protects pure drain/fill behavior, both pickup kinds, combat fixed-step integration, permanent payout, restored-item no-double-pay, upgrade projection/fingerprints, active catalog counts, source-weighted rewards, Upgrade Bay totals, and the progressed Act II economy snapshot. Production browser inspection confirmed the ninth Upgrade Bay card at 1280x720 and the six-source Coastdown HUD/debug state with no console errors.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 110 Vitest files and 686 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 971.92 kB minified/266.15 kB gzip initial JavaScript and 91.27/18.37 kB CSS, increases of 1.67/0.49 kB JavaScript and no CSS change over work order 175. The existing 500 kB chunk notice remains; no dependency, save/snapshot schema, route topology, static base path, or warning threshold changed.

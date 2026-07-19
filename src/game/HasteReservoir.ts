@@ -1,7 +1,7 @@
 import type { ItemId } from '../content/items';
 import type { ItemInstance } from './Rewards';
 
-export type HasteTriggerKind = 'creditPickup' | 'salvagePickup' | 'phaseGraze';
+export type HasteTriggerKind = 'creditPickup' | 'salvagePickup' | 'phaseGraze' | 'anyPickup';
 
 export interface HasteSourceDefinition {
   readonly itemId: ItemId;
@@ -13,6 +13,7 @@ export interface HasteReservoirProfile {
   readonly sourceCount: number;
   readonly capacitySeconds: number;
   readonly sourceIds: readonly ItemId[];
+  readonly pauseDrainWhileNotFiring: boolean;
 }
 
 export interface HasteReservoirReadModel extends HasteReservoirProfile {
@@ -57,6 +58,11 @@ const HASTE_SOURCE_DEFINITIONS = [
     itemId: 'item_phase_wake_suture',
     trigger: 'phaseGraze',
     fillSeconds: 0.65
+  },
+  {
+    itemId: 'item_coastdown_capacitor',
+    trigger: 'anyPickup',
+    fillSeconds: 0.55
   }
 ] as const satisfies readonly HasteSourceDefinition[];
 
@@ -87,7 +93,8 @@ export function createHasteReservoirProfile(items: readonly ItemInstance[]): Has
   return {
     sourceCount,
     capacitySeconds,
-    sourceIds
+    sourceIds,
+    pauseDrainWhileNotFiring: sourceIds.includes('item_coastdown_capacitor')
   };
 }
 
@@ -104,6 +111,20 @@ export function fillHasteReservoir(
 
 export function getHasteFireCooldownMultiplier(chargeSeconds: number): number {
   return chargeSeconds > 0 ? STANDARD_HASTE_FIRE_COOLDOWN_MULTIPLIER : 1;
+}
+
+export function drainHasteReservoir(
+  currentSeconds: number,
+  deltaSeconds: number,
+  profile: HasteReservoirProfile,
+  firing: boolean
+): number {
+  const clampedSeconds = Math.min(profile.capacitySeconds, Math.max(0, currentSeconds));
+  if (profile.pauseDrainWhileNotFiring && !firing) {
+    return clampedSeconds;
+  }
+
+  return Math.max(0, clampedSeconds - Math.max(0, deltaSeconds));
 }
 
 export function createHasteReservoirReadModel(

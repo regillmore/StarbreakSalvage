@@ -25,11 +25,11 @@ describe('item catalog audit', () => {
       onProjectileSpawn: 9,
       onEnemyKilled: 11,
       onPlayerHit: 6,
-      onPickupCollected: 5,
+      onPickupCollected: 6,
       onGraze: 2,
       onSpecialUsed: 0,
       onBombUsed: 1,
-      onSectorStart: 3,
+      onSectorStart: 2,
       onRouteChosen: 4,
       onShopEntered: 2,
       onRewardGenerated: 3,
@@ -48,12 +48,12 @@ describe('item catalog audit', () => {
       'missile-overkill': 7,
       'drone-copy': 7,
       'shield-revenge': 5,
-      'credit-shop': 6,
+      'credit-shop': 7,
       'curse-relic': 6,
       'phase-graze': 6,
       'heat-prototype': 6,
       'lunar-surface': 5,
-      'route-economy': 5,
+      'route-economy': 4,
       'boss-pressure': 0
     });
     expect(audit.implementationStatusCounts).toEqual({

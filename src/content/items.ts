@@ -175,6 +175,7 @@ export type ItemId =
   | 'item_route_ledger_spool'
   | 'item_ambush_insurance_stamp'
   | 'item_exit_toll_transponder'
+  | 'item_coastdown_capacitor'
   | 'item_convoy_receipt_printer'
   | 'item_phase_breaker_subpoena'
   | 'item_warning_siren_lattice'
@@ -1200,8 +1201,27 @@ export const ITEMS: readonly ItemDefinition[] = [
       sources: ['combat', 'route'],
       unlockTier: 'baseline',
       implementationStatus: 'live',
+      retired: true,
       stacking: 'unique',
       uiTags: ['route', 'credit']
+    }
+  },
+  {
+    id: 'item_coastdown_capacitor',
+    name: 'Coastdown Capacitor',
+    rarity: 'rare',
+    tags: ['credit', 'heat'],
+    hooks: ['onPickupCollected'],
+    effect:
+      'any collected currency banks shared haste; the reservoir stops draining while fire is released',
+    weight: 6,
+    metadata: {
+      family: 'credit-shop',
+      sources: ['combat', 'route'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['credit', 'heat']
     }
   },
   {
@@ -1503,7 +1523,7 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_low_orbit_ore_scrip',
       'item_route_ledger_spool',
       'item_ambush_insurance_stamp',
-      'item_exit_toll_transponder',
+      'item_coastdown_capacitor',
       'item_convoy_receipt_printer',
       'item_harmonic_fork_loom',
       'item_plasma_seed_crucible',

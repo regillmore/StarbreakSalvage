@@ -2734,7 +2734,7 @@ export class GameApp {
       : [];
     const hasteDebug = debugState.haste
       ? [
-          `Haste ${debugState.haste.active ? 'ACTIVE' : 'idle'} ${debugState.haste.chargeSeconds.toFixed(2)}/${debugState.haste.capacitySeconds.toFixed(2)}s sources ${debugState.haste.sourceCount} cooldown x${debugState.haste.fireCooldownMultiplier.toFixed(2)}`
+          `Haste ${debugState.haste.active ? 'ACTIVE' : 'idle'} ${debugState.haste.chargeSeconds.toFixed(2)}/${debugState.haste.capacitySeconds.toFixed(2)}s sources ${debugState.haste.sourceCount} drain ${debugState.haste.pauseDrainWhileNotFiring ? 'coast-hold' : 'continuous'} cooldown x${debugState.haste.fireCooldownMultiplier.toFixed(2)}`
         ]
       : [];
     const itemDebug = createItemDebugLines(debugState.items);

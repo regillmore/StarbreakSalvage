@@ -30,6 +30,7 @@ export const ITEM_STORM_ITEM_IDS: readonly ItemId[] = [
   'item_coin_operated_cannon',
   'item_credit_reroute_fuse',
   'item_magnetized_tithe_box',
+  'item_coastdown_capacitor',
   'item_prototype_vent_script',
   'item_excess_warhead_clause',
   'item_salvage_dividend_chip',

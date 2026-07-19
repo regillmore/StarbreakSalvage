@@ -6,6 +6,7 @@ import {
   STANDARD_HASTE_FIRE_COOLDOWN_MULTIPLIER,
   createHasteReservoirProfile,
   createHasteReservoirReadModel,
+  drainHasteReservoir,
   fillHasteReservoir,
   getHasteFireCooldownMultiplier
 } from '../../src/game/HasteReservoir';
@@ -16,7 +17,8 @@ describe('HasteReservoir', () => {
     expect(createHasteReservoirProfile([])).toEqual({
       sourceCount: 0,
       capacitySeconds: 0,
-      sourceIds: []
+      sourceIds: [],
+      pauseDrainWhileNotFiring: false
     });
     expect(fillHasteReservoir(0, 4, 0)).toBe(0);
   });
@@ -33,8 +35,19 @@ describe('HasteReservoir', () => {
       sourceCount: 3,
       capacitySeconds:
         BASE_HASTE_CAPACITY_SECONDS + 2 * HASTE_CAPACITY_PER_ADDITIONAL_SOURCE_SECONDS,
-      sourceIds: ['item_coin_operated_cannon', 'item_credit_reroute_fuse', 'item_phase_wake_suture']
+      sourceIds: ['item_coin_operated_cannon', 'item_credit_reroute_fuse', 'item_phase_wake_suture'],
+      pauseDrainWhileNotFiring: false
     });
+  });
+
+  it('holds a Coastdown reservoir while idle and drains it at the normal rate while firing', () => {
+    const profile = createHasteReservoirProfile([
+      { itemId: 'item_coastdown_capacitor', acquisitionOrder: 0 }
+    ]);
+
+    expect(profile.pauseDrainWhileNotFiring).toBe(true);
+    expect(drainHasteReservoir(1.5, 0.4, profile, false)).toBe(1.5);
+    expect(drainHasteReservoir(1.5, 0.4, profile, true)).toBeCloseTo(1.1);
   });
 
   it('caps clustered refills without changing the standard live cadence', () => {

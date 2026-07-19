@@ -65,11 +65,16 @@ import { HEAT_EXHAUST_EFFECT_SECONDS, getHeatShotCost } from './HeatShot';
 import { getLaserProjectileKind } from './LaserProjectile';
 import {
   createHasteReservoirProfile,
+  drainHasteReservoir,
   fillHasteReservoir,
   getHasteFireCooldownMultiplier
 } from './HasteReservoir';
 import type { MissionObjectiveResultSnapshot } from './ObjectiveDirector';
-import type { BossPhaseUpgradeEffects } from './UpgradeEffects';
+import {
+  getExitTollCreditRefund,
+  type BossPhaseUpgradeEffects,
+  type SectorStartUpgradeEffects
+} from './UpgradeEffects';
 import type { CrewCombatProfile } from './CrewCommand';
 import {
   MAX_COMBINED_ALLIES,
@@ -425,6 +430,7 @@ export interface CombatState {
   items: readonly ItemInstance[];
   readonly engineering: EngineeringCombatProfile | null;
   readonly bossPhaseUpgradeEffects: BossPhaseUpgradeEffects | null;
+  readonly sectorStartUpgradeEffects: SectorStartUpgradeEffects | null;
   procTelemetry: CombinedProcTelemetry;
   volleyIndex: number;
   stats: CombatStats;
@@ -624,6 +630,7 @@ export interface CombatStateOptions {
   readonly looseCurrencyPlan?: LooseCurrencyPlan | null;
   readonly engineering?: EngineeringCombatProfile | null;
   readonly bossPhaseUpgradeEffects?: BossPhaseUpgradeEffects | null;
+  readonly sectorStartUpgradeEffects?: SectorStartUpgradeEffects | null;
   readonly crew?: CrewCombatProfile | null;
   readonly fleet?: FleetCombatProfile | null;
 }
@@ -763,6 +770,7 @@ export function createCombatState(
     items: options.items ?? [],
     engineering: options.engineering ?? null,
     bossPhaseUpgradeEffects: options.bossPhaseUpgradeEffects ?? null,
+    sectorStartUpgradeEffects: options.sectorStartUpgradeEffects ?? null,
     procTelemetry: {
       budget: options.engineering?.procBudget ?? BASE_COMBINED_PROC_BUDGET,
       totalApplied: 0,
@@ -3060,9 +3068,11 @@ function updatePlayer(
   ventWeaponHeat(state, dt);
   player.invulnerableSeconds = Math.max(0, player.invulnerableSeconds - dt);
   const hasteProfile = createHasteReservoirProfile(state.items);
-  player.hasteSeconds = Math.min(
-    hasteProfile.capacitySeconds,
-    Math.max(0, player.hasteSeconds - dt)
+  player.hasteSeconds = drainHasteReservoir(
+    player.hasteSeconds,
+    dt,
+    hasteProfile,
+    input.fire
   );
   player.specialCooldown = Math.max(0, player.specialCooldown - dt);
   player.specialActiveSeconds = Math.max(0, player.specialActiveSeconds - dt);
@@ -3148,9 +3158,12 @@ function applySectorStartHooks(
     salvageBonus: 0,
     specialChargeBonus: 0
   });
+  const upgradeCredits = hasItem(state.items, 'item_exit_toll_transponder')
+    ? 0
+    : getExitTollCreditRefund(state.sectorStartUpgradeEffects, context.sectorIndex);
 
-  if (payload.creditsBonus > 0) {
-    state.player.credits += Math.floor(payload.creditsBonus);
+  if (payload.creditsBonus + upgradeCredits > 0) {
+    state.player.credits += Math.floor(payload.creditsBonus + upgradeCredits);
   }
 
   if (payload.salvageBonus > 0) {

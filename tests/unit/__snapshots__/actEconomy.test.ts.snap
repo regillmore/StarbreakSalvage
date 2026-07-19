@@ -144,9 +144,9 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
         "Shop pool",
       ],
       [
-        "item_credit_reroute_fuse",
-        16,
-        "Shop pool",
+        "item_phase_anchor_spool",
+        18,
+        "vault source",
       ],
       [
         "item_coupon_cascade_fuse",
@@ -154,8 +154,8 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
         "shop source",
       ],
       [
-        "item_arc_welder_drone",
-        16,
+        "item_credit_reroute_fuse",
+        14,
         "Shop pool",
       ],
     ],

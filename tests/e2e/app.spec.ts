@@ -732,12 +732,15 @@ test('opens the Upgrade Bay and purchases an upgrade from banked scrap', async (
 
   await expect(page.getByRole('heading', { name: 'Upgrade Bay' })).toBeVisible();
   await expect(page.locator('.debug-overlay')).toContainText(
-    'Progress Bank 8kg Upgrades 0/8 Ready 2'
+    'Progress Bank 8kg Upgrades 0/9 Ready 2'
   );
   await expect(page.getByTestId('upgrade-bay-summary')).toContainText(
-    'Bank 8 kg | Installed 0/8 | Ready 2'
+    'Bank 8 kg | Installed 0/9 | Ready 2'
   );
-  await expect(page.locator('[data-testid^="upgrade-card-"]')).toHaveCount(8);
+  await expect(page.locator('[data-testid^="upgrade-card-"]')).toHaveCount(9);
+  await expect(page.getByTestId('upgrade-card-upgrade_exit_toll_transponder')).toContainText(
+    'Each sector begins with a 1-3 credit refund'
+  );
 
   const bayBox = await page.locator('.upgrade-bay-panel').boundingBox();
   if (!bayBox) {
@@ -755,10 +758,10 @@ test('opens the Upgrade Bay and purchases an upgrade from banked scrap', async (
     'Purchased Contract Survey Rig.'
   );
   await expect(page.getByTestId('upgrade-bay-summary')).toContainText(
-    'Bank 4 kg | Installed 1/8 | Ready 1'
+    'Bank 4 kg | Installed 1/9 | Ready 1'
   );
   await expect(page.locator('.debug-overlay')).toContainText(
-    'Progress Bank 4kg Upgrades 1/8 Ready 1'
+    'Progress Bank 4kg Upgrades 1/9 Ready 1'
   );
   await expect(surveyRig).toContainText('Installed in the archive.');
 
@@ -863,17 +866,18 @@ test('exposes item-heavy hook storm debug instrumentation', async ({ page }) => 
   await page.keyboard.press('6');
   await expect(page.getByTestId('boss-warning')).toContainText('ITEM HOOK STORM');
   await expect(page.locator('.debug-overlay')).toContainText('Scenario item-storm');
-  await expect(page.locator('.debug-overlay')).toContainText('Items 28 (28 unique)');
+  await expect(page.locator('.debug-overlay')).toContainText('Items 29 (29 unique)');
   await expect(page.locator('.debug-overlay')).toContainText(
-    /Haste ACTIVE .* sources 5 cooldown x0\.75/
+    /Haste ACTIVE .* sources 6 drain coast-hold cooldown x0\.75/
   );
   await expect(page.getByTestId('weapon-readout')).toContainText('HASTE');
+  await expect(page.getByTestId('weapon-readout')).toContainText('COAST');
   await expect(page.locator('.debug-overlay')).toContainText(/Hooks 13\/14 \d+ apps/);
   await expect(page.locator('.debug-overlay')).toContainText(/Proc on[A-Za-z]+ \d+\/48 skip 0/);
-  await expect(page.locator('.debug-overlay')).toContainText(/Build .+ \| 28 items/);
+  await expect(page.locator('.debug-overlay')).toContainText(/Build .+ \| 29 items/);
   await expect(page.locator('.debug-overlay')).toContainText('Projectiles 30 (P0/E30)');
   await expect(page.locator('.debug-overlay')).toContainText('Telegraphs 2');
-  await expect(page.getByTestId('item-readout')).toContainText(/Build .+ \| 28 items/);
+  await expect(page.getByTestId('item-readout')).toContainText(/Build .+ \| 29 items/);
 
   await page.keyboard.down(' ');
   await expect(page.getByTestId('combat-status')).toContainText(/Shots [1-9]/);
