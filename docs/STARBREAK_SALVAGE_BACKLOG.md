@@ -2459,3 +2459,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 174. `GameApp` owns the debrief-specific seed/URL reset, while `MainMenuScene` projects the existing last-run save record into an adjacent secondary launch action. Focused Chromium coverage protects the full seeded-run -> normal-title -> exact-seed-retry sequence.
+
+### BL40 - Managed local browser smoke host
+
+Acceptance:
+
+- One project command starts or reuses a managed Vite host, waits for the Pages-subpath app, and publishes the current LAN browser URL without requiring address or port guesswork.
+- A machine-readable ignored state record and JSON status command expose verified PID, token, mode, actual port, local URL, browser URL, health endpoints, and start time.
+- Status refreshes the active routed LAN address while the listener remains bound to all interfaces, preventing earlier-task URLs from becoming implicit authority.
+- Stop authenticates the owned process through its health endpoint, requests a graceful shutdown, removes runtime state, exits the original host shell successfully, and is safe to repeat.
+- Future agents are instructed to keep a task-length managed shell, consume the reported `browserUrl`, avoid `localhost` for the in-app browser, and always stop after inspection.
+- Automated and real in-app-browser smoke cover start, page readiness, status, reuse, browser connection, clean console state, teardown, and no lingering listener.
+
+Status:
+
+- Implemented in work order 175. `scripts/smoke-host.mjs` owns Vite directly, writes atomic ignored state, resolves the current routed IPv4 address, verifies a token-bearing health endpoint, and shuts down through an authenticated request. Package scripts, `AGENTS.md`, README guidance, isolated lifecycle coverage, and a real in-app-browser pass establish the repeatable workflow.

@@ -617,3 +617,30 @@ Status: implemented. `GameApp` now treats debrief exit as a distinct navigation 
 The keyboard/debrief Chromium regression now begins from `?seed=STARBREAK-SMOKE`, abandons through the ordinary run summary, confirms a seed-free URL, blank manual field, focused random action, and visible saved-seed replay, then launches the replay and confirms the contract board regenerated `STARBREAK-SMOKE`. In-app browser inspection followed that seeded run through its debrief and confirmed the ordinary title at `?debug=1`, the primary random launch above the exact saved-seed retry, no horizontal or vertical viewport overflow at 1280x720, and no captured console errors.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 109 Vitest files and 679 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 970.25 kB minified/265.66 kB gzip initial JavaScript and 91.27/18.37 kB CSS, increases of 0.78/0.22 kB JavaScript and 0.38/0.06 kB CSS over work order 173. The existing 500 kB chunk notice remains; no dependency, seed resolution, RNG stream, save/snapshot schema, static base path, or warning threshold changed.
+
+## Work order 175 - Managed browser smoke host
+
+Goal: replace recurring ad-hoc LAN and process troubleshooting with one lean, project-owned lifecycle for interactive local browser validation.
+
+Prompt:
+
+> Add agent-facing project tooling that starts or reuses a local Vite instance, publishes the current LAN URL in both human- and machine-readable forms, proves the app is ready at the GitHub Pages base, and tears the exact owned instance down reliably. Avoid stale copied addresses, arbitrary port assumptions, orphaned processes, and unsafe PID kills. Document the workflow where future agents will see it, cover the lifecycle automatically, and validate the published address through the in-app browser.
+
+Acceptance criteria:
+
+- `npm run smoke:host` starts a managed foreground dev host on all local interfaces, accepts `--mode preview`, tolerates a busy default port, waits for both Vite and the application page, and remains attached to a task-length shell.
+- A versioned state record under ignored `node_modules/.cache` contains the PID, ownership token, mode, actual port, Pages base, loopback URL, current LAN `browserUrl`, health URLs, and start time.
+- `npm run smoke:status` verifies the process and token-bearing health endpoint, refreshes the active routed IPv4 address, verifies the app page, and supports a single JSON record through `--json`.
+- Repeating start against a healthy same-mode instance is idempotent; it reports and reuses the existing process instead of opening another listener.
+- `npm run smoke:stop` authenticates against the ownership endpoint before requesting graceful shutdown, is idempotent after shutdown, removes runtime state, and lets the original managed host command exit successfully.
+- Status never treats an unverified PID as owned, stale dead-process state is retired, and no runtime state or log enters version control.
+- Focused automated coverage exercises start, page load, status, reuse, graceful stop, and repeated stop with an isolated state file and operating-system-assigned port.
+- `AGENTS.md` and the README tell agents to use the published URL rather than remembered LAN or localhost addresses, retain a long-running shell with a task-length timeout, and stop after browser inspection.
+
+Status: implemented. `scripts/smoke-host.mjs` uses the Vite API directly so the long-running command itself owns the listener. A private no-store health endpoint exposes the current ownership token and accepts only authenticated shutdown requests. The state file is written atomically beneath the already ignored dependency cache. LAN discovery first asks the operating system for the active routed IPv4 address without sending application traffic, then falls back to ranked non-loopback interfaces; status recomputes the browser URL while the server remains bound to every interface.
+
+The command family now covers human output and JSON automation, exact Pages-subpath readiness, dynamic ports, dev/preview selection, same-mode reuse, mode-conflict refusal, stale-state cleanup, verified ownership, graceful cross-platform shutdown, and safe repeated stop. `AGENTS.md` makes this the default in-app-browser path and explicitly calls out the managed shell timeout and cleanup sequence; the README exposes the same commands to contributors.
+
+Focused lifecycle coverage launches the real tool with an isolated state file and ephemeral port, fetches the app, verifies status identity, proves start reuse, stops it through the authenticated endpoint, waits for a clean host exit, and repeats stop safely. A real Codex managed-shell run published `http://192.168.40.7:4175/StarbreakSalvage/`; the in-app browser loaded its debug title screen to complete state with no captured console errors, after which `smoke:stop` closed the listener and the original host cell returned exit code 0.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 110 Vitest files and 680 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. A separate post-build `smoke:host -- --mode preview --port 0` run selected port 58886, returned the correct preview state and LAN URL, served the Pages title with HTTP 200, and shut down with both controller and managed-host exit code 0. The browser tooling is development-only and leaves the production bundle unchanged at 970.25 kB minified/265.66 kB gzip JavaScript and 91.27/18.37 kB CSS. The existing 500 kB chunk notice remains; no dependency, gameplay code, content RNG, save/snapshot schema, static base path, or warning threshold changed.

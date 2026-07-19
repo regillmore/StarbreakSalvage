@@ -35,6 +35,9 @@ npm run preview   # locally serve dist/
 npm run test      # Vitest unit/integration tests
 npm run test:e2e  # Playwright smoke tests
 npm run test:preview # serve dist and verify Pages base/hashed assets
+npm run smoke:host # start/reuse a managed LAN-visible Vite instance for interactive browser smoke
+npm run smoke:status # print the authoritative current browser URL and host ownership state
+npm run smoke:stop # stop the authenticated project-owned smoke instance
 npm run lint      # ESLint
 npm run format    # Prettier write
 npm run check     # typecheck + lint + test + build
@@ -44,6 +47,14 @@ npm run verify:release # check + Playwright + production preview smoke
 After modifying code, run the narrowest relevant tests first, then `npm run check` before declaring the task complete. Release closeouts should run `npm run verify:release`. If Playwright browsers are not installed in a local environment, say so and run every other check.
 
 Local Codex note: `npm run test:e2e` will need escalation on Windows because Playwright launches Chromium from `%LOCALAPPDATA%\ms-playwright`, which the sandbox cannot read by default. E2E will report a missing `chromium_headless_shell` executable even after install, so run the E2E command with escalation for AppData visibility.
+
+For in-app browser inspection, run `npm run smoke:host` and use the exact `Browser URL` it prints.
+Do not reuse a LAN address from an earlier task or infer one from `localhost`; `npm run smoke:status`
+re-resolves the active adapter and `npm run --silent smoke:status -- --json` exposes the same URL as
+machine-readable `browserUrl`. Keep the long-running start cell while inspecting; the start command
+is idempotent from another shell. Give that managed shell a task-length command timeout rather than
+the default short diagnostic timeout. Always run `npm run smoke:stop` after the browser pass,
+including after a failed inspection, then collect the successfully completed start cell.
 
 ## Code style and architecture rules
 

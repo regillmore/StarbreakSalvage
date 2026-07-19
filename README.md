@@ -24,6 +24,9 @@ npm run preview   # serve the production build locally
 npm run test      # run Vitest unit tests
 npm run test:e2e  # run Playwright smoke tests
 npm run test:preview # verify the production Pages base and hashed assets
+npm run smoke:host # start/reuse a managed LAN-visible browser smoke host
+npm run smoke:status # print the current authoritative browser URL
+npm run smoke:stop # stop the project-owned browser smoke host
 npm run lint      # run ESLint
 npm run format    # format files with Prettier
 npm run check     # typecheck, lint, test, and build
@@ -31,6 +34,16 @@ npm run verify:release # run check, Chromium smoke, and preview smoke
 ```
 
 The Vite base path is configured for GitHub Pages at `/StarbreakSalvage/`.
+
+For interactive browser validation, use `npm run smoke:host` instead of manually choosing a
+Vite port or copying an address from an earlier terminal. The command binds a project-owned dev
+instance to local interfaces, waits for the app and its ownership endpoint, prints the current
+`Browser URL`, and stays attached to that managed shell. Repeating the command from another shell
+safely reuses the same healthy instance. Use
+`npm run smoke:status` to refresh the URL after a network change and `npm run smoke:stop` when the
+inspection is complete. Automation can read one JSON record with
+`npm run --silent smoke:status -- --json`. Add `-- --mode preview` to `smoke:host` after a build when
+the production server is the desired target.
 
 ## Controls
 
