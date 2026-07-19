@@ -2430,3 +2430,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 170. `HeatShot` owns the cost and visual read model, `ItemHooks` carries ordered spend/outcome state, `CombatState` settles the budget before ordinary shot heat, and the shared Canvas/DOM presentations render either the molten slug or its exhaust replacement.
+
+### BL38 - Shared haste reservoir
+
+Acceptance:
+
+- Coin-Operated Cannon and every similar credit, salvage, or phase-graze cadence source add charge to one player haste reservoir instead of multiplying the current fire-rate modifier.
+- Any positive reservoir charge applies one standard 0.75 cooldown multiplier; additional sources never increase that live cadence.
+- One source provides 2.4 seconds of capacity, each additional distinct source adds 0.8 seconds, and the shared reservoir caps at 6.4 seconds.
+- Clustered pickups clamp cleanly to capacity, duplicate copies of one unique item cannot double-fill or enlarge the reservoir, and charge drains through ordinary fixed-step time.
+- Player- and ally-collected pickups share the same hook path, while phase grazes contribute through their existing ordered item hook.
+- Item cards, the combat HUD, debug instrumentation, deterministic tests, saves, accessibility modes, performance budgets, and static hosting remain coherent.
+
+Status:
+
+- Implemented in work order 173. `HasteReservoir` owns source profiles, scaling capacity, bounded fill, the fixed active cadence, and the shared read model. `ItemHooks` now emits additive source-attributed charge, while `CombatState` drains and consumes the single reservoir for pickup and phase-graze triggers. The weapon HUD and item-storm diagnostics expose live charge, capacity, source count, and fixed cooldown state.

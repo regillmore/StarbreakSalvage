@@ -16,6 +16,11 @@ import {
   type EnemySpawn
 } from '../../src/game/CombatState';
 import { createWaveDirectorPlan, getObjectiveProgress } from '../../src/game/WaveDirector';
+import {
+  STANDARD_HASTE_FIRE_COOLDOWN_MULTIPLIER,
+  createHasteReservoirProfile
+} from '../../src/game/HasteReservoir';
+import type { ItemInstance } from '../../src/game/Rewards';
 
 const bounds: CombatBounds = {
   width: 640,
@@ -24,6 +29,57 @@ const bounds: CombatBounds = {
 };
 
 describe('CombatState', () => {
+  it('fills one bounded haste reservoir from clustered pickups without stacking cadence', () => {
+    const singleItems: ItemInstance[] = [
+      { itemId: 'item_coin_operated_cannon', acquisitionOrder: 0 }
+    ];
+    const stackedItems: ItemInstance[] = [
+      { itemId: 'item_coin_operated_cannon', acquisitionOrder: 0 },
+      { itemId: 'item_credit_reroute_fuse', acquisitionOrder: 1 },
+      { itemId: 'item_magnetized_tithe_box', acquisitionOrder: 2 }
+    ];
+    const single = createCombatState(bounds, 'HASTE-SINGLE', {
+      items: singleItems,
+      skipEnemyWaves: true
+    });
+    const stacked = createCombatState(bounds, 'HASTE-STACKED', {
+      items: stackedItems,
+      skipEnemyWaves: true
+    });
+
+    for (const state of [single, stacked]) {
+      for (let index = 0; index < 8; index += 1) {
+        state.pickups.push({
+          id: state.nextId++,
+          kind: 'credit',
+          x: state.player.x,
+          y: state.player.y,
+          vx: 0,
+          vy: 0,
+          radius: 7,
+          value: 1
+        });
+      }
+      updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 0, bounds);
+    }
+
+    expect(single.player.hasteSeconds).toBe(
+      createHasteReservoirProfile(singleItems).capacitySeconds
+    );
+    expect(stacked.player.hasteSeconds).toBe(
+      createHasteReservoirProfile(stackedItems).capacitySeconds
+    );
+    expect(stacked.player.hasteSeconds).toBeGreaterThan(single.player.hasteSeconds);
+
+    updateCombatState(single, { movement: { x: 0, y: 0 }, fire: true }, 0, bounds);
+    updateCombatState(stacked, { movement: { x: 0, y: 0 }, fire: true }, 0, bounds);
+
+    const expectedCooldown =
+      single.weapon.fireCooldownSeconds * STANDARD_HASTE_FIRE_COOLDOWN_MULTIPLIER;
+    expect(single.player.fireCooldown).toBeCloseTo(expectedCooldown);
+    expect(stacked.player.fireCooldown).toBeCloseTo(expectedCooldown);
+  });
+
   it('spends stored heat on a Vent shot and exhausts visibly when the reserve is cool', () => {
     const items = [
       {

@@ -164,7 +164,7 @@
       "tags": [
         "credit"
       ],
-      "effect": "collecting credits boosts fire rate briefly"
+      "effect": "credit pickups fill a shared bounded haste reservoir"
     },
     {
       "id": "item_overkill_ledger",

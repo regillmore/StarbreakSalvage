@@ -64,6 +64,13 @@ export interface SceneDebugState {
     readonly storedHeat: number;
     readonly cost: number;
   };
+  readonly haste?: {
+    readonly active: boolean;
+    readonly chargeSeconds: number;
+    readonly capacitySeconds: number;
+    readonly sourceCount: number;
+    readonly fireCooldownMultiplier: number;
+  };
   readonly inputMode?: string;
   readonly hudMode?: string;
   readonly contractTheme?: ContractThemeDebugState;

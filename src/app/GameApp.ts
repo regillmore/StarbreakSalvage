@@ -2721,6 +2721,11 @@ export class GameApp {
           `Heat shots F${debugState.heatShots.fired}/X${debugState.heatShots.exhausted} reserve ${debugState.heatShots.storedHeat.toFixed(2)}/${debugState.heatShots.cost.toFixed(2)}`
         ]
       : [];
+    const hasteDebug = debugState.haste
+      ? [
+          `Haste ${debugState.haste.active ? 'ACTIVE' : 'idle'} ${debugState.haste.chargeSeconds.toFixed(2)}/${debugState.haste.capacitySeconds.toFixed(2)}s sources ${debugState.haste.sourceCount} cooldown x${debugState.haste.fireCooldownMultiplier.toFixed(2)}`
+        ]
+      : [];
     const itemDebug = createItemDebugLines(debugState.items);
     const enemyRoleDebug = createEnemyRoleDebugLines(debugState.enemyRoles);
     const environmentStressDebug = createEnvironmentStressDebugLines(debugState.environmentStress);
@@ -2862,6 +2867,7 @@ export class GameApp {
       ...destructionDebug,
       ...scenarioDebug,
       ...heatShotDebug,
+      ...hasteDebug,
       ...itemDebug,
       ...enemyRoleDebug,
       ...environmentStressDebug,

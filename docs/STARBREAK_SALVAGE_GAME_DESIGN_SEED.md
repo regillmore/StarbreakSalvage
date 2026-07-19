@@ -100,7 +100,7 @@ Avoid items that are only invisible +5% upgrades unless needed for common filler
 | item_ricochet_license | Ricochet License | uncommon | ricochet | Eligible shots bounce once off screen edges. |
 | item_drone_uplink | Drone Uplink | rare | drone | Drones copy a reduced primary shot. |
 | item_shield_dynamo | Shield Dynamo | uncommon | shield | Shield damage charges special ability. |
-| item_coin_operated_cannon | Coin-Operated Cannon | uncommon | credit | Picking up credits boosts fire rate briefly. |
+| item_coin_operated_cannon | Coin-Operated Cannon | uncommon | credit | Credit pickups fill a shared, bounded haste reservoir. |
 | item_overkill_ledger | Overkill Ledger | rare | overkill,scrap | Excess damage can become scrap. |
 | item_heat_sink_saint | Heat Sink Saint | uncommon | heat | Reduces heat and makes venting offensive. |
 | item_cursed_hull_plate | Cursed Hull Plate | cursed | curse,armor | Lower max hull; repairs grant damage. |

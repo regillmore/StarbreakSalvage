@@ -68,7 +68,8 @@ describe('item hook ordering', () => {
       projectileTags: ['phase'],
       specialChargeGain: 0.1,
       bonusSalvage: 0,
-      fireRateMultiplier: 1,
+      hasteFillSeconds: 0,
+      hasteSourceIds: [],
       effectRadius: 34
     });
 
@@ -76,7 +77,8 @@ describe('item hook ordering', () => {
       projectileTags: ['phase'],
       specialChargeGain: 0.1,
       bonusSalvage: 0,
-      fireRateMultiplier: 1,
+      hasteFillSeconds: 0,
+      hasteSourceIds: [],
       effectRadius: 34
     });
   });
@@ -381,7 +383,8 @@ describe('item synergies', () => {
     ];
     const creditPayload = applyItemHooks('onPickupCollected', pickupInstances, {
       kind: 'credit',
-      fireRateMultiplier: 1
+      hasteFillSeconds: 0,
+      hasteSourceIds: []
     });
 
     const revengeInstances: ItemInstance[] = [
@@ -393,11 +396,33 @@ describe('item synergies', () => {
       revengeProjectiles: []
     });
 
-    expect(creditPayload.fireRateMultiplier).toBeLessThan(1);
+    expect(creditPayload.hasteFillSeconds).toBeCloseTo(1.15);
+    expect(creditPayload.hasteSourceIds).toEqual([
+      'item_credit_reroute_fuse',
+      'item_magnetized_tithe_box'
+    ]);
     expect(hitPayload.revengeProjectiles.length).toBeGreaterThanOrEqual(2);
     expect(
       hitPayload.revengeProjectiles.some((projectile) => projectile.tags.includes('relic'))
     ).toBe(true);
+  });
+
+  it('does not double-fill haste from duplicate copies of one unique source', () => {
+    const payload = applyItemHooks(
+      'onPickupCollected',
+      [
+        { itemId: 'item_coin_operated_cannon', acquisitionOrder: 0 },
+        { itemId: 'item_coin_operated_cannon', acquisitionOrder: 1 }
+      ],
+      {
+        kind: 'credit',
+        hasteFillSeconds: 0,
+        hasteSourceIds: []
+      }
+    );
+
+    expect(payload.hasteFillSeconds).toBeCloseTo(0.8);
+    expect(payload.hasteSourceIds).toEqual(['item_coin_operated_cannon']);
   });
 
   it('applies first expansion volley hooks for split, missile, and sidecar items', () => {
@@ -451,7 +476,8 @@ describe('item synergies', () => {
         projectileTags: ['phase'],
         specialChargeGain: 0.1,
         bonusSalvage: 0,
-        fireRateMultiplier: 1,
+        hasteFillSeconds: 0,
+        hasteSourceIds: [],
         effectRadius: 34
       }
     );
@@ -479,7 +505,8 @@ describe('item synergies', () => {
     );
 
     expect(grazePayload.specialChargeGain).toBeGreaterThan(0.1);
-    expect(grazePayload.fireRateMultiplier).toBeLessThan(1);
+    expect(grazePayload.hasteFillSeconds).toBeGreaterThan(0);
+    expect(grazePayload.hasteSourceIds).toEqual(['item_phase_wake_suture']);
     expect(grazePayload.effectRadius).toBeGreaterThan(34);
     expect(specialPayload).toEqual({
       projectiles: [baseProjectile],
@@ -505,8 +532,7 @@ describe('item synergies', () => {
         sectorId: 'sector_lunar_surface',
         creditsBonus: 0,
         salvageBonus: 0,
-        specialChargeBonus: 0,
-        fireRateMultiplier: 1
+        specialChargeBonus: 0
       }
     );
     const routePayload = applyItemHooks(

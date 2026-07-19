@@ -63,6 +63,11 @@ import {
 } from './PhaseProjectile';
 import { HEAT_EXHAUST_EFFECT_SECONDS, getHeatShotCost } from './HeatShot';
 import { getLaserProjectileKind } from './LaserProjectile';
+import {
+  createHasteReservoirProfile,
+  fillHasteReservoir,
+  getHasteFireCooldownMultiplier
+} from './HasteReservoir';
 import type { MissionObjectiveResultSnapshot } from './ObjectiveDirector';
 import type { BossPhaseUpgradeEffects } from './UpgradeEffects';
 import type { CrewCombatProfile } from './CrewCommand';
@@ -127,8 +132,7 @@ export interface PlayerState {
   weaponHeat: number;
   weaponOverheatSeconds: number;
   invulnerableSeconds: number;
-  fireRateMultiplier: number;
-  fireRateBoostSeconds: number;
+  hasteSeconds: number;
   specialCharge: number;
   readonly maxSpecialCharge: number;
   readonly specialChargeMultiplier: number;
@@ -660,8 +664,7 @@ export function createCombatState(
       weaponHeat: 0,
       weaponOverheatSeconds: 0,
       invulnerableSeconds: 0,
-      fireRateMultiplier: 1,
-      fireRateBoostSeconds: 0,
+      hasteSeconds: 0,
       specialCharge: clamp(shipStats.specialInitialCharge, 0, SPECIAL_MAX_CHARGE),
       maxSpecialCharge: SPECIAL_MAX_CHARGE,
       specialChargeMultiplier: shipStats.specialChargeMultiplier,
@@ -1638,6 +1641,7 @@ export function prepareDebugItemStormScenario(
   state.player.specialCharge = state.player.maxSpecialCharge;
   state.player.specialCooldown = 0;
   state.player.specialActiveSeconds = 0;
+  state.player.hasteSeconds = 0;
   state.player.bombs = state.player.maxBombs;
   state.player.bombCooldown = 0;
 
@@ -1711,16 +1715,18 @@ export function prepareDebugItemStormScenario(
     });
   }
 
-  state.pickups.push({
-    id: getNextEntityId(state),
-    kind: 'credit',
-    x: state.player.x - 56,
-    y: state.player.y - 80,
-    vx: 0,
-    vy: 18,
-    radius: 7,
-    value: 4
-  });
+  for (let index = 0; index < 6; index += 1) {
+    state.pickups.push({
+      id: getNextEntityId(state),
+      kind: 'credit',
+      x: state.player.x + (index - 2.5) * 7,
+      y: state.player.y - 8 + (index % 2) * 6,
+      vx: 0,
+      vy: 18,
+      radius: 7,
+      value: 1
+    });
+  }
   state.pickups.push({
     id: getNextEntityId(state),
     kind: 'salvage',
@@ -3053,14 +3059,14 @@ function updatePlayer(
   player.weaponOverheatSeconds = Math.max(0, player.weaponOverheatSeconds - dt);
   ventWeaponHeat(state, dt);
   player.invulnerableSeconds = Math.max(0, player.invulnerableSeconds - dt);
-  player.fireRateBoostSeconds = Math.max(0, player.fireRateBoostSeconds - dt);
+  const hasteProfile = createHasteReservoirProfile(state.items);
+  player.hasteSeconds = Math.min(
+    hasteProfile.capacitySeconds,
+    Math.max(0, player.hasteSeconds - dt)
+  );
   player.specialCooldown = Math.max(0, player.specialCooldown - dt);
   player.specialActiveSeconds = Math.max(0, player.specialActiveSeconds - dt);
   player.bombCooldown = Math.max(0, player.bombCooldown - dt);
-
-  if (player.fireRateBoostSeconds <= 0) {
-    player.fireRateMultiplier = 1;
-  }
 
   if (input.special) {
     activateSpecial(state);
@@ -3089,7 +3095,9 @@ function updatePlayer(
     const specialMultiplier =
       player.specialActiveSeconds > 0 ? player.specialFireRateMultiplier : 1;
     player.fireCooldown =
-      state.weapon.fireCooldownSeconds * player.fireRateMultiplier * specialMultiplier;
+      state.weapon.fireCooldownSeconds *
+      getHasteFireCooldownMultiplier(player.hasteSeconds) *
+      specialMultiplier;
     state.stats = {
       ...state.stats,
       shotsFired: state.stats.shotsFired + firePayload.projectiles.length,
@@ -3138,8 +3146,7 @@ function applySectorStartHooks(
     sectorId: context.sectorId,
     creditsBonus: 0,
     salvageBonus: 0,
-    specialChargeBonus: 0,
-    fireRateMultiplier: state.player.fireRateMultiplier
+    specialChargeBonus: 0
   });
 
   if (payload.creditsBonus > 0) {
@@ -3153,11 +3160,27 @@ function applySectorStartHooks(
   if (payload.specialChargeBonus > 0) {
     gainSpecialCharge(state, payload.specialChargeBonus);
   }
+}
 
-  if (payload.fireRateMultiplier < state.player.fireRateMultiplier) {
-    state.player.fireRateMultiplier = payload.fireRateMultiplier;
-    state.player.fireRateBoostSeconds = Math.max(state.player.fireRateBoostSeconds, 2);
-  }
+function fillPlayerHaste(state: CombatState, fillSeconds: number): boolean {
+  const profile = createHasteReservoirProfile(state.items);
+  const previousSeconds = state.player.hasteSeconds;
+  state.player.hasteSeconds = fillHasteReservoir(
+    previousSeconds,
+    fillSeconds,
+    profile.capacitySeconds
+  );
+  return state.player.hasteSeconds > previousSeconds;
+}
+
+function applyPickupHaste(state: CombatState, kind: PickupKind): number {
+  const payload = applyCombatHooks(state, 'onPickupCollected', {
+    kind,
+    hasteFillSeconds: 0,
+    hasteSourceIds: []
+  });
+  fillPlayerHaste(state, payload.hasteFillSeconds);
+  return payload.hasteSourceIds.length;
 }
 
 function addWeaponHeat(state: CombatState): void {
@@ -3571,12 +3594,14 @@ function collectPickupForAlly(state: CombatState, ally: AllyState): void {
   state.pickups = state.pickups.filter((candidate) => candidate.id !== pickup.id);
   if (pickup.kind === 'credit') state.player.credits += pickup.value;
   else state.player.salvage += pickup.value;
+  const hasteTriggerCount = applyPickupHaste(state, pickup.kind);
   ally.salvageRecovered += pickup.value;
   state.stats = {
     ...state.stats,
     pickupsCollected: state.stats.pickupsCollected + 1,
     looseCurrencyCollected: state.stats.looseCurrencyCollected + pickup.value,
-    allySalvageCollected: state.stats.allySalvageCollected + pickup.value
+    allySalvageCollected: state.stats.allySalvageCollected + pickup.value,
+    itemTriggers: state.stats.itemTriggers + hasteTriggerCount
   };
 }
 
@@ -3952,7 +3977,8 @@ function resolveGraze(state: CombatState): void {
         ? SPECIAL_CHARGE_PER_GRAZE * 1.55
         : SPECIAL_CHARGE_PER_GRAZE,
       bonusSalvage: 0,
-      fireRateMultiplier: state.player.fireRateMultiplier,
+      hasteFillSeconds: 0,
+      hasteSourceIds: [],
       effectRadius: 34
     });
 
@@ -3962,10 +3988,7 @@ function resolveGraze(state: CombatState): void {
       state.player.salvage += Math.floor(grazePayload.bonusSalvage);
     }
 
-    if (grazePayload.fireRateMultiplier < state.player.fireRateMultiplier) {
-      state.player.fireRateMultiplier = grazePayload.fireRateMultiplier;
-      state.player.fireRateBoostSeconds = Math.max(state.player.fireRateBoostSeconds, 1.2);
-    }
+    fillPlayerHaste(state, grazePayload.hasteFillSeconds);
 
     state.effects.push({
       id: getNextEntityId(state),
@@ -3983,7 +4006,7 @@ function resolveGraze(state: CombatState): void {
         state.stats.itemTriggers +
         Number(hasItem(state.items, 'item_phase_grazer')) +
         Number(grazePayload.bonusSalvage > 0) +
-        Number(grazePayload.fireRateMultiplier < 1)
+        grazePayload.hasteSourceIds.length
     };
   }
 }
@@ -4167,20 +4190,13 @@ function resolveCombatCollisions(state: CombatState): void {
       state.player.salvage += pickup.value;
     }
 
-    const pickupPayload = applyCombatHooks(state, 'onPickupCollected', {
-      kind: pickup.kind,
-      fireRateMultiplier: state.player.fireRateMultiplier
-    });
-    if (pickupPayload.fireRateMultiplier < state.player.fireRateMultiplier) {
-      state.player.fireRateMultiplier = pickupPayload.fireRateMultiplier;
-      state.player.fireRateBoostSeconds = 2.2;
-    }
+    const hasteTriggerCount = applyPickupHaste(state, pickup.kind);
 
     state.stats = {
       ...state.stats,
       pickupsCollected: state.stats.pickupsCollected + 1,
       looseCurrencyCollected: state.stats.looseCurrencyCollected + pickup.value,
-      itemTriggers: state.stats.itemTriggers + Number(pickupPayload.fireRateMultiplier < 1)
+      itemTriggers: state.stats.itemTriggers + hasteTriggerCount
     };
   }
 

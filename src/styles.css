@@ -4586,6 +4586,12 @@ html[data-bullet-contrast='high'] .crew-command-button {
   border-color: color-mix(in srgb, var(--hud-primary) 46%, transparent);
 }
 
+.hud-pill-system[data-haste-active='true'] {
+  color: #fff3bd;
+  border-color: color-mix(in srgb, var(--hud-warning) 68%, transparent);
+  background: color-mix(in srgb, var(--hud-warning) 10%, rgba(4, 6, 18, 0.72));
+}
+
 .hud-pill-warning {
   color: #fff7d4;
   border-color: color-mix(in srgb, var(--hud-warning) 56%, transparent);

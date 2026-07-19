@@ -566,3 +566,31 @@ The map exposes a compact `View Full Act` / `Focus Choices` toggle with pressed 
 Browser inspection of the real seeded Act I post-sector hub at 1280x720 confirms that the cleared optional node and both layer-two routes form a readable triangle, long sector names stay legible, service nodes remain available, and the map label and view toggle do not collide with the active graph.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 108 Vitest files and 674 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 968.19 kB minified/264.85 kB gzip initial JavaScript and 90.70/18.27 kB CSS, increases of 1.75/0.70 kB JavaScript and 1.13/0.20 kB CSS over work order 171. The existing 500 kB chunk notice remains; no dependency, route graph, route legality, RNG stream, save/snapshot schema, static base path, or warning threshold changed.
+
+## Work order 173 - Shared haste reservoir
+
+Goal: replace geometrically stacking pickup fire-rate boosts with one legible, bounded haste resource that rewards clustered collection and multiple compatible upgrades without destabilizing weapon cadence.
+
+Prompt:
+
+> Rework Coin-Operated Cannon and similar cadence upgrades around one player haste reservoir. Credit, salvage, and qualifying phase-graze triggers should add deterministic charge to that shared pool instead of multiplying an already-reduced fire-rate value. Additional distinct haste sources should scale reservoir capacity and refill strength, while any active reservoir always applies the same standard haste cadence. Expose the charge and cap in combat, keep ordered item-hook attribution, include ally-collected pickups, and protect fixed-step behavior, duplicate-item safety, previews, accessibility, saves, determinism, performance budgets, and static hosting.
+
+Acceptance criteria:
+
+- Coin-Operated Cannon, Credit Reroute Fuse, Magnetized Tithe Box, Salvage Magnet, Regolith Scoop Array, and Phase Wake Suture are explicit shared-haste sources with deterministic trigger and fill profiles.
+- A fitted haste build owns one reservoir: the first distinct source grants 2.4 seconds of capacity, each additional source adds 0.8 seconds, and total capacity is capped at 6.4 seconds.
+- Every active reservoir applies exactly a 0.75 weapon cooldown multiplier. Source count, charge amount, pickup count, and repeated clusters never reduce that multiplier further; Special retains its separate authored burst multiplier.
+- Credit and salvage pickups add the ordered contributions of matching unique sources, clamp at the shared cap, and use the same path whether collected by the player or a salvage-command ally.
+- Phase Wake Suture retains its phase-only graze condition and special-charge bonus but contributes additive haste charge instead of mutating cadence.
+- Duplicate copies of one unique haste item neither enlarge capacity nor contribute twice to one trigger.
+- The combat weapon pill shows current and maximum haste seconds, highlights the active state, and debug instrumentation reports charge, capacity, distinct source count, and the authoritative cooldown multiplier.
+- Item descriptions explain their shared-reservoir role, the item-storm fixture produces a six-credit/five-source cluster, and focused pure, hook, combat, and Chromium coverage protects the bounded result.
+- Content RNG, hook ordering, projectile topology, weapon heat, saves, snapshots, accessibility modes, performance caps, static base path, and dependency set remain unchanged.
+
+Status: implemented. The new pure `HasteReservoir` module owns six item source profiles, distinct-source capacity scaling, bounded additive fill, the standard active cooldown multiplier, and a presentation/debug read model. `ItemHooks` replaces mutable multiplier payloads with additive fill plus source attribution and deduplicates one item ID within a dispatch. `CombatState` stores only reservoir seconds, drains them through fixed-step time, derives cadence from the authoritative active state, and routes both player and ally pickup collection through the same haste application path. The unused sector-start cadence surface is removed; Special remains an independent temporary multiplier.
+
+Coin-Operated Cannon and the five related item descriptions now identify the shared reservoir. Gameplay appends `Haste current/max` to the weapon pill only when a haste source is fitted, gives active haste a restrained amber state, and publishes the full reservoir model to debug diagnostics. The item-storm fixture adds all three credit-haste sources and places six simultaneous credits inside collection range, producing five total haste sources when combined with its salvage and phase-graze items.
+
+Focused coverage proves zero-source behavior, distinct-source scaling, duplicate suppression, bounded cluster fill, fixed cadence parity between one- and three-item builds, additive hook attribution, and the real collision-to-fire path. The production Chromium item-storm flow confirms `Haste ACTIVE`, five sources, a 5.60-second cap, and fixed `x0.75` cooldown in the HUD/debug surface without captured console errors.
+
+Verification: `npm run check` passes typecheck, ESLint, all 109 Vitest files and 679 tests, and the production build. All 17 Playwright Chromium paths pass with the documented Windows AppData escalation, and `npm run test:preview` confirms the Pages base plus every hashed/lazy asset returns 200. The build emits 969.47 kB minified/265.44 kB gzip initial JavaScript and 90.89/18.31 kB CSS, increases of 1.28/0.59 kB JavaScript and 0.19/0.04 kB CSS over work order 172. The existing 500 kB chunk notice remains; no dependency, content RNG, hook/proc cap, projectile topology, save/snapshot schema, static base path, or warning threshold changed.

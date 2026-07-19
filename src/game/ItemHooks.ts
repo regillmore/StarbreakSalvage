@@ -15,6 +15,7 @@ import type {
 import type { RouteKind } from './Generation';
 import type { ProjectileVisualKind } from './HeatShot';
 import type { LaserProjectileKind } from './LaserProjectile';
+import { getHasteSourceDefinition, type HasteTriggerKind } from './HasteReservoir';
 
 export interface ProjectileBlueprint {
   readonly x: number;
@@ -68,14 +69,16 @@ export interface PlayerHitPayload {
 
 export interface PickupCollectedPayload {
   readonly kind: 'credit' | 'salvage';
-  readonly fireRateMultiplier: number;
+  readonly hasteFillSeconds: number;
+  readonly hasteSourceIds: readonly ItemId[];
 }
 
 export interface GrazePayload {
   readonly projectileTags: readonly ItemTag[];
   readonly specialChargeGain: number;
   readonly bonusSalvage: number;
-  readonly fireRateMultiplier: number;
+  readonly hasteFillSeconds: number;
+  readonly hasteSourceIds: readonly ItemId[];
   readonly effectRadius: number;
 }
 
@@ -113,7 +116,6 @@ export interface SectorStartPayload {
   readonly creditsBonus: number;
   readonly salvageBonus: number;
   readonly specialChargeBonus: number;
-  readonly fireRateMultiplier: number;
 }
 
 export interface RouteChosenPayload {
@@ -1329,42 +1331,11 @@ function applyOnPickupCollected(
   itemId: ItemId,
   payload: PickupCollectedPayload
 ): PickupCollectedPayload {
-  if (itemId === 'item_coin_operated_cannon' && payload.kind === 'credit') {
-    return {
-      ...payload,
-      fireRateMultiplier: payload.fireRateMultiplier * 0.72
-    };
-  }
-
-  if (itemId === 'item_credit_reroute_fuse' && payload.kind === 'credit') {
-    return {
-      ...payload,
-      fireRateMultiplier: payload.fireRateMultiplier * 0.82
-    };
-  }
-
-  if (itemId === 'item_magnetized_tithe_box' && payload.kind === 'credit') {
-    return {
-      ...payload,
-      fireRateMultiplier: payload.fireRateMultiplier * 0.88
-    };
-  }
-
-  if (itemId === 'item_salvage_magnet' && payload.kind === 'salvage') {
-    return {
-      ...payload,
-      fireRateMultiplier: payload.fireRateMultiplier * 0.92
-    };
-  }
-
-  if (itemId === 'item_regolith_scoop_array' && payload.kind === 'salvage') {
-    return {
-      ...payload,
-      fireRateMultiplier: payload.fireRateMultiplier * 0.86
-    };
-  }
-
-  return payload;
+  return applyHasteSource(
+    itemId,
+    payload.kind === 'credit' ? 'creditPickup' : 'salvagePickup',
+    payload
+  );
 }
 
 function applyOnGraze(itemId: ItemId, payload: GrazePayload): GrazePayload {
@@ -1377,15 +1348,32 @@ function applyOnGraze(itemId: ItemId, payload: GrazePayload): GrazePayload {
   }
 
   if (itemId === 'item_phase_wake_suture' && hasAnyTag(payload.projectileTags, ['phase'])) {
-    return {
+    return applyHasteSource(itemId, 'phaseGraze', {
       ...payload,
       specialChargeGain: payload.specialChargeGain + 0.025,
-      fireRateMultiplier: payload.fireRateMultiplier * 0.9,
       effectRadius: payload.effectRadius + 10
-    };
+    });
   }
 
   return payload;
+}
+
+function applyHasteSource<
+  TPayload extends {
+    readonly hasteFillSeconds: number;
+    readonly hasteSourceIds: readonly ItemId[];
+  }
+>(itemId: ItemId, trigger: HasteTriggerKind, payload: TPayload): TPayload {
+  const source = getHasteSourceDefinition(itemId);
+  if (!source || source.trigger !== trigger || payload.hasteSourceIds.includes(itemId)) {
+    return payload;
+  }
+
+  return {
+    ...payload,
+    hasteFillSeconds: payload.hasteFillSeconds + source.fillSeconds,
+    hasteSourceIds: [...payload.hasteSourceIds, itemId]
+  };
 }
 
 function applyOnSpecialUsed(_itemId: ItemId, payload: SpecialUsedPayload): SpecialUsedPayload {

@@ -63,6 +63,7 @@ import {
 } from '../game/ExpeditionGraph';
 import { createItemLoadoutStressModel, createItemStormLoadout } from '../game/ItemStress';
 import { getHeatShotCost } from '../game/HeatShot';
+import { createHasteReservoirReadModel } from '../game/HasteReservoir';
 import {
   createEnvironmentObjectPlacementPlan,
   type EnvironmentObjectPlacementPlan
@@ -1060,6 +1061,7 @@ export class GameplayScene implements Scene {
     const sectorPacing = this.getSectorPacingPlan();
     const hazardZoneDirector = this.getHazardZoneDirectorPlan();
     const itemStress = createItemLoadoutStressModel(combatState.items);
+    const haste = createHasteReservoirReadModel(combatState.items, combatState.player.hasteSeconds);
     const enemyRoles = createEnemyRolePressureSummary(combatState);
     const environmentStress = createEnvironmentStressDebugState(activeHazards, entityCounts);
     const setPiece = getSetPieceReadModel(combatState.setPiece);
@@ -1097,6 +1099,13 @@ export class GameplayScene implements Scene {
         exhausted: combatState.heatShotsExhausted,
         storedHeat: combatState.player.weaponHeat,
         cost: getHeatShotCost(combatState.weapon.overheatLimit)
+      },
+      haste: {
+        active: haste.active,
+        chargeSeconds: haste.chargeSeconds,
+        capacitySeconds: haste.capacitySeconds,
+        sourceCount: haste.sourceCount,
+        fireCooldownMultiplier: haste.fireCooldownMultiplier
       },
       mission: this.missionContext?.debugState,
       boarding: this.missionContext?.projection.boardingOperation
@@ -1876,6 +1885,9 @@ export class GameplayScene implements Scene {
       .join(' | ');
     this.verbReadout.textContent = this.getVerbReadout(state);
     this.weaponReadout.textContent = this.getWeaponReadout(state);
+    this.weaponReadout.dataset.hasteActive = String(
+      createHasteReservoirReadModel(state.items, state.player.hasteSeconds).active
+    );
     this.syncMeters(state);
     this.combatReadout.textContent = `Destroyed ${state.stats.enemiesDestroyed} | Rivals ${state.stats.rivalsDestroyed}D/${state.stats.rivalsEscaped}E | Shots ${state.stats.shotsFired} | Hooks ${state.stats.itemTriggers}`;
     const activeAllies = state.allies.filter((ally) => ally.status === 'active');
@@ -2013,10 +2025,15 @@ export class GameplayScene implements Scene {
       state.player.weaponOverheatSeconds > 0
         ? `OVERHEAT ${state.player.weaponOverheatSeconds.toFixed(1)}s`
         : `Heat ${heatPercent}%`;
+    const haste = createHasteReservoirReadModel(state.items, state.player.hasteSeconds);
+    const hasteStatus =
+      haste.sourceCount > 0
+        ? ` | ${haste.active ? 'HASTE' : 'Haste'} ${haste.chargeSeconds.toFixed(1)}/${haste.capacitySeconds.toFixed(1)}s`
+        : '';
 
     return `${state.weapon.name}${
       this.missionContext?.projection.operationMode === 'boarding' ? ' / BREACH CUTTER' : ''
-    } | ${state.weapon.pattern} | ${heatStatus}`;
+    } | ${state.weapon.pattern} | ${heatStatus}${hasteStatus}`;
   }
 
   private syncMeters(state: CombatState): void {

@@ -375,7 +375,7 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'uncommon',
     tags: ['credit'],
     hooks: ['onPickupCollected'],
-    effect: 'collecting credits briefly improves fire rate',
+    effect: 'credit pickups add strong charge to the shared haste reservoir',
     weight: 10,
     metadata: {
       family: 'credit-shop',
@@ -511,7 +511,7 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'common',
     tags: ['scrap', 'credit', 'magnet'],
     hooks: ['onPickupCollected'],
-    effect: 'pickup attraction range is increased',
+    effect: 'pulls pickups farther; salvage adds charge to the shared haste reservoir',
     weight: 14,
     metadata: {
       family: 'credit-shop',
@@ -630,7 +630,7 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'common',
     tags: ['credit', 'heat'],
     hooks: ['onPickupCollected'],
-    effect: 'credit pickups briefly vent weapon cadence',
+    effect: 'credit pickups add steady charge to the shared haste reservoir',
     weight: 10,
     metadata: {
       family: 'credit-shop',
@@ -698,7 +698,7 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'common',
     tags: ['magnet', 'credit'],
     hooks: ['onPickupCollected'],
-    effect: 'credit collection sharpens the next burst',
+    effect: 'credit pickups add charge to the shared haste reservoir',
     weight: 10,
     metadata: {
       family: 'credit-shop',
@@ -1022,7 +1022,7 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'uncommon',
     tags: ['phase', 'ricochet'],
     hooks: ['onGraze'],
-    effect: 'phase grazes briefly sharpen the firing cadence',
+    effect: 'phase grazes add charge to the shared haste reservoir',
     weight: 7,
     metadata: {
       family: 'phase-graze',
@@ -1091,7 +1091,7 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'uncommon',
     tags: ['scrap', 'magnet'],
     hooks: ['onPickupCollected'],
-    effect: 'salvage pickups briefly tighten the firing cadence',
+    effect: 'salvage pickups add strong charge to the shared haste reservoir',
     weight: 8,
     metadata: {
       family: 'lunar-surface',
