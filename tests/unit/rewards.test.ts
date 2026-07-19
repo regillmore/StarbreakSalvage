@@ -109,7 +109,7 @@ describe('reward generation', () => {
     const shopProfile = getItemPoolWeightProfile('shop');
     const vaultProfile = getItemPoolWeightProfile('vault');
     const lunarProfile = getItemPoolWeightProfile('lunar');
-    const shopItem = getItemById('item_coupon_cascade_fuse');
+    const shopItem = getItemById('item_convoy_receipt_printer');
     const baselineCombatItem = getItemById('item_split_prism');
     const cursedVaultItem = getItemById('item_cursed_hull_plate');
     const starterVaultItem = getItemById('item_revenge_beam');
@@ -193,22 +193,22 @@ describe('reward generation', () => {
     }).toEqual({
       shop: [
         {
-          id: 'item_coastdown_capacitor',
-          sourceHint: 'route source',
-          price: 9
+          id: 'item_convoy_receipt_printer',
+          sourceHint: 'shop source',
+          price: 6
         },
         {
-          id: 'item_laser_tax_stamp',
+          id: 'item_coin_operated_cannon',
           sourceHint: 'Shop pool',
           price: 7
         },
         {
-          id: 'item_sidecar_drone_bay',
+          id: 'item_salvage_dividend_chip',
           sourceHint: 'Shop pool',
           price: 5
         },
         {
-          id: 'item_route_ledger_spool',
+          id: 'item_low_orbit_ore_scrip',
           sourceHint: 'route source',
           price: 4
         }
@@ -225,7 +225,7 @@ describe('reward generation', () => {
           sourceHint: 'Elite pool'
         },
         {
-          id: 'item_market_echo_locator',
+          id: 'item_boreline_crimper',
           profile: 'elite',
           sourceHint: 'Elite pool'
         }

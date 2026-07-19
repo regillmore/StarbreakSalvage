@@ -15,7 +15,11 @@ import {
 import { getShopStockForRoll, initializeShopStockForRoll } from '../game/ShopStock';
 import { generateShopInventory, getShopRerollCost } from '../game/Shops';
 import { createEngineeringCombatProfile } from '../game/Foundry';
-import { getMarketDecoderReadout, getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
+import {
+  getCouponCascadeReadout,
+  getMarketDecoderReadout,
+  getRunUpgradeDebugLabels
+} from '../game/UpgradeEffects';
 import type { InputAction } from '../systems/InputSystem';
 import {
   applyContractScreenTheme,
@@ -52,7 +56,12 @@ export class ShopScene implements Scene {
     const rerollCount = getShopRerollCount(this.session, sector.index);
     const shopModifiers = getShopModifiersForSector(this.session, sector.index);
     const interActEffects = getInterActEffectsForSector(this.session, sector);
-    const upgradeReadout = getMarketDecoderReadout(this.run.upgradeEffects);
+    const upgradeReadout = [
+      getMarketDecoderReadout(this.run.upgradeEffects),
+      getCouponCascadeReadout(this.run.upgradeEffects)
+    ]
+      .filter((readout): readout is string => Boolean(readout))
+      .join(' | ');
     const campaign = getFactionCampaignInfluence(
       this.run.factionCampaign,
       this.session.factionCampaign,
@@ -60,8 +69,7 @@ export class ShopScene implements Scene {
       { plan: this.run.factionFronts, state: this.session.factionFronts }
     );
     const carrier = createCarrierInfluence(this.run.carrierPlan, this.session.carrier);
-    const carrierAccess =
-      carrier.factionAccess[campaign.factionId] && campaign.frontCarrierAccess;
+    const carrierAccess = carrier.factionAccess[campaign.factionId] && campaign.frontCarrierAccess;
     const priceDiscount =
       shopModifiers.reduce((total, modifier) => total + modifier.discount, 0) +
       interActEffects.shopDiscount +
@@ -104,7 +112,8 @@ export class ShopScene implements Scene {
           bossGate: sector.objective.bossRequired,
           actEconomy,
           engineeringHooks: engineering.hooks,
-          procBudget: engineering.procBudget
+          procBudget: engineering.procBudget,
+          couponCascadeUpgrade: this.run.upgradeEffects.shopCouponCascade
         }).map((item) => ({
           slot: item.slot,
           itemId: item.item.id,
@@ -209,7 +218,7 @@ export class ShopScene implements Scene {
       eyebrow,
       createContractThemeStrip(this.uiRoot.ownerDocument, theme),
       title,
-      ...(upgradeReadout ? [upgradeNote] : []),
+      ...(upgradeReadout.length > 0 ? [upgradeNote] : []),
       shopGrid,
       controls
     );

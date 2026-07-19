@@ -217,6 +217,7 @@ export interface ItemHookDispatchReport<THook extends ItemHookName> {
 export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly ItemId[]>> = {
   onFire: [
     'item_split_prism',
+    'item_boreline_crimper',
     'item_drone_uplink',
     'item_heat_sink_saint',
     'item_phase_grazer',
@@ -635,6 +636,25 @@ function applyOnFire(
     return {
       ...payload,
       projectiles: splitProjectiles
+    };
+  }
+
+  if (itemId === 'item_boreline_crimper') {
+    return {
+      ...payload,
+      projectiles: payload.projectiles.map((projectile) => {
+        if (Math.abs(projectile.vx) < 24) {
+          return projectile;
+        }
+
+        return {
+          ...projectile,
+          vx: projectile.vx * 0.58,
+          vy: projectile.vy * 1.12,
+          damage: projectile.damage * 1.18,
+          tags: addTags(projectile.tags, ['overkill'])
+        };
+      })
     };
   }
 

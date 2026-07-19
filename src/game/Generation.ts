@@ -342,19 +342,22 @@ export function createRunGenerationSaveFingerprint(
     'unlock_boss_apex_practice',
     'unlock_challenge_apex_migration'
   ]);
-  const unlocks = unlockedIds
-    .filter((unlockId) => !nonGenerationUnlocks.has(unlockId))
-    .sort()
-    .join(',') || 'fresh';
+  const unlocks =
+    unlockedIds
+      .filter((unlockId) => !nonGenerationUnlocks.has(unlockId))
+      .sort()
+      .join(',') || 'fresh';
   const nonGenerationUpgrades = new Set<UpgradeId>([
     'upgrade_boss_warning_lattice',
     'upgrade_capital_relief_protocol',
-    'upgrade_exit_toll_transponder'
+    'upgrade_exit_toll_transponder',
+    'upgrade_coupon_cascade_fuse'
   ]);
-  const upgrades = upgradeEffects.activeUpgradeIds
-    .filter((upgradeId) => !nonGenerationUpgrades.has(upgradeId))
-    .sort()
-    .join(',') || 'none';
+  const upgrades =
+    upgradeEffects.activeUpgradeIds
+      .filter((upgradeId) => !nonGenerationUpgrades.has(upgradeId))
+      .sort()
+      .join(',') || 'none';
   return `unlocks=${unlocks}|upgrades=${upgrades}`;
 }
 
@@ -918,6 +921,7 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
             contractBoardSlots: run.upgradeEffects.contractBoardSlots,
             shopStockBonus: run.upgradeEffects.shopStockBonus,
             shopDiscount: run.upgradeEffects.shopDiscount,
+            shopCouponCascade: run.upgradeEffects.shopCouponCascade,
             rewardChoiceBonus: run.upgradeEffects.rewardChoiceBonus,
             seedSurvey: run.seedSurvey
           }

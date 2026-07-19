@@ -236,6 +236,43 @@ describe('foundry visual presentation', () => {
     expect(clonedThenBuilt.circuitStages.at(-1)?.outgoingProjectiles).toBe(4);
   });
 
+  it('shows Boreline Crimper gaining value only after an upstream fan exists', () => {
+    const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
+      (candidate) => candidate.shipId === 'ship_debt_runner'
+    );
+    if (!contract) throw new Error('Expected a single-projectile contract.');
+    const splitThenCrimp = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+      { itemId: 'item_split_prism', acquisitionOrder: 0 },
+      { itemId: 'item_boreline_crimper', acquisitionOrder: 1 }
+    ]);
+    const crimpThenSplit = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+      { itemId: 'item_boreline_crimper', acquisitionOrder: 0 },
+      { itemId: 'item_split_prism', acquisitionOrder: 1 }
+    ]);
+
+    expect(splitThenCrimp.circuitStages[1]).toMatchObject({
+      name: 'Boreline Crimper',
+      incomingProjectiles: 3,
+      outgoingProjectiles: 3,
+      outputLabel: '2.2 -> 2.5 impact',
+      addedTags: ['overkill'],
+      changed: true
+    });
+    expect(crimpThenSplit.circuitStages[0]).toMatchObject({
+      name: 'Boreline Crimper',
+      outputLabel: 'conditional volley armed',
+      addedTags: [],
+      changed: false
+    });
+    expect(
+      Math.max(
+        ...splitThenCrimp.attackSimulation.projectiles
+          .filter((projectile) => projectile.waveIndex === 0)
+          .map((projectile) => Math.abs(projectile.vx))
+      )
+    ).toBeCloseTo(70.528);
+  });
+
   it('projects prototype-vent cadence shifts onto affected earlier circuit cards', () => {
     const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
       (candidate) => candidate.shipId === 'ship_debt_runner'

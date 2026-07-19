@@ -42,11 +42,17 @@ export function generateShopInventory(options: {
   readonly actEconomy?: ActEconomyProfile;
   readonly engineeringHooks?: readonly EngineeringHookInstance[];
   readonly procBudget?: number;
+  readonly couponCascadeUpgrade?: boolean;
 }): ShopInventoryItem[] {
   const shopSeed = `${options.seed}:sector-${options.sectorIndex}:reroll-${options.rerollCount}`;
   const priceRng = createRng(shopSeed).fork('prices');
   const actStockBonus = options.actEconomy?.shopStockBonus ?? 0;
   const actPriceAdjustment = options.actEconomy?.shopPriceAdjustment ?? 0;
+  const hasLegacyCouponCascade = (options.itemInstances ?? []).some(
+    (instance) => instance.itemId === 'item_coupon_cascade_fuse'
+  );
+  const applyPermanentCouponCascade =
+    options.couponCascadeUpgrade === true && !hasLegacyCouponCascade;
   const shopPayload = applyCombinedHooks(
     'onShopEntered',
     options.itemInstances ?? [],
@@ -55,8 +61,10 @@ export function generateShopInventory(options: {
       sectorIndex: options.sectorIndex,
       rerollCount: options.rerollCount,
       itemCount: (options.count ?? SHOP_ITEM_COUNT) + actStockBonus,
-      priceDiscount: options.priceDiscount ?? 0,
-      biasTags: options.biasTags ?? []
+      priceDiscount: (options.priceDiscount ?? 0) + (applyPermanentCouponCascade ? 1 : 0),
+      biasTags: applyPermanentCouponCascade
+        ? [...(options.biasTags ?? []), 'credit']
+        : (options.biasTags ?? [])
     },
     { maxApplications: options.procBudget }
   );

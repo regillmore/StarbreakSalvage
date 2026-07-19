@@ -672,3 +672,31 @@ Status: implemented. Exit Toll remains in the catalog solely as a retired compat
 Focused coverage protects pure drain/fill behavior, both pickup kinds, combat fixed-step integration, permanent payout, restored-item no-double-pay, upgrade projection/fingerprints, active catalog counts, source-weighted rewards, Upgrade Bay totals, and the progressed Act II economy snapshot. Production browser inspection confirmed the ninth Upgrade Bay card at 1280x720 and the six-source Coastdown HUD/debug state with no console errors.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 110 Vitest files and 686 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 971.92 kB minified/266.15 kB gzip initial JavaScript and 91.27/18.37 kB CSS, increases of 1.67/0.49 kB JavaScript and no CSS change over work order 175. The existing 500 kB chunk notice remains; no dependency, save/snapshot schema, route topology, static base path, or warning threshold changed.
+
+## Work order 177 - Permanent Coupon Cascade and Boreline Crimper
+
+Goal: move Coupon Cascade Fuse's dependable shop economy into permanent progression and refill its common reward slot with a genuinely ordered weapon-chain tool.
+
+Prompt:
+
+> Retire Coupon Cascade Fuse from active run rewards and move its one-credit shop discount plus credit-stock bias into the permanent scrap Upgrade Bay. Preserve restored-run behavior without allowing the item and upgrade to stack. Add a common replacement whose benefit depends clearly on which projectiles have already been built earlier in the signal circuit. Keep shop and weapon generation deterministic, previews honest, active catalog breadth stable, and the managed smoke-host defaults reliable for fresh agents.
+
+Acceptance criteria:
+
+- Coupon Cascade Fuse is absent from active discovery and reward pools and appears as a 10 kg permanent Market upgrade gated by Market Decoder.
+- Permanent and restored-item forms each retain exactly one credit of price reduction and one credit-tag stock bias; owning both applies the recipe once.
+- The shop-specific effect is explicit input to seeded shop generation and does not perturb contracts, route graphs, sector schedules, or projected run duration through the global generation fingerprint.
+- Common Boreline Crimper replaces the same starter/combat/shop slot and modifies only off-axis projectiles that exist before its ordered `onFire` stage.
+- Eligible branches retain 58% lateral velocity, gain 12% forward velocity, gain 18% impact, and receive `overkill`; centered and later-created shots remain unchanged.
+- Hardpoint cumulative cards and live-fire use the production hook path, making after-split placement show a tighter, harder volley while before-split placement remains conditional.
+- The active catalog remains at 60 items, the item-storm fixture remains bounded at 29 active items and retains every implemented hook family, and deterministic reward/shop snapshots are updated.
+- Upgrade Bay totals, restored snapshot compatibility, saves, accessibility modes, hook/projectile caps, static hosting, and dependencies remain coherent.
+- Unmodified `smoke:host`, JSON `smoke:status`, in-app browser load, `smoke:stop`, and original-shell exit succeed using the documented defaults; tooling changes are made only if that pass finds a defect.
+
+Status: implemented. Coupon Cascade remains a retired catalog record and hook solely for restored run snapshots. `RunUpgradeEffects` exposes its permanent market flag, while `Shops` resolves permanent-versus-legacy precedence before the ordinary combined hook pipeline. Installing it changes the appropriate seeded shop result without entering the expedition-wide generation fingerprint. Upgrade Bay now contains ten permanent options.
+
+Boreline Crimper replaces the common pool entry as a bounded ordered transform. It compresses and accelerates only upstream off-axis branches, raises their impact, and stamps `overkill`; it creates no actors or local counters. The shared Hardpoint preview consequently reports a `2.2 -> 2.5 impact` transform when Crimper follows Split Prism and an inert conditional stage when the order is reversed.
+
+The unchanged managed-smoke defaults selected port 4175, published `http://192.168.40.7:4175/StarbreakSalvage/` through JSON status, and loaded that exact address in the in-app browser. The Upgrade Bay rendered all ten cards, showed Coupon Cascade's 10 kg cost, Market Decoder prerequisite, discount, and stock bias without viewport overflow, and produced no captured console errors. `smoke:stop` then closed the listener and the original managed host shell returned exit code 0, so work order 177 requires no tooling adjustment.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 111 Vitest files and 690 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 973.35 kB minified/266.55 kB gzip initial JavaScript and 91.27/18.37 kB CSS, increases of 1.43/0.40 kB JavaScript and no CSS change over work order 176. The existing 500 kB chunk notice remains; no dependency, save/snapshot schema, route topology, static base path, or warning threshold changed.

@@ -109,6 +109,42 @@ describe('item synergies', () => {
     expect(killPayload.arcDamage).toBeGreaterThan(0);
   });
 
+  it('lets Boreline Crimper reshape only the off-axis shots already built upstream', () => {
+    const splitThenCrimp: ItemInstance[] = [
+      { itemId: 'item_split_prism', acquisitionOrder: 0 },
+      { itemId: 'item_boreline_crimper', acquisitionOrder: 1 }
+    ];
+    const crimpThenSplit: ItemInstance[] = [
+      { itemId: 'item_boreline_crimper', acquisitionOrder: 0 },
+      { itemId: 'item_split_prism', acquisitionOrder: 1 }
+    ];
+
+    const compressed = applyItemHooks('onFire', splitThenCrimp, {
+      volleyIndex: 1,
+      projectiles: [baseProjectile]
+    });
+    const uncompressed = applyItemHooks('onFire', crimpThenSplit, {
+      volleyIndex: 1,
+      projectiles: [baseProjectile]
+    });
+    const compressedSides = compressed.projectiles.filter((projectile) => projectile.vx !== 0);
+    const uncompressedSides = uncompressed.projectiles.filter((projectile) => projectile.vx !== 0);
+
+    expect(compressedSides).toHaveLength(2);
+    expect(compressedSides.map((projectile) => Math.abs(projectile.vx))).toEqual([64.96, 64.96]);
+    expect(compressedSides.map((projectile) => projectile.vy)).toEqual([
+      expect.closeTo(-784),
+      expect.closeTo(-784)
+    ]);
+    expect(compressedSides.every((projectile) => projectile.damage > 0.73)).toBe(true);
+    expect(compressedSides.every((projectile) => projectile.tags.includes('overkill'))).toBe(true);
+    expect(uncompressedSides.map((projectile) => Math.abs(projectile.vx))).toEqual([112, 112]);
+    expect(uncompressedSides.every((projectile) => projectile.damage === 0.62)).toBe(true);
+    expect(uncompressedSides.every((projectile) => !projectile.tags.includes('overkill'))).toBe(
+      true
+    );
+  });
+
   it('applies projectile spawn hooks deterministically', () => {
     const instances: ItemInstance[] = [
       { itemId: 'item_chain_arc_capacitor', acquisitionOrder: 0 },
@@ -426,9 +462,7 @@ describe('item synergies', () => {
   });
 
   it('fills Coastdown haste from either kind of collected currency', () => {
-    const instances: ItemInstance[] = [
-      { itemId: 'item_coastdown_capacitor', acquisitionOrder: 0 }
-    ];
+    const instances: ItemInstance[] = [{ itemId: 'item_coastdown_capacitor', acquisitionOrder: 0 }];
     const collect = (kind: 'credit' | 'salvage') =>
       applyItemHooks('onPickupCollected', instances, {
         kind,

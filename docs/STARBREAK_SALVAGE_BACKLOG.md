@@ -2488,3 +2488,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 176. `UpgradeEffects` and `CombatState` own the permanent payout with legacy precedence, while `HasteReservoir` owns Coastdown's any-pickup source and idle-hold drain rule. The active catalog remains at 60 items; the 29-item stress fixture now exposes six haste sources, the 6.4-second cap, `COAST`, and `coast-hold` diagnostics.
+
+### BL42 - Permanent Coupon Cascade and Boreline chain
+
+Acceptance:
+
+- Coupon Cascade Fuse leaves active item rewards and becomes a 10 kg permanent Market upgrade gated by Market Decoder.
+- Its one-credit discount and credit-stock bias remain deterministic, restored run snapshots retain the retired item behavior, and the two representations cannot stack.
+- Common Boreline Crimper replaces the active slot and turns upstream off-axis spread into forward speed, impact, and an overkill trait without adding projectiles.
+- Circuit order is material and visible: fan then Crimper affects existing branches, while Crimper then fan cannot rewrite later-created shots.
+- Global generation fingerprints, active breadth, Upgrade Bay totals, item-storm hook coverage, reward/shop snapshots, saves, accessibility, performance limits, and static hosting remain coherent.
+- Work order 175's unmodified default host/status/browser/stop lifecycle is revalidated and changed only if fresh-agent defaults fail.
+
+Status:
+
+- Implemented in work order 177. `UpgradeEffects` and `Shops` own the permanent recipe with restored-item precedence. `ItemHooks` owns Boreline's pure ordered transform, which automatically feeds combat and shared live-fire previews. The active catalog remains at 60 items and the global run fingerprint excludes the shop-local upgrade.

@@ -80,7 +80,7 @@ describe('run upgrade effects', () => {
         "shop": {
           "discount": 1,
           "itemIds": [
-            "item_coupon_cascade_fuse",
+            "item_reactive_plating_grid",
             "item_ambush_insurance_stamp",
             "item_credit_reroute_fuse",
             "item_convoy_receipt_printer",
@@ -151,6 +151,17 @@ describe('run upgrade effects', () => {
       createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
     );
   });
+
+  it('projects Coupon Cascade without perturbing unrelated expedition generation', () => {
+    const coupon = resolveRunUpgradeEffects(['upgrade_coupon_cascade_fuse']);
+
+    expect(coupon.shopCouponCascade).toBe(true);
+    expect(coupon.shopDiscount).toBe(0);
+    expect(coupon.shopBiasTags).toEqual([]);
+    expect(createRunGenerationSaveFingerprint([], coupon)).toBe(
+      createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
+    );
+  });
 });
 
 function projectUpgradedRun(run: RunSkeleton) {
@@ -165,6 +176,7 @@ function projectUpgradedRun(run: RunSkeleton) {
     excludeItemIds: [],
     count: 4 + run.upgradeEffects.shopStockBonus,
     priceDiscount: run.upgradeEffects.shopDiscount,
+    couponCascadeUpgrade: run.upgradeEffects.shopCouponCascade,
     unlockedIds: run.unlockedIds
   });
   const vaultRewards = generateSectorRewardChoices({

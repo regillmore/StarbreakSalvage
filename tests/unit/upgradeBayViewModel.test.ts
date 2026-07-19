@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import { type UpgradeId } from '../../src/content/upgrades';
 import { createDefaultSaveData } from '../../src/core/saveData';
-import { createUpgradeBayViewModel, type UpgradeBayViewModel } from '../../src/ui/UpgradeBayViewModel';
+import {
+  createUpgradeBayViewModel,
+  type UpgradeBayViewModel
+} from '../../src/ui/UpgradeBayViewModel';
 
 describe('createUpgradeBayViewModel', () => {
   it('summarizes banked scrap, available upgrades, and icon categories', () => {
@@ -13,7 +16,7 @@ describe('createUpgradeBayViewModel', () => {
     const surveyRig = getCard(model, 'upgrade_contract_survey_rig');
     const escrowIndex = getCard(model, 'upgrade_salvage_escrow_index');
 
-    expect(model.summaryText).toBe('Bank 4 kg | Installed 0/9 | Ready 2');
+    expect(model.summaryText).toBe('Bank 4 kg | Installed 0/10 | Ready 2');
     expect(model.availableCount).toBe(2);
     expect(surveyRig.categoryLabel).toBe('Hangar');
     expect(surveyRig.iconKey).toBe('contract-scope');
@@ -34,7 +37,7 @@ describe('createUpgradeBayViewModel', () => {
     const routeUplink = getCard(model, 'upgrade_route_ledger_uplink');
     const relicDossier = getCard(model, 'upgrade_relic_pattern_dossier');
 
-    expect(model.summaryText).toBe('Bank 12 kg | Installed 1/9 | Ready 2');
+    expect(model.summaryText).toBe('Bank 12 kg | Installed 1/10 | Ready 2');
     expect(surveyRig.state).toBe('purchased');
     expect(surveyRig.actionLabel).toBe('Installed');
     expect(surveyRig.canPurchase).toBe(false);

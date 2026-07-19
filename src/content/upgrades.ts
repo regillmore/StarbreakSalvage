@@ -1,10 +1,4 @@
-export const UPGRADE_CATEGORIES = [
-  'hangar',
-  'navigation',
-  'market',
-  'archive',
-  'salvage'
-] as const;
+export const UPGRADE_CATEGORIES = ['hangar', 'navigation', 'market', 'archive', 'salvage'] as const;
 
 export const UPGRADE_ICON_KEYS = [
   'contract-scope',
@@ -24,7 +18,8 @@ export const UPGRADE_EFFECT_KINDS = [
   'seedSurvey',
   'bossWarning',
   'bossRelief',
-  'sectorTollRefund'
+  'sectorTollRefund',
+  'shopCouponCascade'
 ] as const;
 
 export type UpgradeCategory = (typeof UPGRADE_CATEGORIES)[number];
@@ -40,7 +35,8 @@ export type UpgradeId =
   | 'upgrade_seed_cartographer'
   | 'upgrade_boss_warning_lattice'
   | 'upgrade_capital_relief_protocol'
-  | 'upgrade_exit_toll_transponder';
+  | 'upgrade_exit_toll_transponder'
+  | 'upgrade_coupon_cascade_fuse';
 
 export interface UpgradeDefinition {
   readonly id: UpgradeId;
@@ -153,6 +149,17 @@ export const UPGRADES: readonly UpgradeDefinition[] = [
     effect: 'Each sector begins with a 1-3 credit refund, scaling through the act.',
     cost: 9,
     prerequisites: ['upgrade_salvage_escrow_index']
+  },
+  {
+    id: 'upgrade_coupon_cascade_fuse',
+    category: 'market',
+    iconKey: 'market-tag',
+    effectKind: 'shopCouponCascade',
+    name: 'Coupon Cascade Fuse',
+    summary: 'a permanent pricing fuse threaded through every expedition market link',
+    effect: 'Every shop trims prices by 1 credit and favors credit-tagged stock.',
+    cost: 10,
+    prerequisites: ['upgrade_market_decoder']
   }
 ];
 

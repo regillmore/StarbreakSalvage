@@ -160,6 +160,7 @@ export type ItemId =
   | 'item_reactive_plating_grid'
   | 'item_oathbound_deflector'
   | 'item_coupon_cascade_fuse'
+  | 'item_boreline_crimper'
   | 'item_market_echo_locator'
   | 'item_relic_ash_compass'
   | 'item_curse_interest_bond'
@@ -945,8 +946,27 @@ export const ITEMS: readonly ItemDefinition[] = [
       sources: ['starter', 'combat', 'shop'],
       unlockTier: 'baseline',
       implementationStatus: 'live',
+      retired: true,
       stacking: 'unique',
       uiTags: ['credit', 'shop']
+    }
+  },
+  {
+    id: 'item_boreline_crimper',
+    name: 'Boreline Crimper',
+    rarity: 'common',
+    tags: ['split', 'overkill'],
+    hooks: ['onFire'],
+    effect:
+      'off-axis shots already in the chain trade spread for forward speed, impact, and overkill',
+    weight: 11,
+    metadata: {
+      family: 'missile-overkill',
+      sources: ['starter', 'combat', 'shop'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['split', 'overkill']
     }
   },
   {
@@ -1463,7 +1483,7 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_wake_missile_abacus',
       'item_sidecar_drone_bay',
       'item_reactive_plating_grid',
-      'item_coupon_cascade_fuse',
+      'item_boreline_crimper',
       'item_near_miss_tachometer',
       'item_crater_shadow_lens',
       'item_low_orbit_ore_scrip',
@@ -1510,7 +1530,7 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_signal_clone_stamp',
       'item_reactive_plating_grid',
       'item_oathbound_deflector',
-      'item_coupon_cascade_fuse',
+      'item_boreline_crimper',
       'item_market_echo_locator',
       'item_near_miss_tachometer',
       'item_phase_wake_suture',

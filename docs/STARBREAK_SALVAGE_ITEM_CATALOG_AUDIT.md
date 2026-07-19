@@ -1,17 +1,17 @@
 # Starbreak Salvage - Item Catalog Audit
 
-Work orders 051-056 baseline, refreshed by work orders 156, 169, and 170. This document records the active item catalog after the Noita-style circuit pivot retired Boss Pressure from live rotation, replaced its five slots with weapon-chain upgrades, and converted Prototype Vent Script into an ordered stored-heat modifier. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
+Work orders 051-056 baseline, refreshed by work orders 156, 169, 170, 176, and 177. This document records the active item catalog after the Noita-style circuit pivot retired Boss Pressure from live rotation, moved two economy passives into permanent progression, refilled their active slots, and converted Prototype Vent Script into an ordered stored-heat modifier. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
 
 ## Current Shape
 
-| Measure                | Current | Phase 6 target                                                                                |
-| ---------------------- | ------- | --------------------------------------------------------------------------------------------- |
-| Active item definitions | 60      | Five Boss Pressure definitions remain retired for legacy-save compatibility                   |
-| Candidate reward pools | 4       | Starter, ignition core, combat, and vault remain the broad candidate buckets                  |
-| Weight profiles        | 9       | Starter, combat, shop, vault, elite, boss, faction, lunar, and route contexts are weighted    |
-| Hook names             | 14      | Includes environment-object destruction alongside combat, route, and economy hooks            |
-| Locked item ids        | 7       | Direct item gates plus advanced/classified family-tier gates                                  |
-| Active family lanes    | 10      | Boss Pressure remains only as a compatibility label for retired items                          |
+| Measure                 | Current | Phase 6 target                                                                             |
+| ----------------------- | ------- | ------------------------------------------------------------------------------------------ |
+| Active item definitions | 60      | Seven retired definitions remain for legacy-save compatibility                             |
+| Candidate reward pools  | 4       | Starter, ignition core, combat, and vault remain the broad candidate buckets               |
+| Weight profiles         | 9       | Starter, combat, shop, vault, elite, boss, faction, lunar, and route contexts are weighted |
+| Hook names              | 14      | Includes environment-object destruction alongside combat, route, and economy hooks         |
+| Locked item ids         | 7       | Direct item gates plus advanced/classified family-tier gates                               |
+| Active family lanes     | 10      | Boss Pressure remains only as a compatibility label for retired items                      |
 
 ## Schema Metadata
 
@@ -39,50 +39,50 @@ Validation requires every active item to appear in a compatible reward pool and 
 
 ## Hook Coverage
 
-| Hook                 | Item count | Current role                                                        |
-| -------------------- | ---------- | ------------------------------------------------------------------- |
-| `onFire`             | 15         | Volley shaping, drones, split shots, missiles, phase/heat variants, and ordered cadence. |
-| `onProjectileSpawn`  | 9          | Projectile tags, size, damage, TTL, and drift shaping.              |
-| `onEnemyKilled`      | 11         | Salvage payouts, arc/blast follow-ups, overkill/relic rewards.      |
-| `onPlayerHit`        | 6          | Shield, revenge, armor, and curse retaliation.                      |
-| `onPickupCollected`  | 5          | Credit/salvage pickup fire-rate boosts.                             |
-| `onGraze`            | 2          | Near-miss charge/rate/radius effects.                               |
-| `onSpecialUsed`      | 0          | Reserved hook surface; Prototype Vent Script moved to ordered volley cadence. |
-| `onBombUsed`         | 1          | Bomb damage, radius, and boss-ratio shaping.                        |
-| `onSectorStart`      | 3          | Lunar entry, sector-start resource, and toll effects.               |
-| `onRouteChosen`      | 4          | Route economy, curse interest, and ambush insurance effects.        |
-| `onShopEntered`      | 2          | Shop discount, stock, and bias effects.                             |
-| `onRewardGenerated`  | 3          | Reward choice and tag-bias effects.                                 |
-| `onBossPhaseChanged` | 1          | One remaining active circuit hook; permanent counterplay moved to the Upgrade Bay. |
-| `onEnvironmentObjectDestroyed` | 1 | Salvage payout from eligible world-object destruction.             |
+| Hook                           | Item count | Current role                                                                             |
+| ------------------------------ | ---------- | ---------------------------------------------------------------------------------------- |
+| `onFire`                       | 16         | Volley shaping, drones, split shots, missiles, phase/heat variants, and ordered cadence. |
+| `onProjectileSpawn`            | 9          | Projectile tags, size, damage, TTL, and drift shaping.                                   |
+| `onEnemyKilled`                | 11         | Salvage payouts, arc/blast follow-ups, overkill/relic rewards.                           |
+| `onPlayerHit`                  | 6          | Shield, revenge, armor, and curse retaliation.                                           |
+| `onPickupCollected`            | 6          | Credit/salvage pickup shared-reservoir charge.                                           |
+| `onGraze`                      | 2          | Near-miss charge/rate/radius effects.                                                    |
+| `onSpecialUsed`                | 0          | Reserved hook surface; Prototype Vent Script moved to ordered volley cadence.            |
+| `onBombUsed`                   | 1          | Bomb damage, radius, and boss-ratio shaping.                                             |
+| `onSectorStart`                | 2          | Lunar entry and sector-start resource effects.                                           |
+| `onRouteChosen`                | 4          | Route economy, curse interest, and ambush insurance effects.                             |
+| `onShopEntered`                | 1          | Rerolled-shop stock and bias effects.                                                    |
+| `onRewardGenerated`            | 3          | Reward choice and tag-bias effects.                                                      |
+| `onBossPhaseChanged`           | 1          | One remaining active circuit hook; permanent counterplay moved to the Upgrade Bay.       |
+| `onEnvironmentObjectDestroyed` | 1          | Salvage payout from eligible world-object destruction.                                   |
 
 Work order 054 gave the work order 053 hook surface its first live users. Item discovery is currently recorded from run inventory at summary time, so a dedicated collection hook remains optional unless future mid-run archive UI needs it.
 
 ## Candidate Reward Pool Coverage
 
-| Pool          | Items | Rarity mix                                   | Notes                                                                    |
-| ------------- | ----- | -------------------------------------------- | ------------------------------------------------------------------------ |
-| Starter       | 27    | 14 common, 9 uncommon, 4 rare                | Broad safe starter-source catalog; no prototype or cursed entries.       |
+| Pool          | Items | Rarity mix                                   | Notes                                                                      |
+| ------------- | ----- | -------------------------------------------- | -------------------------------------------------------------------------- |
+| Starter       | 27    | 14 common, 9 uncommon, 4 rare                | Broad safe starter-source catalog; no prototype or cursed entries.         |
 | Ignition Core | 9     | 1 common, 4 uncommon, 3 rare, 1 cursed       | Shared one-per-family opening pool; unlock filtering gates the curse core. |
-| Combat        | 51    | 14 common, 18 uncommon, 17 rare, 2 prototype | Feeds combat, shop, elite, boss, faction, lunar, and route profiles.     |
-| Vault         | 20    | 2 uncommon, 11 rare, 4 prototype, 3 cursed   | Feeds vault plus high-pressure profiles when rare/cursed pressure fits.  |
+| Combat        | 51    | 14 common, 18 uncommon, 17 rare, 2 prototype | Feeds combat, shop, elite, boss, faction, lunar, and route profiles.       |
+| Vault         | 20    | 2 uncommon, 11 rare, 4 prototype, 3 cursed   | Feeds vault plus high-pressure profiles when rare/cursed pressure fits.    |
 
 The broad candidate pools are intentionally small in number; source identity now comes from the weight profile layer rather than separate hard-filtered lists for every surface.
 
 ## Weight Profile Coverage
 
-| Profile      | Candidate pools | Primary role                                                                             |
-| ------------ | --------------- | ---------------------------------------------------------------------------------------- |
-| Starter      | starter         | Broad starter-source generation; common/uncommon-forward, no prototype/cursed weights.   |
-| Ignition Core | starterCore    | One seeded opening upgrade, strongly biased by contract and weapon affinity.              |
-| Combat  | combat          | Baseline post-sector rewards with moderate rare/prototype pressure.                      |
-| Shop    | combat          | Market inventory biased toward shop, route, credit, magnet, heat, and drone entries.     |
-| Vault   | vault           | Relic/cursed/prototype-leaning rewards with phase and curse identity.                    |
-| Elite   | combat, vault   | Higher-pressure rewards biased toward elite, boss, overkill, missile, and drone entries. |
-| Boss    | combat, vault   | Boss rewards favor circuit-ready laser, heat, shield, overkill, and phase entries.       |
-| Faction | combat, vault   | Faction ambush rewards with faction-specific tag bias from boss faction context.         |
-| Lunar   | combat, vault   | Lunar Surface rewards biased toward lunar, route, scrap, laser, and phase entries.       |
-| Route   | combat, vault   | Repair/shop/glitch-style rewards biased toward route economy and credit flow.            |
+| Profile       | Candidate pools | Primary role                                                                             |
+| ------------- | --------------- | ---------------------------------------------------------------------------------------- |
+| Starter       | starter         | Broad starter-source generation; common/uncommon-forward, no prototype/cursed weights.   |
+| Ignition Core | starterCore     | One seeded opening upgrade, strongly biased by contract and weapon affinity.             |
+| Combat        | combat          | Baseline post-sector rewards with moderate rare/prototype pressure.                      |
+| Shop          | combat          | Market inventory biased toward shop, route, credit, magnet, heat, and drone entries.     |
+| Vault         | vault           | Relic/cursed/prototype-leaning rewards with phase and curse identity.                    |
+| Elite         | combat, vault   | Higher-pressure rewards biased toward elite, boss, overkill, missile, and drone entries. |
+| Boss          | combat, vault   | Boss rewards favor circuit-ready laser, heat, shield, overkill, and phase entries.       |
+| Faction       | combat, vault   | Faction ambush rewards with faction-specific tag bias from boss faction context.         |
+| Lunar         | combat, vault   | Lunar Surface rewards biased toward lunar, route, scrap, laser, and phase entries.       |
+| Route         | combat, vault   | Repair/shop/glitch-style rewards biased toward route economy and credit flow.            |
 
 Known-seed tests now sample shop, elite, vault, and lunar reward surfaces, and upgrade snapshots cover progressed-save shop/vault behavior.
 
@@ -105,7 +105,7 @@ Known-seed tests now sample shop, elite, vault, and lunar reward surfaces, and u
 
 | Tag        | Count |
 | ---------- | ----- |
-| `credit`   | 14    |
+| `credit`   | 13    |
 | `phase`    | 9     |
 | `scrap`    | 7     |
 | `drone`    | 8     |
@@ -118,11 +118,11 @@ Known-seed tests now sample shop, elite, vault, and lunar reward surfaces, and u
 | `laser`    | 5     |
 | `magnet`   | 4     |
 | `missile`  | 5     |
-| `overkill` | 4     |
+| `overkill` | 5     |
 | `ricochet` | 4     |
 | `bomb`     | 3     |
 | `revenge`  | 3     |
-| `split`    | 5     |
+| `split`    | 6     |
 | `relic`    | 2     |
 
 `relic`, `split`, `revenge`, and `bomb` remain thinner tags even though their broader families are now represented.
@@ -132,10 +132,10 @@ Known-seed tests now sample shop, elite, vault, and lunar reward surfaces, and u
 | Family           | Count | Phase 6 note                                                                                                  |
 | ---------------- | ----- | ------------------------------------------------------------------------------------------------------------- |
 | Laser/Split      | 7     | Harmonic Fork Loom copies the current outer chain rather than a fixed base shot.                              |
-| Missile/Overkill | 7     | Warhead Echo Chamber turns the heaviest upstream shot into a periodic overkill echo.                          |
+| Missile/Overkill | 8     | Boreline Crimper converts an already-built fan's spread into forward speed, impact, and overkill.             |
 | Drone/Copy       | 7     | Crossfeed Detonator rewards kills carrying two distinct circuit traits.                                       |
 | Shield/Revenge   | 5     | Reached the first expansion target; defensive balance should avoid rewarding intentional damage too strongly. |
-| Credit/Shop      | 7     | Coastdown Capacitor turns broad pickup play into a conserved shared-haste reserve.                            |
+| Credit/Shop      | 6     | Coastdown Capacitor turns broad pickup play into a conserved shared-haste reserve.                            |
 | Curse/Relic      | 6     | Advanced vault/route entries are locked behind the Relic Thief dossier; risk/reward tuning still needs work.  |
 | Phase/Graze      | 6     | Ricochet Branch Coupler extends split and drone branches with a real bounce.                                  |
 | Heat/Prototype   | 6     | Plasma Seed Crucible converts an earlier circuit trait into plasma/heat scaling.                              |
@@ -148,11 +148,11 @@ The five Boss Pressure definitions and their original hook implementations remai
 
 | Archetype        | Rewarded count |
 | ---------------- | -------------- |
-| Laser/Split      | 13             |
-| Missile/Overkill | 8              |
+| Laser/Split      | 14             |
+| Missile/Overkill | 9              |
 | Drone/Copy       | 11             |
 | Shield/Revenge   | 5              |
-| Credit/Shop      | 15             |
+| Credit/Shop      | 14             |
 | Curse/Relic      | 6              |
 | Phase/Graze      | 11             |
 | Heat/Prototype   | 13             |
@@ -161,12 +161,12 @@ The five Boss Pressure definitions and their original hook implementations remai
 
 These former bridge entries now have live, order-sensitive circuit behavior:
 
-| Item              | Current behavior                                                 | Circuit role                                                                                              |
-| ----------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Ricochet License  | Gives eligible phase/plasma/ricochet shots one real sidewall rebound. | Live in work order 132; chains into phase and arc projectile modifiers. |
-| Phase Grazer      | Transforms every fourth complete volley into a phase chain. | Live in work order 132; socket order controls which split/clone shots inherit it. |
-| Vault Parasite    | Converts cursed/overkill executions into salvage plus blast pressure. | Live in work order 132; requires an actual tagged execution. |
-| Cursed Hull Plate | Amplifies retaliation already built before it, adds curse/overkill, and emits a fan. | Live in work order 132; socket order changes the amplified set. |
+| Item              | Current behavior                                                                     | Circuit role                                                                      |
+| ----------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| Ricochet License  | Gives eligible phase/plasma/ricochet shots one real sidewall rebound.                | Live in work order 132; chains into phase and arc projectile modifiers.           |
+| Phase Grazer      | Transforms every fourth complete volley into a phase chain.                          | Live in work order 132; socket order controls which split/clone shots inherit it. |
+| Vault Parasite    | Converts cursed/overkill executions into salvage plus blast pressure.                | Live in work order 132; requires an actual tagged execution.                      |
+| Cursed Hull Plate | Amplifies retaliation already built before it, adds curse/overkill, and emits a fan. | Live in work order 132; socket order changes the amplified set.                   |
 
 No shipped item is a pure no-op or bridge: current validation requires every declared hook to have an implementation, and work order 132 promoted the final four bridge entries to live mechanics. Work order 052 formalized live, bridge, and planned implementation status in item metadata.
 
@@ -177,6 +177,12 @@ Prototype Vent Script now reads the fitted signal chain instead of modifying Spe
 ## Permanent economy and conserved haste in Work Order 176
 
 Exit Toll Transponder is now a permanent 9 kg Salvage upgrade rather than an active run item. Its retired catalog definition and sector-start hook remain only for restored snapshot compatibility. Coastdown Capacitor occupies the released rare combat/route slot: either currency pickup adds 0.55 seconds to the shared haste reservoir, and releasing fire pauses drain. It adds capacity as one distinct source but never strengthens the standard active haste cadence. This shifts one active item from Route/Economy and `scrap` into Credit/Shop and `heat` without changing the 60-item active breadth target.
+
+## Permanent Coupon Cascade and Boreline chain in Work Order 177
+
+Coupon Cascade Fuse is now a permanent 10 kg Market upgrade gated by Market Decoder. Its retired catalog record and `onShopEntered` reducer remain only for restored run snapshots; shop generation gives a legacy fitted copy precedence over the permanent flag, preserving the exact one-credit discount and credit-stock bias without double application. The permanent effect is passed explicitly into shop generation but excluded from the expedition-wide generation fingerprint, so installing it changes deterministic market stock without reshuffling contracts, routes, sectors, or run duration.
+
+Boreline Crimper occupies the released common starter/combat/shop slot. It affects only off-axis projectiles already present at its `onFire` stage: lateral velocity falls to 58%, forward velocity rises by 12%, impact rises by 18%, and the branch gains `overkill`. A Crimper after Split Prism, Needle Splitter, a missile splinter, or another fan stage therefore compresses every available branch; one placed before a splitter cannot retroactively modify shots that do not exist yet. It adds no projectile, counter, RNG draw, or separate preview implementation.
 
 ## Risks For 057-060
 

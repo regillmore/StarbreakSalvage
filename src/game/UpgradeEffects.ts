@@ -23,6 +23,7 @@ export interface RunUpgradeEffects {
   readonly shopStockBonus: number;
   readonly shopDiscount: number;
   readonly shopBiasTags: readonly ItemTag[];
+  readonly shopCouponCascade: boolean;
   readonly rewardChoiceBonus: number;
   readonly rewardBiasTags: readonly ItemTag[];
   readonly seedSurvey: boolean;
@@ -52,6 +53,7 @@ export function resolveRunUpgradeEffects(
     shopStockBonus: hasMarketDecoder ? 1 : 0,
     shopDiscount: hasMarketDecoder ? 1 : 0,
     shopBiasTags: hasMarketDecoder ? ['credit', 'heat'] : [],
+    shopCouponCascade: hasUpgrade('upgrade_coupon_cascade_fuse'),
     rewardChoiceBonus: hasRelicDossier ? 1 : 0,
     rewardBiasTags: hasRelicDossier ? ['relic', 'curse', 'phase'] : [],
     seedSurvey: hasUpgrade('upgrade_seed_cartographer'),
@@ -84,6 +86,10 @@ export function getRunUpgradeDebugLabels(effects: RunUpgradeEffects): string[] {
 
   if (effects.shopStockBonus > 0 || effects.shopDiscount > 0) {
     labels.push(`shop +${effects.shopStockBonus}/-${effects.shopDiscount}`);
+  }
+
+  if (effects.shopCouponCascade) {
+    labels.push('coupon cascade');
   }
 
   if (effects.rewardChoiceBonus > 0) {
@@ -122,6 +128,10 @@ export function getMarketDecoderReadout(effects: RunUpgradeEffects): string | nu
   }
 
   return `Market Decoder: +${effects.shopStockBonus} stock | -${effects.shopDiscount} prices`;
+}
+
+export function getCouponCascadeReadout(effects: RunUpgradeEffects): string | null {
+  return effects.shopCouponCascade ? 'Coupon Cascade: -1 prices | credit stock bias' : null;
 }
 
 export function getRewardDossierReadout(
