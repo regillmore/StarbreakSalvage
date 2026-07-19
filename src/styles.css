@@ -279,8 +279,35 @@ button {
 }
 
 .title-start-button {
-  min-width: min(19rem, 100%);
+  width: 100%;
   min-height: 3.8rem;
+}
+
+.title-launch-actions {
+  display: grid;
+  width: min(19rem, 100%);
+  gap: 0.45rem;
+}
+
+.title-retry-button {
+  display: grid;
+  justify-items: center;
+  min-height: 3.25rem;
+  padding-block: 0.45rem;
+  line-height: 1.2;
+}
+
+.title-retry-button small {
+  max-width: 100%;
+  overflow: hidden;
+  color: #7cf7ff;
+  font:
+    700 0.62rem/1.25 'Cascadia Mono',
+    Consolas,
+    monospace;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .title-launch-status {
@@ -5134,6 +5161,10 @@ html[data-bullet-contrast='high'] .hud-meter-track {
 
   .title-launch-panel {
     grid-template-columns: 1fr;
+  }
+
+  .title-launch-actions {
+    width: 100%;
   }
 
   .title-launch-status {

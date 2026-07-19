@@ -17,6 +17,7 @@ export class MainMenuScene implements Scene {
     private readonly uiRoot: HTMLElement,
     private readonly saveSummary: SaveSummary,
     private readonly seedInput: string,
+    private readonly lastSavedSeed: string | null,
     private readonly onStartRun: (seedInput: string) => void,
     private readonly onOpenArchive: () => void,
     private readonly onOpenUpgradeBay: () => void,
@@ -100,7 +101,30 @@ export class MainMenuScene implements Scene {
     startButton.addEventListener('click', () => {
       this.beginLaunch(explicitSeed ? this.seedInput : 'RANDOM', shell, startButton, launchStatus);
     });
-    launchPanel.append(launchCopy, startButton, launchStatus);
+
+    const launchActions = document.createElement('div');
+    launchActions.className = 'title-launch-actions';
+    launchActions.append(startButton);
+
+    const retrySeed = !explicitSeed ? this.lastSavedSeed?.trim() : null;
+    if (retrySeed) {
+      const retryButton = document.createElement('button');
+      retryButton.className = 'secondary-button title-retry-button';
+      retryButton.type = 'button';
+      retryButton.dataset.testid = 'retry-last-seed';
+      retryButton.dataset.seed = retrySeed;
+      const retryLabel = document.createElement('span');
+      retryLabel.textContent = 'Retry Last Seed';
+      const retryCode = document.createElement('small');
+      retryCode.textContent = retrySeed;
+      retryButton.append(retryLabel, retryCode);
+      retryButton.addEventListener('click', () => {
+        this.beginLaunch(retrySeed, shell, retryButton, launchStatus);
+      });
+      launchActions.append(retryButton);
+    }
+
+    launchPanel.append(launchCopy, launchActions, launchStatus);
     this.primaryStartButton = startButton;
 
     const resumePanel = this.createResumePanel(document);

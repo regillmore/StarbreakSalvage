@@ -1448,6 +1448,16 @@ test('supports keyboard-only start, pause, end-run, and summary flow', async ({ 
 
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Starbreak Salvage' })).toBeVisible();
+  await expect(page).not.toHaveURL(/(?:\?|&)seed=/);
+  await expect(page.getByRole('button', { name: 'Start Random Expedition' })).toBeFocused();
+  const retryLastSeed = page.getByTestId('retry-last-seed');
+  await expect(retryLastSeed).toContainText('Retry Last Seed');
+  await expect(retryLastSeed).toContainText('STARBREAK-SMOKE');
+  await expect(page.getByTestId('seed-entry')).toHaveValue('');
+
+  await retryLastSeed.click();
+  await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
+  await expect(page.locator('body')).toContainText('Contract Board | Seed STARBREAK-SMOKE');
 
   expect(browserErrors).toEqual([]);
 });

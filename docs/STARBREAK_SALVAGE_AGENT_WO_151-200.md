@@ -594,3 +594,26 @@ Coin-Operated Cannon and the five related item descriptions now identify the sha
 Focused coverage proves zero-source behavior, distinct-source scaling, duplicate suppression, bounded cluster fill, fixed cadence parity between one- and three-item builds, additive hook attribution, and the real collision-to-fire path. The production Chromium item-storm flow confirms `Haste ACTIVE`, five sources, a 5.60-second cap, and fixed `x0.75` cooldown in the HUD/debug surface without captured console errors.
 
 Verification: `npm run check` passes typecheck, ESLint, all 109 Vitest files and 679 tests, and the production build. All 17 Playwright Chromium paths pass with the documented Windows AppData escalation, and `npm run test:preview` confirms the Pages base plus every hashed/lazy asset returns 200. The build emits 969.47 kB minified/265.44 kB gzip initial JavaScript and 90.89/18.31 kB CSS, increases of 1.28/0.59 kB JavaScript and 0.19/0.04 kB CSS over work order 172. The existing 500 kB chunk notice remains; no dependency, content RNG, hook/proc cap, projectile topology, save/snapshot schema, static base path, or warning threshold changed.
+
+## Work order 174 - Normal return and saved-seed retry
+
+Goal: make every completed-run return land on the ordinary random title while retaining an explicit, convenient way to replay the previous expedition.
+
+Prompt:
+
+> Always leave the run debrief for the normal title presentation, even when the completed expedition originated from a supplied URL or manually entered code. Clear the stale active seed route without disturbing other query state, keep random expedition as the focused primary action, and add a nearby secondary action that retries the exact last seed already stored in permanent save data. Preserve manual code entry, suspended-run resume, deterministic generation, saves, static hosting, responsive layout, and keyboard access.
+
+Acceptance criteria:
+
+- `Back to Menu` from every run debrief clears the transient title seed input and removes only the `seed` query parameter from the current URL.
+- The returned title identifies the next launch as random, keeps `Start Random Expedition` focused, and leaves the collapsed manual-code field blank.
+- When permanent save data contains a last run, a secondary `Retry Last Seed` action appears beside the random launch and displays that run's exact normalized seed.
+- Retrying passes the saved seed through the ordinary contract-board generation path; it does not resume a snapshot, bypass contract selection, or create a separate RNG path.
+- The retry action is suppressed on an explicitly seeded title so the loaded-code primary action remains unambiguous.
+- Suspended expedition controls, archive progression, save migration, manual seed entry, accessibility modes, responsive layout, static hosting, and the initial random-seed contract remain compatible.
+
+Status: implemented. `GameApp` now treats debrief exit as a distinct navigation boundary: it clears transient seed entry, removes the URL's `seed` parameter with same-document history replacement, and then opens the normal title. `MainMenuScene` reads the existing `saveData.lastRun.seed` record without adding a schema or storage key and renders one compact secondary replay action only beside the random primary launch. Both buttons converge on the existing launch animation, seed resolver, run generator, and contract board.
+
+The keyboard/debrief Chromium regression now begins from `?seed=STARBREAK-SMOKE`, abandons through the ordinary run summary, confirms a seed-free URL, blank manual field, focused random action, and visible saved-seed replay, then launches the replay and confirms the contract board regenerated `STARBREAK-SMOKE`. In-app browser inspection followed that seeded run through its debrief and confirmed the ordinary title at `?debug=1`, the primary random launch above the exact saved-seed retry, no horizontal or vertical viewport overflow at 1280x720, and no captured console errors.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 109 Vitest files and 679 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 970.25 kB minified/265.66 kB gzip initial JavaScript and 91.27/18.37 kB CSS, increases of 0.78/0.22 kB JavaScript and 0.38/0.06 kB CSS over work order 173. The existing 500 kB chunk notice remains; no dependency, seed resolution, RNG stream, save/snapshot schema, static base path, or warning threshold changed.

@@ -294,6 +294,7 @@ export class GameApp {
         this.uiRoot,
         getSaveSummary(this.saveData),
         this.seedEntryInput,
+        this.saveData.lastRun?.seed ?? null,
         (seedInput) => {
           this.startRunFromMenu(seedInput);
         },
@@ -2469,10 +2470,20 @@ export class GameApp {
         this.saveData,
         this.lastSaveUpdate,
         () => {
-          this.showMainMenu();
+          this.returnToMainMenuFromDebrief();
         }
       )
     );
+  }
+
+  private returnToMainMenuFromDebrief(): void {
+    this.seedEntryInput = '';
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('seed')) {
+      url.searchParams.delete('seed');
+      window.history.replaceState(window.history.state, '', url);
+    }
+    this.showMainMenu();
   }
 
   private saveRunSummary(result: CombatRunResult | null): SaveUpdateResult | null {

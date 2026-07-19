@@ -2445,3 +2445,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 173. `HasteReservoir` owns source profiles, scaling capacity, bounded fill, the fixed active cadence, and the shared read model. `ItemHooks` now emits additive source-attributed charge, while `CombatState` drains and consumes the single reservoir for pickup and phase-graze triggers. The weapon HUD and item-storm diagnostics expose live charge, capacity, source count, and fixed cooldown state.
+
+### BL39 - Normal debrief return and saved-seed retry
+
+Acceptance:
+
+- Leaving any run debrief opens the ordinary random-expedition title, clears transient manual seed input, and removes only the stale `seed` URL parameter.
+- Random launch remains the focused primary action and manual code entry remains collapsed and secondary.
+- Permanent save data's last-run seed supplies one nearby `Retry Last Seed` action with the exact code visible to the player.
+- Retry uses the normal seed resolver, contract board, deterministic generation, and new-run lifecycle rather than snapshot resume or a parallel launch path.
+- Explicitly seeded title visits remain unambiguous, suspended expedition controls remain intact, and responsive/accessibility/static-hosting behavior is preserved.
+
+Status:
+
+- Implemented in work order 174. `GameApp` owns the debrief-specific seed/URL reset, while `MainMenuScene` projects the existing last-run save record into an adjacent secondary launch action. Focused Chromium coverage protects the full seeded-run -> normal-title -> exact-seed-retry sequence.
