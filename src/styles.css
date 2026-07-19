@@ -3568,6 +3568,7 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
 
 .navigation-map-label {
   position: absolute;
+  z-index: 2;
   top: 0.65rem;
   left: 0.72rem;
   display: grid;
@@ -3581,6 +3582,34 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
 
 .navigation-map-label strong {
   color: #7cf7ff;
+}
+
+.navigation-map-view-toggle {
+  position: absolute;
+  z-index: 3;
+  top: 0.6rem;
+  right: 0.65rem;
+  min-width: 7.4rem;
+  padding: 0.38rem 0.58rem;
+  border: 1px solid rgba(124, 247, 255, 0.42);
+  border-radius: 999px;
+  color: #c9faff;
+  background: rgba(3, 10, 23, 0.9);
+  box-shadow: 0 0 14px rgba(124, 247, 255, 0.1);
+  font-family: 'Cascadia Mono', 'Consolas', monospace;
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.navigation-map-view-toggle:hover,
+.navigation-map-view-toggle:focus-visible {
+  border-color: #7cf7ff;
+  outline: none;
+  color: #fff;
+  background: rgba(9, 32, 51, 0.98);
+  box-shadow: 0 0 18px rgba(124, 247, 255, 0.25);
 }
 
 .navigation-destination-node {
@@ -3601,6 +3630,19 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
     0 0 18px rgba(124, 247, 255, 0.08);
   transform: translate(-50%, -50%);
   text-align: left;
+  transition:
+    top 280ms ease,
+    left 280ms ease;
+}
+
+.constellation-node[data-node-kind='sector'] {
+  width: clamp(8.75rem, 26%, 12.5rem);
+  min-width: 0;
+}
+
+.constellation-map[data-constellation-view='overview']
+  .constellation-node[data-node-kind='sector'] {
+  width: clamp(7.6rem, 20%, 10rem);
 }
 
 .navigation-destination-node:hover,
@@ -3945,6 +3987,11 @@ html[data-performance-mode='true'] .navigation-map-routes line,
 html[data-reduced-motion='true'] .constellation-node,
 html[data-performance-mode='true'] .constellation-node {
   animation: none;
+}
+
+html[data-reduced-motion='true'] .navigation-destination-node,
+html[data-performance-mode='true'] .navigation-destination-node {
+  transition: none;
 }
 
 html[data-reduced-motion='true'] .navigation-map-routes line[data-status='choice'],
@@ -5318,6 +5365,19 @@ html[data-bullet-contrast='high'] .hud-meter-track {
     grid-template-columns: 1.3rem auto;
     min-width: 5.6rem;
     padding: 0.26rem 0.34rem;
+  }
+
+  .navigation-map-view-toggle {
+    top: 0.45rem;
+    right: 0.45rem;
+    min-width: 6.7rem;
+    padding: 0.32rem 0.45rem;
+    font-size: 0.5rem;
+  }
+
+  .constellation-map[data-constellation-view='overview']
+    .constellation-node[data-node-kind='sector'] {
+    width: 5.8rem;
   }
 
   .navigation-node-glyph {

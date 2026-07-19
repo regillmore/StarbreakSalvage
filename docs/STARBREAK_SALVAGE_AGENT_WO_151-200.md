@@ -540,3 +540,29 @@ Status: implemented. `LaserProjectile` owns five pure presentation profiles (`ne
 Browser inspection of the seeded Debt Runner contract confirms that the Light Needle preview now reads as a long, narrow luminous lance rather than the former cyan dot, stays inside the normalized combat camera, and identifies its needle profile in the live region. The full Chromium flow protects the profile attribute, laser core, accessible summary, responsive hardpoint geometry, phase composition, and clean console behavior.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 107 Vitest files and 671 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 966.44 kB minified/264.15 kB gzip initial JavaScript and 89.57/18.07 kB CSS, increases of 3.51/0.92 kB JavaScript and 2.74/0.59 kB CSS over work order 170. The existing 500 kB chunk notice remains; no dependency, projectile topology, combat balance, actor/proc cap, RNG stream, save/snapshot schema, static base path, or warning threshold changed.
+
+## Work order 172 - Active-choice constellation camera
+
+Goal: make the 1-2-3-2-1 act graph readable at decision time without giving up a complete-act overview or access to carrier services.
+
+Prompt:
+
+> Default the navigation map to a moderately closer presentation centered on the currently actionable sector node, pair, or trio. Spread graph positions through the camera while keeping node-card text at a stable readable size, leave carrier-service nodes available around the map, and add an explicit toggle between the active-choice focus and the complete act. The toggle is presentation-only: preserve authored graph coordinates, route legality, directional navigation, deterministic generation, saves, accessibility modes, and static hosting.
+
+Acceptance criteria:
+
+- Sector Transition opens in `focus` view whenever at least one current or ready sector exists; the focused SVG viewport stays within the authored 0-100 chart and uses one moderate shared scale.
+- The current optional node and its two onward destinations form a non-overlapping three-card composition, while two- and one-node states receive the same bounded camera treatment.
+- Sector cards are projected into the focused viewport without scaling their text or mutating seeded node coordinates; carrier-service cards remain fixed, visible, and selectable.
+- `View Full Act` restores the exact `0 0 100 100` route viewport and uses a compact whole-chart sector-card treatment; `Focus Choices` returns to the same active-node framing.
+- The view choice persists while the same Sector Transition scene remains active but does not enter run state, snapshots, content RNG, or route history.
+- The toggle has explicit pressed state and changing accessible names, directional node navigation still uses authored coordinates, and reduced-motion/performance modes suppress position transitions.
+- Operational approach constellations retain their existing complete-chart presentation unless they explicitly opt into a camera later.
+
+Status: implemented. `ConstellationMap` now owns a pure bounded viewport model and point projection shared by route SVG geometry and sector-card positioning. Sector Transition derives the focus set from its current and choice nodes, defaults to a 1.38x camera, and retains the local focus/overview state without touching the run session. Service cards remain on their authored carrier-orbit anchors, while the overview receives smaller sector cards so the complete 1-2-3-2-1 graph stays useful.
+
+The map exposes a compact `View Full Act` / `Focus Choices` toggle with pressed state, accessible labels, deterministic test attributes, and reduced-motion/performance transition suppression. The shared Operational approach map passes no camera option and therefore remains an overview. Focused unit coverage protects viewport clamping, coordinate immutability, layer expansion, exact overview restoration, and the missing-focus fallback; Chromium coverage toggles both views in the ordinary launch briefing and rejects overlap among all three ready post-sector cards.
+
+Browser inspection of the real seeded Act I post-sector hub at 1280x720 confirms that the cleared optional node and both layer-two routes form a readable triangle, long sector names stay legible, service nodes remain available, and the map label and view toggle do not collide with the active graph.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 108 Vitest files and 674 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 968.19 kB minified/264.85 kB gzip initial JavaScript and 90.70/18.27 kB CSS, increases of 1.75/0.70 kB JavaScript and 1.13/0.20 kB CSS over work order 171. The existing 500 kB chunk notice remains; no dependency, route graph, route legality, RNG stream, save/snapshot schema, static base path, or warning threshold changed.

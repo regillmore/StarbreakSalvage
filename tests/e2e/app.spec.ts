@@ -186,6 +186,23 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   expect(briefingMetricCount).toBeGreaterThanOrEqual(2);
   expect(briefingMetricCount).toBeLessThanOrEqual(4);
   await expect(page.getByTestId('navigation-map')).toBeVisible();
+  await expect(page.getByTestId('navigation-map')).toHaveAttribute(
+    'data-constellation-view',
+    'focus'
+  );
+  await expect(page.getByTestId('navigation-map-view-toggle')).toHaveText('View Full Act');
+  await expect(page.locator('.navigation-map-routes')).not.toHaveAttribute(
+    'viewBox',
+    '0 0 100 100'
+  );
+  await page.getByTestId('navigation-map-view-toggle').click();
+  await expect(page.getByTestId('navigation-map')).toHaveAttribute(
+    'data-constellation-view',
+    'overview'
+  );
+  await expect(page.locator('.navigation-map-routes')).toHaveAttribute('viewBox', '0 0 100 100');
+  await expect(page.getByTestId('navigation-map-view-toggle')).toHaveText('Focus Choices');
+  await page.getByTestId('navigation-map-view-toggle').click();
   await expect(page.locator('.constellation-node[data-node-kind="sector"]')).toHaveCount(9);
   await expect(page.locator('.constellation-node[data-node-kind="service"]')).toHaveCount(5);
   await expect(page.locator('.navigation-map-routes line')).toHaveCount(14);
@@ -330,6 +347,40 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(
     page.locator('.constellation-node[data-node-kind="sector"][data-constellation-status="choice"]')
   ).toHaveCount(3);
+  await expect(
+    page
+      .locator('.constellation-node[data-node-kind="sector"][data-constellation-status="choice"]')
+      .last()
+  ).toHaveCSS('opacity', '1');
+  await expect(page.getByTestId('navigation-map')).toHaveAttribute(
+    'data-constellation-focus-count',
+    '3'
+  );
+  const readyNodeBoxes = await page
+    .locator('.constellation-node[data-node-kind="sector"][data-constellation-status="choice"]')
+    .evaluateAll((elements) =>
+      elements.map((element) => {
+        const bounds = element.getBoundingClientRect();
+        return {
+          left: bounds.left,
+          right: bounds.right,
+          top: bounds.top,
+          bottom: bounds.bottom
+        };
+      })
+    );
+  for (let leftIndex = 0; leftIndex < readyNodeBoxes.length; leftIndex += 1) {
+    for (let rightIndex = leftIndex + 1; rightIndex < readyNodeBoxes.length; rightIndex += 1) {
+      const left = readyNodeBoxes[leftIndex]!;
+      const right = readyNodeBoxes[rightIndex]!;
+      const overlaps =
+        left.left < right.right &&
+        left.right > right.left &&
+        left.top < right.bottom &&
+        left.bottom > right.top;
+      expect(overlaps).toBe(false);
+    }
+  }
   expect(
     await page
       .getByTestId('navigation-destination-route')

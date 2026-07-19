@@ -43,7 +43,8 @@ import {
 import {
   createConstellationMap,
   updateConstellationSelection,
-  type ConstellationMapNode
+  type ConstellationMapNode,
+  type ConstellationMapViewMode
 } from './ConstellationMap';
 import {
   createRouteNavigationReadModel,
@@ -88,6 +89,7 @@ export class SectorTransitionScene implements Scene {
   private plan: SectorNavigationPlan | null = null;
   private detailRoot: HTMLElement | null = null;
   private constellationButtons = new Map<string, HTMLButtonElement>();
+  private constellationViewMode: ConstellationMapViewMode = 'focus';
 
   public constructor(
     private readonly uiRoot: HTMLElement,
@@ -458,7 +460,20 @@ export class SectorTransitionScene implements Scene {
       nodes: [...sectorNodes, ...serviceNodes],
       edges: plan.constellation.edges,
       selectedId: this.selectedNodeId ?? plan.constellation.currentSectorNodeId,
-      onSelect: (nodeId) => this.selectNode(nodeId)
+      onSelect: (nodeId) => this.selectNode(nodeId),
+      view: {
+        mode: this.constellationViewMode,
+        focusNodeIds: sectorNodes
+          .filter(
+            (node) =>
+              node.status === 'choice' ||
+              (node.id === plan.constellation.currentSectorNodeId && node.status === 'current')
+          )
+          .map((node) => node.id),
+        onModeChange: (mode) => {
+          this.constellationViewMode = mode;
+        }
+      }
     });
     this.constellationButtons = new Map(result.buttons);
     return result.element;

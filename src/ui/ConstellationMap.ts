@@ -29,6 +29,68 @@ export interface ConstellationMapResult {
   readonly buttons: ReadonlyMap<string, HTMLButtonElement>;
 }
 
+export type ConstellationMapViewMode = 'focus' | 'overview';
+
+export interface ConstellationMapViewport {
+  readonly mode: ConstellationMapViewMode;
+  readonly scale: number;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+const CONSTELLATION_FOCUS_SCALE = 1.38;
+
+export function createConstellationMapViewport(
+  nodes: readonly Pick<ConstellationMapNode, 'id' | 'x' | 'y'>[],
+  focusNodeIds: readonly string[],
+  mode: ConstellationMapViewMode
+): ConstellationMapViewport {
+  const focusIds = new Set(focusNodeIds);
+  const focusNodes = nodes.filter((node) => focusIds.has(node.id));
+  if (mode === 'overview' || focusNodes.length === 0) {
+    return { mode: 'overview', scale: 1, x: 0, y: 0, width: 100, height: 100 };
+  }
+
+  const scale = CONSTELLATION_FOCUS_SCALE;
+  const width = 100 / scale;
+  const height = 100 / scale;
+  const halfWidth = width / 2;
+  const halfHeight = height / 2;
+  const xValues = focusNodes.map((node) => node.x);
+  const yValues = focusNodes.map((node) => node.y);
+  const centerX = clamp(
+    (Math.min(...xValues) + Math.max(...xValues)) / 2,
+    halfWidth,
+    100 - halfWidth
+  );
+  const centerY = clamp(
+    (Math.min(...yValues) + Math.max(...yValues)) / 2,
+    halfHeight,
+    100 - halfHeight
+  );
+  return {
+    mode: 'focus',
+    scale,
+    x: centerX - halfWidth,
+    y: centerY - halfHeight,
+    width,
+    height
+  };
+}
+
+export function projectConstellationPoint(
+  viewport: ConstellationMapViewport,
+  x: number,
+  y: number
+): { readonly x: number; readonly y: number } {
+  return {
+    x: ((x - viewport.x) / viewport.width) * 100,
+    y: ((y - viewport.y) / viewport.height) * 100
+  };
+}
+
 export function createConstellationMap(options: {
   readonly document: Document;
   readonly ariaLabel: string;
@@ -39,6 +101,11 @@ export function createConstellationMap(options: {
   readonly edges: readonly ConstellationMapEdge[];
   readonly selectedId: string;
   readonly onSelect: (nodeId: string) => void;
+  readonly view?: {
+    readonly mode: ConstellationMapViewMode;
+    readonly focusNodeIds: readonly string[];
+    readonly onModeChange: (mode: ConstellationMapViewMode) => void;
+  };
 }): ConstellationMapResult {
   const map = options.document.createElement('section');
   map.className = 'navigation-map constellation-map';
@@ -52,7 +119,6 @@ export function createConstellationMap(options: {
 
   const routes = options.document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   routes.classList.add('navigation-map-routes');
-  routes.setAttribute('viewBox', '0 0 100 100');
   routes.setAttribute('preserveAspectRatio', 'none');
   routes.setAttribute('aria-hidden', 'true');
   const byId = new Map(options.nodes.map((node) => [node.id, node]));
@@ -94,8 +160,6 @@ export function createConstellationMap(options: {
     button.dataset.available = String(node.available);
     button.dataset.visited = String(Boolean(node.visited));
     if (node.testId) button.dataset.testid = node.testId;
-    button.style.setProperty('--nav-x', `${node.x}%`);
-    button.style.setProperty('--nav-y', `${node.y}%`);
     button.style.setProperty('--constellation-order', String(node.revealOrder));
     button.style.setProperty('--constellation-delay', `${120 + node.revealOrder * 80}ms`);
     button.setAttribute('aria-pressed', String(node.id === options.selectedId));
@@ -127,7 +191,73 @@ export function createConstellationMap(options: {
     map.append(button);
   }
 
+  let viewMode = options.view?.mode ?? 'overview';
+  const focusNodeIds = options.view?.focusNodeIds ?? [];
+  const focusNodeIdSet = new Set(focusNodeIds);
+  const focusAvailable = options.nodes.some(
+    (node) => node.kind === 'sector' && focusNodeIdSet.has(node.id)
+  );
+  let viewToggle: HTMLButtonElement | null = null;
+
+  const applyView = (requestedMode: ConstellationMapViewMode): void => {
+    const viewport = createConstellationMapViewport(
+      options.nodes.filter((node) => node.kind === 'sector'),
+      focusNodeIds,
+      requestedMode
+    );
+    viewMode = viewport.mode;
+    map.dataset.constellationView = viewMode;
+    map.dataset.constellationFocusCount = String(focusNodeIds.length);
+    routes.setAttribute('viewBox', formatViewport(viewport));
+    for (const node of options.nodes) {
+      const point =
+        node.kind === 'sector'
+          ? projectConstellationPoint(viewport, node.x, node.y)
+          : { x: node.x, y: node.y };
+      const button = buttons.get(node.id);
+      button?.style.setProperty('--nav-x', `${formatCoordinate(point.x)}%`);
+      button?.style.setProperty('--nav-y', `${formatCoordinate(point.y)}%`);
+    }
+    if (viewToggle) updateViewToggle(viewToggle, viewMode);
+  };
+
+  if (options.view && focusAvailable) {
+    viewToggle = options.document.createElement('button');
+    viewToggle.className = 'navigation-map-view-toggle';
+    viewToggle.type = 'button';
+    viewToggle.dataset.testid = 'navigation-map-view-toggle';
+    viewToggle.addEventListener('click', () => {
+      const nextMode = viewMode === 'focus' ? 'overview' : 'focus';
+      applyView(nextMode);
+      options.view?.onModeChange(nextMode);
+    });
+    map.append(viewToggle);
+  }
+  applyView(viewMode);
+
   return { element: map, buttons };
+}
+
+function updateViewToggle(toggle: HTMLButtonElement, mode: ConstellationMapViewMode): void {
+  const overview = mode === 'overview';
+  toggle.setAttribute('aria-pressed', String(overview));
+  toggle.setAttribute(
+    'aria-label',
+    overview ? 'Focus active constellation choices' : 'Show complete act constellation'
+  );
+  toggle.textContent = overview ? 'Focus Choices' : 'View Full Act';
+}
+
+function formatViewport(viewport: ConstellationMapViewport): string {
+  return [viewport.x, viewport.y, viewport.width, viewport.height].map(formatCoordinate).join(' ');
+}
+
+function formatCoordinate(value: number): string {
+  return String(Number(value.toFixed(3)));
+}
+
+function clamp(value: number, minimum: number, maximum: number): number {
+  return Math.max(minimum, Math.min(maximum, value));
 }
 
 export function updateConstellationSelection(
