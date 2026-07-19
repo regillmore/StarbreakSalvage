@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   createDefaultSettings,
+  getVisibleRemapActions,
   importSettingsData,
   loadSettingsData,
   SETTINGS_SCHEMA_VERSION,
@@ -99,6 +100,18 @@ describe('settingsData', () => {
 
     expect(actionsForKey('[', bindings)).toEqual(['crewFocus']);
     expect(actionsForKey('L', bindings)).not.toContain('crewFocus');
+  });
+
+  it('retains legacy wing bindings without advertising suppressed command controls', () => {
+    const visible = getVisibleRemapActions();
+
+    expect(visible).toContain('fire');
+    expect(visible).toContain('pause');
+    expect(visible).not.toContain('crewFocus');
+    expect(visible).not.toContain('crewScreen');
+    expect(visible).not.toContain('crewSalvage');
+    expect(visible).not.toContain('crewRegroup');
+    expect(visible).not.toContain('crewDisengage');
   });
 
   it('writes settings through storage', () => {

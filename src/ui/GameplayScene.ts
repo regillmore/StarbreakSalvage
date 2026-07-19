@@ -24,13 +24,11 @@ import {
   prepareDebugLongScrollScenario,
   spawnDebugDenseCombatScenario,
   spawnBoss,
-  issueCrewCommand,
   updateCombatState,
   type CombatBounds,
   type CombatRunResult,
   type CombatState
 } from '../game/CombatState';
-import { CREW_COMMANDS, type CrewCommand } from '../content/crew';
 import type { CrewCombatProfile } from '../game/CrewCommand';
 import {
   createFleetDebugState,
@@ -40,7 +38,6 @@ import {
 import { createRunTimelineDebugState, type RunTimelineState } from '../game/RunTimeline';
 import type { ScenarioLabGameplayPreset } from '../game/ScenarioLab';
 import type { BossId } from '../content/bosses';
-import { getFactionById } from '../content/factions';
 import type { SectorId } from '../content/sectors';
 import { getEnvironmentObjectsForSector } from '../content/environmentObjects';
 import type { ShipStats } from '../content/ships';
@@ -87,6 +84,7 @@ import { createMissionObjectiveResultSnapshot } from '../game/ObjectiveDirector'
 import { getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import { createHudMeterModel, createHudThemeModel, type HudThemeOptions } from './HudTheme';
 import { createContractThemeDebugState } from './ContractTheme';
+import type { GameplayPauseDossier } from './PauseDossier';
 import {
   applySectorConditionsToBossArena,
   applySectorConditionsToFeatures,
@@ -341,7 +339,7 @@ export class GameplayScene implements Scene {
     this.positionReadout.dataset.testid = 'player-position';
 
     this.distanceReadout = document.createElement('p');
-    this.distanceReadout.className = 'hud-pill';
+    this.distanceReadout.className = 'hud-pill hud-pill-progress';
     this.distanceReadout.dataset.testid = 'distance-readout';
 
     this.hullReadout = document.createElement('p');
@@ -353,15 +351,15 @@ export class GameplayScene implements Scene {
     this.economyReadout.dataset.testid = 'pickup-readout';
 
     this.objectiveReadout = document.createElement('p');
-    this.objectiveReadout.className = 'hud-pill hud-pill-wide';
+    this.objectiveReadout.className = 'hud-pill hud-pill-wide hud-pill-objective';
     this.objectiveReadout.dataset.testid = 'objective-readout';
 
     this.verbReadout = document.createElement('p');
-    this.verbReadout.className = 'hud-pill hud-pill-wide';
+    this.verbReadout.className = 'hud-pill hud-pill-resource';
     this.verbReadout.dataset.testid = 'verb-readout';
 
     this.weaponReadout = document.createElement('p');
-    this.weaponReadout.className = 'hud-pill hud-pill-wide hud-pill-system';
+    this.weaponReadout.className = 'hud-pill hud-pill-wide hud-pill-system hud-pill-weapon';
     this.weaponReadout.dataset.testid = 'weapon-readout';
 
     this.combatReadout = document.createElement('p');
@@ -369,11 +367,11 @@ export class GameplayScene implements Scene {
     this.combatReadout.dataset.testid = 'combat-status';
 
     this.bossReadout = document.createElement('p');
-    this.bossReadout.className = 'hud-pill';
+    this.bossReadout.className = 'hud-pill hud-pill-boss';
     this.bossReadout.dataset.testid = 'boss-readout';
 
     this.warningReadout = document.createElement('p');
-    this.warningReadout.className = 'hud-pill hud-pill-warning';
+    this.warningReadout.className = 'hud-pill hud-pill-wide hud-pill-warning hud-pill-alert';
     this.warningReadout.dataset.testid = 'boss-warning';
 
     this.itemReadout = document.createElement('p');
@@ -381,7 +379,7 @@ export class GameplayScene implements Scene {
     this.itemReadout.dataset.testid = 'item-readout';
 
     this.hintReadout = document.createElement('p');
-    this.hintReadout.className = 'hud-pill hud-pill-wide';
+    this.hintReadout.className = 'hud-pill hud-pill-wide hud-pill-guidance';
     this.hintReadout.dataset.testid = 'hint-readout';
 
     this.commandReadout = document.createElement('p');
@@ -449,16 +447,16 @@ export class GameplayScene implements Scene {
     );
 
     const sector = document.createElement('p');
-    sector.className = 'hud-pill';
+    sector.className = 'hud-pill hud-pill-context';
     sector.dataset.testid = 'expedition-readout';
     const expedition = createExpeditionPathReadModel(this.run.expedition, this.expeditionProgress);
-    sector.textContent = `${formatActSectorLabel(
-      this.getCurrentSector().act
-    )} | Sector ${this.sectorIndex + 1} | ${this.getCurrentSectorName()} | Expedition ${
-      expedition.currentNodeLabel
-    } | nodes ${expedition.visitedNodeCount}/${expedition.totalNodeCount}${
-      this.missionContext ? ` | ${this.missionContext.readModel.stageLabel}` : ''
-    }`;
+    const actSectorLabel = formatActSectorLabel(this.getCurrentSector().act);
+    const missionStageLabel = this.missionContext?.readModel.stageLabel ?? 'Sector operation';
+    sector.textContent = `${actSectorLabel} | S${this.sectorIndex + 1} ${this.getCurrentSectorName()} | ${missionStageLabel}`;
+    sector.setAttribute(
+      'aria-label',
+      `${actSectorLabel}. Sector ${this.sectorIndex + 1}, ${this.getCurrentSectorName()}. Expedition ${expedition.currentNodeLabel}. Nodes ${expedition.visitedNodeCount} of ${expedition.totalNodeCount}. ${missionStageLabel}.`
+    );
 
     const contract = document.createElement('p');
     contract.className = 'hud-pill';
@@ -514,39 +512,29 @@ export class GameplayScene implements Scene {
       sector,
       this.distanceReadout,
       this.hullReadout,
-      this.economyReadout,
-      this.objectiveReadout,
-      this.hintReadout,
-      this.commandReadout,
       this.verbReadout,
       this.weaponReadout,
-      this.combatReadout,
-      this.bossReadout,
+      this.objectiveReadout,
       this.warningReadout,
-      this.itemReadout,
-      loadout,
-      boarding,
-      apex,
-      contract
+      this.hintReadout,
+      this.bossReadout,
+      apex
     );
     chrome.append(themeReadout, meterStrip);
-    const commandBar = ownerDocument.createElement('div');
-    commandBar.className = 'crew-command-bar';
-    commandBar.setAttribute('aria-label', 'Wingmate commands');
-    if ((this.crewProfile?.members.length ?? 0) === 0) commandBar.hidden = true;
-    for (const command of CREW_COMMANDS) {
-      const button = ownerDocument.createElement('button');
-      button.type = 'button';
-      button.className = 'crew-command-button';
-      button.dataset.testid = `crew-command-${command}`;
-      button.textContent = formatCrewCommandButton(command);
-      button.addEventListener('click', () => {
-        issueCrewCommand(this.getCombatState(), command);
-        this.syncReadouts();
-      });
-      commandBar.append(button);
-    }
-    hud.append(chrome, commandBar, readoutStrip, this.positionReadout);
+    const dossierSource = ownerDocument.createElement('div');
+    dossierSource.className = 'hud-dossier-source';
+    dossierSource.hidden = true;
+    dossierSource.setAttribute('aria-hidden', 'true');
+    dossierSource.append(
+      this.economyReadout,
+      this.combatReadout,
+      this.itemReadout,
+      this.commandReadout,
+      loadout,
+      boarding,
+      contract
+    );
+    hud.append(chrome, readoutStrip, dossierSource, this.positionReadout);
     const contactBanner = ownerDocument.createElement('aside');
     contactBanner.className = 'apex-contact-banner';
     contactBanner.dataset.testid = 'apex-contact-banner';
@@ -839,12 +827,6 @@ export class GameplayScene implements Scene {
       this.queuedBomb = true;
     }
 
-    const crewCommand = getCrewCommandForAction(action);
-    if (crewCommand) {
-      issueCrewCommand(this.getCombatState(), crewCommand);
-      this.syncReadouts();
-    }
-
     if (action === 'pause' || action === 'back') {
       this.onPause(this);
     }
@@ -978,6 +960,142 @@ export class GameplayScene implements Scene {
 
   public isBoardingOperation(): boolean {
     return this.missionContext?.projection.operationMode === 'boarding';
+  }
+
+  public getPauseDossier(): GameplayPauseDossier {
+    const state = this.getCombatState();
+    const sector = this.getCurrentSector();
+    const scroll = this.getScrollState();
+    const expedition = createExpeditionPathReadModel(this.run.expedition, this.expeditionProgress);
+    const engineering = createEngineeringCombatProfile(this.engineeringState);
+    const pacing = this.getSectorPacingPlan();
+    const hazardDirector = this.getHazardZoneDirectorPlan();
+    const setPiece = getSetPieceReadModel(state.setPiece);
+    const routePressure = this.combatModifiers.map((modifier) => modifier.label).join(', ');
+    const boarding = this.missionContext?.projection.boardingOperation;
+    const mission = this.missionContext?.readModel;
+    const objectiveVariant = formatSectorObjectiveVariantReadout(sector.objective);
+    const fullLoadout = `${engineering.frameName} | ${engineering.moduleSummary} | P${engineering.resources.powerDraw}/${engineering.resources.reactorOutput} H${engineering.resources.heatLoad}/${engineering.resources.thermalCapacity} | INST ${engineering.instability}/${engineering.instabilityCapacity}`;
+    const operationEntries = [
+      { label: 'Objective', value: this.objectiveReadout.textContent ?? 'Objective unavailable' },
+      mission?.objectiveBrief ? { label: 'Brief', value: mission.objectiveBrief } : null,
+      {
+        label: 'Immediate warning',
+        value:
+          this.warningReadout.textContent === 'Warning clear'
+            ? 'No immediate warning.'
+            : (this.warningReadout.textContent ?? 'No immediate warning.'),
+        tone: this.warningReadout.textContent === 'Warning clear' ? 'standard' : 'warning'
+      } as const,
+      { label: 'Guidance', value: this.hintReadout.textContent ?? 'Hold the current route.' },
+      setPiece
+        ? {
+            label: 'Set piece',
+            value: `${setPiece.name} / ${setPiece.layoutLabel} | ${setPiece.stageLabel} | target ${setPiece.targetLabel} | safe ${setPiece.safeLaneLabel}`
+          }
+        : null
+    ].filter((entry): entry is NonNullable<typeof entry> => entry !== null);
+    const sectorEntries = [
+      { label: 'Conditions', value: formatSectorConditionReadout(this.sectorConditions) },
+      { label: 'Pacing', value: formatSectorPacingReadout(pacing) },
+      { label: 'Hazard plan', value: formatHazardZoneDirectorReadout(hazardDirector) },
+      objectiveVariant ? { label: 'Objective variant', value: objectiveVariant } : null,
+      {
+        label: 'Route pressure',
+        value:
+          routePressure ||
+          formatRouteTagSummary(sector.routeOptions) ||
+          'No carried route pressure.'
+      },
+      boarding
+        ? {
+            label: 'Environment',
+            value: `${boarding.title} | ${this.confinedEnvironment?.label ?? 'Confined interior'} | ${boarding.rooms.length} rooms / ${boarding.doors.length} bulkheads`
+          }
+        : null
+    ].filter((entry): entry is NonNullable<typeof entry> => entry !== null);
+    const campaignEntries = [
+      this.campaignInfluence?.rival
+        ? {
+            label: 'Rival contact',
+            value: `${this.campaignInfluence.rival.name} | ${this.campaignInfluence.rival.shipName} | appearance ${this.campaignInfluence.rival.appearance}`
+          }
+        : null,
+      this.campaignInfluence?.front
+        ? {
+            label: 'Faction front',
+            value: `${this.campaignInfluence.front.mapCue} ${this.campaignInfluence.front.strategyLabel} | ${this.campaignInfluence.front.ownerFactionName} ${this.campaignInfluence.front.stance} | reinforcements ${this.campaignInfluence.frontReinforcementCount} / support ${this.campaignInfluence.frontSupportCount}`
+          }
+        : null,
+      this.campaignInfluence?.frontForecast
+        ? { label: 'Forecast', value: this.campaignInfluence.frontForecast }
+        : null
+    ].filter((entry): entry is NonNullable<typeof entry> => entry !== null);
+
+    return {
+      eyebrow: `${formatActSectorLabel(sector.act)} // SECTOR ${this.sectorIndex + 1} // ${mission?.stageLabel ?? 'ACTIVE OPERATION'}`,
+      title: sector.sectorName,
+      subtitle: mission
+        ? `${mission.contractTitle} — ${mission.summary}`
+        : `${this.contract.shipName} active contract`,
+      metrics: [
+        {
+          label: boarding ? 'Interior progress' : 'Distance',
+          value: boarding
+            ? formatBoardingDistanceReadout(boarding, scroll.distance, state.timeSeconds)
+            : `${Math.round(scroll.distance)}/${scroll.plan.length}u`
+        },
+        {
+          label: 'Hull',
+          value: `${state.player.hull}/${state.player.maxHull}`,
+          tone: state.player.hull <= 1 ? 'warning' : 'good'
+        },
+        { label: 'Credits', value: `${this.startingCredits + state.player.credits}` },
+        { label: 'Salvage', value: `${this.startingSalvage + state.player.salvage}` }
+      ],
+      sections: [
+        {
+          id: 'operation',
+          eyebrow: 'Live orders',
+          title: 'Current operation',
+          entries: [...operationEntries, ...campaignEntries]
+        },
+        {
+          id: 'sector',
+          eyebrow: 'Navigation intelligence',
+          title: 'Sector dossier',
+          entries: sectorEntries
+        },
+        {
+          id: 'ship',
+          eyebrow: this.contract.shipName,
+          title: 'Ship systems',
+          entries: [
+            { label: 'Weapon', value: this.getWeaponReadout(state) },
+            { label: 'Reserves', value: this.getVerbReadout(state) },
+            { label: 'Signal circuit', value: this.getBuildReadout(state) },
+            { label: 'Hardpoints', value: fullLoadout }
+          ]
+        },
+        {
+          id: 'ledger',
+          eyebrow: `${expedition.visitedNodeCount}/${expedition.totalNodeCount} expedition nodes`,
+          title: 'Ledger & support',
+          entries: [
+            { label: 'Combat', value: this.combatReadout.textContent ?? 'No combat logged.' },
+            { label: 'Wing', value: this.getWingReadout(state) },
+            {
+              label: state.boss ? 'Boss contact' : 'Expected boss',
+              value: this.bossReadout.textContent ?? this.getCurrentBossName()
+            },
+            {
+              label: 'Expedition',
+              value: `${expedition.currentNodeLabel} | nodes ${expedition.visitedNodeCount}/${expedition.totalNodeCount}`
+            }
+          ]
+        }
+      ]
+    };
   }
 
   public prepareScenarioLabPreset(preset: ScenarioLabGameplayPreset): void {
@@ -1873,14 +1991,8 @@ export class GameplayScene implements Scene {
     this.objectiveReadout.textContent = [
       getObjectiveProgress(this.getWavePlan(), state).readout,
       apexContact ? `APEX HUNT · ${apexContact.stageLabel}: ${apexContact.label}` : null,
-      this.campaignInfluence?.rival
-        ? `Rival ${this.campaignInfluence.rival.name} | ${this.campaignInfluence.rival.shipName} | appearance ${this.campaignInfluence.rival.appearance}`
-        : null,
-      this.campaignInfluence?.front
-        ? `${this.campaignInfluence.front.mapCue} ${this.campaignInfluence.front.strategyLabel} | owner ${this.campaignInfluence.front.ownerFactionName} | ${this.campaignInfluence.front.stance} | reinforcements ${this.campaignInfluence.frontReinforcementCount} / support ${this.campaignInfluence.frontSupportCount}`
-        : null,
       setPiece
-        ? `${setPiece.name} / ${setPiece.layoutLabel} (${getFactionById(state.setPiece?.ownerFactionId ?? this.getCurrentSector().bossFactionId).name}): ${setPiece.stageLabel} | target ${setPiece.targetLabel} | ${setPiece.destroyedComponents}/${setPiece.totalComponents}`
+        ? `${setPiece.stageLabel} | target ${setPiece.targetLabel} | ${setPiece.destroyedComponents}/${setPiece.totalComponents}`
         : null
     ]
       .filter((part): part is string => Boolean(part))
@@ -1892,20 +2004,14 @@ export class GameplayScene implements Scene {
     );
     this.syncMeters(state);
     this.combatReadout.textContent = `Destroyed ${state.stats.enemiesDestroyed} | Rivals ${state.stats.rivalsDestroyed}D/${state.stats.rivalsEscaped}E | Shots ${state.stats.shotsFired} | Hooks ${state.stats.itemTriggers}`;
-    const activeAllies = state.allies.filter((ally) => ally.status === 'active');
-    const injuredAllies = state.allies.filter((ally) => ally.status === 'injured');
-    const activeCrew = activeAllies.filter((ally) => ally.source === 'crew').length;
-    const activeFleet = activeAllies.filter((ally) => ally.source === 'fleet').length;
-    this.commandReadout.textContent =
-      state.allies.length > 0
-        ? `Wing C${activeCrew}/F${activeFleet} active/${injuredAllies.length} disabled | ${state.crewCommand.active.toUpperCase()} | cooldown ${state.crewCommand.cooldownSeconds.toFixed(1)}s | ${state.stats.allyEnemiesDestroyed} defeats/${state.stats.allySalvageCollected} salvage`
-        : 'Wing offline | Recruit crew or construct support craft';
+    this.commandReadout.textContent = this.getWingReadout(state);
     this.bossReadout.textContent = state.boss
       ? `${formatSecondActFinaleBossName(
           this.getCurrentSector().finale,
           state.boss.name
         )} ${Math.max(0, state.boss.hull)}/${state.boss.maxHull} | ${state.boss.phaseLabel}`
       : `Boss ${this.getCurrentBossName()}`;
+    this.bossReadout.hidden = state.boss === null;
     this.warningReadout.textContent =
       state.telegraphs[0]?.label ??
       (state.rivalEncounter?.outcome === 'engaged'
@@ -1916,7 +2022,6 @@ export class GameplayScene implements Scene {
       (setPiece && setPiece.active
         ? `${setPiece.layoutLabel}; ${setPiece.stageLabel}; safe ${setPiece.safeLaneLabel}`
         : null) ??
-      this.campaignInfluence?.frontForecast ??
       formatBossArenaReadout(this.bossArenaUpdate.phase) ??
       'Warning clear';
     this.itemReadout.textContent = this.getBuildReadout(state);
@@ -1951,6 +2056,15 @@ export class GameplayScene implements Scene {
           ? formatSecondActFinaleOutcome(this.getCurrentSector().finale, 'destroyed')
           : 'Hint Controls offline; rescue transponder broadcasting.';
     }
+
+    this.warningReadout.hidden = this.warningReadout.textContent === 'Warning clear';
+    this.hintReadout.hidden =
+      cooldownPresentation === null &&
+      exitPresentation === null &&
+      destructionPresentation === null &&
+      state.boss === null &&
+      this.bossArenaUpdate.phase === 'none' &&
+      this.getActiveHazards().length === 0;
   }
 
   private getCombatSeed(): string {
@@ -2068,6 +2182,17 @@ export class GameplayScene implements Scene {
     return formatBuildSynergyHud(createBuildSynergyModel(state.items));
   }
 
+  private getWingReadout(state: CombatState): string {
+    const activeAllies = state.allies.filter((ally) => ally.status === 'active');
+    const injuredAllies = state.allies.filter((ally) => ally.status === 'injured');
+    const activeCrew = activeAllies.filter((ally) => ally.source === 'crew').length;
+    const activeFleet = activeAllies.filter((ally) => ally.source === 'fleet').length;
+
+    return state.allies.length > 0
+      ? `Automatic support | ${activeCrew} crew / ${activeFleet} craft active | ${injuredAllies.length} disabled | ${state.stats.allyEnemiesDestroyed} defeats | ${state.stats.allySalvageCollected} salvage recovered`
+      : 'No deployed wing support.';
+  }
+
   private getOnboardingHint(state: CombatState): string {
     if (state.boss) {
       const finale = this.getCurrentSector().finale;
@@ -2103,24 +2228,7 @@ export class GameplayScene implements Scene {
     }
 
     if (state.stats.shotsFired === 0) {
-      const pacing = this.getSectorPacingPlan();
-      const hazardZoneDirector = this.getHazardZoneDirectorPlan();
-      const sectorReadouts = [
-        this.sectorConditions.modifiers.length > 0
-          ? formatSectorConditionReadout(this.sectorConditions)
-          : null,
-        formatSectorObjectiveVariantReadout(this.getCurrentSector().objective),
-        pacing.arcKind !== 'standard' ? formatSectorPacingReadout(pacing) : null,
-        hazardZoneDirector.scheduledHazardCount > 0 || hazardZoneDirector.pressureLevel > 0
-          ? formatHazardZoneDirectorReadout(hazardZoneDirector)
-          : null
-      ].filter((readout): readout is string => readout !== null);
-
-      if (sectorReadouts.length > 0) {
-        return sectorReadouts.join(' | ');
-      }
-
-      return 'Hint Hold fire, move through gaps, and survive to the sector exit.';
+      return 'Hint Fire to engage; pause opens the full sector dossier.';
     }
 
     if (state.player.specialCharge >= state.player.maxSpecialCharge) {
@@ -2317,37 +2425,6 @@ function clearExitPressure(state: CombatState): void {
   state.telegraphs = [];
   state.boss = null;
   state.nextSpawnIndex = state.spawnSchedule.length;
-}
-
-function getCrewCommandForAction(action: InputAction): CrewCommand | null {
-  switch (action) {
-    case 'crewFocus':
-      return 'focus';
-    case 'crewScreen':
-      return 'screen';
-    case 'crewSalvage':
-      return 'salvage';
-    case 'crewRegroup':
-      return 'regroup';
-    case 'crewDisengage':
-      return 'disengage';
-    default:
-      return null;
-  }
-}
-
-function formatCrewCommandButton(command: CrewCommand): string {
-  const key =
-    command === 'focus'
-      ? 'L'
-      : command === 'screen'
-        ? 'C'
-        : command === 'salvage'
-          ? 'V'
-          : command === 'regroup'
-            ? 'O'
-            : 'Z';
-  return `${command.toUpperCase()} [${key}]`;
 }
 
 function formatBoardingDistanceReadout(

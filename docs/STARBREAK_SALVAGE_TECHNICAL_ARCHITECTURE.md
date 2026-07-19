@@ -344,6 +344,9 @@ Phase 4 adds display/input/identity polish without turning presentation into a s
 - Themed HUD should decorate clear operational readouts, not replace them with ambiguous art.
 - Critical state still needs text and semantic DOM exposure for accessibility.
 - Reduced motion, performance mode, and high-contrast bullet settings should simplify cockpit styling and preserve bullet readability.
+- Work order 178 splits combat presentation by urgency. `GameplayScene` keeps ship identity, four live meters, compact sector/distance/hull, weapon/reserve state, objective progress, and immediate warning state in the cockpit; economy, build, hardpoint, combat-ledger, route, faction, hazard-plan, expected-boss, and wing detail belong to the pause dossier.
+- `GameplayScene.getPauseDossier()` is the read-model boundary for paused operational detail. `PauseScene` renders its structured metrics and labeled sections but does not inspect combat internals or advance simulation.
+- General guidance remains pause-only during ordinary flight. Boss, hazard, cooldown, exit, and destruction guidance may re-enter the live HUD because those states require immediate action.
 
 ## Phase 7 architecture priorities
 
@@ -590,7 +593,7 @@ Work order 098 implementation:
 - Recruitment consumes existing `recordCandidate` / `protectSpecialist` mission policies or a trusted faction distress signal after a successful optional consequence. Resolved foundry loadouts supply command headroom; injured crew continue occupying capacity, and combat deployment is capped at three fitted allies.
 - `CombatState` owns the short-lived ally actors and command runtime. Focus queries at most 24 enemies, screen examines at most 32 hostile projectiles, salvage examines at most 24 pickups, and every command has an explicit cooldown. Ally projectiles have their own owner/attribution id and share centralized enemy, boss, pickup, objective, and result accounting without dispatching player item hooks.
 - Enemy shots can injure an ally before reaching the player; regroup repairs only ally hull, and disengage produces a crew retreat rather than an enemy escape or injury. Combat results fold back into the roster only at the mission boundary.
-- Five settings-backed input actions and pointer buttons issue focus, screen, salvage, regroup, and disengage. Canvas glyphs/labels, HUD state, briefings, routes, foundry copy, summaries, debug budgets, and the public `T` fixture consume public crew read models. Crew remains run-local, so save schema v5 is unchanged.
+- The original five settings-backed focus, screen, salvage, regroup, and disengage bindings remain accepted for schema/save compatibility, but work order 178 suppresses their settings rows, cockpit buttons, and gameplay dispatch. Allies now remain on automatic focus behavior; pause, briefings, routes, foundry copy, summaries, debug budgets, and the public `T` fixture consume read-only crew status. Crew remains run-local, so save schema v5 is unchanged.
 
 ### Run timeline and Scenario Lab
 

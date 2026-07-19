@@ -700,3 +700,31 @@ Boreline Crimper replaces the common pool entry as a bounded ordered transform. 
 The unchanged managed-smoke defaults selected port 4175, published `http://192.168.40.7:4175/StarbreakSalvage/` through JSON status, and loaded that exact address in the in-app browser. The Upgrade Bay rendered all ten cards, showed Coupon Cascade's 10 kg cost, Market Decoder prerequisite, discount, and stock bias without viewport overflow, and produced no captured console errors. `smoke:stop` then closed the listener and the original managed host shell returned exit code 0, so work order 177 requires no tooling adjustment.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 111 Vitest files and 690 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 973.35 kB minified/266.55 kB gzip initial JavaScript and 91.27/18.37 kB CSS, increases of 1.43/0.40 kB JavaScript and no CSS change over work order 176. The existing 500 kB chunk notice remains; no dependency, save/snapshot schema, route topology, static base path, or warning threshold changed.
+
+## Work order 178 - Urgent cockpit HUD and pause dossier
+
+Goal: reclaim combat visibility by limiting the live cockpit to urgent, glanceable state and moving persistent operational detail into a richer pause surface.
+
+Prompt:
+
+> Slim the sector HUD around ship meters, current sector progress, objective progress, weapon state, and immediate threats. Move low-urgency economy, loadout, build, route, sector-intelligence, ledger, boss, campaign, and support information into a structured pause dossier. Suppress the low-value ally command controls while retaining automatic ally combat and compatibility with existing settings data. Keep desktop, narrow, high-contrast, reduced-motion, pause, settings, snapshot, and fixed-step behavior coherent.
+
+Acceptance criteria:
+
+- The live HUD contains the themed ship identity, four meters, compact act/sector/stage context, distance, hull, reserves, weapon state, objective progress, and immediate warnings.
+- Anticipated boss identity, economy, combat counters, build identity, hardpoint summary, expedition-node detail, sector conditions, pacing, hazard plan, route pressure, faction forecast, and wing ledger no longer consume visible cockpit space.
+- General hints remain pause-only during normal flight; boss, active hazard, arena lock, cooldown, exit, and destruction guidance can surface live when immediate action matters.
+- Pause presents four current metrics and four labeled dossier sections for current operation, sector intelligence, ship systems, and ledger/support without unformatted debug prose.
+- Resume, Settings, Suspend, and End Run remain keyboard/pointer accessible and sticky while a long dossier scrolls.
+- Wing command buttons disappear from gameplay, command bindings disappear from visible Settings rows, and command actions no longer dispatch during combat. Existing settings payloads and defaults remain loadable.
+- Crew and fleet allies retain their established automatic targeting, projectile, injury, salvage, objective, and result behavior; the pause dossier reports support status without controls.
+- Standard 1280x720 HUD height is materially reduced, the 390x700 HUD stays at or below 156 px, pause remains within viewport width, and high-contrast/reduced-motion behavior remains compatible.
+- Simulation, deterministic generation, saves/snapshots, route topology, item hooks, actor/projectile caps, static hosting, and dependencies remain unchanged.
+
+Status: implemented. `GameplayScene` now renders only the urgent readout subset and exposes a structured `GameplayPauseDossier` read model for the paused scene. Long objective ownership, set-piece, faction, conditions, pacing, hazard planning, engineering, build, ledger, expected boss, and wing state remain available without competing with live combat. Immediate warnings and phase-specific guidance retain precedence, while ordinary pre-fire and passive hints stay in the dossier.
+
+`PauseScene` is now a responsive operational board with a compact header, four metrics, four semantic definition-list cards, and sticky controls. The crew command bar and gameplay command dispatch are removed; visible settings omit those five bindings while the settings schema and imported payload compatibility remain intact. Ally actors continue using the existing automatic focus behavior and all combat accounting remains untouched.
+
+Focused desktop and narrow Chromium coverage protects the urgent-versus-dossier split, suppressed command surface, campaign and automatic-wing relocation, four-card pause structure, sticky navigation flow, and the 156 px narrow HUD ceiling. A managed in-app browser pass at 1280x720 measured the normal cockpit at two compact operational bands, rendered a 1080 px pause dossier with four metrics and four sections, found no horizontal overflow or ally controls, and captured no console errors. The unchanged managed host stopped cleanly and its original shell returned exit code 0.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 111 Vitest files and 691 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 977.38 kB minified/267.42 kB gzip initial JavaScript and 93.32/18.78 kB CSS, increases of 4.03/0.87 kB JavaScript and 2.05/0.41 kB CSS over work order 177. The existing 500 kB chunk notice remains; no dependency, save/snapshot schema, deterministic content input, route topology, static base path, or warning threshold changed.

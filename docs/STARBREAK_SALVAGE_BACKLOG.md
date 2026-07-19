@@ -2503,3 +2503,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 177. `UpgradeEffects` and `Shops` own the permanent recipe with restored-item precedence. `ItemHooks` owns Boreline's pure ordered transform, which automatically feeds combat and shared live-fire previews. The active catalog remains at 60 items and the global run fingerprint excludes the shop-local upgrade.
+
+### BL43 - Urgent cockpit HUD and pause dossier
+
+Acceptance:
+
+- Live combat keeps only themed identity, four meters, compact sector/distance/hull, reserves, weapon, objective, and immediate warning state.
+- Economy, combat ledger, build, hardpoints, expedition detail, sector conditions/pacing/hazard plan, route/faction intelligence, expected boss, and wing status move to a structured pause dossier.
+- Pause exposes four metrics and four labeled operational sections with sticky Resume, Settings, Suspend, and End Run controls across desktop and narrow viewports.
+- Passive hints remain off the live HUD unless a boss, hazard, arena, cooldown, exit, or destruction state makes guidance urgent.
+- Ally command buttons, visible command bindings, and gameplay command dispatch are suppressed while legacy settings remain compatible and automatic ally combat remains unchanged.
+- Desktop/narrow/high-contrast/reduced-motion browser coverage, saves, deterministic generation, fixed-step simulation, static hosting, and dependencies remain coherent.
+
+Status:
+
+- Implemented in work order 178. `GameplayScene` owns the urgent cockpit projection and supplies a structured pause read model; `PauseScene` renders the low-urgency dossier without reading combat internals. The live command surface is gone, allies remain automatic, and the narrow HUD ceiling is 156 px.

@@ -213,7 +213,14 @@ export function isRemappableAction(action: InputAction): action is RemappableAct
 }
 
 export function getVisibleRemapActions(): readonly RemappableAction[] {
-  return REMAPPABLE_ACTIONS;
+  return REMAPPABLE_ACTIONS.filter(
+    (action) =>
+      action !== 'crewFocus' &&
+      action !== 'crewScreen' &&
+      action !== 'crewSalvage' &&
+      action !== 'crewRegroup' &&
+      action !== 'crewDisengage'
+  );
 }
 
 export function getAllInputActions(): readonly InputAction[] {

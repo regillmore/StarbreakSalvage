@@ -262,8 +262,13 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
     /ASSAULT|hostiles|fortification/i
   );
   await expect(page.getByTestId('expedition-readout')).toContainText(
-    'Expedition Outer Debris Field Gate Operation | nodes 2/108'
+    'S1 Outer Debris Field | Breach Assault: sector operation'
   );
+  await expect(page.getByTestId('pickup-readout')).toBeHidden();
+  await expect(page.getByTestId('combat-status')).toBeHidden();
+  await expect(page.getByTestId('item-readout')).toBeHidden();
+  await expect(page.getByTestId('ship-loadout-readout')).toBeHidden();
+  await expect(page.locator('.crew-command-bar')).toHaveCount(0);
   await expect(page.getByTestId('hint-readout')).toContainText('Hint');
   await expect(page.getByTestId('verb-readout')).toContainText('Special');
   await expect(page.getByTestId('weapon-readout')).toContainText('Heat');
@@ -298,6 +303,13 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
 
   await page.keyboard.press('Escape');
   await expect(page.getByRole('heading', { name: 'Paused' })).toBeVisible();
+  await expect(page.getByTestId('pause-dossier')).toBeVisible();
+  await expect(page.locator('.pause-metric')).toHaveCount(4);
+  await expect(page.locator('.pause-dossier-card')).toHaveCount(4);
+  await expect(page.getByTestId('pause-section-operation')).toContainText('Current operation');
+  await expect(page.getByTestId('pause-section-sector')).toContainText('Sector conditions');
+  await expect(page.getByTestId('pause-section-ship')).toContainText('Signal circuit');
+  await expect(page.getByTestId('pause-section-ledger')).toContainText('Expected boss');
 
   await page.getByRole('button', { name: 'Settings' }).click();
   await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
@@ -311,7 +323,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.locator('.debug-overlay')).toContainText(
     'Scenario set-piece:setpiece_ledger_hecaton'
   );
-  await expect(page.getByTestId('objective-readout')).toContainText('Hecaton Ledger Ark');
+  await expect(page.getByTestId('objective-readout')).toContainText('Shield Emitter');
   await page.keyboard.press('8');
   await expect(page.getByTestId('sector-exit-toast')).toContainText(
     /Outer Debris Field clear\. (Main thrusters igniting|Ship accelerating out of sector)/
@@ -1138,19 +1150,23 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
   await expect(page.getByTestId('faction-campaign-brief')).toContainText('RIVAL');
   await expect(page.locator('.debug-overlay')).toContainText('Campaign rivals');
   await page.keyboard.press('Enter');
-  await expect(page.getByTestId('objective-readout')).toContainText('Rival');
+  await expect(page.getByTestId('objective-readout')).not.toContainText('Rival');
   await expect(page.locator('.debug-overlay')).toContainText('Active rival');
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('pause-section-operation')).toContainText('Rival contact');
+  await page.keyboard.press('Escape');
 
   await page.keyboard.press('T');
   await expect(page.getByTestId('mission-briefing')).toBeVisible();
   await expect(page.getByTestId('crew-brief')).toContainText('3 active wingmates');
   await page.keyboard.press('Enter');
-  await expect(page.getByTestId('crew-command-readout')).toContainText(
-    /Wing C[1-3]\/F[0-2] active/
-  );
-  await page.getByTestId('crew-command-screen').click();
-  await expect(page.getByTestId('crew-command-readout')).toContainText('SCREEN');
-  await expect(page.locator('.debug-overlay')).toContainText('Crew screen');
+  await expect(page.getByTestId('crew-command-readout')).toBeHidden();
+  await expect(page.getByTestId('crew-command-readout')).toContainText('Automatic support');
+  await expect(page.locator('.crew-command-button')).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('pause-section-ledger')).toContainText('Automatic support');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.debug-overlay')).toContainText('Crew focus');
 
   expect(browserErrors).toEqual([]);
 });
@@ -1212,7 +1228,11 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
   for (let index = 0; index < 8; index += 1) await page.keyboard.press('Tab');
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('cockpit-hud')).toBeVisible();
-  await expect(page.getByTestId('objective-readout')).toContainText(/owner .* reinforcements/);
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('pause-section-operation')).toContainText(
+    /Faction front.*reinforcements/
+  );
+  await page.keyboard.press('Escape');
   await expect(page.locator('.debug-overlay')).toContainText('Front ending');
 
   await page.keyboard.press('B');
@@ -1446,6 +1466,8 @@ test('supports keyboard-only start, pause, end-run, and summary flow', async ({ 
   await page.keyboard.press('Tab');
   await expect(page.getByRole('button', { name: 'Settings' })).toBeFocused();
   await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: 'Suspend & Main Menu' })).toBeFocused();
+  await page.keyboard.press('Tab');
   await expect(page.getByRole('button', { name: 'End Run' })).toBeFocused();
   await page.keyboard.press('Enter');
 
@@ -1634,6 +1656,8 @@ test('keeps the gameplay HUD and safe frame readable in a narrow viewport', asyn
   await expect(page.locator('.debug-overlay')).toContainText('HUD standard');
   await expect(page.getByTestId('objective-readout')).toBeVisible();
   await expect(page.getByTestId('expedition-readout')).toBeVisible();
+  await expect(page.getByTestId('pickup-readout')).toBeHidden();
+  await expect(page.locator('.crew-command-bar')).toHaveCount(0);
 
   const hudBox = await page.locator('.game-hud').boundingBox();
   if (!hudBox) {
@@ -1641,7 +1665,13 @@ test('keeps the gameplay HUD and safe frame readable in a narrow viewport', asyn
   }
 
   expect(hudBox.width).toBeLessThanOrEqual(390);
-  expect(hudBox.y + hudBox.height).toBeLessThanOrEqual(175);
+  expect(hudBox.y + hudBox.height).toBeLessThanOrEqual(156);
+
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('pause-dossier')).toBeVisible();
+  const pauseBox = await page.getByTestId('pause-dossier').boundingBox();
+  if (!pauseBox) throw new Error('Expected the pause dossier to have a browser layout box.');
+  expect(pauseBox.width).toBeLessThanOrEqual(390);
 
   expect(browserErrors).toEqual([]);
 });
@@ -1869,10 +1899,9 @@ async function expectGameplaySector(
   sectorName: string,
   sectorIndex?: number
 ): Promise<void> {
-  const expectedText =
-    sectorIndex === undefined ? sectorName : `Sector ${sectorIndex} | ${sectorName}`;
+  const expectedText = sectorIndex === undefined ? sectorName : `S${sectorIndex} ${sectorName}`;
 
-  await expect(page.locator('.hud-pill').filter({ hasText: expectedText })).toBeVisible();
+  await expect(page.getByTestId('expedition-readout')).toContainText(expectedText);
 }
 
 async function commitSelectedDestinationAndDepart(page: Page): Promise<void> {
