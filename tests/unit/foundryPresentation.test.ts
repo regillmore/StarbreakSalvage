@@ -257,7 +257,8 @@ describe('foundry visual presentation', () => {
     expect(dashboard.circuitStages[0]).toMatchObject({
       name: 'Phase Grazer',
       changed: true,
-      cadenceShiftLabel: 'VENT SCRIPT · EVERY 4TH -> 5TH VOLLEY · +1 HEAT SHOT'
+      cadenceShiftLabel:
+        'VENT SCRIPT · EVERY 4TH -> 5TH VOLLEY · +1 HEAT SHOT · SPENDS 32% HEAT · COOL = EXHAUST'
     });
     expect(dashboard.circuitStages[1]).toMatchObject({
       name: 'Prototype Vent Script',
@@ -265,10 +266,14 @@ describe('foundry visual presentation', () => {
     });
     expect(dashboard.attackSimulation.waveCopies).toBeGreaterThanOrEqual(5);
     expect(
-      dashboard.attackSimulation.projectiles.filter(
-        (projectile) => projectile.waveIndex === 4 && projectile.tags.includes('heat')
-      )
-    ).toHaveLength(1);
+      dashboard.attackSimulation.projectiles.some((projectile) => projectile.tags.includes('heat'))
+    ).toBe(false);
+    expect(dashboard.attackSimulation.heatExhausts).toEqual([
+      expect.objectContaining({ waveIndex: 4 })
+    ]);
+    expect(dashboard.attackSimulation.ariaLabel).toContain(
+      'spend 32% of overheat capacity; this cool-start cycle generates 0 and replaces 1 underfunded attempt with visible exhaust'
+    );
   });
 
   it('builds steady velocity-scaled flight copies inside the preview actor budget', () => {
@@ -335,6 +340,15 @@ describe('foundry visual presentation', () => {
     expect(phase.ariaLabel).toContain('first damaging contact pierces and collapses the phase');
     expect(phaseMissile.ariaLabel).toContain('two-stage motor profile');
     expect(phaseMissile.ariaLabel).toContain('refracted core');
+  });
+
+  it('marks authored heat shots for their molten live-fire treatment', () => {
+    const preview = createFoundryAttackPreviewModel('Heat Shot', 0.2, [
+      { ...projectile(0, 0, -520), tags: ['heat', 'plasma'], visualKind: 'heatShot' }
+    ]);
+
+    expect(preview.projectiles[0]?.flightKind).toBe('heatShot');
+    expect(preview.heatExhausts).toEqual([]);
   });
 
   it('summarizes component costs and direct replacement deltas', () => {

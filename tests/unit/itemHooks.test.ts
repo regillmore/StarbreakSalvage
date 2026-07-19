@@ -199,7 +199,11 @@ describe('item synergies', () => {
     });
     const ventedCycle = applyItemHooks('onFire', vented, {
       volleyIndex: 5,
-      projectiles: [baseProjectile]
+      projectiles: [baseProjectile],
+      storedWeaponHeat: 0.8,
+      heatShotCost: 0.4,
+      weaponHeatSpent: 0,
+      heatShotEvents: []
     });
     const unaffectedLaterStage = applyItemHooks('onFire', ventFirst, {
       volleyIndex: 4,
@@ -208,11 +212,55 @@ describe('item synergies', () => {
 
     expect(delayedOldCycle.projectiles).toEqual([baseProjectile]);
     expect(ventedCycle.projectiles).toHaveLength(2);
-    expect(ventedCycle.projectiles.filter((shot) => shot.tags.includes('heat'))).toHaveLength(1);
+    expect(ventedCycle.projectiles.filter((shot) => shot.visualKind === 'heatShot')).toEqual([
+      expect.objectContaining({
+        damage: 1.65,
+        radius: 6,
+        tags: expect.arrayContaining(['heat', 'plasma'])
+      })
+    ]);
+    expect(ventedCycle.weaponHeatSpent).toBe(0.4);
+    expect(ventedCycle.heatShotEvents).toEqual([
+      expect.objectContaining({ outcome: 'fired', heatBefore: 0.8, heatAfter: 0.4 })
+    ]);
     expect(ventedCycle.projectiles.some((shot) => shot.tags.includes('phase'))).toBe(true);
     expect(unaffectedLaterStage.projectiles).toHaveLength(1);
     expect(unaffectedLaterStage.projectiles[0]?.tags).toContain('phase');
     expect(unaffectedLaterStage.projectiles[0]?.tags).not.toContain('heat');
+  });
+
+  it('replaces an underfunded heat shot with exhaust and never double-spends one reserve', () => {
+    const instances: ItemInstance[] = [
+      {
+        itemId: 'item_phase_grazer',
+        acquisitionOrder: 0,
+        socket: { componentId: 'a', socketIndex: 0, circuitOrder: 0 }
+      },
+      {
+        itemId: 'item_missile_splinter_warrant',
+        acquisitionOrder: 1,
+        socket: { componentId: 'a', socketIndex: 1, circuitOrder: 1 }
+      },
+      {
+        itemId: 'item_prototype_vent_script',
+        acquisitionOrder: 2,
+        socket: { componentId: 'a', socketIndex: 2, circuitOrder: 2 }
+      }
+    ];
+    const payload = applyItemHooks('onFire', instances, {
+      volleyIndex: 5,
+      projectiles: [baseProjectile],
+      storedWeaponHeat: 0.6,
+      heatShotCost: 0.4,
+      weaponHeatSpent: 0,
+      heatShotEvents: []
+    });
+
+    expect(payload.weaponHeatSpent).toBe(0.4);
+    expect(payload.projectiles.filter((shot) => shot.visualKind === 'heatShot')).toHaveLength(1);
+    expect(payload.heatShotEvents?.map((event) => event.outcome)).toEqual(['fired', 'exhausted']);
+    expect(payload.heatShotEvents?.[1]?.heatBefore).toBeCloseTo(0.2);
+    expect(payload.heatShotEvents?.[1]?.heatAfter).toBeCloseTo(0.2);
   });
 
   it('applies missile plus overkill synergy', () => {

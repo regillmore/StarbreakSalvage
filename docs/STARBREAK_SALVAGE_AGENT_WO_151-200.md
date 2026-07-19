@@ -484,3 +484,31 @@ The Engineering Foundry Scenario Lab fixture now fits Phase Grazer before Protot
 Browser inspection of that fixture confirms a stable two-stage rail: Phase Grazer reports `VENT SCRIPT · EVERY 4TH -> 5TH VOLLEY · +1 HEAT SHOT`, the representative output remains `conditional volley armed`, moving Vent earlier removes the annotation, and moving it later restores it. The live attack simulation reports a two-to-three-shot firing cycle, showing that the fifth volley adds one shot without changing the fixed preview scale.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 105 Vitest files and 660 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 957.27 kB minified/261.57 kB gzip initial JavaScript and 84.21/16.94 kB CSS, increases of 1.13/0.47 kB JavaScript and 0.17/0.03 kB CSS over work order 168. The existing 500 kB chunk notice remains; no dependency, projectile cap, RNG stream, content-generation order, save/snapshot schema, static base path, or warning threshold changed.
+
+## Work order 170 - Stored-heat shot identity
+
+Goal: turn Prototype Vent's generic bonus projectile into an explicit stored-heat release valve with a readable success and failure language.
+
+Prompt:
+
+> Give heat shot a distinct mechanical and visual identity. Each Vent-affected periodic stage should request a substantial amount of heat already stored by the weapon, consume that heat once when available, and emit a powerful differentiated projectile that remains eligible for later circuit transforms. If the reserve is insufficient, skip the projectile and replace it with a clear non-damaging exhaust plume. Make combat and both shared live-fire previews use the same budget, expose the spend/skip rule on affected Hardpoint cards, and preserve ordered hook composition, fixed-step determinism, actor caps, accessibility modes, saves, snapshots, and static hosting.
+
+Acceptance criteria:
+
+- A heat-shot attempt costs exactly 32% of the current weapon's overheat capacity and spends only heat stored before the ordinary volley adds its authored per-shot heat.
+- Multiple Vent-affected stages on one volley share one carried budget in circuit order; no stage can spend heat already consumed by an earlier stage.
+- A funded attempt adds one slower, larger, harder-hitting `heat`/`plasma` projectile with explicit heat-shot identity before later circuit and projectile hooks run.
+- An underfunded attempt adds no projectile, damage, or hidden heat debt and emits one short capped exhaust plume behind the player ship.
+- Canvas combat renders a velocity-aligned molten core, armored thermal shell, and split wake; transformed phase shots retain their phase interference. Shared Contract/Hardpoint previews render the same identity and synchronize skipped attempts with an exhaust replacement.
+- Affected Hardpoint cards state the 32% spend and cool-reserve exhaust rule, and the accessible preview summary counts funded versus skipped attempts in its bounded cool-start cycle.
+- Reduced motion, performance mode, high contrast, hook/projectile/effect caps, deterministic generation, saves, snapshots, and static hosting remain compatible.
+
+Status: implemented. `HeatShot` owns the proportional cost and deterministic presentation read model. `ItemHooks` carries stored heat, cumulative spend, and ordered outcome events through the existing fire payload; a funded stage produces one heavy plasma-tagged heat slug, while a cool stage records an exhaust outcome without manufacturing a projectile. `CombatState` settles the spend before ordinary shot heat, tracks funded/skipped attempts for diagnostics, and uses the existing capped combat-effect pool for the non-damaging plume.
+
+`CanvasRenderer` gives the authored heat shot a white-hot core, amber shell, and bifurcated wake, composing a phase wake when later signal stages add that trait. `FoundryPresentation` now cools and heats its six production volleys under the same weapon, engineering, and Heat Sink multipliers as combat; `AttackSimulationPreview` renders molten shots and synchronized exhaust replacements, while the accessible summary reports the 32% rule and its bounded outcomes.
+
+The Engineering Foundry Scenario Lab fixture now identifies its cool-start fifth-cycle miss as `0 generated / 1 underfunded`, renders one exhaust actor inside the same normalized camera at desktop and narrow widths, and states the cost/failure rule on the affected Phase Grazer card. The item-storm debug fixture starts with a controlled hot reserve; its Chromium path reaches both a funded shot and a skipped exhaust through ordinary held-fire input while preserving the existing 48-hook budget and captured-error checks.
+
+Browser inspection confirms that the revised Hardpoint rail, accessible preview summary, and exhaust replacement remain legible without stretching the attack console. Focused unit coverage proves proportional cost, pre-volley settlement, sequential no-double-spend behavior, funded and underfunded branches, molten Canvas geometry, phase composition, preview classification, and exhaust rendering. Focused Chromium coverage protects responsive plume bounds, reduced-motion visibility, circuit reorder copy, and the live hot/cool cycle.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 106 Vitest files and 666 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 962.93 kB minified/263.23 kB gzip initial JavaScript and 86.83/17.48 kB CSS, increases of 5.66/1.66 kB JavaScript and 2.62/0.54 kB CSS over work order 169. The existing 500 kB chunk notice remains; no dependency, RNG stream, content-generation order, actor/proc cap, save/snapshot schema, static base path, or warning threshold changed.

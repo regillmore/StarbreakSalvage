@@ -62,6 +62,7 @@ import {
   type ExpeditionProgressState
 } from '../game/ExpeditionGraph';
 import { createItemLoadoutStressModel, createItemStormLoadout } from '../game/ItemStress';
+import { getHeatShotCost } from '../game/HeatShot';
 import {
   createEnvironmentObjectPlacementPlan,
   type EnvironmentObjectPlacementPlan
@@ -1091,6 +1092,12 @@ export class GameplayScene implements Scene {
         : undefined,
       arenaPhase: this.bossArenaUpdate.phase,
       debugScenario: this.debugScenario ?? undefined,
+      heatShots: {
+        fired: combatState.heatShotsFired,
+        exhausted: combatState.heatShotsExhausted,
+        storedHeat: combatState.player.weaponHeat,
+        cost: getHeatShotCost(combatState.weapon.overheatLimit)
+      },
       mission: this.missionContext?.debugState,
       boarding: this.missionContext?.projection.boardingOperation
         ? {

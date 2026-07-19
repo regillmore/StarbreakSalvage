@@ -79,6 +79,13 @@ export function createAttackSimulationPreviewElement(
     shot.style.setProperty('--shot-heading', `${projectile.headingDegrees}deg`);
     shot.style.setProperty('--shot-duration', `${projectile.durationSeconds}s`);
     shot.style.setProperty('--shot-delay', `${projectile.delaySeconds}s`);
+    if (projectile.flightKind === 'heatShot') {
+      shot.classList.add('attack-simulation-projectile-heat-shot');
+      const heatCore = ownerDocument.createElement('span');
+      heatCore.className = 'attack-simulation-heat-core';
+      heatCore.setAttribute('aria-hidden', 'true');
+      shot.append(heatCore);
+    }
     if (isPhaseProjectile(projectile.tags)) {
       shot.classList.add('attack-simulation-projectile-phase');
       const phaseShell = ownerDocument.createElement('span');
@@ -87,6 +94,18 @@ export function createAttackSimulationPreviewElement(
       shot.append(phaseShell);
     }
     projectileLayer.append(shot);
+  }
+
+  for (const exhaust of simulation.heatExhausts) {
+    const plume = ownerDocument.createElement('span');
+    plume.className = 'attack-simulation-heat-exhaust';
+    plume.dataset.testid = 'attack-simulation-heat-exhaust';
+    plume.dataset.waveIndex = String(exhaust.waveIndex);
+    plume.style.setProperty('--heat-exhaust-offset', `${exhaust.offsetPercent}%`);
+    plume.style.setProperty('--heat-exhaust-delay', `${exhaust.delaySeconds}s`);
+    plume.style.setProperty('--heat-exhaust-duration', `${exhaust.durationSeconds}s`);
+    plume.setAttribute('aria-hidden', 'true');
+    projectileLayer.append(plume);
   }
 
   const targeting = ownerDocument.createElement('span');

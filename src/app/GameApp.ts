@@ -2716,6 +2716,11 @@ export class GameApp {
       ? [`Destruction ${debugState.destructionSequence}`]
       : [];
     const scenarioDebug = debugState.debugScenario ? [`Scenario ${debugState.debugScenario}`] : [];
+    const heatShotDebug = debugState.heatShots
+      ? [
+          `Heat shots F${debugState.heatShots.fired}/X${debugState.heatShots.exhausted} reserve ${debugState.heatShots.storedHeat.toFixed(2)}/${debugState.heatShots.cost.toFixed(2)}`
+        ]
+      : [];
     const itemDebug = createItemDebugLines(debugState.items);
     const enemyRoleDebug = createEnemyRoleDebugLines(debugState.enemyRoles);
     const environmentStressDebug = createEnvironmentStressDebugLines(debugState.environmentStress);
@@ -2856,6 +2861,7 @@ export class GameApp {
       ...cooldownDebug,
       ...destructionDebug,
       ...scenarioDebug,
+      ...heatShotDebug,
       ...itemDebug,
       ...enemyRoleDebug,
       ...environmentStressDebug,

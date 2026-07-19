@@ -2416,3 +2416,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 169. `ItemHooks` centralizes periodic item cadences and applies the script only across an earlier-to-later circuit edge. Shifted cycles append one bounded heat-tagged projectile before downstream stages. `FoundryPresentation` and Hardpoint circuit cards consume the same profile, and the Engineering Foundry Scenario Lab fixture protects the positional interaction.
+
+### BL37 - Stored-heat projectile conversion
+
+Acceptance:
+
+- Vent heat shots spend 32% of weapon overheat capacity from the pre-volley stored reserve, and ordered simultaneous stages cannot double-spend it.
+- A funded stage emits one heavy, slower `heat`/`plasma` shot that remains available to later circuit and projectile transforms.
+- An underfunded stage skips damage and creates one capped, non-damaging exhaust plume behind the player.
+- Combat, Contract Select, and Hardpoint Control share the heat/cooling budget and identify the funded molten shot and cool-reserve exhaust outcome consistently.
+- Circuit cards and accessible preview copy explain the cost and failure rule; high contrast, reduced motion, performance mode, saves, snapshots, determinism, and static hosting remain compatible.
+
+Status:
+
+- Implemented in work order 170. `HeatShot` owns the cost and visual read model, `ItemHooks` carries ordered spend/outcome state, `CombatState` settles the budget before ordinary shot heat, and the shared Canvas/DOM presentations render either the molten slug or its exhaust replacement.

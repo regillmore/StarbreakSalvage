@@ -885,7 +885,8 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'rare',
     tags: ['drone', 'arc'],
     hooks: ['onFire'],
-    effect: 'every third volley clones the projectile chain built before this socket into drone shots',
+    effect:
+      'every third volley clones the projectile chain built before this socket into drone shots',
     weight: 6,
     metadata: {
       family: 'drone-copy',
@@ -1056,7 +1057,7 @@ export const ITEMS: readonly ItemDefinition[] = [
     tags: ['heat'],
     hooks: ['onFire'],
     effect:
-      'earlier periodic volley upgrades trigger one volley later and add one heat shot each cycle',
+      'earlier periodic volleys trigger one cycle later and spend 32% heat capacity on a heavy heat shot, or vent exhaust when underfunded',
     weight: 6,
     metadata: {
       family: 'heat-prototype',

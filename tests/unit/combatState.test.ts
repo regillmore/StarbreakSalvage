@@ -24,6 +24,45 @@ const bounds: CombatBounds = {
 };
 
 describe('CombatState', () => {
+  it('spends stored heat on a Vent shot and exhausts visibly when the reserve is cool', () => {
+    const items = [
+      {
+        itemId: 'item_phase_grazer' as const,
+        acquisitionOrder: 0,
+        socket: { componentId: 'test', socketIndex: 0, circuitOrder: 0 }
+      },
+      {
+        itemId: 'item_prototype_vent_script' as const,
+        acquisitionOrder: 1,
+        socket: { componentId: 'test', socketIndex: 1, circuitOrder: 1 }
+      }
+    ];
+    const hot = createCombatState(bounds, 'HEAT-SHOT-HOT', { items, skipEnemyWaves: true });
+    hot.volleyIndex = 4;
+    hot.player.weaponHeat = 0.8;
+
+    updateCombatState(hot, { movement: { x: 0, y: 0 }, fire: true }, 0, bounds);
+
+    expect(hot.heatShotsFired).toBe(1);
+    expect(hot.heatShotsExhausted).toBe(0);
+    expect(hot.projectiles.filter((shot) => shot.visualKind === 'heatShot')).toHaveLength(1);
+    expect(hot.player.weaponHeat).toBeCloseTo(0.452);
+
+    const cool = createCombatState(bounds, 'HEAT-SHOT-COOL', { items, skipEnemyWaves: true });
+    cool.volleyIndex = 4;
+    cool.player.weaponHeat = 0.1;
+
+    updateCombatState(cool, { movement: { x: 0, y: 0 }, fire: true }, 0, bounds);
+
+    expect(cool.heatShotsFired).toBe(0);
+    expect(cool.heatShotsExhausted).toBe(1);
+    expect(cool.projectiles.filter((shot) => shot.visualKind === 'heatShot')).toHaveLength(0);
+    expect(cool.effects).toContainEqual(
+      expect.objectContaining({ kind: 'heatExhaust', x: cool.player.x - 7 })
+    );
+    expect(cool.player.weaponHeat).toBeCloseTo(0.2);
+  });
+
   it('consumes a fitted ricochet charge when a player shot reaches a sidewall', () => {
     const state = createCombatState(bounds, 'RICOCHET-RUNTIME');
     state.projectiles.push({

@@ -1,6 +1,6 @@
 # Starbreak Salvage - Item Catalog Audit
 
-Work orders 051-056 baseline, refreshed by work orders 156 and 169. This document records the active item catalog after the Noita-style circuit pivot retired Boss Pressure from live rotation, replaced its five slots with weapon-chain upgrades, and converted Prototype Vent Script into an ordered cadence modifier. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
+Work orders 051-056 baseline, refreshed by work orders 156, 169, and 170. This document records the active item catalog after the Noita-style circuit pivot retired Boss Pressure from live rotation, replaced its five slots with weapon-chain upgrades, and converted Prototype Vent Script into an ordered stored-heat modifier. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
 
 ## Current Shape
 
@@ -170,9 +170,9 @@ These former bridge entries now have live, order-sensitive circuit behavior:
 
 No shipped item is a pure no-op or bridge: current validation requires every declared hook to have an implementation, and work order 132 promoted the final four bridge entries to live mechanics. Work order 052 formalized live, bridge, and planned implementation status in item metadata.
 
-## Ordered cadence modifier in Work Order 169
+## Ordered heat converter in Work Orders 169-170
 
-Prototype Vent Script now reads the fitted signal chain instead of modifying Special use. Every periodic volley stage earlier than the script changes from every `n`th volley to every `(n+1)`th volley and adds one generic heat-tagged shot on that completed cycle. A script placed before a periodic stage has no effect on it. The shared cadence profile drives combat hooks, Contract/Hardpoint live-fire previews, and the explicit cadence-change line on each affected Hardpoint card; later stages can still transform the new heat shot in normal circuit order.
+Prototype Vent Script now reads the fitted signal chain instead of modifying Special use. Every periodic volley stage earlier than the script changes from every `n`th volley to every `(n+1)`th volley and attempts one heavy heat/plasma shot on that completed cycle. A funded attempt spends 32% of the weapon's overheat capacity from heat stored before the ordinary volley; a cool reserve skips the shot and displays non-damaging exhaust. One carried budget prevents simultaneous stages from double-spending it. A script placed before a periodic stage has no effect on it. The shared cadence and heat-event payload drives combat hooks, Contract/Hardpoint live-fire previews, and the explicit cadence/cost line on each affected Hardpoint card; later stages can still transform a funded heat shot in normal circuit order.
 
 ## Risks For 057-060
 

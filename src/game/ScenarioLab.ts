@@ -118,7 +118,7 @@ export const SCENARIO_LAB_DEFINITIONS: readonly ScenarioLabDefinition[] = [
   scenario(
     'lab_engineering_foundry',
     'Engineering Foundry',
-    'Open a deterministic foundry inventory with an ordered Prototype Vent cadence synergy.',
+    'Open a deterministic foundry inventory with an ordered Prototype Vent heat-budget synergy.',
     ['frame', 'modules', 'foundry', 'engineering'],
     4,
     'foundry',

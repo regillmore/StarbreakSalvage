@@ -27,6 +27,8 @@ import {
 import { getComponentCircuitCapacity } from '../game/ComponentCircuit';
 import { getItemSocketSlots } from '../game/ItemSockets';
 import { isPhaseProjectile } from '../game/PhaseProjectile';
+import { HEAT_SHOT_COST_RATIO, getHeatShotCost } from '../game/HeatShot';
+import type { HeatShotEvent } from '../game/ItemHooks';
 
 export type FoundryComparisonTone = 'improved' | 'declined' | 'same' | 'danger';
 
@@ -73,7 +75,7 @@ export interface FoundryAttackProjectileModel {
   readonly damage: number;
   readonly ttl: number;
   readonly tags: readonly string[];
-  readonly flightKind: 'ballistic' | 'missile' | 'phase' | 'phaseMissile';
+  readonly flightKind: 'ballistic' | 'missile' | 'phase' | 'phaseMissile' | 'heatShot';
   readonly headingDegrees: number;
   readonly startXPercent: number;
   readonly endXPercent: number;
@@ -87,6 +89,14 @@ export interface FoundryAttackProjectileModel {
   readonly delaySeconds: number;
 }
 
+export interface FoundryAttackHeatExhaustModel {
+  readonly id: string;
+  readonly waveIndex: number;
+  readonly offsetPercent: number;
+  readonly delaySeconds: number;
+  readonly durationSeconds: number;
+}
+
 export interface FoundryAttackSimulationModel {
   readonly cameraWidth: number;
   readonly cameraHeight: number;
@@ -95,6 +105,7 @@ export interface FoundryAttackSimulationModel {
   readonly fireCooldownSeconds: number;
   readonly waveCopies: number;
   readonly projectiles: readonly FoundryAttackProjectileModel[];
+  readonly heatExhausts: readonly FoundryAttackHeatExhaustModel[];
   readonly ariaLabel: string;
 }
 
@@ -347,7 +358,7 @@ function createFoundryCircuitStageModels(
         item.hooks
       ),
       cadenceShiftLabel: cadence?.prototypeVented
-        ? `VENT SCRIPT · EVERY ${formatOrdinal(cadence.baseCadence)} -> ${formatOrdinal(cadence.effectiveCadence)} VOLLEY · +1 HEAT SHOT`
+        ? `VENT SCRIPT · EVERY ${formatOrdinal(cadence.baseCadence)} -> ${formatOrdinal(cadence.effectiveCadence)} VOLLEY · +1 HEAT SHOT · SPENDS 32% HEAT · COOL = EXHAUST`
         : null,
       addedTags,
       changed
@@ -364,7 +375,9 @@ function addLaterCircuitContext(
   const prototypeVent = ordered.find(
     (instance) => instance.itemId === 'item_prototype_vent_script'
   );
-  return prototypeVent && !prefix.includes(prototypeVent) ? [...prefix, prototypeVent] : [...prefix];
+  return prototypeVent && !prefix.includes(prototypeVent)
+    ? [...prefix, prototypeVent]
+    : [...prefix];
 }
 
 function formatOrdinal(value: number): string {
@@ -452,17 +465,42 @@ function createFoundryAttackSimulationModel(
   procBudget: number,
   items: readonly ItemInstance[]
 ): FoundryAttackSimulationModel {
+  let storedWeaponHeat = 0;
+  const heatPerShotMultiplier =
+    resolution.effects.heatPerShotMultiplier *
+    (items.some((item) => item.itemId === 'item_heat_sink_saint') ? 0.7 : 1);
+  const heatVentMultiplier =
+    resolution.effects.heatVentMultiplier *
+    (items.some((item) => item.itemId === 'item_heat_sink_saint') ? 1.35 : 1);
+  const sourceHeatEvents: (readonly HeatShotEvent[])[] = [];
   const volleys = Array.from({ length: MAX_ATTACK_PREVIEW_WAVE_COPIES }, (_value, index) => {
+    if (index > 0) {
+      storedWeaponHeat = Math.max(
+        0,
+        storedWeaponHeat -
+          weapon.heatVentPerSecond * heatVentMultiplier * weapon.fireCooldownSeconds
+      );
+    }
     const firePayload = applyCombinedHooks(
       'onFire',
       items,
       resolution.hooks,
       {
         volleyIndex: index + 1,
-        projectiles: createWeaponProjectileBlueprints(weapon, { x: 0, y: 0, radius: 0 })
+        projectiles: createWeaponProjectileBlueprints(weapon, { x: 0, y: 0, radius: 0 }),
+        storedWeaponHeat,
+        heatShotCost: getHeatShotCost(weapon.overheatLimit),
+        weaponHeatSpent: 0,
+        heatShotEvents: []
       },
       { maxApplications: procBudget }
     );
+    storedWeaponHeat = Math.max(0, storedWeaponHeat - (firePayload.weaponHeatSpent ?? 0));
+    storedWeaponHeat = Math.min(
+      weapon.overheatLimit,
+      storedWeaponHeat + weapon.heatPerShot * heatPerShotMultiplier
+    );
+    sourceHeatEvents.push(firePayload.heatShotEvents ?? []);
     return firePayload.projectiles.map(
       (projectile) =>
         applyCombinedHooks(
@@ -474,7 +512,12 @@ function createFoundryAttackSimulationModel(
         ).projectile
     );
   });
-  return createFoundryAttackPatternPreviewModel(weapon.name, weapon.fireCooldownSeconds, volleys);
+  return createFoundryAttackPatternPreviewModel(
+    weapon.name,
+    weapon.fireCooldownSeconds,
+    volleys,
+    sourceHeatEvents
+  );
 }
 
 export function createFoundryAttackPreviewModel(
@@ -488,7 +531,8 @@ export function createFoundryAttackPreviewModel(
 function createFoundryAttackPatternPreviewModel(
   weaponName: string,
   fireCooldownSeconds: number,
-  sourceVolleys: readonly (readonly ProjectileBlueprint[])[]
+  sourceVolleys: readonly (readonly ProjectileBlueprint[])[],
+  sourceHeatEvents: readonly (readonly HeatShotEvent[])[] = []
 ): FoundryAttackSimulationModel {
   const safeCooldown = Math.max(0.05, fireCooldownSeconds);
   const safeVolleys = sourceVolleys.map((volley) => volley.slice(0, 12));
@@ -522,6 +566,7 @@ function createFoundryAttackPatternPreviewModel(
     Math.min(MAX_ATTACK_PREVIEW_WAVE_COPIES, Math.ceil(sequenceSeconds / safeCooldown))
   );
   const selectedVolleys: (readonly ProjectileBlueprint[])[] = [];
+  const selectedHeatEvents: (readonly HeatShotEvent[])[] = [];
   let projectileCount = 0;
 
   for (let waveIndex = 0; waveIndex < desiredWaveCopies; waveIndex += 1) {
@@ -533,6 +578,9 @@ function createFoundryAttackPatternPreviewModel(
       break;
     }
     selectedVolleys.push(volley);
+    selectedHeatEvents.push(
+      sourceHeatEvents[waveIndex % Math.max(1, sourceHeatEvents.length)] ?? []
+    );
     projectileCount += volley.length;
   }
 
@@ -551,6 +599,17 @@ function createFoundryAttackPatternPreviewModel(
       )
     )
   );
+  const heatExhausts = selectedHeatEvents.flatMap((events, waveIndex) =>
+    events
+      .filter((event) => event.outcome === 'exhausted')
+      .map((event, eventIndex) => ({
+        id: `preview-heat-exhaust-${waveIndex}-${event.sourceItemId}-${eventIndex}`,
+        waveIndex,
+        offsetPercent: (eventIndex % 2 === 0 ? -1 : 1) * (1.2 + eventIndex * 0.55),
+        delaySeconds: -waveIndex * safeCooldown,
+        durationSeconds
+      }))
+  );
   const volleySizes = selectedVolleys.map((volley) => volley.length);
   const minimumVolleySize = Math.min(...volleySizes);
   const volleySize = Math.max(...volleySizes);
@@ -567,6 +626,13 @@ function createFoundryAttackPatternPreviewModel(
   const phaseDescription = safeProjectiles.some((projectile) => isPhaseProjectile(projectile.tags))
     ? ' Phase-tagged shots carry a refracted core, displaced afterimages, and a broken wake; their first damaging contact pierces and collapses the phase.'
     : '';
+  const heatEvents = selectedHeatEvents.flat();
+  const heatShotsFired = heatEvents.filter((event) => event.outcome === 'fired').length;
+  const heatShotsExhausted = heatEvents.length - heatShotsFired;
+  const heatDescription =
+    heatEvents.length > 0
+      ? ` Vent heat shots spend ${(HEAT_SHOT_COST_RATIO * 100).toFixed(0)}% of overheat capacity; this cool-start cycle generates ${heatShotsFired} and replaces ${heatShotsExhausted} underfunded attempt${heatShotsExhausted === 1 ? '' : 's'} with visible exhaust.`
+      : '';
   return {
     cameraWidth: COMBAT_ARENA_WIDTH,
     cameraHeight: FOUNDRY_ATTACK_PREVIEW_WORLD_HEIGHT,
@@ -575,7 +641,8 @@ function createFoundryAttackPatternPreviewModel(
     fireCooldownSeconds: safeCooldown,
     waveCopies,
     projectiles,
-    ariaLabel: `${weaponName} live-fire preview. ${volleyDescription} at ${volleysPerSecond.toFixed(1)} volleys per second.${missileDescription}${phaseDescription} Projectile paths use the draft loadout's combat velocity, spread, radius, damage, engineering hooks, and owned item hooks.`
+    heatExhausts,
+    ariaLabel: `${weaponName} live-fire preview. ${volleyDescription} at ${volleysPerSecond.toFixed(1)} volleys per second.${missileDescription}${phaseDescription}${heatDescription} Projectile paths use the draft loadout's combat velocity, spread, radius, damage, engineering hooks, and owned item hooks.`
   };
 }
 
@@ -608,13 +675,16 @@ function createFoundryAttackProjectileModel(
   const performanceRise = -projectile.vy * performanceTravelSeconds;
   const missile = isMissileProjectile(projectile.tags);
   const phased = isPhaseProjectile(projectile.tags);
-  const flightKind = phased
-    ? missile
-      ? 'phaseMissile'
-      : 'phase'
-    : missile
-      ? 'missile'
-      : 'ballistic';
+  const flightKind =
+    projectile.visualKind === 'heatShot'
+      ? 'heatShot'
+      : phased
+        ? missile
+          ? 'phaseMissile'
+          : 'phase'
+        : missile
+          ? 'missile'
+          : 'ballistic';
   return {
     id: `preview-shot-${waveIndex}-${projectileIndex}`,
     projectileIndex,

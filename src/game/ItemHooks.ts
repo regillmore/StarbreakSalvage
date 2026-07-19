@@ -13,6 +13,7 @@ import type {
   EnvironmentObjectKind
 } from '../content/environmentObjects';
 import type { RouteKind } from './Generation';
+import type { ProjectileVisualKind } from './HeatShot';
 
 export interface ProjectileBlueprint {
   readonly x: number;
@@ -26,11 +27,24 @@ export interface ProjectileBlueprint {
   readonly procDepth: number;
   readonly ricochetBounces?: number;
   readonly environmentDamageSource?: EnvironmentObjectDamageSource;
+  readonly visualKind?: ProjectileVisualKind;
+}
+
+export interface HeatShotEvent {
+  readonly sourceItemId: ItemId;
+  readonly outcome: 'fired' | 'exhausted';
+  readonly heatCost: number;
+  readonly heatBefore: number;
+  readonly heatAfter: number;
 }
 
 export interface FirePayload {
   readonly volleyIndex: number;
   readonly projectiles: readonly ProjectileBlueprint[];
+  readonly storedWeaponHeat?: number;
+  readonly heatShotCost?: number;
+  readonly weaponHeatSpent?: number;
+  readonly heatShotEvents?: readonly HeatShotEvent[];
 }
 
 export interface EnemyKilledPayload {
@@ -678,10 +692,7 @@ function applyOnFire(
     };
   }
 
-  if (
-    itemId === 'item_phase_grazer' &&
-    isItemVolleyCycle(itemId, instances, payload.volleyIndex)
-  ) {
+  if (itemId === 'item_phase_grazer' && isItemVolleyCycle(itemId, instances, payload.volleyIndex)) {
     return addPrototypeVentCycleShot(itemId, instances, payload, {
       ...payload,
       projectiles: payload.projectiles.map((projectile) => ({
@@ -969,19 +980,45 @@ function addPrototypeVentCycleShot(
     return output;
   }
 
+  const heatCost = Math.max(0, input.heatShotCost ?? 0);
+  const storedHeat = input.storedWeaponHeat ?? Number.POSITIVE_INFINITY;
+  const alreadySpent = Math.max(0, input.weaponHeatSpent ?? 0);
+  const availableHeat = Number.isFinite(storedHeat)
+    ? Math.max(0, storedHeat - alreadySpent)
+    : heatCost;
+  const canFire = availableHeat + 1e-9 >= heatCost;
+  const event: HeatShotEvent = {
+    sourceItemId: itemId,
+    outcome: canFire ? 'fired' : 'exhausted',
+    heatCost,
+    heatBefore: availableHeat,
+    heatAfter: canFire ? Math.max(0, availableHeat - heatCost) : availableHeat
+  };
+
+  if (!canFire) {
+    return {
+      ...output,
+      weaponHeatSpent: alreadySpent,
+      heatShotEvents: [...(input.heatShotEvents ?? []), event]
+    };
+  }
+
   return {
     ...output,
+    weaponHeatSpent: alreadySpent + heatCost,
+    heatShotEvents: [...(input.heatShotEvents ?? []), event],
     projectiles: [
       ...output.projectiles,
       {
         ...seedProjectile,
-        vx: seedProjectile.vx * 0.35,
-        vy: seedProjectile.vy * 0.94,
-        damage: Math.max(0.45, seedProjectile.damage * 0.58),
-        radius: Math.max(3, seedProjectile.radius * 0.82),
-        ttl: seedProjectile.ttl + 0.12,
-        tags: addTags(seedProjectile.tags, ['heat']),
-        procDepth: seedProjectile.procDepth + 1
+        vx: seedProjectile.vx * 0.28,
+        vy: seedProjectile.vy * 0.76,
+        damage: Math.max(1.15, seedProjectile.damage * 1.65),
+        radius: Math.max(6, seedProjectile.radius * 1.18),
+        ttl: seedProjectile.ttl + 0.4,
+        tags: addTags(seedProjectile.tags, ['heat', 'plasma']),
+        procDepth: seedProjectile.procDepth + 1,
+        visualKind: 'heatShot'
       }
     ]
   };
@@ -1031,8 +1068,7 @@ function applyOnEnemyKilled(
   ) {
     return {
       ...payload,
-      bonusSalvage:
-        payload.bonusSalvage + 2 + Math.max(0, Math.ceil(payload.overkillDamage * 0.5)),
+      bonusSalvage: payload.bonusSalvage + 2 + Math.max(0, Math.ceil(payload.overkillDamage * 0.5)),
       blastDamage: payload.blastDamage + 0.75
     };
   }

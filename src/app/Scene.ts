@@ -58,6 +58,12 @@ export interface SceneDebugState {
   readonly destructionSequence?: string;
   readonly arenaPhase?: string;
   readonly debugScenario?: string;
+  readonly heatShots?: {
+    readonly fired: number;
+    readonly exhausted: number;
+    readonly storedHeat: number;
+    readonly cost: number;
+  };
   readonly inputMode?: string;
   readonly hudMode?: string;
   readonly contractTheme?: ContractThemeDebugState;

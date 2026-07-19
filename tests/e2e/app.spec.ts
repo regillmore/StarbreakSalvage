@@ -814,6 +814,9 @@ test('exposes item-heavy hook storm debug instrumentation', async ({ page }) => 
   await expect(page.getByTestId('combat-status')).toContainText(/Shots [1-9]/);
   await expect(page.getByTestId('combat-status')).toContainText(/Hooks [1-9]/);
   await expect(page.locator('.debug-overlay')).toContainText(/Combined proc onFire \d+\/\d+/);
+  await expect(page.locator('.debug-overlay')).toContainText(/Heat shots F[1-9]\d*\/X[1-9]\d*/, {
+    timeout: 10_000
+  });
   await page.keyboard.up(' ');
 
   expect(browserErrors).toEqual([]);
@@ -1570,11 +1573,16 @@ test('keeps hardpoint live-fire geometry on one combat scale across viewport wid
   await expect(page.getByTestId('salvage-foundry')).toBeVisible();
   const cadenceShift = page.getByTestId('foundry-circuit-cadence-shift');
   await expect(cadenceShift).toHaveText(
-    'VENT SCRIPT · EVERY 4TH -> 5TH VOLLEY · +1 HEAT SHOT'
+    'VENT SCRIPT · EVERY 4TH -> 5TH VOLLEY · +1 HEAT SHOT · SPENDS 32% HEAT · COOL = EXHAUST'
   );
-  await page.getByRole('button', { name: 'Move Prototype Vent Script earlier in the circuit' }).click();
+  await expect(page.getByTestId('attack-simulation-heat-exhaust')).toHaveCount(1);
+  await page
+    .getByRole('button', { name: 'Move Prototype Vent Script earlier in the circuit' })
+    .click();
   await expect(cadenceShift).toHaveCount(0);
-  await page.getByRole('button', { name: 'Move Prototype Vent Script later in the circuit' }).click();
+  await page
+    .getByRole('button', { name: 'Move Prototype Vent Script later in the circuit' })
+    .click();
   await expect(cadenceShift).toHaveCount(1);
   await page.evaluate(() => {
     document.documentElement.dataset.reducedMotion = 'true';
@@ -1585,10 +1593,16 @@ test('keeps hardpoint live-fire geometry on one combat scale across viewport wid
       const preview = document.querySelector<HTMLElement>('[data-testid="foundry-attack-preview"]');
       const ship = preview?.querySelector<SVGSVGElement>('.ship-preview-combat');
       const shot = preview?.querySelector<HTMLElement>('[data-testid="foundry-attack-projectile"]');
-      if (!preview || !ship || !shot) throw new Error('Hardpoint preview geometry is unavailable.');
+      const exhaust = preview?.querySelector<HTMLElement>(
+        '[data-testid="attack-simulation-heat-exhaust"]'
+      );
+      if (!preview || !ship || !shot || !exhaust) {
+        throw new Error('Hardpoint preview geometry is unavailable.');
+      }
       const previewRect = preview.getBoundingClientRect();
       const shipRect = ship.getBoundingClientRect();
       const shotRect = shot.getBoundingClientRect();
+      const exhaustRect = exhaust.getBoundingClientRect();
       const cameraWidth = Number(preview.dataset.cameraWidth);
       const cameraHeight = Number(preview.dataset.cameraHeight);
       const shipRadius = Number(preview.dataset.shipRadius);
@@ -1603,7 +1617,13 @@ test('keeps hardpoint live-fire geometry on one combat scale across viewport wid
         shotWidthRatio: shotRect.width / previewRect.width,
         expectedShotWidthRatio: Math.max(4, projectileRadius * 2) / cameraWidth,
         shotAspect: shotRect.width / shotRect.height,
-        endRisePercent: Number.parseFloat(shotStyle.getPropertyValue('--shot-end-rise'))
+        endRisePercent: Number.parseFloat(shotStyle.getPropertyValue('--shot-end-rise')),
+        exhaustVisible: Number.parseFloat(getComputedStyle(exhaust).opacity),
+        exhaustInsideCamera:
+          exhaustRect.left >= previewRect.left &&
+          exhaustRect.right <= previewRect.right &&
+          exhaustRect.top >= previewRect.top &&
+          exhaustRect.bottom <= previewRect.bottom
       };
     });
 
@@ -1618,6 +1638,8 @@ test('keeps hardpoint live-fire geometry on one combat scale across viewport wid
     expect(geometry.shotWidthRatio).toBeCloseTo(geometry.expectedShotWidthRatio, 2);
     expect(geometry.shotAspect).toBeCloseTo(1, 1);
     expect(geometry.endRisePercent).toBeGreaterThanOrEqual(96);
+    expect(geometry.exhaustVisible).toBeGreaterThan(0.6);
+    expect(geometry.exhaustInsideCamera).toBe(true);
   }
   expect(narrow.shipWidthRatio).toBeCloseTo(wide.shipWidthRatio, 2);
   expect(narrow.shotWidthRatio).toBeCloseTo(wide.shotWidthRatio, 2);

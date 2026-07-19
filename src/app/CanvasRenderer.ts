@@ -64,6 +64,7 @@ import {
   isMissileProjectile
 } from '../game/MissileFlight';
 import { getPhaseProjectilePresentation, isPhaseProjectile } from '../game/PhaseProjectile';
+import { getHeatShotPresentation, type ProjectileVisualKind } from '../game/HeatShot';
 
 const BACKGROUND_SEED = 'STARBREAK-SALVAGE-SHELL';
 const DEFAULT_PLAYER_SHIP_APPEARANCE: ShipAppearance = {
@@ -164,6 +165,7 @@ export interface ProjectileRenderState {
   readonly tags: readonly string[];
   readonly ageSeconds?: number;
   readonly factionId?: FactionId;
+  readonly visualKind?: ProjectileVisualKind;
 }
 
 export interface TelegraphRenderState {
@@ -227,7 +229,8 @@ export interface CombatEffectRenderState {
     | 'environmentHit'
     | 'environmentBreak'
     | 'chainReaction'
-    | 'phaseCollapse';
+    | 'phaseCollapse'
+    | 'heatExhaust';
   readonly x: number;
   readonly y: number;
   readonly radius: number;
@@ -1716,6 +1719,19 @@ export class CanvasRenderer {
     context.shadowColor = projectileColor;
     context.shadowBlur = velocityCues.highContrastProjectiles ? 14 : 10;
 
+    if (projectile.visualKind === 'heatShot') {
+      if (phased) {
+        this.paintPhaseProjectileWake(
+          projectile,
+          projectileColor,
+          velocityCues.highContrastProjectiles
+        );
+      }
+      this.paintHeatShotProjectile(projectile, velocityCues.highContrastProjectiles);
+      context.restore();
+      return;
+    }
+
     if (phased) {
       this.paintPhaseProjectileWake(
         projectile,
@@ -1755,6 +1771,71 @@ export class CanvasRenderer {
       context.stroke();
     }
 
+    context.restore();
+  }
+
+  private paintHeatShotProjectile(projectile: ProjectileRenderState, highContrast: boolean): void {
+    const context = this.context;
+    const presentation = getHeatShotPresentation({
+      ageSeconds: this.settings.reducedMotion ? 0.12 : projectile.ageSeconds,
+      radius: projectile.radius,
+      vx: projectile.vx,
+      vy: projectile.vy
+    });
+    const shellColor = highContrast ? '#ffef5f' : '#ff9c4a';
+    const wakeColor = highContrast ? '#ffffff' : '#ffd166';
+
+    context.save();
+    context.rotate(presentation.headingRadians);
+
+    context.globalAlpha = highContrast ? 0.92 : presentation.pulse * 0.72;
+    context.strokeStyle = wakeColor;
+    context.lineWidth = highContrast ? 3 : Math.max(1.8, projectile.radius * 0.34);
+    context.beginPath();
+    context.moveTo(-presentation.wakeSpread, projectile.radius * 0.78);
+    context.quadraticCurveTo(
+      -presentation.wakeSpread * 1.4,
+      presentation.wakeLength * 0.55,
+      -presentation.wakeSpread * 0.3,
+      presentation.wakeLength
+    );
+    context.moveTo(presentation.wakeSpread, projectile.radius * 0.78);
+    context.quadraticCurveTo(
+      presentation.wakeSpread * 1.4,
+      presentation.wakeLength * 0.55,
+      presentation.wakeSpread * 0.3,
+      presentation.wakeLength
+    );
+    context.stroke();
+
+    context.globalAlpha = highContrast ? 1 : 0.9;
+    context.fillStyle = shellColor;
+    context.strokeStyle = highContrast ? '#03050d' : '#fff3c4';
+    context.lineWidth = highContrast ? 2.5 : 1.5;
+    context.beginPath();
+    context.moveTo(0, -presentation.shellRadius);
+    context.lineTo(presentation.shellRadius * 0.86, 0);
+    context.lineTo(presentation.shellRadius * 0.52, presentation.shellRadius);
+    context.lineTo(-presentation.shellRadius * 0.52, presentation.shellRadius);
+    context.lineTo(-presentation.shellRadius * 0.86, 0);
+    context.closePath();
+    context.fill();
+    context.stroke();
+
+    context.fillStyle = '#ffffff';
+    context.shadowColor = highContrast ? '#ffffff' : '#ffef5f';
+    context.shadowBlur = this.settings.reducedMotion ? 0 : 16;
+    context.beginPath();
+    context.ellipse(
+      0,
+      0,
+      presentation.coreWidth * 0.5,
+      presentation.coreLength * 0.5,
+      0,
+      0,
+      Math.PI * 2
+    );
+    context.fill();
     context.restore();
   }
 
@@ -2214,6 +2295,10 @@ export class CanvasRenderer {
     const alpha = clamp(effect.ttl / effect.maxTtl, 0, 1);
     const radius = getCombatEffectRenderRadius(effect, this.settings.reducedMotion);
     const velocityCues = getVelocityCueState(this.settings);
+    if (effect.kind === 'heatExhaust') {
+      this.paintHeatExhaustEffect(effect, alpha, velocityCues.highContrastProjectiles);
+      return;
+    }
     const color =
       effect.kind === 'bomb'
         ? '#ffd166'
@@ -2315,6 +2400,43 @@ export class CanvasRenderer {
       context.fill();
     }
 
+    context.restore();
+  }
+
+  private paintHeatExhaustEffect(
+    effect: CombatEffectRenderState,
+    alpha: number,
+    highContrast: boolean
+  ): void {
+    const context = this.context;
+    const progress = 1 - alpha;
+    const plumeLength = effect.radius * (0.9 + progress * 1.25);
+    const plumeWidth = effect.radius * (0.46 + progress * 0.42);
+    const plumeColor = highContrast ? '#ffffff' : '#ff9c4a';
+
+    context.save();
+    context.translate(effect.x, effect.y);
+    context.globalAlpha = alpha * 0.78;
+    context.fillStyle = plumeColor;
+    context.strokeStyle = highContrast ? '#03050d' : '#ffd166';
+    context.lineWidth = highContrast ? 2.5 : 1.5;
+    context.shadowColor = highContrast ? '#ffffff' : '#ff9c4a';
+    context.shadowBlur = this.settings.reducedMotion ? 0 : 12;
+    context.beginPath();
+    context.moveTo(-plumeWidth * 0.45, 0);
+    context.quadraticCurveTo(-plumeWidth, plumeLength * 0.34, -plumeWidth * 0.25, plumeLength);
+    context.lineTo(0, plumeLength * 0.74);
+    context.lineTo(plumeWidth * 0.25, plumeLength);
+    context.quadraticCurveTo(plumeWidth, plumeLength * 0.34, plumeWidth * 0.45, 0);
+    context.closePath();
+    context.fill();
+    context.stroke();
+
+    context.globalAlpha = alpha;
+    context.fillStyle = highContrast ? '#ffef5f' : '#fff3c4';
+    context.beginPath();
+    context.ellipse(0, plumeLength * 0.2, plumeWidth * 0.22, plumeLength * 0.3, 0, 0, Math.PI * 2);
+    context.fill();
     context.restore();
   }
 

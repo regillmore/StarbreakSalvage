@@ -61,6 +61,7 @@ import {
   getPhaseCollapseRadius,
   isPhaseProjectile
 } from './PhaseProjectile';
+import { HEAT_EXHAUST_EFFECT_SECONDS, getHeatShotCost } from './HeatShot';
 import type { MissionObjectiveResultSnapshot } from './ObjectiveDirector';
 import type { BossPhaseUpgradeEffects } from './UpgradeEffects';
 import type { CrewCombatProfile } from './CrewCommand';
@@ -156,6 +157,7 @@ export interface ProjectileState {
   ricochetBounces?: number;
   phasePiercedTargetKey?: string;
   readonly environmentDamageSource?: EnvironmentObjectDamageSource;
+  readonly visualKind?: ProjectileBlueprint['visualKind'];
   readonly factionId?: FactionId;
   readonly setPieceSourceId?: string;
   readonly allyId?: string;
@@ -318,7 +320,8 @@ export type CombatEffectKind =
   | 'environmentHit'
   | 'environmentBreak'
   | 'chainReaction'
-  | 'phaseCollapse';
+  | 'phaseCollapse'
+  | 'heatExhaust';
 
 export interface CombatEffectState {
   readonly id: number;
@@ -404,6 +407,8 @@ export interface CombatState {
   setPiece: SetPieceState | null;
   effects: CombatEffectState[];
   phaseCollapseCount: number;
+  heatShotsFired: number;
+  heatShotsExhausted: number;
   grazedProjectileIds: Set<number>;
   formationRewardsClaimed: Set<string>;
   hazardActorCooldowns: Map<string, number>;
@@ -739,6 +744,8 @@ export function createCombatState(
     setPiece: createSetPieceState(options.setPiecePlan ?? null, options.setPieceOwnerFactionId),
     effects: [],
     phaseCollapseCount: 0,
+    heatShotsFired: 0,
+    heatShotsExhausted: 0,
     grazedProjectileIds: new Set<number>(),
     formationRewardsClaimed: new Set<string>(),
     hazardActorCooldowns: new Map<string, number>(),
@@ -1618,8 +1625,13 @@ export function prepareDebugItemStormScenario(
   state.player.x = centerX;
   state.player.y = bounds.height * 0.78;
   state.player.fireCooldown = 0;
-  state.player.weaponHeat = 0;
+  state.player.weaponHeat = Math.min(
+    state.weapon.overheatLimit,
+    getHeatShotCost(state.weapon.overheatLimit) * 1.6
+  );
   state.player.weaponOverheatSeconds = 0;
+  state.heatShotsFired = 0;
+  state.heatShotsExhausted = 0;
   state.player.invulnerableSeconds = 0.85;
   state.player.specialCharge = state.player.maxSpecialCharge;
   state.player.specialCooldown = 0;
@@ -3061,9 +3073,14 @@ function updatePlayer(
 
     const firePayload = applyCombatHooks(state, 'onFire', {
       volleyIndex: state.volleyIndex,
-      projectiles: createWeaponProjectileBlueprints(state.weapon, state.player)
+      projectiles: createWeaponProjectileBlueprints(state.weapon, state.player),
+      storedWeaponHeat: player.weaponHeat,
+      heatShotCost: getHeatShotCost(state.weapon.overheatLimit),
+      weaponHeatSpent: 0,
+      heatShotEvents: []
     });
 
+    resolveHeatShotEvents(state, firePayload);
     spawnPlayerProjectiles(state, firePayload.projectiles);
     addWeaponHeat(state);
 
@@ -3076,6 +3093,37 @@ function updatePlayer(
       shotsFired: state.stats.shotsFired + firePayload.projectiles.length,
       itemTriggers: state.stats.itemTriggers + Math.max(0, firePayload.projectiles.length - 1)
     };
+  }
+}
+
+function resolveHeatShotEvents(state: CombatState, payload: ItemHookPayloadByName['onFire']): void {
+  const spent = Math.min(state.player.weaponHeat, Math.max(0, payload.weaponHeatSpent ?? 0));
+  state.player.weaponHeat = Math.max(0, state.player.weaponHeat - spent);
+
+  let exhaustedIndex = 0;
+  for (const event of payload.heatShotEvents ?? []) {
+    if (event.outcome === 'fired') {
+      state.heatShotsFired += 1;
+      continue;
+    }
+
+    state.heatShotsExhausted += 1;
+    if (state.effects.length >= MAX_ENVIRONMENT_FEEDBACK_EFFECTS) {
+      continue;
+    }
+
+    const side = exhaustedIndex % 2 === 0 ? -1 : 1;
+    const lane = Math.floor(exhaustedIndex / 2) + 1;
+    state.effects.push({
+      id: getNextEntityId(state),
+      kind: 'heatExhaust',
+      x: state.player.x + side * lane * 7,
+      y: state.player.y + state.player.radius * 0.72,
+      radius: 18 + Math.min(8, exhaustedIndex * 2),
+      ttl: HEAT_EXHAUST_EFFECT_SECONDS,
+      maxTtl: HEAT_EXHAUST_EFFECT_SECONDS
+    });
+    exhaustedIndex += 1;
   }
 }
 
@@ -3794,7 +3842,8 @@ function selectBossAttackPattern(boss: BossState): BossPatternId {
 function updateProjectiles(state: CombatState, dt: number, bounds: CombatBounds): void {
   for (const projectile of state.projectiles) {
     const missile = isMissileProjectile(projectile.tags);
-    const tracksVisualAge = missile || isPhaseProjectile(projectile.tags);
+    const tracksVisualAge =
+      missile || isPhaseProjectile(projectile.tags) || projectile.visualKind === 'heatShot';
     const ageSeconds = tracksVisualAge ? Math.max(0, projectile.ageSeconds ?? 0) : 0;
     const nextAgeSeconds = ageSeconds + dt;
     const travelSeconds =
