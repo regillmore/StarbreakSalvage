@@ -8,6 +8,7 @@ import {
 } from '../../src/game/CombatState';
 import { generateRunSkeleton, type RouteKind, type RouteOption } from '../../src/game/Generation';
 import {
+  addItemToSession,
   advanceSector,
   applyRouteOutcome,
   createRunSession,
@@ -147,6 +148,53 @@ describe('route events', () => {
     expect(discount).toBeGreaterThan(0);
   });
 
+  it('applies permanent Low-Orbit Ore Scrip refunds without doubling a restored item copy', () => {
+    const run = generateRunSkeleton('ORE-SCRIP-ROUTE', {
+      purchasedUpgradeIds: ['upgrade_low_orbit_ore_scrip']
+    });
+    const contract = getFirstContract(run);
+    const sector = getCurrentSector(run, createRunSession(run, contract));
+    const route = makeRoute('shop');
+    const outcome = generateRouteOutcome({
+      run,
+      sector,
+      route,
+      availableCredits: contract.startingCredits
+    });
+    const upgraded = createRunSession(run, contract);
+    const restored = createRunSession(run, contract);
+    const stacked = createRunSession(run, contract);
+
+    expect(addItemToSession(restored, 'item_low_orbit_ore_scrip').socket).not.toBeNull();
+    expect(addItemToSession(stacked, 'item_low_orbit_ore_scrip').socket).not.toBeNull();
+
+    applyRouteOutcome(
+      upgraded,
+      sector,
+      route,
+      outcome,
+      undefined,
+      undefined,
+      run.upgradeEffects.routeChosen
+    );
+    applyRouteOutcome(restored, sector, route, outcome);
+    applyRouteOutcome(
+      stacked,
+      sector,
+      route,
+      outcome,
+      undefined,
+      undefined,
+      run.upgradeEffects.routeChosen
+    );
+
+    const expectedCreditsDelta = outcome.effects.creditsDelta + 1;
+    expect(upgraded.routeOutcomes[0]?.effects.creditsDelta).toBe(expectedCreditsDelta);
+    expect(restored.routeOutcomes[0]?.effects.creditsDelta).toBe(expectedCreditsDelta);
+    expect(stacked.routeOutcomes[0]?.effects.creditsDelta).toBe(expectedCreditsDelta);
+    expect(stacked.routeOutcomes[0]?.details).toContain('Low-Orbit Ore Scrip refunds 1 credit.');
+  });
+
   it('uses route outcomes to alter rewards and next-sector combat', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
     const contract = getFirstContract(run);
@@ -166,9 +214,9 @@ describe('route events', () => {
 
     expect(advanceSector(run, session)).toBe(true);
     expect(getIncomingRewardRouteKind(session, session.currentSectorIndex)).toBe(route.kind);
-    expect(
-      getRewardModifiersForSector(session, session.currentSectorIndex)[0]?.creditBonus
-    ).toBe(3);
+    expect(getRewardModifiersForSector(session, session.currentSectorIndex)[0]?.creditBonus).toBe(
+      3
+    );
     expect(
       generateSectorRewardChoices({
         run,

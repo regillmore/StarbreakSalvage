@@ -105,11 +105,11 @@ Known-seed tests now sample shop, elite, vault, and lunar reward surfaces, and u
 
 | Tag        | Count |
 | ---------- | ----- |
-| `credit`   | 13    |
+| `credit`   | 12    |
 | `phase`    | 9     |
-| `scrap`    | 7     |
+| `scrap`    | 6     |
 | `drone`    | 8     |
-| `plasma`   | 9     |
+| `plasma`   | 10    |
 | `shield`   | 5     |
 | `curse`    | 5     |
 | `heat`     | 7     |
@@ -122,7 +122,7 @@ Known-seed tests now sample shop, elite, vault, and lunar reward surfaces, and u
 | `ricochet` | 4     |
 | `bomb`     | 3     |
 | `revenge`  | 3     |
-| `split`    | 6     |
+| `split`    | 7     |
 | `relic`    | 2     |
 
 `relic`, `split`, `revenge`, and `bomb` remain thinner tags even though their broader families are now represented.
@@ -139,7 +139,7 @@ Known-seed tests now sample shop, elite, vault, and lunar reward surfaces, and u
 | Curse/Relic      | 6     | Advanced vault/route entries are locked behind the Relic Thief dossier; risk/reward tuning still needs work.  |
 | Phase/Graze      | 6     | Ricochet Branch Coupler extends split and drone branches with a real bounce.                                  |
 | Heat/Prototype   | 6     | Plasma Seed Crucible converts an earlier circuit trait into plasma/heat scaling.                              |
-| Lunar/Surface    | 5     | First source-driven sector family is present.                                                                 |
+| Lunar/Surface    | 5     | Gangue Compression Die converts upstream light branches into denser plasma.                                   |
 | Route/Economy    | 4     | Exit Toll moved to permanent scrap progression; four active route-circuit items remain.                       |
 
 The five Boss Pressure definitions and their original hook implementations remain readable to restored snapshots, but they are absent from pools, unlock gates, discovery, stress fixtures, and the active audit. Boss Warning Lattice and Capital Relief Protocol preserve the worthwhile telegraph, delay, charge, and late-phase-clear mechanics as permanent scrap upgrades.
@@ -148,14 +148,14 @@ The five Boss Pressure definitions and their original hook implementations remai
 
 | Archetype        | Rewarded count |
 | ---------------- | -------------- |
-| Laser/Split      | 14             |
+| Laser/Split      | 15             |
 | Missile/Overkill | 9              |
 | Drone/Copy       | 11             |
 | Shield/Revenge   | 5              |
-| Credit/Shop      | 14             |
+| Credit/Shop      | 13             |
 | Curse/Relic      | 6              |
 | Phase/Graze      | 11             |
-| Heat/Prototype   | 13             |
+| Heat/Prototype   | 14             |
 
 ## Former Bridge Effects Promoted In Work Order 132
 
@@ -183,6 +183,12 @@ Exit Toll Transponder is now a permanent 9 kg Salvage upgrade rather than an act
 Coupon Cascade Fuse is now a permanent 10 kg Market upgrade gated by Market Decoder. Its retired catalog record and `onShopEntered` reducer remain only for restored run snapshots; shop generation gives a legacy fitted copy precedence over the permanent flag, preserving the exact one-credit discount and credit-stock bias without double application. The permanent effect is passed explicitly into shop generation but excluded from the expedition-wide generation fingerprint, so installing it changes deterministic market stock without reshuffling contracts, routes, sectors, or run duration.
 
 Boreline Crimper occupies the released common starter/combat/shop slot. It affects only off-axis projectiles already present at its `onFire` stage: lateral velocity falls to 58%, forward velocity rises by 12%, impact rises by 18%, and the branch gains `overkill`. A Crimper after Split Prism, Needle Splitter, a missile splinter, or another fan stage therefore compresses every available branch; one placed before a splitter cannot retroactively modify shots that do not exist yet. It adds no projectile, counter, RNG draw, or separate preview implementation.
+
+## Permanent Ore Scrip and Gangue chain in Work Order 179
+
+Low-Orbit Ore Scrip is now an 8 kg Navigation upgrade gated by Route Ledger Uplink. Its retired catalog record and `onRouteChosen` reducer remain only for restored snapshots; route settlement gives the legacy fitted copy precedence over the permanent flag, preserving exactly one credit after Shop/Repair destinations. The route-local flag is excluded from the expedition-wide generation fingerprint and supplied only at settlement, so it does not reshuffle seeded content.
+
+Gangue Compression Die occupies the released common starter/combat/lunar/route slot. At its ordered `onFire` stage it finds the current peak projectile damage and compacts only shots below 90% of that reference: 90% velocity, 130% damage, +1 radius, +0.18 seconds of life, and a `plasma` trait. Split Prism and other earlier branch builders therefore feed the Die; later branches cannot be retroactively converted. The added plasma trait opens existing Chain Arc, Ricochet, Plasma Lens/Bloom, Arc Window, Heat Signature, and Crossfeed combinations without adding a projectile or a second preview path.
 
 ## Risks For 057-060
 

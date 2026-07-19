@@ -38,7 +38,7 @@ export const ITEM_STORM_ITEM_IDS: readonly ItemId[] = [
   'item_regolith_scoop_array',
   'item_crater_shadow_lens',
   'item_route_ledger_spool',
-  'item_boreline_crimper',
+  'item_gangue_compression_die',
   'item_market_echo_locator',
   'item_convoy_receipt_printer',
   'item_oathbound_deflector',

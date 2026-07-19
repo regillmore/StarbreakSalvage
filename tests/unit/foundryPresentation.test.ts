@@ -273,6 +273,47 @@ describe('foundry visual presentation', () => {
     ).toBeCloseTo(70.528);
   });
 
+  it('shows Gangue Compression Die converting only upstream light branches into plasma', () => {
+    const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
+      (candidate) => candidate.shipId === 'ship_debt_runner'
+    );
+    if (!contract) throw new Error('Expected a single-projectile contract.');
+    const splitThenCompress = createFoundryDashboardModel(
+      createEngineeringState(contract.loadout),
+      [
+        { itemId: 'item_split_prism', acquisitionOrder: 0 },
+        { itemId: 'item_gangue_compression_die', acquisitionOrder: 1 }
+      ]
+    );
+    const compressThenSplit = createFoundryDashboardModel(
+      createEngineeringState(contract.loadout),
+      [
+        { itemId: 'item_gangue_compression_die', acquisitionOrder: 0 },
+        { itemId: 'item_split_prism', acquisitionOrder: 1 }
+      ]
+    );
+
+    expect(splitThenCompress.circuitStages[1]).toMatchObject({
+      name: 'Gangue Compression Die',
+      incomingProjectiles: 3,
+      outgoingProjectiles: 3,
+      outputLabel: '2.2 -> 2.6 impact',
+      addedTags: ['plasma'],
+      changed: true
+    });
+    expect(compressThenSplit.circuitStages[0]).toMatchObject({
+      name: 'Gangue Compression Die',
+      outputLabel: 'conditional volley armed',
+      addedTags: [],
+      changed: false
+    });
+    expect(
+      splitThenCompress.attackSimulation.projectiles.filter((projectile) =>
+        projectile.tags.includes('plasma')
+      )
+    ).not.toHaveLength(0);
+  });
+
   it('projects prototype-vent cadence shifts onto affected earlier circuit cards', () => {
     const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
       (candidate) => candidate.shipId === 'ship_debt_runner'

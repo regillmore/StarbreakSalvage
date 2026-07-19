@@ -2518,3 +2518,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 178. `GameplayScene` owns the urgent cockpit projection and supplies a structured pause read model; `PauseScene` renders the low-urgency dossier without reading combat internals. The live command surface is gone, allies remain automatic, and the narrow HUD ceiling is 156 px.
+
+### BL44 - Permanent Ore Scrip and Gangue chain
+
+Acceptance:
+
+- Low-Orbit Ore Scrip leaves active item rewards and becomes an 8 kg permanent Navigation upgrade gated by Route Ledger Uplink.
+- Its one-credit Shop/Repair route refund remains deterministic, restored run snapshots retain the retired item behavior, and the two representations cannot double-pay.
+- Common Gangue Compression Die replaces the active slot and compacts upstream lighter branches into slower, harder, larger, longer-lived plasma shots without adding projectiles.
+- Circuit order is material and visible: split then Die converts existing light branches and reports the impact/tag change, while Die then split cannot rewrite later-created shots.
+- Global generation fingerprints, active breadth, Upgrade Bay totals, item-storm hook pressure, reward/shop snapshots, saves, accessibility, performance limits, static hosting, and smoke tooling remain coherent.
+
+Status:
+
+- Implemented in work order 179. `UpgradeEffects` and `RunSession` own the permanent route refund with restored-item precedence. `ItemHooks` owns Gangue's pure ordered transform, which automatically feeds combat and shared live-fire previews. The active catalog remains at 60 items and the global run fingerprint excludes the route-local upgrade.

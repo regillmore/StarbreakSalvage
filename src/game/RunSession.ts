@@ -57,6 +57,7 @@ import {
 import { generateStartingItemLoadout, type ItemInstance } from './Rewards';
 import { autoFitItemSocket, autoFitItemSockets, getActiveFittedItems } from './ItemSockets';
 import type { ShopStockLedger } from './ShopStock';
+import { getLowOrbitOreScripCreditRefund, type RouteChosenUpgradeEffects } from './UpgradeEffects';
 import type {
   AppliedRouteOutcome,
   RouteCombatModifier,
@@ -370,9 +371,7 @@ export function applyFleetCommand(
   if (
     command.kind === 'assign' &&
     command.candidateId !== null &&
-    session.carrier.facilities.some(
-      (facility) => facility.assignedCrewId === command.candidateId
-    )
+    session.carrier.facilities.some((facility) => facility.assignedCrewId === command.candidateId)
   ) {
     return {
       state: session.fleet,
@@ -406,10 +405,7 @@ export function applyFleetCommand(
   session.fleet = result.state;
   session.salvage -= result.salvageCost;
   if (result.consumedComponentId) {
-    session.engineering = consumeCargoComponent(
-      session.engineering,
-      result.consumedComponentId
-    );
+    session.engineering = consumeCargoComponent(session.engineering, result.consumedComponentId);
     session.carrier = {
       ...session.carrier,
       cargo: session.carrier.cargo.filter((cargo) => cargo.id !== result.consumedComponentId)
@@ -441,8 +437,7 @@ export function applyFleetCommand(
     id: `${eventId}:crew-arc`,
     source: command.kind === 'construct' || command.kind === 'refit' ? 'module' : 'command',
     sectorIndex: session.currentSectorIndex,
-    candidateIds:
-      command.kind === 'assign' && command.candidateId ? [command.candidateId] : [],
+    candidateIds: command.kind === 'assign' && command.candidateId ? [command.candidateId] : [],
     positive: command.kind !== 'recover',
     detail: result.label
   });
@@ -935,10 +930,7 @@ export function recordRouteChoice(
 
 export function getRunSessionVisitedActRouteSectorIndices(
   run: Pick<RunSkeleton, 'actRouteGraph'>,
-  session: Pick<
-    RunSessionState,
-    'currentSectorIndex' | 'routeHistory' | 'routeOutcomes'
-  >
+  session: Pick<RunSessionState, 'currentSectorIndex' | 'routeHistory' | 'routeOutcomes'>
 ): readonly number[] {
   const recordedTargets = [
     ...session.routeOutcomes.map((outcome) => outcome.sectorIndex),
@@ -947,9 +939,7 @@ export function getRunSessionVisitedActRouteSectorIndices(
     )
   ];
   const legacyTargets =
-    recordedTargets.length === 0
-      ? session.routeHistory.map((entry) => entry.sectorIndex)
-      : [];
+    recordedTargets.length === 0 ? session.routeHistory.map((entry) => entry.sectorIndex) : [];
 
   return getVisitedActRouteSectorIndices({
     graph: run.actRouteGraph,
@@ -964,9 +954,16 @@ export function applyRouteOutcome(
   route: RouteOption,
   outcome: AppliedRouteOutcome,
   factionCampaignPlan?: FactionCampaignPlan,
-  factionFrontPlan?: FactionFrontPlan
+  factionFrontPlan?: FactionFrontPlan,
+  routeUpgradeEffects?: RouteChosenUpgradeEffects
 ): void {
-  const adjustedOutcome = applyRouteChosenHooks(session, sector, route, outcome);
+  const adjustedOutcome = applyRouteChosenHooks(
+    session,
+    sector,
+    route,
+    outcome,
+    routeUpgradeEffects
+  );
 
   recordRouteChoice(session, sector, route, adjustedOutcome);
 
@@ -1286,12 +1283,17 @@ function applyRouteChosenHooks(
   session: RunSessionState,
   sector: SectorRoute,
   route: RouteOption,
-  outcome: AppliedRouteOutcome
+  outcome: AppliedRouteOutcome,
+  routeUpgradeEffects?: RouteChosenUpgradeEffects
 ): AppliedRouteOutcome {
   const engineering = createEngineeringCombatProfile(session.engineering);
+  const activeItems = getActiveFittedItems(session.itemInstances, session.engineering.committed);
+  const hasLegacyOreScrip = activeItems.some(
+    (instance) => instance.itemId === 'item_low_orbit_ore_scrip'
+  );
   const payload = applyCombinedHooks(
     'onRouteChosen',
-    getActiveFittedItems(session.itemInstances, session.engineering.committed),
+    activeItems,
     engineering.hooks,
     {
       routeKind: route.kind,
@@ -1311,6 +1313,13 @@ function applyRouteChosenHooks(
     },
     { maxApplications: engineering.procBudget }
   );
+  const permanentOreRefund = hasLegacyOreScrip
+    ? 0
+    : getLowOrbitOreScripCreditRefund(routeUpgradeEffects ?? null, route.kind);
+  const oreRefundApplied =
+    permanentOreRefund > 0 ||
+    (hasLegacyOreScrip &&
+      getLowOrbitOreScripCreditRefund({ lowOrbitOreRefund: true }, route.kind) > 0);
   const hasShopPayload =
     outcome.effects.shop !== null ||
     payload.shopDiscount !== 0 ||
@@ -1319,9 +1328,12 @@ function applyRouteChosenHooks(
 
   return {
     ...outcome,
+    details: oreRefundApplied
+      ? [...outcome.details, 'Low-Orbit Ore Scrip refunds 1 credit.']
+      : outcome.details,
     effects: {
       ...outcome.effects,
-      creditsDelta: payload.creditsDelta,
+      creditsDelta: payload.creditsDelta + permanentOreRefund,
       salvageDelta: payload.salvageDelta,
       hullPatchDelta: payload.hullPatchDelta,
       curseDelta: payload.curseDelta,
@@ -1390,9 +1402,8 @@ export function getIncomingRewardRouteKind(
   sectorIndex: number
 ): RouteKind | null {
   return (
-    [...session.routeOutcomes]
-      .reverse()
-      .find((outcome) => outcome.sectorIndex === sectorIndex)?.routeKind ?? null
+    [...session.routeOutcomes].reverse().find((outcome) => outcome.sectorIndex === sectorIndex)
+      ?.routeKind ?? null
   );
 }
 
@@ -1528,8 +1539,7 @@ export function advanceSector(
       `Illegal act route transition from ${previousSectorIndex + 1} to ${targetSectorIndex + 1}.`
     );
   }
-  session.currentSectorIndex =
-    targetSectorIndex ?? routeTargets[0] ?? previousSectorIndex + 1;
+  session.currentSectorIndex = targetSectorIndex ?? routeTargets[0] ?? previousSectorIndex + 1;
   for (const threat of run.apexHunts.threats) {
     const finale = threat.encounters.find((encounter) => encounter.stage === 'finale');
     const state = session.apexHunts.threats.find(

@@ -1378,10 +1378,7 @@ export class GameApp {
         !completedStage.optional &&
         completedStage.operationalRole === 'gate' &&
         nextStage.id === schedule.branchStageId &&
-        shouldOfferSectorCompletionReward(
-          this.currentRun.acts,
-          this.runSession.currentSectorIndex
-        )
+        shouldOfferSectorCompletionReward(this.currentRun.acts, this.runSession.currentSectorIndex)
       ) {
         this.showReward();
       } else {
@@ -1653,10 +1650,7 @@ export class GameApp {
       this.handleRouteChoice(targetSectorIndex, route);
     };
     if (
-      getActBoundaryHandoffAfterSector(
-        this.currentRun.acts,
-        this.runSession.currentSectorIndex
-      )
+      getActBoundaryHandoffAfterSector(this.currentRun.acts, this.runSession.currentSectorIndex)
     ) {
       chooseOption(direct.id);
       return;
@@ -1714,11 +1708,7 @@ export class GameApp {
           targetSectorIndices,
           onChoose: chooseRoute
         },
-        () =>
-          this.suspendAtConstellation(
-            'sectorTransition',
-            `Suspended at ${branchStage.label}`
-          )
+        () => this.suspendAtConstellation('sectorTransition', `Suspended at ${branchStage.label}`)
       )
     );
     this.checkpointRun('sectorTransition', `${branchStage.label} checkpoint`);
@@ -1824,10 +1814,7 @@ export class GameApp {
 
   private showRouteChoice(): void {
     if (
-      getActBoundaryHandoffAfterSector(
-        this.currentRun.acts,
-        this.runSession.currentSectorIndex
-      )
+      getActBoundaryHandoffAfterSector(this.currentRun.acts, this.runSession.currentSectorIndex)
     ) {
       this.advanceAfterSectorExtraction();
       return;
@@ -1858,8 +1845,7 @@ export class GameApp {
         {
           sourceSectorIndex,
           targetSectorIndices,
-          onChoose: (targetSectorIndex, route) =>
-            this.handleRouteChoice(targetSectorIndex, route)
+          onChoose: (targetSectorIndex, route) => this.handleRouteChoice(targetSectorIndex, route)
         },
         () =>
           this.suspendAtConstellation(
@@ -1887,7 +1873,8 @@ export class GameApp {
       route,
       outcome,
       this.currentRun.factionCampaign,
-      this.currentRun.factionFronts
+      this.currentRun.factionFronts,
+      this.currentRun.upgradeEffects.routeChosen
     );
 
     if (route.kind === 'shop') {
@@ -2104,10 +2091,7 @@ export class GameApp {
     );
   }
 
-  private acquireRouteComponentAndAdvance(
-    targetSectorIndex: number,
-    route: RouteOption
-  ): void {
+  private acquireRouteComponentAndAdvance(targetSectorIndex: number, route: RouteOption): void {
     const sector = getCurrentSector(this.currentRun, this.runSession);
     const component = generateComponentSalvage({
       seed: this.currentRun.seed,

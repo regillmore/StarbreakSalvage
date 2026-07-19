@@ -13,6 +13,10 @@ export interface SectorStartUpgradeEffects {
   readonly exitTollRefund: boolean;
 }
 
+export interface RouteChosenUpgradeEffects {
+  readonly lowOrbitOreRefund: boolean;
+}
+
 export interface RunUpgradeEffects {
   readonly purchasedUpgradeIds: readonly UpgradeId[];
   readonly activeUpgradeIds: readonly UpgradeId[];
@@ -28,6 +32,7 @@ export interface RunUpgradeEffects {
   readonly rewardBiasTags: readonly ItemTag[];
   readonly seedSurvey: boolean;
   readonly sectorStart: SectorStartUpgradeEffects;
+  readonly routeChosen: RouteChosenUpgradeEffects;
   readonly bossPhase: BossPhaseUpgradeEffects;
 }
 
@@ -59,6 +64,9 @@ export function resolveRunUpgradeEffects(
     seedSurvey: hasUpgrade('upgrade_seed_cartographer'),
     sectorStart: {
       exitTollRefund: hasUpgrade('upgrade_exit_toll_transponder')
+    },
+    routeChosen: {
+      lowOrbitOreRefund: hasUpgrade('upgrade_low_orbit_ore_scrip')
     },
     bossPhase: {
       attackCooldownSeconds: hasBossWarning ? 0.15 : 0,
@@ -104,6 +112,10 @@ export function getRunUpgradeDebugLabels(effects: RunUpgradeEffects): string[] {
     labels.push('exit toll refund');
   }
 
+  if (effects.routeChosen.lowOrbitOreRefund) {
+    labels.push('ore scrip refund');
+  }
+
   if (effects.bossPhase.telegraphSeconds > 0) {
     labels.push('boss warning');
   }
@@ -120,6 +132,13 @@ export function getExitTollCreditRefund(
   sectorIndex: number
 ): number {
   return effects?.exitTollRefund ? Math.min(3, Math.max(1, Math.floor(sectorIndex))) : 0;
+}
+
+export function getLowOrbitOreScripCreditRefund(
+  effects: RouteChosenUpgradeEffects | null,
+  routeKind: RewardContextKind
+): number {
+  return effects?.lowOrbitOreRefund && (routeKind === 'shop' || routeKind === 'repair') ? 1 : 0;
 }
 
 export function getMarketDecoderReadout(effects: RunUpgradeEffects): string | null {

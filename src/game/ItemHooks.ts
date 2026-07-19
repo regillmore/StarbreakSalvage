@@ -218,6 +218,7 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
   onFire: [
     'item_split_prism',
     'item_boreline_crimper',
+    'item_gangue_compression_die',
     'item_drone_uplink',
     'item_heat_sink_saint',
     'item_phase_grazer',
@@ -653,6 +654,32 @@ function applyOnFire(
           vy: projectile.vy * 1.12,
           damage: projectile.damage * 1.18,
           tags: addTags(projectile.tags, ['overkill'])
+        };
+      })
+    };
+  }
+
+  if (itemId === 'item_gangue_compression_die') {
+    const peakDamage = payload.projectiles.reduce(
+      (peak, projectile) => Math.max(peak, projectile.damage),
+      0
+    );
+
+    return {
+      ...payload,
+      projectiles: payload.projectiles.map((projectile) => {
+        if (peakDamage <= 0 || projectile.damage >= peakDamage * 0.9) {
+          return projectile;
+        }
+
+        return {
+          ...projectile,
+          vx: projectile.vx * 0.9,
+          vy: projectile.vy * 0.9,
+          damage: projectile.damage * 1.3,
+          radius: projectile.radius + 1,
+          ttl: projectile.ttl + 0.18,
+          tags: addTags(projectile.tags, ['plasma'])
         };
       })
     };

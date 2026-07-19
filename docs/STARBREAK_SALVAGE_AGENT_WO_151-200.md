@@ -728,3 +728,30 @@ Status: implemented. `GameplayScene` now renders only the urgent readout subset 
 Focused desktop and narrow Chromium coverage protects the urgent-versus-dossier split, suppressed command surface, campaign and automatic-wing relocation, four-card pause structure, sticky navigation flow, and the 156 px narrow HUD ceiling. A managed in-app browser pass at 1280x720 measured the normal cockpit at two compact operational bands, rendered a 1080 px pause dossier with four metrics and four sections, found no horizontal overflow or ally controls, and captured no console errors. The unchanged managed host stopped cleanly and its original shell returned exit code 0.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 111 Vitest files and 691 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 977.38 kB minified/267.42 kB gzip initial JavaScript and 93.32/18.78 kB CSS, increases of 4.03/0.87 kB JavaScript and 2.05/0.41 kB CSS over work order 177. The existing 500 kB chunk notice remains; no dependency, save/snapshot schema, deterministic content input, route topology, static base path, or warning threshold changed.
+
+## Work order 179 - Permanent Ore Scrip and Gangue Compression Die
+
+Goal: move Low-Orbit Ore Scrip's dependable low-risk route refund into permanent progression and refill its common reward slot with another genuinely ordered weapon-chain tool.
+
+Prompt:
+
+> Retire Low-Orbit Ore Scrip from active run rewards and move its one-credit Shop/Repair route refund into the permanent scrap Upgrade Bay. Preserve restored-run behavior without allowing the item and upgrade to double-pay. Add a common replacement that turns lighter projectiles created earlier in the signal circuit into a distinct, synergy-friendly output. Keep route settlement and weapon generation deterministic, previews honest, active catalog breadth stable, and the managed smoke-host defaults reliable.
+
+Acceptance criteria:
+
+- Low-Orbit Ore Scrip is absent from active discovery and reward pools and appears as an 8 kg permanent Navigation upgrade gated by Route Ledger Uplink.
+- Permanent and restored-item forms each refund exactly one credit after a Shop or Repair route; owning both pays once and records the refund in the settled route detail.
+- The route-local effect is explicit input to route settlement and is excluded from the expedition-wide generation fingerprint, so it cannot reshuffle contracts, route topology, sectors, shops, rewards, or duration.
+- Common Gangue Compression Die replaces the same starter/combat/lunar/route slot and modifies only lighter projectiles that exist before its ordered `onFire` stage.
+- Eligible shots retain 90% velocity, gain 30% impact, one radius unit, 0.18 seconds of life, and the `plasma` trait; the strongest reference shots and later-created branches remain unchanged.
+- Hardpoint cumulative cards and live-fire use the production hook path, making Split-then-Die report a `2.2 -> 2.6 impact` plasma conversion while Die-then-Split remains conditional.
+- The active catalog remains at 60 items and the 29-item stress fixture substitutes Gangue for one prior `onFire` transform without increasing hook applications or proc limits.
+- Upgrade Bay totals, restored snapshot compatibility, deterministic source-weighted fixtures, saves, accessibility modes, static hosting, dependencies, and work order 175 smoke tooling remain coherent.
+
+Status: implemented. Low-Orbit Ore Scrip remains a retired catalog record and `onRouteChosen` hook solely for restored run snapshots. `RunUpgradeEffects.routeChosen` exposes the permanent flag; `RunSession.applyRouteOutcome` gives a fitted legacy copy precedence, appends one readable refund detail, and settles exactly one credit on Shop/Repair destinations. The upgrade is deliberately omitted from the global generation fingerprint.
+
+Gangue Compression Die occupies the released common lunar slot as a bounded ordered transform. It compares the already-built volley against its peak impact, compacts only sub-90% branches, and adds plasma without creating shots, RNG draws, counters, or preview-only rules. Splitters before the Die produce denser plasma branches and unlock downstream plasma/arc/ricochet interactions; splitters after it remain untouched.
+
+The unchanged managed-smoke defaults selected port 4175 and published `http://192.168.1.2:4175/StarbreakSalvage/` through JSON status. The in-app browser loaded that exact address, rendered all eleven permanent upgrades, and showed Low-Orbit Ore Scrip's 8 kg cost, Route Ledger Uplink prerequisite, and Shop/Repair refund. At 390x700 the Upgrade Bay remained exactly 390 px wide with no horizontal overflow and no captured console warnings or errors. `smoke:stop` then closed the listener and the original managed host shell returned exit code 0, so work order 179 requires no tooling adjustment.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 111 Vitest files and 695 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 978.94 kB minified/267.88 kB gzip initial JavaScript and 93.32/18.78 kB CSS, increases of 1.56/0.46 kB JavaScript and no CSS change over work order 178. The existing 500 kB chunk notice remains; no dependency, save/snapshot schema, route topology, static base path, or warning threshold changed.

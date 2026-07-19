@@ -19,7 +19,7 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
       "vault source",
     ],
     [
-      "item_low_orbit_ore_scrip",
+      "item_mining_laser_transit",
       "lunar source",
     ],
     [
@@ -49,9 +49,9 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
         "boss source",
       ],
       [
-        "item_magnetized_tithe_box",
-        15,
-        "Shop pool",
+        "item_phase_anchor_spool",
+        17,
+        "vault source",
       ],
       [
         "item_credit_reroute_fuse",
@@ -59,9 +59,9 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
         "Shop pool",
       ],
       [
-        "item_boreline_crimper",
+        "item_wake_missile_abacus",
         17,
-        "shop source",
+        "Shop pool",
       ],
     ],
   },
@@ -109,7 +109,7 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
       "vault source",
     ],
     [
-      "item_low_orbit_ore_scrip",
+      "item_mining_laser_transit",
       "lunar source",
     ],
     [
@@ -154,8 +154,8 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
         "shop source",
       ],
       [
-        "item_salvage_dividend_chip",
-        14,
+        "item_arc_welder_drone",
+        16,
         "Shop pool",
       ],
     ],

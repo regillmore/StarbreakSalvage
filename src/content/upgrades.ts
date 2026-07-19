@@ -19,7 +19,8 @@ export const UPGRADE_EFFECT_KINDS = [
   'bossWarning',
   'bossRelief',
   'sectorTollRefund',
-  'shopCouponCascade'
+  'shopCouponCascade',
+  'routeOreScrip'
 ] as const;
 
 export type UpgradeCategory = (typeof UPGRADE_CATEGORIES)[number];
@@ -36,7 +37,8 @@ export type UpgradeId =
   | 'upgrade_boss_warning_lattice'
   | 'upgrade_capital_relief_protocol'
   | 'upgrade_exit_toll_transponder'
-  | 'upgrade_coupon_cascade_fuse';
+  | 'upgrade_coupon_cascade_fuse'
+  | 'upgrade_low_orbit_ore_scrip';
 
 export interface UpgradeDefinition {
   readonly id: UpgradeId;
@@ -160,6 +162,17 @@ export const UPGRADES: readonly UpgradeDefinition[] = [
     effect: 'Every shop trims prices by 1 credit and favors credit-tagged stock.',
     cost: 10,
     prerequisites: ['upgrade_market_decoder']
+  },
+  {
+    id: 'upgrade_low_orbit_ore_scrip',
+    category: 'navigation',
+    iconKey: 'route-radar',
+    effectKind: 'routeOreScrip',
+    name: 'Low-Orbit Ore Scrip',
+    summary: 'a standing ore-credit agreement accepted along stable carrier lanes',
+    effect: 'Shop and Repair destinations refund 1 credit after route settlement.',
+    cost: 8,
+    prerequisites: ['upgrade_route_ledger_uplink']
   }
 ];
 

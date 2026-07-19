@@ -173,6 +173,7 @@ export type ItemId =
   | 'item_surface_beacon_drone'
   | 'item_mining_laser_transit'
   | 'item_low_orbit_ore_scrip'
+  | 'item_gangue_compression_die'
   | 'item_route_ledger_spool'
   | 'item_ambush_insurance_stamp'
   | 'item_exit_toll_transponder'
@@ -1170,8 +1171,27 @@ export const ITEMS: readonly ItemDefinition[] = [
       sources: ['starter', 'combat', 'lunar', 'route'],
       unlockTier: 'baseline',
       implementationStatus: 'live',
+      retired: true,
       stacking: 'unique',
       uiTags: ['lunar', 'credit']
+    }
+  },
+  {
+    id: 'item_gangue_compression_die',
+    name: 'Gangue Compression Die',
+    rarity: 'common',
+    tags: ['plasma', 'split'],
+    hooks: ['onFire'],
+    effect:
+      'lighter shots already in the chain compact into slower, harder, longer-lived plasma slugs',
+    weight: 10,
+    metadata: {
+      family: 'lunar-surface',
+      sources: ['starter', 'combat', 'lunar', 'route'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['lunar', 'plasma', 'split']
     }
   },
   {
@@ -1486,7 +1506,7 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_boreline_crimper',
       'item_near_miss_tachometer',
       'item_crater_shadow_lens',
-      'item_low_orbit_ore_scrip',
+      'item_gangue_compression_die',
       'item_route_ledger_spool',
       'item_harmonic_fork_loom'
     ]
@@ -1540,7 +1560,7 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_regolith_scoop_array',
       'item_surface_beacon_drone',
       'item_mining_laser_transit',
-      'item_low_orbit_ore_scrip',
+      'item_gangue_compression_die',
       'item_route_ledger_spool',
       'item_ambush_insurance_stamp',
       'item_coastdown_capacitor',

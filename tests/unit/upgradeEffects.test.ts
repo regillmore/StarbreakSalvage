@@ -80,7 +80,7 @@ describe('run upgrade effects', () => {
         "shop": {
           "discount": 1,
           "itemIds": [
-            "item_reactive_plating_grid",
+            "item_sidecar_drone_bay",
             "item_ambush_insurance_stamp",
             "item_credit_reroute_fuse",
             "item_convoy_receipt_printer",
@@ -159,6 +159,15 @@ describe('run upgrade effects', () => {
     expect(coupon.shopDiscount).toBe(0);
     expect(coupon.shopBiasTags).toEqual([]);
     expect(createRunGenerationSaveFingerprint([], coupon)).toBe(
+      createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
+    );
+  });
+
+  it('projects Low-Orbit Ore Scrip without perturbing unrelated expedition generation', () => {
+    const oreScrip = resolveRunUpgradeEffects(['upgrade_low_orbit_ore_scrip']);
+
+    expect(oreScrip.routeChosen).toEqual({ lowOrbitOreRefund: true });
+    expect(createRunGenerationSaveFingerprint([], oreScrip)).toBe(
       createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
     );
   });

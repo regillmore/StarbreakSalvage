@@ -145,6 +145,42 @@ describe('item synergies', () => {
     );
   });
 
+  it('lets Gangue Compression Die compact only lighter shots already built upstream', () => {
+    const splitThenCompress: ItemInstance[] = [
+      { itemId: 'item_split_prism', acquisitionOrder: 0 },
+      { itemId: 'item_gangue_compression_die', acquisitionOrder: 1 }
+    ];
+    const compressThenSplit: ItemInstance[] = [
+      { itemId: 'item_gangue_compression_die', acquisitionOrder: 0 },
+      { itemId: 'item_split_prism', acquisitionOrder: 1 }
+    ];
+
+    const compressed = applyItemHooks('onFire', splitThenCompress, {
+      volleyIndex: 1,
+      projectiles: [baseProjectile]
+    });
+    const uncompressed = applyItemHooks('onFire', compressThenSplit, {
+      volleyIndex: 1,
+      projectiles: [baseProjectile]
+    });
+    const compactedBranches = compressed.projectiles.filter((projectile) =>
+      projectile.tags.includes('plasma')
+    );
+    const laterBranches = uncompressed.projectiles.filter((projectile) => projectile.vx !== 0);
+
+    expect(compactedBranches).toHaveLength(2);
+    expect(compactedBranches.map((projectile) => Math.abs(projectile.vx))).toEqual([100.8, 100.8]);
+    expect(compactedBranches.map((projectile) => projectile.vy)).toEqual([
+      expect.closeTo(-630),
+      expect.closeTo(-630)
+    ]);
+    expect(compactedBranches.every((projectile) => projectile.damage > 0.8)).toBe(true);
+    expect(compactedBranches.every((projectile) => projectile.radius > 4)).toBe(true);
+    expect(compactedBranches.every((projectile) => projectile.ttl > baseProjectile.ttl)).toBe(true);
+    expect(laterBranches.every((projectile) => projectile.damage === 0.62)).toBe(true);
+    expect(laterBranches.every((projectile) => !projectile.tags.includes('plasma'))).toBe(true);
+  });
+
   it('applies projectile spawn hooks deterministically', () => {
     const instances: ItemInstance[] = [
       { itemId: 'item_chain_arc_capacitor', acquisitionOrder: 0 },

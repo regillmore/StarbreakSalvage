@@ -208,9 +208,9 @@ describe('reward generation', () => {
           price: 5
         },
         {
-          id: 'item_low_orbit_ore_scrip',
-          sourceHint: 'route source',
-          price: 4
+          id: 'item_mining_laser_transit',
+          sourceHint: 'Shop pool',
+          price: 9
         }
       ],
       eliteRewards: [
@@ -249,7 +249,7 @@ describe('reward generation', () => {
       ],
       lunarRewards: [
         {
-          id: 'item_ambush_insurance_stamp',
+          id: 'item_coastdown_capacitor',
           profile: 'lunar',
           sourceHint: 'route source'
         },
@@ -259,7 +259,7 @@ describe('reward generation', () => {
           sourceHint: 'Lunar pool'
         },
         {
-          id: 'item_regolith_scoop_array',
+          id: 'item_crater_shadow_lens',
           profile: 'lunar',
           sourceHint: 'lunar source'
         }
