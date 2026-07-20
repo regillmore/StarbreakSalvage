@@ -2563,3 +2563,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 181. `UpgradeEffects` and `RunSession` own the permanent reward-credit contribution with restored-item precedence. `ItemHooks` owns Forkline's bounded ordered outer-branch charge, which automatically feeds combat and shared live-fire previews. The active catalog remains at 60 items and the global run fingerprint excludes the route-local upgrade.
+
+### BL47 - Signal-circuit condition readouts
+
+Acceptance:
+
+- Signal output can distinguish an unmet circuit prerequisite from a stage whose condition is valid but whose timed trigger is merely idle in the representative volley.
+- Prototype Vent Script derives its prerequisite from the authoritative periodic-volley cadence registry and fitted order rather than item prose or preview changes.
+- Vent without an earlier periodic stage identifies that exact missing requirement; linked Vent identifies the number of earlier periodic stages it modifies.
+- Reordering Vent updates its condition output and the affected cadence annotation immediately, with semantic DOM state and text that does not rely on color.
+- Production hooks, preview simulation, heat budgets, proc/projectile caps, RNG, saves, snapshots, generation, accessibility, static hosting, and dependencies remain unchanged.
+
+Status:
+
+- Implemented in work order 182. `ItemHooks` supplies the shared Vent condition profile, `FoundryPresentation` translates it into precise stage output, and `FoundryScene` exposes met/unmet/none semantics with readable linked and blocked treatments.

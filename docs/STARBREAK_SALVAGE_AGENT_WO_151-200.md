@@ -810,3 +810,28 @@ Forkline Dynamo occupies the released common route slot as a bounded ordered tra
 The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/`, verified all 12 persistent Upgrade Bay cards at a 390 x 700 viewport, confirmed Route Ledger Spool's Navigation prerequisite and one-credit cash-out copy, found no horizontal overflow, and recorded no console warnings or errors. The viewport was restored, the browser tab was finalized, and the authenticated work order 175 host was stopped cleanly.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 112 Vitest files and 705 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The focused hook, Foundry presentation, route settlement, upgrade-effect, and restored-fixture suite passes 68 tests. The build emits 985.14 kB minified/269.70 kB gzip initial JavaScript and 94.17/18.96 kB CSS, increases of 1.41/0.37 kB JavaScript and no CSS change over work order 180. The existing 500 kB chunk notice remains; no dependency, save/snapshot schema, seeded generation input, route topology, static base path, or warning threshold changed.
+
+## Work order 182 - Signal-circuit condition readouts
+
+Goal: distinguish an unmet ordered-circuit prerequisite from a valid stage merely waiting for its authored trigger.
+
+Prompt:
+
+> Give signal-circuit output cards an explicit condition state. Begin with Prototype Vent Script: when no periodic volley item is fitted earlier in the ordered chain, its output must say that the condition is not met and identify the missing earlier periodic volley. When linked correctly, confirm how many earlier periodic stages it modifies. Drive the result from the same cadence registry used by combat, update immediately when the player reorders the circuit, and preserve simulation, preview parity, accessibility, saves, determinism, and static hosting.
+
+Acceptance criteria:
+
+- `ItemHooks` exposes a deterministic Prototype Vent circuit-condition profile derived from the authoritative periodic-volley cadence registry and fitted circuit order.
+- A Vent card with no earlier periodic stage reports `CONDITION NOT MET · NEEDS AN EARLIER PERIODIC VOLLEY` instead of the ambiguous `conditional volley armed` fallback.
+- A linked Vent card reports `CONDITION MET` and the number of earlier periodic volley stages it modifies, with correct singular/plural wording.
+- Moving Vent before and after Phase Grazer updates both the Vent output copy and its met/unmet presentation state immediately; the affected Phase card's cadence annotation still disappears and returns through the existing shared profile.
+- Met and unmet states use explicit DOM data plus readable color treatment without relying on color alone; ordinary cards keep their existing output summaries.
+- The feature changes no hook order, cadence, projectile, heat budget, preview simulation, RNG, proc cap, save/snapshot shape, generated content, or dependency.
+
+Status: implemented. `ItemHooks.getPrototypeVentCircuitConditionProfile` counts only periodic items earlier than Vent through the same ordered item list and cadence table that resolve combat cycles. `FoundryPresentation` owns a small extensible circuit-condition read model: Vent replaces the generic inert-stage fallback with precise met/unmet output while all ordinary transformation, arc, cadence, tag, impact, and projectile summaries remain unchanged.
+
+`FoundryScene` publishes `data-condition="met|unmet|none"` beside the existing changed state. The signal output therefore communicates its status in text and reinforces it with distinct linked and blocked treatments. Focused unit coverage protects both circuit orders and the shared condition count; the existing Engineering Foundry Chromium path now protects the live reorder transition in both directions.
+
+The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/` at 390 x 700. It confirmed the linked green state and one-stage count, moved Vent ahead of Phase Grazer to confirm the explicit pink unmet state and missing-prerequisite copy, verified the Phase cadence line disappeared, then restored the order and both linked indicators. Both output cards remained inside the 390 px document width and the browser recorded no warnings or errors. The observation shell later reached its five-minute command lease; a fresh authenticated host/status/stop cycle completed with owner-shell exit code 0 and left no listener behind.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 112 Vitest files and 705 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The focused ItemHooks, Foundry presentation, and Scenario Lab suite passes 49 tests, and the isolated Hardpoint reorder Chromium path passes. The build emits 985.84 kB minified/269.99 kB gzip initial JavaScript and 94.38/19.02 kB CSS, increases of 0.70/0.29 kB JavaScript and 0.21/0.06 kB CSS over work order 181. The existing 500 kB chunk notice remains; no dependency, hook order, simulation rule, RNG input, save/snapshot schema, generated content, static base path, or warning threshold changed.

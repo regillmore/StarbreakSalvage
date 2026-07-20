@@ -204,6 +204,11 @@ export interface ItemVolleyCadenceProfile {
   readonly prototypeVented: boolean;
 }
 
+export interface PrototypeVentCircuitConditionProfile {
+  readonly earlierPeriodicStageCount: number;
+  readonly conditionMet: boolean;
+}
+
 export interface ItemHookDispatchOptions {
   readonly maxApplications?: number;
 }
@@ -383,6 +388,29 @@ export function getItemVolleyCadenceProfile(
     baseCadence,
     effectiveCadence: baseCadence + (prototypeVented ? 1 : 0),
     prototypeVented
+  };
+}
+
+export function getPrototypeVentCircuitConditionProfile(
+  instances: readonly ItemInstance[]
+): PrototypeVentCircuitConditionProfile | null {
+  const ordered = getOrderedItemInstances(instances);
+  const ventIndex = ordered.findIndex(
+    (instance) => instance.itemId === 'item_prototype_vent_script'
+  );
+  if (ventIndex < 0) return null;
+
+  const earlierPeriodicStageCount = ordered
+    .slice(0, ventIndex)
+    .filter(
+      (instance) =>
+        PERIODIC_VOLLEY_CADENCES[instance.itemId as keyof typeof PERIODIC_VOLLEY_CADENCES] !==
+        undefined
+    ).length;
+
+  return {
+    earlierPeriodicStageCount,
+    conditionMet: earlierPeriodicStageCount > 0
   };
 }
 

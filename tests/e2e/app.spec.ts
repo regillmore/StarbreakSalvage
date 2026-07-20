@@ -1690,6 +1690,9 @@ test('keeps hardpoint live-fire geometry on one combat scale across viewport wid
   await page.getByTestId('scenario-lab-lab_engineering_foundry').click();
   await expect(page.getByTestId('salvage-foundry')).toBeVisible();
   const cadenceShift = page.getByTestId('foundry-circuit-cadence-shift');
+  const ventOutput = page.getByTestId('foundry-circuit-node-1').locator('.foundry-circuit-output');
+  await expect(ventOutput).toContainText('CONDITION MET · 1 EARLIER PERIODIC VOLLEY LINKED');
+  await expect(ventOutput).toHaveAttribute('data-condition', 'met');
   await expect(cadenceShift).toHaveText(
     'VENT SCRIPT · EVERY 4TH -> 5TH VOLLEY · +1 HEAT SHOT · SPENDS 32% HEAT · COOL = EXHAUST'
   );
@@ -1698,10 +1701,14 @@ test('keeps hardpoint live-fire geometry on one combat scale across viewport wid
     .getByRole('button', { name: 'Move Prototype Vent Script earlier in the circuit' })
     .click();
   await expect(cadenceShift).toHaveCount(0);
+  await expect(ventOutput).toContainText('CONDITION NOT MET · NEEDS AN EARLIER PERIODIC VOLLEY');
+  await expect(ventOutput).toHaveAttribute('data-condition', 'unmet');
   await page
     .getByRole('button', { name: 'Move Prototype Vent Script later in the circuit' })
     .click();
   await expect(cadenceShift).toHaveCount(1);
+  await expect(ventOutput).toContainText('CONDITION MET · 1 EARLIER PERIODIC VOLLEY LINKED');
+  await expect(ventOutput).toHaveAttribute('data-condition', 'met');
   await page.evaluate(() => {
     document.documentElement.dataset.reducedMotion = 'true';
   });

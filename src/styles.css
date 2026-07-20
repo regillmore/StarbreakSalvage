@@ -1975,6 +1975,18 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   background: rgba(255, 209, 102, 0.07);
 }
 
+.foundry-circuit-output[data-condition='met'] {
+  border-left-color: #78f7c2;
+  color: #cffff0;
+  background: rgba(120, 247, 194, 0.07);
+}
+
+.foundry-circuit-output[data-condition='unmet'] {
+  border-left-color: #ff7f98;
+  color: #ffd0d9;
+  background: rgba(255, 87, 120, 0.09);
+}
+
 .foundry-circuit-actions {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

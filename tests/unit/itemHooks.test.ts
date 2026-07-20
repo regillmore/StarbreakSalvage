@@ -4,7 +4,8 @@ import {
   applyItemHooks,
   applyItemHooksWithReport,
   getItemVolleyCadenceProfile,
-  getOrderedItemInstances
+  getOrderedItemInstances,
+  getPrototypeVentCircuitConditionProfile
 } from '../../src/game/ItemHooks';
 import type { ItemInstance } from '../../src/game/Rewards';
 import { getArcChargeProfile } from '../../src/game/ArcCharge';
@@ -299,6 +300,14 @@ describe('item synergies', () => {
       baseCadence: 4,
       effectiveCadence: 4,
       prototypeVented: false
+    });
+    expect(getPrototypeVentCircuitConditionProfile(vented)).toEqual({
+      earlierPeriodicStageCount: 1,
+      conditionMet: true
+    });
+    expect(getPrototypeVentCircuitConditionProfile(ventFirst)).toEqual({
+      earlierPeriodicStageCount: 0,
+      conditionMet: false
     });
 
     const delayedOldCycle = applyItemHooks('onFire', vented, {

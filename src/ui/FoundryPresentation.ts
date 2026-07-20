@@ -15,6 +15,7 @@ import { applyCombinedHooks } from '../game/CombinedHooks';
 import {
   getItemVolleyCadenceProfile,
   getOrderedItemInstances,
+  getPrototypeVentCircuitConditionProfile,
   type ProjectileBlueprint
 } from '../game/ItemHooks';
 import type { ItemInstance } from '../game/Rewards';
@@ -123,6 +124,7 @@ export interface FoundryCircuitStageModel {
   readonly incomingImpact: number;
   readonly outgoingImpact: number;
   readonly outputLabel: string;
+  readonly conditionMet: boolean | null;
   readonly cadenceShiftLabel: string | null;
   readonly addedTags: readonly string[];
   readonly changed: boolean;
@@ -342,6 +344,7 @@ function createFoundryCircuitStageModels(
       )
     ];
     const cadence = getItemVolleyCadenceProfile(instance.itemId, ordered);
+    const condition = createCircuitStageCondition(instance.itemId, ordered);
     const changed =
       incoming.length !== outgoing.length ||
       Math.abs(incomingImpact - outgoingImpact) > 0.01 ||
@@ -359,15 +362,18 @@ function createFoundryCircuitStageModels(
       outgoingProjectiles: outgoing.length,
       incomingImpact,
       outgoingImpact,
-      outputLabel: createCircuitStageOutputLabel(
-        incoming.length,
-        outgoing.length,
-        incomingImpact,
-        outgoingImpact,
-        item.hooks,
-        incomingArc,
-        outgoingArc
-      ),
+      outputLabel:
+        condition?.label ??
+        createCircuitStageOutputLabel(
+          incoming.length,
+          outgoing.length,
+          incomingImpact,
+          outgoingImpact,
+          item.hooks,
+          incomingArc,
+          outgoingArc
+        ),
+      conditionMet: condition?.met ?? null,
       cadenceShiftLabel: cadence?.prototypeVented
         ? `VENT SCRIPT · EVERY ${formatOrdinal(cadence.baseCadence)} -> ${formatOrdinal(cadence.effectiveCadence)} VOLLEY · +1 HEAT SHOT · SPENDS 32% HEAT · COOL = EXHAUST`
         : null,
@@ -377,6 +383,32 @@ function createFoundryCircuitStageModels(
     incoming = outgoing;
     return model;
   });
+}
+
+interface CircuitStageCondition {
+  readonly met: boolean;
+  readonly label: string;
+}
+
+function createCircuitStageCondition(
+  itemId: ItemInstance['itemId'],
+  ordered: readonly ItemInstance[]
+): CircuitStageCondition | null {
+  if (itemId !== 'item_prototype_vent_script') return null;
+
+  const profile = getPrototypeVentCircuitConditionProfile(ordered);
+  if (!profile || !profile.conditionMet) {
+    return {
+      met: false,
+      label: 'CONDITION NOT MET · NEEDS AN EARLIER PERIODIC VOLLEY'
+    };
+  }
+
+  const stageLabel = profile.earlierPeriodicStageCount === 1 ? 'VOLLEY' : 'VOLLEYS';
+  return {
+    met: true,
+    label: `CONDITION MET · ${profile.earlierPeriodicStageCount} EARLIER PERIODIC ${stageLabel} LINKED`
+  };
 }
 
 function addLaterCircuitContext(

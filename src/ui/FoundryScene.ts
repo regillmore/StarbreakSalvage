@@ -757,6 +757,12 @@ export class FoundryScene implements Scene {
     const output = document.createElement('div');
     output.className = 'foundry-circuit-output';
     output.dataset.changed = String(stage?.changed ?? false);
+    output.dataset.condition =
+      stage?.conditionMet === null || stage?.conditionMet === undefined
+        ? 'none'
+        : stage.conditionMet
+          ? 'met'
+          : 'unmet';
     output.innerHTML = `<small>OUTPUT</small><strong>${stage?.outputLabel ?? 'signal armed'}</strong>`;
     if (stage?.cadenceShiftLabel) {
       const cadenceShift = document.createElement('span');

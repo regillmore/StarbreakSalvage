@@ -421,6 +421,8 @@ describe('foundry visual presentation', () => {
     });
     expect(dashboard.circuitStages[1]).toMatchObject({
       name: 'Prototype Vent Script',
+      outputLabel: 'CONDITION MET · 1 EARLIER PERIODIC VOLLEY LINKED',
+      conditionMet: true,
       cadenceShiftLabel: null
     });
     expect(dashboard.attackSimulation.waveCopies).toBeGreaterThanOrEqual(5);
@@ -433,6 +435,29 @@ describe('foundry visual presentation', () => {
     expect(dashboard.attackSimulation.ariaLabel).toContain(
       'spend 32% of overheat capacity; this cool-start cycle generates 0 and replaces 1 underfunded attempt with visible exhaust'
     );
+
+    const unmetDashboard = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+      {
+        itemId: 'item_prototype_vent_script',
+        acquisitionOrder: 1,
+        socket: { componentId: 'vent', socketIndex: 0, circuitOrder: 0 }
+      },
+      {
+        itemId: 'item_phase_grazer',
+        acquisitionOrder: 0,
+        socket: { componentId: 'phase', socketIndex: 0, circuitOrder: 1 }
+      }
+    ]);
+    expect(unmetDashboard.circuitStages[0]).toMatchObject({
+      name: 'Prototype Vent Script',
+      outputLabel: 'CONDITION NOT MET · NEEDS AN EARLIER PERIODIC VOLLEY',
+      conditionMet: false,
+      changed: false
+    });
+    expect(unmetDashboard.circuitStages[1]).toMatchObject({
+      name: 'Phase Grazer',
+      cadenceShiftLabel: null
+    });
   });
 
   it('builds steady velocity-scaled flight copies inside the preview actor budget', () => {
