@@ -1,12 +1,12 @@
 # Starbreak Salvage - Item Catalog Audit
 
-Work orders 051-056 baseline, refreshed by work orders 156, 169, 170, 176, and 177. This document records the active item catalog after the Noita-style circuit pivot retired Boss Pressure from live rotation, moved two economy passives into permanent progression, refilled their active slots, and converted Prototype Vent Script into an ordered stored-heat modifier. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
+Work orders 051-056 baseline, refreshed by work orders 156, 169, 170, 176, 177, 179, and 180. This document records the active item catalog after the Noita-style circuit pivot retired Boss Pressure from live rotation, moved three economy passives into permanent progression, refilled their active slots, converted Prototype Vent Script into an ordered stored-heat modifier, and made arc a projectile-carried secondary discharge. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
 
 ## Current Shape
 
 | Measure                 | Current | Phase 6 target                                                                             |
 | ----------------------- | ------- | ------------------------------------------------------------------------------------------ |
-| Active item definitions | 60      | Seven retired definitions remain for legacy-save compatibility                             |
+| Active item definitions | 60      | Eight retired definitions remain for legacy-save compatibility                             |
 | Candidate reward pools  | 4       | Starter, ignition core, combat, and vault remain the broad candidate buckets               |
 | Weight profiles         | 9       | Starter, combat, shop, vault, elite, boss, faction, lunar, and route contexts are weighted |
 | Hook names              | 14      | Includes environment-object destruction alongside combat, route, and economy hooks         |
@@ -41,16 +41,16 @@ Validation requires every active item to appear in a compatible reward pool and 
 
 | Hook                           | Item count | Current role                                                                             |
 | ------------------------------ | ---------- | ---------------------------------------------------------------------------------------- |
-| `onFire`                       | 16         | Volley shaping, drones, split shots, missiles, phase/heat variants, and ordered cadence. |
-| `onProjectileSpawn`            | 9          | Projectile tags, size, damage, TTL, and drift shaping.                                   |
-| `onEnemyKilled`                | 11         | Salvage payouts, arc/blast follow-ups, overkill/relic rewards.                           |
+| `onFire`                       | 17         | Volley shaping, drones, split shots, missiles, phase/heat variants, and ordered cadence. |
+| `onProjectileSpawn`            | 10         | Projectile traits, arc charge, size, damage, TTL, and drift shaping.                     |
+| `onEnemyKilled`                | 10         | Salvage payouts, compact blasts, and overkill/relic rewards.                             |
 | `onPlayerHit`                  | 6          | Shield, revenge, armor, and curse retaliation.                                           |
 | `onPickupCollected`            | 6          | Credit/salvage pickup shared-reservoir charge.                                           |
 | `onGraze`                      | 2          | Near-miss charge/rate/radius effects.                                                    |
 | `onSpecialUsed`                | 0          | Reserved hook surface; Prototype Vent Script moved to ordered volley cadence.            |
 | `onBombUsed`                   | 1          | Bomb damage, radius, and boss-ratio shaping.                                             |
 | `onSectorStart`                | 2          | Lunar entry and sector-start resource effects.                                           |
-| `onRouteChosen`                | 4          | Route economy, curse interest, and ambush insurance effects.                             |
+| `onRouteChosen`                | 3          | Route economy, curse interest, and ambush insurance effects.                             |
 | `onShopEntered`                | 1          | Rerolled-shop stock and bias effects.                                                    |
 | `onRewardGenerated`            | 3          | Reward choice and tag-bias effects.                                                      |
 | `onBossPhaseChanged`           | 1          | One remaining active circuit hook; permanent counterplay moved to the Upgrade Bay.       |
@@ -133,7 +133,7 @@ Known-seed tests now sample shop, elite, vault, and lunar reward surfaces, and u
 | ---------------- | ----- | ------------------------------------------------------------------------------------------------------------- |
 | Laser/Split      | 7     | Harmonic Fork Loom copies the current outer chain rather than a fixed base shot.                              |
 | Missile/Overkill | 8     | Boreline Crimper converts an already-built fan's spread into forward speed, impact, and overkill.             |
-| Drone/Copy       | 7     | Crossfeed Detonator rewards kills carrying two distinct circuit traits.                                       |
+| Drone/Copy       | 7     | Crossfeed Detonator charges upstream projectiles that carry two distinct circuit traits.                      |
 | Shield/Revenge   | 5     | Reached the first expansion target; defensive balance should avoid rewarding intentional damage too strongly. |
 | Credit/Shop      | 6     | Coastdown Capacitor turns broad pickup play into a conserved shared-haste reserve.                            |
 | Curse/Relic      | 6     | Advanced vault/route entries are locked behind the Relic Thief dossier; risk/reward tuning still needs work.  |
@@ -189,6 +189,12 @@ Boreline Crimper occupies the released common starter/combat/shop slot. It affec
 Low-Orbit Ore Scrip is now an 8 kg Navigation upgrade gated by Route Ledger Uplink. Its retired catalog record and `onRouteChosen` reducer remain only for restored snapshots; route settlement gives the legacy fitted copy precedence over the permanent flag, preserving exactly one credit after Shop/Repair destinations. The route-local flag is excluded from the expedition-wide generation fingerprint and supplied only at settlement, so it does not reshuffle seeded content.
 
 Gangue Compression Die occupies the released common starter/combat/lunar/route slot. At its ordered `onFire` stage it finds the current peak projectile damage and compacts only shots below 90% of that reference: 90% velocity, 130% damage, +1 radius, +0.18 seconds of life, and a `plasma` trait. Split Prism and other earlier branch builders therefore feed the Die; later branches cannot be retroactively converted. The added plasma trait opens existing Chain Arc, Ricochet, Plasma Lens/Bloom, Arc Window, Heat Signature, and Crossfeed combinations without adding a projectile or a second preview path.
+
+## Projectile-attached arc charge in Work Order 180
+
+Arc is no longer post-kill bonus damage. A projectile carries either standard charge (55% of its impact, minimum 0.35, within 180 units) or heavy charge (82%, minimum 0.55, within 240 units). Its ordinary target receives unchanged projectile damage; consumption then attempts one deterministic lightning discharge into the nearest distinct living enemy or boss. Phase retains the charge through its one traversal, and a shot without a secondary target simply spends the charge without a hit.
+
+Chain Arc Capacitor and Plasma Lens Array attach standard charge, Arc Welder Drone's generated shot carries one, Arc Window Invoice upgrades eligible upstream chains to heavy charge, and Crossfeed Detonator attaches heavy charge to projectiles that already carry two circuit traits. Crossfeed's compact execution blast remains, but its old kill-only arc branch and Chain Arc's `onEnemyKilled` declaration are removed. Hardpoint cumulative cards now separate body impact from secondary arc damage/range, so Arc Window after Chain Arc is a visible heavy upgrade while the reverse order leaves the later standard charge intact.
 
 ## Risks For 057-060
 

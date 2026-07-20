@@ -30,6 +30,7 @@ import { isPhaseProjectile } from '../game/PhaseProjectile';
 import { HEAT_SHOT_COST_RATIO, getHeatShotCost } from '../game/HeatShot';
 import { getLaserProjectileKind, type LaserProjectileKind } from '../game/LaserProjectile';
 import type { HeatShotEvent } from '../game/ItemHooks';
+import { getArcChargeProfile, getArcDischargeDamage, type ArcChargeKind } from '../game/ArcCharge';
 
 export type FoundryComparisonTone = 'improved' | 'declined' | 'same' | 'danger';
 
@@ -76,6 +77,7 @@ export interface FoundryAttackProjectileModel {
   readonly damage: number;
   readonly ttl: number;
   readonly tags: readonly string[];
+  readonly arcChargeKind: ArcChargeKind | null;
   readonly flightKind: 'ballistic' | 'missile' | 'phase' | 'phaseMissile' | 'heatShot';
   readonly laserKind: LaserProjectileKind | null;
   readonly headingDegrees: number;
@@ -331,6 +333,8 @@ function createFoundryCircuitStageModels(
     const item = getItemById(instance.itemId);
     const incomingImpact = sumProjectileImpact(incoming);
     const outgoingImpact = sumProjectileImpact(outgoing);
+    const incomingArc = summarizeArcVolley(incoming);
+    const outgoingArc = summarizeArcVolley(outgoing);
     const incomingTags = new Set(incoming.flatMap((projectile) => projectile.tags));
     const addedTags = [
       ...new Set(
@@ -341,6 +345,9 @@ function createFoundryCircuitStageModels(
     const changed =
       incoming.length !== outgoing.length ||
       Math.abs(incomingImpact - outgoingImpact) > 0.01 ||
+      incomingArc.chargeCount !== outgoingArc.chargeCount ||
+      Math.abs(incomingArc.totalDamage - outgoingArc.totalDamage) > 0.01 ||
+      incomingArc.maxRange !== outgoingArc.maxRange ||
       addedTags.length > 0 ||
       cadence?.prototypeVented === true;
     const model: FoundryCircuitStageModel = {
@@ -357,7 +364,9 @@ function createFoundryCircuitStageModels(
         outgoing.length,
         incomingImpact,
         outgoingImpact,
-        item.hooks
+        item.hooks,
+        incomingArc,
+        outgoingArc
       ),
       cadenceShiftLabel: cadence?.prototypeVented
         ? `VENT SCRIPT · EVERY ${formatOrdinal(cadence.baseCadence)} -> ${formatOrdinal(cadence.effectiveCadence)} VOLLEY · +1 HEAT SHOT · SPENDS 32% HEAT · COOL = EXHAUST`
@@ -423,6 +432,27 @@ function sumProjectileImpact(projectiles: readonly ProjectileBlueprint[]): numbe
   return projectiles.reduce((total, projectile) => total + projectile.damage, 0);
 }
 
+interface ArcVolleySummary {
+  readonly chargeCount: number;
+  readonly totalDamage: number;
+  readonly maxRange: number;
+}
+
+function summarizeArcVolley(projectiles: readonly ProjectileBlueprint[]): ArcVolleySummary {
+  return projectiles.reduce<ArcVolleySummary>(
+    (summary, projectile) => {
+      const profile = getArcChargeProfile(projectile);
+      if (!profile) return summary;
+      return {
+        chargeCount: summary.chargeCount + 1,
+        totalDamage: summary.totalDamage + getArcDischargeDamage(projectile.damage, profile),
+        maxRange: Math.max(summary.maxRange, profile.range)
+      };
+    },
+    { chargeCount: 0, totalDamage: 0, maxRange: 0 }
+  );
+}
+
 function getCircuitStageDomain(hooks: readonly string[]): FoundryCircuitStageModel['domain'] {
   if (hooks.includes('onFire')) return 'VOLLEY';
   if (hooks.includes('onProjectileSpawn')) return 'PROJECTILE';
@@ -447,7 +477,9 @@ function createCircuitStageOutputLabel(
   outgoingProjectiles: number,
   incomingImpact: number,
   outgoingImpact: number,
-  hooks: readonly string[]
+  hooks: readonly string[],
+  incomingArc: ArcVolleySummary,
+  outgoingArc: ArcVolleySummary
 ): string {
   if (incomingProjectiles !== outgoingProjectiles) {
     return `${incomingProjectiles} -> ${outgoingProjectiles} shots`;
@@ -455,7 +487,22 @@ function createCircuitStageOutputLabel(
   if (Math.abs(incomingImpact - outgoingImpact) > 0.01) {
     return `${incomingImpact.toFixed(1)} -> ${outgoingImpact.toFixed(1)} impact`;
   }
-  if (hooks.includes('onProjectileSpawn')) return 'shot properties rewritten';
+  if (
+    incomingArc.chargeCount !== outgoingArc.chargeCount ||
+    Math.abs(incomingArc.totalDamage - outgoingArc.totalDamage) > 0.01 ||
+    incomingArc.maxRange !== outgoingArc.maxRange
+  ) {
+    const incomingLabel =
+      incomingArc.chargeCount > 0
+        ? `${incomingArc.totalDamage.toFixed(1)} @ ${incomingArc.maxRange}u`
+        : 'none';
+    const outgoingLabel =
+      outgoingArc.chargeCount > 0
+        ? `${outgoingArc.totalDamage.toFixed(1)} @ ${outgoingArc.maxRange}u`
+        : 'none';
+    return `ARC ${incomingLabel} -> ${outgoingLabel}`;
+  }
+  if (hooks.includes('onProjectileSpawn')) return 'conditional projectile rewrite armed';
   if (hooks.includes('onFire')) return 'conditional volley armed';
   if (getCircuitStageDomain(hooks) === 'ECONOMY') return 'run economy signal armed';
   return 'reactive signal armed';
@@ -646,6 +693,18 @@ function createFoundryAttackPatternPreviewModel(
     laserKinds.length > 0
       ? ` Laser-tagged shots use velocity-aligned luminous bodies; active profiles: ${laserKinds.join(', ')}.`
       : '';
+  const arcSummary = summarizeArcVolley(safeProjectiles);
+  const arcKinds = [
+    ...new Set(
+      safeProjectiles
+        .map((projectile) => getArcChargeProfile(projectile)?.kind ?? null)
+        .filter((kind): kind is ArcChargeKind => kind !== null)
+    )
+  ];
+  const arcDescription =
+    arcSummary.chargeCount > 0
+      ? ` Arc-charged shots store a ${arcKinds.join('/')} secondary discharge totaling ${arcSummary.totalDamage.toFixed(1)} potential impact across this volley at up to ${arcSummary.maxRange}u; the primary hit receives no bonus damage.`
+      : '';
   return {
     cameraWidth: COMBAT_ARENA_WIDTH,
     cameraHeight: FOUNDRY_ATTACK_PREVIEW_WORLD_HEIGHT,
@@ -655,7 +714,7 @@ function createFoundryAttackPatternPreviewModel(
     waveCopies,
     projectiles,
     heatExhausts,
-    ariaLabel: `${weaponName} live-fire preview. ${volleyDescription} at ${volleysPerSecond.toFixed(1)} volleys per second.${missileDescription}${laserDescription}${phaseDescription}${heatDescription} Projectile paths use the draft loadout's combat velocity, spread, radius, damage, engineering hooks, and owned item hooks.`
+    ariaLabel: `${weaponName} live-fire preview. ${volleyDescription} at ${volleysPerSecond.toFixed(1)} volleys per second.${missileDescription}${laserDescription}${phaseDescription}${arcDescription}${heatDescription} Projectile paths use the draft loadout's combat velocity, spread, radius, damage, engineering hooks, and owned item hooks.`
   };
 }
 
@@ -710,6 +769,7 @@ function createFoundryAttackProjectileModel(
     damage: projectile.damage,
     ttl: projectile.ttl,
     tags: projectile.tags,
+    arcChargeKind: getArcChargeProfile(projectile)?.kind ?? null,
     flightKind,
     laserKind,
     headingDegrees: (Math.atan2(projectile.vx, -projectile.vy) * 180) / Math.PI,

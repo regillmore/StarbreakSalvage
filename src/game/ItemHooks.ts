@@ -16,6 +16,7 @@ import type { RouteKind } from './Generation';
 import type { ProjectileVisualKind } from './HeatShot';
 import type { LaserProjectileKind } from './LaserProjectile';
 import { getHasteSourceDefinition, type HasteTriggerKind } from './HasteReservoir';
+import { attachArcCharge, type ArcChargeKind } from './ArcCharge';
 
 export interface ProjectileBlueprint {
   readonly x: number;
@@ -31,6 +32,7 @@ export interface ProjectileBlueprint {
   readonly environmentDamageSource?: EnvironmentObjectDamageSource;
   readonly visualKind?: ProjectileVisualKind;
   readonly laserKind?: LaserProjectileKind;
+  readonly arcChargeKind?: ArcChargeKind;
 }
 
 export interface HeatShotEvent {
@@ -55,7 +57,6 @@ export interface EnemyKilledPayload {
   readonly overkillDamage: number;
   readonly bonusSalvage: number;
   readonly blastDamage: number;
-  readonly arcDamage: number;
 }
 
 export interface ProjectileSpawnPayload {
@@ -243,10 +244,10 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_arc_window_invoice',
     'item_heat_signature_loop',
     'item_plasma_seed_crucible',
-    'item_ricochet_branch_coupler'
+    'item_ricochet_branch_coupler',
+    'item_crossfeed_detonator'
   ],
   onEnemyKilled: [
-    'item_chain_arc_capacitor',
     'item_overkill_ledger',
     'item_bomb_refund_actuator',
     'item_vault_parasite',
@@ -481,10 +482,7 @@ function applyOnProjectileSpawn(
     hasAnyTag(payload.projectile.tags, ['laser', 'plasma'])
   ) {
     return {
-      projectile: {
-        ...payload.projectile,
-        tags: addTags(payload.projectile.tags, ['arc'])
-      }
+      projectile: attachArcCharge(payload.projectile)
     };
   }
 
@@ -504,12 +502,11 @@ function applyOnProjectileSpawn(
 
   if (itemId === 'item_plasma_lens_array' && hasAnyTag(payload.projectile.tags, ['plasma'])) {
     return {
-      projectile: {
+      projectile: attachArcCharge({
         ...payload.projectile,
         damage: payload.projectile.damage * 1.04,
-        radius: payload.projectile.radius + 1,
-        tags: addTags(payload.projectile.tags, ['arc'])
-      }
+        radius: payload.projectile.radius + 1
+      })
     };
   }
 
@@ -543,13 +540,13 @@ function applyOnProjectileSpawn(
     hasAnyTag(payload.projectile.tags, ['arc', 'plasma', 'phase', 'ricochet', 'split'])
   ) {
     return {
-      projectile: {
-        ...payload.projectile,
-        damage: payload.projectile.damage * 1.32,
-        radius: payload.projectile.radius + 1,
-        ttl: payload.projectile.ttl + 0.2,
-        tags: addTags(payload.projectile.tags, ['arc'])
-      }
+      projectile: attachArcCharge(payload.projectile, 'heavy')
+    };
+  }
+
+  if (itemId === 'item_crossfeed_detonator' && getCircuitTraitCount(payload.projectile.tags) >= 2) {
+    return {
+      projectile: attachArcCharge(payload.projectile, 'heavy')
     };
   }
 
@@ -861,6 +858,7 @@ function applyOnFire(
           damage: Math.max(0.4, seedProjectile.damage * 0.52),
           radius: Math.max(3, seedProjectile.radius * 0.76),
           tags: addTags(seedProjectile.tags, ['arc', 'drone']),
+          arcChargeKind: seedProjectile.arcChargeKind ?? 'standard',
           procDepth: seedProjectile.procDepth + 1
         }
       ]
@@ -1084,17 +1082,6 @@ function applyOnEnemyKilled(
   payload: EnemyKilledPayload
 ): EnemyKilledPayload {
   if (
-    itemId === 'item_chain_arc_capacitor' &&
-    hasAnyTag(payload.projectileTags, ['laser', 'plasma']) &&
-    hasItem(instances, 'item_split_prism')
-  ) {
-    return {
-      ...payload,
-      arcDamage: payload.arcDamage + 0.75
-    };
-  }
-
-  if (
     itemId === 'item_overkill_ledger' &&
     hasAnyTag(payload.projectileTags, ['missile', 'overkill']) &&
     payload.overkillDamage > 0
@@ -1195,22 +1182,23 @@ function applyOnEnemyKilled(
   }
 
   if (itemId === 'item_crossfeed_detonator') {
-    const circuitTraitCount = new Set(
-      payload.projectileTags.filter((tag) =>
-        ['arc', 'drone', 'missile', 'phase', 'ricochet', 'split'].includes(tag)
-      )
-    ).size;
+    const circuitTraitCount = getCircuitTraitCount(payload.projectileTags);
 
     if (circuitTraitCount >= 2) {
       return {
         ...payload,
-        blastDamage: payload.blastDamage + 0.55,
-        arcDamage: payload.arcDamage + 0.45
+        blastDamage: payload.blastDamage + 0.55
       };
     }
   }
 
   return payload;
+}
+
+function getCircuitTraitCount(tags: readonly ItemTag[]): number {
+  return new Set(
+    tags.filter((tag) => ['arc', 'drone', 'missile', 'phase', 'ricochet', 'split'].includes(tag))
+  ).size;
 }
 
 function applyOnEnvironmentObjectDestroyed(

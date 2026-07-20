@@ -8,6 +8,7 @@ import {
 import { getFactionById, type FactionId } from '../content/factions';
 import { getEnemyFormationById, type EnemyFormationId } from '../content/enemyFormations';
 import { getEnemyVariantById, type EnemyVariantId } from '../content/enemyVariants';
+import type { ItemTag } from '../content/items';
 import { getHazardZoneColor } from '../content/hazardZones';
 import type { ShipAppearance, ShipSilhouette, ShipWeaponMountHint } from '../content/ships';
 import type { BoardingRoomKind } from '../content/boarding';
@@ -70,6 +71,7 @@ import {
   getLaserProjectilePresentation,
   type LaserProjectileKind
 } from '../game/LaserProjectile';
+import { getArcChargeProfile, type ArcChargeKind } from '../game/ArcCharge';
 
 const BACKGROUND_SEED = 'STARBREAK-SALVAGE-SHELL';
 const DEFAULT_PLAYER_SHIP_APPEARANCE: ShipAppearance = {
@@ -167,7 +169,8 @@ export interface ProjectileRenderState {
   readonly vy: number;
   readonly radius: number;
   readonly owner: 'player' | 'ally' | 'enemy';
-  readonly tags: readonly string[];
+  readonly tags: readonly ItemTag[];
+  readonly arcChargeKind?: ArcChargeKind;
   readonly ageSeconds?: number;
   readonly factionId?: FactionId;
   readonly visualKind?: ProjectileVisualKind;
@@ -236,10 +239,13 @@ export interface CombatEffectRenderState {
     | 'environmentBreak'
     | 'chainReaction'
     | 'phaseCollapse'
+    | 'arcDischarge'
     | 'heatExhaust';
   readonly x: number;
   readonly y: number;
   readonly radius: number;
+  readonly targetX?: number;
+  readonly targetY?: number;
   readonly ttl: number;
   readonly maxTtl: number;
 }
@@ -1735,6 +1741,7 @@ export class CanvasRenderer {
         );
       }
       this.paintHeatShotProjectile(projectile, velocityCues.highContrastProjectiles);
+      this.paintArcProjectileCharge(projectile, velocityCues.highContrastProjectiles);
       context.restore();
       return;
     }
@@ -1755,6 +1762,7 @@ export class CanvasRenderer {
           velocityCues.highContrastProjectiles,
           laserKind
         );
+        this.paintArcProjectileCharge(projectile, velocityCues.highContrastProjectiles);
         context.restore();
         return;
       }
@@ -1763,6 +1771,7 @@ export class CanvasRenderer {
         projectileColor,
         velocityCues.highContrastProjectiles
       );
+      this.paintArcProjectileCharge(projectile, velocityCues.highContrastProjectiles);
       context.restore();
       return;
     }
@@ -1774,6 +1783,7 @@ export class CanvasRenderer {
         velocityCues.highContrastProjectiles,
         laserKind
       );
+      this.paintArcProjectileCharge(projectile, velocityCues.highContrastProjectiles);
       context.restore();
       return;
     }
@@ -1784,6 +1794,7 @@ export class CanvasRenderer {
         projectileColor,
         velocityCues.highContrastProjectiles
       );
+      this.paintArcProjectileCharge(projectile, velocityCues.highContrastProjectiles);
       context.restore();
       return;
     }
@@ -1798,6 +1809,8 @@ export class CanvasRenderer {
       context.lineWidth = Math.max(2, projectile.radius * 0.55);
       context.stroke();
     }
+
+    this.paintArcProjectileCharge(projectile, velocityCues.highContrastProjectiles);
 
     context.restore();
   }
@@ -1906,21 +1919,54 @@ export class CanvasRenderer {
       context.stroke();
     }
 
-    if (projectile.tags.includes('arc')) {
-      context.globalAlpha = highContrast ? 0.92 : 0.78;
-      context.strokeStyle = highContrast ? '#ffef5f' : '#ff6bd6';
-      context.lineWidth = highContrast ? 2 : 1.25;
+    context.restore();
+  }
+
+  private paintArcProjectileCharge(projectile: ProjectileRenderState, highContrast: boolean): void {
+    const profile = getArcChargeProfile(projectile);
+    if (!profile) return;
+
+    const context = this.context;
+    const age = this.settings.reducedMotion ? 0.14 : Math.max(0, projectile.ageSeconds ?? 0);
+    const pulse = 0.78 + Math.sin(age * 19) * 0.18;
+    const shellRadius = Math.max(
+      projectile.radius + 3,
+      projectile.radius * (profile.kind === 'heavy' ? 1.95 : 1.62)
+    );
+    const accent = highContrast ? '#ffef5f' : profile.kind === 'heavy' ? '#ff6bd6' : '#7cf7ff';
+    const branchCount = this.settings.performanceMode ? 2 : profile.kind === 'heavy' ? 5 : 3;
+
+    context.save();
+    context.rotate(age * (profile.kind === 'heavy' ? 2.8 : 2.1));
+    context.globalAlpha = highContrast ? 0.96 : pulse;
+    context.strokeStyle = accent;
+    context.lineWidth = highContrast ? 2.2 : profile.kind === 'heavy' ? 1.65 : 1.25;
+    context.shadowColor = accent;
+    context.shadowBlur = this.settings.reducedMotion ? 0 : profile.kind === 'heavy' ? 16 : 10;
+    context.setLineDash([Math.max(2, shellRadius * 0.34), Math.max(2, shellRadius * 0.24)]);
+    context.beginPath();
+    context.arc(0, 0, shellRadius, 0, Math.PI * 2);
+    context.stroke();
+    context.setLineDash([]);
+
+    for (let index = 0; index < branchCount; index += 1) {
+      const angle = (index / branchCount) * Math.PI * 2;
+      const tangentX = -Math.sin(angle);
+      const tangentY = Math.cos(angle);
+      const innerX = Math.cos(angle) * shellRadius * 0.62;
+      const innerY = Math.sin(angle) * shellRadius * 0.62;
+      const outerX = Math.cos(angle) * shellRadius * 1.18;
+      const outerY = Math.sin(angle) * shellRadius * 1.18;
+      const kink = (index % 2 === 0 ? 1 : -1) * shellRadius * 0.22;
       context.beginPath();
-      context.moveTo(-presentation.shellWidth * 0.65, halfLength * 0.2);
-      context.quadraticCurveTo(
-        presentation.shellWidth * 0.75,
-        -halfLength * 0.08,
-        -presentation.shellWidth * 0.28,
-        -halfLength * 0.46
+      context.moveTo(innerX, innerY);
+      context.lineTo(
+        (innerX + outerX) * 0.5 + tangentX * kink,
+        (innerY + outerY) * 0.5 + tangentY * kink
       );
+      context.lineTo(outerX, outerY);
       context.stroke();
     }
-
     context.restore();
   }
 
@@ -2449,6 +2495,10 @@ export class CanvasRenderer {
       this.paintHeatExhaustEffect(effect, alpha, velocityCues.highContrastProjectiles);
       return;
     }
+    if (effect.kind === 'arcDischarge') {
+      this.paintArcDischargeEffect(effect, alpha, velocityCues.highContrastProjectiles);
+      return;
+    }
     const color =
       effect.kind === 'bomb'
         ? '#ffd166'
@@ -2550,6 +2600,68 @@ export class CanvasRenderer {
       context.fill();
     }
 
+    context.restore();
+  }
+
+  private paintArcDischargeEffect(
+    effect: CombatEffectRenderState,
+    alpha: number,
+    highContrast: boolean
+  ): void {
+    const context = this.context;
+    const targetX = effect.targetX ?? effect.x;
+    const targetY = effect.targetY ?? effect.y;
+    const dx = targetX - effect.x;
+    const dy = targetY - effect.y;
+    const length = Math.max(1, Math.hypot(dx, dy));
+    const normalX = -dy / length;
+    const normalY = dx / length;
+    const segmentCount = this.settings.performanceMode ? 5 : this.settings.reducedMotion ? 7 : 9;
+    const phase = this.settings.reducedMotion ? 0.36 : 1 - alpha;
+    const accent = highContrast ? '#ffef5f' : '#7cf7ff';
+    const core = highContrast ? '#ffffff' : '#f8fbff';
+    const points: Array<{ readonly x: number; readonly y: number }> = [];
+
+    for (let index = 0; index <= segmentCount; index += 1) {
+      const progress = index / segmentCount;
+      const taper = Math.sin(progress * Math.PI);
+      const offset =
+        index === 0 || index === segmentCount
+          ? 0
+          : Math.sin(index * 7.7 + phase * 21) * effect.radius * 0.72 * taper;
+      points.push({
+        x: effect.x + dx * progress + normalX * offset,
+        y: effect.y + dy * progress + normalY * offset
+      });
+    }
+
+    const strokeBolt = (color: string, width: number, opacity: number): void => {
+      context.globalAlpha = alpha * opacity;
+      context.strokeStyle = color;
+      context.lineWidth = width;
+      context.beginPath();
+      context.moveTo(points[0]!.x, points[0]!.y);
+      for (const point of points.slice(1)) context.lineTo(point.x, point.y);
+      context.stroke();
+    };
+
+    context.save();
+    context.lineCap = 'round';
+    context.lineJoin = 'round';
+    context.shadowColor = accent;
+    context.shadowBlur = this.settings.reducedMotion ? 0 : 18;
+    if (highContrast) strokeBolt('#03050d', 6, 0.9);
+    strokeBolt(accent, highContrast ? 3.5 : 4.2, 0.72);
+    strokeBolt(core, highContrast ? 1.7 : 1.45, 1);
+
+    context.globalAlpha = alpha;
+    context.fillStyle = core;
+    context.strokeStyle = accent;
+    context.lineWidth = highContrast ? 2.5 : 1.5;
+    context.beginPath();
+    context.arc(targetX, targetY, Math.max(3.5, effect.radius * 0.34), 0, Math.PI * 2);
+    context.fill();
+    context.stroke();
     context.restore();
   }
 

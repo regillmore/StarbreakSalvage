@@ -7,6 +7,7 @@ import {
   getOrderedItemInstances
 } from '../../src/game/ItemHooks';
 import type { ItemInstance } from '../../src/game/Rewards';
+import { getArcChargeProfile } from '../../src/game/ArcCharge';
 
 const baseProjectile = {
   x: 100,
@@ -48,8 +49,7 @@ describe('item hook ordering', () => {
         projectileTags: ['laser'],
         overkillDamage: 0,
         bonusSalvage: 0,
-        blastDamage: 0,
-        arcDamage: 0
+        blastDamage: 0
       },
       { maxApplications: 2 }
     );
@@ -94,19 +94,18 @@ describe('item synergies', () => {
       volleyIndex: 1,
       projectiles: [baseProjectile]
     });
-    const killPayload = applyItemHooks('onEnemyKilled', instances, {
-      projectileTags: ['laser'],
-      overkillDamage: 0,
-      bonusSalvage: 0,
-      blastDamage: 0,
-      arcDamage: 0
-    });
+    const spawned = firePayload.projectiles.map(
+      (projectile) => applyItemHooks('onProjectileSpawn', instances, { projectile }).projectile
+    );
 
     expect(firePayload.projectiles).toHaveLength(3);
     expect(firePayload.projectiles.some((projectile) => projectile.tags.includes('split'))).toBe(
       true
     );
-    expect(killPayload.arcDamage).toBeGreaterThan(0);
+    expect(spawned.every((projectile) => projectile.arcChargeKind === 'standard')).toBe(true);
+    expect(spawned.every((projectile) => getArcChargeProfile(projectile)?.range === 180)).toBe(
+      true
+    );
   });
 
   it('lets Boreline Crimper reshape only the off-axis shots already built upstream', () => {
@@ -346,8 +345,7 @@ describe('item synergies', () => {
       projectileTags: ['missile', 'overkill'],
       overkillDamage: 1.4,
       bonusSalvage: 0,
-      blastDamage: 0,
-      arcDamage: 0
+      blastDamage: 0
     });
 
     expect(payload.bonusSalvage).toBe(2);
@@ -440,8 +438,7 @@ describe('item synergies', () => {
       projectileTags: ['laser', 'drone', 'missile', 'phase'],
       overkillDamage: 0,
       bonusSalvage: 0,
-      blastDamage: 0,
-      arcDamage: 0
+      blastDamage: 0
     });
 
     expect(payload.bonusSalvage).toBe(4);
@@ -762,6 +759,16 @@ describe('item synergies', () => {
         }
       }
     );
+    const crossfeedSpawn = applyItemHooks(
+      'onProjectileSpawn',
+      [{ itemId: 'item_crossfeed_detonator', acquisitionOrder: 0 }],
+      {
+        projectile: {
+          ...baseProjectile,
+          tags: ['arc', 'missile']
+        }
+      }
+    );
     const killPayload = applyItemHooks(
       'onEnemyKilled',
       [{ itemId: 'item_crossfeed_detonator', acquisitionOrder: 0 }],
@@ -769,8 +776,7 @@ describe('item synergies', () => {
         projectileTags: ['arc', 'missile'],
         overkillDamage: 0,
         bonusSalvage: 0,
-        blastDamage: 0,
-        arcDamage: 0
+        blastDamage: 0
       }
     );
 
@@ -782,8 +788,8 @@ describe('item synergies', () => {
     );
     expect(spawnPayload.projectile.damage).toBeGreaterThan(1);
     expect(spawnPayload.projectile.ricochetBounces).toBe(1);
+    expect(crossfeedSpawn.projectile.arcChargeKind).toBe('heavy');
     expect(killPayload.blastDamage).toBe(0.55);
-    expect(killPayload.arcDamage).toBe(0.45);
   });
 
   it('makes Plasma Seed Crucible depend on an earlier projectile trait', () => {

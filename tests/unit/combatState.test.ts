@@ -1089,7 +1089,8 @@ describe('CombatState', () => {
       radius: 8,
       damage: 1,
       ttl: 1,
-      tags: ['laser'],
+      tags: ['laser', 'arc'],
+      arcChargeKind: 'standard',
       procDepth: 0
     });
 
@@ -1098,6 +1099,118 @@ describe('CombatState', () => {
     expect(state.enemies).toHaveLength(0);
     expect(state.stats.enemiesDestroyed).toBe(2);
     expect(getObjectiveProgress(plan, state).complete).toBe(true);
+  });
+
+  it('spends an attached arc charge on a nearby secondary target without amplifying the primary hit', () => {
+    const state = createCombatState(bounds, 'ARC-SECONDARY-TARGET', {
+      skipEnemyWaves: true
+    });
+    state.enemies.push(
+      {
+        id: 811,
+        factionId: 'faction_corporate_ledger',
+        x: state.player.x,
+        y: state.player.y - 120,
+        radius: 17,
+        hull: 5,
+        maxHull: 5,
+        drift: 0,
+        targetY: 120,
+        fireCooldown: 1
+      },
+      {
+        id: 812,
+        factionId: 'faction_corporate_ledger',
+        x: state.player.x + 60,
+        y: state.player.y - 120,
+        radius: 17,
+        hull: 5,
+        maxHull: 5,
+        drift: 0,
+        targetY: 120,
+        fireCooldown: 1
+      }
+    );
+    state.projectiles.push({
+      id: 813,
+      owner: 'player',
+      x: state.player.x,
+      y: state.player.y - 120,
+      vx: 0,
+      vy: 0,
+      radius: 8,
+      damage: 1,
+      ttl: 1,
+      tags: ['laser', 'arc'],
+      arcChargeKind: 'standard',
+      procDepth: 0
+    });
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
+
+    expect(state.enemies.find((enemy) => enemy.id === 811)?.hull).toBe(4);
+    expect(state.enemies.find((enemy) => enemy.id === 812)?.hull).toBeCloseTo(4.45);
+    expect(state.projectiles.some((projectile) => projectile.id === 813)).toBe(false);
+    const secondary = state.enemies.find((enemy) => enemy.id === 812)!;
+    const discharge = state.effects.find((effect) => effect.kind === 'arcDischarge');
+    expect(discharge?.targetX).toBeCloseTo(secondary.x);
+    expect(discharge?.targetY).toBeCloseTo(secondary.y);
+    expect(state.stats.itemTriggers).toBe(1);
+  });
+
+  it('retains an arc charge through a phase pierce and discharges only on the consuming hit', () => {
+    const state = createCombatState(bounds, 'ARC-PHASE-CONSUMPTION', {
+      skipEnemyWaves: true
+    });
+    state.enemies.push(
+      ...[0, 20, 70].map((offset, index) => ({
+        id: 821 + index,
+        factionId: 'faction_corporate_ledger' as const,
+        x: state.player.x + offset,
+        y: state.player.y - 120,
+        radius: 17,
+        hull: 10,
+        maxHull: 10,
+        drift: 0,
+        targetY: 120,
+        fireCooldown: 1
+      }))
+    );
+    state.projectiles.push({
+      id: 824,
+      owner: 'player',
+      x: state.player.x,
+      y: state.player.y - 120,
+      vx: 0,
+      vy: 0,
+      radius: 8,
+      damage: 1,
+      ttl: 1,
+      tags: ['laser', 'arc', 'phase'],
+      arcChargeKind: 'standard',
+      procDepth: 0
+    });
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
+
+    expect(state.effects.some((effect) => effect.kind === 'arcDischarge')).toBe(false);
+    expect(state.projectiles.find((projectile) => projectile.id === 824)).toMatchObject({
+      tags: ['laser', 'arc'],
+      arcChargeKind: 'standard'
+    });
+
+    const consumingProjectile = state.projectiles.find((projectile) => projectile.id === 824)!;
+    const consumingTarget = state.enemies.find((enemy) => enemy.id === 822)!;
+    consumingProjectile.x = consumingTarget.x;
+    consumingProjectile.y = consumingTarget.y;
+
+    updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
+
+    expect(state.projectiles.some((projectile) => projectile.id === 824)).toBe(false);
+    expect(state.enemies.find((enemy) => enemy.id === 821)?.hull).toBeCloseTo(8.45);
+    expect(state.enemies.find((enemy) => enemy.id === 822)?.hull).toBe(9);
+    expect(state.enemies.find((enemy) => enemy.id === 823)?.hull).toBe(10);
+    expect(state.effects.some((effect) => effect.kind === 'arcDischarge')).toBe(true);
   });
 
   it('counts enemy body collisions as cleared targets to avoid empty-field soft locks', () => {
@@ -1172,7 +1285,7 @@ describe('CombatState', () => {
     state.nextSpawnIndex = formationSpawns.length;
     addFormationEnemy(state, formationSpawns[0], 1401, 300, 180, 1);
     addFormationEnemy(state, formationSpawns[1], 1402, 328, 180, 0.5);
-    state.projectiles.push(createPlayerProjectile(1403, 300, 180, ['laser']));
+    state.projectiles.push(createPlayerProjectile(1403, 300, 180, ['laser', 'arc']));
 
     updateCombatState(state, { movement: { x: 0, y: 0 }, fire: false }, 1 / 60, bounds);
 
@@ -1408,7 +1521,7 @@ function createPlayerProjectile(
   id: number,
   x: number,
   y: number,
-  tags: readonly ('laser' | 'missile' | 'plasma')[]
+  tags: readonly ('arc' | 'laser' | 'missile' | 'plasma')[]
 ) {
   return {
     id,

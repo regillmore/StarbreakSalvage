@@ -64,6 +64,12 @@ import {
 import { HEAT_EXHAUST_EFFECT_SECONDS, getHeatShotCost } from './HeatShot';
 import { getLaserProjectileKind } from './LaserProjectile';
 import {
+  ARC_DISCHARGE_EFFECT_SECONDS,
+  getArcChargeProfile,
+  getArcDischargeDamage,
+  type ArcChargeKind
+} from './ArcCharge';
+import {
   createHasteReservoirProfile,
   drainHasteReservoir,
   fillHasteReservoir,
@@ -169,6 +175,7 @@ export interface ProjectileState {
   readonly environmentDamageSource?: EnvironmentObjectDamageSource;
   readonly visualKind?: ProjectileBlueprint['visualKind'];
   readonly laserKind?: ProjectileBlueprint['laserKind'];
+  readonly arcChargeKind?: ArcChargeKind;
   readonly factionId?: FactionId;
   readonly setPieceSourceId?: string;
   readonly allyId?: string;
@@ -332,6 +339,7 @@ export type CombatEffectKind =
   | 'environmentBreak'
   | 'chainReaction'
   | 'phaseCollapse'
+  | 'arcDischarge'
   | 'heatExhaust';
 
 export interface CombatEffectState {
@@ -340,6 +348,8 @@ export interface CombatEffectState {
   readonly x: number;
   readonly y: number;
   readonly radius: number;
+  readonly targetX?: number;
+  readonly targetY?: number;
   ttl: number;
   readonly maxTtl: number;
 }
@@ -3068,12 +3078,7 @@ function updatePlayer(
   ventWeaponHeat(state, dt);
   player.invulnerableSeconds = Math.max(0, player.invulnerableSeconds - dt);
   const hasteProfile = createHasteReservoirProfile(state.items);
-  player.hasteSeconds = drainHasteReservoir(
-    player.hasteSeconds,
-    dt,
-    hasteProfile,
-    input.fire
-  );
+  player.hasteSeconds = drainHasteReservoir(player.hasteSeconds, dt, hasteProfile, input.fire);
   player.specialCooldown = Math.max(0, player.specialCooldown - dt);
   player.specialActiveSeconds = Math.max(0, player.specialActiveSeconds - dt);
   player.bombCooldown = Math.max(0, player.bombCooldown - dt);
@@ -4041,7 +4046,13 @@ function resolveCombatCollisions(state: CombatState): void {
           continue;
         }
         damageEnemyWithAllyProjectile(state, enemy, projectile, enemyIdsToRemove);
-        resolveProjectileImpact(state, projectile, targetKey, projectileIdsToRemove);
+        resolveProjectileImpact(
+          state,
+          projectile,
+          targetKey,
+          projectileIdsToRemove,
+          enemyIdsToRemove
+        );
         break;
       }
       const boss = state.boss;
@@ -4054,12 +4065,24 @@ function resolveCombatCollisions(state: CombatState): void {
         circlesOverlap(projectile, boss)
       ) {
         damageBossWithAllyProjectile(state, boss, projectile);
-        resolveProjectileImpact(state, projectile, bossTargetKey, projectileIdsToRemove);
+        resolveProjectileImpact(
+          state,
+          projectile,
+          bossTargetKey,
+          projectileIdsToRemove,
+          enemyIdsToRemove
+        );
       }
       if (!projectileIdsToRemove.has(projectile.id)) {
         const setPieceTargetKey = damageSetPieceWithProjectile(state, projectile);
         if (setPieceTargetKey) {
-          resolveProjectileImpact(state, projectile, setPieceTargetKey, projectileIdsToRemove);
+          resolveProjectileImpact(
+            state,
+            projectile,
+            setPieceTargetKey,
+            projectileIdsToRemove,
+            enemyIdsToRemove
+          );
         }
       }
     }
@@ -4076,7 +4099,13 @@ function resolveCombatCollisions(state: CombatState): void {
         }
 
         damageEnemyWithProjectile(state, enemy, projectile, enemyIdsToRemove);
-        resolveProjectileImpact(state, projectile, targetKey, projectileIdsToRemove);
+        resolveProjectileImpact(
+          state,
+          projectile,
+          targetKey,
+          projectileIdsToRemove,
+          enemyIdsToRemove
+        );
         break;
       }
 
@@ -4090,13 +4119,25 @@ function resolveCombatCollisions(state: CombatState): void {
         circlesOverlap(projectile, boss)
       ) {
         damageBossWithProjectile(state, boss, projectile);
-        resolveProjectileImpact(state, projectile, bossTargetKey, projectileIdsToRemove);
+        resolveProjectileImpact(
+          state,
+          projectile,
+          bossTargetKey,
+          projectileIdsToRemove,
+          enemyIdsToRemove
+        );
       }
 
       if (!projectileIdsToRemove.has(projectile.id)) {
         const setPieceTargetKey = damageSetPieceWithProjectile(state, projectile);
         if (setPieceTargetKey) {
-          resolveProjectileImpact(state, projectile, setPieceTargetKey, projectileIdsToRemove);
+          resolveProjectileImpact(
+            state,
+            projectile,
+            setPieceTargetKey,
+            projectileIdsToRemove,
+            enemyIdsToRemove
+          );
         }
       }
 
@@ -4128,7 +4169,13 @@ function resolveCombatCollisions(state: CombatState): void {
           );
 
           if (damaged) {
-            resolveProjectileImpact(state, projectile, targetKey, projectileIdsToRemove);
+            resolveProjectileImpact(
+              state,
+              projectile,
+              targetKey,
+              projectileIdsToRemove,
+              enemyIdsToRemove
+            );
             break;
           }
         }
@@ -4148,7 +4195,8 @@ function resolveCombatCollisions(state: CombatState): void {
           state,
           projectile,
           getProjectileTargetKey('ally', ally.candidateId),
-          projectileIdsToRemove
+          projectileIdsToRemove,
+          enemyIdsToRemove
         );
         damageAlly(state, ally, projectile.damage);
       } else if (
@@ -4159,7 +4207,8 @@ function resolveCombatCollisions(state: CombatState): void {
           state,
           projectile,
           getProjectileTargetKey('player', 'ship'),
-          projectileIdsToRemove
+          projectileIdsToRemove,
+          enemyIdsToRemove
         );
         damagePlayer(state, projectile.damage);
       }
@@ -4224,10 +4273,12 @@ function resolveProjectileImpact(
   state: CombatState,
   projectile: ProjectileState,
   targetKey: string,
-  projectileIdsToRemove: Set<number>
+  projectileIdsToRemove: Set<number>,
+  enemyIdsToRemove: Set<number>
 ): void {
   if (!isPhaseProjectile(projectile.tags)) {
     projectileIdsToRemove.add(projectile.id);
+    dischargeArcCharge(state, projectile, targetKey, enemyIdsToRemove);
     return;
   }
 
@@ -4245,6 +4296,107 @@ function resolveProjectileImpact(
       maxTtl: PHASE_COLLAPSE_EFFECT_SECONDS
     });
   }
+}
+
+type ArcSecondaryTarget =
+  | { readonly kind: 'enemy'; readonly enemy: EnemyState; readonly targetKey: string }
+  | { readonly kind: 'boss'; readonly boss: BossState; readonly targetKey: string };
+
+function dischargeArcCharge(
+  state: CombatState,
+  projectile: ProjectileState,
+  primaryTargetKey: string,
+  enemyIdsToRemove: Set<number>
+): void {
+  if (projectile.owner !== 'player' && projectile.owner !== 'ally') return;
+  const profile = getArcChargeProfile(projectile);
+  if (!profile) return;
+
+  const rangeSquared = profile.range * profile.range;
+  const candidates: Array<{
+    readonly target: ArcSecondaryTarget;
+    readonly distanceSquared: number;
+  }> = [];
+
+  for (const enemy of state.enemies) {
+    const targetKey = getProjectileTargetKey('enemy', enemy.id);
+    if (targetKey === primaryTargetKey || enemyIdsToRemove.has(enemy.id) || enemy.hull <= 0) {
+      continue;
+    }
+    const distanceSquared = getDistanceSquared(projectile, enemy);
+    if (distanceSquared <= rangeSquared) {
+      candidates.push({ target: { kind: 'enemy', enemy, targetKey }, distanceSquared });
+    }
+  }
+
+  const boss = state.boss;
+  if (boss) {
+    const targetKey = getProjectileTargetKey('boss', boss.bossId);
+    const distanceSquared = getDistanceSquared(projectile, boss);
+    if (targetKey !== primaryTargetKey && boss.hull > 0 && distanceSquared <= rangeSquared) {
+      candidates.push({ target: { kind: 'boss', boss, targetKey }, distanceSquared });
+    }
+  }
+
+  const selected = candidates.sort((a, b) => {
+    const distanceDelta = a.distanceSquared - b.distanceSquared;
+    if (Math.abs(distanceDelta) > 1e-9) return distanceDelta;
+    return a.target.targetKey < b.target.targetKey ? -1 : 1;
+  })[0]?.target;
+  if (!selected) return;
+
+  const damage = getArcDischargeDamage(projectile.damage, profile);
+  const target = selected.kind === 'enemy' ? selected.enemy : selected.boss;
+  target.hull = applyDamage(target.hull, damage).hull;
+
+  if (selected.kind === 'enemy' && selected.enemy.hull <= 0) {
+    const allyOwned = projectile.owner === 'ally';
+    recordEnemyDefeat(
+      state,
+      selected.enemy,
+      enemyIdsToRemove,
+      allyOwned
+        ? {
+            dropPickups: !selected.enemy.rivalId,
+            grantSpecialCharge: false
+          }
+        : undefined
+    );
+    if (allyOwned && !selected.enemy.rivalId) recordAllyDefeat(state, projectile.allyId);
+  } else if (selected.kind === 'boss') {
+    if (selected.boss.hull > 0) {
+      refreshBossPhase(state, selected.boss);
+    } else {
+      spawnBossDefeatPickups(state, selected.boss, 0);
+      state.boss = null;
+      state.telegraphs = [];
+      state.stats = {
+        ...state.stats,
+        enemiesDestroyed: state.stats.enemiesDestroyed + 1,
+        bossesDefeated: state.stats.bossesDefeated + 1
+      };
+      if (projectile.owner === 'ally') recordAllyDefeat(state, projectile.allyId);
+      gainSpecialCharge(state, SPECIAL_CHARGE_PER_BOSS);
+    }
+  }
+
+  if (state.effects.length < MAX_ENVIRONMENT_FEEDBACK_EFFECTS) {
+    state.effects.push({
+      id: getNextEntityId(state),
+      kind: 'arcDischarge',
+      x: projectile.x,
+      y: projectile.y,
+      targetX: target.x,
+      targetY: target.y,
+      radius: profile.kind === 'heavy' ? 18 : 13,
+      ttl: ARC_DISCHARGE_EFFECT_SECONDS,
+      maxTtl: ARC_DISCHARGE_EFFECT_SECONDS
+    });
+  }
+  state.stats = {
+    ...state.stats,
+    itemTriggers: state.stats.itemTriggers + 1
+  };
 }
 
 function getProjectileTargetKey(
@@ -4288,15 +4440,11 @@ function damageEnemyWithProjectile(
     projectileTags: projectile.tags,
     overkillDamage,
     bonusSalvage: 0,
-    blastDamage: 0,
-    arcDamage: 0
+    blastDamage: 0
   });
   recordEnemyDefeat(state, enemy, enemyIdsToRemove, {
     bonusSalvage: killPayload.bonusSalvage,
-    itemTriggers:
-      Number(killPayload.bonusSalvage > 0) +
-      Number(killPayload.blastDamage > 0) +
-      Number(killPayload.arcDamage > 0)
+    itemTriggers: Number(killPayload.bonusSalvage > 0) + Number(killPayload.blastDamage > 0)
   });
   applyKillSideEffects(state, enemy, killPayload, enemyIdsToRemove);
 }
@@ -4333,8 +4481,7 @@ function damageBossWithProjectile(
     projectileTags: projectile.tags,
     overkillDamage,
     bonusSalvage: 0,
-    blastDamage: 0,
-    arcDamage: 0
+    blastDamage: 0
   });
 
   spawnBossDefeatPickups(state, boss, killPayload.bonusSalvage);
@@ -4851,21 +4998,6 @@ function applyKillSideEffects(
   payload: EnemyKilledPayload,
   enemyIdsToRemove: Set<number>
 ): void {
-  if (payload.arcDamage > 0) {
-    const nearest = state.enemies
-      .filter((enemy) => enemy.id !== defeatedEnemy.id && !enemyIdsToRemove.has(enemy.id))
-      .sort(
-        (a, b) => getDistanceSquared(defeatedEnemy, a) - getDistanceSquared(defeatedEnemy, b)
-      )[0];
-
-    if (nearest) {
-      nearest.hull = applyDamage(nearest.hull, payload.arcDamage).hull;
-      if (nearest.hull <= 0) {
-        recordEnemyDefeat(state, nearest, enemyIdsToRemove);
-      }
-    }
-  }
-
   if (payload.blastDamage > 0) {
     for (const enemy of state.enemies) {
       if (enemy.id === defeatedEnemy.id || enemyIdsToRemove.has(enemy.id)) {

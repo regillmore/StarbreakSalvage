@@ -22,8 +22,8 @@ describe('item catalog audit', () => {
     });
     expect(audit.hookCounts).toEqual({
       onFire: 17,
-      onProjectileSpawn: 9,
-      onEnemyKilled: 11,
+      onProjectileSpawn: 10,
+      onEnemyKilled: 10,
       onPlayerHit: 6,
       onPickupCollected: 6,
       onGraze: 2,

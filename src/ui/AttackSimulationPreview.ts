@@ -68,6 +68,7 @@ export function createAttackSimulationPreviewElement(
     shot.dataset.ttl = String(projectile.ttl);
     shot.dataset.tags = projectile.tags.join(' ');
     shot.dataset.flightKind = projectile.flightKind;
+    if (projectile.arcChargeKind) shot.dataset.arcCharge = projectile.arcChargeKind;
     if (projectile.laserKind) shot.dataset.laserKind = projectile.laserKind;
     shot.style.setProperty('--shot-start-x', `${projectile.startXPercent}%`);
     shot.style.setProperty('--shot-end-x', `${projectile.endXPercent}%`);
@@ -100,6 +101,12 @@ export function createAttackSimulationPreviewElement(
       phaseShell.className = 'attack-simulation-phase-shell';
       phaseShell.setAttribute('aria-hidden', 'true');
       shot.append(phaseShell);
+    }
+    if (projectile.arcChargeKind) {
+      const arcCharge = ownerDocument.createElement('span');
+      arcCharge.className = 'attack-simulation-arc-charge';
+      arcCharge.setAttribute('aria-hidden', 'true');
+      shot.append(arcCharge);
     }
     projectileLayer.append(shot);
   }

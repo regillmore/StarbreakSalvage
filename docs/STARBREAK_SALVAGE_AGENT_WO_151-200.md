@@ -755,3 +755,31 @@ Gangue Compression Die occupies the released common lunar slot as a bounded orde
 The unchanged managed-smoke defaults selected port 4175 and published `http://192.168.1.2:4175/StarbreakSalvage/` through JSON status. The in-app browser loaded that exact address, rendered all eleven permanent upgrades, and showed Low-Orbit Ore Scrip's 8 kg cost, Route Ledger Uplink prerequisite, and Shop/Repair refund. At 390x700 the Upgrade Bay remained exactly 390 px wide with no horizontal overflow and no captured console warnings or errors. `smoke:stop` then closed the listener and the original managed host shell returned exit code 0, so work order 179 requires no tooling adjustment.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 111 Vitest files and 695 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 978.94 kB minified/267.88 kB gzip initial JavaScript and 93.32/18.78 kB CSS, increases of 1.56/0.46 kB JavaScript and no CSS change over work order 178. The existing 500 kB chunk notice remains; no dependency, save/snapshot schema, route topology, static base path, or warning threshold changed.
+
+## Work order 180 - Projectile-carried arc charge
+
+Goal: give arc a legible electrical identity as a projectile-carried secondary-target discharge and make the existing arc item family compose honestly with the ordered signal circuit.
+
+Prompt:
+
+> Replace kill-only arc bonus damage with a charge carried by the projectile. The ordinary impact must deal its unchanged damage to the primary target; when that projectile is consumed, its charge should attempt one deterministic lightning discharge into another nearby enemy or boss. Make standard and heavy charge useful circuit outputs, preserve phase charge until the phase shot's eventual consuming hit, refit existing arc items around the new model, and expose the result in combat and Hardpoint previews without adding unbounded scans, random targeting, or persistent state.
+
+Acceptance criteria:
+
+- A shared arc profile defines a standard charge at 55% projectile impact within 180 units and a heavy charge at 82% within 240 units, with small minimum secondary damage floors.
+- Arc never increases damage to the projectile's primary target; one consuming impact may discharge once into the nearest distinct living enemy or boss, with distance and stable target identity breaking ties deterministically.
+- A phase projectile keeps its arc charge through its first piercing collision and discharges only when a later collision actually consumes the shot.
+- A charge without a valid secondary target expires harmlessly, and discharge damage does not recursively create another projectile or arc chain.
+- Chain Arc Capacitor and Plasma Lens Array attach standard charge, Arc Welder Drone's extra shot carries charge, Arc Window Invoice upgrades eligible upstream chains to heavy charge, and Crossfeed Detonator gives two-trait upstream projectiles heavy charge while retaining only its compact kill blast.
+- The former kill-only `arcDamage` hook path is removed, so arc behavior no longer depends on killing the primary target.
+- Canvas combat renders a bounded rotating electrical shell on charged shots and a short segmented lightning strike on successful discharge; high contrast, reduced motion, and performance modes remain readable and bounded.
+- Contract and Hardpoint live-fire render standard versus heavy charge, cumulative circuit cards report secondary damage/range changes, and accessible copy states explicitly that primary impact is unchanged.
+- Actor/projectile/effect caps, target-specific damage reducers, objectives, ally credit, deterministic generation, snapshots, saves, static hosting, and dependencies remain coherent.
+
+Status: implemented. `ArcCharge` is the shared standard/heavy profile and attachment boundary. `CombatState` resolves a single deterministic secondary target only after the ordinary target-specific damage path decides the projectile is consumed; first phase traversal retains the charge, while ordinary, spent-phase, player, and ally shots share the same discharge rule. A successful discharge adds one capped endpoint effect and one item-trigger count, while an unfound target adds neither damage nor a phantom effect.
+
+The five active arc-facing items now build that model instead of a parallel kill-only zap. Chain Arc and Plasma Lens attach standard charge, Arc Welder's side shot is explicitly charged, Arc Window upgrades eligible earlier traits to heavy charge without inflating primary impact, and Crossfeed attaches heavy charge to an already-built two-trait projectile while leaving its compact execution blast intact. Hardpoint stage comparison derives body impact and arc potential separately from the production hook path, so order changes are visible even when primary damage does not change.
+
+The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/`, entered the isolated 29-item hook storm, confirmed Chain Arc's live charged-shot/effect treatment stayed bounded in the combat camera, and captured only Vite connection diagnostics with no console warnings or errors. The first observation shell reached its configured ten-minute lease during iteration; a fresh extended managed shell reused port 4175, completed the pass, stopped through the authenticated owner command, and returned exit code 0 without requiring a tooling change.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 112 Vitest files and 701 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 983.73 kB minified/269.33 kB gzip initial JavaScript and 94.17/18.96 kB CSS, increases of 4.79/1.45 kB JavaScript and 0.85/0.18 kB CSS over work order 179. The existing 500 kB chunk notice remains; no dependency, save/snapshot schema, seeded generation input, route topology, static base path, or warning threshold changed.

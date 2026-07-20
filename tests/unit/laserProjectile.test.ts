@@ -110,9 +110,9 @@ describe('laser projectile identity', () => {
     expect(context.translate).toHaveBeenCalledWith(190, 320);
     expect(context.rotate).toHaveBeenCalledWith(Math.atan2(70, 820));
     expect(context.lineTo.mock.calls.length).toBeGreaterThanOrEqual(7);
-    expect(context.quadraticCurveTo).toHaveBeenCalledOnce();
     expect(context.fill).toHaveBeenCalledOnce();
-    expect(context.arc).not.toHaveBeenCalled();
+    expect(context.arc).toHaveBeenCalledOnce();
+    expect(context.setLineDash).toHaveBeenCalledWith(expect.arrayContaining([expect.any(Number)]));
   });
 
   it('exposes laser profiles and their directional cue to shared live-fire previews', () => {
@@ -126,6 +126,27 @@ describe('laser projectile identity', () => {
     expect(preview.projectiles[0]?.laserKind).toBe('beam');
     expect(preview.ariaLabel).toContain('velocity-aligned luminous bodies');
     expect(preview.ariaLabel).toContain('active profiles: beam');
+  });
+
+  it('renders a layered lightning path from consumed projectile to secondary target', () => {
+    const context = createContext();
+    const renderer = createRenderer(context);
+
+    renderer.paintCombatEffect({
+      kind: 'arcDischarge',
+      x: 120,
+      y: 260,
+      targetX: 248,
+      targetY: 180,
+      radius: 18,
+      ttl: 0.18,
+      maxTtl: 0.22
+    });
+
+    expect(context.moveTo).toHaveBeenCalledWith(120, 260);
+    expect(context.lineTo.mock.calls.length).toBeGreaterThanOrEqual(18);
+    expect(context.arc).toHaveBeenCalledWith(248, 180, expect.any(Number), 0, Math.PI * 2);
+    expect(context.stroke.mock.calls.length).toBeGreaterThanOrEqual(3);
   });
 });
 
@@ -153,6 +174,7 @@ function createContext() {
     lineTo: vi.fn(),
     closePath: vi.fn(),
     quadraticCurveTo: vi.fn(),
+    setLineDash: vi.fn(),
     fill: vi.fn(),
     stroke: vi.fn(),
     fillStyle: '',
@@ -160,6 +182,8 @@ function createContext() {
     shadowColor: '',
     shadowBlur: 0,
     lineWidth: 1,
-    globalAlpha: 1
+    globalAlpha: 1,
+    lineCap: 'butt',
+    lineJoin: 'miter'
   };
 }

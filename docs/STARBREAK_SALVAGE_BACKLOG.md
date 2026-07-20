@@ -2532,3 +2532,19 @@ Acceptance:
 Status:
 
 - Implemented in work order 179. `UpgradeEffects` and `RunSession` own the permanent route refund with restored-item precedence. `ItemHooks` owns Gangue's pure ordered transform, which automatically feeds combat and shared live-fire previews. The active catalog remains at 60 items and the global run fingerprint excludes the route-local upgrade.
+
+### BL45 - Projectile-carried arc charge
+
+Acceptance:
+
+- Arc is a projectile-carried standard or heavy charge that never adds damage to its primary target.
+- A consumed charged projectile attempts exactly one deterministic discharge into the nearest distinct living enemy or boss; an absent secondary target produces no damage or phantom hit.
+- Phase traversal retains the charge until the projectile's later consuming collision.
+- Chain Arc Capacitor, Plasma Lens Array, Arc Welder Drone, Arc Window Invoice, and Crossfeed Detonator all use the shared model, and the former kill-only arc damage path is removed.
+- Arc Window and Crossfeed can upgrade an already-built chain to heavy charge, making signal-circuit order visible without adding projectiles or RNG draws.
+- Combat, Contract Select, and Hardpoint live-fire share standard/heavy charge visuals; cumulative Hardpoint cards distinguish unchanged primary impact from secondary damage and range.
+- Deterministic targeting, damage/objective accounting, ally credit, actor/projectile/effect caps, accessibility modes, saves, static hosting, and dependencies remain coherent.
+
+Status:
+
+- Implemented in work order 180. `ArcCharge` owns the two bounded profiles, `CombatState` owns consumption-time secondary targeting and damage, production item hooks attach or upgrade the charge, and Canvas/DOM previews expose its lightning identity without another simulation path.

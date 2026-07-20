@@ -314,6 +314,57 @@ describe('foundry visual presentation', () => {
     ).not.toHaveLength(0);
   });
 
+  it('shows Arc Window upgrading an earlier charge without inflating primary impact', () => {
+    const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
+      (candidate) => candidate.shipId === 'ship_debt_runner'
+    );
+    if (!contract) throw new Error('Expected a single-projectile contract.');
+    const chargedThenWindowed = createFoundryDashboardModel(
+      createEngineeringState(contract.loadout),
+      [
+        { itemId: 'item_chain_arc_capacitor', acquisitionOrder: 0 },
+        { itemId: 'item_arc_window_invoice', acquisitionOrder: 1 }
+      ]
+    );
+    const windowedThenCharged = createFoundryDashboardModel(
+      createEngineeringState(contract.loadout),
+      [
+        { itemId: 'item_arc_window_invoice', acquisitionOrder: 0 },
+        { itemId: 'item_chain_arc_capacitor', acquisitionOrder: 1 }
+      ]
+    );
+
+    expect(chargedThenWindowed.circuitStages[0]).toMatchObject({
+      name: 'Chain Arc Capacitor',
+      outputLabel: 'ARC none -> 0.6 @ 180u',
+      addedTags: ['arc'],
+      changed: true
+    });
+    expect(chargedThenWindowed.circuitStages[1]).toMatchObject({
+      name: 'Arc Window Invoice',
+      outputLabel: 'ARC 0.6 @ 180u -> 0.8 @ 240u',
+      addedTags: [],
+      changed: true
+    });
+    expect(chargedThenWindowed.circuitStages[1]?.incomingImpact).toBeCloseTo(1);
+    expect(chargedThenWindowed.circuitStages[1]?.outgoingImpact).toBeCloseTo(1);
+    expect(
+      chargedThenWindowed.attackSimulation.projectiles.every(
+        (projectile) => projectile.arcChargeKind === 'heavy'
+      )
+    ).toBe(true);
+    expect(chargedThenWindowed.attackSimulation.ariaLabel).toContain(
+      'the primary hit receives no bonus damage'
+    );
+    expect(windowedThenCharged.circuitStages[0]).toMatchObject({
+      name: 'Arc Window Invoice',
+      outputLabel: 'conditional projectile rewrite armed',
+      addedTags: [],
+      changed: false
+    });
+    expect(windowedThenCharged.attackSimulation.projectiles[0]?.arcChargeKind).toBe('standard');
+  });
+
   it('projects prototype-vent cadence shifts onto affected earlier circuit cards', () => {
     const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
       (candidate) => candidate.shipId === 'ship_debt_runner'

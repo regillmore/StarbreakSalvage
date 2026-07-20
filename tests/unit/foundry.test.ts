@@ -218,8 +218,7 @@ describe('combined item and module hooks', () => {
         projectileTags: ['laser'],
         overkillDamage: 0,
         bonusSalvage: 0,
-        blastDamage: 0,
-        arcDamage: 0
+        blastDamage: 0
       }
     ).payload;
     const defense = applyCombinedHooksWithReport(

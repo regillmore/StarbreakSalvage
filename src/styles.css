@@ -1238,9 +1238,49 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   }
 }
 
-.attack-simulation-projectile[data-tags~='arc'] {
-  outline: 1px solid rgba(255, 107, 214, 0.8);
-  outline-offset: 1px;
+.attack-simulation-projectile[data-arc-charge] {
+  filter: drop-shadow(0 0 0.24rem rgba(124, 247, 255, 0.78));
+}
+
+.attack-simulation-projectile[data-arc-charge='heavy'] {
+  filter: drop-shadow(0 0 0.34rem rgba(255, 107, 214, 0.9));
+}
+
+.attack-simulation-arc-charge {
+  position: absolute;
+  inset: -48%;
+  border: 1px dashed rgba(124, 247, 255, 0.88);
+  border-radius: 50%;
+  box-shadow:
+    0 -0.18rem 0 -0.08rem #f8fbff,
+    0.18rem 0.08rem 0 -0.09rem #7cf7ff,
+    -0.16rem 0.13rem 0 -0.09rem #7cf7ff;
+  animation: attack-arc-charge 360ms steps(3, end) infinite;
+  pointer-events: none;
+}
+
+[data-arc-charge='heavy'] .attack-simulation-arc-charge {
+  inset: -68%;
+  border-color: rgba(255, 107, 214, 0.96);
+  border-width: 2px;
+  box-shadow:
+    0 -0.24rem 0 -0.09rem #f8fbff,
+    0.24rem 0.1rem 0 -0.08rem #ff6bd6,
+    -0.22rem 0.17rem 0 -0.08rem #7cf7ff;
+}
+
+@keyframes attack-arc-charge {
+  0% {
+    transform: rotate(0deg) scale(0.9);
+  }
+
+  50% {
+    transform: rotate(28deg) scale(1.08);
+  }
+
+  100% {
+    transform: rotate(61deg) scale(0.96);
+  }
 }
 
 .attack-simulation-live-label {
@@ -2075,7 +2115,9 @@ html[data-reduced-motion='true'] .attack-simulation-projectile {
 }
 
 html[data-reduced-motion='true'] .attack-simulation-phase-shell,
-html[data-performance-mode='true'] .attack-simulation-phase-shell {
+html[data-performance-mode='true'] .attack-simulation-phase-shell,
+html[data-reduced-motion='true'] .attack-simulation-arc-charge,
+html[data-performance-mode='true'] .attack-simulation-arc-charge {
   opacity: 0.72;
   transform: rotate(45deg);
   animation: none;

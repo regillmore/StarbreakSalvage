@@ -292,8 +292,8 @@ export const ITEMS: readonly ItemDefinition[] = [
     name: 'Chain Arc Capacitor',
     rarity: 'rare',
     tags: ['laser', 'plasma'],
-    hooks: ['onProjectileSpawn', 'onEnemyKilled'],
-    effect: 'laser and plasma shots can arc to nearby enemies',
+    hooks: ['onProjectileSpawn'],
+    effect: 'laser and plasma shots carry a charge that zaps a nearby second target when spent',
     weight: 7,
     metadata: {
       family: 'laser-split',
@@ -599,7 +599,7 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'uncommon',
     tags: ['plasma', 'arc'],
     hooks: ['onProjectileSpawn'],
-    effect: 'plasma shots gain a wider charged lens',
+    effect: 'plasma shots gain a wider lens and carry a standard secondary-target arc charge',
     weight: 8,
     metadata: {
       family: 'laser-split',
@@ -752,7 +752,7 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'uncommon',
     tags: ['arc', 'drone'],
     hooks: ['onFire'],
-    effect: 'arc builds gain a side drone weld every third volley',
+    effect: 'arc-charged builds gain a side drone shot carrying its own charge every third volley',
     weight: 8,
     metadata: {
       family: 'drone-copy',
@@ -820,7 +820,7 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'rare',
     tags: ['arc', 'plasma'],
     hooks: ['onProjectileSpawn'],
-    effect: 'split, phase, ricochet, plasma, and arc shots gain a heavy arc charge',
+    effect: 'eligible shots upgrade their stored arc to a longer-range, harder secondary discharge',
     weight: 6,
     metadata: {
       family: 'laser-split',
@@ -1444,8 +1444,9 @@ export const ITEMS: readonly ItemDefinition[] = [
     name: 'Crossfeed Detonator',
     rarity: 'rare',
     tags: ['arc', 'overkill'],
-    hooks: ['onEnemyKilled'],
-    effect: 'kills carrying two circuit traits discharge both an arc and a compact blast',
+    hooks: ['onProjectileSpawn', 'onEnemyKilled'],
+    effect:
+      'shots already carrying two circuit traits gain a heavy arc charge and trigger a compact blast on kill',
     weight: 5,
     metadata: {
       family: 'drone-copy',
