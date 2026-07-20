@@ -203,14 +203,14 @@ describe('reward generation', () => {
           price: 7
         },
         {
-          id: 'item_salvage_dividend_chip',
+          id: 'item_arc_welder_drone',
           sourceHint: 'Shop pool',
-          price: 5
+          price: 7
         },
         {
-          id: 'item_mining_laser_transit',
+          id: 'item_heat_signature_loop',
           sourceHint: 'Shop pool',
-          price: 9
+          price: 6
         }
       ],
       eliteRewards: [

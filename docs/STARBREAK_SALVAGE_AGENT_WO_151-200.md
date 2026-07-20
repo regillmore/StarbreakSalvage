@@ -783,3 +783,30 @@ The five active arc-facing items now build that model instead of a parallel kill
 The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/`, entered the isolated 29-item hook storm, confirmed Chain Arc's live charged-shot/effect treatment stayed bounded in the combat camera, and captured only Vite connection diagnostics with no console warnings or errors. The first observation shell reached its configured ten-minute lease during iteration; a fresh extended managed shell reused port 4175, completed the pass, stopped through the authenticated owner command, and returned exit code 0 without requiring a tooling change.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 112 Vitest files and 701 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits 983.73 kB minified/269.33 kB gzip initial JavaScript and 94.17/18.96 kB CSS, increases of 4.79/1.45 kB JavaScript and 0.85/0.18 kB CSS over work order 179. The existing 500 kB chunk notice remains; no dependency, save/snapshot schema, seeded generation input, route topology, static base path, or warning threshold changed.
+
+## Work order 181 - Permanent Route Ledger and Forkline Dynamo
+
+Goal: move Route Ledger Spool's dependable reward cash-out into permanent progression and refill its common route slot with a topology-aware arc circuit tool.
+
+Prompt:
+
+> Retire Route Ledger Spool from active run rewards and move its one-credit route reward cash-out into the permanent scrap Upgrade Bay. Preserve restored-run behavior without allowing the item and upgrade to double-pay. Add a common replacement whose value depends on a multi-shot topology already being present earlier in the ordered signal circuit. Keep route settlement and weapon generation deterministic, previews honest, active catalog breadth stable, and the managed smoke-host lifecycle reliable.
+
+Acceptance criteria:
+
+- Route Ledger Spool is absent from active discovery and reward pools and appears as a 9 kg permanent Navigation upgrade gated by Route Ledger Uplink.
+- Permanent and restored-item forms each add exactly one credit to a route reward cash-out; owning both adds it once and records one readable settlement detail.
+- The route-local effect is explicit input to route settlement and excluded from the expedition-wide generation fingerprint, so it cannot reshuffle contracts, route topology, sectors, shops, rewards, or duration.
+- Common Forkline Dynamo replaces the same starter/combat/route slot and operates only when two or more projectiles already exist at its ordered `onFire` stage.
+- The Dynamo attaches standard arc charge to the two projected horizontal extremes, leaves inner projectiles untouched, and changes neither primary impact nor projectile count.
+- Hardpoint cumulative cards and live fire use the production hook path, making Split-then-Dynamo report `ARC none -> 0.7 @ 180u` while Dynamo-then-Split remains conditional for a single-shot weapon.
+- The active catalog remains at 60 items, and the 29-item stress fixture retains every implemented hook family while substituting the new circuit item and another active route hook for legacy coverage.
+- Upgrade Bay totals, restored snapshot compatibility, deterministic source-weighted fixtures, saves, accessibility modes, static hosting, dependencies, and work order 175 smoke tooling remain coherent.
+
+Status: implemented. Route Ledger Spool remains a retired catalog record and `onRouteChosen` hook solely for restored run snapshots. `RunUpgradeEffects.routeChosen` exposes the permanent cash-out flag; `RunSession.applyRouteOutcome` gives a fitted legacy copy precedence, records one shared detail, and contributes exactly one credit to the eventual route reward. The upgrade is deliberately omitted from the global generation fingerprint.
+
+Forkline Dynamo occupies the released common route slot as a bounded ordered transform. It derives stable projected horizontal lanes from only the current volley, charges the two extremes through the shared work order 180 arc model, and creates no shot, primary damage, RNG draw, counter, or preview-only rule. Earlier multi-shot topology feeds it; later topology remains untouched. The active catalog stays at 60, the stress loadout stays at 29 while retaining all active hook families, and deterministic shop fixtures are updated for the changed common pool.
+
+The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/`, verified all 12 persistent Upgrade Bay cards at a 390 x 700 viewport, confirmed Route Ledger Spool's Navigation prerequisite and one-credit cash-out copy, found no horizontal overflow, and recorded no console warnings or errors. The viewport was restored, the browser tab was finalized, and the authenticated work order 175 host was stopped cleanly.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 112 Vitest files and 705 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The focused hook, Foundry presentation, route settlement, upgrade-effect, and restored-fixture suite passes 68 tests. The build emits 985.14 kB minified/269.70 kB gzip initial JavaScript and 94.17/18.96 kB CSS, increases of 1.41/0.37 kB JavaScript and no CSS change over work order 180. The existing 500 kB chunk notice remains; no dependency, save/snapshot schema, seeded generation input, route topology, static base path, or warning threshold changed.

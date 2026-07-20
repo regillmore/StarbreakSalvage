@@ -21,7 +21,7 @@ describe('item catalog audit', () => {
       cursed: 3
     });
     expect(audit.hookCounts).toEqual({
-      onFire: 17,
+      onFire: 18,
       onProjectileSpawn: 10,
       onEnemyKilled: 10,
       onPlayerHit: 6,
@@ -30,21 +30,21 @@ describe('item catalog audit', () => {
       onSpecialUsed: 0,
       onBombUsed: 1,
       onSectorStart: 2,
-      onRouteChosen: 3,
+      onRouteChosen: 2,
       onShopEntered: 1,
       onRewardGenerated: 3,
       onBossPhaseChanged: 1,
       onEnvironmentObjectDestroyed: 1
     });
     expect(audit.tagCounts).toMatchObject({
-      credit: 12,
+      credit: 11,
       phase: 9,
       plasma: 10,
       overkill: 5,
       relic: 2
     });
     expect(audit.familyCounts).toEqual({
-      'laser-split': 7,
+      'laser-split': 8,
       'missile-overkill': 8,
       'drone-copy': 7,
       'shield-revenge': 5,
@@ -53,7 +53,7 @@ describe('item catalog audit', () => {
       'phase-graze': 6,
       'heat-prototype': 6,
       'lunar-surface': 5,
-      'route-economy': 4,
+      'route-economy': 3,
       'boss-pressure': 0
     });
     expect(audit.implementationStatusCounts).toEqual({
@@ -154,5 +154,6 @@ describe('item catalog audit', () => {
     expect(getImplementedHookItemIds('onProjectileSpawn')).toContain('item_plasma_seed_crucible');
     expect(getImplementedHookItemIds('onFire')).toContain('item_boreline_crimper');
     expect(getImplementedHookItemIds('onFire')).toContain('item_gangue_compression_die');
+    expect(getImplementedHookItemIds('onFire')).toContain('item_forkline_dynamo');
   });
 });

@@ -2548,3 +2548,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 180. `ArcCharge` owns the two bounded profiles, `CombatState` owns consumption-time secondary targeting and damage, production item hooks attach or upgrade the charge, and Canvas/DOM previews expose its lightning identity without another simulation path.
+
+### BL46 - Permanent Route Ledger and Forkline chain
+
+Acceptance:
+
+- Route Ledger Spool leaves active rewards and becomes a 9 kg permanent Navigation upgrade gated by Route Ledger Uplink.
+- Its one-credit route reward cash-out remains deterministic, restored snapshots retain the retired item behavior, and the two representations cannot double-pay.
+- Common Forkline Dynamo replaces the active starter/combat/route slot and attaches standard arc charge to only the two outermost projectiles already present in a multi-shot volley.
+- Circuit order is material and visible: split then Dynamo charges existing flanks and reports secondary arc output, while Dynamo then a single-shot splitter cannot rewrite later branches.
+- The transform adds no projectile or primary impact, and downstream charge/trait effects continue through the production hook path.
+- Global generation fingerprints, active breadth, Upgrade Bay totals, item-storm hook coverage, reward/shop snapshots, saves, accessibility, performance limits, static hosting, and smoke tooling remain coherent.
+
+Status:
+
+- Implemented in work order 181. `UpgradeEffects` and `RunSession` own the permanent reward-credit contribution with restored-item precedence. `ItemHooks` owns Forkline's bounded ordered outer-branch charge, which automatically feeds combat and shared live-fire previews. The active catalog remains at 60 items and the global run fingerprint excludes the route-local upgrade.

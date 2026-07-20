@@ -314,6 +314,36 @@ describe('foundry visual presentation', () => {
     ).not.toHaveLength(0);
   });
 
+  it('shows Forkline Dynamo charging only branches that already exist upstream', () => {
+    const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
+      (candidate) => candidate.shipId === 'ship_debt_runner'
+    );
+    if (!contract) throw new Error('Expected a single-projectile contract.');
+    const splitThenCharge = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+      { itemId: 'item_split_prism', acquisitionOrder: 0 },
+      { itemId: 'item_forkline_dynamo', acquisitionOrder: 1 }
+    ]);
+    const chargeThenSplit = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+      { itemId: 'item_forkline_dynamo', acquisitionOrder: 0 },
+      { itemId: 'item_split_prism', acquisitionOrder: 1 }
+    ]);
+
+    expect(splitThenCharge.circuitStages[1]).toMatchObject({
+      name: 'Forkline Dynamo',
+      incomingProjectiles: 3,
+      outgoingProjectiles: 3,
+      outputLabel: 'ARC none -> 0.7 @ 180u',
+      addedTags: ['arc'],
+      changed: true
+    });
+    expect(chargeThenSplit.circuitStages[0]).toMatchObject({
+      name: 'Forkline Dynamo',
+      outputLabel: 'conditional volley armed',
+      addedTags: [],
+      changed: false
+    });
+  });
+
   it('shows Arc Window upgrading an earlier charge without inflating primary impact', () => {
     const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
       (candidate) => candidate.shipId === 'ship_debt_runner'

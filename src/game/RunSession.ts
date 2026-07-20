@@ -57,7 +57,11 @@ import {
 import { generateStartingItemLoadout, type ItemInstance } from './Rewards';
 import { autoFitItemSocket, autoFitItemSockets, getActiveFittedItems } from './ItemSockets';
 import type { ShopStockLedger } from './ShopStock';
-import { getLowOrbitOreScripCreditRefund, type RouteChosenUpgradeEffects } from './UpgradeEffects';
+import {
+  getLowOrbitOreScripCreditRefund,
+  getRouteLedgerSpoolRewardCreditBonus,
+  type RouteChosenUpgradeEffects
+} from './UpgradeEffects';
 import type {
   AppliedRouteOutcome,
   RouteCombatModifier,
@@ -1291,6 +1295,9 @@ function applyRouteChosenHooks(
   const hasLegacyOreScrip = activeItems.some(
     (instance) => instance.itemId === 'item_low_orbit_ore_scrip'
   );
+  const hasLegacyRouteLedger = activeItems.some(
+    (instance) => instance.itemId === 'item_route_ledger_spool'
+  );
   const payload = applyCombinedHooks(
     'onRouteChosen',
     activeItems,
@@ -1316,10 +1323,17 @@ function applyRouteChosenHooks(
   const permanentOreRefund = hasLegacyOreScrip
     ? 0
     : getLowOrbitOreScripCreditRefund(routeUpgradeEffects ?? null, route.kind);
+  const permanentRouteLedgerCredit = hasLegacyRouteLedger
+    ? 0
+    : getRouteLedgerSpoolRewardCreditBonus(routeUpgradeEffects ?? null);
   const oreRefundApplied =
     permanentOreRefund > 0 ||
     (hasLegacyOreScrip &&
-      getLowOrbitOreScripCreditRefund({ lowOrbitOreRefund: true }, route.kind) > 0);
+      getLowOrbitOreScripCreditRefund(
+        { lowOrbitOreRefund: true, routeLedgerRewardCredit: false },
+        route.kind
+      ) > 0);
+  const routeLedgerCreditApplied = hasLegacyRouteLedger || permanentRouteLedgerCredit > 0;
   const hasShopPayload =
     outcome.effects.shop !== null ||
     payload.shopDiscount !== 0 ||
@@ -1328,9 +1342,13 @@ function applyRouteChosenHooks(
 
   return {
     ...outcome,
-    details: oreRefundApplied
-      ? [...outcome.details, 'Low-Orbit Ore Scrip refunds 1 credit.']
-      : outcome.details,
+    details: [
+      ...outcome.details,
+      ...(oreRefundApplied ? ['Low-Orbit Ore Scrip refunds 1 credit.'] : []),
+      ...(routeLedgerCreditApplied
+        ? ['Route Ledger Spool adds 1 credit to the reward cash-out.']
+        : [])
+    ],
     effects: {
       ...outcome.effects,
       creditsDelta: payload.creditsDelta + permanentOreRefund,
@@ -1340,7 +1358,7 @@ function applyRouteChosenHooks(
       relicDelta: payload.relicDelta,
       reward: {
         choiceBonus: payload.rewardChoiceBonus,
-        creditBonus: payload.rewardCreditBonus,
+        creditBonus: payload.rewardCreditBonus + permanentRouteLedgerCredit,
         biasTags: payload.rewardBiasTags,
         poolIdOverride: payload.rewardPoolIdOverride
       },

@@ -20,7 +20,8 @@ export const UPGRADE_EFFECT_KINDS = [
   'bossRelief',
   'sectorTollRefund',
   'shopCouponCascade',
-  'routeOreScrip'
+  'routeOreScrip',
+  'routeLedgerSpool'
 ] as const;
 
 export type UpgradeCategory = (typeof UPGRADE_CATEGORIES)[number];
@@ -38,7 +39,8 @@ export type UpgradeId =
   | 'upgrade_capital_relief_protocol'
   | 'upgrade_exit_toll_transponder'
   | 'upgrade_coupon_cascade_fuse'
-  | 'upgrade_low_orbit_ore_scrip';
+  | 'upgrade_low_orbit_ore_scrip'
+  | 'upgrade_route_ledger_spool';
 
 export interface UpgradeDefinition {
   readonly id: UpgradeId;
@@ -172,6 +174,17 @@ export const UPGRADES: readonly UpgradeDefinition[] = [
     summary: 'a standing ore-credit agreement accepted along stable carrier lanes',
     effect: 'Shop and Repair destinations refund 1 credit after route settlement.',
     cost: 8,
+    prerequisites: ['upgrade_route_ledger_uplink']
+  },
+  {
+    id: 'upgrade_route_ledger_spool',
+    category: 'navigation',
+    iconKey: 'route-radar',
+    effectKind: 'routeLedgerSpool',
+    name: 'Route Ledger Spool',
+    summary: 'a permanent settlement spool threaded through every route contract',
+    effect: 'Every route reward cash-out carries 1 additional credit.',
+    cost: 9,
     prerequisites: ['upgrade_route_ledger_uplink']
   }
 ];

@@ -15,6 +15,7 @@ export interface SectorStartUpgradeEffects {
 
 export interface RouteChosenUpgradeEffects {
   readonly lowOrbitOreRefund: boolean;
+  readonly routeLedgerRewardCredit: boolean;
 }
 
 export interface RunUpgradeEffects {
@@ -66,7 +67,8 @@ export function resolveRunUpgradeEffects(
       exitTollRefund: hasUpgrade('upgrade_exit_toll_transponder')
     },
     routeChosen: {
-      lowOrbitOreRefund: hasUpgrade('upgrade_low_orbit_ore_scrip')
+      lowOrbitOreRefund: hasUpgrade('upgrade_low_orbit_ore_scrip'),
+      routeLedgerRewardCredit: hasUpgrade('upgrade_route_ledger_spool')
     },
     bossPhase: {
       attackCooldownSeconds: hasBossWarning ? 0.15 : 0,
@@ -116,6 +118,10 @@ export function getRunUpgradeDebugLabels(effects: RunUpgradeEffects): string[] {
     labels.push('ore scrip refund');
   }
 
+  if (effects.routeChosen.routeLedgerRewardCredit) {
+    labels.push('route ledger cash-out');
+  }
+
   if (effects.bossPhase.telegraphSeconds > 0) {
     labels.push('boss warning');
   }
@@ -139,6 +145,12 @@ export function getLowOrbitOreScripCreditRefund(
   routeKind: RewardContextKind
 ): number {
   return effects?.lowOrbitOreRefund && (routeKind === 'shop' || routeKind === 'repair') ? 1 : 0;
+}
+
+export function getRouteLedgerSpoolRewardCreditBonus(
+  effects: RouteChosenUpgradeEffects | null
+): number {
+  return effects?.routeLedgerRewardCredit ? 1 : 0;
 }
 
 export function getMarketDecoderReadout(effects: RunUpgradeEffects): string | null {

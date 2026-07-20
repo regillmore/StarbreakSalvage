@@ -180,6 +180,41 @@ describe('item synergies', () => {
     expect(laterBranches.every((projectile) => !projectile.tags.includes('plasma'))).toBe(true);
   });
 
+  it('lets Forkline Dynamo charge only the outer branches already built upstream', () => {
+    const splitThenCharge: ItemInstance[] = [
+      { itemId: 'item_split_prism', acquisitionOrder: 0 },
+      { itemId: 'item_forkline_dynamo', acquisitionOrder: 1 }
+    ];
+    const chargeThenSplit: ItemInstance[] = [
+      { itemId: 'item_forkline_dynamo', acquisitionOrder: 0 },
+      { itemId: 'item_split_prism', acquisitionOrder: 1 }
+    ];
+
+    const charged = applyItemHooks('onFire', splitThenCharge, {
+      volleyIndex: 1,
+      projectiles: [baseProjectile]
+    });
+    const uncharged = applyItemHooks('onFire', chargeThenSplit, {
+      volleyIndex: 1,
+      projectiles: [baseProjectile]
+    });
+    const chargedBranches = charged.projectiles.filter(
+      (projectile) => projectile.arcChargeKind === 'standard'
+    );
+
+    expect(charged.projectiles).toHaveLength(3);
+    expect(chargedBranches).toHaveLength(2);
+    expect(chargedBranches.map((projectile) => projectile.vx)).toEqual([-112, 112]);
+    expect(chargedBranches.every((projectile) => projectile.tags.includes('arc'))).toBe(true);
+    expect(charged.projectiles.find((projectile) => projectile.vx === 0)?.arcChargeKind).toBe(
+      undefined
+    );
+    expect(uncharged.projectiles).toHaveLength(3);
+    expect(uncharged.projectiles.every((projectile) => !projectile.tags.includes('arc'))).toBe(
+      true
+    );
+  });
+
   it('applies projectile spawn hooks deterministically', () => {
     const instances: ItemInstance[] = [
       { itemId: 'item_chain_arc_capacitor', acquisitionOrder: 0 },

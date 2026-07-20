@@ -16,7 +16,7 @@ describe('createUpgradeBayViewModel', () => {
     const surveyRig = getCard(model, 'upgrade_contract_survey_rig');
     const escrowIndex = getCard(model, 'upgrade_salvage_escrow_index');
 
-    expect(model.summaryText).toBe('Bank 4 kg | Installed 0/11 | Ready 2');
+    expect(model.summaryText).toBe('Bank 4 kg | Installed 0/12 | Ready 2');
     expect(model.availableCount).toBe(2);
     expect(surveyRig.categoryLabel).toBe('Hangar');
     expect(surveyRig.iconKey).toBe('contract-scope');
@@ -37,7 +37,7 @@ describe('createUpgradeBayViewModel', () => {
     const routeUplink = getCard(model, 'upgrade_route_ledger_uplink');
     const relicDossier = getCard(model, 'upgrade_relic_pattern_dossier');
 
-    expect(model.summaryText).toBe('Bank 12 kg | Installed 1/11 | Ready 2');
+    expect(model.summaryText).toBe('Bank 12 kg | Installed 1/12 | Ready 2');
     expect(surveyRig.state).toBe('purchased');
     expect(surveyRig.actionLabel).toBe('Installed');
     expect(surveyRig.canPurchase).toBe(false);

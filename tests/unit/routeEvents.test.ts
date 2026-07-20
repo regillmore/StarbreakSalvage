@@ -195,6 +195,55 @@ describe('route events', () => {
     expect(stacked.routeOutcomes[0]?.details).toContain('Low-Orbit Ore Scrip refunds 1 credit.');
   });
 
+  it('applies permanent Route Ledger reward credit without doubling a restored item copy', () => {
+    const run = generateRunSkeleton('ROUTE-LEDGER-CASHOUT', {
+      purchasedUpgradeIds: ['upgrade_route_ledger_spool']
+    });
+    const contract = getFirstContract(run);
+    const sector = getCurrentSector(run, createRunSession(run, contract));
+    const route = makeRoute('vault');
+    const outcome = generateRouteOutcome({
+      run,
+      sector,
+      route,
+      availableCredits: contract.startingCredits
+    });
+    const upgraded = createRunSession(run, contract);
+    const restored = createRunSession(run, contract);
+    const stacked = createRunSession(run, contract);
+
+    expect(addItemToSession(restored, 'item_route_ledger_spool').socket).not.toBeNull();
+    expect(addItemToSession(stacked, 'item_route_ledger_spool').socket).not.toBeNull();
+
+    applyRouteOutcome(
+      upgraded,
+      sector,
+      route,
+      outcome,
+      undefined,
+      undefined,
+      run.upgradeEffects.routeChosen
+    );
+    applyRouteOutcome(restored, sector, route, outcome);
+    applyRouteOutcome(
+      stacked,
+      sector,
+      route,
+      outcome,
+      undefined,
+      undefined,
+      run.upgradeEffects.routeChosen
+    );
+
+    const expectedRewardCredit = outcome.effects.reward.creditBonus + 1;
+    expect(upgraded.routeOutcomes[0]?.effects.reward.creditBonus).toBe(expectedRewardCredit);
+    expect(restored.routeOutcomes[0]?.effects.reward.creditBonus).toBe(expectedRewardCredit);
+    expect(stacked.routeOutcomes[0]?.effects.reward.creditBonus).toBe(expectedRewardCredit);
+    expect(stacked.routeOutcomes[0]?.details).toContain(
+      'Route Ledger Spool adds 1 credit to the reward cash-out.'
+    );
+  });
+
   it('uses route outcomes to alter rewards and next-sector combat', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
     const contract = getFirstContract(run);

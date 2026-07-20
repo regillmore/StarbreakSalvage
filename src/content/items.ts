@@ -175,6 +175,7 @@ export type ItemId =
   | 'item_low_orbit_ore_scrip'
   | 'item_gangue_compression_die'
   | 'item_route_ledger_spool'
+  | 'item_forkline_dynamo'
   | 'item_ambush_insurance_stamp'
   | 'item_exit_toll_transponder'
   | 'item_coastdown_capacitor'
@@ -1207,8 +1208,27 @@ export const ITEMS: readonly ItemDefinition[] = [
       sources: ['starter', 'combat', 'route'],
       unlockTier: 'baseline',
       implementationStatus: 'live',
+      retired: true,
       stacking: 'unique',
       uiTags: ['route', 'credit']
+    }
+  },
+  {
+    id: 'item_forkline_dynamo',
+    name: 'Forkline Dynamo',
+    rarity: 'common',
+    tags: ['arc', 'split'],
+    hooks: ['onFire'],
+    effect:
+      'once the current volley has branches, its two outermost shots carry standard arc charge',
+    weight: 11,
+    metadata: {
+      family: 'laser-split',
+      sources: ['starter', 'combat', 'route'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['arc', 'split']
     }
   },
   {
@@ -1508,7 +1528,7 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_near_miss_tachometer',
       'item_crater_shadow_lens',
       'item_gangue_compression_die',
-      'item_route_ledger_spool',
+      'item_forkline_dynamo',
       'item_harmonic_fork_loom'
     ]
   },
@@ -1562,7 +1582,7 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_surface_beacon_drone',
       'item_mining_laser_transit',
       'item_gangue_compression_die',
-      'item_route_ledger_spool',
+      'item_forkline_dynamo',
       'item_ambush_insurance_stamp',
       'item_coastdown_capacitor',
       'item_convoy_receipt_printer',

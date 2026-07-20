@@ -80,15 +80,15 @@ describe('run upgrade effects', () => {
         "shop": {
           "discount": 1,
           "itemIds": [
-            "item_sidecar_drone_bay",
-            "item_ambush_insurance_stamp",
+            "item_salvage_dividend_chip",
+            "item_coastdown_capacitor",
             "item_credit_reroute_fuse",
             "item_convoy_receipt_printer",
             "item_salvage_magnet",
           ],
           "prices": [
             4,
-            5,
+            8,
             3,
             5,
             5,
@@ -166,8 +166,23 @@ describe('run upgrade effects', () => {
   it('projects Low-Orbit Ore Scrip without perturbing unrelated expedition generation', () => {
     const oreScrip = resolveRunUpgradeEffects(['upgrade_low_orbit_ore_scrip']);
 
-    expect(oreScrip.routeChosen).toEqual({ lowOrbitOreRefund: true });
+    expect(oreScrip.routeChosen).toEqual({
+      lowOrbitOreRefund: true,
+      routeLedgerRewardCredit: false
+    });
     expect(createRunGenerationSaveFingerprint([], oreScrip)).toBe(
+      createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
+    );
+  });
+
+  it('projects Route Ledger Spool without perturbing unrelated expedition generation', () => {
+    const routeLedger = resolveRunUpgradeEffects(['upgrade_route_ledger_spool']);
+
+    expect(routeLedger.routeChosen).toEqual({
+      lowOrbitOreRefund: false,
+      routeLedgerRewardCredit: true
+    });
+    expect(createRunGenerationSaveFingerprint([], routeLedger)).toBe(
       createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
     );
   });

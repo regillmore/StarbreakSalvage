@@ -220,6 +220,7 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_split_prism',
     'item_boreline_crimper',
     'item_gangue_compression_die',
+    'item_forkline_dynamo',
     'item_drone_uplink',
     'item_heat_sink_saint',
     'item_phase_grazer',
@@ -679,6 +680,23 @@ function applyOnFire(
           tags: addTags(projectile.tags, ['plasma'])
         };
       })
+    };
+  }
+
+  if (itemId === 'item_forkline_dynamo' && payload.projectiles.length >= 2) {
+    const horizontalOrder = payload.projectiles
+      .map((projectile, index) => ({
+        index,
+        projectedX: projectile.x + projectile.vx * 0.12
+      }))
+      .sort((left, right) => left.projectedX - right.projectedX || left.index - right.index);
+    const chargedIndices = new Set([horizontalOrder[0]?.index, horizontalOrder.at(-1)?.index]);
+
+    return {
+      ...payload,
+      projectiles: payload.projectiles.map((projectile, index) =>
+        chargedIndices.has(index) ? attachArcCharge(projectile) : projectile
+      )
     };
   }
 
