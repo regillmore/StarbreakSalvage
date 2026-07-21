@@ -891,3 +891,30 @@ The active drone item family now states what is deployed and when it fires. Upli
 Contract Select, Hardpoint Control, and Canvas combat share the same follower roster and source identifiers. Browser inspection of `STARBREAK-SMOKE` confirmed three Drone Chaplain followers in both previews and live combat, corrected an initial center-follower overlap by raising the preview formation band, retained a 390 px document width at the narrow breakpoint, and recorded no console warnings or errors. The authenticated work order 175 smoke host stopped cleanly and its owner shell returned exit code 0.
 
 Verification: `npm run verify:release` passes (114 Vitest files / 715 tests, production build, 17/17 Chromium E2E tests, and Pages preview asset smoke). Interactive browser inspection confirmed three distinct Drone Chaplain followers in both contract and Hardpoint previews, a non-overlapping shared escort formation in live combat, responsive narrow-width layout, and no console warnings or errors. The existing Vite large-chunk advisory remains (`994.05 kB` initial JavaScript, `272.33 kB` gzip); no dependencies were added.
+
+## Work order 185 - Permanent Convoy Receipts and rebound freight chain
+
+Goal: move Convoy Receipt Printer's dependable reroll breadth into permanent progression and refill its uncommon slot with an order-sensitive ricochet/overkill circuit tool.
+
+Prompt:
+
+> Retire Convoy Receipt Printer from active run rewards and move its rerolled-shop stock expansion into the permanent scrap Upgrade Bay. Preserve restored-run behavior without allowing the item and upgrade to double-apply. Add an uncommon replacement whose benefit depends on prepared ricochet bounces already being present earlier in the ordered weapon chain. Keep shop generation deterministic, previews honest, active catalog breadth stable, and the managed smoke-host lifecycle reliable.
+
+Acceptance criteria:
+
+- Convoy Receipt Printer is absent from active discovery and reward pools and appears as a 12 kg permanent Market upgrade gated by Market Decoder.
+- The permanent effect adds exactly one credit/drone-biased stock slot after a shop reroll; it does not alter initial stock, and a restored fitted copy takes precedence so both representations cannot stack.
+- The shop-local effect is explicit input to shop generation and excluded from the expedition-wide generation fingerprint, so installing it cannot reshuffle contracts, route topology, sectors, or duration.
+- Uncommon Rebound Freight Seal replaces the same combat/route/shop slot and operates only on shots carrying ricochet bounces prepared by an earlier projectile stage.
+- Each of at most two prepared bounces adds 14% primary impact and the overkill trait without adding or consuming shots, bounces, RNG draws, timers, or persistent state.
+- Hardpoint cumulative cards expose both the linked bouncing-shot count and the precise missing earlier-ricochet condition; live fire uses the same production hook ordering.
+- The active catalog remains at 60 items, the compatibility catalog rises to 71 with eleven retired definitions, and the 29-item stress fixture covers both the legacy shop hook and the new projectile transform.
+- Upgrade Bay totals, deterministic source-weighted fixtures, restored snapshots, saves, accessibility modes, static hosting, dependencies, and work order 175 smoke tooling remain coherent.
+
+Status: implemented. Convoy Receipt Printer remains a retired catalog record and `onShopEntered` hook solely for restored run snapshots. `RunUpgradeEffects.convoyReceiptPrinter` exposes the permanent flag; `Shops.generateShopInventory` gives a fitted legacy copy precedence and authors one extra reroll slot with the same credit/drone bias only when `rerollCount > 0`. The upgrade is deliberately omitted from the global generation fingerprint.
+
+Rebound Freight Seal occupies the released uncommon combat/route/shop slot as a bounded ordered projectile transform. It reads the upstream `ricochetBounces` count, multiplies impact by 1.14 per prepared bounce up to two, slightly enlarges the shot, and adds the existing overkill trait. Ricochet before Seal therefore activates and can feed later trait-count effects; Seal before a ricochet source remains explicitly unmet. No alternate preview or combat path was added.
+
+The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/`, rendered all fourteen permanent Upgrade Bay cards, and confirmed Convoy Receipt Printer's Market category, 12 kg cost, Market Decoder prerequisite, reroll-only copy, extra stock, and credit/drone bias. The card remained balanced beside Market Echo Locator and the browser recorded no warnings or errors.
+
+Verification: `npm run verify:release` passes (114 Vitest files / 719 tests, production build, 17/17 Chromium E2E tests, and Pages preview asset smoke). The managed browser pass confirmed the complete 14-card Upgrade Bay, Convoy Receipt Printer's locked prerequisite and copy, responsive card layout, and no console warnings or errors. The build emits `995.98 kB` minified / `272.75 kB` gzip initial JavaScript and `95.61 kB` / `19.25 kB` CSS, an increase of `1.93 kB` / `0.42 kB` JavaScript over work order 184 with unchanged CSS. The existing Vite large-chunk advisory remains; no dependency or warning threshold changed.

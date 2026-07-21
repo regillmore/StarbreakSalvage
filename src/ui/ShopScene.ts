@@ -17,6 +17,7 @@ import { generateShopInventory, getShopRerollCost } from '../game/Shops';
 import { createEngineeringCombatProfile } from '../game/Foundry';
 import {
   getCouponCascadeReadout,
+  getConvoyReceiptPrinterReadout,
   getMarketDecoderReadout,
   getRunUpgradeDebugLabels
 } from '../game/UpgradeEffects';
@@ -58,7 +59,8 @@ export class ShopScene implements Scene {
     const interActEffects = getInterActEffectsForSector(this.session, sector);
     const upgradeReadout = [
       getMarketDecoderReadout(this.run.upgradeEffects),
-      getCouponCascadeReadout(this.run.upgradeEffects)
+      getCouponCascadeReadout(this.run.upgradeEffects),
+      getConvoyReceiptPrinterReadout(this.run.upgradeEffects)
     ]
       .filter((readout): readout is string => Boolean(readout))
       .join(' | ');
@@ -113,7 +115,8 @@ export class ShopScene implements Scene {
           actEconomy,
           engineeringHooks: engineering.hooks,
           procBudget: engineering.procBudget,
-          couponCascadeUpgrade: this.run.upgradeEffects.shopCouponCascade
+          couponCascadeUpgrade: this.run.upgradeEffects.shopCouponCascade,
+          convoyReceiptPrinterUpgrade: this.run.upgradeEffects.convoyReceiptPrinter
         }).map((item) => ({
           slot: item.slot,
           itemId: item.item.id,

@@ -234,6 +234,33 @@ describe('item synergies', () => {
     expect(payload.projectile.ricochetBounces).toBe(1);
   });
 
+  it('lets Rebound Freight Seal amplify only ricochets prepared earlier in the chain', () => {
+    const coupledThenSealed: ItemInstance[] = [
+      { itemId: 'item_ricochet_branch_coupler', acquisitionOrder: 0 },
+      { itemId: 'item_rebound_freight_seal', acquisitionOrder: 1 }
+    ];
+    const sealedThenCoupled: ItemInstance[] = [
+      { itemId: 'item_rebound_freight_seal', acquisitionOrder: 0 },
+      { itemId: 'item_ricochet_branch_coupler', acquisitionOrder: 1 }
+    ];
+    const branch = { ...baseProjectile, tags: ['laser', 'split'] as const };
+    const amplified = applyItemHooks('onProjectileSpawn', coupledThenSealed, {
+      projectile: branch
+    }).projectile;
+    const missed = applyItemHooks('onProjectileSpawn', sealedThenCoupled, {
+      projectile: branch
+    }).projectile;
+
+    expect(amplified.ricochetBounces).toBe(1);
+    expect(amplified.damage).toBeCloseTo(1.14);
+    expect(amplified.radius).toBeCloseTo(4.5);
+    expect(amplified.tags).toEqual(expect.arrayContaining(['ricochet', 'overkill']));
+    expect(missed.ricochetBounces).toBe(1);
+    expect(missed.damage).toBe(1);
+    expect(missed.tags).toContain('ricochet');
+    expect(missed.tags).not.toContain('overkill');
+  });
+
   it('uses fitted circuit order to build materially different projectile chains', () => {
     const phaseSplitClone: ItemInstance[] = [
       {

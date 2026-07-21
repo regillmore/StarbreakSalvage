@@ -42,7 +42,7 @@ export const ITEM_STORM_ITEM_IDS: readonly ItemId[] = [
   'item_faraday_phase_shunt',
   'item_convoy_receipt_printer',
   'item_oathbound_deflector',
-  'item_harmonic_fork_loom',
+  'item_rebound_freight_seal',
   'item_plasma_seed_crucible',
   'item_mining_laser_transit',
   'item_warhead_echo_chamber',

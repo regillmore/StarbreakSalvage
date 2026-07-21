@@ -22,7 +22,8 @@ export const UPGRADE_EFFECT_KINDS = [
   'shopCouponCascade',
   'routeOreScrip',
   'routeLedgerSpool',
-  'marketEchoLocator'
+  'marketEchoLocator',
+  'convoyReceiptPrinter'
 ] as const;
 
 export type UpgradeCategory = (typeof UPGRADE_CATEGORIES)[number];
@@ -42,7 +43,8 @@ export type UpgradeId =
   | 'upgrade_coupon_cascade_fuse'
   | 'upgrade_low_orbit_ore_scrip'
   | 'upgrade_route_ledger_spool'
-  | 'upgrade_market_echo_locator';
+  | 'upgrade_market_echo_locator'
+  | 'upgrade_convoy_receipt_printer';
 
 export interface UpgradeDefinition {
   readonly id: UpgradeId;
@@ -198,6 +200,17 @@ export const UPGRADES: readonly UpgradeDefinition[] = [
     summary: 'a standing echo array that reads carrier-market reward traffic',
     effect: 'Shop and Repair rewards gain one extra credit/magnet-biased choice.',
     cost: 11,
+    prerequisites: ['upgrade_market_decoder']
+  },
+  {
+    id: 'upgrade_convoy_receipt_printer',
+    category: 'market',
+    iconKey: 'market-tag',
+    effectKind: 'convoyReceiptPrinter',
+    name: 'Convoy Receipt Printer',
+    summary: 'a standing reroll manifest that calls one more convoy lot into every market',
+    effect: 'Rerolled shops gain one extra stock slot biased toward credit and drone items.',
+    cost: 12,
     prerequisites: ['upgrade_market_decoder']
   }
 ];

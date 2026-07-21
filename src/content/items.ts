@@ -181,6 +181,7 @@ export type ItemId =
   | 'item_exit_toll_transponder'
   | 'item_coastdown_capacitor'
   | 'item_convoy_receipt_printer'
+  | 'item_rebound_freight_seal'
   | 'item_phase_breaker_subpoena'
   | 'item_warning_siren_lattice'
   | 'item_capital_wound_ledger'
@@ -1317,8 +1318,27 @@ export const ITEMS: readonly ItemDefinition[] = [
       sources: ['combat', 'route', 'shop'],
       unlockTier: 'baseline',
       implementationStatus: 'live',
+      retired: true,
       stacking: 'unique',
       uiTags: ['route', 'shop']
+    }
+  },
+  {
+    id: 'item_rebound_freight_seal',
+    name: 'Rebound Freight Seal',
+    rarity: 'uncommon',
+    tags: ['ricochet', 'overkill'],
+    hooks: ['onProjectileSpawn'],
+    effect:
+      'shots with prepared wall bounces gain 14% impact per bounce and carry overkill freight',
+    weight: 7,
+    metadata: {
+      family: 'phase-graze',
+      sources: ['combat', 'route', 'shop'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['phase', 'overkill']
     }
   },
   {
@@ -1605,7 +1625,7 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_forkline_dynamo',
       'item_ambush_insurance_stamp',
       'item_coastdown_capacitor',
-      'item_convoy_receipt_printer',
+      'item_rebound_freight_seal',
       'item_harmonic_fork_loom',
       'item_plasma_seed_crucible',
       'item_ricochet_branch_coupler',

@@ -252,6 +252,7 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_heat_signature_loop',
     'item_plasma_seed_crucible',
     'item_ricochet_branch_coupler',
+    'item_rebound_freight_seal',
     'item_crossfeed_detonator',
     'item_faraday_phase_shunt'
   ],
@@ -635,6 +636,24 @@ function applyOnProjectileSpawn(
         ricochetBounces: (payload.projectile.ricochetBounces ?? 0) + 1
       }
     };
+  }
+
+  if (itemId === 'item_rebound_freight_seal') {
+    const preparedBounces = Math.min(
+      2,
+      Math.max(0, Math.floor(payload.projectile.ricochetBounces ?? 0))
+    );
+
+    if (preparedBounces > 0) {
+      return {
+        projectile: {
+          ...payload.projectile,
+          damage: payload.projectile.damage * (1 + preparedBounces * 0.14),
+          radius: payload.projectile.radius + preparedBounces * 0.5,
+          tags: addTags(payload.projectile.tags, ['overkill'])
+        }
+      };
+    }
   }
 
   return payload;

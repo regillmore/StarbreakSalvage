@@ -85,16 +85,16 @@ describe('run upgrade effects', () => {
           "discount": 1,
           "itemIds": [
             "item_magnetized_tithe_box",
+            "item_ambush_insurance_stamp",
+            "item_laser_tax_stamp",
             "item_coastdown_capacitor",
-            "item_plasma_lens_array",
-            "item_convoy_receipt_printer",
             "item_salvage_magnet",
           ],
           "prices": [
             4,
+            5,
+            5,
             8,
-            5,
-            5,
             5,
           ],
           "stockBonus": 1,
@@ -202,6 +202,17 @@ describe('run upgrade effects', () => {
     expect(getMarketEchoLocatorRewardChoiceBonus(marketEcho, 'shop', true)).toBe(0);
     expect(getMarketEchoLocatorRewardBiasTags(marketEcho, 'shop', true)).toEqual([]);
     expect(createRunGenerationSaveFingerprint([], marketEcho)).toBe(
+      createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
+    );
+  });
+
+  it('projects Convoy Receipt Printer without perturbing unrelated expedition generation', () => {
+    const receipts = resolveRunUpgradeEffects(['upgrade_convoy_receipt_printer']);
+
+    expect(receipts.convoyReceiptPrinter).toBe(true);
+    expect(receipts.shopStockBonus).toBe(0);
+    expect(receipts.shopBiasTags).toEqual([]);
+    expect(createRunGenerationSaveFingerprint([], receipts)).toBe(
       createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
     );
   });

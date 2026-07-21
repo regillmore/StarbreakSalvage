@@ -217,9 +217,9 @@ describe('reward generation', () => {
     }).toEqual({
       shop: [
         {
-          id: 'item_convoy_receipt_printer',
-          sourceHint: 'shop source',
-          price: 6
+          id: 'item_forkline_dynamo',
+          sourceHint: 'route source',
+          price: 4
         },
         {
           id: 'item_salvage_magnet',
@@ -273,7 +273,7 @@ describe('reward generation', () => {
       ],
       lunarRewards: [
         {
-          id: 'item_coastdown_capacitor',
+          id: 'item_ambush_insurance_stamp',
           profile: 'lunar',
           sourceHint: 'route source'
         },

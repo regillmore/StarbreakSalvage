@@ -208,6 +208,12 @@ Market Echo Locator is now an 11 kg Market upgrade gated by Market Decoder. Its 
 
 Faraday Phase Shunt occupies the released uncommon combat/shop slot. At its ordered `onProjectileSpawn` stage it adds one consumable `phase` traversal only to projectiles already carrying standard or heavy arc charge. The first hit therefore damages normally, spends phase instead of the projectile, and preserves the electrical charge; the later consuming hit can discharge into a distinct nearby target through the shared arc model. A Shunt placed before its arc source remains inert, and the item adds no projectile, primary damage, charge strength, RNG draw, timer, or separate preview path.
 
+## Permanent Convoy Receipts and rebound freight chain in Work Order 185
+
+Convoy Receipt Printer is now a 12 kg Market upgrade gated by Market Decoder. Its retired catalog record and `onShopEntered` reducer remain only for restored snapshots; shop generation gives a fitted legacy copy precedence over the permanent flag, so either representation adds exactly one credit/drone-biased slot after a reroll and neither changes initial stock. The shop-local flag is excluded from the expedition-wide generation fingerprint and supplied directly to the named shop roll.
+
+Uncommon Rebound Freight Seal replaces the released active slot. As an ordered projectile transform, it requires an upstream `ricochetBounces` value, adds 14% impact for each of at most two prepared bounces, and attaches the existing overkill trait without creating or consuming a projectile or bounce. The active catalog remains at 60 items; the compatibility catalog now contains 71 definitions, eleven of them retired.
+
 ## Risks For 057-060
 
 - New hook surfaces can create runaway proc chains unless proc order and budgets stay tested as item count grows.

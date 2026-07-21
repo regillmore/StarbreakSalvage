@@ -466,6 +466,17 @@ function createCircuitStageCondition(
         }
       : { met: false, label: 'CONDITION NOT MET · NEEDS A DRONE LAUNCHER' };
   }
+  if (itemId === 'item_rebound_freight_seal') {
+    const bouncingShots = incoming.filter(
+      (projectile) => (projectile.ricochetBounces ?? 0) > 0
+    ).length;
+    return bouncingShots > 0
+      ? {
+          met: true,
+          label: `CONDITION MET · ${bouncingShots} BOUNCING SHOT${bouncingShots === 1 ? '' : 'S'} · +14% IMPACT PER BOUNCE`
+        }
+      : { met: false, label: 'CONDITION NOT MET · NEEDS AN EARLIER RICOCHET SOURCE' };
+  }
 
   return null;
 }

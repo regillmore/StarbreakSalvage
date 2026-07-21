@@ -354,7 +354,8 @@ export function createRunGenerationSaveFingerprint(
     'upgrade_coupon_cascade_fuse',
     'upgrade_low_orbit_ore_scrip',
     'upgrade_route_ledger_spool',
-    'upgrade_market_echo_locator'
+    'upgrade_market_echo_locator',
+    'upgrade_convoy_receipt_printer'
   ]);
   const upgrades =
     upgradeEffects.activeUpgradeIds
@@ -925,6 +926,7 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
             shopStockBonus: run.upgradeEffects.shopStockBonus,
             shopDiscount: run.upgradeEffects.shopDiscount,
             shopCouponCascade: run.upgradeEffects.shopCouponCascade,
+            convoyReceiptPrinter: run.upgradeEffects.convoyReceiptPrinter,
             rewardChoiceBonus: run.upgradeEffects.rewardChoiceBonus,
             seedSurvey: run.seedSurvey
           }

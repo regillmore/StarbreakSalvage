@@ -441,6 +441,41 @@ describe('foundry visual presentation', () => {
     expect(shuntedThenCharged.attackSimulation.projectiles[0]?.tags).not.toContain('phase');
   });
 
+  it('shows Rebound Freight Seal activating only after an earlier ricochet source', () => {
+    const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
+      (candidate) => candidate.shipId === 'ship_debt_runner'
+    );
+    if (!contract) throw new Error('Expected a single-projectile contract.');
+    const freightReady = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+      { itemId: 'item_split_prism', acquisitionOrder: 0 },
+      { itemId: 'item_ricochet_branch_coupler', acquisitionOrder: 1 },
+      { itemId: 'item_rebound_freight_seal', acquisitionOrder: 2 }
+    ]);
+    const freightUnmet = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+      { itemId: 'item_split_prism', acquisitionOrder: 0 },
+      { itemId: 'item_rebound_freight_seal', acquisitionOrder: 1 },
+      { itemId: 'item_ricochet_branch_coupler', acquisitionOrder: 2 }
+    ]);
+
+    expect(freightReady.circuitStages[2]).toMatchObject({
+      name: 'Rebound Freight Seal',
+      outputLabel: 'CONDITION MET · 2 BOUNCING SHOTS · +14% IMPACT PER BOUNCE',
+      conditionMet: true,
+      addedTags: ['overkill'],
+      changed: true
+    });
+    expect(freightReady.circuitStages[2]?.outgoingImpact).toBeGreaterThan(
+      freightReady.circuitStages[2]?.incomingImpact ?? 0
+    );
+    expect(freightUnmet.circuitStages[1]).toMatchObject({
+      name: 'Rebound Freight Seal',
+      outputLabel: 'CONDITION NOT MET · NEEDS AN EARLIER RICOCHET SOURCE',
+      conditionMet: false,
+      addedTags: [],
+      changed: false
+    });
+  });
+
   it('projects prototype-vent cadence shifts onto affected earlier circuit cards', () => {
     const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
       (candidate) => candidate.shipId === 'ship_debt_runner'

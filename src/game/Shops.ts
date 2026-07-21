@@ -43,6 +43,7 @@ export function generateShopInventory(options: {
   readonly engineeringHooks?: readonly EngineeringHookInstance[];
   readonly procBudget?: number;
   readonly couponCascadeUpgrade?: boolean;
+  readonly convoyReceiptPrinterUpgrade?: boolean;
 }): ShopInventoryItem[] {
   const shopSeed = `${options.seed}:sector-${options.sectorIndex}:reroll-${options.rerollCount}`;
   const priceRng = createRng(shopSeed).fork('prices');
@@ -53,6 +54,13 @@ export function generateShopInventory(options: {
   );
   const applyPermanentCouponCascade =
     options.couponCascadeUpgrade === true && !hasLegacyCouponCascade;
+  const hasLegacyConvoyReceiptPrinter = (options.itemInstances ?? []).some(
+    (instance) => instance.itemId === 'item_convoy_receipt_printer'
+  );
+  const applyPermanentConvoyReceiptPrinter =
+    options.convoyReceiptPrinterUpgrade === true &&
+    !hasLegacyConvoyReceiptPrinter &&
+    options.rerollCount > 0;
   const shopPayload = applyCombinedHooks(
     'onShopEntered',
     options.itemInstances ?? [],
@@ -60,11 +68,16 @@ export function generateShopInventory(options: {
     {
       sectorIndex: options.sectorIndex,
       rerollCount: options.rerollCount,
-      itemCount: (options.count ?? SHOP_ITEM_COUNT) + actStockBonus,
+      itemCount:
+        (options.count ?? SHOP_ITEM_COUNT) +
+        actStockBonus +
+        (applyPermanentConvoyReceiptPrinter ? 1 : 0),
       priceDiscount: (options.priceDiscount ?? 0) + (applyPermanentCouponCascade ? 1 : 0),
-      biasTags: applyPermanentCouponCascade
-        ? [...(options.biasTags ?? []), 'credit']
-        : (options.biasTags ?? [])
+      biasTags: [
+        ...(options.biasTags ?? []),
+        ...(applyPermanentCouponCascade ? ['credit'] : []),
+        ...(applyPermanentConvoyReceiptPrinter ? ['drone', 'credit'] : [])
+      ]
     },
     { maxApplications: options.procBudget }
   );

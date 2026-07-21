@@ -23,7 +23,7 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
       "lunar source",
     ],
     [
-      "item_convoy_receipt_printer",
+      "item_rebound_freight_seal",
       "route source",
     ],
     [
@@ -39,7 +39,7 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
     "count": 5,
     "items": [
       [
-        "item_convoy_receipt_printer",
+        "item_rebound_freight_seal",
         18,
         "shop source",
       ],
@@ -113,7 +113,7 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
       "lunar source",
     ],
     [
-      "item_convoy_receipt_printer",
+      "item_rebound_freight_seal",
       "route source",
     ],
     [
@@ -129,9 +129,9 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
     "count": 6,
     "items": [
       [
-        "item_convoy_receipt_printer",
-        17,
-        "shop source",
+        "item_coastdown_capacitor",
+        20,
+        "route source",
       ],
       [
         "item_crossfeed_detonator",
@@ -149,14 +149,14 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
         "Shop pool",
       ],
       [
-        "item_plasma_bloom_filter",
-        21,
-        "vault source",
+        "item_arc_welder_drone",
+        18,
+        "Shop pool",
       ],
       [
-        "item_shield_revenge_contract",
-        19,
-        "vault source",
+        "item_scrap_saints_relay",
+        14,
+        "Shop pool",
       ],
     ],
   },

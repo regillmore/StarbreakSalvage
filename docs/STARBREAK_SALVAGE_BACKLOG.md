@@ -2608,3 +2608,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 184. `DroneFollowers` owns source definitions and formation geometry, `CombatState` owns persistent actors and launch-origin routing, and both DOM live-fire surfaces use the same roster. The audited item hooks and circuit readouts make standalone behavior, real prerequisites, and bounded output explicit.
+
+### BL50 - Permanent Convoy Receipts and rebound freight chain
+
+Acceptance:
+
+- Convoy Receipt Printer leaves active rewards and becomes a 12 kg permanent Market upgrade gated by Market Decoder.
+- Its reroll-only extra stock slot and credit/drone bias remain deterministic, restored snapshots retain the retired item behavior, and the two representations cannot stack.
+- Uncommon Rebound Freight Seal replaces the active combat/route/shop slot and adds 14% impact per prepared ricochet bounce, up to two, plus the overkill trait.
+- Circuit order is material and visible: an earlier ricochet source links the Seal and reports its bouncing-shot count, while Seal before ricochet reports the missing prerequisite and cannot rewrite later shots.
+- The transform adds or consumes no projectile, bounce, RNG draw, timer, or persistent state, and downstream trait-count effects receive its overkill tag through the production hook path.
+- Global generation fingerprints, active breadth, Upgrade Bay totals, item-storm hook coverage, reward/shop snapshots, saves, accessibility, performance limits, static hosting, and smoke tooling remain coherent.
+
+Status:
+
+- Implemented in work order 185. `UpgradeEffects` and `Shops` own the permanent reroll contribution with restored-item precedence. `ItemHooks` owns Rebound Freight Seal's bounded upstream-bounce transform, which automatically feeds combat and shared live-fire previews. The active catalog remains at 60 items and the global run fingerprint excludes the shop-local upgrade.

@@ -29,6 +29,7 @@ export interface RunUpgradeEffects {
   readonly shopDiscount: number;
   readonly shopBiasTags: readonly ItemTag[];
   readonly shopCouponCascade: boolean;
+  readonly convoyReceiptPrinter: boolean;
   readonly rewardChoiceBonus: number;
   readonly rewardBiasTags: readonly ItemTag[];
   readonly marketEchoLocator: boolean;
@@ -61,6 +62,7 @@ export function resolveRunUpgradeEffects(
     shopDiscount: hasMarketDecoder ? 1 : 0,
     shopBiasTags: hasMarketDecoder ? ['credit', 'heat'] : [],
     shopCouponCascade: hasUpgrade('upgrade_coupon_cascade_fuse'),
+    convoyReceiptPrinter: hasUpgrade('upgrade_convoy_receipt_printer'),
     rewardChoiceBonus: hasRelicDossier ? 1 : 0,
     rewardBiasTags: hasRelicDossier ? ['relic', 'curse', 'phase'] : [],
     marketEchoLocator: hasUpgrade('upgrade_market_echo_locator'),
@@ -102,6 +104,10 @@ export function getRunUpgradeDebugLabels(effects: RunUpgradeEffects): string[] {
 
   if (effects.shopCouponCascade) {
     labels.push('coupon cascade');
+  }
+
+  if (effects.convoyReceiptPrinter) {
+    labels.push('convoy receipts');
   }
 
   if (effects.rewardChoiceBonus > 0) {
@@ -169,6 +175,12 @@ export function getMarketDecoderReadout(effects: RunUpgradeEffects): string | nu
 
 export function getCouponCascadeReadout(effects: RunUpgradeEffects): string | null {
   return effects.shopCouponCascade ? 'Coupon Cascade: -1 prices | credit stock bias' : null;
+}
+
+export function getConvoyReceiptPrinterReadout(effects: RunUpgradeEffects): string | null {
+  return effects.convoyReceiptPrinter
+    ? 'Convoy Receipts: rerolls +1 stock | credit / drone bias'
+    : null;
 }
 
 export function getRewardDossierReadout(
