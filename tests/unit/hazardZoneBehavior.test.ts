@@ -17,11 +17,15 @@ import {
   type SectorHazardPlan
 } from '../../src/game/SectorFeatures';
 import {
-  createSalvageStormDebugFixture,
   createSalvageStormGeometry,
   formatSalvageStormWarning,
   getSalvageStormPhaseState
 } from '../../src/game/SalvageStorm';
+import {
+  createMeteorStormDebugFixture,
+  createMeteorStormGeometry,
+  formatMeteorStormWarning
+} from '../../src/game/MeteorStorm';
 
 const bounds: CombatBounds = {
   width: 640,
@@ -40,7 +44,9 @@ describe('HazardZoneBehavior', () => {
     for (const definition of HAZARD_ZONE_DEFINITIONS) {
       expect(definition.behavior.warningCue).not.toBe(definition.behavior.activeCue);
       expect(definition.behavior.collisionBands).toBeGreaterThanOrEqual(1);
-      expect(definition.behavior.activeDamageDutyCycle).toBeGreaterThanOrEqual(0.45);
+      expect(definition.behavior.activeDamageDutyCycle).toBeGreaterThanOrEqual(
+        definition.behavior.kind === 'meteorStorm' ? 0.15 : 0.45
+      );
       expect(definition.readability.renderLayer).toBe('underBullets');
     }
   });
@@ -109,7 +115,7 @@ describe('HazardZoneBehavior', () => {
   });
 
   it('moves a readable calm channel across three salvage squall surges and lulls', () => {
-    const hazard = createHazard('salvage_storm', {
+    const hazard = createHazard('salvage_squall', {
       telegraphDistance: 20,
       startDistance: 170,
       endDistance: 470,
@@ -147,70 +153,115 @@ describe('HazardZoneBehavior', () => {
     });
   });
 
-  it('provides one deterministic route-squall browser inspection fixture', () => {
+  it('moves a rounded meteor pocket while continuously cycling small impact markers', () => {
+    const hazard = createHazard('salvage_storm', {
+      telegraphDistance: 20,
+      startDistance: 170,
+      endDistance: 570,
+      xRatio: 0.25
+    });
+    const plan = createPlan(hazard);
+    const forecast = getActiveSectorHazards(plan, 120)[0];
+    const early = getActiveSectorHazards(plan, 182)[0];
+    const firstImpact = getActiveSectorHazards(plan, 198)[0];
+    const late = getActiveSectorHazards(plan, 530)[0];
+    if (!forecast || !early || !firstImpact || !late) {
+      throw new Error('Expected meteor storm forecast and active phases.');
+    }
+
+    const rect = getSectorHazardCollisionRect(hazard, bounds);
+    const forecastGeometry = createMeteorStormGeometry(forecast, rect);
+    const earlyGeometry = createMeteorStormGeometry(early, rect);
+    const impactGeometry = createMeteorStormGeometry(firstImpact, rect);
+    const lateGeometry = createMeteorStormGeometry(late, rect);
+
+    expect(forecastGeometry.impacts).toHaveLength(3);
+    expect(forecastGeometry.impacts.every((impact) => impact.phase === 'forecast')).toBe(true);
+    expect(forecastGeometry.damageImpacts).toEqual([]);
+    expect(earlyGeometry.impacts.some((impact) => impact.phase === 'telegraph')).toBe(true);
+    expect(impactGeometry.damageImpacts).toHaveLength(1);
+    expect(getSectorHazardDamageRects(firstImpact, bounds)[0]?.width).toBeLessThan(70);
+    expect(lateGeometry.pocket.centerY).toBeGreaterThan(earlyGeometry.pocket.centerY);
+    expect(lateGeometry.pocket.centerX).toBeGreaterThan(earlyGeometry.pocket.centerX);
+    expect(formatMeteorStormWarning(forecast)).toContain('TRACK LEFT TO RIGHT');
+    expect(formatMeteorStormWarning(early)).toMatch(/\d+ MARKED \| \d+ IMPACTING/);
+
+    const reverse = getActiveSectorHazards(
+      createPlan({ ...hazard, id: 'test_reverse_meteors', xRatio: 0.75 }),
+      182
+    )[0];
+    if (!reverse) throw new Error('Expected reverse meteor storm.');
+    const reverseGeometry = createMeteorStormGeometry(reverse, rect);
+    expect(reverseGeometry.pocket.startX).toBeGreaterThan(reverseGeometry.pocket.endX);
+  });
+
+  it('provides one deterministic route-meteor browser inspection fixture', () => {
     const source = createPlan(createHazard('warning_beam'));
-    const first = createSalvageStormDebugFixture(source, 1800);
-    const repeated = createSalvageStormDebugFixture(source, 1800);
+    const first = createMeteorStormDebugFixture(source, 1800);
+    const repeated = createMeteorStormDebugFixture(source, 1800);
 
     expect(repeated).toEqual(first);
     expect(first.features.hazards).toEqual([first.hazard]);
     expect(first.hazard).toMatchObject({
-      id: 'debug_route_salvage_squall',
+      id: 'debug_route_meteor_storm',
       kind: 'salvage_storm',
-      label: 'ROUTE SQUALL',
-      widthRatio: 0.64
+      label: 'ROUTE METEORS',
+      widthRatio: 0.48
     });
     expect(first.targetDistance).toBeGreaterThan(first.hazard.startDistance);
     expect(first.targetDistance).toBeLessThan(first.hazard.endDistance);
+
+    const lateFixture = createMeteorStormDebugFixture(source, 1800, 1200);
+    expect(lateFixture.hazard.startDistance).toBe(1200);
+    expect(lateFixture.targetDistance).toBeGreaterThan(1200);
   });
 
-  it('lets salvage squall charge lanes damage every allegiance while its calm lane stays safe', () => {
-    const state = createCombatState(bounds, 'SALVAGE-SQUALL', {
+  it('damages every allegiance only inside the brief circular meteor impact', () => {
+    const state = createCombatState(bounds, 'METEOR-STORM', {
       skipEnemyWaves: true
     });
     const hazard = createHazard('salvage_storm', {
       telegraphDistance: 20,
       startDistance: 170,
-      endDistance: 470,
+      endDistance: 570,
       xRatio: 0.25
     });
     const plan = createPlan(hazard);
-    const activeHazard = getActiveSectorHazards(plan, 180)[0];
-    if (!activeHazard) throw new Error('Expected active salvage squall.');
-    const geometry = createSalvageStormGeometry(
+    const activeHazard = getActiveSectorHazards(plan, 198)[0];
+    if (!activeHazard) throw new Error('Expected an active meteor impact.');
+    const geometry = createMeteorStormGeometry(
       activeHazard,
       getSectorHazardCollisionRect(hazard, bounds)
     );
-    const calmLane = geometry.laneRects[geometry.calmLaneIndex];
-    const chargedLane = geometry.damageRects[0];
-    if (!calmLane || !chargedLane) throw new Error('Expected calm and charged squall lanes.');
+    const impact = geometry.damageImpacts[0];
+    if (!impact) throw new Error('Expected a damaging meteor circle.');
 
-    state.player.x = calmLane.centerX;
-    state.player.y = bounds.height * 0.72;
+    state.player.x = bounds.width - bounds.padding - state.player.radius;
+    state.player.y = bounds.height - bounds.padding - state.player.radius;
     state.enemies.push({
       id: 902,
       factionId: 'faction_scrap_court',
-      x: chargedLane.centerX,
-      y: 220,
+      x: impact.x,
+      y: impact.y,
       radius: 17,
       hull: 3,
       maxHull: 3,
       drift: 0,
-      targetY: 220,
+      targetY: impact.y,
       fireCooldown: 10
     });
     state.allies = [
       {
         source: 'crew',
-        candidateId: 'squall-test-ally',
-        name: 'Squall Test Ally',
-        callsign: 'CALM',
+        candidateId: 'meteor-test-ally',
+        name: 'Meteor Test Ally',
+        callsign: 'MARK',
         role: 'gunner',
         trait: 'steady',
         preferredCommand: 'focus',
         cue: { glyph: 'A', color: '#7cf7ff', highContrastGlyph: 'A' },
-        x: chargedLane.centerX,
-        y: 340,
+        x: impact.x,
+        y: impact.y,
         radius: 13,
         hull: 3,
         maxHull: 3,
@@ -222,15 +273,15 @@ describe('HazardZoneBehavior', () => {
         status: 'active',
         enemiesDefeated: 0,
         salvageRecovered: 0,
-        fitLabel: 'squall fixture'
+        fitLabel: 'meteor fixture'
       }
     ];
     const boss = spawnBoss(state, 'boss_auditor_drone_xl', bounds);
-    boss.x = chargedLane.centerX;
-    boss.y = 460;
+    boss.x = impact.x;
+    boss.y = impact.y;
     boss.hull = 5;
 
-    const safePass = resolveSectorHazardCollisions(state, plan, 180, bounds);
+    const safePass = resolveSectorHazardCollisions(state, plan, 198, bounds);
     expect(safePass.hitHazardIds).toEqual([]);
     expect(state.player.hull).toBe(state.player.maxHull);
     expect(state.enemies[0]?.hull).toBe(2);
@@ -238,9 +289,10 @@ describe('HazardZoneBehavior', () => {
     expect(state.boss?.hull).toBe(4);
     expect(state.hazardActorCooldowns.size).toBe(3);
 
-    state.player.x = chargedLane.centerX;
-    const chargedPass = resolveSectorHazardCollisions(state, plan, 180, bounds);
-    expect(chargedPass.hitHazardIds).toEqual([hazard.id]);
+    state.player.x = impact.x;
+    state.player.y = impact.y;
+    const impactPass = resolveSectorHazardCollisions(state, plan, 198, bounds);
+    expect(impactPass.hitHazardIds).toEqual([hazard.id]);
     expect(state.player.hull).toBe(state.player.maxHull - 1);
   });
 

@@ -944,3 +944,31 @@ Status: implemented. `SalvageStorm` owns the three-surge phase state, calm-lane 
 The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/`, launched the deterministic `H` fixture, and observed `SURGE 1/3 | CALM LEFT` advance to `SURGE 2/3 | CALM CENTER`. The dashed cyan refuge and charged amber wreckage lanes remained legible beneath the combat world, and the browser recorded no warnings or errors. The authenticated work order 175 smoke host stopped cleanly and its owner shell returned exit code 0.
 
 Verification: `npm run verify:release` passes (114 Vitest files / 722 tests, production build, 17/17 Chromium E2E tests, and Pages preview asset smoke). The focused salvage-squall and environment suites pass 57 tests, and the isolated environmental-stress Chromium path passes. The build emits `999.85 kB` minified / `274.08 kB` gzip initial JavaScript and unchanged `95.61 kB` / `19.25 kB` CSS, increases of `3.87 kB` / `1.33 kB` JavaScript over work order 185. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, projectile/actor cap, RNG stream, static base path, or warning threshold changed.
+
+## Work order 187 - Traveling meteor storm pockets
+
+Goal: reserve work order 186's arena-spanning salvage squall for authored special encounters and replace the routine route-storm slot with a vigilant-play meteor pocket whose visible danger is local, continuous, and avoidable.
+
+Prompt:
+
+> Keep the large vertical safe-lane squall available as a future special hazard, but remove it from routine hazard generation. Refit the stable route-storm schedule as a traveling rounded meteor pocket that continuously marks a sparse scatter of small impact circles. Make the broad pocket communicate travel rather than damage: only the brief marked impacts hurt, so an attentive player always has room to weave even when multiple hazards overlap.
+
+Acceptance criteria:
+
+- `salvage_storm` retains its stable seeded schedule identity but now presents as `METEOR STORM` / `ROUTE METEORS`; the work order 186 squall moves to a separate `salvage_squall` definition excluded from routine director choices.
+- One shared pure geometry model derives a rounded diagonal travel pocket, direction, ten deterministic impact schedules, visible phase, concise warning text, and exact circular damage areas from the authored hazard record.
+- The pocket itself never damages. Only impact-phase circles do, and each circle is small enough to leave navigable gaps inside the storm even when forecast and telegraph circles overlap.
+- Forecast, telegraph, impact, and afterglow phases are visually distinct; contracting rings, crosshairs, impact streaks, and the text readout communicate timing without relying on color.
+- Meteor impacts use exact circle overlap for the player, enemies, bosses, set pieces, destructibles, obstacles, and damageable allies while retaining the established hazard cooldown ledger and attribution rules.
+- The pocket travels left-to-right or right-to-left according to the existing seeded placement ratio and descends through its authored band without per-frame RNG.
+- Reduced-motion, performance, and high-contrast settings preserve timing and collision while bounding track, fragment, trail, and forecast ornament.
+- The `H` environment-stress shortcut always starts a fresh deterministic meteor fixture at or after the current scroll position, making late visual inspection reliable.
+- Existing pause-distance behavior, boss-lock settlement, schedule fingerprints, save/snapshot compatibility, static hosting, dependencies, and actor/projectile/effect caps remain coherent.
+
+Status: implemented. `MeteorStorm` owns pocket travel, deterministic impact placement and timing, circular damage geometry, warning copy, and the current-distance-aware browser fixture. `HazardZoneBehavior`, `SectorHazards`, `GameplayScene`, and `CanvasRenderer` consume that shared result. The broad ellipse is explicitly navigational presentation; simulation only exposes its momentary impact circles.
+
+The former `salvage_storm` values and `SalvageStorm` model remain available under `salvage_squall`, but the special definition is absent from routine hazard and pacing choices. This preserves the promising encounter for later authorship without allowing random stacked lane walls. Stable `salvage_storm` IDs continue to occupy the same generated schedule slots, so no new RNG draw or route-graph change is introduced.
+
+The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/`, launched the deterministic `H` fixture during a stopped set-piece engagement, and observed the rounded diagonal pocket, travel track, overlapping aim-point warnings, impact flash, and `MARKED` / `IMPACTING` text. Only the compact impact circles entered the damage window, the effect cleared naturally, and the browser recorded no warnings or errors.
+
+Verification: `npm run verify:release` passes (114 Vitest files / 723 tests, production build, 17/17 Chromium E2E tests, and Pages preview asset smoke). The focused meteor behavior suite passes 12 tests, and the isolated environmental-stress Chromium path passes. The build emits `1,007.25 kB` minified / `276.03 kB` gzip initial JavaScript and unchanged `95.61 kB` / `19.25 kB` CSS, increases of `7.40 kB` / `1.95 kB` JavaScript over work order 186. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, projectile/actor cap, RNG stream, static base path, or warning threshold changed.

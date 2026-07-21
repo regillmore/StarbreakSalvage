@@ -118,9 +118,10 @@ import {
 } from '../game/HazardZoneDirector';
 import { resolveSectorHazardCollisions } from '../game/SectorHazards';
 import {
-  createSalvageStormDebugFixture,
-  formatSalvageStormWarning
-} from '../game/SalvageStorm';
+  createMeteorStormDebugFixture,
+  formatMeteorStormWarning
+} from '../game/MeteorStorm';
+import { formatSalvageStormWarning } from '../game/SalvageStorm';
 import {
   advanceSectorHazardRuntime,
   createSectorHazardRuntimeState,
@@ -907,9 +908,10 @@ export class GameplayScene implements Scene {
       const state = this.getCombatState();
       const feedbackBefore = createCombatFeedbackSnapshot(state);
       const scroll = this.getScrollState();
-      const fixture = createSalvageStormDebugFixture(
+      const fixture = createMeteorStormDebugFixture(
         this.getCurrentFeatures(),
-        this.getCurrentScrollPlan().length
+        this.getCurrentScrollPlan().length,
+        scroll.distance
       );
       const targetDistance = fixture.targetDistance;
 
@@ -2225,6 +2227,12 @@ export class GameplayScene implements Scene {
 
     if (activeHazard) {
       if (activeHazard.hazard.kind === 'salvage_storm') {
+        const warning = formatMeteorStormWarning(activeHazard);
+        return activeHazard.phase === 'telegraph'
+          ? `Hint ${warning}. Clear the rounded storm track before impacts begin.`
+          : `Hint ${warning}. Move between the small marked circles; the storm pocket itself is safe.`;
+      }
+      if (activeHazard.hazard.kind === 'salvage_squall') {
         const warning = formatSalvageStormWarning(activeHazard);
         return activeHazard.phase === 'telegraph'
           ? `Hint ${warning}. Follow the calm-channel sequence before the first surge.`
@@ -2383,6 +2391,10 @@ function formatActiveHazardWarning(activeHazard: ActiveSectorHazard | undefined)
   }
 
   if (activeHazard.hazard.kind === 'salvage_storm') {
+    return formatMeteorStormWarning(activeHazard);
+  }
+
+  if (activeHazard.hazard.kind === 'salvage_squall') {
     return formatSalvageStormWarning(activeHazard);
   }
 

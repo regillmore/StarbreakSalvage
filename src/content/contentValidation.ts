@@ -2449,12 +2449,18 @@ function validateHazardZoneDefinitions(
       hazard.behavior.patternDensity
     );
 
-    if (hazard.behavior.activeDamageDutyCycle < 0.45) {
-      errors.push(`${owner} behavior must keep activeDamageDutyCycle at or above 0.45`);
+    const minimumDamageDutyCycle = hazard.behavior.kind === 'meteorStorm' ? 0.15 : 0.45;
+    if (hazard.behavior.activeDamageDutyCycle < minimumDamageDutyCycle) {
+      errors.push(
+        `${owner} behavior must keep activeDamageDutyCycle at or above ${minimumDamageDutyCycle}`
+      );
     }
 
-    if (hazard.behavior.activePulseCount > 8) {
-      errors.push(`${owner} behavior must keep activePulseCount at or below 8`);
+    const maximumPulseCount = hazard.behavior.kind === 'meteorStorm' ? 12 : 8;
+    if (hazard.behavior.activePulseCount > maximumPulseCount) {
+      errors.push(
+        `${owner} behavior must keep activePulseCount at or below ${maximumPulseCount}`
+      );
     }
 
     if (hazard.behavior.collisionBands > 4) {

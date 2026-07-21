@@ -20,7 +20,7 @@ describe('createEnvironmentStressDebugState', () => {
     expect(summary).toEqual({
       activeHazards: 3,
       hazardBudget: 4,
-      hazardLabels: ['mines', 'squall'],
+      hazardLabels: ['mines', 'meteors'],
       environmentObjects: 6,
       environmentObjectBudget: 16,
       destructibles: 4,

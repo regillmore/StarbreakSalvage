@@ -6,6 +6,7 @@ export const HAZARD_ZONE_IDS = [
   'warning_beam',
   'mine_belt',
   'salvage_storm',
+  'salvage_squall',
   'crush_gate',
   'dust_plume',
   'mining_laser',
@@ -30,6 +31,7 @@ export const HAZARD_ZONE_TELEGRAPH_SHAPES = [
   'beamLine',
   'mineStripe',
   'stormNoise',
+  'impactScatter',
   'gateRails',
   'dustWake',
   'laserTrace',
@@ -37,7 +39,11 @@ export const HAZARD_ZONE_TELEGRAPH_SHAPES = [
 ] as const;
 export type HazardZoneTelegraphShape = (typeof HAZARD_ZONE_TELEGRAPH_SHAPES)[number];
 
-export const HAZARD_ZONE_DAMAGE_SHAPES = ['verticalBand', 'beamSegment'] as const;
+export const HAZARD_ZONE_DAMAGE_SHAPES = [
+  'verticalBand',
+  'beamSegment',
+  'impactCircles'
+] as const;
 export type HazardZoneDamageShape = (typeof HAZARD_ZONE_DAMAGE_SHAPES)[number];
 
 export const HAZARD_ZONE_SAFE_LANE_POLICIES = ['avoidMarkedLane'] as const;
@@ -46,7 +52,11 @@ export type HazardZoneSafeLanePolicy = (typeof HAZARD_ZONE_SAFE_LANE_POLICIES)[n
 export const HAZARD_ZONE_RENDER_LAYERS = ['underBullets'] as const;
 export type HazardZoneRenderLayer = (typeof HAZARD_ZONE_RENDER_LAYERS)[number];
 
-export const HAZARD_ZONE_COLLISION_SHAPES = ['verticalBand', 'beamSegment'] as const;
+export const HAZARD_ZONE_COLLISION_SHAPES = [
+  'verticalBand',
+  'beamSegment',
+  'impactCircles'
+] as const;
 export type HazardZoneCollisionShape = (typeof HAZARD_ZONE_COLLISION_SHAPES)[number];
 
 export const HAZARD_ZONE_SETTINGS_VARIANTS = [
@@ -68,6 +78,7 @@ export const HAZARD_ZONE_BEHAVIOR_KINDS = [
   'discreteMineCluster',
   'collapsingColumns',
   'orbitalShadow',
+  'meteorStorm',
   'salvageSquall',
   'dustFront',
   'staticWarningGate'
@@ -279,10 +290,50 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
   {
     id: 'salvage_storm',
     family: 'storm',
+    label: 'METEOR STORM',
+    debugLabel: 'meteors',
+    summary:
+      'a traveling rounded storm pocket that scatters small, continuously telegraphed meteor impacts',
+    sectorFit: ALL_SECTOR_IDS,
+    factionFit: 'any',
+    telegraphShape: 'impactScatter',
+    activeDamageShape: 'impactCircles',
+    metrics: {
+      sector: { widthRatio: 0.48, activeSpan: 320, telegraphLead: 165 },
+      condition: { widthRatio: 0.48, activeSpan: 315, telegraphLead: 165 },
+      pacing: { widthRatio: 0.46, activeSpan: 300, telegraphLead: 170 }
+    },
+    phase: { minTelegraphLead: 140, minActiveSpan: 220 },
+    damage: 1,
+    damageCooldownSeconds: 0.45,
+    safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.5 },
+    bossArenaPolicy: 'settleBeforeLock',
+    readability: createReadability(
+      140,
+      '#ff9b54',
+      '#ffffff',
+      'staticPulse',
+      'simplifiedPattern',
+      'impactCircles'
+    ),
+    behavior: createBehavior(
+      'meteorStorm',
+      'storm-track forecast',
+      'meteor impact scatter',
+      0.72,
+      0.2,
+      10,
+      1,
+      0.56
+    )
+  },
+  {
+    id: 'salvage_squall',
+    family: 'storm',
     label: 'SALVAGE SQUALL',
     debugLabel: 'squall',
     summary:
-      'a broad three-surge front of charged wreckage with a calm channel crossing between lanes',
+      'an authored broad three-surge front whose calm channel crosses between charged lanes',
     sectorFit: ALL_SECTOR_IDS,
     factionFit: 'any',
     telegraphShape: 'stormNoise',

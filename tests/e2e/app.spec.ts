@@ -1015,7 +1015,7 @@ test('exposes environmental stress budgets under high-contrast narrow smoke', as
   );
   await expect(page.getByTestId('pickup-readout')).toContainText(/Credits .* Salvage/);
   await expect(page.getByTestId('boss-warning')).toContainText(
-    /(?:SALVAGE SQUALL|ROUTE SQUALL|PACED SQUALL) \| (?:SURGE|LULL) [1-3]\/3 \| CALM (?:LEFT|CENTER|RIGHT)/
+    /(?:METEOR STORM|ROUTE METEORS|PACED METEORS) \| \d+ MARKED \| \d+ IMPACTING/
   );
 
   expect(browserErrors).toEqual([]);

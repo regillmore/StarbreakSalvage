@@ -2638,3 +2638,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 186. `SalvageStorm` owns the phase, lane, warning, geometry, and debug-fixture contract; existing hazard simulation and rendering consume it without another RNG stream or simulation path.
+
+### BL52 - Traveling meteor storm pockets
+
+Acceptance:
+
+- Preserve the work order 186 squall as a special-only `salvage_squall` definition and remove it from routine director choices.
+- Reuse the stable `salvage_storm` schedule identity for a rounded traveling meteor pocket with deterministic direction and impact scatter.
+- Treat the pocket as travel and warning presentation only; damage is confined to sparse, brief, small circular impacts that vigilant players can weave between.
+- Share impact timing and geometry across Canvas art, player collision, combat-actor damage, environment damage, warning text, and the deterministic debug fixture.
+- Forecast, telegraph, impact, and afterglow states remain legible without color, while reduced-motion and performance modes bound ornament without altering collision.
+- Seeded schedules, pause behavior, boss settlement, save compatibility, static hosting, dependencies, and simulation caps remain coherent.
+
+Status:
+
+- Implemented in work order 187. `MeteorStorm` owns the bounded pocket and ten-impact model. Routine generation still emits `salvage_storm` without another RNG draw, while the retired routine squall remains available only through the separately authored `salvage_squall` identity.

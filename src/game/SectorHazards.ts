@@ -3,7 +3,9 @@ import { getHazardZoneDefinition } from '../content/hazardZones';
 import {
   applyPlayerDamage,
   damageCombatActorsByHazard,
+  damageEnvironmentObjectsInRadius,
   damageEnvironmentObjectsInRect,
+  damageSetPieceComponentsInRadius,
   damageSetPieceComponentsInRect,
   type CombatBounds,
   type CombatState,
@@ -20,6 +22,7 @@ import {
   type SectorHazardPlan
 } from './SectorFeatures';
 import { circleOverlapsBeamSegment, getActiveBeamBoltSegment } from './BeamHazard';
+import { createMeteorStormGeometry, type MeteorStormImpact } from './MeteorStorm';
 
 export interface SectorHazardCollisionResult {
   readonly activeHazardIds: readonly string[];
@@ -44,6 +47,55 @@ export function resolveSectorHazardCollisions(
       continue;
     }
 
+    if (activeHazard.hazard.kind === 'salvage_storm') {
+      const geometry = createMeteorStormGeometry(
+        activeHazard,
+        getSectorHazardCollisionRect(activeHazard.hazard, bounds)
+      );
+      if (geometry.damageImpacts.length === 0) {
+        continue;
+      }
+
+      damagingHazardIds.push(activeHazard.hazard.id);
+      for (const impact of geometry.damageImpacts) {
+        damageEnvironmentObjectsInRadius(
+          state,
+          impact.x,
+          impact.y,
+          impact.radius,
+          'hazard',
+          activeHazard.hazard.damage
+        );
+        damageSetPieceComponentsInRadius(
+          state,
+          impact.x,
+          impact.y,
+          impact.radius,
+          'hazard',
+          activeHazard.hazard.damage
+        );
+      }
+
+      const definition = getHazardZoneDefinition(activeHazard.hazard.kind);
+      damageCombatActorsByHazard(
+        state,
+        activeHazard.hazard.id,
+        activeHazard.hazard.damage,
+        definition.damageCooldownSeconds,
+        (target) =>
+          geometry.damageImpacts.some((impact) => circleOverlapsMeteorImpact(target, impact))
+      );
+
+      if (
+        geometry.damageImpacts.some((impact) =>
+          circleOverlapsMeteorImpact(state.player, impact)
+        )
+      ) {
+        applyHazardDamageToPlayer(state, activeHazard, hitHazardIds);
+      }
+      continue;
+    }
+
     const damageRects = getSectorHazardDamageRects(activeHazard, bounds);
 
     if (damageRects.length === 0) {
@@ -57,7 +109,7 @@ export function resolveSectorHazardCollisions(
       damageSetPieceComponentsInRect(state, rect, 'hazard', activeHazard.hazard.damage);
     }
 
-    if (activeHazard.hazard.kind === 'salvage_storm') {
+    if (activeHazard.hazard.kind === 'salvage_squall') {
       const definition = getHazardZoneDefinition(activeHazard.hazard.kind);
       for (const rect of damageRects) {
         damageCombatActorsByHazard(
@@ -89,16 +141,7 @@ export function resolveSectorHazardCollisions(
       continue;
     }
 
-    const previousDamageTaken = state.stats.damageTaken;
-    applyPlayerDamage(state, activeHazard.hazard.damage);
-
-    if (state.stats.damageTaken > previousDamageTaken) {
-      state.player.invulnerableSeconds = Math.max(
-        state.player.invulnerableSeconds,
-        getHazardZoneDefinition(activeHazard.hazard.kind).damageCooldownSeconds
-      );
-      hitHazardIds.push(activeHazard.hazard.id);
-    }
+    applyHazardDamageToPlayer(state, activeHazard, hitHazardIds);
   }
 
   return {
@@ -127,6 +170,16 @@ export function playerOverlapsActiveHazard(
   activeHazard: ActiveSectorHazard,
   bounds: CombatBounds
 ): boolean {
+  if (activeHazard.hazard.kind === 'salvage_storm') {
+    const geometry = createMeteorStormGeometry(
+      activeHazard,
+      getSectorHazardCollisionRect(activeHazard.hazard, bounds)
+    );
+    return geometry.damageImpacts.some((impact) =>
+      circleOverlapsMeteorImpact(player, impact)
+    );
+  }
+
   if (activeHazard.hazard.kind === 'warning_beam') {
     if (getSectorHazardDamageRects(activeHazard, bounds).length === 0) {
       return false;
@@ -139,6 +192,35 @@ export function playerOverlapsActiveHazard(
   return getSectorHazardDamageRects(activeHazard, bounds).some((rect) =>
     circleOverlapsHazardRect(player, rect)
   );
+}
+
+function applyHazardDamageToPlayer(
+  state: CombatState,
+  activeHazard: ActiveSectorHazard,
+  hitHazardIds: string[]
+): void {
+  const previousDamageTaken = state.stats.damageTaken;
+  applyPlayerDamage(state, activeHazard.hazard.damage);
+
+  if (state.stats.damageTaken <= previousDamageTaken) {
+    return;
+  }
+
+  state.player.invulnerableSeconds = Math.max(
+    state.player.invulnerableSeconds,
+    getHazardZoneDefinition(activeHazard.hazard.kind).damageCooldownSeconds
+  );
+  hitHazardIds.push(activeHazard.hazard.id);
+}
+
+function circleOverlapsMeteorImpact(
+  circle: Pick<PlayerState, 'x' | 'y' | 'radius'>,
+  impact: Pick<MeteorStormImpact, 'x' | 'y' | 'radius'>
+): boolean {
+  const dx = circle.x - impact.x;
+  const dy = circle.y - impact.y;
+  const radius = circle.radius + impact.radius;
+  return dx * dx + dy * dy <= radius * radius;
 }
 
 function circleOverlapsHazardRect(

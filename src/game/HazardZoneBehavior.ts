@@ -7,6 +7,10 @@ import {
 } from '../content/hazardZones';
 import { clamp } from '../core/math';
 import type { ActiveSectorHazard, SectorHazardCollisionRect } from './SectorFeatures';
+import {
+  createMeteorStormDamageRects,
+  isMeteorStormDamageWindowOpen
+} from './MeteorStorm';
 import { createSalvageStormGeometry } from './SalvageStorm';
 
 export interface HazardZonePresentationSettings {
@@ -92,6 +96,10 @@ export function isHazardZoneDamageWindowOpen(activeHazard: ActiveSectorHazard): 
     return false;
   }
 
+  if (activeHazard.hazard.kind === 'salvage_storm') {
+    return isMeteorStormDamageWindowOpen(activeHazard);
+  }
+
   const behavior = getHazardZoneDefinition(activeHazard.hazard.kind).behavior;
 
   if (behavior.activeDamageDutyCycle >= 0.999 || behavior.activePulseCount <= 1) {
@@ -150,6 +158,10 @@ export function getHazardZoneDamageRects(
 
   if (behavior.kind === 'salvageSquall') {
     return createSalvageStormGeometry(activeHazard, baseRect).damageRects;
+  }
+
+  if (behavior.kind === 'meteorStorm') {
+    return createMeteorStormDamageRects(activeHazard, baseRect);
   }
 
   return [baseRect];
