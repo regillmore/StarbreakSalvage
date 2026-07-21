@@ -169,9 +169,9 @@ export const SHIPS: readonly ShipDefinition[] = [
       startingCredits: 16,
       startingSalvage: 0
     },
-    perk: 'starts with two micro-drones',
-    drawback: 'main weapon damage reduced until drones are active',
-    contractSummary: 'Support hull with two micro-drones and reduced direct weapon output.',
+    perk: 'two micro-drones alternate reduced primary copies from formation',
+    drawback: 'its command grid consumes power and mass that direct weapons could use',
+    contractSummary: 'Support hull escorted by two visible micro-drones with alternating fire.',
     sponsors: ['Choir of Useful Debris', 'Orbital Parish Mutual'],
     itemBias: ['drone', 'orbital', 'support']
   },

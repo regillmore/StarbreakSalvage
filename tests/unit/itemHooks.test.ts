@@ -412,18 +412,22 @@ describe('item synergies', () => {
     ).toBe(true);
   });
 
-  it('applies drone plus copy synergy', () => {
-    const instances: ItemInstance[] = [
-      { itemId: 'item_drone_uplink', acquisitionOrder: 0 },
-      { itemId: 'item_mirror_turret', acquisitionOrder: 1 }
-    ];
+  it('deploys the uplink pair without an undocumented mirror prerequisite', () => {
+    const instances: ItemInstance[] = [{ itemId: 'item_drone_uplink', acquisitionOrder: 0 }];
     const payload = applyItemHooks('onFire', instances, {
       volleyIndex: 3,
       projectiles: [baseProjectile]
     });
 
-    expect(payload.projectiles.length).toBeGreaterThan(2);
-    expect(payload.projectiles.some((projectile) => projectile.tags.includes('drone'))).toBe(true);
+    expect(payload.projectiles).toHaveLength(3);
+    expect(
+      payload.projectiles.filter((projectile) => projectile.tags.includes('drone'))
+    ).toHaveLength(2);
+    expect(
+      payload.projectiles
+        .filter((projectile) => projectile.tags.includes('drone'))
+        .every((projectile) => projectile.droneSourceId === 'item_drone_uplink')
+    ).toBe(true);
   });
 
   it('applies expanded volley hooks for missile, phase, and arc drone builds', () => {
@@ -487,6 +491,23 @@ describe('item synergies', () => {
 
     expect(payload.bonusSalvage).toBe(4);
     expect(payload.blastDamage).toBeGreaterThan(0);
+  });
+
+  it('pays Scrap Saints only when the consuming projectile was drone-fired', () => {
+    const instances: ItemInstance[] = [
+      { itemId: 'item_drone_uplink', acquisitionOrder: 0 },
+      { itemId: 'item_scrap_saints_relay', acquisitionOrder: 1 }
+    ];
+    const resolve = (projectileTags: readonly ('laser' | 'drone')[]) =>
+      applyItemHooks('onEnemyKilled', instances, {
+        projectileTags,
+        overkillDamage: 0,
+        bonusSalvage: 0,
+        blastDamage: 0
+      });
+
+    expect(resolve(['laser']).bonusSalvage).toBe(0);
+    expect(resolve(['laser', 'drone']).bonusSalvage).toBe(1);
   });
 
   it('applies expanded pickup and curse revenge hooks', () => {

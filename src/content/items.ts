@@ -346,7 +346,7 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'rare',
     tags: ['drone'],
     hooks: ['onFire'],
-    effect: 'drones copy a reduced primary shot every third volley',
+    effect: 'deploys an uplink pair that copies one reduced primary shot each every third volley',
     weight: 8,
     metadata: {
       family: 'drone-copy',
@@ -499,7 +499,7 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'uncommon',
     tags: ['drone'],
     hooks: ['onFire'],
-    effect: 'adds a rear ghost shot at reduced damage',
+    effect: 'deploys a mirror follower that fires one reduced rear-cover shot each volley',
     weight: 10,
     metadata: {
       family: 'drone-copy',
@@ -584,7 +584,7 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'common',
     tags: ['scrap', 'drone'],
     hooks: ['onEnemyKilled'],
-    effect: 'drone-marked kills recover extra salvage',
+    effect: 'kills made by drone-fired shots recover one extra salvage; needs a drone launcher',
     weight: 9,
     metadata: {
       family: 'drone-copy',
@@ -754,7 +754,8 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'uncommon',
     tags: ['arc', 'drone'],
     hooks: ['onFire'],
-    effect: 'arc-charged builds gain a side drone shot carrying its own charge every third volley',
+    effect:
+      'deploys an arc welder follower that fires a charged side shot every third volley; needs an arc source',
     weight: 8,
     metadata: {
       family: 'drone-copy',
@@ -873,7 +874,7 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'common',
     tags: ['drone'],
     hooks: ['onFire'],
-    effect: 'every fourth volley dispatches a sidecar drone shot',
+    effect: 'deploys a sidecar follower that fires one reduced flanking shot every fourth volley',
     weight: 11,
     metadata: {
       family: 'drone-copy',
@@ -891,7 +892,7 @@ export const ITEMS: readonly ItemDefinition[] = [
     tags: ['drone', 'arc'],
     hooks: ['onFire'],
     effect:
-      'every third volley clones the projectile chain built before this socket into drone shots',
+      'deploys a clone follower; every third volley it copies up to four earlier shots at reduced impact',
     weight: 6,
     metadata: {
       family: 'drone-copy',

@@ -33,6 +33,7 @@ export interface ProjectileBlueprint {
   readonly visualKind?: ProjectileVisualKind;
   readonly laserKind?: LaserProjectileKind;
   readonly arcChargeKind?: ArcChargeKind;
+  readonly droneSourceId?: string;
 }
 
 export interface HeatShotEvent {
@@ -742,11 +743,7 @@ function applyOnFire(
     };
   }
 
-  if (
-    itemId === 'item_drone_uplink' &&
-    hasItem(instances, 'item_mirror_turret') &&
-    isItemVolleyCycle(itemId, instances, payload.volleyIndex)
-  ) {
+  if (itemId === 'item_drone_uplink' && isItemVolleyCycle(itemId, instances, payload.volleyIndex)) {
     return addPrototypeVentCycleShot(itemId, instances, payload, {
       ...payload,
       projectiles: [
@@ -755,18 +752,20 @@ function applyOnFire(
           {
             ...projectile,
             x: projectile.x - 32,
-            damage: projectile.damage * 0.5,
+            damage: projectile.damage * 0.38,
             radius: Math.max(3, projectile.radius * 0.75),
             tags: addTags(projectile.tags, ['drone']),
-            procDepth: projectile.procDepth + 1
+            procDepth: projectile.procDepth + 1,
+            droneSourceId: itemId
           },
           {
             ...projectile,
             x: projectile.x + 32,
-            damage: projectile.damage * 0.5,
+            damage: projectile.damage * 0.38,
             radius: Math.max(3, projectile.radius * 0.75),
             tags: addTags(projectile.tags, ['drone']),
-            procDepth: projectile.procDepth + 1
+            procDepth: projectile.procDepth + 1,
+            droneSourceId: itemId
           }
         ])
       ]
@@ -785,7 +784,8 @@ function applyOnFire(
           damage: projectile.damage * 0.38,
           radius: Math.max(3, projectile.radius * 0.72),
           tags: addTags(projectile.tags, ['drone']),
-          procDepth: projectile.procDepth + 1
+          procDepth: projectile.procDepth + 1,
+          droneSourceId: itemId
         }))
       ]
     };
@@ -819,7 +819,7 @@ function applyOnFire(
   ) {
     const sources = payload.projectiles
       .filter((projectile) => !projectile.tags.includes('drone'))
-      .slice(0, 8);
+      .slice(0, 4);
     return addPrototypeVentCycleShot(itemId, instances, payload, {
       ...payload,
       projectiles: [
@@ -828,10 +828,11 @@ function applyOnFire(
           ...projectile,
           x: projectile.x + (index % 2 === 0 ? -24 : 24),
           vx: projectile.vx + (index % 2 === 0 ? -36 : 36),
-          damage: Math.max(0.3, projectile.damage * 0.55),
+          damage: Math.max(0.3, projectile.damage * 0.48),
           radius: Math.max(3, projectile.radius * 0.78),
           tags: addTags(projectile.tags, ['drone', 'arc']),
-          procDepth: projectile.procDepth + 1
+          procDepth: projectile.procDepth + 1,
+          droneSourceId: itemId
         }))
       ]
     });
@@ -919,7 +920,8 @@ function applyOnFire(
           radius: Math.max(3, seedProjectile.radius * 0.76),
           tags: addTags(seedProjectile.tags, ['arc', 'drone']),
           arcChargeKind: seedProjectile.arcChargeKind ?? 'standard',
-          procDepth: seedProjectile.procDepth + 1
+          procDepth: seedProjectile.procDepth + 1,
+          droneSourceId: itemId
         }
       ]
     });
@@ -1002,7 +1004,8 @@ function applyOnFire(
           damage: Math.max(0.35, seedProjectile.damage * 0.45),
           radius: Math.max(3, seedProjectile.radius * 0.72),
           tags: addTags(seedProjectile.tags, ['drone']),
-          procDepth: seedProjectile.procDepth + 1
+          procDepth: seedProjectile.procDepth + 1,
+          droneSourceId: itemId
         }
       ]
     });
@@ -1181,12 +1184,7 @@ function applyOnEnemyKilled(
     };
   }
 
-  if (
-    itemId === 'item_scrap_saints_relay' &&
-    (hasAnyTag(payload.projectileTags, ['drone']) ||
-      hasItem(instances, 'item_drone_uplink') ||
-      hasItem(instances, 'item_arc_welder_drone'))
-  ) {
+  if (itemId === 'item_scrap_saints_relay' && hasAnyTag(payload.projectileTags, ['drone'])) {
     return {
       ...payload,
       bonusSalvage: payload.bonusSalvage + 1

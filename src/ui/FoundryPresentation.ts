@@ -1,4 +1,9 @@
-import { getShipFrameById, getShipModuleById, type ShipModuleSlot } from '../content/shipModules';
+import {
+  getShipFrameById,
+  getShipModuleById,
+  type ShipModuleId,
+  type ShipModuleSlot
+} from '../content/shipModules';
 import { getItemById } from '../content/items';
 import { getWeaponById, type WeaponPatternId } from '../content/weapons';
 import { COMBAT_ARENA_WIDTH } from '../game/CombatGeometry';
@@ -32,6 +37,13 @@ import { HEAT_SHOT_COST_RATIO, getHeatShotCost } from '../game/HeatShot';
 import { getLaserProjectileKind, type LaserProjectileKind } from '../game/LaserProjectile';
 import type { HeatShotEvent } from '../game/ItemHooks';
 import { getArcChargeProfile, getArcDischargeDamage, type ArcChargeKind } from '../game/ArcCharge';
+import {
+  createDroneFollowerSpecs,
+  createMicroChoirVolley,
+  getEscortFormationOffset,
+  type DroneFollowerSourceId,
+  type DroneFollowerSpec
+} from '../game/DroneFollowers';
 
 export type FoundryComparisonTone = 'improved' | 'declined' | 'same' | 'danger';
 
@@ -83,6 +95,7 @@ export interface FoundryAttackProjectileModel {
   readonly laserKind: LaserProjectileKind | null;
   readonly headingDegrees: number;
   readonly startXPercent: number;
+  readonly startBottomPercent: number;
   readonly endXPercent: number;
   readonly endRisePercent: number;
   readonly restXPercent: number;
@@ -92,6 +105,17 @@ export interface FoundryAttackProjectileModel {
   readonly displayDiameterPercent: number;
   readonly durationSeconds: number;
   readonly delaySeconds: number;
+}
+
+export interface FoundryAttackDroneModel {
+  readonly id: string;
+  readonly sourceId: DroneFollowerSourceId;
+  readonly label: string;
+  readonly glyph: string;
+  readonly color: string;
+  readonly xPercent: number;
+  readonly bottomPercent: number;
+  readonly sizePercent: number;
 }
 
 export interface FoundryAttackHeatExhaustModel {
@@ -110,6 +134,7 @@ export interface FoundryAttackSimulationModel {
   readonly fireCooldownSeconds: number;
   readonly waveCopies: number;
   readonly projectiles: readonly FoundryAttackProjectileModel[];
+  readonly drones: readonly FoundryAttackDroneModel[];
   readonly heatExhausts: readonly FoundryAttackHeatExhaustModel[];
   readonly ariaLabel: string;
 }
@@ -344,7 +369,7 @@ function createFoundryCircuitStageModels(
       )
     ];
     const cadence = getItemVolleyCadenceProfile(instance.itemId, ordered);
-    const condition = createCircuitStageCondition(instance.itemId, ordered);
+    const condition = createCircuitStageCondition(instance.itemId, ordered, resolution, incoming);
     const changed =
       incoming.length !== outgoing.length ||
       Math.abs(incomingImpact - outgoingImpact) > 0.01 ||
@@ -391,6 +416,73 @@ interface CircuitStageCondition {
 }
 
 function createCircuitStageCondition(
+  itemId: ItemInstance['itemId'],
+  ordered: readonly ItemInstance[],
+  resolution: EngineeringResolution,
+  incoming: readonly ProjectileBlueprint[]
+): CircuitStageCondition | null {
+  const ventCondition = createPrototypeVentCircuitStageCondition(itemId, ordered);
+  if (ventCondition) return ventCondition;
+
+  if (itemId === 'item_drone_uplink') {
+    return { met: true, label: '2 FOLLOWERS DEPLOYED · COPY EVERY 3RD VOLLEY' };
+  }
+  if (itemId === 'item_mirror_turret') {
+    return { met: true, label: '1 FOLLOWER DEPLOYED · REAR COVER EACH VOLLEY' };
+  }
+  if (itemId === 'item_sidecar_drone_bay') {
+    return { met: true, label: '1 FOLLOWER DEPLOYED · FLANK SHOT EVERY 4TH VOLLEY' };
+  }
+  if (itemId === 'item_signal_clone_stamp') {
+    const sourceCount = Math.min(
+      4,
+      incoming.filter((projectile) => !projectile.tags.includes('drone')).length
+    );
+    return sourceCount > 0
+      ? {
+          met: true,
+          label: `1 FOLLOWER DEPLOYED · CLONES ${sourceCount} EARLIER SHOT${sourceCount === 1 ? '' : 'S'} EVERY 3RD VOLLEY`
+        }
+      : { met: false, label: 'FOLLOWER IDLE · NEEDS AN EARLIER NON-DRONE SHOT' };
+  }
+  if (itemId === 'item_arc_welder_drone') {
+    const arcReady = hasDroneArcFeed(ordered, incoming);
+    return arcReady
+      ? { met: true, label: '1 FOLLOWER DEPLOYED · ARC FEED READY EVERY 3RD VOLLEY' }
+      : { met: false, label: 'FOLLOWER IDLE · NEEDS AN ARC SOURCE' };
+  }
+  if (itemId === 'item_scrap_saints_relay') {
+    const followerCount = createDroneFollowerSpecs(
+      ordered,
+      getResolutionModuleIds(resolution)
+    ).filter(
+      (follower) =>
+        follower.sourceId !== 'item_arc_welder_drone' || hasDroneArcFeed(ordered, incoming)
+    ).length;
+    return followerCount > 0
+      ? {
+          met: true,
+          label: `CONDITION MET · ${followerCount} DRONE${followerCount === 1 ? '' : 'S'} CAN MARK KILLS`
+        }
+      : { met: false, label: 'CONDITION NOT MET · NEEDS A DRONE LAUNCHER' };
+  }
+
+  return null;
+}
+
+function hasDroneArcFeed(
+  ordered: readonly ItemInstance[],
+  incoming: readonly ProjectileBlueprint[]
+): boolean {
+  return (
+    ordered.some((instance) => instance.itemId === 'item_chain_arc_capacitor') ||
+    incoming.some(
+      (projectile) => projectile.tags.includes('arc') || getArcChargeProfile(projectile) !== null
+    )
+  );
+}
+
+function createPrototypeVentCircuitStageCondition(
   itemId: ItemInstance['itemId'],
   ordered: readonly ItemInstance[]
 ): CircuitStageCondition | null {
@@ -448,7 +540,8 @@ function resolveCircuitPreviewVolley(
     },
     { maxApplications: procBudget }
   );
-  return firePayload.projectiles.map(
+  const moduleIds = getResolutionModuleIds(resolution);
+  return createMicroChoirVolley(firePayload.projectiles, 12, moduleIds).map(
     (projectile) =>
       applyCombinedHooks(
         'onProjectileSpawn',
@@ -546,6 +639,8 @@ function createFoundryAttackSimulationModel(
   procBudget: number,
   items: readonly ItemInstance[]
 ): FoundryAttackSimulationModel {
+  const moduleIds = getResolutionModuleIds(resolution);
+  const droneSpecs = createDroneFollowerSpecs(items, moduleIds);
   let storedWeaponHeat = 0;
   const heatPerShotMultiplier =
     resolution.effects.heatPerShotMultiplier *
@@ -582,7 +677,7 @@ function createFoundryAttackSimulationModel(
       storedWeaponHeat + weapon.heatPerShot * heatPerShotMultiplier
     );
     sourceHeatEvents.push(firePayload.heatShotEvents ?? []);
-    return firePayload.projectiles.map(
+    return createMicroChoirVolley(firePayload.projectiles, index + 1, moduleIds).map(
       (projectile) =>
         applyCombinedHooks(
           'onProjectileSpawn',
@@ -597,7 +692,8 @@ function createFoundryAttackSimulationModel(
     weapon.name,
     weapon.fireCooldownSeconds,
     volleys,
-    sourceHeatEvents
+    sourceHeatEvents,
+    droneSpecs
   );
 }
 
@@ -613,7 +709,8 @@ function createFoundryAttackPatternPreviewModel(
   weaponName: string,
   fireCooldownSeconds: number,
   sourceVolleys: readonly (readonly ProjectileBlueprint[])[],
-  sourceHeatEvents: readonly (readonly HeatShotEvent[])[] = []
+  sourceHeatEvents: readonly (readonly HeatShotEvent[])[] = [],
+  droneSpecs: readonly DroneFollowerSpec[] = []
 ): FoundryAttackSimulationModel {
   const safeCooldown = Math.max(0.05, fireCooldownSeconds);
   const safeVolleys = sourceVolleys.map((volley) => volley.slice(0, 12));
@@ -667,16 +764,21 @@ function createFoundryAttackPatternPreviewModel(
 
   const waveCopies = selectedVolleys.length;
   const durationSeconds = Math.max(flightSeconds, safeCooldown * waveCopies);
+  const drones = createFoundryAttackDroneModels(droneSpecs);
   const projectiles = selectedVolleys.flatMap((volley, waveIndex) =>
     volley.map((projectile, projectileIndex) =>
       createFoundryAttackProjectileModel(
         projectile,
         projectileIndex,
+        volley
+          .slice(0, projectileIndex)
+          .filter((candidate) => candidate.droneSourceId === projectile.droneSourceId).length,
         waveIndex,
         waveCopies,
         durationSeconds,
         flightSeconds,
-        safeCooldown
+        safeCooldown,
+        drones
       )
     )
   );
@@ -737,6 +839,10 @@ function createFoundryAttackPatternPreviewModel(
     arcSummary.chargeCount > 0
       ? ` Arc-charged shots store a ${arcKinds.join('/')} secondary discharge totaling ${arcSummary.totalDamage.toFixed(1)} potential impact across this volley at up to ${arcSummary.maxRange}u; the primary hit receives no bonus damage.`
       : '';
+  const droneDescription =
+    drones.length > 0
+      ? ` ${drones.length} formation drone${drones.length === 1 ? '' : 's'} remain visible; drone-tagged shots launch from their assigned follower.`
+      : '';
   return {
     cameraWidth: COMBAT_ARENA_WIDTH,
     cameraHeight: FOUNDRY_ATTACK_PREVIEW_WORLD_HEIGHT,
@@ -745,23 +851,32 @@ function createFoundryAttackPatternPreviewModel(
     fireCooldownSeconds: safeCooldown,
     waveCopies,
     projectiles,
+    drones,
     heatExhausts,
-    ariaLabel: `${weaponName} live-fire preview. ${volleyDescription} at ${volleysPerSecond.toFixed(1)} volleys per second.${missileDescription}${laserDescription}${phaseDescription}${arcDescription}${heatDescription} Projectile paths use the draft loadout's combat velocity, spread, radius, damage, engineering hooks, and owned item hooks.`
+    ariaLabel: `${weaponName} live-fire preview. ${volleyDescription} at ${volleysPerSecond.toFixed(1)} volleys per second.${missileDescription}${laserDescription}${phaseDescription}${arcDescription}${heatDescription}${droneDescription} Projectile paths use the draft loadout's combat velocity, spread, radius, damage, engineering hooks, and owned item hooks.`
   };
 }
 
 function createFoundryAttackProjectileModel(
   projectile: ProjectileBlueprint,
   projectileIndex: number,
+  sourceProjectileIndex: number,
   waveIndex: number,
   waveCopies: number,
   durationSeconds: number,
   flightSeconds: number,
-  fireCooldownSeconds: number
+  fireCooldownSeconds: number,
+  drones: readonly FoundryAttackDroneModel[]
 ): FoundryAttackProjectileModel {
-  const startX = projectile.x;
+  const sourceDrones = projectile.droneSourceId
+    ? drones.filter((drone) => drone.sourceId === projectile.droneSourceId)
+    : [];
+  const sourceDrone =
+    sourceDrones[(waveIndex + 1 + sourceProjectileIndex) % Math.max(1, sourceDrones.length)] ??
+    null;
+  const startX = sourceDrone ? (sourceDrone.xPercent / 100) * COMBAT_ARENA_WIDTH : projectile.x;
   const endTravelSeconds = getProjectileTravelSeconds(durationSeconds, projectile.tags);
-  const endX = projectile.x + projectile.vx * endTravelSeconds;
+  const endX = startX + projectile.vx * endTravelSeconds;
   const endRise = -projectile.vy * endTravelSeconds;
   const restProgress = (waveIndex + 1) / (waveCopies + 1);
   const performanceProgress = 0.58;
@@ -773,9 +888,9 @@ function createFoundryAttackProjectileModel(
     flightSeconds * performanceProgress,
     projectile.tags
   );
-  const restX = projectile.x + projectile.vx * restTravelSeconds;
+  const restX = startX + projectile.vx * restTravelSeconds;
   const restRise = -projectile.vy * restTravelSeconds;
-  const performanceX = projectile.x + projectile.vx * performanceTravelSeconds;
+  const performanceX = startX + projectile.vx * performanceTravelSeconds;
   const performanceRise = -projectile.vy * performanceTravelSeconds;
   const missile = isMissileProjectile(projectile.tags);
   const phased = isPhaseProjectile(projectile.tags);
@@ -794,7 +909,7 @@ function createFoundryAttackProjectileModel(
     id: `preview-shot-${waveIndex}-${projectileIndex}`,
     projectileIndex,
     waveIndex,
-    x: projectile.x,
+    x: startX,
     vx: projectile.vx,
     vy: projectile.vy,
     radius: projectile.radius,
@@ -806,6 +921,7 @@ function createFoundryAttackProjectileModel(
     laserKind,
     headingDegrees: (Math.atan2(projectile.vx, -projectile.vy) * 180) / Math.PI,
     startXPercent: toAttackPreviewHorizontalPercent(startX),
+    startBottomPercent: sourceDrone?.bottomPercent ?? 10,
     endXPercent: toAttackPreviewHorizontalPercent(endX),
     endRisePercent: toAttackPreviewVerticalPercent(endRise),
     restXPercent: toAttackPreviewHorizontalPercent(restX),
@@ -816,6 +932,28 @@ function createFoundryAttackProjectileModel(
     durationSeconds,
     delaySeconds: -waveIndex * fireCooldownSeconds
   };
+}
+
+function createFoundryAttackDroneModels(
+  specs: readonly DroneFollowerSpec[]
+): FoundryAttackDroneModel[] {
+  return specs.map((spec, index) => {
+    const offset = getEscortFormationOffset(index, specs.length);
+    return {
+      id: spec.id,
+      sourceId: spec.sourceId,
+      label: spec.label,
+      glyph: spec.glyph,
+      color: spec.color,
+      xPercent: toAttackPreviewHorizontalPercent(offset.x),
+      bottomPercent: 32 + Math.min(5, Math.abs(offset.x) / 44),
+      sizePercent: toAttackPreviewHorizontalPercent(spec.radius * 2.4)
+    };
+  });
+}
+
+function getResolutionModuleIds(resolution: EngineeringResolution): ShipModuleId[] {
+  return resolution.loadout?.mounts.map((mount) => mount.moduleId) ?? [];
 }
 
 function toAttackPreviewHorizontalPercent(worldUnits: number): number {

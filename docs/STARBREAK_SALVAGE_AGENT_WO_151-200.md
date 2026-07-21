@@ -862,3 +862,32 @@ Faraday Phase Shunt occupies the released uncommon combat/shop slot as a bounded
 The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/` at 390 x 700. It rendered all 13 permanent Upgrade Bay cards, confirmed Market Echo Locator's Market category, 11 kg cost, Market Decoder prerequisite, and Shop/Repair choice copy, measured the 366.59 px panel inside a 390 px document with no horizontal overflow, and recorded no console warnings or errors. The viewport was restored, the tab finalized, and the authenticated work order 175 host stopped with its owner shell returning exit code 0.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 112 Vitest files and 709 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The focused item-hook, Foundry presentation, upgrade-effect, reward, catalog, stress, and Upgrade Bay suite passes 74 tests. The build emits 987.15 kB minified/270.32 kB gzip initial JavaScript and 94.38/19.02 kB CSS, increases of 1.31/0.33 kB JavaScript and no CSS change over work order 182. The existing 500 kB chunk notice remains; no dependency, save/snapshot schema, route topology, static base path, or warning threshold changed.
+
+## Work order 184 - Formation drone followers
+
+Goal: turn drone upgrades from ship-originating proc abstractions into persistent escort craft whose formation, firing source, conditions, and contribution are readable in combat and Hardpoint Control.
+
+Prompt:
+
+> Reimagine drones as follower units that fly in formation with allies. Review the drone upgrade family for clear prerequisites, bounded power, honest ordered-circuit output, and useful standalone behavior.
+
+Acceptance criteria:
+
+- The Micro-Choir module and every active firing drone upgrade create persistent, visually distinct follower actors; the combined drone roster is capped at eight.
+- Followers share one deterministic escort formation with active crew and fleet allies, move toward reassigned slots through fixed-step simulation, do not collide, and remain non-damageable signal emitters rather than hidden extra hull.
+- Every drone-tagged player projectile records its launcher and originates from the corresponding follower in combat and both shared live-fire previews.
+- Micro-Choir deploys two followers that alternate one 36%-impact primary copy each volley without passing that native copy back through earlier `onFire` stages.
+- Drone Uplink is useful without Mirror Turret: its pair each fires a 38%-impact copy every third volley. Mirror, Sidecar, and Arc Welder retain distinct rear, flanking, and charged cadences.
+- Signal Clone Stamp copies at most four upstream non-drone shots at 48% impact every third volley, bounding its rare chain multiplication.
+- Arc Welder visibly reports idle until an arc source exists; Signal Clone, Uplink, Mirror, Sidecar, and Scrap Saints report their deployed or linked state in the signal output card.
+- Scrap Saints pays only when the consuming projectile was actually drone-fired; merely owning a drone item no longer marks unrelated kills.
+- Contract Select and Hardpoint live fire render follower craft clear of the ship, launch their shots from those craft, and describe formation-drone count through the accessible preview label.
+- Actor accounting includes persistent drones while enemy, ally-projectile, proc, effect, and content-generation caps remain bounded; no RNG draw, save field, snapshot schema, dependency, or route input is added.
+
+Status: implemented. `DroneFollowers` owns the bounded source roster, native Micro-Choir copy, and shared escort offsets. `CombatState` instantiates those actors beside recruited allies, advances their fixed-step formation, records them in entity pressure, pulses the firing craft, and relocates only explicitly sourced drone projectiles. The actors are intentionally non-colliding and invulnerable: upgrade sockets buy firing positions and readable formation, not disposable extra hull or another damage-target system.
+
+The active drone item family now states what is deployed and when it fires. Uplink loses its undocumented Mirror-only gate, Clone Stamp is capped at four 48% copies, Arc Welder retains its real arc prerequisite with an explicit idle state, and Scrap Saints now reads the actual killing projectile tag. Hardpoint cumulative cards distinguish deployed, linked, and idle stages without confusing an off-cadence stage for a broken one.
+
+Contract Select, Hardpoint Control, and Canvas combat share the same follower roster and source identifiers. Browser inspection of `STARBREAK-SMOKE` confirmed three Drone Chaplain followers in both previews and live combat, corrected an initial center-follower overlap by raising the preview formation band, retained a 390 px document width at the narrow breakpoint, and recorded no console warnings or errors. The authenticated work order 175 smoke host stopped cleanly and its owner shell returned exit code 0.
+
+Verification: `npm run verify:release` passes (114 Vitest files / 715 tests, production build, 17/17 Chromium E2E tests, and Pages preview asset smoke). Interactive browser inspection confirmed three distinct Drone Chaplain followers in both contract and Hardpoint previews, a non-overlapping shared escort formation in live combat, responsive narrow-width layout, and no console warnings or errors. The existing Vite large-chunk advisory remains (`994.05 kB` initial JavaScript, `272.33 kB` gzip); no dependencies were added.

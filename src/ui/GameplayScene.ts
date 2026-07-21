@@ -743,6 +743,10 @@ export class GameplayScene implements Scene {
       renderer.paintAlly(ally);
     }
 
+    for (const drone of state.drones) {
+      renderer.paintDroneFollower(drone);
+    }
+
     for (const enemy of state.enemies) {
       renderer.paintEnemy(enemy);
     }

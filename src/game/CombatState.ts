@@ -83,6 +83,13 @@ import {
 } from './UpgradeEffects';
 import type { CrewCombatProfile } from './CrewCommand';
 import {
+  createDroneFollowerSpecs,
+  createMicroChoirVolley,
+  getEscortFormationOffset,
+  isDroneFollowerSourceId,
+  type DroneFollowerSourceId
+} from './DroneFollowers';
+import {
   MAX_COMBINED_ALLIES,
   MAX_COMBINED_ALLY_PROJECTILES,
   type FleetCombatProfile
@@ -179,6 +186,7 @@ export interface ProjectileState {
   readonly factionId?: FactionId;
   readonly setPieceSourceId?: string;
   readonly allyId?: string;
+  readonly droneSourceId?: string;
 }
 
 export interface AllyState {
@@ -208,6 +216,20 @@ export interface AllyState {
   enemiesDefeated: number;
   salvageRecovered: number;
   readonly fitLabel: string;
+}
+
+export interface DroneFollowerState {
+  readonly id: string;
+  readonly sourceId: DroneFollowerSourceId;
+  readonly sourceIndex: number;
+  readonly label: string;
+  readonly glyph: string;
+  readonly color: string;
+  x: number;
+  y: number;
+  readonly radius: number;
+  readonly moveSpeed: number;
+  firingPulseSeconds: number;
 }
 
 export interface CrewCommandState {
@@ -421,6 +443,7 @@ export interface CombatState {
   boss: BossState | null;
   rivalEncounter: RivalCombatState | null;
   allies: AllyState[];
+  drones: DroneFollowerState[];
   crewCommand: CrewCommandState;
   telegraphs: TelegraphState[];
   pickups: PickupState[];
@@ -558,6 +581,7 @@ export interface CombatEntityCounts {
   readonly player: number;
   readonly enemies: number;
   readonly allies?: number;
+  readonly drones?: number;
   readonly boss: number;
   readonly projectiles: number;
   readonly playerProjectiles: number;
@@ -656,6 +680,11 @@ export function createCombatState(
   const bossDefinition = getBossById(options.bossId ?? DEFAULT_BOSS_ID);
   const shipStats = options.shipStats ?? DEFAULT_SHIP_STATS;
   const maxBombs = Math.max(0, Math.floor(shipStats.bombCapacity));
+  const allyCount = Math.min(
+    MAX_COMBINED_ALLIES,
+    (options.crew?.members.length ?? 0) + (options.fleet?.members.length ?? 0)
+  );
+  const droneSpecs = createDroneFollowerSpecs(options.items ?? [], options.engineering?.moduleIds);
   const state: CombatState = {
     seed,
     bossId: bossDefinition.id,
@@ -754,6 +783,15 @@ export function createCombatState(
         enemiesDefeated: 0,
         salvageRecovered: 0
       })),
+    drones: droneSpecs.map((drone, index) => {
+      const offset = getEscortFormationOffset(allyCount + index, allyCount + droneSpecs.length);
+      return {
+        ...drone,
+        x: clamp(bounds.width / 2 + offset.x, bounds.padding, bounds.width - bounds.padding),
+        y: clamp(bounds.height * 0.78 + offset.y, bounds.padding, bounds.height - bounds.padding),
+        firingPulseSeconds: 0
+      };
+    }),
     crewCommand: {
       active: 'focus',
       cooldownSeconds: 0,
@@ -870,6 +908,7 @@ export function updateCombatState(
   spawnDueBoss(state, bounds);
   updateEnemies(state, safeDt, bounds);
   updateAllies(state, safeDt, bounds);
+  updateDroneFollowers(state, safeDt, bounds);
   updateBoss(state, safeDt, bounds);
   updateProjectiles(state, safeDt, bounds);
   updateTelegraphs(state, safeDt);
@@ -1831,6 +1870,7 @@ export function getCombatEntityCounts(state: CombatState): CombatEntityCounts {
       boss +
       state.enemies.length +
       state.allies.length +
+      state.drones.length +
       state.projectiles.length +
       state.pickups.length +
       state.telegraphs.length +
@@ -1840,6 +1880,7 @@ export function getCombatEntityCounts(state: CombatState): CombatEntityCounts {
     player: 1,
     enemies: state.enemies.length,
     ...(state.allies.length > 0 ? { allies: state.allies.length } : {}),
+    ...(state.drones.length > 0 ? { drones: state.drones.length } : {}),
     boss,
     projectiles: state.projectiles.length,
     playerProjectiles,
@@ -3104,7 +3145,12 @@ function updatePlayer(
     });
 
     resolveHeatShotEvents(state, firePayload);
-    spawnPlayerProjectiles(state, firePayload.projectiles);
+    const projectiles = createMicroChoirVolley(
+      firePayload.projectiles,
+      state.volleyIndex,
+      state.engineering?.moduleIds
+    );
+    spawnPlayerProjectiles(state, projectiles);
     addWeaponHeat(state);
 
     const specialMultiplier =
@@ -3115,7 +3161,7 @@ function updatePlayer(
       specialMultiplier;
     state.stats = {
       ...state.stats,
-      shotsFired: state.stats.shotsFired + firePayload.projectiles.length,
+      shotsFired: state.stats.shotsFired + projectiles.length,
       itemTriggers: state.stats.itemTriggers + Math.max(0, firePayload.projectiles.length - 1)
     };
   }
@@ -3398,14 +3444,36 @@ function spawnPlayerProjectiles(
   state: CombatState,
   projectiles: readonly ProjectileBlueprint[]
 ): void {
+  const sourceCounts = new Map<DroneFollowerSourceId, number>();
   for (const projectile of projectiles) {
     const spawnPayload = applyCombatHooks(state, 'onProjectileSpawn', { projectile });
+    const drone = getProjectileDroneFollower(state, spawnPayload.projectile, sourceCounts);
+    if (drone) drone.firingPulseSeconds = 0.14;
     state.projectiles.push({
       id: getNextEntityId(state),
       owner: 'player',
-      ...spawnPayload.projectile
+      ...spawnPayload.projectile,
+      ...(drone
+        ? {
+            x: drone.x,
+            y: drone.y - drone.radius
+          }
+        : {})
     });
   }
+}
+
+function getProjectileDroneFollower(
+  state: CombatState,
+  projectile: ProjectileBlueprint,
+  sourceCounts: Map<DroneFollowerSourceId, number>
+): DroneFollowerState | null {
+  if (!isDroneFollowerSourceId(projectile.droneSourceId)) return null;
+  const followers = state.drones.filter((drone) => drone.sourceId === projectile.droneSourceId);
+  if (followers.length === 0) return null;
+  const sourceCount = sourceCounts.get(projectile.droneSourceId) ?? 0;
+  sourceCounts.set(projectile.droneSourceId, sourceCount + 1);
+  return followers[(state.volleyIndex + sourceCount) % followers.length] ?? null;
 }
 
 function spawnDueEnemies(state: CombatState, bounds: CombatBounds): void {
@@ -3521,7 +3589,13 @@ function updateAllies(state: CombatState, dt: number, bounds: CombatBounds): voi
       continue;
     }
 
-    const desired = getAllyDesiredPosition(state, ally, index, activeAllies.length, bounds);
+    const desired = getAllyDesiredPosition(
+      state,
+      ally,
+      index,
+      activeAllies.length + state.drones.length,
+      bounds
+    );
     moveAllyToward(ally, desired, dt, bounds);
 
     if (command === 'screen') {
@@ -3562,16 +3636,51 @@ function getAllyDesiredPosition(
     }, null);
     if (pickup) return pickup;
   }
-  const spacing = state.crewCommand.active === 'regroup' ? 30 : 58;
-  const yOffset = state.crewCommand.active === 'screen' ? -78 : 38;
+  const offset = getEscortFormationOffset(index, count);
+  const regroupScale = state.crewCommand.active === 'regroup' ? 0.65 : 1;
+  const yOffset = state.crewCommand.active === 'screen' ? -78 : offset.y * regroupScale;
   return {
     x: clamp(
-      state.player.x + (index - (count - 1) / 2) * spacing,
+      state.player.x + offset.x * regroupScale,
       bounds.padding,
       bounds.width - bounds.padding
     ),
     y: clamp(state.player.y + yOffset, bounds.padding, bounds.height - bounds.padding)
   };
+}
+
+function updateDroneFollowers(state: CombatState, dt: number, bounds: CombatBounds): void {
+  const activeAllyCount = state.allies.filter((ally) => ally.status === 'active').length;
+  const formationCount = activeAllyCount + state.drones.length;
+  for (let index = 0; index < state.drones.length; index += 1) {
+    const drone = state.drones[index]!;
+    drone.firingPulseSeconds = Math.max(0, drone.firingPulseSeconds - dt);
+    const offset = getEscortFormationOffset(activeAllyCount + index, formationCount);
+    moveDroneToward(
+      drone,
+      {
+        x: clamp(state.player.x + offset.x, bounds.padding, bounds.width - bounds.padding),
+        y: clamp(state.player.y + offset.y, bounds.padding, bounds.height - bounds.padding)
+      },
+      dt,
+      bounds
+    );
+  }
+}
+
+function moveDroneToward(
+  drone: DroneFollowerState,
+  target: Vector2,
+  dt: number,
+  bounds: CombatBounds
+): void {
+  const dx = target.x - drone.x;
+  const dy = target.y - drone.y;
+  const distance = Math.hypot(dx, dy);
+  if (distance <= 0.5) return;
+  const step = Math.min(distance, drone.moveSpeed * dt);
+  drone.x = clamp(drone.x + (dx / distance) * step, bounds.padding, bounds.width - bounds.padding);
+  drone.y = clamp(drone.y + (dy / distance) * step, bounds.padding, bounds.height - bounds.padding);
 }
 
 function moveAllyToward(ally: AllyState, target: Vector2, dt: number, bounds: CombatBounds): void {

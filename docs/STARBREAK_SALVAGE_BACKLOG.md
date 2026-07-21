@@ -2592,3 +2592,19 @@ Acceptance:
 Status:
 
 - Implemented in work order 183. `UpgradeEffects` and `SectorRewards` own the permanent reward contribution with restored-item precedence. `ItemHooks` owns Faraday's pure upstream-charge transform, which automatically feeds combat and shared live-fire previews. The active catalog remains at 60 items and the global run fingerprint excludes the reward-local upgrade.
+
+### BL49 - Formation drone followers
+
+Acceptance:
+
+- Native and item-provided drones are persistent, bounded follower actors sharing a deterministic escort formation with crew and fleet allies.
+- Drone-tagged player shots identify their launcher and originate from the corresponding follower in combat, Contract Select, and Hardpoint live fire.
+- Micro-Choir's two followers alternate modest native copies, Uplink works standalone, Clone Stamp has a bounded copy count, and each firing drone retains a distinct cadence and role.
+- Arc Welder exposes its missing arc feed, Scrap Saints exposes its missing operational drone launcher, and every drone signal card distinguishes deployed, linked, or idle state in text and semantic DOM state.
+- Scrap Saints rewards only actual drone-fired kills, and hidden item ownership can no longer mark unrelated projectiles.
+- Drones enter actor-pressure accounting without adding collision targets, damageable hull, RNG draws, save fields, snapshot changes, or unbounded scans.
+- Desktop, narrow, high-contrast, reduced-motion, production build, static hosting, and managed browser smoke remain coherent.
+
+Status:
+
+- Implemented in work order 184. `DroneFollowers` owns source definitions and formation geometry, `CombatState` owns persistent actors and launch-origin routing, and both DOM live-fire surfaces use the same roster. The audited item hooks and circuit readouts make standalone behavior, real prerequisites, and bounded output explicit.

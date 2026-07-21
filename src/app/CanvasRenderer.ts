@@ -152,6 +152,16 @@ export interface AllyRenderState {
   readonly status: 'active' | 'injured' | 'retreated';
 }
 
+export interface DroneFollowerRenderState {
+  readonly label: string;
+  readonly glyph: string;
+  readonly color: string;
+  readonly x: number;
+  readonly y: number;
+  readonly radius: number;
+  readonly firingPulseSeconds: number;
+}
+
 export interface BossRenderState {
   readonly bossId: BossId;
   readonly factionId: FactionId;
@@ -1519,6 +1529,51 @@ export class CanvasRenderer {
       : `${identity} ${ally.callsign} | ${ally.role}`;
     context.strokeText(label, 0, -ally.radius - 7);
     context.fillText(label, 0, -ally.radius - 7);
+    context.restore();
+  }
+
+  public paintDroneFollower(drone: DroneFollowerRenderState): void {
+    const context = this.context;
+    const highContrast = this.settings.bulletContrast === 'high';
+    const pulse = clamp(drone.firingPulseSeconds / 0.14, 0, 1);
+    const color = highContrast ? '#ffffff' : drone.color;
+    context.save();
+    context.translate(drone.x, drone.y);
+    context.shadowBlur = this.settings.performanceMode ? 0 : 7 + pulse * 11;
+    context.shadowColor = color;
+    context.strokeStyle = color;
+    context.fillStyle = highContrast ? '#050712' : '#07101d';
+    context.lineWidth = 1.5 + pulse;
+    context.beginPath();
+    context.moveTo(0, -drone.radius * 1.2);
+    context.lineTo(drone.radius, -drone.radius * 0.08);
+    context.lineTo(drone.radius * 0.48, drone.radius * 0.82);
+    context.lineTo(0, drone.radius * 0.48);
+    context.lineTo(-drone.radius * 0.48, drone.radius * 0.82);
+    context.lineTo(-drone.radius, -drone.radius * 0.08);
+    context.closePath();
+    context.fill();
+    context.stroke();
+
+    context.globalAlpha = 0.42 + pulse * 0.45;
+    context.beginPath();
+    context.arc(0, 0, drone.radius * (1.5 + pulse * 0.34), 0, Math.PI * 2);
+    context.stroke();
+    context.globalAlpha = 1;
+    context.fillStyle = color;
+    context.font = 'bold 6px ui-monospace, monospace';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText(drone.glyph, 0, 0);
+
+    context.globalAlpha = 0.7;
+    context.fillStyle = color;
+    context.beginPath();
+    context.moveTo(-drone.radius * 0.3, drone.radius * 0.7);
+    context.lineTo(0, drone.radius * (1.5 + pulse * 0.35));
+    context.lineTo(drone.radius * 0.3, drone.radius * 0.7);
+    context.closePath();
+    context.fill();
     context.restore();
   }
 

@@ -840,7 +840,7 @@ export const SHIP_MODULES: readonly ShipModuleDefinition[] = [
     presentation: {
       name: 'Micro-Choir Bay',
       shortName: 'Micro-Choir',
-      summary: 'Twin-drone launch and command hardware represented as one bounded module.',
+      summary: 'Twin followers alternate reduced primary copies from the escort formation.',
       icon: 'drone-choir',
       accentColor: '#9fd7ff'
     }

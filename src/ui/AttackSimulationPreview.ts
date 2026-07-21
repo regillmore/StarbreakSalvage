@@ -55,6 +55,21 @@ export function createAttackSimulationPreviewElement(
   projectileLayer.dataset.fireCooldown = String(simulation.fireCooldownSeconds);
   projectileLayer.setAttribute('aria-hidden', 'true');
 
+  for (const drone of simulation.drones) {
+    const follower = ownerDocument.createElement('span');
+    follower.className = 'attack-simulation-drone';
+    follower.dataset.testid = 'attack-simulation-drone';
+    follower.dataset.sourceId = drone.sourceId;
+    follower.dataset.label = drone.label;
+    follower.style.setProperty('--drone-color', drone.color);
+    follower.style.setProperty('--drone-x', `${drone.xPercent}%`);
+    follower.style.setProperty('--drone-bottom', `${drone.bottomPercent}%`);
+    follower.style.setProperty('--drone-size', `${drone.sizePercent}%`);
+    follower.textContent = drone.glyph;
+    follower.setAttribute('aria-hidden', 'true');
+    projectileLayer.append(follower);
+  }
+
   for (const projectile of simulation.projectiles) {
     const shot = ownerDocument.createElement('span');
     shot.className = 'attack-simulation-projectile';
@@ -71,6 +86,7 @@ export function createAttackSimulationPreviewElement(
     if (projectile.arcChargeKind) shot.dataset.arcCharge = projectile.arcChargeKind;
     if (projectile.laserKind) shot.dataset.laserKind = projectile.laserKind;
     shot.style.setProperty('--shot-start-x', `${projectile.startXPercent}%`);
+    shot.style.setProperty('--shot-start-bottom', `${projectile.startBottomPercent}%`);
     shot.style.setProperty('--shot-end-x', `${projectile.endXPercent}%`);
     shot.style.setProperty('--shot-end-rise', `${projectile.endRisePercent}%`);
     shot.style.setProperty('--shot-rest-x', `${projectile.restXPercent}%`);

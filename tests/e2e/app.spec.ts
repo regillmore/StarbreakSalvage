@@ -1808,8 +1808,30 @@ test('keeps contract live-fire comparison responsive and updates the seeded igni
   await expect(page.getByTestId('selected-contract-ignition')).toContainText('Signal Clone Stamp');
   await expect(page.getByTestId('contract-attack-projectile-layer')).toHaveAttribute(
     'data-volley-size',
-    '4'
+    '5'
   );
+  await expect(
+    page.getByTestId('contract-attack-preview').getByTestId('attack-simulation-drone')
+  ).toHaveCount(3);
+  expect(
+    await page.getByTestId('contract-attack-preview').evaluate((preview) => {
+      const ship = preview
+        .querySelector<SVGSVGElement>('.ship-preview-combat')
+        ?.getBoundingClientRect();
+      if (!ship) throw new Error('Contract ship preview is unavailable.');
+      return [...preview.querySelectorAll<HTMLElement>('.attack-simulation-drone')].every(
+        (drone) => {
+          const bounds = drone.getBoundingClientRect();
+          return (
+            bounds.right < ship.left ||
+            bounds.left > ship.right ||
+            bounds.bottom < ship.top ||
+            bounds.top > ship.bottom
+          );
+        }
+      );
+    })
+  ).toBe(true);
 
   await page.setViewportSize({ width: 1280, height: 900 });
   const wide = await readPreviewGeometry();

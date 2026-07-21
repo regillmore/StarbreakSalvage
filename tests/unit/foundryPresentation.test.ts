@@ -148,7 +148,7 @@ describe('foundry visual presentation', () => {
         tags: projectile.tags
       }));
 
-    expect(previewVolley).toHaveLength(6);
+    expect(previewVolley).toHaveLength(7);
     expect(previewVolley).toEqual(combatVolley);
     expect(dashboard.attackSimulation.ariaLabel).toContain('owned item hooks');
   });
@@ -167,7 +167,7 @@ describe('foundry visual presentation', () => {
       delta: 0,
       tone: 'same'
     });
-    expect(dashboard.attackSimulation.volleySize).toBe(4);
+    expect(dashboard.attackSimulation.volleySize).toBe(5);
     expect(
       Array.from(
         { length: dashboard.attackSimulation.waveCopies },
@@ -176,14 +176,20 @@ describe('foundry visual presentation', () => {
             (projectile) => projectile.waveIndex === waveIndex
           ).length
       )
-    ).toEqual([2, 2, 4, 2, 2]);
+    ).toEqual([3, 3, 5, 3, 3]);
+    expect(dashboard.attackSimulation.drones).toHaveLength(3);
+    expect(
+      dashboard.attackSimulation.projectiles.some(
+        (projectile) => projectile.tags.includes('drone') && projectile.startBottomPercent > 10
+      )
+    ).toBe(true);
     expect(
       dashboard.attackSimulation.projectiles
         .filter((projectile) => projectile.waveIndex === 0)
         .map((projectile) => projectile.vy)
-    ).toEqual([-660, -660]);
+    ).toEqual([-660, -660, -660]);
     expect(dashboard.attackSimulation.ariaLabel).toContain(
-      '2-4 projectiles per volley across the firing cycle'
+      '3-5 projectiles per volley across the firing cycle'
     );
   });
 
@@ -498,6 +504,44 @@ describe('foundry visual presentation', () => {
       name: 'Phase Grazer',
       cadenceShiftLabel: null
     });
+  });
+
+  it('distinguishes deployed, linked, and idle drone circuit stages', () => {
+    const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
+      (candidate) => candidate.shipId === 'ship_debt_runner'
+    );
+    if (!contract) throw new Error('Expected the Debt Runner contract.');
+    const engineering = createEngineeringState(contract.loadout);
+    const idle = createFoundryDashboardModel(engineering, [
+      { itemId: 'item_arc_welder_drone', acquisitionOrder: 0 },
+      { itemId: 'item_scrap_saints_relay', acquisitionOrder: 1 }
+    ]);
+
+    expect(idle.circuitStages[0]).toMatchObject({
+      name: 'Arc Welder Drone',
+      conditionMet: false,
+      outputLabel: 'FOLLOWER IDLE · NEEDS AN ARC SOURCE'
+    });
+    expect(idle.circuitStages[1]).toMatchObject({
+      name: 'Scrap Saints Relay',
+      conditionMet: false,
+      outputLabel: 'CONDITION NOT MET · NEEDS A DRONE LAUNCHER'
+    });
+
+    const linked = createFoundryDashboardModel(engineering, [
+      { itemId: 'item_chain_arc_capacitor', acquisitionOrder: 0 },
+      { itemId: 'item_arc_welder_drone', acquisitionOrder: 1 },
+      { itemId: 'item_drone_uplink', acquisitionOrder: 2 }
+    ]);
+    expect(linked.circuitStages[1]).toMatchObject({
+      conditionMet: true,
+      outputLabel: '1 FOLLOWER DEPLOYED · ARC FEED READY EVERY 3RD VOLLEY'
+    });
+    expect(linked.circuitStages[2]).toMatchObject({
+      conditionMet: true,
+      outputLabel: '2 FOLLOWERS DEPLOYED · COPY EVERY 3RD VOLLEY'
+    });
+    expect(linked.attackSimulation.drones).toHaveLength(3);
   });
 
   it('builds steady velocity-scaled flight copies inside the preview actor budget', () => {

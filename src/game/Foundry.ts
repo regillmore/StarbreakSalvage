@@ -143,6 +143,7 @@ export interface EngineeringResolution {
 
 export interface EngineeringCombatProfile {
   readonly weaponId: ResolvedShipLoadout['primaryWeaponId'];
+  readonly moduleIds: readonly ShipModuleId[];
   readonly loadoutSignature: string;
   readonly frameName: string;
   readonly moduleSummary: string;
@@ -642,6 +643,7 @@ export function createEngineeringCombatProfile(state: EngineeringState): Enginee
   }
   return {
     weaponId: resolution.loadout.primaryWeaponId,
+    moduleIds: resolution.loadout.mounts.map((mount) => mount.moduleId),
     loadoutSignature: resolution.signature,
     frameName: resolution.loadout.frameName,
     moduleSummary: resolution.loadout.mounts
