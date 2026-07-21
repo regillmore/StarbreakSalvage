@@ -9,12 +9,13 @@ import {
 } from './RunSession';
 import { applyCombinedHooks } from './CombinedHooks';
 import { createEngineeringCombatProfile } from './Foundry';
+import { generateRewardChoices, type RewardChoice, type RewardContextKind } from './Rewards';
 import {
-  generateRewardChoices,
-  type RewardChoice,
-  type RewardContextKind
-} from './Rewards';
-import { getRewardUpgradeBiasTags, getRewardUpgradeChoiceBonus } from './UpgradeEffects';
+  getMarketEchoLocatorRewardBiasTags,
+  getMarketEchoLocatorRewardChoiceBonus,
+  getRewardUpgradeBiasTags,
+  getRewardUpgradeChoiceBonus
+} from './UpgradeEffects';
 import { createActEconomyProfile, getActEconomyRewardChoiceBonus } from './ActEconomy';
 import { createCarrierInfluence } from './CarrierCommand';
 import { getActiveFittedItems } from './ItemSockets';
@@ -40,11 +41,25 @@ export function generateSectorRewardChoices(options: {
   const poolId = poolOverride ?? (rewardContext === 'vault' ? 'vault' : 'combat');
   const choiceBonus = modifiers.reduce((total, modifier) => total + modifier.choiceBonus, 0);
   const modifierBiasTags = modifiers.flatMap((modifier) => modifier.biasTags);
-  const upgradeChoiceBonus = getRewardUpgradeChoiceBonus(
-    options.run.upgradeEffects,
-    rewardContext
-  );
+  const upgradeChoiceBonus = getRewardUpgradeChoiceBonus(options.run.upgradeEffects, rewardContext);
   const upgradeBiasTags = getRewardUpgradeBiasTags(options.run.upgradeEffects, rewardContext);
+  const fittedItems = getActiveFittedItems(
+    options.session.itemInstances,
+    options.session.engineering.committed
+  );
+  const legacyMarketEchoActive = fittedItems.some(
+    (instance) => instance.itemId === 'item_market_echo_locator'
+  );
+  const marketEchoChoiceBonus = getMarketEchoLocatorRewardChoiceBonus(
+    options.run.upgradeEffects,
+    rewardContext,
+    legacyMarketEchoActive
+  );
+  const marketEchoBiasTags = getMarketEchoLocatorRewardBiasTags(
+    options.run.upgradeEffects,
+    rewardContext,
+    legacyMarketEchoActive
+  );
   const actRewardChoiceBonus = getActEconomyRewardChoiceBonus(
     actEconomy,
     rewardContext,
@@ -55,28 +70,26 @@ export function generateSectorRewardChoices(options: {
   const carrier = createCarrierInfluence(options.run.carrierPlan, options.session.carrier);
   const rewardPayload = applyCombinedHooks(
     'onRewardGenerated',
-    getActiveFittedItems(
-      options.session.itemInstances,
-      options.session.engineering.committed
-    ),
+    fittedItems,
     engineering.hooks,
     {
       routeKind: rewardContext,
       sectorIndex: sector.index,
       poolId,
       choiceCount:
-        options.count ??
-        3 +
-          choiceBonus +
-          upgradeChoiceBonus +
-          interActEffects.rewardChoiceBonus +
-          actRewardChoiceBonus +
-          carrier.rewardChoiceBonus,
+        (options.count ??
+          3 +
+            choiceBonus +
+            upgradeChoiceBonus +
+            interActEffects.rewardChoiceBonus +
+            actRewardChoiceBonus +
+            carrier.rewardChoiceBonus) + marketEchoChoiceBonus,
       biasTags: [
         ...options.contract.itemBias,
         ...getRouteBiasTags(rewardContext),
         ...modifierBiasTags,
         ...upgradeBiasTags,
+        ...marketEchoBiasTags,
         ...interActEffects.rewardBiasTags,
         ...actEconomy.rewardBiasTags,
         ...carrier.rewardBiasTags
@@ -84,11 +97,7 @@ export function generateSectorRewardChoices(options: {
     },
     { maxApplications: engineering.procBudget }
   );
-  const poolProfileId = getSectorRewardPoolProfileId(
-    rewardPayload.poolId,
-    rewardContext,
-    sector
-  );
+  const poolProfileId = getSectorRewardPoolProfileId(rewardPayload.poolId, rewardContext, sector);
   const rewardSeedSuffix =
     rewardContext === 'sectorClear' ? 'reward-sectorClear' : `route-${rewardContext}`;
 

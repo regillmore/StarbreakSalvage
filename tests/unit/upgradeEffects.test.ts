@@ -9,7 +9,11 @@ import {
 import { createRunSession, getCurrentSector } from '../../src/game/RunSession';
 import { generateSectorRewardChoices } from '../../src/game/SectorRewards';
 import { generateShopInventory } from '../../src/game/Shops';
-import { resolveRunUpgradeEffects } from '../../src/game/UpgradeEffects';
+import {
+  getMarketEchoLocatorRewardBiasTags,
+  getMarketEchoLocatorRewardChoiceBonus,
+  resolveRunUpgradeEffects
+} from '../../src/game/UpgradeEffects';
 
 const UPGRADED_SAVE_IDS: readonly UpgradeId[] = [
   'upgrade_contract_survey_rig',
@@ -80,16 +84,16 @@ describe('run upgrade effects', () => {
         "shop": {
           "discount": 1,
           "itemIds": [
-            "item_salvage_dividend_chip",
+            "item_magnetized_tithe_box",
             "item_coastdown_capacitor",
-            "item_credit_reroute_fuse",
+            "item_plasma_lens_array",
             "item_convoy_receipt_printer",
             "item_salvage_magnet",
           ],
           "prices": [
             4,
             8,
-            3,
+            5,
             5,
             5,
           ],
@@ -183,6 +187,21 @@ describe('run upgrade effects', () => {
       routeLedgerRewardCredit: true
     });
     expect(createRunGenerationSaveFingerprint([], routeLedger)).toBe(
+      createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
+    );
+  });
+
+  it('projects Market Echo Locator without doubling a restored fitted copy', () => {
+    const marketEcho = resolveRunUpgradeEffects(['upgrade_market_echo_locator']);
+
+    expect(marketEcho.marketEchoLocator).toBe(true);
+    expect(getMarketEchoLocatorRewardChoiceBonus(marketEcho, 'shop')).toBe(1);
+    expect(getMarketEchoLocatorRewardChoiceBonus(marketEcho, 'repair')).toBe(1);
+    expect(getMarketEchoLocatorRewardBiasTags(marketEcho, 'shop')).toEqual(['credit', 'magnet']);
+    expect(getMarketEchoLocatorRewardChoiceBonus(marketEcho, 'vault')).toBe(0);
+    expect(getMarketEchoLocatorRewardChoiceBonus(marketEcho, 'shop', true)).toBe(0);
+    expect(getMarketEchoLocatorRewardBiasTags(marketEcho, 'shop', true)).toEqual([]);
+    expect(createRunGenerationSaveFingerprint([], marketEcho)).toBe(
       createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
     );
   });

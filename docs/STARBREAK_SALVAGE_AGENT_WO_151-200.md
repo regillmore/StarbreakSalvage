@@ -835,3 +835,30 @@ Status: implemented. `ItemHooks.getPrototypeVentCircuitConditionProfile` counts 
 The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/` at 390 x 700. It confirmed the linked green state and one-stage count, moved Vent ahead of Phase Grazer to confirm the explicit pink unmet state and missing-prerequisite copy, verified the Phase cadence line disappeared, then restored the order and both linked indicators. Both output cards remained inside the 390 px document width and the browser recorded no warnings or errors. The observation shell later reached its five-minute command lease; a fresh authenticated host/status/stop cycle completed with owner-shell exit code 0 and left no listener behind.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 112 Vitest files and 705 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The focused ItemHooks, Foundry presentation, and Scenario Lab suite passes 49 tests, and the isolated Hardpoint reorder Chromium path passes. The build emits 985.84 kB minified/269.99 kB gzip initial JavaScript and 94.38/19.02 kB CSS, increases of 0.70/0.29 kB JavaScript and 0.21/0.06 kB CSS over work order 181. The existing 500 kB chunk notice remains; no dependency, hook order, simulation rule, RNG input, save/snapshot schema, generated content, static base path, or warning threshold changed.
+
+## Work order 183 - Permanent Market Echo and Faraday phase chain
+
+Goal: move Market Echo Locator's dependable route-reward breadth into permanent progression and refill its uncommon slot with an order-sensitive arc/phase circuit tool.
+
+Prompt:
+
+> Retire Market Echo Locator from active run rewards and move its extra credit/magnet-biased Shop/Repair reward choice into the permanent scrap Upgrade Bay. Preserve restored-run behavior without allowing the item and upgrade to double-apply. Add an uncommon replacement whose value depends on an arc charge already being present earlier in the ordered weapon chain. Keep reward generation deterministic, previews honest, active catalog breadth stable, and the managed smoke-host lifecycle reliable.
+
+Acceptance criteria:
+
+- Market Echo Locator is absent from active discovery and reward pools and appears as an 11 kg permanent Market upgrade gated by Market Decoder.
+- Permanent and restored-item forms each add exactly one credit/magnet-biased choice to Shop and Repair rewards; owning both adds it once.
+- The reward-local effect is explicit input to reward generation and excluded from the expedition-wide generation fingerprint, so it cannot reshuffle contracts, route topology, sectors, shops, or duration.
+- Uncommon Faraday Phase Shunt replaces the same combat/shop slot and operates only on projectiles already carrying standard or heavy arc charge at its ordered `onProjectileSpawn` stage.
+- The Shunt adds one consumable phase traversal without changing projectile count, primary impact, or charge strength; the first collision preserves the charge and a later consuming collision can discharge it normally.
+- Hardpoint cumulative cards and live fire use the production hook path, making Arc-then-Shunt report the phase trait while Shunt-then-Arc remains conditional.
+- The active catalog remains at 60 items, and the 29-item stress fixture retains every implemented hook family without increasing its item count or proc limits.
+- Upgrade Bay totals, restored snapshot compatibility, deterministic source-weighted fixtures, saves, accessibility modes, static hosting, dependencies, and work order 175 smoke tooling remain coherent.
+
+Status: implemented. Market Echo Locator remains a retired catalog record and `onRewardGenerated` hook solely for restored run snapshots. `RunUpgradeEffects.marketEchoLocator` exposes the permanent flag; `SectorRewards` projects fitted items once, gives a legacy copy precedence, and supplies exactly one extra choice plus the same credit/magnet bias before the normal combined hook pipeline. The upgrade is deliberately omitted from the global generation fingerprint.
+
+Faraday Phase Shunt occupies the released uncommon combat/shop slot as a bounded ordered transform. It reads the shared upstream `ArcCharge` profile and adds only the existing one-use phase tag. Arc before Shunt therefore survives its first damaging traversal and discharges on consumption; Shunt before Arc remains inert. The item creates no shot, damage multiplier, charge strength, RNG draw, timer, state field, collision rule, or preview-only implementation. The active catalog stays at 60, while the total compatibility catalog rises to 70 with ten retired definitions.
+
+The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/` at 390 x 700. It rendered all 13 permanent Upgrade Bay cards, confirmed Market Echo Locator's Market category, 11 kg cost, Market Decoder prerequisite, and Shop/Repair choice copy, measured the 366.59 px panel inside a 390 px document with no horizontal overflow, and recorded no console warnings or errors. The viewport was restored, the tab finalized, and the authenticated work order 175 host stopped with its owner shell returning exit code 0.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 112 Vitest files and 709 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The focused item-hook, Foundry presentation, upgrade-effect, reward, catalog, stress, and Upgrade Bay suite passes 74 tests. The build emits 987.15 kB minified/270.32 kB gzip initial JavaScript and 94.38/19.02 kB CSS, increases of 1.31/0.33 kB JavaScript and no CSS change over work order 182. The existing 500 kB chunk notice remains; no dependency, save/snapshot schema, route topology, static base path, or warning threshold changed.

@@ -162,6 +162,7 @@ export type ItemId =
   | 'item_coupon_cascade_fuse'
   | 'item_boreline_crimper'
   | 'item_market_echo_locator'
+  | 'item_faraday_phase_shunt'
   | 'item_relic_ash_compass'
   | 'item_curse_interest_bond'
   | 'item_near_miss_tachometer'
@@ -984,8 +985,26 @@ export const ITEMS: readonly ItemDefinition[] = [
       sources: ['combat', 'shop'],
       unlockTier: 'baseline',
       implementationStatus: 'live',
+      retired: true,
       stacking: 'unique',
       uiTags: ['credit', 'shop']
+    }
+  },
+  {
+    id: 'item_faraday_phase_shunt',
+    name: 'Faraday Phase Shunt',
+    rarity: 'uncommon',
+    tags: ['phase', 'arc'],
+    hooks: ['onProjectileSpawn'],
+    effect: 'arc-charged shots already in the chain phase through one target before discharging',
+    weight: 8,
+    metadata: {
+      family: 'phase-graze',
+      sources: ['combat', 'shop'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['phase', 'arc']
     }
   },
   {
@@ -1572,7 +1591,7 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_reactive_plating_grid',
       'item_oathbound_deflector',
       'item_boreline_crimper',
-      'item_market_echo_locator',
+      'item_faraday_phase_shunt',
       'item_near_miss_tachometer',
       'item_phase_wake_suture',
       'item_heat_signature_loop',

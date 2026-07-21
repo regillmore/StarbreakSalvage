@@ -39,12 +39,12 @@ export const ITEM_STORM_ITEM_IDS: readonly ItemId[] = [
   'item_crater_shadow_lens',
   'item_forkline_dynamo',
   'item_gangue_compression_die',
-  'item_market_echo_locator',
+  'item_faraday_phase_shunt',
   'item_convoy_receipt_printer',
   'item_oathbound_deflector',
   'item_harmonic_fork_loom',
   'item_plasma_seed_crucible',
-  'item_ricochet_branch_coupler',
+  'item_mining_laser_transit',
   'item_warhead_echo_chamber',
   'item_crossfeed_detonator'
 ];

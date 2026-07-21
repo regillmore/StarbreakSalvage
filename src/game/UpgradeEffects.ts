@@ -31,6 +31,7 @@ export interface RunUpgradeEffects {
   readonly shopCouponCascade: boolean;
   readonly rewardChoiceBonus: number;
   readonly rewardBiasTags: readonly ItemTag[];
+  readonly marketEchoLocator: boolean;
   readonly seedSurvey: boolean;
   readonly sectorStart: SectorStartUpgradeEffects;
   readonly routeChosen: RouteChosenUpgradeEffects;
@@ -62,6 +63,7 @@ export function resolveRunUpgradeEffects(
     shopCouponCascade: hasUpgrade('upgrade_coupon_cascade_fuse'),
     rewardChoiceBonus: hasRelicDossier ? 1 : 0,
     rewardBiasTags: hasRelicDossier ? ['relic', 'curse', 'phase'] : [],
+    marketEchoLocator: hasUpgrade('upgrade_market_echo_locator'),
     seedSurvey: hasUpgrade('upgrade_seed_cartographer'),
     sectorStart: {
       exitTollRefund: hasUpgrade('upgrade_exit_toll_transponder')
@@ -104,6 +106,10 @@ export function getRunUpgradeDebugLabels(effects: RunUpgradeEffects): string[] {
 
   if (effects.rewardChoiceBonus > 0) {
     labels.push(`vault +${effects.rewardChoiceBonus}`);
+  }
+
+  if (effects.marketEchoLocator) {
+    labels.push('market echo');
   }
 
   if (effects.seedSurvey) {
@@ -190,4 +196,26 @@ export function getRewardUpgradeBiasTags(
   routeKind: RewardContextKind
 ): readonly ItemTag[] {
   return getRewardUpgradeChoiceBonus(effects, routeKind) > 0 ? effects.rewardBiasTags : [];
+}
+
+export function getMarketEchoLocatorRewardChoiceBonus(
+  effects: RunUpgradeEffects,
+  routeKind: RewardContextKind,
+  legacyItemActive = false
+): number {
+  return effects.marketEchoLocator &&
+    !legacyItemActive &&
+    (routeKind === 'shop' || routeKind === 'repair')
+    ? 1
+    : 0;
+}
+
+export function getMarketEchoLocatorRewardBiasTags(
+  effects: RunUpgradeEffects,
+  routeKind: RewardContextKind,
+  legacyItemActive = false
+): readonly ItemTag[] {
+  return getMarketEchoLocatorRewardChoiceBonus(effects, routeKind, legacyItemActive) > 0
+    ? ['credit', 'magnet']
+    : [];
 }

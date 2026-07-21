@@ -353,7 +353,8 @@ export function createRunGenerationSaveFingerprint(
     'upgrade_exit_toll_transponder',
     'upgrade_coupon_cascade_fuse',
     'upgrade_low_orbit_ore_scrip',
-    'upgrade_route_ledger_spool'
+    'upgrade_route_ledger_spool',
+    'upgrade_market_echo_locator'
   ]);
   const upgrades =
     upgradeEffects.activeUpgradeIds

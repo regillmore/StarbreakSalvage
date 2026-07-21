@@ -22,7 +22,7 @@ describe('item catalog audit', () => {
     });
     expect(audit.hookCounts).toEqual({
       onFire: 18,
-      onProjectileSpawn: 10,
+      onProjectileSpawn: 11,
       onEnemyKilled: 10,
       onPlayerHit: 6,
       onPickupCollected: 6,
@@ -32,13 +32,13 @@ describe('item catalog audit', () => {
       onSectorStart: 2,
       onRouteChosen: 2,
       onShopEntered: 1,
-      onRewardGenerated: 3,
+      onRewardGenerated: 2,
       onBossPhaseChanged: 1,
       onEnvironmentObjectDestroyed: 1
     });
     expect(audit.tagCounts).toMatchObject({
-      credit: 11,
-      phase: 9,
+      credit: 10,
+      phase: 10,
       plasma: 10,
       overkill: 5,
       relic: 2
@@ -48,9 +48,9 @@ describe('item catalog audit', () => {
       'missile-overkill': 8,
       'drone-copy': 7,
       'shield-revenge': 5,
-      'credit-shop': 6,
+      'credit-shop': 5,
       'curse-relic': 6,
-      'phase-graze': 6,
+      'phase-graze': 7,
       'heat-prototype': 6,
       'lunar-surface': 5,
       'route-economy': 3,

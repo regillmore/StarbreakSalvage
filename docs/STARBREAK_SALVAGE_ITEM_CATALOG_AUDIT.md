@@ -1,12 +1,12 @@
 # Starbreak Salvage - Item Catalog Audit
 
-Work orders 051-056 baseline, refreshed by work orders 156, 169, 170, 176, 177, 179, 180, and 181. This document records the active item catalog after the Noita-style circuit pivot retired Boss Pressure from live rotation, moved four economy passives into permanent progression, refilled their active slots, converted Prototype Vent Script into an ordered stored-heat modifier, and made arc a projectile-carried secondary discharge. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
+Work orders 051-056 baseline, refreshed by work orders 156, 169, 170, 176, 177, 179, 180, 181, and 183. This document records the active item catalog after the Noita-style circuit pivot retired Boss Pressure from live rotation, moved five economy passives into permanent progression, refilled their active slots, converted Prototype Vent Script into an ordered stored-heat modifier, and made arc a projectile-carried secondary discharge. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
 
 ## Current Shape
 
 | Measure                 | Current | Phase 6 target                                                                             |
 | ----------------------- | ------- | ------------------------------------------------------------------------------------------ |
-| Active item definitions | 60      | Nine retired definitions remain for legacy-save compatibility                              |
+| Active item definitions | 60      | Ten retired definitions remain for legacy-save compatibility                               |
 | Candidate reward pools  | 4       | Starter, ignition core, combat, and vault remain the broad candidate buckets               |
 | Weight profiles         | 9       | Starter, combat, shop, vault, elite, boss, faction, lunar, and route contexts are weighted |
 | Hook names              | 14      | Includes environment-object destruction alongside combat, route, and economy hooks         |
@@ -42,7 +42,7 @@ Validation requires every active item to appear in a compatible reward pool and 
 | Hook                           | Item count | Current role                                                                             |
 | ------------------------------ | ---------- | ---------------------------------------------------------------------------------------- |
 | `onFire`                       | 18         | Volley shaping, drones, split shots, missiles, phase/heat variants, and ordered cadence. |
-| `onProjectileSpawn`            | 10         | Projectile traits, arc charge, size, damage, TTL, and drift shaping.                     |
+| `onProjectileSpawn`            | 11         | Projectile traits, arc charge, size, damage, TTL, and drift shaping.                     |
 | `onEnemyKilled`                | 10         | Salvage payouts, compact blasts, and overkill/relic rewards.                             |
 | `onPlayerHit`                  | 6          | Shield, revenge, armor, and curse retaliation.                                           |
 | `onPickupCollected`            | 6          | Credit/salvage pickup shared-reservoir charge.                                           |
@@ -52,7 +52,7 @@ Validation requires every active item to appear in a compatible reward pool and 
 | `onSectorStart`                | 2          | Lunar entry and sector-start resource effects.                                           |
 | `onRouteChosen`                | 2          | Curse-interest and ambush-insurance effects; retired economy hooks remain compatible.    |
 | `onShopEntered`                | 1          | Rerolled-shop stock and bias effects.                                                    |
-| `onRewardGenerated`            | 3          | Reward choice and tag-bias effects.                                                      |
+| `onRewardGenerated`            | 2          | Reward choice and tag-bias effects; retired Market Echo remains compatible.              |
 | `onBossPhaseChanged`           | 1          | One remaining active circuit hook; permanent counterplay moved to the Upgrade Bay.       |
 | `onEnvironmentObjectDestroyed` | 1          | Salvage payout from eligible world-object destruction.                                   |
 
@@ -105,8 +105,8 @@ Known-seed tests now sample shop, elite, vault, and lunar reward surfaces, and u
 
 | Tag        | Count |
 | ---------- | ----- |
-| `credit`   | 11    |
-| `phase`    | 9     |
+| `credit`   | 10    |
+| `phase`    | 10    |
 | `scrap`    | 5     |
 | `drone`    | 8     |
 | `plasma`   | 10    |
@@ -114,9 +114,9 @@ Known-seed tests now sample shop, elite, vault, and lunar reward surfaces, and u
 | `curse`    | 5     |
 | `heat`     | 7     |
 | `armor`    | 4     |
-| `arc`      | 6     |
+| `arc`      | 7     |
 | `laser`    | 5     |
-| `magnet`   | 4     |
+| `magnet`   | 3     |
 | `missile`  | 5     |
 | `overkill` | 5     |
 | `ricochet` | 4     |
@@ -135,12 +135,12 @@ Known-seed tests now sample shop, elite, vault, and lunar reward surfaces, and u
 | Missile/Overkill | 8     | Boreline Crimper converts an already-built fan's spread into forward speed, impact, and overkill.             |
 | Drone/Copy       | 7     | Crossfeed Detonator charges upstream projectiles that carry two distinct circuit traits.                      |
 | Shield/Revenge   | 5     | Reached the first expansion target; defensive balance should avoid rewarding intentional damage too strongly. |
-| Credit/Shop      | 6     | Coastdown Capacitor turns broad pickup play into a conserved shared-haste reserve.                            |
+| Credit/Shop      | 5     | Coastdown Capacitor turns broad pickup play into a conserved shared-haste reserve.                            |
 | Curse/Relic      | 6     | Advanced vault/route entries are locked behind the Relic Thief dossier; risk/reward tuning still needs work.  |
-| Phase/Graze      | 6     | Ricochet Branch Coupler extends split and drone branches with a real bounce.                                  |
+| Phase/Graze      | 7     | Faraday Phase Shunt lets an upstream arc charge survive one phase traversal before discharge.                 |
 | Heat/Prototype   | 6     | Plasma Seed Crucible converts an earlier circuit trait into plasma/heat scaling.                              |
 | Lunar/Surface    | 5     | Gangue Compression Die converts upstream light branches into denser plasma.                                   |
-| Route/Economy    | 3     | Four former route/economy passives now live in permanent scrap progression.                                   |
+| Route/Economy    | 3     | Five former economy passives now live in permanent scrap progression.                                         |
 
 The five Boss Pressure definitions and their original hook implementations remain readable to restored snapshots, but they are absent from pools, unlock gates, discovery, stress fixtures, and the active audit. Boss Warning Lattice and Capital Relief Protocol preserve the worthwhile telegraph, delay, charge, and late-phase-clear mechanics as permanent scrap upgrades.
 
@@ -148,13 +148,13 @@ The five Boss Pressure definitions and their original hook implementations remai
 
 | Archetype        | Rewarded count |
 | ---------------- | -------------- |
-| Laser/Split      | 16             |
+| Laser/Split      | 17             |
 | Missile/Overkill | 9              |
-| Drone/Copy       | 12             |
+| Drone/Copy       | 13             |
 | Shield/Revenge   | 5              |
-| Credit/Shop      | 12             |
+| Credit/Shop      | 11             |
 | Curse/Relic      | 6              |
-| Phase/Graze      | 11             |
+| Phase/Graze      | 12             |
 | Heat/Prototype   | 14             |
 
 ## Former Bridge Effects Promoted In Work Order 132
@@ -201,6 +201,12 @@ Chain Arc Capacitor and Plasma Lens Array attach standard charge, Arc Welder Dro
 Route Ledger Spool is now a 9 kg Navigation upgrade gated by Route Ledger Uplink. Its retired catalog record and `onRouteChosen` reducer remain only for restored snapshots; route settlement gives a fitted legacy copy precedence over the permanent flag, so either representation adds exactly one credit to the later reward cash-out. The route-local flag is omitted from the expedition-wide generation fingerprint and cannot reshuffle contracts, maps, sectors, shops, rewards, or duration.
 
 Forkline Dynamo occupies the released common starter/combat/route slot. At its ordered `onFire` stage it requires at least two current projectiles, ranks them by their projected horizontal lane, and attaches standard arc charge to only the leftmost and rightmost shots. An upstream splitter or native multi-shot weapon therefore feeds the Dynamo; a Dynamo placed before a single-shot splitter remains inert. It adds no projectile, primary impact, RNG draw, timer, or preview-only rule, while downstream Arc Window, plasma, phase, ricochet, and multi-trait effects can still transform its charged branches.
+
+## Permanent Market Echo and Faraday phase chain in Work Order 183
+
+Market Echo Locator is now an 11 kg Market upgrade gated by Market Decoder. Its retired catalog record and `onRewardGenerated` reducer remain only for restored snapshots; reward generation gives a fitted legacy copy precedence over the permanent flag, so either representation adds exactly one credit/magnet-biased choice on Shop and Repair rewards. The reward-local flag is omitted from the expedition-wide generation fingerprint and cannot reshuffle contracts, maps, sectors, shops, or duration.
+
+Faraday Phase Shunt occupies the released uncommon combat/shop slot. At its ordered `onProjectileSpawn` stage it adds one consumable `phase` traversal only to projectiles already carrying standard or heavy arc charge. The first hit therefore damages normally, spends phase instead of the projectile, and preserves the electrical charge; the later consuming hit can discharge into a distinct nearby target through the shared arc model. A Shunt placed before its arc source remains inert, and the item adds no projectile, primary damage, charge strength, RNG draw, timer, or separate preview path.
 
 ## Risks For 057-060
 

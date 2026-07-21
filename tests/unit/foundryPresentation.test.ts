@@ -395,6 +395,46 @@ describe('foundry visual presentation', () => {
     expect(windowedThenCharged.attackSimulation.projectiles[0]?.arcChargeKind).toBe('standard');
   });
 
+  it('shows Faraday Phase Shunt activating only after an earlier arc stage', () => {
+    const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
+      (candidate) => candidate.shipId === 'ship_debt_runner'
+    );
+    if (!contract) throw new Error('Expected a single-projectile contract.');
+    const chargedThenShunted = createFoundryDashboardModel(
+      createEngineeringState(contract.loadout),
+      [
+        { itemId: 'item_chain_arc_capacitor', acquisitionOrder: 0 },
+        { itemId: 'item_faraday_phase_shunt', acquisitionOrder: 1 }
+      ]
+    );
+    const shuntedThenCharged = createFoundryDashboardModel(
+      createEngineeringState(contract.loadout),
+      [
+        { itemId: 'item_faraday_phase_shunt', acquisitionOrder: 0 },
+        { itemId: 'item_chain_arc_capacitor', acquisitionOrder: 1 }
+      ]
+    );
+
+    expect(chargedThenShunted.circuitStages[1]).toMatchObject({
+      name: 'Faraday Phase Shunt',
+      addedTags: ['phase'],
+      changed: true
+    });
+    expect(chargedThenShunted.attackSimulation.projectiles[0]).toMatchObject({
+      arcChargeKind: 'standard'
+    });
+    expect(chargedThenShunted.attackSimulation.projectiles[0]?.tags).toEqual(
+      expect.arrayContaining(['arc', 'phase'])
+    );
+    expect(shuntedThenCharged.circuitStages[0]).toMatchObject({
+      name: 'Faraday Phase Shunt',
+      addedTags: [],
+      changed: false
+    });
+    expect(shuntedThenCharged.attackSimulation.projectiles[0]?.tags).toContain('arc');
+    expect(shuntedThenCharged.attackSimulation.projectiles[0]?.tags).not.toContain('phase');
+  });
+
   it('projects prototype-vent cadence shifts onto affected earlier circuit cards', () => {
     const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
       (candidate) => candidate.shipId === 'ship_debt_runner'

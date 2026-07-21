@@ -16,7 +16,7 @@ import type { RouteKind } from './Generation';
 import type { ProjectileVisualKind } from './HeatShot';
 import type { LaserProjectileKind } from './LaserProjectile';
 import { getHasteSourceDefinition, type HasteTriggerKind } from './HasteReservoir';
-import { attachArcCharge, type ArcChargeKind } from './ArcCharge';
+import { attachArcCharge, getArcChargeProfile, type ArcChargeKind } from './ArcCharge';
 
 export interface ProjectileBlueprint {
   readonly x: number;
@@ -251,7 +251,8 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_heat_signature_loop',
     'item_plasma_seed_crucible',
     'item_ricochet_branch_coupler',
-    'item_crossfeed_detonator'
+    'item_crossfeed_detonator',
+    'item_faraday_phase_shunt'
   ],
   onEnemyKilled: [
     'item_overkill_ledger',
@@ -576,6 +577,19 @@ function applyOnProjectileSpawn(
   if (itemId === 'item_crossfeed_detonator' && getCircuitTraitCount(payload.projectile.tags) >= 2) {
     return {
       projectile: attachArcCharge(payload.projectile, 'heavy')
+    };
+  }
+
+  if (
+    itemId === 'item_faraday_phase_shunt' &&
+    getArcChargeProfile(payload.projectile) !== null &&
+    !payload.projectile.tags.includes('phase')
+  ) {
+    return {
+      projectile: {
+        ...payload.projectile,
+        tags: addTags(payload.projectile.tags, ['phase'])
+      }
     };
   }
 

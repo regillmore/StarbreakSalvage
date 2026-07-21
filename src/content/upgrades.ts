@@ -21,7 +21,8 @@ export const UPGRADE_EFFECT_KINDS = [
   'sectorTollRefund',
   'shopCouponCascade',
   'routeOreScrip',
-  'routeLedgerSpool'
+  'routeLedgerSpool',
+  'marketEchoLocator'
 ] as const;
 
 export type UpgradeCategory = (typeof UPGRADE_CATEGORIES)[number];
@@ -40,7 +41,8 @@ export type UpgradeId =
   | 'upgrade_exit_toll_transponder'
   | 'upgrade_coupon_cascade_fuse'
   | 'upgrade_low_orbit_ore_scrip'
-  | 'upgrade_route_ledger_spool';
+  | 'upgrade_route_ledger_spool'
+  | 'upgrade_market_echo_locator';
 
 export interface UpgradeDefinition {
   readonly id: UpgradeId;
@@ -186,6 +188,17 @@ export const UPGRADES: readonly UpgradeDefinition[] = [
     effect: 'Every route reward cash-out carries 1 additional credit.',
     cost: 9,
     prerequisites: ['upgrade_route_ledger_uplink']
+  },
+  {
+    id: 'upgrade_market_echo_locator',
+    category: 'market',
+    iconKey: 'market-tag',
+    effectKind: 'marketEchoLocator',
+    name: 'Market Echo Locator',
+    summary: 'a standing echo array that reads carrier-market reward traffic',
+    effect: 'Shop and Repair rewards gain one extra credit/magnet-biased choice.',
+    cost: 11,
+    prerequisites: ['upgrade_market_decoder']
   }
 ];
 

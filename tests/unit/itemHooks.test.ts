@@ -865,4 +865,34 @@ describe('item synergies', () => {
     expect(second.projectile.tags).toContain('arc');
     expect(second.projectile.tags).not.toContain('heat');
   });
+
+  it('lets Faraday Phase Shunt preserve an earlier arc charge through one hit', () => {
+    const chargedThenShunted: ItemInstance[] = [
+      {
+        itemId: 'item_chain_arc_capacitor',
+        acquisitionOrder: 0,
+        socket: { componentId: 'a', socketIndex: 0, circuitOrder: 0 }
+      },
+      {
+        itemId: 'item_faraday_phase_shunt',
+        acquisitionOrder: 1,
+        socket: { componentId: 'a', socketIndex: 1, circuitOrder: 1 }
+      }
+    ];
+    const shuntedThenCharged = chargedThenShunted.map((item, index) => ({
+      ...item,
+      socket: { ...item.socket!, circuitOrder: index === 0 ? 1 : 0 }
+    }));
+    const first = applyItemHooks('onProjectileSpawn', chargedThenShunted, {
+      projectile: baseProjectile
+    });
+    const second = applyItemHooks('onProjectileSpawn', shuntedThenCharged, {
+      projectile: baseProjectile
+    });
+
+    expect(first.projectile.tags).toEqual(expect.arrayContaining(['arc', 'phase']));
+    expect(first.projectile.arcChargeKind).toBe('standard');
+    expect(second.projectile.tags).toContain('arc');
+    expect(second.projectile.tags).not.toContain('phase');
+  });
 });

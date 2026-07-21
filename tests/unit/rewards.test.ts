@@ -10,7 +10,7 @@ import {
   getItemPoolWeightProfile,
   getRewardWeight
 } from '../../src/game/Rewards';
-import { createRunSession, getCurrentSector } from '../../src/game/RunSession';
+import { addItemToSession, createRunSession, getCurrentSector } from '../../src/game/RunSession';
 import { generateSectorRewardChoices } from '../../src/game/SectorRewards';
 import { generateShopInventory } from '../../src/game/Shops';
 
@@ -42,6 +42,30 @@ describe('reward generation', () => {
     expect(first).toEqual(replay);
     expect(first).toHaveLength(3);
     expect(first.every((choice) => choice.poolProfileId !== 'route')).toBe(true);
+  });
+
+  it('migrates Market Echo rewards without doubling a restored fitted copy', () => {
+    const baselineRun = generateRunSkeleton('MARKET-ECHO-REWARD');
+    const upgradedRun = generateRunSkeleton('MARKET-ECHO-REWARD', {
+      purchasedUpgradeIds: ['upgrade_market_echo_locator']
+    });
+    const baselineContract = getFirstContract(baselineRun);
+    const upgradedContract = getFirstContract(upgradedRun);
+    const baseline = createRunSession(baselineRun, baselineContract);
+    const permanent = createRunSession(upgradedRun, upgradedContract);
+    const restored = createRunSession(baselineRun, baselineContract);
+    const stacked = createRunSession(upgradedRun, upgradedContract);
+
+    expect(addItemToSession(restored, 'item_market_echo_locator').socket).not.toBeNull();
+    expect(addItemToSession(stacked, 'item_market_echo_locator').socket).not.toBeNull();
+
+    const count = (run: typeof baselineRun, session: typeof baseline, contract: StartingContract) =>
+      generateSectorRewardChoices({ run, session, contract, routeKind: 'shop' }).length;
+
+    expect(count(baselineRun, baseline, baselineContract)).toBe(3);
+    expect(count(upgradedRun, permanent, upgradedContract)).toBe(4);
+    expect(count(baselineRun, restored, baselineContract)).toBe(4);
+    expect(count(upgradedRun, stacked, upgradedContract)).toBe(4);
   });
 
   it('creates one deterministic contract-biased ignition core', () => {
@@ -198,9 +222,9 @@ describe('reward generation', () => {
           price: 6
         },
         {
-          id: 'item_coin_operated_cannon',
+          id: 'item_salvage_magnet',
           sourceHint: 'Shop pool',
-          price: 7
+          price: 5
         },
         {
           id: 'item_arc_welder_drone',
@@ -208,7 +232,7 @@ describe('reward generation', () => {
           price: 7
         },
         {
-          id: 'item_heat_signature_loop',
+          id: 'item_regolith_scoop_array',
           sourceHint: 'Shop pool',
           price: 6
         }

@@ -2577,3 +2577,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 182. `ItemHooks` supplies the shared Vent condition profile, `FoundryPresentation` translates it into precise stage output, and `FoundryScene` exposes met/unmet/none semantics with readable linked and blocked treatments.
+
+### BL48 - Permanent Market Echo and Faraday phase chain
+
+Acceptance:
+
+- Market Echo Locator leaves active rewards and becomes an 11 kg permanent Market upgrade gated by Market Decoder.
+- Its extra credit/magnet-biased Shop/Repair reward choice remains deterministic, restored snapshots retain the retired item behavior, and the two representations cannot double-apply.
+- Uncommon Faraday Phase Shunt replaces the active combat/shop slot and adds one consumed phase traversal only to projectiles already carrying arc charge at its ordered stage.
+- Circuit order is material and visible: Arc then Shunt carries both traits and preserves charge through the first hit, while Shunt then Arc cannot rewrite the later charge.
+- The transform adds no projectile, primary damage, charge strength, RNG draw, or persistent state, and existing phase/arc combat and preview paths remain authoritative.
+- Global generation fingerprints, active breadth, Upgrade Bay totals, item-storm hook coverage, reward/shop snapshots, saves, accessibility, performance limits, static hosting, and smoke tooling remain coherent.
+
+Status:
+
+- Implemented in work order 183. `UpgradeEffects` and `SectorRewards` own the permanent reward contribution with restored-item precedence. `ItemHooks` owns Faraday's pure upstream-charge transform, which automatically feeds combat and shared live-fire previews. The active catalog remains at 60 items and the global run fingerprint excludes the reward-local upgrade.
