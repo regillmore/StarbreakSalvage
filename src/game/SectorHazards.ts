@@ -57,6 +57,19 @@ export function resolveSectorHazardCollisions(
       damageSetPieceComponentsInRect(state, rect, 'hazard', activeHazard.hazard.damage);
     }
 
+    if (activeHazard.hazard.kind === 'salvage_storm') {
+      const definition = getHazardZoneDefinition(activeHazard.hazard.kind);
+      for (const rect of damageRects) {
+        damageCombatActorsByHazard(
+          state,
+          activeHazard.hazard.id,
+          activeHazard.hazard.damage,
+          definition.damageCooldownSeconds,
+          (target) => circleOverlapsHazardRect(target, rect)
+        );
+      }
+    }
+
     if (activeHazard.hazard.kind === 'warning_beam') {
       const segment = getActiveBeamBoltSegment(activeHazard, bounds);
       if (!segment) {
@@ -124,11 +137,11 @@ export function playerOverlapsActiveHazard(
   }
 
   return getSectorHazardDamageRects(activeHazard, bounds).some((rect) =>
-    playerOverlapsHazardRect(player, rect)
+    circleOverlapsHazardRect(player, rect)
   );
 }
 
-function playerOverlapsHazardRect(
+function circleOverlapsHazardRect(
   player: Pick<PlayerState, 'x' | 'y' | 'radius'>,
   rect: SectorHazardCollisionRect
 ): boolean {

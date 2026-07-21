@@ -1573,7 +1573,7 @@ export function prepareDebugEnvironmentStressScenario(
   const distance = state.scrollDistance;
   state.player.x = centerX;
   state.player.y = bounds.height * 0.78;
-  state.player.invulnerableSeconds = 1.2;
+  state.player.invulnerableSeconds = 8;
   state.player.fireCooldown = 0;
   state.player.weaponHeat = 0;
   state.player.weaponOverheatSeconds = 0;

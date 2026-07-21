@@ -169,7 +169,7 @@ const CONDITION_HAZARD_LABELS: Readonly<Record<SectorHazardKind, string>> = {
   debris_lane: 'ROUTE DEBRIS',
   warning_beam: 'ROUTE BEAM',
   mine_belt: 'ROUTE MINES',
-  salvage_storm: 'ROUTE STORM',
+  salvage_storm: 'ROUTE SQUALL',
   crush_gate: 'ROUTE GATE',
   dust_plume: 'ROUTE DUST',
   mining_laser: 'ROUTE LASER',

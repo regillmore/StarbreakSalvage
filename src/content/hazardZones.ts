@@ -68,7 +68,7 @@ export const HAZARD_ZONE_BEHAVIOR_KINDS = [
   'discreteMineCluster',
   'collapsingColumns',
   'orbitalShadow',
-  'plasmaCurtain',
+  'salvageSquall',
   'dustFront',
   'staticWarningGate'
 ] as const;
@@ -279,33 +279,34 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
   {
     id: 'salvage_storm',
     family: 'storm',
-    label: 'SALVAGE STORM',
-    debugLabel: 'storm',
-    summary: 'a wide storm of charged salvage flecks that pressures the edge of the arena',
+    label: 'SALVAGE SQUALL',
+    debugLabel: 'squall',
+    summary:
+      'a broad three-surge front of charged wreckage with a calm channel crossing between lanes',
     sectorFit: ALL_SECTOR_IDS,
     factionFit: 'any',
     telegraphShape: 'stormNoise',
     activeDamageShape: 'verticalBand',
     metrics: {
-      sector: { widthRatio: 0.42, activeSpan: 210, telegraphLead: 150 },
-      condition: { widthRatio: 0.42, activeSpan: 205, telegraphLead: 150 },
-      pacing: { widthRatio: 0.42, activeSpan: 200, telegraphLead: 150 }
+      sector: { widthRatio: 0.64, activeSpan: 270, telegraphLead: 180 },
+      condition: { widthRatio: 0.64, activeSpan: 265, telegraphLead: 180 },
+      pacing: { widthRatio: 0.64, activeSpan: 255, telegraphLead: 180 }
     },
-    phase: { minTelegraphLead: 120, minActiveSpan: 70 },
+    phase: { minTelegraphLead: 150, minActiveSpan: 90 },
     damage: 1,
-    damageCooldownSeconds: 0.35,
-    safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.38 },
+    damageCooldownSeconds: 0.6,
+    safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.3 },
     bossArenaPolicy: 'settleBeforeLock',
-    readability: createReadability(120, '#7cf7ff', '#f8fbff', 'staticPulse', 'simplifiedPattern'),
+    readability: createReadability(150, '#72f1da', '#ffffff', 'staticPulse', 'simplifiedPattern'),
     behavior: createBehavior(
-      'plasmaCurtain',
-      'static curtain',
-      'charged curtain',
-      0.44,
-      0.86,
-      2,
-      2,
-      0.72
+      'salvageSquall',
+      'calm-channel forecast',
+      'charged salvage surge',
+      0.52,
+      0.64,
+      3,
+      3,
+      0.78
     )
   },
   {

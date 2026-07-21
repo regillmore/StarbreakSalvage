@@ -981,7 +981,7 @@ describe('validateContent', () => {
     expect(errors).toContain('Hazard zone hazard_missing has invalid telegraph shape: spiral');
     expect(errors).toContain('Hazard zone hazard_missing has invalid active damage shape: circle');
     expect(errors).toContain(
-      'Hazard zone hazard_missing sector metrics must keep widthRatio between 0.05 and 0.5'
+      'Hazard zone hazard_missing sector metrics must keep widthRatio between 0.05 and 0.75'
     );
     expect(errors).toContain('Hazard zone hazard_missing must define pacing metrics');
     expect(errors).toContain('Hazard zone hazard_missing must keep damage at or below 2');

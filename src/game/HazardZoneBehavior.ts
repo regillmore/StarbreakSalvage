@@ -2,12 +2,12 @@ import {
   getHazardZoneDefinition,
   type HazardZoneBehaviorKind,
   type HazardZoneDamageShape,
-  type HazardZoneId,
   type HazardZoneRenderLayer,
   type HazardZoneTelegraphShape
 } from '../content/hazardZones';
 import { clamp } from '../core/math';
 import type { ActiveSectorHazard, SectorHazardCollisionRect } from './SectorFeatures';
+import { createSalvageStormGeometry } from './SalvageStorm';
 
 export interface HazardZonePresentationSettings {
   readonly reducedMotion: boolean;
@@ -148,35 +148,11 @@ export function getHazardZoneDamageRects(
     return [createRect(baseRect.left, top, baseRect.right, top + height)];
   }
 
-  if (behavior.kind === 'plasmaCurtain') {
-    return createSegmentedRects(activeHazard.hazard.kind, baseRect, behavior.collisionBands);
+  if (behavior.kind === 'salvageSquall') {
+    return createSalvageStormGeometry(activeHazard, baseRect).damageRects;
   }
 
   return [baseRect];
-}
-
-function createSegmentedRects(
-  hazardId: HazardZoneId,
-  baseRect: SectorHazardCollisionRect,
-  segmentCount: number
-): readonly SectorHazardCollisionRect[] {
-  const count = Math.max(1, Math.min(4, Math.floor(segmentCount)));
-
-  if (count <= 1) {
-    return [baseRect];
-  }
-
-  const gap = hazardId === 'mine_belt' ? 18 : 10;
-  const totalGap = gap * (count - 1);
-  const segmentWidth = Math.max(18, (baseRect.width - totalGap) / count);
-  const rects: SectorHazardCollisionRect[] = [];
-
-  for (let index = 0; index < count; index += 1) {
-    const left = baseRect.left + index * (segmentWidth + gap);
-    rects.push(createRect(left, baseRect.top, Math.min(baseRect.right, left + segmentWidth), baseRect.bottom));
-  }
-
-  return rects;
 }
 
 function createRect(

@@ -2285,8 +2285,8 @@ function validateHazardZoneDefinitions(
         metrics.telegraphLead
       );
 
-      if (metrics.widthRatio < 0.05 || metrics.widthRatio > 0.5) {
-        errors.push(`${owner} ${source} metrics must keep widthRatio between 0.05 and 0.5`);
+      if (metrics.widthRatio < 0.05 || metrics.widthRatio > 0.75) {
+        errors.push(`${owner} ${source} metrics must keep widthRatio between 0.05 and 0.75`);
       }
     }
 

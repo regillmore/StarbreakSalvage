@@ -132,7 +132,7 @@ const DIRECTOR_HAZARD_LABELS: Readonly<Record<SectorHazardKind, string>> = {
   debris_lane: 'PACED DEBRIS',
   warning_beam: 'PACED BEAM',
   mine_belt: 'PACED MINES',
-  salvage_storm: 'PACED STORM',
+  salvage_storm: 'PACED SQUALL',
   crush_gate: 'PACED GATE',
   dust_plume: 'PACED DUST',
   mining_laser: 'PACED LASER',

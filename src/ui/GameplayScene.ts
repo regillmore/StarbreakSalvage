@@ -118,6 +118,10 @@ import {
 } from '../game/HazardZoneDirector';
 import { resolveSectorHazardCollisions } from '../game/SectorHazards';
 import {
+  createSalvageStormDebugFixture,
+  formatSalvageStormWarning
+} from '../game/SalvageStorm';
+import {
   advanceSectorHazardRuntime,
   createSectorHazardRuntimeState,
   formatSectorHazardRuntimeDebug,
@@ -903,19 +907,17 @@ export class GameplayScene implements Scene {
       const state = this.getCombatState();
       const feedbackBefore = createCombatFeedbackSnapshot(state);
       const scroll = this.getScrollState();
-      const features = this.getCurrentFeatures();
-      const targetDistance = getDebugEnvironmentStressDistance(
-        features,
+      const fixture = createSalvageStormDebugFixture(
+        this.getCurrentFeatures(),
         this.getCurrentScrollPlan().length
       );
+      const targetDistance = fixture.targetDistance;
 
+      this.conditionedFeatures = fixture.features;
       setScrollDistance(scroll, Math.max(scroll.distance, targetDistance), scroll.plan.baseSpeed);
       state.scrollDistance = scroll.distance;
-      const debugBeam = features.hazards.find((hazard) => hazard.kind === 'warning_beam');
-      if (debugBeam) {
-        this.getSectorHazardRuntimeState().effectiveDistances[debugBeam.id] =
-          debugBeam.startDistance + 18;
-      }
+      this.sectorHazardRuntimeState = createSectorHazardRuntimeState(scroll.distance);
+      this.getSectorHazardRuntimeState().effectiveDistances[fixture.hazard.id] = targetDistance;
       prepareDebugEnvironmentStressScenario(state, this.getCombatBounds());
       this.updateBossArena(scroll.distance, state);
       this.emitFeedback(diffCombatFeedback(feedbackBefore, createCombatFeedbackSnapshot(state)));
@@ -2222,6 +2224,12 @@ export class GameplayScene implements Scene {
     const activeHazard = this.getActiveHazards()[0];
 
     if (activeHazard) {
+      if (activeHazard.hazard.kind === 'salvage_storm') {
+        const warning = formatSalvageStormWarning(activeHazard);
+        return activeHazard.phase === 'telegraph'
+          ? `Hint ${warning}. Follow the calm-channel sequence before the first surge.`
+          : `Hint ${warning}. Charged lanes damage every craft; hold the calm channel or clear the storm edge.`;
+      }
       const beamTrack =
         activeHazard.hazard.kind === 'warning_beam'
           ? ` ${formatBeamHazardTrack(activeHazard.hazard.beam)}.`
@@ -2374,6 +2382,10 @@ function formatActiveHazardWarning(activeHazard: ActiveSectorHazard | undefined)
     return null;
   }
 
+  if (activeHazard.hazard.kind === 'salvage_storm') {
+    return formatSalvageStormWarning(activeHazard);
+  }
+
   if (activeHazard.hazard.kind !== 'warning_beam') {
     return activeHazard.hazard.label;
   }
@@ -2391,36 +2403,6 @@ function getDebugLongScrollDistance(sectorLength: number): number {
   const exitLeadDistance = Math.max(0, length - DEBUG_LONG_SCROLL_EXIT_LEAD);
 
   return Math.min(lateDistance, exitLeadDistance);
-}
-
-function getDebugEnvironmentStressDistance(
-  features: SectorFeaturePlan,
-  sectorLength: number
-): number {
-  const beam = features.hazards.find((hazard) => hazard.kind === 'warning_beam');
-  if (beam) {
-    return Math.max(0, Math.min(beam.startDistance + 18, Math.max(0, sectorLength - 220)));
-  }
-
-  const candidates = features.hazards
-    .flatMap((hazard) => [hazard.telegraphDistance + 18, hazard.startDistance + 18])
-    .map((distance) => Math.max(0, Math.min(distance, Math.max(0, sectorLength - 220))));
-  const bestCandidate = candidates
-    .map((distance) => ({
-      distance,
-      activeCount: features.hazards.filter(
-        (hazard) => distance >= hazard.telegraphDistance && distance <= hazard.endDistance
-      ).length
-    }))
-    .sort(
-      (left, right) => right.activeCount - left.activeCount || left.distance - right.distance
-    )[0];
-
-  if (!bestCandidate) {
-    return Math.max(0, Math.min(sectorLength * 0.38, sectorLength - DEBUG_LONG_SCROLL_EXIT_LEAD));
-  }
-
-  return bestCandidate.distance;
 }
 
 function clearExitPressure(state: CombatState): void {

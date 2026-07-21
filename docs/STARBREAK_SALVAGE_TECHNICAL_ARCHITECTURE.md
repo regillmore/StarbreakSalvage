@@ -436,8 +436,10 @@ src/game/EnvironmentStress.ts
 - Work order 072 adds `src/content/hazardZones.ts` as the first schema registry for existing hazards. It keeps separate sector, route-condition, and pacing metrics so behavior does not retune while the definition contract becomes content-driven.
 - Work order 073 adds `src/game/HazardZoneBehavior.ts` as the pure runtime behavior layer. It derives presentation state, pulse damage-window gating, fixed-world damage rectangles, and settings simplification from the content registry before `SectorHazards` and `CanvasRenderer` consume it.
 - Work order 074 adds `src/game/HazardZoneDirector.ts` as the deterministic schedule layer between `SectorPacing` and `SectorFeatures`. Pacing keeps pressure/relief/formation/boss beats, while the director materializes fair hazard windows from seed plus save/sector context and exposes ordered telegraph/active/clear events for catchup-safe processing.
+- Work order 186 adds `src/game/SalvageStorm.ts` as the shared phase-and-geometry boundary for the route salvage squall. Its three fixed lanes, moving calm channel, active/lull windows, warning copy, and debug fixture are derived from the already-generated hazard record; simulation, HUD, and Canvas rendering consume those results without independent geometry or runtime RNG.
 - Collision damage must only occur after a visible warning lead. Boss operations preserve the full warning and active spans while packing them before lock; post-release telegraph reconstruction is not permitted.
 - Rendering should keep hazards below bullets, enemies, pickups, and the player. Richer hazard art should use low-alpha fills, clear outlines, and compact labels before adding animated effects.
+- Indiscriminate environmental hazards may damage player, enemies, bosses, and damageable allies through the established hazard cooldown ledger. They must not create hidden projectile actors, must exclude their declared safe geometry, and must keep objective/defeat attribution coherent.
 
 ### Destructibles and obstacles
 

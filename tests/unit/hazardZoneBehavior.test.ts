@@ -10,11 +10,18 @@ import { resolveSectorHazardCollisions } from '../../src/game/SectorHazards';
 import { getActiveBeamBoltSegment } from '../../src/game/BeamHazard';
 import {
   getActiveSectorHazards,
+  getSectorHazardCollisionRect,
   getSectorHazardDamageRects,
   getSectorHazardVisualState,
   type SectorFeaturePlan,
   type SectorHazardPlan
 } from '../../src/game/SectorFeatures';
+import {
+  createSalvageStormDebugFixture,
+  createSalvageStormGeometry,
+  formatSalvageStormWarning,
+  getSalvageStormPhaseState
+} from '../../src/game/SalvageStorm';
 
 const bounds: CombatBounds = {
   width: 640,
@@ -99,6 +106,142 @@ describe('HazardZoneBehavior', () => {
     expect(getSectorHazardDamageRects(closedPulse, bounds)).toEqual([]);
     expect(closedPulse.hazard.startDistance).toBe(hazard.startDistance);
     expect(closedPulse.hazard.endDistance).toBe(hazard.endDistance);
+  });
+
+  it('moves a readable calm channel across three salvage squall surges and lulls', () => {
+    const hazard = createHazard('salvage_storm', {
+      telegraphDistance: 20,
+      startDistance: 170,
+      endDistance: 470,
+      xRatio: 0.25
+    });
+    const plan = createPlan(hazard);
+    const firstSurge = getActiveSectorHazards(plan, 180)[0];
+    const firstLull = getActiveSectorHazards(plan, 240)[0];
+    const middleSurge = getActiveSectorHazards(plan, 280)[0];
+    const finalSurge = getActiveSectorHazards(plan, 380)[0];
+
+    if (!firstSurge || !firstLull || !middleSurge || !finalSurge) {
+      throw new Error('Expected all salvage squall phases.');
+    }
+
+    const rect = getSectorHazardCollisionRect(hazard, bounds);
+    const firstGeometry = createSalvageStormGeometry(firstSurge, rect);
+    expect(firstGeometry.flowDirection).toBe(1);
+    expect(firstGeometry.calmLaneIndex).toBe(0);
+    expect(firstGeometry.damageRects).toHaveLength(2);
+    expect(getSalvageStormPhaseState(firstLull).damageWindowOpen).toBe(false);
+    expect(getSectorHazardDamageRects(firstLull, bounds)).toEqual([]);
+    expect(getSalvageStormPhaseState(middleSurge).calmLaneIndex).toBe(1);
+    expect(getSalvageStormPhaseState(finalSurge).calmLaneIndex).toBe(2);
+    expect(formatSalvageStormWarning(firstSurge)).toContain('SURGE 1/3 | CALM LEFT');
+
+    const reversed = getActiveSectorHazards(
+      createPlan({ ...hazard, id: 'test_reverse_squall', xRatio: 0.75 }),
+      180
+    )[0];
+    if (!reversed) throw new Error('Expected reverse salvage squall.');
+    expect(getSalvageStormPhaseState(reversed)).toMatchObject({
+      flowDirection: -1,
+      calmLaneIndex: 2
+    });
+  });
+
+  it('provides one deterministic route-squall browser inspection fixture', () => {
+    const source = createPlan(createHazard('warning_beam'));
+    const first = createSalvageStormDebugFixture(source, 1800);
+    const repeated = createSalvageStormDebugFixture(source, 1800);
+
+    expect(repeated).toEqual(first);
+    expect(first.features.hazards).toEqual([first.hazard]);
+    expect(first.hazard).toMatchObject({
+      id: 'debug_route_salvage_squall',
+      kind: 'salvage_storm',
+      label: 'ROUTE SQUALL',
+      widthRatio: 0.64
+    });
+    expect(first.targetDistance).toBeGreaterThan(first.hazard.startDistance);
+    expect(first.targetDistance).toBeLessThan(first.hazard.endDistance);
+  });
+
+  it('lets salvage squall charge lanes damage every allegiance while its calm lane stays safe', () => {
+    const state = createCombatState(bounds, 'SALVAGE-SQUALL', {
+      skipEnemyWaves: true
+    });
+    const hazard = createHazard('salvage_storm', {
+      telegraphDistance: 20,
+      startDistance: 170,
+      endDistance: 470,
+      xRatio: 0.25
+    });
+    const plan = createPlan(hazard);
+    const activeHazard = getActiveSectorHazards(plan, 180)[0];
+    if (!activeHazard) throw new Error('Expected active salvage squall.');
+    const geometry = createSalvageStormGeometry(
+      activeHazard,
+      getSectorHazardCollisionRect(hazard, bounds)
+    );
+    const calmLane = geometry.laneRects[geometry.calmLaneIndex];
+    const chargedLane = geometry.damageRects[0];
+    if (!calmLane || !chargedLane) throw new Error('Expected calm and charged squall lanes.');
+
+    state.player.x = calmLane.centerX;
+    state.player.y = bounds.height * 0.72;
+    state.enemies.push({
+      id: 902,
+      factionId: 'faction_scrap_court',
+      x: chargedLane.centerX,
+      y: 220,
+      radius: 17,
+      hull: 3,
+      maxHull: 3,
+      drift: 0,
+      targetY: 220,
+      fireCooldown: 10
+    });
+    state.allies = [
+      {
+        source: 'crew',
+        candidateId: 'squall-test-ally',
+        name: 'Squall Test Ally',
+        callsign: 'CALM',
+        role: 'gunner',
+        trait: 'steady',
+        preferredCommand: 'focus',
+        cue: { glyph: 'A', color: '#7cf7ff', highContrastGlyph: 'A' },
+        x: chargedLane.centerX,
+        y: 340,
+        radius: 13,
+        hull: 3,
+        maxHull: 3,
+        moveSpeed: 180,
+        fireCooldownSeconds: 1,
+        projectileDamage: 1,
+        fireCooldown: 0,
+        screenCooldown: 0,
+        status: 'active',
+        enemiesDefeated: 0,
+        salvageRecovered: 0,
+        fitLabel: 'squall fixture'
+      }
+    ];
+    const boss = spawnBoss(state, 'boss_auditor_drone_xl', bounds);
+    boss.x = chargedLane.centerX;
+    boss.y = 460;
+    boss.hull = 5;
+
+    const safePass = resolveSectorHazardCollisions(state, plan, 180, bounds);
+    expect(safePass.hitHazardIds).toEqual([]);
+    expect(state.player.hull).toBe(state.player.maxHull);
+    expect(state.enemies[0]?.hull).toBe(2);
+    expect(state.allies[0]?.hull).toBe(2);
+    expect(state.boss?.hull).toBe(4);
+    expect(state.hazardActorCooldowns.size).toBe(3);
+
+    state.player.x = chargedLane.centerX;
+    const chargedPass = resolveSectorHazardCollisions(state, plan, 180, bounds);
+    expect(chargedPass.hitHazardIds).toEqual([hazard.id]);
+    expect(state.player.hull).toBe(state.player.maxHull - 1);
   });
 
   it('keeps hazard damage on cooldown after an active hit', () => {

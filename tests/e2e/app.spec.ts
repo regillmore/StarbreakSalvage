@@ -1014,7 +1014,9 @@ test('exposes environmental stress budgets under high-contrast narrow smoke', as
     /Env stress H[0-4]\/4 (?:none|[a-z/]+) Obj6\/16 D4\/O2 Loose \d+\/48 V\d+\/120 ok/
   );
   await expect(page.getByTestId('pickup-readout')).toContainText(/Credits .* Salvage/);
-  await expect(page.getByTestId('boss-warning')).not.toContainText('Warning clear');
+  await expect(page.getByTestId('boss-warning')).toContainText(
+    /(?:SALVAGE SQUALL|ROUTE SQUALL|PACED SQUALL) \| (?:SURGE|LULL) [1-3]\/3 \| CALM (?:LEFT|CENTER|RIGHT)/
+  );
 
   expect(browserErrors).toEqual([]);
 });

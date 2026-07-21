@@ -73,7 +73,7 @@ describe('SectorFeatures', () => {
         expect(metrics.telegraphLead).toBeGreaterThanOrEqual(definition.phase.minTelegraphLead);
         expect(metrics.activeSpan).toBeGreaterThanOrEqual(definition.phase.minActiveSpan);
         expect(metrics.widthRatio).toBeGreaterThan(0);
-        expect(metrics.widthRatio).toBeLessThanOrEqual(0.5);
+        expect(metrics.widthRatio).toBeLessThanOrEqual(0.75);
       }
     }
 

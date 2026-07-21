@@ -72,6 +72,7 @@ import {
   type LaserProjectileKind
 } from '../game/LaserProjectile';
 import { getArcChargeProfile, type ArcChargeKind } from '../game/ArcCharge';
+import { createSalvageStormGeometry } from '../game/SalvageStorm';
 
 const BACKGROUND_SEED = 'STARBREAK-SALVAGE-SHELL';
 const DEFAULT_PLAYER_SHIP_APPEARANCE: ShipAppearance = {
@@ -812,6 +813,11 @@ export class CanvasRenderer {
       }
 
       const rect = getSectorHazardCollisionRect(activeHazard.hazard, bounds);
+
+      if (activeHazard.hazard.kind === 'salvage_storm') {
+        this.paintSalvageSquallHazard(activeHazard, rect, color, style);
+        continue;
+      }
 
       context.save();
       context.translate(rect.centerX, height / 2);
@@ -2993,28 +2999,6 @@ export class CanvasRenderer {
       return;
     }
 
-    if (style.behaviorKind === 'plasmaCurtain') {
-      context.setLineDash([]);
-      for (
-        let y = rect.top + 30, index = 0;
-        y < rect.bottom;
-        y += style.patternStride, index += 1
-      ) {
-        const x = rect.left + ((index * 37) % Math.max(1, rect.width));
-        context.beginPath();
-        context.moveTo(x - 14, y - 6);
-        context.lineTo(x + 18, y + 8);
-        context.stroke();
-        if (index % 2 === 0) {
-          context.beginPath();
-          context.moveTo(rect.left + rect.width * 0.24, y + 14);
-          context.lineTo(rect.right - rect.width * 0.2, y - 10);
-          context.stroke();
-        }
-      }
-      return;
-    }
-
     if (style.behaviorKind === 'pulseField') {
       context.setLineDash([]);
       context.globalAlpha *= style.damageWindowOpen ? 1 : 0.52;
@@ -3053,6 +3037,171 @@ export class CanvasRenderer {
       context.lineTo(rect.right, y + rect.width * 0.52);
       context.stroke();
     }
+  }
+
+  private paintSalvageSquallHazard(
+    activeHazard: ActiveSectorHazard,
+    rect: SectorHazardCollisionRect,
+    color: string,
+    style: SectorHazardVisualState
+  ): void {
+    const context = this.context;
+    const geometry = createSalvageStormGeometry(activeHazard, rect);
+    const active = activeHazard.phase === 'active';
+    const highContrast = this.settings.bulletContrast === 'high';
+    const chargedColor = highContrast ? '#fff36b' : '#ffd166';
+    const calmColor = highContrast ? '#ffffff' : '#72f1da';
+    const particleCount = this.settings.performanceMode ? 4 : this.settings.reducedMotion ? 6 : 10;
+
+    context.save();
+    context.fillStyle = color;
+    context.globalAlpha = style.fillAlpha * (active ? 0.34 : 0.2);
+    context.fillRect(rect.left, rect.top, rect.width, rect.height);
+    context.strokeStyle = color;
+    context.lineWidth = style.lineWidth;
+    context.globalAlpha = style.strokeAlpha * (active ? 0.74 : 0.56);
+    context.setLineDash(active ? [] : [10, 9]);
+    context.strokeRect(rect.left, rect.top, rect.width, rect.height);
+    context.setLineDash([]);
+
+    for (const [laneIndex, lane] of geometry.laneRects.entries()) {
+      const calm = laneIndex === geometry.calmLaneIndex;
+      const charged = active && geometry.damageWindowOpen && !calm;
+      context.fillStyle = charged ? chargedColor : color;
+      context.globalAlpha = charged ? style.fillAlpha : style.fillAlpha * (calm ? 0.06 : 0.2);
+      context.fillRect(lane.left, lane.top, lane.width, lane.height);
+      context.strokeStyle = calm ? calmColor : chargedColor;
+      context.lineWidth = calm ? style.lineWidth * 1.15 : style.lineWidth * 0.82;
+      context.globalAlpha = calm
+        ? style.strokeAlpha * 0.9
+        : style.strokeAlpha * (charged ? 0.66 : 0.34);
+      context.setLineDash(calm ? [18, 8] : active ? [] : [6, 12]);
+      context.strokeRect(lane.left, lane.top, lane.width, lane.height);
+      context.setLineDash([]);
+
+      if (calm) {
+        this.paintSalvageStormCalmLane(lane, calmColor, geometry.flowDirection, style);
+      } else {
+        this.paintSalvageStormCharge(
+          lane,
+          chargedColor,
+          laneIndex,
+          geometry.flowDirection,
+          geometry.pulseProgress,
+          charged,
+          particleCount,
+          style
+        );
+      }
+    }
+
+    this.paintSalvageStormSequence(rect, geometry.calmLaneIndex, geometry.flowDirection, calmColor, style);
+    context.restore();
+  }
+
+  private paintSalvageStormCalmLane(
+    rect: SectorHazardCollisionRect,
+    color: string,
+    flowDirection: -1 | 1,
+    style: SectorHazardVisualState
+  ): void {
+    const context = this.context;
+    context.strokeStyle = color;
+    context.lineWidth = 1.4;
+    context.globalAlpha = style.strokeAlpha * 0.64;
+    const direction = flowDirection > 0 ? 1 : -1;
+    for (let y = rect.top + 42; y < rect.bottom - 18; y += style.patternStride + 24) {
+      context.beginPath();
+      context.moveTo(rect.centerX - direction * 12, y - 7);
+      context.lineTo(rect.centerX + direction * 2, y);
+      context.lineTo(rect.centerX - direction * 12, y + 7);
+      context.stroke();
+    }
+  }
+
+  private paintSalvageStormCharge(
+    rect: SectorHazardCollisionRect,
+    color: string,
+    laneIndex: number,
+    flowDirection: -1 | 1,
+    pulseProgress: number,
+    charged: boolean,
+    particleCount: number,
+    style: SectorHazardVisualState
+  ): void {
+    const context = this.context;
+    const motion = this.settings.reducedMotion ? 0 : pulseProgress * rect.height * 0.34;
+    const direction = flowDirection > 0 ? 1 : -1;
+    context.strokeStyle = color;
+    context.fillStyle = color;
+    context.lineWidth = charged ? 1.8 : 1.1;
+    context.globalAlpha = style.strokeAlpha * (charged ? 0.78 : 0.34);
+
+    for (let index = 0; index < particleCount; index += 1) {
+      const xRatio = ((index * 47 + laneIndex * 31) % 101) / 100;
+      const x = rect.left + 10 + xRatio * Math.max(1, rect.width - 20);
+      const yOffset = (index * 79 + laneIndex * 43 + motion) % Math.max(1, rect.height);
+      const y = rect.top + yOffset;
+      const length = 8 + (index % 3) * 4;
+      context.beginPath();
+      context.moveTo(x - direction * length * 0.55, y - length);
+      context.lineTo(x + direction * length * 0.55, y + length);
+      context.stroke();
+      if (charged && index % 3 === 0) {
+        context.beginPath();
+        context.moveTo(x - 3, y);
+        context.lineTo(x + direction * 5, y + 5);
+        context.lineTo(x - direction * 2, y + 8);
+        context.closePath();
+        context.fill();
+      }
+    }
+
+    if (!this.settings.performanceMode) {
+      context.globalAlpha *= 0.68;
+      context.lineWidth = 1.2;
+      const arcCount = this.settings.reducedMotion ? 2 : 4;
+      for (let index = 0; index < arcCount; index += 1) {
+        const y = rect.top + ((index + 1) / (arcCount + 1)) * rect.height;
+        const inset = 8 + ((index * 13 + laneIndex * 7) % 18);
+        context.beginPath();
+        context.moveTo(rect.left + inset, y - 8);
+        context.lineTo(rect.centerX - direction * 6, y + 4);
+        context.lineTo(rect.right - inset, y - 4);
+        context.stroke();
+      }
+    }
+  }
+
+  private paintSalvageStormSequence(
+    rect: SectorHazardCollisionRect,
+    calmLaneIndex: number,
+    flowDirection: -1 | 1,
+    color: string,
+    style: SectorHazardVisualState
+  ): void {
+    const context = this.context;
+    const direction = flowDirection > 0 ? 1 : -1;
+    const y = rect.top + 18;
+    const step = rect.width / 3;
+    context.strokeStyle = color;
+    context.fillStyle = color;
+    context.lineWidth = 1.4;
+    context.globalAlpha = style.strokeAlpha * 0.84;
+
+    for (let index = 0; index < 3; index += 1) {
+      const x = rect.left + step * (index + 0.5);
+      context.beginPath();
+      context.arc(x, y, index === calmLaneIndex ? 4.5 : 2.2, 0, Math.PI * 2);
+      context.fill();
+    }
+    context.beginPath();
+    context.moveTo(rect.centerX - direction * 18, y);
+    context.lineTo(rect.centerX + direction * 18, y);
+    context.lineTo(rect.centerX + direction * 10, y - 6);
+    context.moveTo(rect.centerX + direction * 18, y);
+    context.lineTo(rect.centerX + direction * 10, y + 6);
+    context.stroke();
   }
 
   private paintDirectionalBeamHazard(

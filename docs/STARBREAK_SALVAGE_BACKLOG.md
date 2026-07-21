@@ -2623,3 +2623,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 185. `UpgradeEffects` and `Shops` own the permanent reroll contribution with restored-item precedence. `ItemHooks` owns Rebound Freight Seal's bounded upstream-bounce transform, which automatically feeds combat and shared live-fire previews. The active catalog remains at 60 items and the global run fingerprint excludes the shop-local upgrade.
+
+### BL51 - Route salvage squall
+
+Acceptance:
+
+- The route storm becomes a broad, seeded three-surge salvage squall with one calm channel moving across three fixed lanes and a short lull between active damage windows.
+- Direction, current calm lane, and surge/lull progress remain explicit in text and do not rely on motion or color.
+- A shared geometry model controls Canvas art, player collision, and combat-actor damage so the visible refuge is authoritative.
+- Charged lanes damage players, enemies, bosses, and damageable allies without spawning projectiles or persistent actors; the calm channel remains tactically safe.
+- Reduced-motion, performance, and high-contrast modes preserve identical timing and collision while bounding decorative wreckage and electrical effects.
+- The environment-stress debug shortcut produces a deterministic squall fixture, and seeded generation, boss-lock settlement, pause behavior, saves, static hosting, and dependencies remain coherent.
+
+Status:
+
+- Implemented in work order 186. `SalvageStorm` owns the phase, lane, warning, geometry, and debug-fixture contract; existing hazard simulation and rendering consume it without another RNG stream or simulation path.

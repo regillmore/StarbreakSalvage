@@ -543,3 +543,11 @@ Reduced-motion and performance modes keep their existing static representative p
 Victory classification scans the three immutable act records only when a post-sector branch or extraction-stage route presentation would otherwise open. It replaces the terminal optional/constellation mounts with existing synchronous default-branch, relief, extraction, and summary transitions. No new DOM, gameplay actor, projectile, effect, timer, fixed-step branch, RNG draw, route outcome, or retained state is introduced.
 
 The release build emits 932.11 kB minified/254.26 kB gzip initial JavaScript and unchanged 79.56/15.90 kB CSS, increases of 0.17/0.01 kB JavaScript over work order 152. The existing 500 kB chunk notice remains; no dependency, simulation budget, content RNG, mission schema, save/snapshot version, or warning threshold changed.
+
+## Work order 186 salvage-squall budgets
+
+The salvage squall derives three lane rectangles and at most two active damage rectangles from one already-generated hazard record. Player collision checks those two rectangles; combat-actor damage performs the existing bounded enemy, boss, and ally scans with the hazard's shared cooldown ledger. It creates no projectile, actor, pickup, timer, retained history, save field, or RNG draw.
+
+Canvas rendering remains in the established under-bullet hazard layer. Each charged lane draws a bounded set of deterministic wreckage marks and electrical arcs; performance mode reduces that ornament count, and reduced motion removes most temporal drift without changing the lane geometry, phase clock, or collision window. The deterministic debug fixture replaces seed hunting with one bounded inspection hazard and adds no production encounter density.
+
+The release build emits `999.85 kB` minified / `274.08 kB` gzip initial JavaScript and unchanged `95.61 kB` / `19.25 kB` CSS, increases of `3.87 kB` / `1.33 kB` JavaScript over work order 185. The existing 500 kB chunk advisory remains; no dependency, simulation cap, save/snapshot schema, RNG stream, or warning threshold changed.

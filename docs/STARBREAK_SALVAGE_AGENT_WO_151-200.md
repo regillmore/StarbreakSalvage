@@ -918,3 +918,29 @@ Rebound Freight Seal occupies the released uncommon combat/route/shop slot as a 
 The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/`, rendered all fourteen permanent Upgrade Bay cards, and confirmed Convoy Receipt Printer's Market category, 12 kg cost, Market Decoder prerequisite, reroll-only copy, extra stock, and credit/drone bias. The card remained balanced beside Market Echo Locator and the browser recorded no warnings or errors.
 
 Verification: `npm run verify:release` passes (114 Vitest files / 719 tests, production build, 17/17 Chromium E2E tests, and Pages preview asset smoke). The managed browser pass confirmed the complete 14-card Upgrade Bay, Convoy Receipt Printer's locked prerequisite and copy, responsive card layout, and no console warnings or errors. The build emits `995.98 kB` minified / `272.75 kB` gzip initial JavaScript and `95.61 kB` / `19.25 kB` CSS, an increase of `1.93 kB` / `0.42 kB` JavaScript over work order 184 with unchanged CSS. The existing Vite large-chunk advisory remains; no dependency or warning threshold changed.
+
+## Work order 186 - Route salvage squall
+
+Goal: replace the route storm's static damage curtain with a readable, tactical storm front whose moving refuge and indiscriminate damage create a distinct environmental encounter.
+
+Prompt:
+
+> Reimagine the route storm as a broad three-surge salvage squall. Telegraph one calm channel that advances across the front while the other lanes carry charged wreckage, give each surge a short lull, and make the charged lanes dangerous to every craft. Keep the schedule seeded, the visual and collision geometry identical, and the presentation readable beneath bullets and set pieces.
+
+Acceptance criteria:
+
+- `salvage_storm` retains its stable content identity and seeded schedule while presenting as `SALVAGE SQUALL` / `ROUTE SQUALL` rather than a plasma curtain.
+- The squall is a broad three-lane front with three active surges, short lulls, a 180-unit warning lead, and the existing 0.6-second damage cooldown.
+- Exactly one calm channel advances edge-to-center-to-edge; the seeded placement ratio determines whether that sequence travels left-to-right or right-to-left.
+- One shared pure geometry model drives warning text, Canvas presentation, player collision, and combat-actor damage, so no visual safe lane can disagree with simulation.
+- Charged lanes damage the player, enemies, bosses, and damageable allies; the calm channel remains safe and can be used to turn the storm against hostile formations.
+- Warning and active readouts identify direction, surge/lull count, and current calm lane without relying on color. High contrast preserves that language, while reduced-motion and performance settings lower ornament density without changing timing or collision.
+- The squall remains below bullets, actors, pickups, and set pieces, creates no projectile or persistent actor, and performs no per-frame RNG work.
+- The `H` environment-stress shortcut authors one deterministic squall fixture with a stable inspection window so browser smoke no longer depends on the current seed's arbitrary hazard family.
+- Existing hazard pause-distance behavior, boss-lock settlement, save/snapshot compatibility, static hosting, dependencies, and environmental caps remain coherent.
+
+Status: implemented. `SalvageStorm` owns the three-surge phase state, calm-lane order, collision rectangles, concise warning text, and deterministic debug fixture. `HazardZoneBehavior`, `SectorHazards`, `GameplayScene`, and `CanvasRenderer` all consume that shared model rather than reconstructing lane boundaries. The active lanes reuse the bounded environmental damage path for enemies, bosses, and allies, while player damage retains the established hazard cooldown and grace rules.
+
+The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/`, launched the deterministic `H` fixture, and observed `SURGE 1/3 | CALM LEFT` advance to `SURGE 2/3 | CALM CENTER`. The dashed cyan refuge and charged amber wreckage lanes remained legible beneath the combat world, and the browser recorded no warnings or errors. The authenticated work order 175 smoke host stopped cleanly and its owner shell returned exit code 0.
+
+Verification: `npm run verify:release` passes (114 Vitest files / 722 tests, production build, 17/17 Chromium E2E tests, and Pages preview asset smoke). The focused salvage-squall and environment suites pass 57 tests, and the isolated environmental-stress Chromium path passes. The build emits `999.85 kB` minified / `274.08 kB` gzip initial JavaScript and unchanged `95.61 kB` / `19.25 kB` CSS, increases of `3.87 kB` / `1.33 kB` JavaScript over work order 185. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, projectile/actor cap, RNG stream, static base path, or warning threshold changed.
