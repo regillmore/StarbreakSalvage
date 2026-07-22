@@ -155,6 +155,10 @@ export interface AllyRenderState {
   readonly hull: number;
   readonly maxHull: number;
   readonly status: 'active' | 'injured' | 'retreated';
+  readonly scale?: number;
+  readonly alpha?: number;
+  readonly departureActive?: boolean;
+  readonly departureThrust?: number;
 }
 
 export interface DroneFollowerRenderState {
@@ -165,6 +169,10 @@ export interface DroneFollowerRenderState {
   readonly y: number;
   readonly radius: number;
   readonly firingPulseSeconds: number;
+  readonly scale?: number;
+  readonly alpha?: number;
+  readonly departureActive?: boolean;
+  readonly departureThrust?: number;
 }
 
 export interface BossRenderState {
@@ -1511,8 +1519,20 @@ export class CanvasRenderer {
     const context = this.context;
     const highContrast = this.settings.bulletContrast === 'high';
     const healthRatio = clamp(ally.hull / Math.max(1, ally.maxHull), 0, 1);
+    const departureThrust = clamp(ally.departureThrust ?? 0, 0, 1);
     context.save();
     context.translate(ally.x, ally.y);
+    context.scale(ally.scale ?? 1, ally.scale ?? 1);
+    context.globalAlpha = clamp(ally.alpha ?? 1, 0, 1);
+    if (ally.departureActive) {
+      context.fillStyle = highContrast ? '#ffffff' : ally.cue.color;
+      context.beginPath();
+      context.moveTo(-ally.radius * 0.3, ally.radius * 0.58);
+      context.lineTo(0, ally.radius * (1.45 + departureThrust * 1.2));
+      context.lineTo(ally.radius * 0.3, ally.radius * 0.58);
+      context.closePath();
+      context.fill();
+    }
     context.fillStyle = highContrast ? '#050712' : ally.cue.color;
     context.strokeStyle = highContrast ? '#ffffff' : '#dffcff';
     context.lineWidth = 2;
@@ -1529,6 +1549,10 @@ export class CanvasRenderer {
     context.textAlign = 'center';
     context.textBaseline = 'middle';
     context.fillText(highContrast ? ally.cue.highContrastGlyph : ally.cue.glyph, 0, 1);
+    if (ally.departureActive) {
+      context.restore();
+      return;
+    }
     context.fillStyle = '#050712';
     context.fillRect(-ally.radius, ally.radius + 5, ally.radius * 2, 3);
     context.fillStyle = highContrast ? '#ffffff' : ally.cue.color;
@@ -1551,9 +1575,13 @@ export class CanvasRenderer {
     const context = this.context;
     const highContrast = this.settings.bulletContrast === 'high';
     const pulse = clamp(drone.firingPulseSeconds / 0.14, 0, 1);
+    const departureThrust = clamp(drone.departureThrust ?? 0, 0, 1);
+    const baseAlpha = clamp(drone.alpha ?? 1, 0, 1);
     const color = highContrast ? '#ffffff' : drone.color;
     context.save();
     context.translate(drone.x, drone.y);
+    context.scale(drone.scale ?? 1, drone.scale ?? 1);
+    context.globalAlpha = baseAlpha;
     context.shadowBlur = this.settings.performanceMode ? 0 : 7 + pulse * 11;
     context.shadowColor = color;
     context.strokeStyle = color;
@@ -1570,22 +1598,25 @@ export class CanvasRenderer {
     context.fill();
     context.stroke();
 
-    context.globalAlpha = 0.42 + pulse * 0.45;
+    context.globalAlpha = baseAlpha * (0.42 + pulse * 0.45);
     context.beginPath();
     context.arc(0, 0, drone.radius * (1.5 + pulse * 0.34), 0, Math.PI * 2);
     context.stroke();
-    context.globalAlpha = 1;
+    context.globalAlpha = baseAlpha;
     context.fillStyle = color;
     context.font = 'bold 6px ui-monospace, monospace';
     context.textAlign = 'center';
     context.textBaseline = 'middle';
     context.fillText(drone.glyph, 0, 0);
 
-    context.globalAlpha = 0.7;
+    context.globalAlpha = baseAlpha * 0.7;
     context.fillStyle = color;
     context.beginPath();
     context.moveTo(-drone.radius * 0.3, drone.radius * 0.7);
-    context.lineTo(0, drone.radius * (1.5 + pulse * 0.35));
+    context.lineTo(
+      0,
+      drone.radius * (1.5 + Math.max(pulse * 0.35, departureThrust * 1.15))
+    );
     context.lineTo(drone.radius * 0.3, drone.radius * 0.7);
     context.closePath();
     context.fill();

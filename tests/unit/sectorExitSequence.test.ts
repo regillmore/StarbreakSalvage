@@ -45,6 +45,58 @@ describe('SectorExitSequence', () => {
     expect(transitioned.transitionAlpha).toBe(1);
   });
 
+  it('recalls surviving allies and drones into formation before the whole wing departs', () => {
+    const state = createSectorExitSequence({
+      sectorName: 'Claimant Vault',
+      sectorIndex: 2,
+      sectorCount: 5,
+      reason: 'sectorComplete',
+      reducedMotion: false,
+      playerX: 198,
+      playerY: 574,
+      escorts: [
+        { id: 'ally:quiet-knife', kind: 'ally', x: 132, y: 620, radius: 12 },
+        { id: 'drone:choir-1', kind: 'drone', x: 238, y: 604, radius: 7 },
+        { id: 'drone:choir-2', kind: 'drone', x: 404, y: 590, radius: 7 }
+      ]
+    });
+
+    const initial = getSectorExitPresentation(state);
+    expect(initial.phase).toBe('rendezvous');
+    expect(initial.announcement).toBe('Claimant Vault clear. Recalling 1 ally and 2 drones.');
+    expect(initial.escorts.map(({ x, y }) => [x, y])).toEqual([
+      [132, 620],
+      [238, 604],
+      [404, 590]
+    ]);
+
+    advanceSectorExitSequence(state, state.durationSeconds * 0.3);
+    const collected = getSectorExitPresentation(state);
+    expect(collected.phase).toBe('ignition');
+    expect(collected.shipX).toBe(320);
+    expect(collected.shipY).toBe(500);
+    expect(collected.escorts.map(({ x, y }) => [x, y])).toEqual([
+      [290, 542],
+      [350, 542],
+      [262, 576]
+    ]);
+    expect(collected.announcement).toContain('Wing collected');
+
+    advanceSectorExitSequence(state, state.durationSeconds * 0.3);
+    const boost = getSectorExitPresentation(state);
+    expect(boost.phase).toBe('boost');
+    expect(boost.shipY).toBeLessThan(collected.shipY);
+    expect(boost.escorts.every((escort) => escort.y > boost.shipY)).toBe(true);
+    expect(boost.escorts.every((escort) => escort.thrust > 0.75)).toBe(true);
+
+    advanceSectorExitSequence(state, state.durationSeconds);
+    const transitioned = getSectorExitPresentation(state);
+    expect(transitioned.phase).toBe('transition');
+    expect(transitioned.shipAlpha).toBe(0);
+    expect(transitioned.escorts.every((escort) => escort.alpha === 0)).toBe(true);
+    expect(transitioned.escorts.every((escort) => escort.y < -100)).toBe(true);
+  });
+
   it('keeps the debug shortcut fast but still runs the departure phases', () => {
     const normal = createSectorExitSequence({
       sectorName: 'Outer Debris Field',

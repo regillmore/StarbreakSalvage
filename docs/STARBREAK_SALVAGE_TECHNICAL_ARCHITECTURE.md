@@ -930,6 +930,14 @@ seed + permanent save fingerprint
 - `ShopScene` and `SectorTransitionScene` consume the same hull read model for semantic current/max values and full/damaged/critical state. The shop creates at most one segment per effective hull point only when its DOM scene redraws; navigation replaces the earlier maximum-patch summary without adding another stored field.
 - Existing v12 snapshots already validate the checkpoint hull, so the change adds no schema, migration, generation fingerprint, RNG draw, combat actor, projectile, effect, or fixed-step branch.
 
+### Work order 192 wing-rendezvous departure boundary
+
+- `SectorExitSequence` owns one optional immutable escort manifest alongside the player origin. It conditionally inserts a rendezvous phase, derives a compact twelve-slot formation, and returns complete player/escort poses from elapsed time; it never writes back to `CombatState`.
+- `GameplayScene` snapshots only active allies and all current drones when exit begins. Injured and retreated allies are excluded, while the frozen combat arrays remain authoritative until scene replacement. Render-time ids join those actors to their projected departure poses.
+- `CanvasRenderer` accepts optional departure scale, alpha, and thrust on the existing ally and drone render records. Departure draws reuse normal silhouettes and accessibility colors, omit combat identity/hull furniture, and add only one bounded plume per escort.
+- Solo exits retain work order 117 timing and phase thresholds. Escorted exits use a slightly longer transient sequence, but both converge on work order 122's invisible terminal latch and the same reward, route, act, victory, and debug callbacks.
+- The manifest is transient presentation state. It changes no ally/fleet/drone reducer, cooldown settlement, pickup behavior, generated content, RNG stream, save, snapshot, actor cap, or projectile/effect budget.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

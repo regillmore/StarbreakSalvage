@@ -326,10 +326,10 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('objective-readout')).toContainText('Shield Emitter');
   await page.keyboard.press('8');
   await expect(page.getByTestId('sector-exit-toast')).toContainText(
-    /Outer Debris Field clear\. (Main thrusters igniting|Ship accelerating out of sector)/
+    /Outer Debris Field clear\. (Recalling .+|Wing collected; main thrusters igniting|Ship and wing accelerating out of sector|Main thrusters igniting|Ship accelerating out of sector)/
   );
   await expect(page.locator('.debug-overlay')).toContainText(
-    /Exit sectorComplete (ignition|boost|clear|transition) \d+%/
+    /Exit sectorComplete (rendezvous|ignition|boost|clear|transition) \d+%/
   );
   await expect(page.getByTestId('command-deck')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Choose Reward' })).toBeVisible();
@@ -1965,7 +1965,7 @@ async function forceCompleteSectorAndEnterNext(
 ): Promise<void> {
   await page.keyboard.press('8');
   await expect(page.getByTestId('sector-exit-toast')).toContainText(
-    /clear\. (Main thrusters igniting|Ship accelerating out of sector)/
+    /clear\. (Recalling .+|Wing collected; main thrusters igniting|Ship and wing accelerating out of sector|Main thrusters igniting|Ship accelerating out of sector)/
   );
   await expect(page.getByTestId('command-deck')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Choose Reward' })).toBeVisible();

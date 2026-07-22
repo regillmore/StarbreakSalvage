@@ -2716,3 +2716,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 191. `RunSession` owns effective current/max hull and repair mutation over the existing mission checkpoint, sector advance seeds that checkpoint into the next mission, and the operation-entry carry policy resets only the world. `ShopScene` and `GameApp` expose a transactionally priced one-point service, while `SectorTransitionScene` reports actual hull condition.
+
+### BL57 - Wing rendezvous departure
+
+Acceptance:
+
+- Recall active allies and current formation drones into a compact visible formation before sector-exit ignition; exclude injured and retreated allies without changing combat state.
+- Carry the assembled player, ally, and drone wing through one shared boost trajectory until every craft has left the camera before the menu transition.
+- Preserve solo exit timing, natural field settlement, pickup collection, reduced motion, terminal handoff latching, and reward/route/finale callback behavior.
+- Reuse existing follower silhouettes with bounded departure thrust, remove combat-only labels during the beat, and expose recall/boost state through accessible text.
+- Keep the choreography as transient pure presentation with a maximum of twelve escorts and no save, snapshot, RNG, generation, actor, projectile, or effect changes.
+
+Status:
+
+- Implemented in work order 192. `SectorExitSequence` projects the conditional recall and shared departure from captured origins; `GameplayScene` and `CanvasRenderer` bind the live wing to those poses without mutating follower reducers.

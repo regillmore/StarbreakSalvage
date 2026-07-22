@@ -89,7 +89,7 @@ Phase 5 introduces persistent upgrade spending, sector completion feedback, luna
 - banked scrap upgrade catalog validation, costs, prerequisites, affordability, purchase state, save migration, export/import, and corrupted-data repair;
 - same save state plus same seed snapshots for upgrade-influenced contract boards, route previews, shops, rewards, and summary metadata;
 - Upgrade Bay view models, icon/category state, keyboard focus order, pointer purchase flow, narrow layout, and high-contrast readability;
-- sector exit sequence state, completion toast timing, route/reward transition reliability, debug sector-complete shortcut behavior, and reduced-motion fallback;
+- sector exit sequence state, completion toast timing, solo and escorted route/reward transition reliability, debug sector-complete shortcut behavior, wing rendezvous composition, and reduced-motion fallback;
 - lunar sector generation snapshots for background plans, feature plans, hazard windows, route-conditioned modifiers, and content references;
 - player destruction cue state, death-to-summary reliability, ship-theme color usage, reduced motion, performance mode, high contrast, screen shake, and mute interactions;
 - Playwright smoke for opening Upgrade Bay, checking an upgrade state, launching a lunar sector path or verifying generated lunar content, forcing sector completion, and forcing player destruction where practical.
@@ -106,6 +106,7 @@ Current Phase 5 coverage:
 - Work order 048 adds player-destruction cue-state tests for deterministic debris, reduced-motion/performance/high-contrast variants, feedback/audio mappings, debug force-destruction input, and Playwright smoke coverage from destruction toast/debug progress through the destroyed summary.
 - Work order 049 adds debug overlay coverage for banked scrap, upgrade readiness, run resources, current sector id/name/background/pacing, exit progress, and destruction progress. Playwright smoke now verifies Upgrade Bay readiness after purchase, forced sector exit flow, forced destruction, and a `LUNAR-SURFACE-LANE` route that reaches Lunar Surface in-browser.
 - Work order 050 closes Phase 5 with `npm run check`, 7-test Playwright Chromium smoke, production preview asset-path smoke, and release docs that separate automated coverage from manual non-Chromium/real-device browser gaps.
+- Work order 192 extends the same exit seam with pure recall/formation/terminal timing coverage, semantic phase and escort-count attributes, broadened forced-exit Chromium assertions, and a managed-browser composition pass with active allies and drones.
 
 ## Phase 6 QA focus
 

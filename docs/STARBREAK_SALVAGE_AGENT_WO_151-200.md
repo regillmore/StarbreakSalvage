@@ -1086,3 +1086,28 @@ Status: implemented. `RunSession` now exposes one effective-hull read model and 
 The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/` with seed `REPAIR-SMOKE-191`. At 1280 x 720, navigation exposed `Hull 2/2` beside the other run resources and the shop presented a full-width dock service with a segmented meter and disabled full-hull action above the unchanged four-card rack. At 390 x 700, the service stacked into a single readable column without horizontal overflow. The browser recorded no warnings or errors, the viewport was restored, the tabs were finalized, and the authenticated smoke host stopped cleanly with its owner shell returning exit code 0. The critical/damaged purchase path is covered by Chromium using a restored mission checkpoint.
 
 Verification: the focused mission, shop, content-validation, and snapshot suites pass 70 tests; both isolated shop-repair and depleting-rack Chromium paths pass. `npm run verify:release` passes typecheck, ESLint, all 114 Vitest files and 734 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits `1,013.73 kB` minified / `277.83 kB` gzip initial JavaScript and `97.37 kB` / `19.56 kB` CSS, increases of `3.27 kB` / `0.91 kB` JavaScript and `1.69 kB` / `0.31 kB` CSS over work order 190. The existing Vite large-chunk advisory remains; no dependency, actor/projectile/effect cap, save/snapshot schema, route topology, RNG stream, static base path, or warning threshold changed.
+
+## Work order 192 - Wing rendezvous departure
+
+Goal: make sector departure read as a coordinated extraction by recalling surviving allies and formation drones before the player's ship commits to its existing camera-leaving boost.
+
+Prompt:
+
+> At sector close, briefly hold the departure burn while surviving allies and drones peel into a compact formation behind the player. Once collected, ignite and carry the complete wing off the top of the camera together. Preserve natural field settlement, solo departure timing, reduced-motion behavior, and the established reward, route, and finale handoffs.
+
+Acceptance criteria:
+
+- Only active allies and current formation drones join the recall; injured or retreated allies remain absent, and no actor is revived, healed, or otherwise mutated.
+- Escorted departures begin with a clear rendezvous phase. The player moves to a visible staging position while up to the existing four allies and eight drones interpolate from their settled world positions into a compact trailing chevron.
+- Ignition begins only after the formation is collected; the player, allies, and drones then share one accelerating camera-clear trajectory and all become fully offscreen before transition completion.
+- Solo ships retain the established 1.72-second normal, 0.96-second reduced-motion, and 0.6-second debug sequence. Escorted timing grows only enough to make the recall legible.
+- Ally and drone departure rendering reuses their existing silhouettes and colors, adds bounded thruster treatment, and suppresses low-value identity and hull labels during extraction.
+- Accessibility announcements distinguish recall, wing lock, boost, camera clear, and route/run-summary handoff without relying on the animation or color.
+- The exit presentation remains a pure elapsed-time read model over captured actor origins. Combat, scrolling, pickups, cooldown settlement, route progression, snapshots, and seeded generation are unchanged.
+- Focused timing tests, Chromium flow, managed-browser composition, reduced motion, static hosting, and release verification remain coherent.
+
+Status: implemented. `SectorExitSequence` captures a bounded immutable escort manifest, adds a conditional rendezvous phase, and projects both player and wing poses through collection, ignition, boost, clear, and terminal transition. `GameplayScene` supplies active ally and drone origins without mutating their combat actors, and `CanvasRenderer` reuses their normal hulls with compact departure plumes and without combat labels.
+
+The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/` with seed `WING-RENDEZVOUS-192`. A Drone Chaplain exit reported and visibly recalled three live formation drones before ignition. The crew-wing fixture separately recalled its active ally, suppressed the ally label and hull furniture, then kept the craft behind the Phase Courier through rendezvous, ignition, and boost. Both formations cleared into the ordinary reward handoff, and the browser recorded no warnings or errors. The tab finalized and the authenticated smoke host stopped cleanly.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 114 Vitest files and 735 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits `1,016.32 kB` minified / `278.76 kB` gzip initial JavaScript and unchanged `97.37 kB` / `19.56 kB` CSS, increases of `2.59 kB` / `0.93 kB` JavaScript over work order 191. The existing Vite large-chunk advisory remains; no dependency, actor/projectile/effect cap, save/snapshot schema, route topology, RNG stream, static base path, or warning threshold changed.

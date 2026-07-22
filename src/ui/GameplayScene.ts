@@ -698,6 +698,9 @@ export class GameplayScene implements Scene {
     const exitPresentation = this.exitSequence
       ? getSectorExitPresentation(this.exitSequence)
       : null;
+    const exitEscorts = new Map(
+      (exitPresentation?.escorts ?? []).map((escort) => [escort.id, escort] as const)
+    );
 
     if (this.confinedEnvironment) {
       renderer.paintConfinedBackground(this.confinedEnvironment, scroll.cameraOffset);
@@ -745,11 +748,37 @@ export class GameplayScene implements Scene {
     }
 
     for (const ally of state.allies) {
-      renderer.paintAlly(ally);
+      const departure = exitEscorts.get(`ally:${ally.candidateId}`);
+      renderer.paintAlly(
+        departure
+          ? {
+              ...ally,
+              x: departure.x,
+              y: departure.y,
+              scale: departure.scale,
+              alpha: departure.alpha,
+              departureActive: true,
+              departureThrust: departure.thrust
+            }
+          : ally
+      );
     }
 
     for (const drone of state.drones) {
-      renderer.paintDroneFollower(drone);
+      const departure = exitEscorts.get(`drone:${drone.id}`);
+      renderer.paintDroneFollower(
+        departure
+          ? {
+              ...drone,
+              x: departure.x,
+              y: departure.y,
+              scale: departure.scale,
+              alpha: departure.alpha,
+              departureActive: true,
+              departureThrust: departure.thrust
+            }
+          : drone
+      );
     }
 
     for (const enemy of state.enemies) {
@@ -1382,6 +1411,24 @@ export class GameplayScene implements Scene {
       reducedMotion: getHudThemeOptions(this.uiRoot.ownerDocument).reducedMotion,
       playerX: state.player.x,
       playerY: state.player.y,
+      escorts: [
+        ...state.allies
+          .filter(({ status }) => status === 'active')
+          .map((ally) => ({
+            id: `ally:${ally.candidateId}`,
+            kind: 'ally' as const,
+            x: ally.x,
+            y: ally.y,
+            radius: ally.radius
+          })),
+        ...state.drones.map((drone) => ({
+          id: `drone:${drone.id}`,
+          kind: 'drone' as const,
+          x: drone.x,
+          y: drone.y,
+          radius: drone.radius
+        }))
+      ],
       debugFast: options.debugFast
     });
     this.exitSequenceResult = this.withWorldOffset(forceCombatEnd(state, reason));
@@ -1512,6 +1559,8 @@ export class GameplayScene implements Scene {
   private syncExitSequenceUi(): void {
     if (!this.exitSequence) {
       this.exitToast.dataset.exitState = 'idle';
+      delete this.exitToast.dataset.exitPhase;
+      delete this.exitToast.dataset.exitEscorts;
       this.exitToast.setAttribute('aria-hidden', 'true');
       this.exitToast.textContent = '';
       if (this.hudRoot) {
@@ -1522,6 +1571,8 @@ export class GameplayScene implements Scene {
 
     const presentation = getSectorExitPresentation(this.exitSequence);
     this.exitToast.dataset.exitState = 'active';
+    this.exitToast.dataset.exitPhase = presentation.phase;
+    this.exitToast.dataset.exitEscorts = String(presentation.escorts.length);
     this.exitToast.setAttribute('aria-hidden', 'false');
     this.exitToast.textContent = presentation.announcement;
     if (this.hudRoot) {
