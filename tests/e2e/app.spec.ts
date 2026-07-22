@@ -343,7 +343,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
       .locator('.reward-panel')
       .evaluate((panel) => panel.scrollHeight <= panel.clientHeight + 1)
   ).toBe(true);
-  await expect(page.locator('.reward-card').first()).toContainText('Build fit:');
+  await expect(page.locator('.reward-card').filter({ hasText: 'Build fit:' })).toHaveCount(0);
   await expect(
     page
       .locator('.reward-card')
@@ -1986,6 +1986,7 @@ test('depletes fixed shop slots until reroll restocks the rack', async ({ page }
   await page.getByTestId('open-shop').click();
   await page.getByTestId('navigation-destination-action').click();
   await expect(page.getByRole('heading', { name: 'Shop' })).toBeVisible();
+  await expect(page.locator('.shop-card').filter({ hasText: 'Build fit:' })).toHaveCount(0);
   await expect(page.getByTestId('shop-repair-service')).toHaveAttribute('data-state', 'full');
   await expect(page.getByTestId('shop-repair-action')).toBeDisabled();
   const primaryOffer = page.getByTestId('shop-primary-offer');

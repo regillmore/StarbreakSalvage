@@ -22,7 +22,6 @@ export interface ItemCardViewModel {
   readonly iconKind: ItemFamily;
   readonly iconLabel: string;
   readonly priceLabel: string | null;
-  readonly synergyText: string | null;
   readonly acquisitionLabel: string | null;
   readonly metaLine: string;
 }
@@ -30,7 +29,6 @@ export interface ItemCardViewModel {
 export interface ItemCardViewModelOptions {
   readonly sourceLabel?: string;
   readonly price?: number;
-  readonly synergyText?: string | null;
   readonly acquisitionOrder?: number;
 }
 
@@ -89,7 +87,6 @@ export function createItemCardViewModel(
     iconKind: item.metadata.family,
     iconLabel: `${familyLabel} item icon`,
     priceLabel,
-    synergyText: options.synergyText ?? null,
     acquisitionLabel,
     metaLine: metaLabels.join(' | ')
   };

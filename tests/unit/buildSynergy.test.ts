@@ -4,8 +4,7 @@ import {
   BUILD_SYNERGY_CLUSTERS,
   createBuildSynergyModel,
   formatBuildSynergyHud,
-  formatBuildSynergySummary,
-  formatProspectiveBuildSynergy
+  formatBuildSynergySummary
 } from '../../src/game/BuildSynergy';
 import type { ItemInstance } from '../../src/game/Rewards';
 
@@ -56,17 +55,6 @@ describe('build synergy model', () => {
 
     expect(droneFirst.primary?.cluster.id).toBe('droneChorus');
     expect(prismFirst.primary?.cluster.id).toBe('prismBattery');
-  });
-
-  it('formats prospective reward and shop context for the candidate item', () => {
-    const current = [item('item_split_prism', 0), item('item_chain_arc_capacitor', 1)];
-
-    expect(formatProspectiveBuildSynergy(current, 'item_drone_uplink')).toBe(
-      'Build fit: Drones opens'
-    );
-    expect(formatProspectiveBuildSynergy(current, 'item_lane_splitter_chisel')).toBe(
-      'Build fit: Prism +6'
-    );
   });
 
   it('keeps empty builds concise', () => {

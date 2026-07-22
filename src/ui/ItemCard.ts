@@ -5,7 +5,6 @@ export interface ItemCardRenderOptions {
   readonly titlePrefix?: string;
   readonly titleTag?: 'span' | 'h2';
   readonly includeEffect?: boolean;
-  readonly includeSynergy?: boolean;
   readonly compact?: boolean;
 }
 
@@ -70,13 +69,6 @@ export function appendItemCardContent(
   }
 
   parent.append(badges);
-
-  if (options.includeSynergy !== false && model.synergyText) {
-    const synergy = parent.ownerDocument.createElement('span');
-    synergy.className = 'choice-meta item-card-synergy';
-    synergy.textContent = model.synergyText;
-    parent.append(synergy);
-  }
 
   if (options.compact) {
     parent.dataset.compact = 'true';

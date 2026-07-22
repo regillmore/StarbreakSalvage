@@ -969,6 +969,13 @@ seed + permanent save fingerprint
 - Primary Cargo is a filtered presentation over the unchanged engineering snapshot, not a second inventory. Non-primary components remain available to carrier/fleetcraft and restored-state consumers, and scrapping a visible primary still uses the existing reversible action, salvage payout, history, undo, and commit boundary.
 - The change adds no save/snapshot field, migration, component-generation pass, RNG draw, route mutation, combat actor, projectile, effect, or fixed-step branch.
 
+### Work order 197 Build Fit retirement boundary
+
+- `RewardScene` and `ShopScene` pass authored source and price context directly into `ItemCardViewModel`; neither scene constructs a hypothetical acquisition nor asks `BuildSynergy` to score one.
+- `ItemCardViewModel` contains only durable authored/acquired item presentation. `ItemCard` has no optional prospective-synergy row, preventing other menus from reviving an implication that family scores are upgrade effects.
+- `BuildSynergy.createBuildSynergyModel` remains a read-only classifier over owned item instances for HUD and debrief identity. Its scores are not consumed by `ItemHooks`, `CombatState`, reward generation, shops, engineering, or run progression.
+- The change removes presentation-only work and adds no save/snapshot field, migration, item definition, RNG draw, route mutation, combat actor, projectile, effect, hook, or fixed-step branch.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

@@ -388,7 +388,7 @@ export class RunSummaryScene implements Scene {
             : 'Upgrade rack',
           acquisitionOrder: instance.acquisitionOrder
         }),
-        { compact: true, includeEffect: false, includeSynergy: false }
+        { compact: true, includeEffect: false }
       );
       grid.append(card);
     }

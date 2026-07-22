@@ -2790,3 +2790,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 196. `FoundryScene` owns one mounted-primary selector and a primary-only reserve page; `Foundry` exposes the filtered cargo projection and resolves drafts without hidden resource ceilings, while strict `ShipLoadout` validation remains the default outside the foundry.
+
+### BL62 - Retire prospective Build Fit
+
+Acceptance:
+
+- Remove `Build Fit` labels and candidate scores from circuit item cards in rewards and shops.
+- Remove the shared item-card synergy row and prospective build-scoring helper instead of leaving unused presentation plumbing.
+- Preserve authored item effect text, tags, rarity, source, price, implementation state, ordered circuit behavior, and deterministic card selection.
+- Keep descriptive owned-build identity in the HUD and run debrief; confirm that prospective fit never changes gameplay.
+- Preserve bounded manifests, keyboard operation, static hosting, and clean browser logs.
+
+Status:
+
+- Implemented in work order 197. Reward and shop cards now present only authored item information; the candidate-only Build Fit path is removed, while owned-build summaries and all live item hooks remain unchanged.

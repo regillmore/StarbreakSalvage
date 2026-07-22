@@ -623,3 +623,11 @@ Hardpoint entry performs one bounded scan of the small engineering component arr
 Resource capacity values are still calculated for combat/debug compatibility, but their four comparisons and instability threshold no longer create foundry issues or presentation nodes. The change adds no dependency, save/snapshot field, RNG draw, actor, projectile, effect, timer, collision path, or fixed-step work.
 
 The checked build emits `1,019.43 kB` minified / `279.74 kB` gzip initial JavaScript and `102.05 kB` / `20.36 kB` CSS, changes of `-2.56 kB` / `-0.60 kB` JavaScript and `+1.57 kB` / `+0.25 kB` CSS over work order 195. The existing Vite large-chunk advisory remains; no warning threshold changed.
+
+## Work order 197 Build Fit retirement budgets
+
+Reward and shop rendering no longer constructs a hypothetical item-instance array, re-scores all eleven build clusters, searches the resulting matches, formats a candidate delta, or appends a synergy DOM row for every circuit card. Owned-build classification remains on its existing HUD/debrief update paths.
+
+The change removes code and DOM volume and adds no dependency, save/snapshot field, RNG draw, item definition, actor, projectile, effect, hook, timer, collision path, or fixed-step work.
+
+The checked build emits `1,018.73 kB` minified / `279.52 kB` gzip initial JavaScript and `102.03 kB` / `20.35 kB` CSS, changes of `-0.70 kB` / `-0.22 kB` JavaScript and `-0.02 kB` / `-0.01 kB` CSS over work order 196. The existing Vite large-chunk advisory remains; no warning threshold changed.

@@ -6,8 +6,7 @@ import { createItemCardViewModel } from '../../src/ui/ItemCardViewModel';
 describe('item card view model', () => {
   it('formats reward item cards with rarity, family, source, tags, and effect state', () => {
     const model = createItemCardViewModel(getItemById('item_split_prism'), {
-      sourceLabel: 'Starter pool',
-      synergyText: 'Build fit: Prism +5'
+      sourceLabel: 'Starter pool'
     });
 
     expect(model).toEqual(
@@ -20,8 +19,7 @@ describe('item card view model', () => {
         effectStateLabel: 'Live effect',
         effectStateKind: 'live',
         iconKind: 'laser-split',
-        iconLabel: 'Laser Split item icon',
-        synergyText: 'Build fit: Prism +5'
+        iconLabel: 'Laser Split item icon'
       })
     );
     expect(model.badges).toEqual(['Split']);

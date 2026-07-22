@@ -2,11 +2,7 @@ import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene, SceneDebugState } from '../app/Scene';
 import { getItemById, type ItemId } from '../content/items';
 import { createActEconomyProfile, getActEconomyShopReadout } from '../game/ActEconomy';
-import { formatProspectiveBuildSynergy } from '../game/BuildSynergy';
-import {
-  createShopPrimaryWeaponOffer,
-  getInstalledPrimaryWeapon
-} from '../game/ComponentOffers';
+import { createShopPrimaryWeaponOffer, getInstalledPrimaryWeapon } from '../game/ComponentOffers';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import {
   getCurrentSector,
@@ -215,12 +211,7 @@ export class ShopScene implements Scene {
     } else {
       armoryButton.disabled = this.session.credits < primaryWeaponOffer.price;
       armoryButton.addEventListener('click', () => {
-        if (
-          this.onBuyPrimaryWeapon(
-            primaryWeaponOffer.component.id,
-            primaryWeaponOffer.price
-          )
-        ) {
+        if (this.onBuyPrimaryWeapon(primaryWeaponOffer.component.id, primaryWeaponOffer.price)) {
           this.enter();
         }
       });
@@ -260,8 +251,7 @@ export class ShopScene implements Scene {
         buyButton,
         createItemCardViewModel(item, {
           sourceLabel: stockItem.sourceHint,
-          price: stockItem.price,
-          synergyText: formatProspectiveBuildSynergy(this.session.itemInstances, item.id)
+          price: stockItem.price
         })
       );
       shopGrid.append(buyButton);

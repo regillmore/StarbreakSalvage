@@ -167,22 +167,6 @@ export function createBuildSynergyModel(
   };
 }
 
-export function createProspectiveBuildSynergyModel(
-  instances: readonly ItemInstance[],
-  itemId: ItemId
-): BuildSynergyModel {
-  const nextAcquisitionOrder =
-    instances.reduce((highest, item) => Math.max(highest, item.acquisitionOrder), -1) + 1;
-
-  return createBuildSynergyModel([
-    ...instances,
-    {
-      itemId,
-      acquisitionOrder: nextAcquisitionOrder
-    }
-  ]);
-}
-
 export function formatBuildSynergyHud(model: BuildSynergyModel): string {
   if (model.itemCount === 0 || !model.primary) {
     return 'Build no items';
@@ -200,26 +184,6 @@ export function formatBuildSynergySummary(model: BuildSynergyModel): string {
 
   const secondary = model.secondary ? `; secondary ${model.secondary.cluster.label}` : '';
   return `${model.primary.cluster.label} leads at ${model.primary.score}${secondary}; ${model.itemCount} item${model.itemCount === 1 ? '' : 's'}.`;
-}
-
-export function formatProspectiveBuildSynergy(
-  instances: readonly ItemInstance[],
-  itemId: ItemId
-): string {
-  const current = createBuildSynergyModel(instances);
-  const next = createProspectiveBuildSynergyModel(instances, itemId);
-  const affectedMatch = next.matches.find((match) => match.matchingItemIds.includes(itemId));
-
-  if (!affectedMatch) {
-    return 'Build fit: new branch';
-  }
-
-  const currentMatch = current.matches.find(
-    (match) => match.cluster.id === affectedMatch.cluster.id
-  );
-  const delta = affectedMatch.score - (currentMatch?.score ?? 0);
-  const verb = currentMatch ? `+${delta}` : 'opens';
-  return `Build fit: ${affectedMatch.cluster.shortLabel} ${verb}`;
 }
 
 function scoreCluster(

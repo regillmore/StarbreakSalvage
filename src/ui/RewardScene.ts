@@ -2,11 +2,7 @@ import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene, SceneDebugState } from '../app/Scene';
 import type { ItemId } from '../content/items';
 import { createActEconomyProfile } from '../game/ActEconomy';
-import { formatProspectiveBuildSynergy } from '../game/BuildSynergy';
-import {
-  createSectorPrimaryWeaponOffer,
-  getInstalledPrimaryWeapon
-} from '../game/ComponentOffers';
+import { createSectorPrimaryWeaponOffer, getInstalledPrimaryWeapon } from '../game/ComponentOffers';
 import type { FoundryComponentInstance } from '../game/Foundry';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import { generateSectorRewardChoices } from '../game/SectorRewards';
@@ -104,8 +100,7 @@ export class RewardScene implements Scene {
       appendItemCardContent(
         rewardButton,
         createItemCardViewModel(choice.item, {
-          sourceLabel: choice.sourceHint,
-          synergyText: formatProspectiveBuildSynergy(this.session.itemInstances, choice.item.id)
+          sourceLabel: choice.sourceHint
         }),
         { titlePrefix: 'Take ' }
       );
@@ -119,15 +114,10 @@ export class RewardScene implements Scene {
     primaryWeaponButton.addEventListener('click', () =>
       this.onSelectPrimaryWeapon(primaryWeaponOffer)
     );
-    appendPrimaryWeaponOfferCardContent(
-      primaryWeaponButton,
-      primaryWeaponOffer,
-      installedPrimary,
-      {
-        sourceLabel: 'Recovered Armament',
-        actionLabel: 'Take Weapon to Cargo'
-      }
-    );
+    appendPrimaryWeaponOfferCardContent(primaryWeaponButton, primaryWeaponOffer, installedPrimary, {
+      sourceLabel: 'Recovered Armament',
+      actionLabel: 'Take Weapon to Cargo'
+    });
     rewardGrid.append(primaryWeaponButton);
 
     const creditsButton = document.createElement('button');

@@ -3817,8 +3817,7 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
 
 .item-card-title,
 .item-card-meta,
-.item-card-effect,
-.item-card-synergy {
+.item-card-effect {
   overflow-wrap: anywhere;
 }
 

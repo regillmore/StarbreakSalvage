@@ -1211,3 +1211,26 @@ Status: implemented. `FoundryScene` now places a Primary Arsenal in the former G
 Managed-browser inspection at `1280x720` confirms the Primary Arsenal occupies the former Grid Envelope column beside the live-fire preview, the circuit remains below, and the debug fixture can swap its reserve primary into the mount while sending the former weapon back to Primary Cargo. The authoritative selector, mounted/reserve labels, four weapon metrics, and displaced-weapon status remain readable without the assignment board or quota meters.
 
 Verification: focused Foundry, loadout, presentation, Scenario Lab, and Chromium navigation checks pass. `npm run verify:release` passes typecheck, ESLint, all 115 Vitest files and 741 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,019.43 kB` minified / `279.74 kB` gzip initial JavaScript and `102.05 kB` / `20.36 kB` CSS. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, route topology, RNG stream, static base path, or warning threshold changed.
+
+## Work order 197 - Retire prospective Build Fit
+
+Goal: keep circuit reward and shop cards focused on authored mechanics by removing the legacy prospective Build Fit score and its implied mechanical promise.
+
+Prompt:
+
+> Suppress or revert the Build Fit circuit-upgrade card label and effect, if one exists. Remove the prospective fit calculation from reward and shop presentation, preserve the actual item effect, tags, source, rarity, and live-state copy, and do not disturb the ordered signal circuit or descriptive run identity.
+
+Acceptance criteria:
+
+- Circuit item cards in required-sector rewards and shops render no `Build Fit` label, score, branch-opening claim, or reserved synergy row.
+- The shared item-card model and renderer no longer accept or emit prospective synergy text.
+- The prospective Build Synergy helper and its candidate-only scoring path are removed rather than retained as dead presentation logic.
+- Existing authored item effects, tags, rarity, source, price, implementation state, acquisition order, ordered circuit behavior, combat hooks, and deterministic selection remain unchanged.
+- HUD and debrief build identity may continue summarizing the upgrades the player actually owns; no prospective score ever modifies gameplay.
+- Reward/shop keyboard semantics, bounded card counts, static hosting, and browser error cleanliness remain intact.
+
+Status: implemented. `RewardScene` and `ShopScene` now create ordinary item-card models without candidate scoring. `ItemCardViewModel` and `ItemCard` no longer carry a synergy-text field or render a dedicated row, and `BuildSynergy` retains only the owned-build model used by the combat HUD and run debrief. No Build Fit gameplay effect existed to remove.
+
+Managed-browser inspection used seed `BUILD-FIT-197B` to force the first required-sector reward, select a circuit item, and visit the local shop. All five reward cards and four shop circuit cards retained their authored effect, tags, source/price, and live-state presentation while reporting zero `Build Fit` text and zero synergy-row nodes; browser warning/error logs were empty.
+
+Verification: focused Build Synergy, item-card, reward, and shop unit tests pass, as do the focused first-sector reward and finite-shop Chromium paths. `npm run verify:release` passes typecheck, ESLint, all 115 Vitest files and 740 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,018.73 kB` minified / `279.52 kB` gzip initial JavaScript and `102.03 kB` / `20.35 kB` CSS. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, route topology, RNG stream, static base path, or warning threshold changed.
