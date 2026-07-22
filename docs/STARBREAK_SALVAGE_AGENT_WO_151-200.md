@@ -1030,3 +1030,31 @@ Claimant Arc Seal occupies the released uncommon combat/route/elite/faction slot
 The managed browser pass used `http://10.25.250.13:4175/StarbreakSalvage/` at 1280 x 720. It rendered all sixteen permanent Upgrade Bay cards and confirmed Ambush Insurance Stamp's Navigation category, 10 kg cost, Route Ledger Uplink prerequisite, and exact Elite/Faction Ambush salvage and armor-credit copy. The 465.5 px card sat inside the 1040 px panel with a 1280 px document and no horizontal overflow. The tab closed and the authenticated work order 175 smoke host stopped cleanly with its owner shell returning exit code 0.
 
 Verification: focused circuit, route, reward, upgrade, catalog, and presentation coverage passes 132 tests; `npm run verify:release` passes typecheck, ESLint, all 114 Vitest files and 731 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits `1,010.01 kB` minified / `276.75 kB` gzip initial JavaScript and unchanged `95.61 kB` / `19.25 kB` CSS, increases of `1.82 kB` / `0.46 kB` JavaScript over work order 188. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, route topology, RNG stream, static base path, or warning threshold changed.
+
+## Work order 190 - Primary weapon circuit capacity
+
+Goal: make signal-circuit breadth an explicit primary-weapon property and turn recovered weapon quality into meaningful final capacity variance.
+
+Prompt:
+
+> Move all signal-circuit capacity onto the mounted primary weapon. Preserve the opening three-slot budget on contract weapons, remove contributions and circuit stats from every other component type, and let recovered primary quality widen or narrow the final ordered chain. Keep universal item fitting, deterministic rerouting, restored snapshots, and Foundry comparisons honest.
+
+Acceptance criteria:
+
+- Each contract primary weapon supplies three universal conduits, preserving one seeded ignition item and two open starting slots; every secondary, engine, utility, armor, drone, and bomb component supplies zero.
+- Recovered Act I primary weapons supply a base of two conduits, while Act II and later weapons supply a base of three.
+- Standard, tuned, prototype, and relic quality add zero, one, two, and three conduits respectively, capped at six total; recovered Act I weapons therefore span two to five and later weapons span three to six.
+- Capacity derives from existing component source, sector, and quality data without another RNG draw, save field, or snapshot migration.
+- Replacing the mounted primary deterministically reconciles the ordered circuit, racking tail items when capacity shrinks and restoring legal assignments when capacity grows; changing any non-primary component cannot alter capacity.
+- The circuit rail uses the primary weapon's alternating weapon/flex channels and retains work order 159's universal item compatibility.
+- Hardpoint Control labels the system `Primary Weapon Circuit`, exposes one primary-weapon capacity extension, and reports `Weapon circuit` in Grid Envelope.
+- Only installed and cargo primary-weapon cards display the sixth `S` capacity stat or socket comparison delta; non-primary components retain the five ordinary engineering stats.
+- Unit, snapshot, validation, E2E, managed-browser, static-hosting, accessibility, and release checks remain coherent.
+
+Status: implemented. `ComponentCircuit` now projects capacity exclusively from the mounted primary weapon. Contract hardware retains three slots, recovered weapons use the act and quality matrix above, and the six-slot cap remains a small bounded ordered chain. Module templates expose circuit channels only on primary weapons, while content validation rejects channels on every non-primary kind. `ItemSockets` continues to own assignment and deterministic tail reconciliation, so the pivot changes no item-fit rule or persisted engineering shape.
+
+Foundry presentation now calls the rail `Primary Weapon Circuit`, identifies its single extension as primary-weapon capacity, and reports `Weapon circuit` in Grid Envelope. Primary installed and cargo cards show the `S` stat and signed capacity comparison; secondary, engine, utility, armor, drone, and bomb cards omit it. The starter contract still opens with one seeded ignition item and two free slots, but later weapons can contract the build to two or expand it through six.
+
+The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/` with seed `FOUNDRY-CIRCUIT-190`. The Engineering Foundry showed one three-slot Dumbfire Missile Rack extension, `Weapon circuit 2/3`, and no socket stat on the mounted secondary or engine. Swapping to a relic Act I Short-Range Spread Cannon updated the same rail to five slots with three open, reported `Weapon circuit 2/5`, and showed `S5` only on the primary candidate and `S3` on the displaced starter primary in cargo. The layout remained balanced at 1280 x 720, the tab closed, and the authenticated smoke host stopped cleanly.
+
+Verification: focused circuit, Foundry presentation, validation, and engineering coverage passes 80 tests; `npm run verify:release` passes typecheck, ESLint, all 114 Vitest files and 732 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits `1,010.46 kB` minified / `276.92 kB` gzip initial JavaScript and `95.68 kB` / `19.25 kB` CSS, increases of `0.45 kB` / `0.17 kB` JavaScript and `0.07 kB` / effectively unchanged gzip CSS over work order 189. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, route topology, RNG stream, static base path, or warning threshold changed.

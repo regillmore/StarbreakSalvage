@@ -1037,6 +1037,7 @@ export function compareFoundryComponents(
   const instability = candidateStats.instability - installedStats.instability;
   const circuit = candidateStats.circuit - installedStats.circuit;
   const burden = power + heat + mass + command + instability - circuit;
+  const circuitLabel = candidateStats.slot === 'primary' ? ` S${formatSigned(circuit)}` : '';
   return {
     power,
     heat,
@@ -1047,7 +1048,7 @@ export function compareFoundryComponents(
     tone: burden < 0 ? 'improved' : burden > 0 ? 'declined' : 'same',
     label: `P${formatSigned(power)} H${formatSigned(heat)} M${formatSigned(mass)} C${formatSigned(
       command
-    )} !${formatSigned(instability)} S${formatSigned(circuit)}`
+    )} !${formatSigned(instability)}${circuitLabel}`
   };
 }
 
@@ -1062,14 +1063,14 @@ function createCircuitMeter(
   return {
     id: 'circuit',
     glyph: 'S',
-    label: 'Circuit',
+    label: 'Weapon circuit',
     value: live,
     capacity,
     committedValue: committedCapacity,
     ratio: clamp01(live / Math.max(1, capacity)),
     delta,
     tone,
-    ariaLabel: `Circuit ${live} live of ${capacity}${delta === 0 ? ', unchanged capacity' : `, ${formatSigned(delta)} capacity from committed`}`
+    ariaLabel: `Primary weapon circuit ${live} live of ${capacity}${delta === 0 ? ', unchanged capacity' : `, ${formatSigned(delta)} capacity from committed`}`
   };
 }
 

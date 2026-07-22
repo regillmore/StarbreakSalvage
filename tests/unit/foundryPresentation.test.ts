@@ -736,7 +736,7 @@ describe('foundry visual presentation', () => {
     const comparison = compareFoundryComponents(tunedCandidate, installed);
 
     expect(stats.slot).toBe(contract.loadout.mounts[0]!.slot);
-    expect(stats.circuit).toBe(1);
+    expect(stats.circuit).toBe(3);
     expect(comparison.power).toBe(0);
     expect(comparison.heat).toBe(4);
     expect(comparison.instability).toBe(2);
@@ -745,7 +745,7 @@ describe('foundry visual presentation', () => {
     expect(comparison.label).toContain('H+4');
   });
 
-  it('treats recovered circuit capacity as a standard beneficial component delta', () => {
+  it('treats a higher-quality recovered primary circuit as a beneficial component delta', () => {
     const contract = generateRunSkeleton('FOUNDRY-CIRCUIT-COMPARE').contracts[0]!;
     const state = createEngineeringState(contract.loadout);
     const installed = getInstalledComponent(state.draft, contract.loadout.mounts[0]!.hardpointId);
@@ -754,14 +754,37 @@ describe('foundry visual presentation', () => {
       ...installed,
       id: 'recovered-circuit-candidate',
       source: 'combat' as const,
-      sourceLabel: 'Act I salvage',
-      acquiredSectorIndex: 1
+      sourceLabel: 'Act II salvage',
+      acquiredSectorIndex: 10,
+      qualityId: 'tuned' as const
     };
     const comparison = compareFoundryComponents(recovered, installed);
 
-    expect(createFoundryComponentStatModel(recovered).circuit).toBe(2);
+    expect(createFoundryComponentStatModel(recovered).circuit).toBe(4);
     expect(comparison).toMatchObject({ circuit: 1, tone: 'improved' });
     expect(comparison.label).toContain('S+1');
+  });
+
+  it('keeps circuit capacity absent from non-primary component comparisons', () => {
+    const contract = generateRunSkeleton('FOUNDRY-NON-PRIMARY-CIRCUIT').contracts[0]!;
+    const state = createEngineeringState(contract.loadout);
+    const mount = contract.loadout.mounts.find((candidate) => candidate.slot !== 'primary');
+    if (!mount) throw new Error('Expected non-primary comparison hardware.');
+    const installed = getInstalledComponent(state.draft, mount.hardpointId);
+    if (!installed) throw new Error('Expected installed non-primary hardware.');
+    const recovered = {
+      ...installed,
+      id: 'recovered-non-primary-candidate',
+      source: 'boss' as const,
+      sourceLabel: 'Boss machinery',
+      acquiredSectorIndex: 19,
+      qualityId: 'relic' as const
+    };
+    const comparison = compareFoundryComponents(recovered, installed);
+
+    expect(createFoundryComponentStatModel(recovered).circuit).toBe(0);
+    expect(comparison.circuit).toBe(0);
+    expect(comparison.label).not.toContain(' S');
   });
 });
 

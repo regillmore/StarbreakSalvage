@@ -3422,8 +3422,14 @@ function validateShipcraftDefinitions(
     validateNonNegativeNumber(errors, owner, 'mass', module.mass);
     validateNonNegativeNumber(errors, owner, 'commandDraw', module.commandDraw);
     validateKnownUniqueValues(errors, owner, 'tag', module.tags, tags);
-    if (module.upgradeSockets.length === 0 || module.upgradeSockets.length > 3) {
-      errors.push(`${owner} must define one to three upgrade sockets`);
+    if (module.slot === 'primary' && module.upgradeSockets.length === 0) {
+      errors.push(`${owner} primary weapon must define at least one circuit channel`);
+    }
+    if (module.slot !== 'primary' && module.upgradeSockets.length > 0) {
+      errors.push(`${owner} non-primary hardware cannot define circuit channels`);
+    }
+    if (module.upgradeSockets.length > 3) {
+      errors.push(`${owner} cannot define more than three circuit channel templates`);
     }
     for (const socketType of module.upgradeSockets) {
       if (!upgradeSocketTypes.has(socketType)) {

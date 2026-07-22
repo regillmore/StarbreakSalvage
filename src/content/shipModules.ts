@@ -665,7 +665,7 @@ function createSystemModule(
   const { adapterId, compatibility, ...module } = definition;
   return {
     ...module,
-    upgradeSockets: createUpgradeSockets(module.slot),
+    upgradeSockets: [],
     compatibility: createCompatibility(compatibility),
     behavior: { kind: 'legacySystemAdapter', adapterId }
   };

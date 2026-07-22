@@ -499,22 +499,22 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   );
   await expect(page.getByTestId('foundry-mini-hud')).toContainText(/BASELINE|DRAFT DELTA/);
   await expect(page.getByTestId('foundry-meter-power').getByRole('meter')).toBeVisible();
-  await expect(page.getByTestId('foundry-meter-circuit')).toContainText('Circuit');
+  await expect(page.getByTestId('foundry-meter-circuit')).toContainText('Weapon circuit');
   await expect(page.getByTestId('foundry-meter-circuit').getByRole('meter')).toBeVisible();
-  await expect(page.locator('.foundry-installed-card [data-stat="circuit"]')).toHaveCount(3);
+  await expect(page.locator('.foundry-installed-card [data-stat="circuit"]')).toHaveCount(1);
   await expect(page.locator('.foundry-circuit-contribution')).toHaveCount(0);
   await expect(page.getByTestId('foundry-attack-impact')).toBeVisible();
   const upgradeCircuit = page.getByTestId('foundry-upgrade-circuit');
-  await expect(upgradeCircuit.getByRole('heading', { name: 'Signal Circuit' })).toBeVisible();
+  await expect(
+    upgradeCircuit.getByRole('heading', { name: 'Primary Weapon Circuit' })
+  ).toBeVisible();
   await expect(upgradeCircuit).toContainText('2/3 LIVE / 1 OPEN');
-  await expect(upgradeCircuit).toContainText(/CORE -> .* -> WEAPON/);
-  await expect(upgradeCircuit).toContainText('Every upgrade fits every conduit');
-  await expect(page.getByTestId('foundry-circuit-extension')).toHaveCount(3);
-  await expect(page.getByTestId('foundry-circuit-extension')).toHaveText([
-    /\+1.*UNIVERSAL/,
-    /\+1.*UNIVERSAL/,
-    /\+1.*UNIVERSAL/
-  ]);
+  await expect(upgradeCircuit).toContainText(/PRIMARY BUS -> .* -> MUZZLE/);
+  await expect(upgradeCircuit).toContainText('Every upgrade fits every primary-weapon conduit');
+  await expect(page.getByTestId('foundry-circuit-extension')).toHaveCount(1);
+  await expect(page.getByTestId('foundry-circuit-extension')).toContainText(
+    /3.*PRIMARY WEAPON SLOTS/
+  );
   const activeCircuitNodes = upgradeCircuit.locator(
     '.foundry-circuit-node:not(.foundry-circuit-node-empty)'
   );
@@ -1368,7 +1368,15 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
   const cargoCards = page.locator('.foundry-cargo-card');
   const cargoCount = await cargoCards.count();
   expect(cargoCount).toBeGreaterThan(0);
-  await expect(cargoCards.locator('[data-stat="circuit"]')).toHaveCount(cargoCount);
+  const primaryCargoCount = await cargoCards.evaluateAll(
+    (cards) =>
+      cards.filter((card) =>
+        [...card.querySelectorAll('.foundry-badge')].some(
+          (badge) => badge.textContent?.trim() === 'PRIMARY'
+        )
+      ).length
+  );
+  await expect(cargoCards.locator('[data-stat="circuit"]')).toHaveCount(primaryCargoCount);
   await expect(cargoCards.locator('[data-stat="salvage"]')).toHaveCount(0);
   await expect(cargoCards.getByRole('button', { name: /^Route \// })).toHaveCount(0);
   await expect(cargoCards.getByRole('button', { name: /^Clock \// })).toHaveCount(0);

@@ -1769,8 +1769,12 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
 
 .foundry-component-stats {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.25rem;
+}
+
+.foundry-component-stats-primary {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
 .foundry-component-stats > span {

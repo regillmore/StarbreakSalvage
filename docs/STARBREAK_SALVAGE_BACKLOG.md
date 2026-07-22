@@ -2686,3 +2686,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 189. `UpgradeEffects` and `RunSession` own the permanent route claim with restored-item precedence. `ItemHooks` owns Claimant Arc Seal's bounded upstream-overkill transform, which automatically feeds combat and shared live-fire previews. The active catalog remains at 60 items and the global run fingerprint excludes the route-local upgrade.
+
+### BL55 - Primary weapon circuit capacity
+
+Acceptance:
+
+- Move all signal-circuit capacity to the mounted primary weapon while preserving the contract opening of three slots, one seeded ignition item, and two open conduits.
+- Give every non-primary component zero conduits and omit socket capacity from its installed, cargo, comparison, and Grid Envelope presentation.
+- Derive recovered primary capacity from existing act and quality data: Act I base two, Act II+ base three, plus zero through three for standard through relic quality, capped at six.
+- Preserve universal item fitting, deterministic tail reconciliation when the primary changes, restored snapshots, content generation, and the existing engineering reducer boundary without a new save field or RNG draw.
+- Present one primary extension, a `Primary Weapon Circuit` rail, a `Weapon circuit` grid metric, and a sixth `S` stat only on primary weapon cards.
+- Cover the exact two-to-six capacity matrix, zero-capacity non-primary hardware, browser-visible expansion and contraction, responsive layout, snapshots, and release smoke.
+
+Status:
+
+- Implemented in work order 190. `ComponentCircuit` derives the complete capacity budget from the mounted primary weapon and existing source/sector/quality metadata. `ItemSockets` retains universal assignment and deterministic reconciliation, while Foundry projections display capacity only where the primary weapon owns it.

@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
+import { getShipModuleById } from '../../src/content/shipModules';
 import { generateRunSkeleton } from '../../src/game/Generation';
-import { getComponentCircuitSlotTypes } from '../../src/game/ComponentCircuit';
 import {
-  acquireComponent,
-  createEngineeringState,
-  generateComponentSalvage
-} from '../../src/game/Foundry';
+  getComponentCircuitCapacity,
+  getComponentCircuitSlotTypes
+} from '../../src/game/ComponentCircuit';
+import { createEngineeringState } from '../../src/game/Foundry';
 import {
   autoFitItemSockets,
   autoFitItemSocket,
@@ -56,48 +56,57 @@ describe('ship signal circuit', () => {
     expect(fitted).toEqual(replay);
     expect(fitted.every((item) => item.socket)).toBe(true);
     expect(summary).toMatchObject({ fitted: 3, capacity: 3, open: 0, unfitted: 0 });
-    expect(summary.extensions).toHaveLength(3);
-    expect(summary.extensions.every((extension) => extension.capacity === 1)).toBe(true);
-    expect(summary.channels).toEqual([{ type: 'flex', count: 3 }]);
+    expect(summary.extensions).toHaveLength(1);
+    expect(summary.extensions[0]).toMatchObject({ capacity: 3 });
+    expect(summary.channels).toEqual([
+      { type: 'weapon', count: 2 },
+      { type: 'flex', count: 1 }
+    ]);
     expect(getActiveFittedItems(fitted, engineering.committed)).toHaveLength(3);
   });
 
-  it('tiers component circuit capacity from contract issue through Act I and Act II salvage', () => {
+  it('projects circuit capacity only from the primary weapon with quality-scaled variation', () => {
     const run = generateRunSkeleton('SOCKET-CAPACITY-TIERS');
-    let engineering = createEngineeringState(run.contracts[0]!.loadout);
-    const starterSlots = run.contracts.flatMap((contract) =>
-      createEngineeringState(contract.loadout).committed.components.map(
-        getComponentCircuitSlotTypes
-      )
+    const engineering = createEngineeringState(run.contracts[0]!.loadout);
+    const starterPrimary = engineering.committed.components.find(
+      (component) => getShipModuleById(component.moduleId).slot === 'primary'
     );
-    const generateAt = (sectorIndex: number) =>
-      generateComponentSalvage({
-        seed: run.seed,
-        saveFingerprint: 'capacity-tiers',
-        sectorIndex,
-        routeKind: 'elite',
-        sectorId: run.sectors[sectorIndex - 1]!.sectorId,
-        bossRequired: false,
-        state: engineering
-      });
-    const actOneOpening = generateAt(1);
-    engineering = acquireComponent(engineering, actOneOpening);
-    const actOneFinale = generateAt(9);
-    engineering = acquireComponent(engineering, actOneFinale);
-    const actTwoOpening = generateAt(10);
-    engineering = acquireComponent(engineering, actTwoOpening);
-    const actThreeOpening = generateAt(19);
+    if (!starterPrimary) throw new Error('Expected a contract primary weapon.');
+    const nonPrimary = engineering.committed.components.filter(
+      (component) => getShipModuleById(component.moduleId).slot !== 'primary'
+    );
+    const recovered = (sectorIndex: number, qualityId: typeof starterPrimary.qualityId) => ({
+      ...starterPrimary,
+      source: 'combat' as const,
+      acquiredSectorIndex: sectorIndex,
+      qualityId
+    });
 
-    expect(starterSlots.every((slots) => slots.length === 1)).toBe(true);
-    expect(starterSlots.every((slots) => slots[0] === 'flex')).toBe(true);
-    expect(getComponentCircuitSlotTypes(actOneOpening)).toHaveLength(2);
-    expect(getComponentCircuitSlotTypes(actOneFinale)).toHaveLength(2);
-    expect(getComponentCircuitSlotTypes(actTwoOpening)).toHaveLength(3);
-    expect(getComponentCircuitSlotTypes(actThreeOpening)).toHaveLength(3);
-    expect(getComponentCircuitSlotTypes(actTwoOpening)).toEqual([
-      expect.not.stringMatching('flex'),
+    expect(getComponentCircuitCapacity(starterPrimary)).toBe(3);
+    expect(getComponentCircuitSlotTypes(starterPrimary)).toEqual(['weapon', 'flex', 'weapon']);
+    expect(nonPrimary.every((component) => getComponentCircuitCapacity(component) === 0)).toBe(
+      true
+    );
+    expect(
+      nonPrimary.every((component) => getComponentCircuitSlotTypes(component).length === 0)
+    ).toBe(true);
+    expect(
+      (['standard', 'tuned', 'prototype', 'relic'] as const).map((quality) =>
+        getComponentCircuitCapacity(recovered(1, quality))
+      )
+    ).toEqual([2, 3, 4, 5]);
+    expect(
+      (['standard', 'tuned', 'prototype', 'relic'] as const).map((quality) =>
+        getComponentCircuitCapacity(recovered(10, quality))
+      )
+    ).toEqual([3, 4, 5, 6]);
+    expect(getComponentCircuitSlotTypes(recovered(19, 'relic'))).toEqual([
+      'weapon',
       'flex',
-      expect.not.stringMatching('flex')
+      'weapon',
+      'flex',
+      'weapon',
+      'flex'
     ]);
   });
 
@@ -122,23 +131,23 @@ describe('ship signal circuit', () => {
     const removedComponent = engineering.committed.components.find(
       (component) => component.id === removedComponentId
     )!;
-    const actOneReplacement = {
+    const recoveredReplacement = {
       ...removedComponent,
-      id: 'act-one-replacement',
+      id: 'recovered-replacement',
       source: 'combat' as const,
       sourceLabel: 'Combat wreckage',
-      acquiredSectorIndex: 1
+      acquiredSectorIndex: 10
     };
-    const withActOneReplacement = {
+    const withRecoveredReplacement = {
       ...engineering.committed,
-      components: [...engineering.committed.components, actOneReplacement],
+      components: [...engineering.committed.components, recoveredReplacement],
       mounts: engineering.committed.mounts.map((mount) =>
         mount.componentId === removedComponentId
-          ? { ...mount, componentId: actOneReplacement.id }
+          ? { ...mount, componentId: recoveredReplacement.id }
           : mount
       )
     };
-    const rerouted = reconcileItemSockets(movedTwice, withActOneReplacement);
+    const rerouted = reconcileItemSockets(movedTwice, withRecoveredReplacement);
 
     expect(reordered.map((item) => item.itemId)).toEqual([
       'item_salvage_magnet',
@@ -149,7 +158,7 @@ describe('ship signal circuit', () => {
       componentId: salvageAssignment.componentId,
       socketIndex: salvageAssignment.socketIndex
     });
-    expect(getActiveFittedItems(rerouted, withActOneReplacement)).toHaveLength(3);
+    expect(getActiveFittedItems(rerouted, withRecoveredReplacement)).toHaveLength(3);
     expect(rerouted.some((item) => item.socket?.componentId === removedComponentId)).toBe(false);
   });
 
@@ -178,52 +187,52 @@ describe('ship signal circuit', () => {
     expect(getActiveFittedItems(acquired, engineering.committed).at(-1)?.acquisitionOrder).toBe(2);
   });
 
-  it('fits every upgrade domain into any open installed conduit', () => {
+  it('fits every upgrade domain into any open primary-weapon conduit', () => {
     const run = generateRunSkeleton('SOCKET-UNIVERSAL-CONDUITS', { unlockedIds: [] });
     const contract = run.contracts.find(
       (candidate) => candidate.shipId === 'ship_missile_accountant'
     );
     if (!contract) throw new Error('Expected the Missile Accountant circuit fixture.');
     const engineering = createEngineeringState(contract.loadout);
-    const secondaryHardpoint = contract.loadout.mounts.find((mount) => mount.slot === 'secondary');
-    const secondaryMount = engineering.committed.mounts.find(
-      (mount) => mount.hardpointId === secondaryHardpoint?.hardpointId
+    const primaryHardpoint = contract.loadout.mounts.find((mount) => mount.slot === 'primary');
+    const primaryMount = engineering.committed.mounts.find(
+      (mount) => mount.hardpointId === primaryHardpoint?.hardpointId
     );
-    const secondaryComponent = engineering.committed.components.find(
-      (component) => component.id === secondaryMount?.componentId
+    const primaryComponent = engineering.committed.components.find(
+      (component) => component.id === primaryMount?.componentId
     );
-    if (!secondaryMount || !secondaryComponent) {
-      throw new Error('Expected installed secondary ordnance hardware.');
+    if (!primaryMount || !primaryComponent) {
+      throw new Error('Expected installed primary weapon hardware.');
     }
     const universalSnapshot = {
       ...engineering.committed,
       components: [
         {
-          ...secondaryComponent,
+          ...primaryComponent,
           source: 'combat' as const,
           sourceLabel: 'Act I salvage',
           acquiredSectorIndex: 1
         }
       ],
-      mounts: [{ ...secondaryMount, installationOrder: 0 }]
+      mounts: [{ ...primaryMount, installationOrder: 0 }]
     };
     const slots = getItemSocketSlots(universalSnapshot);
     const items: ItemInstance[] = [
       {
         itemId: 'item_split_prism',
         acquisitionOrder: 0,
-        socket: { componentId: secondaryComponent.id, socketIndex: 1, circuitOrder: 0 }
+        socket: { componentId: primaryComponent.id, socketIndex: 1, circuitOrder: 0 }
       },
       { itemId: 'item_signal_clone_stamp', acquisitionOrder: 1, socket: null }
     ];
 
-    expect(slots.map((slot) => slot.type)).toEqual(['ordnance', 'flex']);
+    expect(slots.map((slot) => slot.type)).toEqual(['weapon', 'flex']);
     expect(getItemCircuitDomains('item_signal_clone_stamp')).not.toContain('ordnance');
     expect(canFitItemInCircuit(items, universalSnapshot, 1)).toBe(true);
 
     const fitted = fitItemInCircuit(items, universalSnapshot, 1);
     expect(fitted.find((item) => item.acquisitionOrder === 1)?.socket).toMatchObject({
-      componentId: secondaryComponent.id,
+      componentId: primaryComponent.id,
       socketIndex: 0,
       circuitOrder: 1
     });

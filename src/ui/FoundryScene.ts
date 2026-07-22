@@ -410,22 +410,24 @@ export class FoundryScene implements Scene {
   private createComponentStatStrip(component: FoundryComponentInstance): HTMLElement {
     const stats = createFoundryComponentStatModel(component);
     const strip = document.createElement('div');
-    strip.className = 'foundry-component-stats';
+    strip.className = `foundry-component-stats${stats.slot === 'primary' ? ' foundry-component-stats-primary' : ''}`;
+    const circuitAria = stats.slot === 'primary' ? `, primary weapon circuit ${stats.circuit}` : '';
     strip.setAttribute(
       'aria-label',
-      `Power ${stats.power}, heat ${stats.heat}, mass ${stats.mass}, command ${stats.command}, instability ${stats.instability}, circuit ${stats.circuit}`
+      `Power ${stats.power}, heat ${stats.heat}, mass ${stats.mass}, command ${stats.command}, instability ${stats.instability}${circuitAria}`
     );
-    const values: readonly (readonly [string, string, number])[] = [
+    const values: (readonly [string, string, number])[] = [
       ['power', 'P', stats.power],
       ['heat', 'H', stats.heat],
       ['mass', 'M', stats.mass],
       ['command', 'C', stats.command],
-      ['instability', '!', stats.instability],
-      ['circuit', 'S', stats.circuit]
+      ['instability', '!', stats.instability]
     ];
+    if (stats.slot === 'primary') values.push(['circuit', 'S', stats.circuit]);
     for (const [id, glyph, value] of values) {
       const stat = document.createElement('span');
       stat.dataset.stat = id;
+      if (id === 'circuit') stat.title = 'Primary weapon circuit slots';
       stat.innerHTML = `<b>${glyph}</b>${value}`;
       strip.append(stat);
     }
@@ -620,7 +622,7 @@ export class FoundryScene implements Scene {
     const header = document.createElement('header');
     header.className = 'foundry-circuit-header';
     const title = document.createElement('h2');
-    title.textContent = 'Signal Circuit';
+    title.textContent = 'Primary Weapon Circuit';
     const budget = document.createElement('strong');
     budget.className = 'foundry-circuit-budget';
     budget.textContent = `${summary.fitted}/${summary.capacity} LIVE / ${summary.open} OPEN`;
@@ -629,17 +631,17 @@ export class FoundryScene implements Scene {
     copy.className = 'foundry-circuit-copy';
     copy.textContent =
       summary.chain.length > 0
-        ? `CORE -> ${summary.chain.join(' -> ')} -> WEAPON. Every upgrade fits every conduit; each stage receives the signal built before it.`
-        : 'No live chain. Every upgrade fits every installed conduit; append from the rack.';
+        ? `PRIMARY BUS -> ${summary.chain.join(' -> ')} -> MUZZLE. Every upgrade fits every primary-weapon conduit; each stage receives the signal built before it.`
+        : 'No live chain. The mounted primary weapon supplies every conduit; append from the rack.';
 
     const extensions = document.createElement('div');
     extensions.className = 'foundry-circuit-extensions';
-    extensions.setAttribute('aria-label', 'Installed component circuit extensions');
+    extensions.setAttribute('aria-label', 'Mounted primary weapon circuit capacity');
     for (const extension of summary.extensions) {
       const chip = document.createElement('span');
       chip.className = 'foundry-circuit-extension';
       chip.dataset.testid = 'foundry-circuit-extension';
-      chip.innerHTML = `<b>+${extension.capacity}</b><span>${extension.moduleName}</span><small>UNIVERSAL</small>`;
+      chip.innerHTML = `<b>${extension.capacity}</b><span>${extension.moduleName}</span><small>PRIMARY WEAPON SLOTS</small>`;
       extensions.append(chip);
     }
 
