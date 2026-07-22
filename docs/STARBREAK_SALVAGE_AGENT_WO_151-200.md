@@ -1284,3 +1284,31 @@ Status: implemented. `ContractSelectScene` resolves each existing contract `star
 The managed browser pass used seed `CONTRACT-GLYPHS-199`. The highlighted Pulse Cannon rendered its twin-cell glyph while the three contract cards showed Pulse Cannon, Basic Blaster, and Light Needle Laser identities. Selecting Relic Thief immediately changed the highlighted glyph and accessible label to Basic Blaster. The desktop composition remained compact and browser warning/error logs were empty; the focused Chromium regression separately covers the 390 x 844 layout and selection synchronization.
 
 Verification: the focused Choose Contract Chromium path passes. `npm run verify:release` passes typecheck, ESLint, all 115 Vitest files and 741 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,022.87 kB` minified / `280.59 kB` gzip initial JavaScript and `103.58 kB` / `20.70 kB` CSS, changes of `+0.21 kB` / `-0.05 kB` JavaScript and `+0.35 kB` / `+0.05 kB` CSS over work order 198. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, contract generation, loadout rule, RNG stream, static base path, or warning threshold changed.
+
+## Work order 200 - Permanent surface beacon and parallax echoes
+
+Goal: move the reliable lunar entry ping into permanent variety progression and replace its rare run slot with an order-sensitive secondary-projectile tool.
+
+Prompt:
+
+> Move Surface Beacon Drone to the permanent scrap upgrade menu. Preserve restored-run compatibility without allowing the old item and new upgrade to stack, then add a rare circuit item that rewards generating secondary shots earlier in the ordered chain.
+
+Acceptance criteria:
+
+- Surface Beacon Drone is absent from live reward pools and appears as a 14 kg Archive upgrade behind Relic Pattern Dossier.
+- The permanent upgrade grants one salvage and 5% special charge at lunar-sector entry, grants nothing elsewhere, and does not stack with a restored legacy Surface Beacon item.
+- Surface Beacon is excluded from the global generation fingerprint so buying it does not reshape unrelated seeded sectors, routes, rewards, or shops.
+- The retired item record and sector-start hook remain readable for restored snapshots but cannot enter a new run.
+- A replacement rare item occupies the same reward slot without changing active catalog breadth or known-seed weighted selection.
+- Parallax Echo Lattice phases only secondary projectiles created by earlier circuit stages and extends those shots' flight by 0.30 seconds. The base shot and branches generated after the Lattice remain unchanged.
+- Phased branches reuse the existing visible phase treatment and consumed one-target pierce instead of introducing another projectile state.
+- Hardpoint Control reports whether an earlier shot-creating stage satisfies the Lattice and updates after circuit reordering.
+- Focused hook, presentation, combat-entry, permanent-upgrade, catalog, Upgrade Bay, and Chromium coverage remain green.
+
+Status: implemented. Surface Beacon Drone is now the seventeenth permanent Upgrade Bay card in Archive progression. `UpgradeEffects` projects its lunar entry ping, while `CombatState` gives a restored legacy item precedence so old snapshots receive the effect exactly once. The upgrade is classified as non-generative and the retired item remains only as compatibility content.
+
+Parallax Echo Lattice is a rare lunar/combat circuit item. Its ordered fire hook recognizes the existing `procDepth` boundary: shots already created upstream receive phase and 0.30 seconds of flight, while the original shot and downstream-created branches do not. Its authored rarity, weight, source profile, reward position, and weighted-generation tags deliberately match the retired Surface Beacon entry, preserving established reward snapshots while changing the player-facing mechanic.
+
+Managed-browser inspection used seed `PARALLAX-ECHO-200`. The Upgrade Bay displayed all 17 cards without horizontal overflow at desktop width, and Surface Beacon showed its Archive category, 14 kg cost, Relic Pattern Dossier prerequisite, and exact lunar-entry effect. The authenticated managed host and browser tab both closed cleanly after inspection.
+
+Verification: focused coverage passes all 158 tests across the seven affected unit files, and the focused Upgrade Bay Chromium path passes. `npm run verify:release` passes typecheck, ESLint, all 115 Vitest files and 745 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,024.53 kB` minified / `280.95 kB` gzip initial JavaScript and `103.58 kB` / `20.70 kB` CSS, changes of `+1.66 kB` / `+0.36 kB` JavaScript and unchanged CSS over work order 199. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, route topology, RNG stream, static base path, actor/projectile cap, or warning threshold changed.

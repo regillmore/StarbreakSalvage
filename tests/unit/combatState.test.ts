@@ -97,7 +97,10 @@ describe('CombatState', () => {
   });
 
   it('applies the permanent Exit Toll refund without doubling a restored item copy', () => {
-    const sectorStartUpgradeEffects = { exitTollRefund: true } as const;
+    const sectorStartUpgradeEffects = {
+      exitTollRefund: true,
+      surfaceBeaconDrone: false
+    } as const;
     const upgraded = createCombatState(bounds, 'EXIT-TOLL-UPGRADE', {
       sectorIndex: 4,
       sectorStartUpgradeEffects,
@@ -112,6 +115,33 @@ describe('CombatState', () => {
 
     expect(upgraded.player.credits).toBe(3);
     expect(restored.player.credits).toBe(3);
+  });
+
+  it('applies the permanent lunar beacon ping without doubling a restored item copy', () => {
+    const sectorStartUpgradeEffects = {
+      exitTollRefund: false,
+      surfaceBeaconDrone: true
+    } as const;
+    const upgraded = createCombatState(bounds, 'SURFACE-BEACON-UPGRADE', {
+      sectorId: 'sector_lunar_surface',
+      sectorStartUpgradeEffects,
+      skipEnemyWaves: true
+    });
+    const restored = createCombatState(bounds, 'SURFACE-BEACON-RESTORED', {
+      sectorId: 'sector_lunar_surface',
+      sectorStartUpgradeEffects,
+      items: [{ itemId: 'item_surface_beacon_drone', acquisitionOrder: 0 }],
+      skipEnemyWaves: true
+    });
+    const nonLunar = createCombatState(bounds, 'SURFACE-BEACON-NON-LUNAR', {
+      sectorId: 'sector_trade_war_corridor',
+      sectorStartUpgradeEffects,
+      skipEnemyWaves: true
+    });
+
+    expect(upgraded.player.salvage).toBe(1);
+    expect(restored.player.salvage).toBe(1);
+    expect(nonLunar.player.salvage).toBe(0);
   });
 
   it('spends stored heat on a Vent shot and exhausts visibly when the reserve is cool', () => {

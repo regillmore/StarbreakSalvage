@@ -78,6 +78,7 @@ import {
 import type { MissionObjectiveResultSnapshot } from './ObjectiveDirector';
 import {
   getExitTollCreditRefund,
+  getSurfaceBeaconSectorStartBonus,
   type BossPhaseUpgradeEffects,
   type SectorStartUpgradeEffects
 } from './UpgradeEffects';
@@ -3212,17 +3213,22 @@ function applySectorStartHooks(
   const upgradeCredits = hasItem(state.items, 'item_exit_toll_transponder')
     ? 0
     : getExitTollCreditRefund(state.sectorStartUpgradeEffects, context.sectorIndex);
+  const surfaceBeaconBonus = getSurfaceBeaconSectorStartBonus(
+    state.sectorStartUpgradeEffects,
+    context.sectorId,
+    hasItem(state.items, 'item_surface_beacon_drone')
+  );
 
   if (payload.creditsBonus + upgradeCredits > 0) {
     state.player.credits += Math.floor(payload.creditsBonus + upgradeCredits);
   }
 
-  if (payload.salvageBonus > 0) {
-    state.player.salvage += Math.floor(payload.salvageBonus);
+  if (payload.salvageBonus + surfaceBeaconBonus.salvageBonus > 0) {
+    state.player.salvage += Math.floor(payload.salvageBonus + surfaceBeaconBonus.salvageBonus);
   }
 
-  if (payload.specialChargeBonus > 0) {
-    gainSpecialCharge(state, payload.specialChargeBonus);
+  if (payload.specialChargeBonus + surfaceBeaconBonus.specialChargeBonus > 0) {
+    gainSpecialCharge(state, payload.specialChargeBonus + surfaceBeaconBonus.specialChargeBonus);
   }
 }
 

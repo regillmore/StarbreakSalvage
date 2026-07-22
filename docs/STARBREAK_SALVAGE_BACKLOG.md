@@ -2833,3 +2833,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 199. `ContractSelectScene` now carries the shared accessible base-weapon glyph into both contract-card Primary rows and the selected live-fire caption, with selection driven solely by the existing `startingWeaponId`.
+
+### BL65 - Permanent surface beacon and parallax echoes
+
+Acceptance:
+
+- Retire Surface Beacon Drone from live run pools and promote its lunar entry ping to a 14 kg Archive upgrade gated by Relic Pattern Dossier.
+- Preserve restored legacy Surface Beacon items, prevent legacy/permanent double application, and exclude the permanent effect from generation fingerprints.
+- Replace the rare slot with Parallax Echo Lattice while preserving active catalog breadth and established weighted reward snapshots.
+- Phase and extend only secondary projectiles that earlier circuit stages have already created; leave the base shot and downstream-created branches unchanged.
+- Reuse the existing consumed phase-pierce identity and expose explicit met/unmet ordered-chain condition copy in Hardpoint Control.
+- Preserve deterministic selection, snapshots, accessibility, static hosting, bounded hook volume, and dependency count.
+
+Status:
+
+- Implemented in work order 200. Surface Beacon now lives in Archive progression with restored-item precedence, while Parallax Echo Lattice turns upstream-generated branches into longer-lived one-hit phase projectiles and reports its ordering condition in the signal circuit.

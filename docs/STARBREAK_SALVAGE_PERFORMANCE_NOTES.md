@@ -643,3 +643,11 @@ The checked build emits `1,022.66 kB` minified / `280.64 kB` gzip initial JavaSc
 Choose Contract creates three compact weapon icons and one highlighted-comparison icon from the same bounded inline-SVG renderer introduced in work order 198. They are static DOM nodes rebuilt only when the menu redraws after contract selection; the live attack preview retains its existing canvas cadence and projectile budget. No network asset, animation timer, cache, retained history, actor, projectile, effect, collision path, or fixed-step branch is added.
 
 The checked build emits `1,022.87 kB` minified / `280.59 kB` gzip initial JavaScript and `103.58 kB` / `20.70 kB` CSS, changes of `+0.21 kB` / `-0.05 kB` JavaScript and `+0.35 kB` / `+0.05 kB` CSS over work order 198. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, generation pass, RNG stream, static base path, or warning threshold changed.
+
+## Work order 200 permanent-beacon/parallax budgets
+
+Surface Beacon adds one permanent-effect flag projection and one lunar-sector id check when a combat scene is created. Its compatibility guard scans the already-small fitted-item list once at that boundary; it performs no work during fixed-step simulation and advances no RNG.
+
+Parallax Echo Lattice maps the already-bounded current volley once when its fire hook resolves. It changes tags and TTL on eligible existing projectiles but creates no projectile, actor, effect, timer, retained history, target scan, collision branch, or new phase system. Foundry condition copy reuses the bounded attack-preview reducer.
+
+The checked build emits `1,024.53 kB` minified / `280.95 kB` gzip initial JavaScript and unchanged `103.58 kB` / `20.70 kB` CSS, increases of `1.66 kB` / `0.36 kB` JavaScript over work order 199. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, route topology, generation pass, RNG stream, static base path, simulation cap, or warning threshold changed.

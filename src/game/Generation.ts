@@ -357,7 +357,8 @@ export function createRunGenerationSaveFingerprint(
     'upgrade_market_echo_locator',
     'upgrade_convoy_receipt_printer',
     'upgrade_mining_laser_transit',
-    'upgrade_ambush_insurance_stamp'
+    'upgrade_ambush_insurance_stamp',
+    'upgrade_surface_beacon_drone'
   ]);
   const upgrades =
     upgradeEffects.activeUpgradeIds

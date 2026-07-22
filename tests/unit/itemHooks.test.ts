@@ -181,6 +181,39 @@ describe('item synergies', () => {
     expect(laterBranches.every((projectile) => !projectile.tags.includes('plasma'))).toBe(true);
   });
 
+  it('lets Parallax Echo Lattice phase only secondary shots created earlier in the chain', () => {
+    const splitThenLattice: ItemInstance[] = [
+      { itemId: 'item_split_prism', acquisitionOrder: 0 },
+      { itemId: 'item_parallax_echo_lattice', acquisitionOrder: 1 }
+    ];
+    const latticeThenSplit: ItemInstance[] = [
+      { itemId: 'item_parallax_echo_lattice', acquisitionOrder: 0 },
+      { itemId: 'item_split_prism', acquisitionOrder: 1 }
+    ];
+
+    const phased = applyItemHooks('onFire', splitThenLattice, {
+      volleyIndex: 1,
+      projectiles: [baseProjectile]
+    });
+    const unphased = applyItemHooks('onFire', latticeThenSplit, {
+      volleyIndex: 1,
+      projectiles: [baseProjectile]
+    });
+    const phasedBranches = phased.projectiles.filter((projectile) => projectile.procDepth > 0);
+    const primary = phased.projectiles.find((projectile) => projectile.procDepth === 0);
+
+    expect(phasedBranches).toHaveLength(2);
+    expect(phasedBranches.every((projectile) => projectile.tags.includes('phase'))).toBe(true);
+    expect(phasedBranches.every((projectile) => projectile.ttl === baseProjectile.ttl + 0.3)).toBe(
+      true
+    );
+    expect(primary?.tags).not.toContain('phase');
+    expect(primary?.ttl).toBe(baseProjectile.ttl);
+    expect(unphased.projectiles.every((projectile) => !projectile.tags.includes('phase'))).toBe(
+      true
+    );
+  });
+
   it('lets Forkline Dynamo charge only the outer branches already built upstream', () => {
     const splitThenCharge: ItemInstance[] = [
       { itemId: 'item_split_prism', acquisitionOrder: 0 },

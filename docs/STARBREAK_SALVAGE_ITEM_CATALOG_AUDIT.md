@@ -157,6 +157,14 @@ The five Boss Pressure definitions and their original hook implementations remai
 | Phase/Graze      | 12             |
 | Heat/Prototype   | 14             |
 
+## Work Order 200: Permanent Surface Beacon / Parallax Echo Lattice
+
+- `item_surface_beacon_drone` is now a retired compatibility record. It remains hook-readable for restored snapshots but is absent from every live reward source.
+- `upgrade_surface_beacon_drone` moves the lunar entry identity into Archive progression: 14 kg, gated by Relic Pattern Dossier, granting one salvage and 5% special charge on lunar entry.
+- Legacy-item precedence prevents a restored run from receiving both versions of the same entry ping, and the permanent flag is non-generative.
+- `item_parallax_echo_lattice` is the new rare lunar/combat replacement. It phases and extends only projectiles already created by an upstream circuit stage, creating meaningful Split, Drone, Shard, Echo, and similar ordered-chain interactions without increasing projectile count.
+- The replacement retains the retired entry's rarity, weight, generation tags, sources, and pool position. Active catalog breadth remains 60; the complete catalog contains 74 records including retired compatibility items.
+
 ## Former Bridge Effects Promoted In Work Order 132
 
 These former bridge entries now have live, order-sensitive circuit behavior:

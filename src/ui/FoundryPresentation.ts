@@ -501,6 +501,18 @@ function createCircuitStageCondition(
         }
       : { met: false, label: 'CONDITION NOT MET · NEEDS AN EARLIER OVERKILL SOURCE' };
   }
+  if (itemId === 'item_parallax_echo_lattice') {
+    const secondaryShots = incoming.filter((projectile) => projectile.procDepth > 0);
+    return secondaryShots.length > 0
+      ? {
+          met: true,
+          label: `CONDITION MET · ${secondaryShots.length} SECONDARY SHOT${secondaryShots.length === 1 ? '' : 'S'} PHASED · +0.30S FLIGHT`
+        }
+      : {
+          met: false,
+          label: 'CONDITION NOT MET · NEEDS AN EARLIER SHOT-CREATING STAGE'
+        };
+  }
 
   return null;
 }

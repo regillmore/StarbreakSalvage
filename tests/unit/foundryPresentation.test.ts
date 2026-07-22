@@ -541,6 +541,40 @@ describe('foundry visual presentation', () => {
     });
   });
 
+  it('shows Parallax Echo Lattice phasing only secondary shots created upstream', () => {
+    const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
+      (candidate) => candidate.shipId === 'ship_debt_runner'
+    );
+    if (!contract) throw new Error('Expected a single-projectile contract.');
+    const linked = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+      { itemId: 'item_split_prism', acquisitionOrder: 0 },
+      { itemId: 'item_parallax_echo_lattice', acquisitionOrder: 1 }
+    ]);
+    const unmet = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+      { itemId: 'item_parallax_echo_lattice', acquisitionOrder: 0 },
+      { itemId: 'item_split_prism', acquisitionOrder: 1 }
+    ]);
+
+    expect(linked.circuitStages[1]).toMatchObject({
+      name: 'Parallax Echo Lattice',
+      outputLabel: 'CONDITION MET · 2 SECONDARY SHOTS PHASED · +0.30S FLIGHT',
+      conditionMet: true,
+      addedTags: ['phase'],
+      changed: true
+    });
+    expect(
+      linked.attackSimulation.projectiles.filter(
+        (projectile) => projectile.waveIndex === 0 && projectile.tags.includes('phase')
+      )
+    ).toHaveLength(2);
+    expect(unmet.circuitStages[0]).toMatchObject({
+      name: 'Parallax Echo Lattice',
+      outputLabel: 'CONDITION NOT MET · NEEDS AN EARLIER SHOT-CREATING STAGE',
+      conditionMet: false,
+      changed: false
+    });
+  });
+
   it('projects prototype-vent cadence shifts onto affected earlier circuit cards', () => {
     const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
       (candidate) => candidate.shipId === 'ship_debt_runner'

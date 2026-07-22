@@ -25,7 +25,8 @@ export const UPGRADE_EFFECT_KINDS = [
   'marketEchoLocator',
   'convoyReceiptPrinter',
   'miningLaserTransit',
-  'ambushInsuranceStamp'
+  'ambushInsuranceStamp',
+  'surfaceBeaconDrone'
 ] as const;
 
 export type UpgradeCategory = (typeof UPGRADE_CATEGORIES)[number];
@@ -48,7 +49,8 @@ export type UpgradeId =
   | 'upgrade_market_echo_locator'
   | 'upgrade_convoy_receipt_printer'
   | 'upgrade_mining_laser_transit'
-  | 'upgrade_ambush_insurance_stamp';
+  | 'upgrade_ambush_insurance_stamp'
+  | 'upgrade_surface_beacon_drone';
 
 export interface UpgradeDefinition {
   readonly id: UpgradeId;
@@ -238,6 +240,17 @@ export const UPGRADES: readonly UpgradeDefinition[] = [
     effect: 'Elite and Faction Ambush routes pay 1 salvage and favor armor and credit rewards.',
     cost: 10,
     prerequisites: ['upgrade_route_ledger_uplink']
+  },
+  {
+    id: 'upgrade_surface_beacon_drone',
+    category: 'archive',
+    iconKey: 'vault-index',
+    effectKind: 'surfaceBeaconDrone',
+    name: 'Surface Beacon Drone',
+    summary: 'a standing lunar survey drone assigned to every expedition manifest',
+    effect: 'Lunar sectors begin with 1 salvage and 5% special charge from a beacon ping.',
+    cost: 14,
+    prerequisites: ['upgrade_relic_pattern_dossier']
   }
 ];
 

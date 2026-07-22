@@ -990,6 +990,15 @@ seed + permanent save fingerprint
 - Selecting a contract redraws the highlighted glyph from the newly selected contract alongside the existing live-fire pattern. It does not mutate the contract, weapon definition, starting loadout, ignition, or preview simulation.
 - The change adds four bounded static SVG nodes to the contract menu and no asset request, canvas-frame branch, save/snapshot field, migration, generation pass, RNG draw, actor, projectile, effect, or dependency.
 
+### Work order 200 surface-beacon/parallax boundary
+
+- `UpgradeEffects.projectSectorStartUpgradeEffects` owns the permanent Surface Beacon flag. `CombatState` combines its lunar-only projection with legacy item hooks at sector creation, and explicit restored-item precedence guarantees the entry ping applies at most once.
+- Surface Beacon is a non-generation upgrade. Buying it changes the run-entry resource effect but not expedition fingerprints, route construction, reward/shop manifests, or named RNG streams.
+- The retired `item_surface_beacon_drone` definition and hook remain solely for restored snapshot compatibility. New selection operates on active items and cannot award it.
+- Parallax Echo Lattice replaces the live pool entry one-for-one with the same rarity, weight, authored generation tags, sources, and position. This preserves existing weighted reward snapshots while active breadth remains 60.
+- Parallax is an ordered `onFire` modifier. It maps the already-bounded volley, applies phase plus 0.30 seconds of TTL only when `procDepth > 0`, and creates no projectile. The established phase collision consumer supplies visible one-target pierce.
+- `FoundryPresentation` derives the met/unmet condition and phased-shot count from the same ordered preview reducer used by combat. No second circuit interpretation or persisted presentation state is introduced.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

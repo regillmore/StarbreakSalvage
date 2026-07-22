@@ -226,6 +226,7 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_split_prism',
     'item_boreline_crimper',
     'item_gangue_compression_die',
+    'item_parallax_echo_lattice',
     'item_forkline_dynamo',
     'item_drone_uplink',
     'item_heat_sink_saint',
@@ -765,6 +766,21 @@ function applyOnFire(
           tags: addTags(projectile.tags, ['plasma'])
         };
       })
+    };
+  }
+
+  if (itemId === 'item_parallax_echo_lattice') {
+    return {
+      ...payload,
+      projectiles: payload.projectiles.map((projectile) =>
+        projectile.procDepth > 0
+          ? {
+              ...projectile,
+              ttl: projectile.ttl + 0.3,
+              tags: addTags(projectile.tags, ['phase'])
+            }
+          : projectile
+      )
     };
   }
 

@@ -15,6 +15,7 @@ import {
   getMarketEchoLocatorRewardBiasTags,
   getMarketEchoLocatorRewardChoiceBonus,
   getMiningLaserTransitRewardBiasTags,
+  getSurfaceBeaconSectorStartBonus,
   resolveRunUpgradeEffects
 } from '../../src/game/UpgradeEffects';
 
@@ -153,8 +154,34 @@ describe('run upgrade effects', () => {
   it('projects the Exit Toll refund as a non-generation permanent effect', () => {
     const toll = resolveRunUpgradeEffects(['upgrade_exit_toll_transponder']);
 
-    expect(toll.sectorStart).toEqual({ exitTollRefund: true });
+    expect(toll.sectorStart).toEqual({
+      exitTollRefund: true,
+      surfaceBeaconDrone: false
+    });
     expect(createRunGenerationSaveFingerprint([], toll)).toBe(
+      createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
+    );
+  });
+
+  it('projects Surface Beacon Drone as a lunar-only non-generation entry ping', () => {
+    const beacon = resolveRunUpgradeEffects(['upgrade_surface_beacon_drone']);
+
+    expect(beacon.sectorStart).toEqual({
+      exitTollRefund: false,
+      surfaceBeaconDrone: true
+    });
+    expect(getSurfaceBeaconSectorStartBonus(beacon.sectorStart, 'sector_lunar_surface')).toEqual({
+      salvageBonus: 1,
+      specialChargeBonus: 0.05
+    });
+    expect(getSurfaceBeaconSectorStartBonus(beacon.sectorStart, 'sector_trade_war')).toEqual({
+      salvageBonus: 0,
+      specialChargeBonus: 0
+    });
+    expect(
+      getSurfaceBeaconSectorStartBonus(beacon.sectorStart, 'sector_lunar_surface', true)
+    ).toEqual({ salvageBonus: 0, specialChargeBonus: 0 });
+    expect(createRunGenerationSaveFingerprint([], beacon)).toBe(
       createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
     );
   });

@@ -172,6 +172,7 @@ export type ItemId =
   | 'item_crater_shadow_lens'
   | 'item_regolith_scoop_array'
   | 'item_surface_beacon_drone'
+  | 'item_parallax_echo_lattice'
   | 'item_mining_laser_transit'
   | 'item_strata_bore_collimator'
   | 'item_low_orbit_ore_scrip'
@@ -1161,8 +1162,27 @@ export const ITEMS: readonly ItemDefinition[] = [
       sources: ['combat', 'lunar'],
       unlockTier: 'baseline',
       implementationStatus: 'live',
+      retired: true,
       stacking: 'unique',
       uiTags: ['lunar', 'drone']
+    }
+  },
+  {
+    id: 'item_parallax_echo_lattice',
+    name: 'Parallax Echo Lattice',
+    rarity: 'rare',
+    tags: ['drone', 'phase'],
+    hooks: ['onFire'],
+    effect:
+      'secondary shots created earlier in the chain phase through one target and hold flight longer',
+    weight: 5,
+    metadata: {
+      family: 'lunar-surface',
+      sources: ['combat', 'lunar'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['lunar', 'drone', 'phase', 'split']
     }
   },
   {
@@ -1658,7 +1678,7 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_prototype_vent_script',
       'item_crater_shadow_lens',
       'item_regolith_scoop_array',
-      'item_surface_beacon_drone',
+      'item_parallax_echo_lattice',
       'item_strata_bore_collimator',
       'item_gangue_compression_die',
       'item_forkline_dynamo',

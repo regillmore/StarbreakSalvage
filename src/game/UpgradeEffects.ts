@@ -11,6 +11,12 @@ export interface BossPhaseUpgradeEffects {
 
 export interface SectorStartUpgradeEffects {
   readonly exitTollRefund: boolean;
+  readonly surfaceBeaconDrone: boolean;
+}
+
+export interface SurfaceBeaconSectorStartBonus {
+  readonly salvageBonus: number;
+  readonly specialChargeBonus: number;
 }
 
 export interface RouteChosenUpgradeEffects {
@@ -71,7 +77,8 @@ export function resolveRunUpgradeEffects(
     miningLaserTransit: hasUpgrade('upgrade_mining_laser_transit'),
     seedSurvey: hasUpgrade('upgrade_seed_cartographer'),
     sectorStart: {
-      exitTollRefund: hasUpgrade('upgrade_exit_toll_transponder')
+      exitTollRefund: hasUpgrade('upgrade_exit_toll_transponder'),
+      surfaceBeaconDrone: hasUpgrade('upgrade_surface_beacon_drone')
     },
     routeChosen: {
       lowOrbitOreRefund: hasUpgrade('upgrade_low_orbit_ore_scrip'),
@@ -134,6 +141,10 @@ export function getRunUpgradeDebugLabels(effects: RunUpgradeEffects): string[] {
     labels.push('exit toll refund');
   }
 
+  if (effects.sectorStart.surfaceBeaconDrone) {
+    labels.push('surface beacon');
+  }
+
   if (effects.routeChosen.lowOrbitOreRefund) {
     labels.push('ore scrip refund');
   }
@@ -162,6 +173,17 @@ export function getExitTollCreditRefund(
   sectorIndex: number
 ): number {
   return effects?.exitTollRefund ? Math.min(3, Math.max(1, Math.floor(sectorIndex))) : 0;
+}
+
+export function getSurfaceBeaconSectorStartBonus(
+  effects: SectorStartUpgradeEffects | null,
+  sectorId: string,
+  legacyItemActive = false
+): SurfaceBeaconSectorStartBonus {
+  const active = effects?.surfaceBeaconDrone && !legacyItemActive && sectorId.includes('lunar');
+  return active
+    ? { salvageBonus: 1, specialChargeBonus: 0.05 }
+    : { salvageBonus: 0, specialChargeBonus: 0 };
 }
 
 export function getLowOrbitOreScripCreditRefund(
@@ -249,10 +271,7 @@ export function getMarketEchoLocatorRewardChoiceBonus(
   routeKind: RewardContextKind,
   _legacyItemActive = false
 ): number {
-  return effects.marketEchoLocator &&
-    (routeKind === 'shop' || routeKind === 'repair')
-    ? 1
-    : 0;
+  return effects.marketEchoLocator && (routeKind === 'shop' || routeKind === 'repair') ? 1 : 0;
 }
 
 export function getMarketEchoLocatorRewardBiasTags(
