@@ -631,3 +631,9 @@ Reward and shop rendering no longer constructs a hypothetical item-instance arra
 The change removes code and DOM volume and adds no dependency, save/snapshot field, RNG draw, item definition, actor, projectile, effect, hook, timer, collision path, or fixed-step work.
 
 The checked build emits `1,018.73 kB` minified / `279.52 kB` gzip initial JavaScript and `102.03 kB` / `20.35 kB` CSS, changes of `-0.70 kB` / `-0.22 kB` JavaScript and `-0.02 kB` / `-0.01 kB` CSS over work order 196. The existing Vite large-chunk advisory remains; no warning threshold changed.
+
+## Work order 198 primary-weapon icon budgets
+
+Each visible weapon card creates one inline SVG containing the shared four-corner frame and at most nine simple paths, lines, circles, or rectangles. Reward and shop add one icon to their already-bounded weapon offer; Primary Arsenal adds one mounted icon; Primary Cargo adds at most one icon per already-bounded loose-primary card. The glyphs are static DOM created only when those menus redraw and add no animation, canvas-frame work, network asset, cache, timer, retained history, actor, projectile, effect, collision path, or fixed-step branch.
+
+The checked build emits `1,022.66 kB` minified / `280.64 kB` gzip initial JavaScript and `103.23 kB` / `20.65 kB` CSS, increases of `3.93 kB` / `1.12 kB` JavaScript and `1.20 kB` / `0.30 kB` CSS over work order 197. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, generation pass, RNG stream, static base path, or warning threshold changed.

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { SHIPS, type ShipId, type WeaponId } from '../../src/content/ships';
+import { WEAPON_ICON_KINDS, WEAPONS } from '../../src/content/weapons';
 import {
   createCombatState,
   updateCombatState,
@@ -17,6 +18,12 @@ const bounds: CombatBounds = {
 };
 
 describe('ship stats and weapon identity', () => {
+  it('assigns every primary weapon base a distinct authored icon silhouette', () => {
+    expect(WEAPONS).toHaveLength(8);
+    expect(new Set(WEAPONS.map((weapon) => weapon.iconKind)).size).toBe(WEAPONS.length);
+    expect(new Set(WEAPONS.map((weapon) => weapon.iconKind))).toEqual(new Set(WEAPON_ICON_KINDS));
+  });
+
   it('defines distinct baseline ship appearances without changing hit radius stats', () => {
     const baselineShips = [
       getShip('ship_debt_runner'),

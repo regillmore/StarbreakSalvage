@@ -2,10 +2,8 @@ import { getComponentQuality } from '../content/engineering';
 import { getShipModuleById } from '../content/shipModules';
 import { getWeaponById } from '../content/weapons';
 import { formatComponentName, type FoundryComponentInstance } from '../game/Foundry';
-import {
-  compareFoundryComponents,
-  createFoundryComponentStatModel
-} from './FoundryPresentation';
+import { compareFoundryComponents, createFoundryComponentStatModel } from './FoundryPresentation';
+import { createWeaponIcon } from './WeaponIcon';
 
 export function appendPrimaryWeaponOfferCardContent(
   container: HTMLElement,
@@ -18,9 +16,8 @@ export function appendPrimaryWeaponOfferCardContent(
   }
 ): void {
   const module = getShipModuleById(component.moduleId);
-  const weapon = module.behavior.kind === 'weaponAdapter'
-    ? getWeaponById(module.behavior.weaponId)
-    : null;
+  const weapon =
+    module.behavior.kind === 'weaponAdapter' ? getWeaponById(module.behavior.weaponId) : null;
   const quality = getComponentQuality(component.qualityId);
   const stats = createFoundryComponentStatModel(component);
   const comparison = compareFoundryComponents(component, installed);
@@ -34,6 +31,11 @@ export function appendPrimaryWeaponOfferCardContent(
   const title = document.createElement('strong');
   title.className = 'component-offer-title';
   title.textContent = formatComponentName(component);
+
+  const heading = document.createElement('span');
+  heading.className = 'component-offer-heading';
+  if (weapon) heading.append(createWeaponIcon(document, weapon));
+  heading.append(title);
 
   const description = document.createElement('span');
   description.className = 'component-offer-copy';
@@ -73,9 +75,10 @@ export function appendPrimaryWeaponOfferCardContent(
 
   const action = document.createElement('span');
   action.className = 'component-offer-action';
-  action.textContent = options.price === undefined
-    ? options.actionLabel
-    : `${options.actionLabel} -${options.price} credits`;
+  action.textContent =
+    options.price === undefined
+      ? options.actionLabel
+      : `${options.actionLabel} -${options.price} credits`;
 
-  container.append(eyebrow, title, description, identity, statsRow, delta, action);
+  container.append(eyebrow, heading, description, identity, statsRow, delta, action);
 }

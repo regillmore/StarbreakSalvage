@@ -976,6 +976,13 @@ seed + permanent save fingerprint
 - `BuildSynergy.createBuildSynergyModel` remains a read-only classifier over owned item instances for HUD and debrief identity. Its scores are not consumed by `ItemHooks`, `CombatState`, reward generation, shops, engineering, or run progression.
 - The change removes presentation-only work and adds no save/snapshot field, migration, item definition, RNG draw, route mutation, combat actor, projectile, effect, hook, or fixed-step branch.
 
+### Work order 198 primary-weapon icon boundary
+
+- `WeaponDefinition.iconKind` is the sole authored visual-identity key for a primary weapon base. `WEAPON_ICON_KINDS` types and validates the eight-entry vocabulary; quality, source, affix, component instance, and route data never select a different glyph.
+- `WeaponIcon.createWeaponIcon` is the sole DOM renderer. It constructs one bounded 48 x 48 inline SVG with accessible weapon-name labeling, stable weapon/icon data attributes, a shared mounting frame, and one silhouette branch selected from the validated kind.
+- `ComponentOfferCard` supplies that renderer to both reward and shop offers, while `FoundryScene` supplies it to the mounted Primary Arsenal and filtered Primary Cargo. These consumers continue to resolve their existing authoritative `weaponId` from the component adapter rather than storing presentation state.
+- Icons add no asset request, canvas frame work, simulation branch, item hook, acquisition mutation, save/snapshot field, migration, generation pass, RNG draw, actor, projectile, effect, or dependency.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

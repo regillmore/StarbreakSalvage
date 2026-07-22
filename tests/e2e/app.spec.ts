@@ -352,6 +352,10 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   ).toBeVisible();
   await expect(page.locator('.reward-card').first()).toContainText(/Live effect|Bridge effect/);
   await expect(page.getByTestId('reward-primary-weapon')).toContainText('Primary Weapon');
+  const rewardWeaponIcon = page.getByTestId('reward-primary-weapon').locator('.weapon-icon');
+  await expect(rewardWeaponIcon).toHaveCount(1);
+  await expect(rewardWeaponIcon).toHaveAttribute('aria-label', /weapon icon$/);
+  await expect(rewardWeaponIcon).toHaveAttribute('data-icon-kind', /\w+/);
   await expect(page.getByTestId('reward-primary-weapon')).toContainText('Mounted delta');
   await expect(page.getByTestId('reward-primary-weapon')).toContainText('Take Weapon to Cargo');
   await page.getByRole('button', { name: /Take / }).first().click();
@@ -526,6 +530,9 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('foundry-boundary')).toContainText(/Undo restores/i);
   await expect(page.getByTestId('foundry-hardpoint-assignments')).toHaveCount(0);
   await expect(page.getByTestId('foundry-primary-selector')).toBeVisible();
+  const mountedWeaponIcon = page.getByTestId('foundry-primary-selector').locator('.weapon-icon');
+  await expect(mountedWeaponIcon).toHaveCount(1);
+  await expect(mountedWeaponIcon).toHaveAttribute('aria-label', /weapon icon$/);
   await expect(page.getByTestId('foundry-primary-assignment')).toHaveValue(
     'component-contract-nose-primary'
   );
@@ -1382,6 +1389,10 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
   await expect(page.getByRole('heading', { name: 'Hardpoint Control' })).toBeVisible();
   await expect(page.getByTestId('foundry-hardpoint-assignments')).toHaveCount(0);
   await expect(page.getByTestId('foundry-primary-selector')).toBeVisible();
+  const fixtureMountedIcon = page.getByTestId('foundry-primary-selector').locator('.weapon-icon');
+  await expect(fixtureMountedIcon).toHaveCount(1);
+  const originalWeaponIconId = await fixtureMountedIcon.getAttribute('data-weapon-id');
+  expect(originalWeaponIconId).toBeTruthy();
   await expect(page.getByTestId('foundry-cargo-menu')).toHaveCount(0);
   await expect(page.locator('.foundry-cargo-card')).toHaveCount(0);
 
@@ -1399,6 +1410,7 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
   await assignment.selectOption(reserveOption);
   await expect(page.getByTestId('foundry-status')).toContainText(/mounted/i);
   await expect(assignment).toHaveValue(reserveOption);
+  await expect(fixtureMountedIcon).not.toHaveAttribute('data-weapon-id', originalWeaponIconId!);
 
   await page.getByTestId('foundry-open-cargo').click();
   await expect(page.getByRole('heading', { name: 'Primary Cargo' })).toBeVisible();
@@ -1421,6 +1433,11 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
       ).length
   );
   expect(primaryCargoCount).toBe(cargoCount);
+  await expect(cargoCards.locator('.weapon-icon')).toHaveCount(cargoCount);
+  await expect(cargoCards.locator('.weapon-icon')).toHaveAttribute(
+    'data-weapon-id',
+    originalWeaponIconId!
+  );
   await expect(cargoCards.locator('[data-stat="impact"]')).toHaveCount(cargoCount);
   await expect(cargoCards.locator('[data-stat="cadence"]')).toHaveCount(cargoCount);
   await expect(cargoCards.locator('[data-stat="velocity"]')).toHaveCount(cargoCount);
@@ -1992,6 +2009,8 @@ test('depletes fixed shop slots until reroll restocks the rack', async ({ page }
   const primaryOffer = page.getByTestId('shop-primary-offer');
   await expect(primaryOffer).toHaveAttribute('data-state', 'available');
   await expect(primaryOffer).toContainText('Primary Weapon');
+  await expect(primaryOffer.locator('.weapon-icon')).toHaveCount(1);
+  await expect(primaryOffer.locator('.weapon-icon')).toHaveAttribute('aria-label', /weapon icon$/);
   const firstPrimaryId = await primaryOffer.getAttribute('data-component-id');
   await primaryOffer.click();
   await expect(primaryOffer).toHaveAttribute('data-state', 'empty');

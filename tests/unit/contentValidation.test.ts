@@ -1358,6 +1358,7 @@ describe('validateContent', () => {
         {
           ...baseWeapon,
           pattern: 'spiral',
+          iconKind: 'orbital-doom',
           tags: ['not-a-real-tag'],
           damage: 0,
           heatVentPerSecond: 0
@@ -1366,6 +1367,7 @@ describe('validateContent', () => {
     });
 
     expect(errors).toContain(`Weapon ${baseWeapon.id} has invalid pattern: spiral`);
+    expect(errors).toContain(`Weapon ${baseWeapon.id} has invalid icon kind: orbital-doom`);
     expect(errors).toContain(`Weapon ${baseWeapon.id} has invalid tag: not-a-real-tag`);
     expect(errors).toContain(`Weapon ${baseWeapon.id} must have positive damage`);
     expect(errors).toContain(`Weapon ${baseWeapon.id} must have positive heatVentPerSecond`);

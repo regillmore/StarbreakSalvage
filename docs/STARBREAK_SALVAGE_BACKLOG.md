@@ -2804,3 +2804,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 197. Reward and shop cards now present only authored item information; the candidate-only Build Fit path is removed, while owned-build summaries and all live item hooks remain unchanged.
+
+### BL63 - Primary weapon icon vocabulary
+
+Acceptance:
+
+- Assign each of the eight primary weapon bases one explicit, validated icon identity with a silhouette distinct from every other base.
+- Render the same code-native SVG glyph on sector-reward weapons, shop weapon offers, the mounted Primary Arsenal, and Primary Cargo.
+- Keep the glyph tied to base weapon identity across quality, source, affix, selector swaps, and cargo displacement; preserve textual weapon name and pattern as nonvisual cues.
+- Add deterministic Foundry fixture and Chromium coverage for mounted/reserve identity changes plus reward and shop placement.
+- Preserve weapon acquisition, shop depletion, ordered circuits, combat behavior, saves, generation streams, accessibility, static hosting, and dependency count.
+
+Status:
+
+- Implemented in work order 198. `weapons.ts` owns the eight-kind identity table, `WeaponIcon` owns the shared accessible SVG vocabulary, and the reward/shop offer card plus Primary Arsenal/Cargo consume that one renderer.

@@ -428,16 +428,40 @@ export function createFoundryDebugFixture(
     });
     fixture = acquireComponent(fixture, component);
   }
-  const primary = generatePrimaryWeaponOffer({
+  const installedPrimary = getInstalledComponents(fixture.committed).find(
+    (component) => getModule(component.moduleId).slot === 'primary'
+  );
+  let primary = generatePrimaryWeaponOffer({
     seed,
     saveFingerprint: 'debug-save',
     sectorIndex: sectorIndex + 3,
     source: 'combat',
     sectorId: 'sector_trade_war_corridor',
     bossRequired: false,
-    offerKey: 'debug-primary-reserve',
+    offerKey: 'debug-primary-reserve-0',
     state: fixture
   });
+  for (
+    let attempt = 1;
+    attempt < 32 && primary.moduleId === installedPrimary?.moduleId;
+    attempt += 1
+  ) {
+    primary = generatePrimaryWeaponOffer({
+      seed,
+      saveFingerprint: 'debug-save',
+      sectorIndex: sectorIndex + 3,
+      source: 'combat',
+      sectorId: 'sector_trade_war_corridor',
+      bossRequired: false,
+      offerKey: `debug-primary-reserve-${attempt}`,
+      state: fixture
+    });
+  }
+  if (primary.moduleId === installedPrimary?.moduleId) {
+    throw new Error(
+      'Foundry debug fixture could not generate a visually distinct reserve primary.'
+    );
+  }
   const committed = {
     ...fixture.committed,
     components: [...fixture.committed.components, primary]

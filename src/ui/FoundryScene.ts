@@ -49,6 +49,7 @@ import {
 } from './FoundryPresentation';
 import { createAttackSimulationPreviewElement } from './AttackSimulationPreview';
 import { createShipPreviewModel } from './ShipPreview';
+import { createWeaponIcon } from './WeaponIcon';
 
 type FoundryView = 'hardpoints' | 'cargo';
 
@@ -376,7 +377,7 @@ export class FoundryScene implements Scene {
     const name = document.createElement('h3');
     name.textContent = formatComponentName(installed);
     const pattern = this.createBadge(weapon.pattern, 'foundry-badge-quality');
-    identity.append(name, pattern);
+    identity.append(createWeaponIcon(document, weapon), name, pattern);
     const summary = document.createElement('p');
     summary.className = 'foundry-primary-summary';
     summary.textContent = module.presentation.summary;
@@ -764,7 +765,16 @@ export class FoundryScene implements Scene {
     header.className = 'foundry-card-header';
     const heading = document.createElement('h3');
     heading.textContent = formatComponentName(component);
-    header.append(heading, this.createBadge(quality.label.toUpperCase(), 'foundry-badge-quality'));
+    const titleGroup = document.createElement('div');
+    titleGroup.className = 'foundry-card-title';
+    if (module.behavior.kind === 'weaponAdapter') {
+      titleGroup.append(createWeaponIcon(document, getWeaponById(module.behavior.weaponId)));
+    }
+    titleGroup.append(heading);
+    header.append(
+      titleGroup,
+      this.createBadge(quality.label.toUpperCase(), 'foundry-badge-quality')
+    );
 
     const identity = document.createElement('div');
     identity.className = 'foundry-badge-row';

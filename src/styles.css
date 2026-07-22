@@ -910,10 +910,10 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
 }
 
 .foundry-primary-identity {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   min-width: 0;
-  align-items: start;
-  justify-content: space-between;
+  align-items: center;
   gap: 0.55rem;
 }
 
@@ -1798,6 +1798,13 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
 
 .foundry-card-header h3 {
   min-width: 0;
+}
+
+.foundry-card-title {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.55rem;
 }
 
 .foundry-component-name {
@@ -3118,6 +3125,91 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
   color: #f8fbff;
   font-size: 1rem;
   line-height: 1.08;
+}
+
+.component-offer-heading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.weapon-icon {
+  width: 2.65rem;
+  height: 2.65rem;
+  flex: 0 0 auto;
+  overflow: visible;
+  color: #7cf7ff;
+  filter: drop-shadow(0 0 5px color-mix(in srgb, currentColor 42%, transparent));
+}
+
+.weapon-icon[data-icon-kind='pulse'] {
+  color: #75e8ff;
+}
+
+.weapon-icon[data-icon-kind='missile'] {
+  color: #ff9b70;
+}
+
+.weapon-icon[data-icon-kind='splitter'] {
+  color: #bba1ff;
+}
+
+.weapon-icon[data-icon-kind='spread'] {
+  color: #ffd166;
+}
+
+.weapon-icon[data-icon-kind='kinetic'] {
+  color: #d8edff;
+}
+
+.weapon-icon[data-icon-kind='beam'] {
+  color: #fff083;
+}
+
+.weapon-icon[data-icon-kind='blaster'] {
+  color: #75f4c6;
+}
+
+.weapon-icon-frame,
+.weapon-icon-line,
+.weapon-icon-hot,
+.weapon-icon-core {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.weapon-icon-frame {
+  opacity: 0.24;
+  stroke-width: 1.2;
+}
+
+.weapon-icon-line {
+  stroke-width: 2;
+}
+
+.weapon-icon-core {
+  fill: currentColor;
+  fill-opacity: 0.12;
+  stroke-width: 1.8;
+}
+
+.weapon-icon-energy {
+  fill: currentColor;
+  filter: drop-shadow(0 0 3px currentColor);
+}
+
+.weapon-icon-hot {
+  opacity: 0.76;
+  stroke-width: 2.4;
+}
+
+.component-offer-heading .weapon-icon,
+.foundry-card-title .weapon-icon {
+  width: 2.35rem;
+  height: 2.35rem;
 }
 
 .component-offer-copy {

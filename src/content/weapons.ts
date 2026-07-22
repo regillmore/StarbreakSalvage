@@ -4,11 +4,25 @@ import type { LaserProjectileKind } from '../game/LaserProjectile';
 
 export type WeaponPatternId = 'single' | 'dual' | 'spread' | 'split' | 'missile' | 'beam';
 
+export const WEAPON_ICON_KINDS = [
+  'needle',
+  'pulse',
+  'missile',
+  'splitter',
+  'spread',
+  'kinetic',
+  'beam',
+  'blaster'
+] as const;
+
+export type WeaponIconKind = (typeof WEAPON_ICON_KINDS)[number];
+
 export interface WeaponDefinition {
   readonly id: WeaponId;
   readonly name: string;
   readonly tags: readonly ItemTag[];
   readonly pattern: WeaponPatternId;
+  readonly iconKind: WeaponIconKind;
   readonly laserKind?: LaserProjectileKind;
   readonly damage: number;
   readonly projectileSpeed: number;
@@ -26,6 +40,7 @@ export const WEAPONS: readonly WeaponDefinition[] = [
     name: 'Light Needle Laser',
     tags: ['laser'],
     pattern: 'single',
+    iconKind: 'needle',
     laserKind: 'needle',
     damage: 1,
     projectileSpeed: 760,
@@ -41,6 +56,7 @@ export const WEAPONS: readonly WeaponDefinition[] = [
     name: 'Pulse Cannon',
     tags: ['plasma'],
     pattern: 'dual',
+    iconKind: 'pulse',
     damage: 1.15,
     projectileSpeed: 660,
     projectileRadius: 5,
@@ -55,6 +71,7 @@ export const WEAPONS: readonly WeaponDefinition[] = [
     name: 'Dumbfire Missile Rack',
     tags: ['missile', 'overkill'],
     pattern: 'missile',
+    iconKind: 'missile',
     damage: 2.35,
     projectileSpeed: 500,
     projectileRadius: 7,
@@ -69,6 +86,7 @@ export const WEAPONS: readonly WeaponDefinition[] = [
     name: 'Needle Splitter',
     tags: ['laser', 'split'],
     pattern: 'split',
+    iconKind: 'splitter',
     laserKind: 'split',
     damage: 0.9,
     projectileSpeed: 820,
@@ -84,6 +102,7 @@ export const WEAPONS: readonly WeaponDefinition[] = [
     name: 'Short-Range Spread Cannon',
     tags: ['plasma'],
     pattern: 'spread',
+    iconKind: 'spread',
     damage: 1.2,
     projectileSpeed: 580,
     projectileRadius: 5.5,
@@ -98,6 +117,7 @@ export const WEAPONS: readonly WeaponDefinition[] = [
     name: 'Kinetic Popgun',
     tags: ['scrap'],
     pattern: 'dual',
+    iconKind: 'kinetic',
     damage: 1,
     projectileSpeed: 640,
     projectileRadius: 4.5,
@@ -112,6 +132,7 @@ export const WEAPONS: readonly WeaponDefinition[] = [
     name: 'Prototype Beam',
     tags: ['laser', 'heat'],
     pattern: 'beam',
+    iconKind: 'beam',
     laserKind: 'beam',
     damage: 1.4,
     projectileSpeed: 780,
@@ -127,6 +148,7 @@ export const WEAPONS: readonly WeaponDefinition[] = [
     name: 'Basic Blaster',
     tags: ['plasma'],
     pattern: 'single',
+    iconKind: 'blaster',
     damage: 1,
     projectileSpeed: 650,
     projectileRadius: 4.5,

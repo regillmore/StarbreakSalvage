@@ -149,7 +149,7 @@ import {
   UPGRADE_ICON_KEYS,
   type UpgradeDefinition
 } from './upgrades';
-import { WEAPONS, type WeaponDefinition } from './weapons';
+import { WEAPON_ICON_KINDS, WEAPONS, type WeaponDefinition } from './weapons';
 import { SET_PIECES, type SetPieceDefinition } from './setPieces';
 import { ITEM_HOOK_IMPLEMENTATIONS } from '../game/ItemHooks';
 import { COMBAT_ARENA_PADDING, COMBAT_ARENA_WIDTH } from '../game/CombatGeometry';
@@ -366,6 +366,7 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
   const upgradeEffectKinds = new Set<string>(UPGRADE_EFFECT_KINDS);
   const upgradeIconKeys = new Set<string>(UPGRADE_ICON_KEYS);
   const weaponPatterns = new Set(['single', 'dual', 'spread', 'split', 'missile', 'beam']);
+  const weaponIconKinds = new Set<string>(WEAPON_ICON_KINDS);
   const bossPatterns = new Set(['auditFan', 'missileCurtain', 'sporeSpiral']);
   const shipSilhouettes = new Set<string>(SHIP_SILHOUETTES);
   const shipMountHints = new Set<string>(SHIP_WEAPON_MOUNT_HINTS);
@@ -801,6 +802,10 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
 
     if (!weaponPatterns.has(weapon.pattern)) {
       errors.push(`Weapon ${weapon.id} has invalid pattern: ${weapon.pattern}`);
+    }
+
+    if (!weaponIconKinds.has(weapon.iconKind)) {
+      errors.push(`Weapon ${weapon.id} has invalid icon kind: ${weapon.iconKind}`);
     }
 
     for (const tag of weapon.tags) {
@@ -2458,9 +2463,7 @@ function validateHazardZoneDefinitions(
 
     const maximumPulseCount = hazard.behavior.kind === 'meteorStorm' ? 12 : 8;
     if (hazard.behavior.activePulseCount > maximumPulseCount) {
-      errors.push(
-        `${owner} behavior must keep activePulseCount at or below ${maximumPulseCount}`
-      );
+      errors.push(`${owner} behavior must keep activePulseCount at or below ${maximumPulseCount}`);
     }
 
     if (hazard.behavior.collisionBands > 4) {

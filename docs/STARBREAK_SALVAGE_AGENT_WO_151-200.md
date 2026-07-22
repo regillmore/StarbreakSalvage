@@ -1234,3 +1234,29 @@ Status: implemented. `RewardScene` and `ShopScene` now create ordinary item-card
 Managed-browser inspection used seed `BUILD-FIT-197B` to force the first required-sector reward, select a circuit item, and visit the local shop. All five reward cards and four shop circuit cards retained their authored effect, tags, source/price, and live-state presentation while reporting zero `Build Fit` text and zero synergy-row nodes; browser warning/error logs were empty.
 
 Verification: focused Build Synergy, item-card, reward, and shop unit tests pass, as do the focused first-sector reward and finite-shop Chromium paths. `npm run verify:release` passes typecheck, ESLint, all 115 Vitest files and 740 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,018.73 kB` minified / `279.52 kB` gzip initial JavaScript and `102.03 kB` / `20.35 kB` CSS. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, route topology, RNG stream, static base path, or warning threshold changed.
+
+## Work order 198 - Primary weapon icon vocabulary
+
+Goal: make primary weapon bases recognizable at a glance across acquisition and engineering menus with one consistent original visual language.
+
+Prompt:
+
+> Give every primary weapon base a distinct authored icon. Reuse that identity in sector rewards, shop weapon offers, the mounted Primary Arsenal, and Primary Cargo so quality, affixes, and source can vary without obscuring the underlying weapon.
+
+Acceptance criteria:
+
+- Every authored primary weapon base owns one explicit icon kind, and content validation rejects unknown icon identities.
+- Light Needle Laser, Pulse Cannon, Dumbfire Missile Rack, Needle Splitter, Short-Range Spread Cannon, Kinetic Popgun, Prototype Beam, and Basic Blaster have distinct silhouettes rather than color-only variants.
+- One shared code-native SVG renderer supplies reward, shop, mounted-primary, and cargo presentation; no raster asset, external request, or production dependency is introduced.
+- Icon identity follows the underlying weapon id through reward/shop generation, mounted-primary swaps, and displaced cargo. Quality, source, affix, and route context do not change the base glyph.
+- Each icon exposes the weapon name as an accessible image label while the adjacent textual name and pattern remain authoritative for nonvisual comparison.
+- The existing reward manifest, shop stock/depletion, primary selector, circuit capacity, attack simulation, engineering reducer, save shape, and deterministic streams remain unchanged.
+- Focused content/Foundry tests, reward/shop/hardpoint Chromium coverage, managed-browser visual inspection, production preview, and release verification remain coherent.
+
+Status: implemented. `weapons.ts` now authors and types an eight-entry icon vocabulary beside each weapon base, and `contentValidation` verifies that vocabulary. `WeaponIcon` creates a compact shared SVG with a quiet mounting frame plus an individual needle, twin pulse cell, missile, splitting branch, spread fan, twin kinetic breech, beam emitter, or plasma blaster silhouette. Color supports the identity but does not define it.
+
+`ComponentOfferCard` places the shared glyph on both recovered reward and shop weapon cards. `FoundryScene` uses the same renderer in Primary Arsenal and Primary Cargo, so an immediate selector swap changes the icon with the live-fire weapon and moves the displaced base identity into reserve. The deterministic Scenario Lab fixture now guarantees that its reserve primary differs from the mounted base, making that visual transition a reliable regression path.
+
+The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/` with seed `WEAPON-ICONS-198`. At the 1280 x 720 Hardpoint Control fixture, the mounted Kinetic Popgun showed a twin-breech glyph; selecting the reserve Basic Blaster replaced it with the orb-and-rail glyph and moved the kinetic identity to Primary Cargo. The first navigation shop showed the same kinetic base glyph on its independently generated Prototype weapon offer. Both compositions remained legible at their compact card scale, and the authenticated smoke host stopped cleanly. Reward placement and accessible labels are covered by the complete Chromium first-sector flow.
+
+Verification: focused content-validation, weapon-identity, Foundry, and Foundry-presentation coverage passes 84 tests; focused reward, Scenario Lab, and shop Chromium paths pass. `npm run verify:release` passes typecheck, ESLint, all 115 Vitest files and 741 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,022.66 kB` minified / `280.64 kB` gzip initial JavaScript and `103.23 kB` / `20.65 kB` CSS, increases of `3.93 kB` / `1.12 kB` JavaScript and `1.20 kB` / `0.30 kB` CSS over work order 197. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, route topology, RNG stream, static base path, or warning threshold changed.

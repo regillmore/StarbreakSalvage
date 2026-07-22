@@ -148,6 +148,15 @@ describe('salvage foundry', () => {
       seed: 'PRIMARY-RESERVE-FIXTURE'
     });
     const primaryCargo = getPrimaryWeaponCargoComponents(state.draft);
+    const installedPrimary = state.draft.mounts
+      .map((mount) =>
+        state.draft.components.find((component) => component.id === mount.componentId)
+      )
+      .find(
+        (component) =>
+          component !== undefined &&
+          SHIP_MODULES.find((module) => module.id === component.moduleId)?.slot === 'primary'
+      );
 
     expect(primaryCargo).toHaveLength(1);
     expect(
@@ -156,6 +165,7 @@ describe('salvage foundry', () => {
           SHIP_MODULES.find((module) => module.id === component.moduleId)?.slot === 'primary'
       )
     ).toBe(true);
+    expect(primaryCargo[0]?.moduleId).not.toBe(installedPrimary?.moduleId);
   });
 
   it('installs, reroutes, overclocks, scraps, and commits explicit resource tradeoffs', () => {
