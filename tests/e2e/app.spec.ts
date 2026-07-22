@@ -342,6 +342,9 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
       .getByRole('img', { name: /item icon/ })
   ).toBeVisible();
   await expect(page.locator('.reward-card').first()).toContainText(/Live effect|Bridge effect/);
+  await expect(page.getByTestId('reward-primary-weapon')).toContainText('Primary Weapon');
+  await expect(page.getByTestId('reward-primary-weapon')).toContainText('Mounted delta');
+  await expect(page.getByTestId('reward-primary-weapon')).toContainText('Take Weapon to Cargo');
   await page.getByRole('button', { name: /Take / }).first().click();
   await expect(page.getByTestId('mission-briefing')).toBeVisible();
   await expect(page.getByTestId('navigation-destination-optional')).toContainText('OPTIONAL');
@@ -1920,11 +1923,32 @@ test('depletes fixed shop slots until reroll restocks the rack', async ({ page }
   await page.getByRole('button', { name: 'Launch Contract' }).click();
   await expect(page.getByTestId('mission-briefing')).toBeVisible();
 
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('heading', { name: 'Starbreak Salvage' })).toBeVisible();
+  await page.evaluate(() => {
+    const key = 'starbreak.run.v12';
+    const raw = window.localStorage.getItem(key);
+    if (!raw) throw new Error('Expected a suspended run snapshot.');
+    const snapshot = JSON.parse(raw) as { session: { credits: number } };
+    snapshot.session.credits = 100;
+    window.localStorage.setItem(key, JSON.stringify(snapshot));
+  });
+  await page.reload();
+  await page.getByTestId('resume-expedition').click();
+  await expect(page.getByTestId('mission-briefing')).toBeVisible();
+
   await page.getByTestId('open-shop').click();
   await page.getByTestId('navigation-destination-action').click();
   await expect(page.getByRole('heading', { name: 'Shop' })).toBeVisible();
   await expect(page.getByTestId('shop-repair-service')).toHaveAttribute('data-state', 'full');
   await expect(page.getByTestId('shop-repair-action')).toBeDisabled();
+  const primaryOffer = page.getByTestId('shop-primary-offer');
+  await expect(primaryOffer).toHaveAttribute('data-state', 'available');
+  await expect(primaryOffer).toContainText('Primary Weapon');
+  const firstPrimaryId = await primaryOffer.getAttribute('data-component-id');
+  await primaryOffer.click();
+  await expect(primaryOffer).toHaveAttribute('data-state', 'empty');
+  await expect(primaryOffer).toContainText('Empty Weapon Cradle');
 
   const shopSlots = page.locator('[data-testid^="shop-slot-"]');
   const initialSlotCount = await shopSlots.count();
@@ -1949,10 +1973,13 @@ test('depletes fixed shop slots until reroll restocks the rack', async ({ page }
   await page.getByTestId('open-shop').click();
   await page.getByTestId('navigation-destination-action').click();
   await expect(page.getByTestId(purchasedTestId!)).toHaveAttribute('data-state', 'empty');
+  await expect(primaryOffer).toHaveAttribute('data-state', 'empty');
 
   await page.getByRole('button', { name: /Reroll -/ }).click();
   await expect(page.locator('.shop-card[data-state="empty"]')).toHaveCount(0);
   await expect(shopSlots).toHaveCount(initialSlotCount);
+  await expect(primaryOffer).toHaveAttribute('data-state', 'available');
+  await expect(primaryOffer).not.toHaveAttribute('data-component-id', firstPrimaryId!);
 });
 
 async function forceCompleteSectorAndEnterNext(

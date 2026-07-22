@@ -918,7 +918,7 @@ seed + permanent save fingerprint
 - Map plans are regenerated from run seed plus zero-based sector index and are not stored. `RunSession.navigation` stores only the current sector index and up to six unique visited destination ids; `resetMissionForCurrentSector` synchronizes this boundary so debug repositioning, normal transit, and resume share one reset rule.
 - `SectorTransitionScene` remains the mission briefing scene id/checkpoint boundary but now projects the plan as a DOM navigation hub. Selection is presentation-only. Confirmed travel records the visit before delegating to `GameApp`; mission launch remains the only path that dispatches briefing and entry mission events.
 - `GameApp` owns service orchestration. Hub Shop uses the current sector's existing seeded inventory/reroll state, Hardpoint uses the existing reversible engineering reducer, and lazy Fleet/Crew/Apex scenes return to the same checkpointed hub. No service owns navigation or mission state.
-- Reward settlement still creates exactly one route-conditioned component, carrier cargo entry, and acquisition timeline event. It advances directly to the next sector; installation is now player-initiated from the next hub. Reopenable foundry calls award crew/carrier salvage bonuses only when scrapping produced positive salvage.
+- Reward settlement still creates exactly one route-conditioned non-primary component, carrier cargo entry, and acquisition timeline event. It advances directly to the next sector; installation is now player-initiated from the next hub. Reopenable foundry calls award crew/carrier salvage bonuses only when scrapping produced positive salvage.
 - Snapshot v11 validates navigation identity, uniqueness, and destination vocabulary and retires v10. Map coordinates and edges remain derived content, keeping the persisted addition bounded and avoiding layout drift inside the fixed-step combat loop.
 
 ### Work order 191 persistent player-hull and dock-service boundary
@@ -937,6 +937,15 @@ seed + permanent save fingerprint
 - `CanvasRenderer` accepts optional departure scale, alpha, and thrust on the existing ally and drone render records. Departure draws reuse normal silhouettes and accessibility colors, omit combat identity/hull furniture, and add only one bounded plume per escort.
 - Solo exits retain work order 117 timing and phase thresholds. Escorted exits use a slightly longer transient sequence, but both converge on work order 122's invisible terminal latch and the same reward, route, act, victory, and debug callbacks.
 - The manifest is transient presentation state. It changes no ally/fleet/drone reducer, cooldown settlement, pickup behavior, generated content, RNG stream, save, snapshot, actor cap, or projectile/effect budget.
+
+### Work order 193 explicit primary-weapon offer boundary
+
+- `Foundry.generateComponentSalvage` remains the automatic route/boarding hardware source but filters its compatible candidates to non-primary slots. `generatePrimaryWeaponOffer` uses the same source, quality, affix, compatibility, salvage, and circuit-capacity rules over primary candidates through a separate named seed; it does not advance or depend on the ordinary automatic selection stream.
+- Explicit offer identity includes sector and offer key rather than `nextComponentSequence`. A sector reward is therefore stable while viewed, and one shop reroll owns one stable weapon id even after acquisition increments engineering sequence. The next reroll receives a distinct identity without adding a mutable offer record.
+- `ComponentOffers` is the shared read-model boundary. It projects the current required-sector offer, the current shop roll and fixed armory quote, mounted-primary comparison target, and depletion from already-owned engineering components. Ordinary item stock remains the only consumer of `shopStockByRoll`.
+- `GameApp.acquireRecoveredComponent` is the shared mutation boundary for reward, shop, and automatic hardware. It acquires into committed engineering, stows one carrier cargo record, and appends one bounded engineering timeline event. Shop purchase first regenerates and validates the current id and quote before spending credits; rewards and purchases never auto-install.
+- `RewardScene` and `ShopScene` consume the same compact primary-offer card projection. Pattern, source/quality name, power/heat/mass/command, primary circuit capacity, and mounted delta remain presentation derived at scene entry and redraw only after player actions.
+- No item reward count, ordinary shop slot, stock snapshot, save version, route topology, combat actor, projectile/effect budget, fixed-step branch, production dependency, or broad generation fingerprint changes.
 
 ## GitHub Pages notes
 

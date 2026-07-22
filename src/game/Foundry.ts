@@ -254,14 +254,68 @@ export function generateComponentSalvage(options: {
     options.sectorId,
     options.bossRequired
   );
+  return generateComponentInstance({
+    ...options,
+    source,
+    rngSeed: `${options.seed}:${options.saveFingerprint}:foundry:${options.sectorIndex}:${options.routeKind}:${options.state.nextComponentSequence}`,
+    candidateFilter: (module) => module.slot !== 'primary',
+    createId: (module, quality) =>
+      `component-${options.sectorIndex}-${options.state.nextComponentSequence}-${module.id.replace('module_', '')}-${quality.id}`
+  });
+}
+
+export function generatePrimaryWeaponOffer(options: {
+  readonly seed: string;
+  readonly saveFingerprint: string;
+  readonly sectorIndex: number;
+  readonly routeKind?: RouteKind;
+  readonly source?: ComponentSource;
+  readonly sectorId: string;
+  readonly bossRequired: boolean;
+  readonly offerKey: string;
+  readonly state: EngineeringState;
+}): FoundryComponentInstance {
+  const source =
+    options.source ??
+    (options.routeKind
+      ? getComponentSourceForRoute(options.routeKind, options.sectorId, options.bossRequired)
+      : getDefaultComponentOfferSource(options.sectorId, options.bossRequired));
+  const offerKey = toComponentOfferKey(
+    `${options.offerKey}-${options.routeKind ?? source}`
+  );
+  return generateComponentInstance({
+    ...options,
+    source,
+    rngSeed: `${options.seed}:${options.saveFingerprint}:foundry-primary:${options.sectorIndex}:${options.routeKind ?? source}:${options.offerKey}`,
+    candidateFilter: (module) => module.slot === 'primary',
+    createId: (module, quality) =>
+      `component-offer-${options.sectorIndex}-${offerKey}-${module.id.replace('module_', '')}-${quality.id}`
+  });
+}
+
+function generateComponentInstance(options: {
+  readonly sectorIndex: number;
+  readonly state: EngineeringState;
+  readonly source: ComponentSource;
+  readonly rngSeed: string;
+  readonly candidateFilter: (module: ShipModuleDefinition) => boolean;
+  readonly createId: (
+    module: ShipModuleDefinition,
+    quality: (typeof COMPONENT_QUALITIES)[number]
+  ) => string;
+}): FoundryComponentInstance {
+  const source = options.source;
   const sourceDefinition = getComponentSource(source);
   const frame = getFrame(options.state.committed.frameId);
-  const rng = createRng(
-    `${options.seed}:${options.saveFingerprint}:foundry:${options.sectorIndex}:${options.routeKind}:${options.state.nextComponentSequence}`
-  );
+  const rng = createRng(options.rngSeed);
   const candidates = SHIP_MODULES.filter(
-    (module) => getStructurallyCompatibleHardpoints(frame, module).length > 0
+    (module) =>
+      options.candidateFilter(module) &&
+      getStructurallyCompatibleHardpoints(frame, module).length > 0
   );
+  if (candidates.length === 0) {
+    throw new Error(`No compatible ${source} component candidates for ${frame.id}.`);
+  }
   const module = rng.weightedChoice(
     candidates.map((candidate) => ({
       item: candidate,
@@ -299,7 +353,7 @@ export function generateComponentSalvage(options: {
   );
 
   return {
-    id: `component-${options.sectorIndex}-${options.state.nextComponentSequence}-${module.id.replace('module_', '')}-${quality.id}`,
+    id: options.createId(module, quality),
     moduleId: module.id,
     qualityId: quality.id,
     source,
@@ -1182,6 +1236,22 @@ function getComponentSourceForRoute(
   if (routeKind === 'factionAmbush') return 'faction';
   if (routeKind === 'repair') return 'route';
   return 'combat';
+}
+
+function getDefaultComponentOfferSource(
+  sectorId: string,
+  bossRequired: boolean
+): ComponentSource {
+  if (bossRequired) return 'boss';
+  if (sectorId === 'sector_lunar_surface') return 'lunar';
+  return 'combat';
+}
+
+function toComponentOfferKey(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
 function addResourceDelta(

@@ -2730,3 +2730,19 @@ Acceptance:
 Status:
 
 - Implemented in work order 192. `SectorExitSequence` projects the conditional recall and shared departure from captured origins; `GameplayScene` and `CanvasRenderer` bind the live wing to those poses without mutating follower reducers.
+
+### BL58 - Explicit primary weapon acquisition
+
+Acceptance:
+
+- Remove primary weapons from every automatic component-salvage path, including ordinary route settlement and boarding-foundry rewards, while preserving automatic non-primary hardware salvage.
+- Add one deterministic frame-compatible primary weapon to each first-pass sector reward selection as an alternative to an upgrade item or credits; accepting it stows the weapon in cargo rather than auto-installing it.
+- Give each shop roll one separate primary armory cradle with a stable deterministic offer and quote. Purchasing empties that cradle, reopening preserves depletion, and rerolling refills it without changing the ordinary finite item rack.
+- Derive weapon source, quality, affix, compatibility, salvage value, and circuit capacity from the existing Foundry rules, with a dedicated named offer stream that does not consume the automatic component sequence.
+- Validate shop purchases against the current seeded offer id and price before spending credits, then route reward and shop acquisitions through one cargo/timeline boundary.
+- Show weapon identity, pattern, engineering costs, circuit capacity, and mounted comparison on both selection surfaces with keyboard focus, narrow-layout support, and non-color text.
+- Preserve item stock snapshots, run-save compatibility, route topology, deterministic item generation, combat budgets, static hosting, and managed smoke tooling.
+
+Status:
+
+- Implemented in work order 193. `Foundry` separates non-primary automatic salvage from stable explicit primary offers; `ComponentOffers` owns reward/shop projections and shop depletion, while `RewardScene`, `ShopScene`, and `GameApp` own explicit choice, validation, cargo, and timeline presentation.

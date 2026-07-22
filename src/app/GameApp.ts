@@ -36,8 +36,10 @@ import {
   acquireComponent,
   createEngineeringCombatProfile,
   generateComponentSalvage,
-  resolveEngineeringSnapshot
+  resolveEngineeringSnapshot,
+  type FoundryComponentInstance
 } from '../game/Foundry';
+import { createShopPrimaryWeaponOffer } from '../game/ComponentOffers';
 import {
   createRunActSaveContext,
   getActBoundaryHandoffAfterSector,
@@ -1907,6 +1909,7 @@ export class GameApp {
         this.runSession,
         this.selectedContract,
         (itemId, price) => this.buyShopItem(itemId, price),
+        (componentId, price) => this.buyShopPrimaryWeapon(componentId, price),
         () => this.rerollShop(),
         (price) => this.buyShopRepair(price),
         () => {
@@ -1925,6 +1928,10 @@ export class GameApp {
         this.selectedContract,
         (itemId) => {
           addItemToSession(this.runSession, itemId);
+          this.showMissionBranch();
+        },
+        (component) => {
+          this.acquireRecoveredComponent(component);
           this.showMissionBranch();
         },
         () => {
@@ -1957,6 +1964,20 @@ export class GameApp {
     depleteShopStockItem(this.runSession, sector.index, rerollCount, itemId, price);
     addItemToSession(this.runSession, itemId);
     return true;
+  }
+
+  private buyShopPrimaryWeapon(componentId: string, price: number): boolean {
+    const offer = createShopPrimaryWeaponOffer(this.currentRun, this.runSession);
+    if (
+      offer.depleted ||
+      offer.component.id !== componentId ||
+      offer.price !== price ||
+      this.runSession.credits < price
+    ) {
+      return false;
+    }
+    if (!spendCredits(this.runSession, price)) return false;
+    return this.acquireRecoveredComponent(offer.component);
   }
 
   private rerollShop(): boolean {
@@ -2128,7 +2149,14 @@ export class GameApp {
       bossRequired: sector.objective.bossRequired,
       state: this.runSession.engineering
     });
-    this.runSession.engineering = acquireComponent(this.runSession.engineering, component);
+    this.acquireRecoveredComponent(component);
+    this.advanceAfterSectorExtraction(targetSectorIndex);
+  }
+
+  private acquireRecoveredComponent(component: FoundryComponentInstance): boolean {
+    const engineering = acquireComponent(this.runSession.engineering, component);
+    if (engineering === this.runSession.engineering) return false;
+    this.runSession.engineering = engineering;
     stowCarrierCargo(this.currentRun, this.runSession, {
       id: component.id,
       label: component.sourceLabel,
@@ -2146,7 +2174,7 @@ export class GameApp {
       subjectId: component.id,
       detailId: component.moduleId
     });
-    this.advanceAfterSectorExtraction(targetSectorIndex);
+    return true;
   }
 
   private showNavigationShop(onBack: () => void = () => this.showSectorTransition()): void {
@@ -2157,6 +2185,7 @@ export class GameApp {
         this.runSession,
         this.selectedContract,
         (itemId, price) => this.buyShopItem(itemId, price),
+        (componentId, price) => this.buyShopPrimaryWeapon(componentId, price),
         () => this.rerollShop(),
         (price) => this.buyShopRepair(price),
         onBack

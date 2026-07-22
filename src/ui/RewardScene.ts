@@ -3,6 +3,11 @@ import type { Scene, SceneDebugState } from '../app/Scene';
 import type { ItemId } from '../content/items';
 import { createActEconomyProfile } from '../game/ActEconomy';
 import { formatProspectiveBuildSynergy } from '../game/BuildSynergy';
+import {
+  createSectorPrimaryWeaponOffer,
+  getInstalledPrimaryWeapon
+} from '../game/ComponentOffers';
+import type { FoundryComponentInstance } from '../game/Foundry';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import { generateSectorRewardChoices } from '../game/SectorRewards';
 import {
@@ -22,6 +27,7 @@ import {
 } from './ContractTheme';
 import { appendItemCardContent } from './ItemCard';
 import { createItemCardViewModel } from './ItemCardViewModel';
+import { appendPrimaryWeaponOfferCardContent } from './ComponentOfferCard';
 
 export class RewardScene implements Scene {
   public readonly id = 'reward';
@@ -32,6 +38,7 @@ export class RewardScene implements Scene {
     private readonly session: RunSessionState,
     private readonly contract: StartingContract,
     private readonly onSelectItem: (itemId: ItemId) => void,
+    private readonly onSelectPrimaryWeapon: (component: FoundryComponentInstance) => void,
     private readonly onTakeCredits: () => void
   ) {}
 
@@ -53,6 +60,8 @@ export class RewardScene implements Scene {
       contract: this.contract,
       ...(incomingRouteKind ? { routeKind: incomingRouteKind } : {})
     });
+    const primaryWeaponOffer = createSectorPrimaryWeaponOffer(this.run, this.session);
+    const installedPrimary = getInstalledPrimaryWeapon(this.session.engineering.committed);
 
     const shell = document.createElement('main');
     shell.className = 'scene-panel scene-panel-wide reward-panel';
@@ -99,6 +108,24 @@ export class RewardScene implements Scene {
       );
       rewardGrid.append(rewardButton);
     }
+
+    const primaryWeaponButton = document.createElement('button');
+    primaryWeaponButton.className = 'choice-card reward-card component-offer-card';
+    primaryWeaponButton.type = 'button';
+    primaryWeaponButton.dataset.testid = 'reward-primary-weapon';
+    primaryWeaponButton.addEventListener('click', () =>
+      this.onSelectPrimaryWeapon(primaryWeaponOffer)
+    );
+    appendPrimaryWeaponOfferCardContent(
+      primaryWeaponButton,
+      primaryWeaponOffer,
+      installedPrimary,
+      {
+        sourceLabel: 'Recovered Armament',
+        actionLabel: 'Take Weapon to Cargo'
+      }
+    );
+    rewardGrid.append(primaryWeaponButton);
 
     const creditsButton = document.createElement('button');
     creditsButton.className = 'choice-card reward-card';

@@ -3,6 +3,10 @@ import type { Scene, SceneDebugState } from '../app/Scene';
 import { getItemById, type ItemId } from '../content/items';
 import { createActEconomyProfile, getActEconomyShopReadout } from '../game/ActEconomy';
 import { formatProspectiveBuildSynergy } from '../game/BuildSynergy';
+import {
+  createShopPrimaryWeaponOffer,
+  getInstalledPrimaryWeapon
+} from '../game/ComponentOffers';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import {
   getCurrentSector,
@@ -32,6 +36,7 @@ import {
 } from './ContractTheme';
 import { appendItemCardContent } from './ItemCard';
 import { createItemCardViewModel } from './ItemCardViewModel';
+import { appendPrimaryWeaponOfferCardContent } from './ComponentOfferCard';
 import {
   createFactionCampaignDebugState,
   getFactionCampaignInfluence
@@ -48,6 +53,7 @@ export class ShopScene implements Scene {
     private readonly session: RunSessionState,
     private readonly contract: StartingContract,
     private readonly onBuyItem: (itemId: ItemId, price: number) => boolean,
+    private readonly onBuyPrimaryWeapon: (componentId: string, price: number) => boolean,
     private readonly onReroll: () => boolean,
     private readonly onRepairHull: (price: number) => boolean,
     private readonly onLeave: () => void
@@ -59,6 +65,8 @@ export class ShopScene implements Scene {
     const hull = getShipHullReadModel(this.contract, this.session);
     const hullRepairCost = getShopHullRepairCost(actEconomy);
     const rerollCount = getShopRerollCount(this.session, sector.index);
+    const primaryWeaponOffer = createShopPrimaryWeaponOffer(this.run, this.session);
+    const installedPrimary = getInstalledPrimaryWeapon(this.session.engineering.committed);
     const shopModifiers = getShopModifiersForSector(this.session, sector.index);
     const interActEffects = getInterActEffectsForSector(this.session, sector);
     const upgradeReadout = [
@@ -170,6 +178,64 @@ export class ShopScene implements Scene {
 
     const shopGrid = document.createElement('div');
     shopGrid.className = 'shop-grid';
+
+    const armory = document.createElement('section');
+    armory.className = 'shop-armory';
+    armory.setAttribute('aria-labelledby', 'shop-armory-title');
+    const armoryHeader = document.createElement('header');
+    const armoryEyebrow = document.createElement('small');
+    armoryEyebrow.textContent = 'Primary Armory // One Crate Per Roll';
+    const armoryTitle = document.createElement('h2');
+    armoryTitle.id = 'shop-armory-title';
+    armoryTitle.textContent = 'Weapon Rack';
+    const armoryCopy = document.createElement('p');
+    armoryCopy.textContent = 'Recovered weapons enter cargo. Rerolling refills this rack.';
+    armoryHeader.append(armoryEyebrow, armoryTitle, armoryCopy);
+
+    const armoryButton = document.createElement('button');
+    armoryButton.className = 'choice-card component-offer-card shop-armory-card';
+    armoryButton.type = 'button';
+    armoryButton.dataset.testid = 'shop-primary-offer';
+    armoryButton.dataset.state = primaryWeaponOffer.depleted ? 'empty' : 'available';
+    armoryButton.dataset.componentId = primaryWeaponOffer.component.id;
+    if (primaryWeaponOffer.depleted) {
+      armoryButton.classList.add('component-offer-empty');
+      armoryButton.disabled = true;
+      armoryButton.setAttribute('aria-label', 'Primary armory slot empty; reroll to restock');
+      const emptyLabel = document.createElement('small');
+      emptyLabel.className = 'component-offer-eyebrow';
+      emptyLabel.textContent = 'Primary Armory // Depleted';
+      const emptyTitle = document.createElement('strong');
+      emptyTitle.className = 'component-offer-title';
+      emptyTitle.textContent = 'Empty Weapon Cradle';
+      const emptyNote = document.createElement('span');
+      emptyNote.className = 'component-offer-copy';
+      emptyNote.textContent = 'Purchased. Reroll to receive another seeded weapon.';
+      armoryButton.append(emptyLabel, emptyTitle, emptyNote);
+    } else {
+      armoryButton.disabled = this.session.credits < primaryWeaponOffer.price;
+      armoryButton.addEventListener('click', () => {
+        if (
+          this.onBuyPrimaryWeapon(
+            primaryWeaponOffer.component.id,
+            primaryWeaponOffer.price
+          )
+        ) {
+          this.enter();
+        }
+      });
+      appendPrimaryWeaponOfferCardContent(
+        armoryButton,
+        primaryWeaponOffer.component,
+        installedPrimary,
+        {
+          sourceLabel: primaryWeaponOffer.component.sourceLabel,
+          actionLabel: 'Buy to Cargo',
+          price: primaryWeaponOffer.price
+        }
+      );
+    }
+    armory.append(armoryHeader, armoryButton);
 
     for (const stockItem of stock) {
       if (stockItem.depleted) {
@@ -287,6 +353,7 @@ export class ShopScene implements Scene {
       title,
       ...(upgradeReadout.length > 0 ? [upgradeNote] : []),
       repairService,
+      armory,
       shopGrid,
       controls
     );

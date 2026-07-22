@@ -2918,6 +2918,152 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
   min-width: 11.5rem;
 }
 
+.shop-armory {
+  display: grid;
+  grid-template-columns: minmax(10rem, 0.42fr) minmax(0, 1.58fr);
+  align-items: stretch;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid rgba(255, 209, 102, 0.34);
+  border-radius: 8px;
+  background:
+    linear-gradient(115deg, rgba(255, 209, 102, 0.08), transparent 46%), rgba(5, 9, 22, 0.82);
+}
+
+.shop-armory > header {
+  display: grid;
+  align-content: center;
+  gap: 0.22rem;
+  min-width: 0;
+}
+
+.shop-armory > header small {
+  color: #ffd166;
+  font-family: 'Cascadia Mono', 'Consolas', monospace;
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.shop-armory > header h2,
+.shop-armory > header p {
+  margin: 0;
+}
+
+.shop-armory > header h2 {
+  color: #f8fbff;
+  font-size: 1.08rem;
+}
+
+.shop-armory > header p {
+  color: #b8cad3;
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+.component-offer-card {
+  position: relative;
+  min-height: 0;
+  gap: 0.38rem;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--component-accent, #ffd166) 58%, transparent);
+  background:
+    linear-gradient(120deg, color-mix(in srgb, var(--component-accent, #ffd166) 11%, transparent), transparent 48%),
+    rgba(7, 11, 27, 0.94);
+}
+
+.component-offer-eyebrow,
+.component-offer-identity,
+.component-offer-delta,
+.component-offer-action {
+  font-family: 'Cascadia Mono', 'Consolas', monospace;
+  text-transform: uppercase;
+}
+
+.component-offer-eyebrow {
+  color: var(--component-accent, #ffd166);
+  font-size: 0.57rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.component-offer-title {
+  color: #f8fbff;
+  font-size: 1rem;
+  line-height: 1.08;
+}
+
+.component-offer-copy {
+  color: #c1d1da;
+  font-size: 0.69rem;
+  line-height: 1.35;
+}
+
+.component-offer-identity {
+  color: #7cf7ff;
+  font-size: 0.58rem;
+  font-weight: 800;
+}
+
+.component-offer-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.28rem;
+}
+
+.component-offer-stats > span {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.28rem 0.34rem;
+  border: 1px solid rgba(124, 247, 255, 0.18);
+  background: rgba(7, 20, 35, 0.78);
+}
+
+.component-offer-stats small {
+  color: #7cf7ff;
+  font-family: 'Cascadia Mono', 'Consolas', monospace;
+  font-size: 0.55rem;
+}
+
+.component-offer-stats b {
+  color: #f8fbff;
+  font-size: 0.7rem;
+}
+
+.component-offer-delta {
+  color: #b8cad3;
+  font-size: 0.58rem;
+}
+
+.component-offer-delta[data-tone='improved'] {
+  color: #87ff9a;
+}
+
+.component-offer-delta[data-tone='declined'] {
+  color: #ffd166;
+}
+
+.component-offer-action {
+  align-self: end;
+  margin-top: auto;
+  padding-top: 0.25rem;
+  border-top: 1px solid rgba(255, 209, 102, 0.2);
+  color: #ffd166;
+  font-size: 0.64rem;
+  font-weight: 900;
+}
+
+.component-offer-empty {
+  place-content: center;
+  min-height: 7.5rem;
+  border-style: dashed;
+  text-align: center;
+}
+
 .choice-card {
   display: grid;
   min-height: 11.5rem;
@@ -5571,6 +5717,10 @@ html[data-bullet-contrast='high'] .hud-meter-track {
   .shop-repair-service {
     grid-template-columns: 1fr;
     align-items: stretch;
+  }
+
+  .shop-armory {
+    grid-template-columns: 1fr;
   }
 
   .shop-repair-action {

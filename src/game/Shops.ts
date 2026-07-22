@@ -1,10 +1,11 @@
 import { type ItemDefinition, type ItemId, type ItemRarity } from '../content/items';
+import { getComponentQuality } from '../content/engineering';
 import type { FactionId } from '../content/factions';
 import type { UnlockId } from '../content/unlocks';
 import { createRng } from '../core/rng';
 import type { ActEconomyProfile } from './ActEconomy';
 import { applyCombinedHooks } from './CombinedHooks';
-import type { EngineeringHookInstance } from './Foundry';
+import type { EngineeringHookInstance, FoundryComponentInstance } from './Foundry';
 import { generateRewardChoices, type ItemInstance } from './Rewards';
 
 export interface ShopInventoryItem {
@@ -25,6 +26,7 @@ const RARITY_PRICE: Record<ItemRarity, number> = {
   prototype: 12,
   cursed: 6
 };
+const PRIMARY_WEAPON_QUALITY_PRICE = [8, 12, 17, 23] as const;
 
 export function generateShopInventory(options: {
   readonly seed: string;
@@ -125,6 +127,18 @@ export function getShopRerollCost(
 
 export function getShopHullRepairCost(actEconomy: ActEconomyProfile | undefined): number {
   return SHOP_HULL_REPAIR_BASE_COST + (actEconomy?.repairCreditSurcharge ?? 0);
+}
+
+export function getShopPrimaryWeaponPrice(
+  component: FoundryComponentInstance,
+  actEconomy: ActEconomyProfile
+): number {
+  const quality = getComponentQuality(component.qualityId);
+  return (
+    PRIMARY_WEAPON_QUALITY_PRICE[quality.tier]! +
+    Math.max(0, actEconomy.runSectorIndex - 1) +
+    actEconomy.shopPriceAdjustment
+  );
 }
 
 function getShopPrice(item: ItemDefinition, sectorIndex: number, variance: number): number {

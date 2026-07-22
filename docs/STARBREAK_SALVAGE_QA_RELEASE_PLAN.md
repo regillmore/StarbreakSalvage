@@ -477,6 +477,7 @@ Phase 10 accessibility checks should also cover mission briefings and branch foc
 - [x] Reduced motion simplifies scrolling effects without hiding gameplay state.
 - [x] Themed HUD and ship previews preserve text contrast in automated smoke coverage.
 - [x] Mouse controls do not trap or steal menu focus.
+- [x] Sector rewards and shops expose keyboard-readable primary weapon identity, circuit capacity, mounted comparison, finite armory depletion, and reroll restocking.
 
 ## Release checklist
 

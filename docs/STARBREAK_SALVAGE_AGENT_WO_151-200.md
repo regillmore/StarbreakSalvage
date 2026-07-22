@@ -1111,3 +1111,30 @@ Status: implemented. `SectorExitSequence` captures a bounded immutable escort ma
 The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/` with seed `WING-RENDEZVOUS-192`. A Drone Chaplain exit reported and visibly recalled three live formation drones before ignition. The crew-wing fixture separately recalled its active ally, suppressed the ally label and hull furniture, then kept the craft behind the Phase Courier through rendezvous, ignition, and boost. Both formations cleared into the ordinary reward handoff, and the browser recorded no warnings or errors. The tab finalized and the authenticated smoke host stopped cleanly.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 114 Vitest files and 735 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits `1,016.32 kB` minified / `278.76 kB` gzip initial JavaScript and unchanged `97.37 kB` / `19.56 kB` CSS, increases of `2.59 kB` / `0.93 kB` JavaScript over work order 191. The existing Vite large-chunk advisory remains; no dependency, actor/projectile/effect cap, save/snapshot schema, route topology, RNG stream, static base path, or warning threshold changed.
+
+## Work order 193 - Explicit primary weapon acquisition
+
+Goal: turn primary weapon recovery into a deliberate build choice by removing it from silent component awards and placing deterministic weapon offers in the sector reward and shop economies.
+
+Prompt:
+
+> Stop granting primary weapons through automatic route and operation salvage. Preserve automatic recovery of supporting ship hardware, but give every required-sector reward one compatible primary weapon alternative and every shop roll one finite primary armory offer. Make weapon identity, circuit capacity, mounted tradeoffs, price, cargo destination, depletion, and reroll behavior clear without changing ordinary item stock or auto-installing a choice.
+
+Acceptance criteria:
+
+- Automatic route and boarding-foundry component generation can produce secondary, defense, engine, utility, drone, and experimental hardware but never a primary weapon.
+- Each first-pass required-sector reward includes one deterministic frame-compatible primary weapon alongside its existing item and credit alternatives; selection stows it in cargo and records the ordinary component/timeline history without auto-installing it.
+- Each shop roll includes one independent primary armory cradle. The seeded weapon and quote remain stable across redraw and reopen, purchase empties the cradle, and a paid reroll supplies a new offer identity.
+- Ordinary finite item rack slots, depletion records, stock bonuses, price modifiers, and restored shop snapshots remain unchanged; the armory infers depletion from the acquired engineering component rather than adding a second stock schema.
+- Reward and shop weapons reuse Foundry source, quality, affix, compatibility, salvage, and recovered-primary circuit-capacity rules through a dedicated named offer stream that cannot consume the automatic component sequence.
+- Shop purchase regenerates and validates the current offer id and fixed act-scaled quote before spending credits; duplicate, stale, depleted, or unaffordable transactions fail without mutation.
+- Both menus show a concise primary identity, pattern/tags, P/H/M/C/S stats, mounted delta, cargo action, and non-color state with keyboard focus and responsive layout.
+- Unit, deterministic generation, Chromium interaction, accessibility, save/snapshot, static-hosting, and release checks remain coherent.
+
+Status: implemented. `Foundry.generateComponentSalvage` now filters out primary modules while `generatePrimaryWeaponOffer` builds explicit weapons from the same authored engineering rules under stable sector/offer identities. `ComponentOffers` projects sector rewards, shop rolls, current mounted comparison, act-scaled quotes, and depletion. `GameApp` routes automatic, reward, and purchased components through one cargo/timeline acquisition boundary and validates the current shop offer before spending.
+
+`RewardScene` adds one recovered-armament alternative without changing item choice generation. `ShopScene` adds a separate one-crate primary armory above the unchanged item rack; purchase, reopen, and reroll states remain visible and stable. The shared `ComponentOfferCard` presents weapon pattern, quality/affix name, engineering demand, primary circuit capacity, and mounted delta on both surfaces.
+
+The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/` at 1280 x 720 with seed `PRIMARY-ARMORY-193`. The shop separated its Weapon Rack from Hull Repair and the four item cards, showed a 12-credit tuned Pulse Cannon with five compact P/H/M/C/S metrics and mounted delta, changed to a semantic empty cradle after purchase, and refilled with a different tuned Kinetic Popgun after reroll. The browser host lease ended before the second managed reward-layout pass; the reward card's identity, comparison, and cargo action remain covered by the release Chromium flow. The tab finalized and the restarted authenticated smoke host stopped cleanly.
+
+Verification: focused Foundry, component-offer, shop, and two player-flow Chromium checks pass. `npm run verify:release` passes typecheck, ESLint, all 115 Vitest files and 738 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits `1,022.15 kB` minified / `280.32 kB` gzip initial JavaScript and `99.72 kB` / `19.94 kB` CSS, increases of `5.83 kB` / `1.56 kB` JavaScript and `2.35 kB` / `0.38 kB` CSS over work order 192. The existing Vite large-chunk advisory remains; no dependency, actor/projectile/effect cap, save/snapshot version, route topology, ordinary shop stock schema, static base path, or warning threshold changed.

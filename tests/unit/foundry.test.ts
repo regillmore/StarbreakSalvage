@@ -19,6 +19,7 @@ import {
   createFoundryDebugFixture,
   formatEngineeringHistory,
   generateComponentSalvage,
+  generatePrimaryWeaponOffer,
   getFusionOptions,
   planFuseComponents,
   planInstallComponent,
@@ -56,6 +57,51 @@ describe('salvage foundry', () => {
     expect(first.compatibility.compatibleHardpointIds.length).toBeGreaterThan(0);
     expect(first.salvageValue).toBeGreaterThan(0);
     expect(first.source).toBe('elite');
+  });
+
+  it('reserves primary weapons for explicit offers instead of automatic salvage', () => {
+    const state = createDebtEngineering();
+    const options = {
+      saveFingerprint: 'unlocks=fresh|upgrades=none',
+      sectorIndex: 3,
+      routeKind: 'elite' as const,
+      sectorId: 'sector_trade_war_corridor',
+      bossRequired: false,
+      state
+    };
+
+    for (let index = 0; index < 32; index += 1) {
+      const automatic = generateComponentSalvage({
+        ...options,
+        seed: `AUTOMATIC-COMPONENT-${index}`
+      });
+      expect(SHIP_MODULES.find((module) => module.id === automatic.moduleId)?.slot).not.toBe(
+        'primary'
+      );
+    }
+
+    const offer = generatePrimaryWeaponOffer({
+      ...options,
+      seed: 'PRIMARY-OFFER',
+      offerKey: 'sector-reward'
+    });
+    const laterSequence = generatePrimaryWeaponOffer({
+      ...options,
+      seed: 'PRIMARY-OFFER',
+      offerKey: 'sector-reward',
+      state: { ...state, nextComponentSequence: state.nextComponentSequence + 4 }
+    });
+    const rerolled = generatePrimaryWeaponOffer({
+      ...options,
+      seed: 'PRIMARY-OFFER',
+      offerKey: 'shop-reroll-1'
+    });
+
+    expect(SHIP_MODULES.find((module) => module.id === offer.moduleId)?.slot).toBe('primary');
+    expect(laterSequence.id).toBe(offer.id);
+    expect(laterSequence.moduleId).toBe(offer.moduleId);
+    expect(laterSequence.qualityId).toBe(offer.qualityId);
+    expect(rerolled.id).not.toBe(offer.id);
   });
 
   it('keeps illegal removal in a reversible draft and rejects commit', () => {

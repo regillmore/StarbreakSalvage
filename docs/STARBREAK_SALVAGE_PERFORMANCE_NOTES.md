@@ -595,3 +595,11 @@ The departure model captures at most the existing four active allies and eight d
 Escorted departures reuse existing actor silhouettes and add one triangular plume per visible follower. Combat labels and ally hull bars are skipped during the short recall/boost presentation, speed-line and aperture budgets are unchanged, and reduced motion retains zero speed streaks. No particle field, projectile, effect actor, save field, snapshot field, generation pass, or dependency is added.
 
 The release build emits `1,016.32 kB` minified / `278.76 kB` gzip initial JavaScript and unchanged `97.37 kB` / `19.56 kB` CSS, increases of `2.59 kB` / `0.93 kB` JavaScript over work order 191. The existing Vite large-chunk advisory remains; no dependency, simulation cap, save/snapshot schema, route topology, RNG stream, static base path, or warning threshold changed.
+
+## Work order 193 explicit primary-weapon offer budgets
+
+Automatic component generation now filters one small static module table before its existing weighted selection. Sector reward and shop entry each generate one additional compatible primary candidate from a dedicated named RNG stream; this happens only when the DOM scene mounts or redraws after a purchase/reroll, never in the combat fixed-step loop.
+
+The reward adds one bounded card. The shop adds one armory service row and one bounded card independent of its existing four-plus item grid; depletion is a single lookup in the already-bounded engineering component array rather than another stock ledger. Mounted comparison scans the small mount list once and derives five engineering metrics plus circuit capacity from existing presentation helpers. No actor, projectile, effect, hook, timer, retained history, save field, snapshot field, or dependency is added.
+
+The work order 193 release build emits `1,022.15 kB` minified / `280.32 kB` gzip initial JavaScript and `99.72 kB` / `19.94 kB` CSS, increases of `5.83 kB` / `1.56 kB` JavaScript and `2.35 kB` / `0.38 kB` CSS over work order 192. The existing Vite large-chunk advisory remains; no warning threshold changed.
