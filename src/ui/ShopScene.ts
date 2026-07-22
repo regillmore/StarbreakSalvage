@@ -8,12 +8,13 @@ import {
   getCurrentSector,
   getInterActEffectsForSector,
   getOwnedItemIds,
+  getShipHullReadModel,
   getShopModifiersForSector,
   getShopRerollCount,
   type RunSessionState
 } from '../game/RunSession';
 import { getShopStockForRoll, initializeShopStockForRoll } from '../game/ShopStock';
-import { generateShopInventory, getShopRerollCost } from '../game/Shops';
+import { generateShopInventory, getShopHullRepairCost, getShopRerollCost } from '../game/Shops';
 import { createEngineeringCombatProfile } from '../game/Foundry';
 import {
   getCouponCascadeReadout,
@@ -48,12 +49,15 @@ export class ShopScene implements Scene {
     private readonly contract: StartingContract,
     private readonly onBuyItem: (itemId: ItemId, price: number) => boolean,
     private readonly onReroll: () => boolean,
+    private readonly onRepairHull: (price: number) => boolean,
     private readonly onLeave: () => void
   ) {}
 
   public enter(): void {
     const sector = getCurrentSector(this.run, this.session);
     const actEconomy = createActEconomyProfile(sector);
+    const hull = getShipHullReadModel(this.contract, this.session);
+    const hullRepairCost = getShopHullRepairCost(actEconomy);
     const rerollCount = getShopRerollCount(this.session, sector.index);
     const shopModifiers = getShopModifiersForSector(this.session, sector.index);
     const interActEffects = getInterActEffectsForSector(this.session, sector);
@@ -141,6 +145,7 @@ export class ShopScene implements Scene {
     eyebrow.textContent = [
       `${sector.sectorName} Market`,
       `Credits ${this.session.credits}`,
+      `Hull ${hull.current}/${hull.max}`,
       priceDiscount > 0 ? `Permit -${priceDiscount} prices` : null,
       actEconomyReadout,
       `${campaign.responseLabel} ${campaign.shopDiscount >= 0 ? 'permit' : 'warrant'} ${campaign.shopDiscount >= 0 ? '-' : '+'}${Math.abs(campaign.shopDiscount)}`,
@@ -196,6 +201,65 @@ export class ShopScene implements Scene {
       shopGrid.append(buyButton);
     }
 
+    const repairService = document.createElement('section');
+    repairService.className = 'shop-repair-service';
+    repairService.dataset.testid = 'shop-repair-service';
+    repairService.dataset.state = hull.state;
+    repairService.setAttribute('aria-labelledby', 'shop-repair-title');
+
+    const repairIdentity = document.createElement('div');
+    repairIdentity.className = 'shop-repair-identity';
+    const repairEyebrow = document.createElement('small');
+    repairEyebrow.textContent = 'Dock Service // Fixed Labor Rate';
+    const repairTitle = document.createElement('h2');
+    repairTitle.id = 'shop-repair-title';
+    repairTitle.textContent = 'Hull Repair';
+    const repairCopy = document.createElement('p');
+    repairCopy.textContent =
+      hull.missing > 0
+        ? 'Restore one hull point. Repeat while the ship is damaged and credits remain.'
+        : 'The contract hull is fully sealed. No repair charge is due.';
+    repairIdentity.append(repairEyebrow, repairTitle, repairCopy);
+
+    const repairGauge = document.createElement('div');
+    repairGauge.className = 'shop-repair-gauge';
+    repairGauge.dataset.testid = 'shop-repair-gauge';
+    repairGauge.setAttribute('role', 'meter');
+    repairGauge.setAttribute('aria-label', `Ship hull ${hull.current} of ${hull.max}`);
+    repairGauge.setAttribute('aria-valuemin', '0');
+    repairGauge.setAttribute('aria-valuemax', `${hull.max}`);
+    repairGauge.setAttribute('aria-valuenow', `${hull.current}`);
+    const repairReadout = document.createElement('strong');
+    repairReadout.textContent = `Hull ${hull.current}/${hull.max}`;
+    const repairSegments = document.createElement('span');
+    repairSegments.className = 'shop-repair-segments';
+    repairSegments.setAttribute('aria-hidden', 'true');
+    for (let index = 0; index < hull.max; index += 1) {
+      const segment = document.createElement('i');
+      segment.dataset.filled = String(index < hull.current);
+      repairSegments.append(segment);
+    }
+    repairGauge.append(repairReadout, repairSegments);
+
+    const repairButton = document.createElement('button');
+    repairButton.className = 'secondary-button shop-repair-action';
+    repairButton.type = 'button';
+    repairButton.dataset.testid = 'shop-repair-action';
+    repairButton.disabled = hull.missing === 0 || this.session.credits < hullRepairCost;
+    repairButton.textContent =
+      hull.missing === 0 ? 'Hull Fully Repaired' : `Repair +1 Hull -${hullRepairCost}`;
+    repairButton.setAttribute(
+      'aria-label',
+      hull.missing === 0
+        ? `Hull fully repaired at ${hull.current} of ${hull.max}`
+        : `Repair one hull for ${hullRepairCost} credits, current hull ${hull.current} of ${hull.max}`
+    );
+    repairButton.addEventListener('click', () => {
+      if (this.onRepairHull(hullRepairCost)) this.enter();
+    });
+
+    repairService.append(repairIdentity, repairGauge, repairButton);
+
     const controls = document.createElement('div');
     controls.className = 'button-row';
 
@@ -222,11 +286,12 @@ export class ShopScene implements Scene {
       createContractThemeStrip(this.uiRoot.ownerDocument, theme),
       title,
       ...(upgradeReadout.length > 0 ? [upgradeNote] : []),
+      repairService,
       shopGrid,
       controls
     );
     this.uiRoot.replaceChildren(shell);
-    shopGrid.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
+    shell.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
   }
 
   public update(_dt: number): void {}

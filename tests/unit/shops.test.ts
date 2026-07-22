@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { generateShopInventory } from '../../src/game/Shops';
+import { createActEconomyProfile } from '../../src/game/ActEconomy';
+import { generateRunSkeleton } from '../../src/game/Generation';
+import { generateShopInventory, getShopHullRepairCost } from '../../src/game/Shops';
 
 const baseOptions = {
   seed: 'COUPON-CASCADE-COMPATIBILITY',
@@ -10,6 +12,17 @@ const baseOptions = {
 } as const;
 
 describe('shop permanent effects', () => {
+  it('prices repeatable hull service from the current act repair economy', () => {
+    const run = generateRunSkeleton('SHOP-HULL-REPAIR-PRICE');
+    const actOne = createActEconomyProfile(run.sectors[run.acts[0]!.startSectorIndex]!);
+    const actTwo = createActEconomyProfile(run.sectors[run.acts[1]!.startSectorIndex]!);
+    const actThree = createActEconomyProfile(run.sectors[run.acts[2]!.endSectorIndex]!);
+
+    expect(getShopHullRepairCost(actOne)).toBe(4);
+    expect(getShopHullRepairCost(actTwo)).toBe(6);
+    expect(getShopHullRepairCost(actThree)).toBeGreaterThan(getShopHullRepairCost(actTwo));
+  });
+
   it('preserves Coupon Cascade pricing and bias without doubling a restored item copy', () => {
     const authoredEquivalent = generateShopInventory({
       ...baseOptions,

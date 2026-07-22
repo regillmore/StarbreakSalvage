@@ -216,6 +216,14 @@ export interface RunSessionState {
   timeline: RunTimelineState;
 }
 
+export interface ShipHullReadModel {
+  readonly current: number;
+  readonly max: number;
+  readonly missing: number;
+  readonly ratio: number;
+  readonly state: 'full' | 'damaged' | 'critical';
+}
+
 export interface MissionObjectiveOutcomeRecord extends MissionObjectiveResultSnapshot {
   readonly sectorIndex: number;
   readonly actId: ActId;
@@ -1415,6 +1423,41 @@ export function getEffectiveShipStats(
   };
 }
 
+export function getShipHullReadModel(
+  contract: StartingContract,
+  session: RunSessionState
+): ShipHullReadModel {
+  const max = Math.max(1, getEffectiveShipStats(contract, session).maxHull);
+  const current = Math.min(max, Math.max(0, session.mission.checkpoint.hull ?? max));
+  const missing = max - current;
+  return {
+    current,
+    max,
+    missing,
+    ratio: current / max,
+    state: missing === 0 ? 'full' : current <= 1 ? 'critical' : 'damaged'
+  };
+}
+
+export function repairShipHull(
+  contract: StartingContract,
+  session: RunSessionState,
+  amount = 1
+): ShipHullReadModel {
+  const hull = getShipHullReadModel(contract, session);
+  const repairedHull = Math.min(hull.max, hull.current + Math.max(0, Math.floor(amount)));
+  if (repairedHull === hull.current) return hull;
+
+  session.mission = {
+    ...session.mission,
+    checkpoint: {
+      ...session.mission.checkpoint,
+      hull: repairedHull
+    }
+  };
+  return getShipHullReadModel(contract, session);
+}
+
 export function getCombatModifiersForSector(
   session: RunSessionState,
   sectorIndex: number
@@ -1579,6 +1622,7 @@ export function advanceSector(
   targetSectorIndex?: number
 ): boolean {
   const previousSectorIndex = session.currentSectorIndex;
+  const carriedHull = session.mission.checkpoint.hull;
   const routeTargets = getNextActRouteSectorIndices(run.actRouteGraph, previousSectorIndex);
   if (
     targetSectorIndex !== undefined &&
@@ -1642,13 +1686,14 @@ export function advanceSector(
     subjectId: run.sectors[session.currentSectorIndex]?.sectorId ?? null,
     detailId: run.expedition.sectors[session.currentSectorIndex]?.sectorId ?? null
   });
-  resetMissionForCurrentSector(run, session);
+  resetMissionForCurrentSector(run, session, carriedHull);
   return true;
 }
 
 export function resetMissionForCurrentSector(
   run: RunSkeleton,
-  session: RunSessionState
+  session: RunSessionState,
+  carriedHull: number | null = null
 ): MissionDirectorState {
   session.navigation = synchronizeSectorNavigationState(
     session.navigation,
@@ -1657,7 +1702,8 @@ export function resetMissionForCurrentSector(
   const schedule = createMissionSchedule(run.expedition, session.currentSectorIndex);
   session.mission = createMissionDirectorState(schedule, {
     credits: session.credits,
-    salvage: session.salvage
+    salvage: session.salvage,
+    hull: carriedHull
   });
   session.expedition = synchronizeExpeditionProgressWithMission(
     session.expedition,

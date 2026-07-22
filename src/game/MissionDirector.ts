@@ -474,7 +474,11 @@ export function createSingleStageCompatibilityMissionSchedule(options: {
 
 export function createMissionDirectorState(
   schedule: MissionSchedule,
-  resources: { readonly credits?: number; readonly salvage?: number } = {}
+  resources: {
+    readonly credits?: number;
+    readonly salvage?: number;
+    readonly hull?: number | null;
+  } = {}
 ): MissionDirectorState {
   return {
     scheduleId: schedule.id,
@@ -488,7 +492,10 @@ export function createMissionDirectorState(
     processedEventIds: [],
     transitions: [],
     checkpoint: {
-      hull: null,
+      hull:
+        resources.hull === undefined || resources.hull === null
+          ? null
+          : Math.max(0, resources.hull),
       scrollDistance: 0,
       worldOffset: 0,
       credits: Math.max(0, resources.credits ?? 0),

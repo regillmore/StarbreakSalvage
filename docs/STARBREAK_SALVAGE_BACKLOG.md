@@ -2701,3 +2701,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 190. `ComponentCircuit` derives the complete capacity budget from the mounted primary weapon and existing source/sector/quality metadata. `ItemSockets` retains universal assignment and deterministic reconciliation, while Foundry projections display capacity only where the primary weapon owns it.
+
+### BL56 - Persistent hull and paid dock repair
+
+Acceptance:
+
+- Carry a numeric mission-checkpoint hull through every normal sector advance and use it as the next operation's starting hull; reserve null checkpoint hull for the full-health initial state.
+- Reset scroll-world state at a fresh sector while preserving current hull, build, resources, and route context, eliminating the old between-sector free heal.
+- Give every available shop one repeatable fixed-rate dock service that restores one hull per purchase, clamps to maximum, rejects stale or unaffordable transactions, and leaves the deterministic item rack untouched.
+- Price Act I repair at 4 credits and add the existing act-economy repair surcharge in later acts without applying item-stock or item-price modifiers to labor.
+- Replace navigation's maximum-hull-patch summary with current/max hull and expose full, damaged, and critical state semantically as well as visually.
+- Preserve route and inter-act maximum-hull improvements, restored snapshots, save compatibility, seeded generation, accessibility modes, static hosting, and managed smoke tooling.
+
+Status:
+
+- Implemented in work order 191. `RunSession` owns effective current/max hull and repair mutation over the existing mission checkpoint, sector advance seeds that checkpoint into the next mission, and the operation-entry carry policy resets only the world. `ShopScene` and `GameApp` expose a transactionally priced one-point service, while `SectorTransitionScene` reports actual hull condition.

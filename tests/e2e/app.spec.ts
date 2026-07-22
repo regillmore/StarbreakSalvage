@@ -1853,6 +1853,63 @@ test('keeps contract live-fire comparison responsive and updates the seeded igni
   expect(wide.horizontalOverflow).toBe(false);
 });
 
+test('carries hull into navigation and sells repeatable repair service in the shop', async ({
+  page
+}) => {
+  const browserErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') browserErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => browserErrors.push(error.message));
+
+  await page.goto('./?debug=1&seed=SHOP-HULL-REPAIR-SMOKE');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('mission-briefing')).toBeVisible();
+
+  const openingHullText = (await page.getByTestId('navigation-hull').textContent()) ?? '';
+  const openingHull = /Hull(\d+)\/(\d+)/.exec(openingHullText.replaceAll(/\s/g, ''));
+  expect(openingHull).not.toBeNull();
+  const maxHull = Number(openingHull![2]);
+  expect(Number(openingHull![1])).toBe(maxHull);
+
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('heading', { name: 'Starbreak Salvage' })).toBeVisible();
+  await page.evaluate(() => {
+    const key = 'starbreak.run.v12';
+    const raw = window.localStorage.getItem(key);
+    if (!raw) throw new Error('Expected a suspended run snapshot.');
+    const snapshot = JSON.parse(raw) as {
+      session: { mission: { checkpoint: { hull: number | null } } };
+    };
+    snapshot.session.mission.checkpoint.hull = 1;
+    window.localStorage.setItem(key, JSON.stringify(snapshot));
+  });
+  await page.reload();
+  await page.getByTestId('resume-expedition').click();
+  await expect(page.getByTestId('navigation-hull')).toContainText(`1/${maxHull}`);
+  await expect(page.getByTestId('navigation-hull')).toHaveAttribute('data-tone', 'critical');
+
+  await page.getByTestId('open-shop').click();
+  await page.getByTestId('navigation-destination-action').click();
+  await expect(page.getByRole('heading', { name: 'Shop' })).toBeVisible();
+  await expect(page.getByTestId('shop-repair-service')).toHaveAttribute('data-state', 'critical');
+  await expect(page.getByTestId('shop-repair-gauge')).toContainText(`Hull 1/${maxHull}`);
+  await expect(page.getByTestId('shop-repair-action')).toHaveText('Repair +1 Hull -4');
+  await expect(page.getByTestId('shop-repair-action')).toBeEnabled();
+  await page.getByTestId('shop-repair-action').click();
+  await expect(page.getByTestId('shop-repair-gauge')).toContainText(`Hull 2/${maxHull}`);
+
+  await page.getByRole('button', { name: 'Leave Shop' }).click();
+  await expect(page.getByTestId('navigation-hull')).toContainText(`2/${maxHull}`);
+  await page.getByTestId('navigation-destination-launch').click();
+  await page.getByTestId('navigation-destination-action').click();
+  await expectGameplaySector(page, 'Outer Debris Field');
+  await expect(page.getByTestId('hull-readout')).toContainText(`Hull 2/${maxHull}`);
+  expect(browserErrors).toEqual([]);
+});
+
 test('depletes fixed shop slots until reroll restocks the rack', async ({ page }) => {
   await page.goto('./?debug=1&seed=SHOP-DEPLETION-SMOKE');
   await page.keyboard.press('Enter');
@@ -1866,6 +1923,8 @@ test('depletes fixed shop slots until reroll restocks the rack', async ({ page }
   await page.getByTestId('open-shop').click();
   await page.getByTestId('navigation-destination-action').click();
   await expect(page.getByRole('heading', { name: 'Shop' })).toBeVisible();
+  await expect(page.getByTestId('shop-repair-service')).toHaveAttribute('data-state', 'full');
+  await expect(page.getByTestId('shop-repair-action')).toBeDisabled();
 
   const shopSlots = page.locator('[data-testid^="shop-slot-"]');
   const initialSlotCount = await shopSlots.count();

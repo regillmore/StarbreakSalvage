@@ -15,6 +15,7 @@ export interface ShopInventoryItem {
 }
 
 export const SHOP_REROLL_COST = 2;
+export const SHOP_HULL_REPAIR_BASE_COST = 4;
 
 const SHOP_ITEM_COUNT = 4;
 const RARITY_PRICE: Record<ItemRarity, number> = {
@@ -120,6 +121,10 @@ export function getShopRerollCost(
     ? Math.min(actEconomy.repeatRerollSurcharge, Math.max(0, rerollCount))
     : 0;
   return SHOP_REROLL_COST + (actEconomy?.rerollCostBonus ?? 0) + repeatSurcharge;
+}
+
+export function getShopHullRepairCost(actEconomy: ActEconomyProfile | undefined): number {
+  return SHOP_HULL_REPAIR_BASE_COST + (actEconomy?.repairCreditSurcharge ?? 0);
 }
 
 function getShopPrice(item: ItemDefinition, sectorIndex: number, variance: number): number {

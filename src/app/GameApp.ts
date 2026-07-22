@@ -70,6 +70,7 @@ import {
   getCombatModifiersForSector,
   getCurrentSector,
   getEffectiveShipStats,
+  getShipHullReadModel,
   getRouteCreditReward,
   getShopRerollCount,
   hasInterActChoiceForSourceAct,
@@ -87,6 +88,7 @@ import {
   recordRunSessionTimelineEvent,
   recordExpeditionBranchDecision,
   resetMissionForCurrentSector,
+  repairShipHull,
   spendCredits,
   stowCarrierCargo,
   type RunSessionState
@@ -108,7 +110,7 @@ import {
 import { generateRouteOutcome, type AppliedRouteOutcome } from '../game/RouteEvents';
 import { createSectorConditionPlan } from '../game/SectorConditions';
 import { getSecondActFinaleSectorIndex } from '../game/SecondActFinale';
-import { getShopRerollCost } from '../game/Shops';
+import { getShopHullRepairCost, getShopRerollCost } from '../game/Shops';
 import { AudioSystem } from '../systems/AudioSystem';
 import { getFeedbackShakeIntensity, type CombatFeedbackCue } from '../systems/CombatFeedback';
 import { InputSystem, type InputAction } from '../systems/InputSystem';
@@ -1906,6 +1908,7 @@ export class GameApp {
         this.selectedContract,
         (itemId, price) => this.buyShopItem(itemId, price),
         () => this.rerollShop(),
+        (price) => this.buyShopRepair(price),
         () => {
           this.acquireRouteComponentAndAdvance(targetSectorIndex, route);
         }
@@ -1969,6 +1972,26 @@ export class GameApp {
 
     incrementShopRerollCount(this.runSession, sector.index);
     return true;
+  }
+
+  private buyShopRepair(price: number): boolean {
+    const sector = getCurrentSector(this.currentRun, this.runSession);
+    const expectedPrice = getShopHullRepairCost(createActEconomyProfile(sector));
+    const before = getShipHullReadModel(this.selectedContract, this.runSession);
+    if (price !== expectedPrice || before.missing === 0) return false;
+    if (!spendCredits(this.runSession, price)) return false;
+
+    const after = repairShipHull(this.selectedContract, this.runSession);
+    recordRunSessionTimelineEvent(this.runSession, {
+      id: `shop-repair:${sector.index}:${this.runSession.timeline.entries.length}`,
+      category: 'economy',
+      kind: 'shopRepair',
+      sectorIndex: this.runSession.currentSectorIndex,
+      value: price,
+      subjectId: this.selectedContract.shipId,
+      detailId: `${before.current}-${after.current}/${after.max}`
+    });
+    return after.current > before.current;
   }
 
   private buyPersistentUpgrade(upgradeId: UpgradeId): UpgradePurchaseResult {
@@ -2135,6 +2158,7 @@ export class GameApp {
         this.selectedContract,
         (itemId, price) => this.buyShopItem(itemId, price),
         () => this.rerollShop(),
+        (price) => this.buyShopRepair(price),
         onBack
       )
     );

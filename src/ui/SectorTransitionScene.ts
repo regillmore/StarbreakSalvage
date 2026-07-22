@@ -8,6 +8,7 @@ import { formatRouteTagSummary } from '../game/ActTwoDebug';
 import {
   getCurrentSector,
   getRunSessionVisitedActRouteSectorIndices,
+  getShipHullReadModel,
   type RunSessionState
 } from '../game/RunSession';
 import { applySectorConditionsToScroll, createSectorConditionPlan } from '../game/SectorConditions';
@@ -112,6 +113,7 @@ export class SectorTransitionScene implements Scene {
 
   public enter(): void {
     const context = this.createBriefingContext();
+    const hull = getShipHullReadModel(this.contract, this.session);
     const choiceSectorIndices = this.routeChoice?.targetSectorIndices ?? [];
     const visitedSectorIndices = getRunSessionVisitedActRouteSectorIndices(this.run, this.session);
     this.plan = createSectorNavigationPlan({
@@ -165,7 +167,7 @@ export class SectorTransitionScene implements Scene {
     resources.append(
       this.createResource('Credits', this.session.credits),
       this.createResource('Salvage', this.session.salvage),
-      this.createResource('Hull', `+${this.session.hullPatch}`),
+      this.createResource('Hull', `${hull.current}/${hull.max}`, 'navigation-hull', hull.state),
       this.createResource('Curse', this.session.curse)
     );
     header.append(headingGroup, resources);
@@ -923,8 +925,15 @@ export class SectorTransitionScene implements Scene {
     });
   }
 
-  private createResource(label: string, value: string | number): HTMLElement {
+  private createResource(
+    label: string,
+    value: string | number,
+    testId?: string,
+    tone?: string
+  ): HTMLElement {
     const item = document.createElement('span');
+    if (testId) item.dataset.testid = testId;
+    if (tone) item.dataset.tone = tone;
     item.innerHTML = `<small>${label}</small><strong>${value}</strong>`;
     return item;
   }

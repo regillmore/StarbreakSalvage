@@ -2829,6 +2829,95 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.shop-repair-service {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(9rem, 0.55fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.72rem 0.82rem;
+  border: 1px solid rgba(124, 247, 255, 0.34);
+  border-radius: 8px;
+  background:
+    linear-gradient(110deg, rgba(124, 247, 255, 0.08), transparent 48%), rgba(5, 11, 26, 0.86);
+}
+
+.shop-repair-service[data-state='damaged'] {
+  border-color: rgba(255, 209, 102, 0.62);
+}
+
+.shop-repair-service[data-state='critical'] {
+  border-color: rgba(255, 107, 214, 0.7);
+  background:
+    linear-gradient(110deg, rgba(255, 107, 214, 0.1), transparent 48%), rgba(5, 11, 26, 0.9);
+}
+
+.shop-repair-identity {
+  display: grid;
+  min-width: 0;
+  gap: 0.18rem;
+}
+
+.shop-repair-identity small {
+  color: #7cf7ff;
+  font-family: 'Cascadia Mono', 'Consolas', monospace;
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.shop-repair-identity h2,
+.shop-repair-identity p {
+  margin: 0;
+}
+
+.shop-repair-identity h2 {
+  color: #f8fbff;
+  font-size: 1.05rem;
+}
+
+.shop-repair-identity p {
+  color: #b8cad3;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.shop-repair-gauge {
+  display: grid;
+  gap: 0.32rem;
+}
+
+.shop-repair-gauge > strong {
+  color: #f8fbff;
+  font-family: 'Cascadia Mono', 'Consolas', monospace;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+}
+
+.shop-repair-segments {
+  display: flex;
+  gap: 0.2rem;
+}
+
+.shop-repair-segments i {
+  flex: 1 1 0;
+  min-width: 0.7rem;
+  height: 0.42rem;
+  border: 1px solid rgba(124, 247, 255, 0.25);
+  border-radius: 2px;
+  background: rgba(124, 247, 255, 0.08);
+}
+
+.shop-repair-segments i[data-filled='true'] {
+  border-color: rgba(135, 255, 154, 0.68);
+  background: linear-gradient(90deg, #7cf7ff, #87ff9a);
+  box-shadow: 0 0 8px rgba(124, 247, 255, 0.28);
+}
+
+.shop-repair-action {
+  min-width: 11.5rem;
+}
+
 .choice-card {
   display: grid;
   min-height: 11.5rem;
@@ -3572,6 +3661,15 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
   border: 1px solid rgba(124, 247, 255, 0.25);
   border-radius: 5px;
   background: rgba(2, 6, 18, 0.78);
+}
+
+.navigation-resource-strip > span[data-tone='damaged'] {
+  border-color: rgba(255, 209, 102, 0.58);
+}
+
+.navigation-resource-strip > span[data-tone='critical'] {
+  border-color: rgba(255, 107, 214, 0.68);
+  background: rgba(37, 7, 32, 0.76);
 }
 
 .navigation-resource-strip small,
@@ -5468,6 +5566,15 @@ html[data-bullet-contrast='high'] .hud-meter-track {
   .summary-item-grid,
   .settings-grid {
     grid-template-columns: 1fr;
+  }
+
+  .shop-repair-service {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .shop-repair-action {
+    width: 100%;
   }
 
   .operational-itinerary,

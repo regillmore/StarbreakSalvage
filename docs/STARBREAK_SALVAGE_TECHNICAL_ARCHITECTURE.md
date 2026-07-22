@@ -921,6 +921,15 @@ seed + permanent save fingerprint
 - Reward settlement still creates exactly one route-conditioned component, carrier cargo entry, and acquisition timeline event. It advances directly to the next sector; installation is now player-initiated from the next hub. Reopenable foundry calls award crew/carrier salvage bonuses only when scrapping produced positive salvage.
 - Snapshot v11 validates navigation identity, uniqueness, and destination vocabulary and retires v10. Map coordinates and edges remain derived content, keeping the persisted addition bounded and avoiding layout drift inside the fixed-step combat loop.
 
+### Work order 191 persistent player-hull and dock-service boundary
+
+- `MissionDirectorState.checkpoint.hull` remains the single current-hull authority outside live combat. A null checkpoint still means an untouched full ship; a numeric value is clamped against the effective contract maximum by `RunSession.getShipHullReadModel`.
+- `advanceSector` captures the settled checkpoint before replacing the mission schedule and supplies it to `resetMissionForCurrentSector`. Required sector-operation profiles carry hull, build, resources, and route context while resetting scroll-world state, so the next `CombatState` starts damaged without carrying enemies, hazards, distance, or effects.
+- `RunSession.repairShipHull` is the bounded mutation seam. It restores an integer amount, clamps at the effective maximum including persistent hull patches, and rewrites only the mission checkpoint. Route and inter-act `hullPatch` effects remain maximum-hull changes and are not treated as free repair.
+- `Shops.getShopHullRepairCost` combines a four-credit base with the existing act-economy repair surcharge. `GameApp` recomputes that price before spending, rejects full-hull and stale-price requests, applies one point, and records the result in the existing bounded timeline. The labor service does not consume or regenerate seeded rack stock and does not inherit item-price modifiers.
+- `ShopScene` and `SectorTransitionScene` consume the same hull read model for semantic current/max values and full/damaged/critical state. The shop creates at most one segment per effective hull point only when its DOM scene redraws; navigation replaces the earlier maximum-patch summary without adding another stored field.
+- Existing v12 snapshots already validate the checkpoint hull, so the change adds no schema, migration, generation fingerprint, RNG draw, combat actor, projectile, effect, or fixed-step branch.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

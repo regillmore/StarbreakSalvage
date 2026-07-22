@@ -47,6 +47,14 @@ const RESET_STAGE: MissionCarryPolicy = {
   scrollWorld: 'reset'
 };
 
+const SECTOR_ENTRY_STAGE: MissionCarryPolicy = {
+  build: 'carry',
+  hull: 'carry',
+  resources: 'carry',
+  routeContext: 'carry',
+  scrollWorld: 'reset'
+};
+
 const CARRY_STAGE: MissionCarryPolicy = {
   build: 'carry',
   hull: 'carry',
@@ -74,7 +82,7 @@ export const MISSION_STAGE_PROFILES: readonly MissionStageProfileDefinition[] = 
     id: 'mission_operation',
     kind: 'combat',
     label: 'Primary operation',
-    carry: RESET_STAGE,
+    carry: SECTOR_ENTRY_STAGE,
     world: {
       scrollLengthScale: 1,
       waveCountScale: 1,
@@ -86,7 +94,7 @@ export const MISSION_STAGE_PROFILES: readonly MissionStageProfileDefinition[] = 
     id: 'mission_operation_advance',
     kind: 'combat',
     label: 'Advance operation',
-    carry: RESET_STAGE,
+    carry: SECTOR_ENTRY_STAGE,
     world: {
       scrollLengthScale: 0.55,
       waveCountScale: 0.65,

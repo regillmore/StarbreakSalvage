@@ -1058,3 +1058,31 @@ Foundry presentation now calls the rail `Primary Weapon Circuit`, identifies its
 The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/` with seed `FOUNDRY-CIRCUIT-190`. The Engineering Foundry showed one three-slot Dumbfire Missile Rack extension, `Weapon circuit 2/3`, and no socket stat on the mounted secondary or engine. Swapping to a relic Act I Short-Range Spread Cannon updated the same rail to five slots with three open, reported `Weapon circuit 2/5`, and showed `S5` only on the primary candidate and `S3` on the displaced starter primary in cargo. The layout remained balanced at 1280 x 720, the tab closed, and the authenticated smoke host stopped cleanly.
 
 Verification: focused circuit, Foundry presentation, validation, and engineering coverage passes 80 tests; `npm run verify:release` passes typecheck, ESLint, all 114 Vitest files and 732 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits `1,010.46 kB` minified / `276.92 kB` gzip initial JavaScript and `95.68 kB` / `19.25 kB` CSS, increases of `0.45 kB` / `0.17 kB` JavaScript and `0.07 kB` / effectively unchanged gzip CSS over work order 189. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, route topology, RNG stream, static base path, or warning threshold changed.
+
+## Work order 191 - Persistent hull and paid dock repair
+
+Goal: make hull damage a lasting expedition cost by carrying it between sectors, moving ordinary repair into the shop, and exposing the ship's actual condition before the next operation.
+
+Prompt:
+
+> Stop restoring the player ship for free between sectors. Carry current hull through required and optional operation transitions, add a repeatable paid hull-repair service to every available shop, and show current/max hull in the navigation resource strip. Keep first launch at full hull, preserve route and refit effects that increase maximum hull, and make damaged, critical, full, unaffordable, and narrow-screen states clear.
+
+Acceptance criteria:
+
+- A new expedition still interprets its empty mission checkpoint as full hull, but a numeric combat result carries through sector advance and becomes the next operation's starting hull.
+- Sector entry resets scroll-world state while carrying build, resources, route context, and hull; no post-sector reducer silently restores the ship.
+- Every shop presents one stable dock-service row above its finite seeded item rack. One purchase restores exactly one hull, clamps at maximum, spends credits transactionally, and may be repeated while damage and funds remain.
+- Act I repair costs 4 credits; later acts add the existing act-economy repair surcharge. Item prices, rack depletion, rerolls, and campaign stock remain unchanged by the fixed labor rate.
+- Full-hull and unaffordable repair actions are disabled with explicit copy and accessible current/max meter semantics; damaged and critical states have non-color text plus distinct visual tones.
+- Navigation replaces the obsolete `+patch` hull readout with current/max hull and highlights damaged or critical condition without changing route selection.
+- Existing route/inter-act hull patches remain maximum-hull improvements rather than an implicit heal.
+- The existing mission checkpoint field remains the sole persisted current-hull authority, requiring no save version, snapshot shape, migration, generation fingerprint, or RNG change.
+- Unit, snapshot/content validation, desktop/narrow managed-browser, Chromium, static-hosting, and release checks remain coherent.
+
+Status: implemented. `RunSession` now exposes one effective-hull read model and one clamped repair mutation over the existing mission checkpoint. `advanceSector` carries the settled checkpoint into the next mission, while the first combat stage uses a dedicated entry policy that keeps hull and resets only the scroll world. A null initial checkpoint still means full hull, preserving new-run and old-snapshot behavior.
+
+`ShopScene` renders a stable semantic dock-service row before the seeded rack. `GameApp` recomputes the act-priced labor charge before spending credits, applies one point, records an economy timeline entry, and redraws the service; Act I costs 4 and deeper acts reuse the existing scarcity surcharge. The constellation resource strip now reports actual current/max hull with damaged and critical tones.
+
+The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/` with seed `REPAIR-SMOKE-191`. At 1280 x 720, navigation exposed `Hull 2/2` beside the other run resources and the shop presented a full-width dock service with a segmented meter and disabled full-hull action above the unchanged four-card rack. At 390 x 700, the service stacked into a single readable column without horizontal overflow. The browser recorded no warnings or errors, the viewport was restored, the tabs were finalized, and the authenticated smoke host stopped cleanly with its owner shell returning exit code 0. The critical/damaged purchase path is covered by Chromium using a restored mission checkpoint.
+
+Verification: the focused mission, shop, content-validation, and snapshot suites pass 70 tests; both isolated shop-repair and depleting-rack Chromium paths pass. `npm run verify:release` passes typecheck, ESLint, all 114 Vitest files and 734 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits `1,013.73 kB` minified / `277.83 kB` gzip initial JavaScript and `97.37 kB` / `19.56 kB` CSS, increases of `3.27 kB` / `0.91 kB` JavaScript and `1.69 kB` / `0.31 kB` CSS over work order 190. The existing Vite large-chunk advisory remains; no dependency, actor/projectile/effect cap, save/snapshot schema, route topology, RNG stream, static base path, or warning threshold changed.

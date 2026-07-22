@@ -16,8 +16,11 @@ import {
   type MissionSchedule
 } from '../../src/game/MissionDirector';
 import {
+  advanceSector,
   createRunSession,
   dispatchMissionEvent,
+  getShipHullReadModel,
+  repairShipHull,
   recordExpeditionBranchDecision
 } from '../../src/game/RunSession';
 import { createBossArenaState, updateBossArenaState } from '../../src/game/BossArena';
@@ -169,6 +172,42 @@ describe('MissionDirector', () => {
     });
     expect(getMissionStage(schedule, state.currentStageId).kind).toBe('relief');
     expect(state.checkpoint).toMatchObject({ hull: 1, credits: 37, salvage: 14 });
+  });
+
+  it('carries damaged hull into the next sector until a paid service repairs it', () => {
+    const run = generateRunSkeleton('MISSION-HULL-CARRY');
+    const contract = run.contracts[0]!;
+    const session = createRunSession(run, contract);
+    const maxHull = contract.shipStats.maxHull;
+    session.mission = {
+      ...session.mission,
+      checkpoint: { ...session.mission.checkpoint, hull: maxHull - 1 }
+    };
+
+    expect(advanceSector(run, session)).toBe(true);
+    expect(getShipHullReadModel(contract, session)).toMatchObject({
+      current: maxHull - 1,
+      max: maxHull,
+      missing: 1
+    });
+
+    dispatchMissionEvent(run, session, { id: 'carry-briefing', type: 'confirmBriefing' });
+    dispatchMissionEvent(run, session, { id: 'carry-entry', type: 'completeEntry' });
+    const schedule = createMissionSchedule(run.expedition, session.currentSectorIndex);
+    const projection = createMissionCombatProjection(
+      schedule,
+      session.mission,
+      run.sectors[session.currentSectorIndex]!
+    );
+    expect(projection.startingHull).toBe(maxHull - 1);
+
+    expect(repairShipHull(contract, session)).toMatchObject({
+      current: maxHull,
+      max: maxHull,
+      missing: 0,
+      state: 'full'
+    });
+    expect(repairShipHull(contract, session).current).toBe(maxHull);
   });
 
   it('reprojects the STARBREAK-SMOKE sector-10 set piece and boss lock inside the gate operation', () => {
