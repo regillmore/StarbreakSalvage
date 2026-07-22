@@ -573,14 +573,15 @@ export function formatRunEconomyBreakdown(
       (total, outcome) => total + outcome.effects.reward.creditBonus,
       0
     );
-    const choices = outcomes.reduce(
-      (total, outcome) => total + outcome.effects.reward.choiceBonus,
-      0
-    );
+    const rewardBiases = [
+      ...new Set(outcomes.flatMap((outcome) => outcome.effects.reward.biasTags))
+    ];
 
     return `${act.shortLabel}: ${outcomes.length} routes, ${formatSignedCredits(
       credits
-    )}/${formatSignedSalvage(salvage)}, +${cashOut} cash-out, +${choices} choices`;
+    )}/${formatSignedSalvage(salvage)}, +${cashOut} cash-out, ${
+      rewardBiases.length > 0 ? rewardBiases.join('/') : 'standard'
+    } reward bias`;
   });
   const junctionCredits = interActChoices.reduce(
     (total, choice) => total + choice.effects.creditsDelta,
@@ -594,17 +595,16 @@ export function formatRunEconomyBreakdown(
     (total, choice) => total + choice.effects.shopDiscount,
     0
   );
-  const junctionRewardChoices = interActChoices.reduce(
-    (total, choice) => total + choice.effects.rewardChoiceBonus,
-    0
-  );
+  const junctionRewardBiases = [
+    ...new Set(interActChoices.flatMap((choice) => choice.effects.rewardBiasTags))
+  ];
   const junctionPart =
     interActChoices.length > 0
       ? `Junction: ${formatSignedCredits(junctionCredits)}/${formatSignedSalvage(
           junctionSalvage
-        )}, ${junctionShopDiscount > 0 ? `-${junctionShopDiscount}` : '+0'} shop, +${
-          junctionRewardChoices
-        } choices`
+        )}, ${junctionShopDiscount > 0 ? `-${junctionShopDiscount}` : '+0'} shop, ${
+          junctionRewardBiases.length > 0 ? junctionRewardBiases.join('/') : 'standard'
+        } reward bias`
       : 'Junction: none';
   const recovered = result
     ? `Recovered: ${result.credits} credits/${result.salvage} kg`

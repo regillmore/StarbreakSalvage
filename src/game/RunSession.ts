@@ -896,7 +896,7 @@ export function recordMissionObjectiveOutcome(
     sectorIndex: schedule.sectorIndex,
     actId: schedule.contract.eligibleActIds[0]!,
     reward: {
-      choiceBonus: rewardRule.choiceBonus + optionalBonus,
+      choiceBonus: rewardRule.choiceBonus,
       creditBonus: rewardRule.creditBonus + optionalBonus,
       biasTags: rewardRule.biasTags,
       poolIdOverride: null

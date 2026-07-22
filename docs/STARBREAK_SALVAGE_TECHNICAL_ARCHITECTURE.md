@@ -947,6 +947,14 @@ seed + permanent save fingerprint
 - `RewardScene` and `ShopScene` consume the same compact primary-offer card projection. Pattern, source/quality name, power/heat/mass/command, primary circuit capacity, and mounted delta remain presentation derived at scene entry and redraw only after player actions.
 - No item reward count, ordinary shop slot, stock snapshot, save version, route topology, combat actor, projectile/effect budget, fixed-step branch, production dependency, or broad generation fingerprint changes.
 
+### Work order 194 bounded reward-manifest boundary
+
+- `SectorRewards.generateRewardChoices` is the sole final circuit-choice count authority. It starts from the authored base of three and adds only the context-specific permanent Relic Pattern Dossier and Market Echo Locator bonuses. The result is resolved before the existing named reward RNG stream selects its bounded prefix.
+- Objective, route, act-economy, carrier, inter-act, curse, and fitted-item systems may contribute deterministic bias tags, credits, salvage, or other authored consequences, but their hooks cannot mutate final manifest breadth. Historical `rewardChoiceBonus` data remains loadable for snapshot compatibility and is deliberately ignored by the count policy.
+- Restored legacy Market Echo items retain legacy reward bias precedence, while the permanent upgrade's extra choice remains authoritative. Other restored count-bearing item hooks are interpreted as bias-only effects, preventing active circuit order from becoming an option-count multiplier.
+- `RewardScene` appends the work order 193 primary weapon and the credit fallback after circuit generation. Normal manifests therefore contain five cards and a context-upgraded manifest contains at most six; neither auxiliary choice participates in item weighting or advances the circuit-item stream.
+- The existing reward seed names, deterministic item ordering, explicit weapon-offer stream, save/snapshot shape, route topology, and combat budgets are unchanged. A lower requested count intentionally exposes a shorter prefix of the same deterministic reward sequence.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

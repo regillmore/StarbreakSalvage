@@ -136,7 +136,7 @@ const OPPORTUNITIES = [
   'sell a faction claim or carry it into the next operation',
   'splice an impossible route into the reward lattice',
   'recover a law-proof hull brace before the next gate',
-  'convert horizon telemetry into an additional reward choice'
+  'convert horizon telemetry into a focused reward signal'
 ] as const;
 
 export function createNullFrontierCampaignPlan(options: {

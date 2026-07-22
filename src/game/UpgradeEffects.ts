@@ -247,10 +247,9 @@ export function getRewardUpgradeBiasTags(
 export function getMarketEchoLocatorRewardChoiceBonus(
   effects: RunUpgradeEffects,
   routeKind: RewardContextKind,
-  legacyItemActive = false
+  _legacyItemActive = false
 ): number {
   return effects.marketEchoLocator &&
-    !legacyItemActive &&
     (routeKind === 'shop' || routeKind === 'repair')
     ? 1
     : 0;
@@ -261,7 +260,7 @@ export function getMarketEchoLocatorRewardBiasTags(
   routeKind: RewardContextKind,
   legacyItemActive = false
 ): readonly ItemTag[] {
-  return getMarketEchoLocatorRewardChoiceBonus(effects, routeKind, legacyItemActive) > 0
+  return !legacyItemActive && getMarketEchoLocatorRewardChoiceBonus(effects, routeKind) > 0
     ? ['credit', 'magnet']
     : [];
 }

@@ -115,7 +115,7 @@ export function generateRouteOutcome(options: {
         summary: 'An ace wing marks your transponder, but the bounty purse is already leaking.',
         details: [
           `Gain ${salvageDelta} salvage.`,
-          `Reward screen gains 1 extra choice and +${rewardCreditBonus} credit cash-out.`,
+          `Reward manifest favors overkill and drone gear with +${rewardCreditBonus} credit cash-out.`,
           targetSectorIndex === null
             ? 'No future sector remains for the bounty wing.'
             : 'Next sector enemies gain +1 hull and open fire 10% sooner.',
@@ -125,7 +125,7 @@ export function generateRouteOutcome(options: {
           ...createEmptyEffects(),
           salvageDelta,
           reward: {
-            choiceBonus: 1,
+            choiceBonus: 0,
             creditBonus: rewardCreditBonus,
             biasTags: ['overkill', 'drone'],
             poolIdOverride: null
@@ -157,7 +157,7 @@ export function generateRouteOutcome(options: {
         details: [
           creditCost > 0 ? `Spend ${creditCost} credits on cutting charges.` : 'No credits spent.',
           `Gain ${salvageDelta} salvage, 1 relic marker, and 1 curse.`,
-          'Reward pool switches to vault items with 1 extra choice.',
+          'Reward pool switches to vault items with curse and phase bias.',
           ...actDetails
         ],
         effects: {
@@ -167,7 +167,7 @@ export function generateRouteOutcome(options: {
           curseDelta: 1,
           relicDelta: 1,
           reward: {
-            choiceBonus: 1,
+            choiceBonus: 0,
             creditBonus: 0,
             biasTags: ['curse', 'phase'],
             poolIdOverride: 'vault'
@@ -224,7 +224,7 @@ export function generateRouteOutcome(options: {
             : creditsDelta > 0
               ? `Gain ${creditsDelta} credits.`
               : `Lose ${Math.abs(creditsDelta)} credits.`,
-          'Reward screen gains 1 extra choice biased toward phase tech.',
+          'Reward manifest gains a stronger phase-tech bias.',
           targetSectorIndex === null
             ? 'The distortion has no future sector to infect.'
             : 'Next sector enemies open fire 16% sooner; the boss gains +1 hull.',
@@ -235,7 +235,7 @@ export function generateRouteOutcome(options: {
           creditsDelta,
           curseDelta: variance < 0 ? 1 : 0,
           reward: {
-            choiceBonus: 1,
+            choiceBonus: 0,
             creditBonus: 1,
             biasTags: ['phase', biasTag],
             poolIdOverride: variance < 0 ? 'vault' : null

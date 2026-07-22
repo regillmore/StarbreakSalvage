@@ -1568,7 +1568,7 @@ function applyOnRouteChosen(itemId: ItemId, payload: RouteChosenPayload): RouteC
       ...payload,
       salvageDelta: payload.salvageDelta + 2,
       curseDelta: payload.curseDelta + 1,
-      rewardChoiceBonus: payload.rewardChoiceBonus + 1
+      rewardBiasTags: addTags(payload.rewardBiasTags, ['curse', 'relic'])
     };
   }
 
@@ -1633,7 +1633,6 @@ function applyOnRewardGenerated(
   ) {
     return {
       ...payload,
-      choiceCount: payload.choiceCount + 1,
       biasTags: [...payload.biasTags, 'credit', 'magnet']
     };
   }
@@ -1641,7 +1640,6 @@ function applyOnRewardGenerated(
   if (itemId === 'item_relic_ash_compass' && payload.poolId === 'vault') {
     return {
       ...payload,
-      choiceCount: payload.choiceCount + 1,
       biasTags: [...payload.biasTags, 'relic', 'phase']
     };
   }

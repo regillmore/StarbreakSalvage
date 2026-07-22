@@ -204,7 +204,7 @@ describe('run upgrade effects', () => {
     expect(getMarketEchoLocatorRewardChoiceBonus(marketEcho, 'repair')).toBe(1);
     expect(getMarketEchoLocatorRewardBiasTags(marketEcho, 'shop')).toEqual(['credit', 'magnet']);
     expect(getMarketEchoLocatorRewardChoiceBonus(marketEcho, 'vault')).toBe(0);
-    expect(getMarketEchoLocatorRewardChoiceBonus(marketEcho, 'shop', true)).toBe(0);
+    expect(getMarketEchoLocatorRewardChoiceBonus(marketEcho, 'shop', true)).toBe(1);
     expect(getMarketEchoLocatorRewardBiasTags(marketEcho, 'shop', true)).toEqual([]);
     expect(createRunGenerationSaveFingerprint([], marketEcho)).toBe(
       createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())

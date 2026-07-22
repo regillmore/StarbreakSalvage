@@ -982,7 +982,7 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'uncommon',
     tags: ['credit', 'magnet'],
     hooks: ['onRewardGenerated'],
-    effect: 'shop and repair routes echo one extra reward choice',
+    effect: 'shop and repair rewards lean toward credit and salvage-attraction tools',
     weight: 8,
     metadata: {
       family: 'credit-shop',
@@ -1017,7 +1017,7 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'rare',
     tags: ['relic', 'phase'],
     hooks: ['onRewardGenerated'],
-    effect: 'vault rewards gain a relic-biased extra reading',
+    effect: 'vault rewards lean more strongly toward relic and phase technology',
     weight: 5,
     metadata: {
       family: 'curse-relic',

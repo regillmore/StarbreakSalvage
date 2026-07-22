@@ -78,12 +78,12 @@ describe('route events', () => {
 
     expect(outcomes.shop?.effects.shop?.discount).toBeGreaterThan(0);
     expect(outcomes.elite?.effects.combat?.enemyHullBonus).toBe(1);
-    expect(outcomes.elite?.effects.reward.choiceBonus).toBe(1);
+    expect(outcomes.elite?.effects.reward.choiceBonus).toBe(0);
     expect(outcomes.vault?.effects.curseDelta).toBe(1);
     expect(outcomes.vault?.effects.relicDelta).toBe(1);
     expect(outcomes.vault?.effects.reward.poolIdOverride).toBe('vault');
     expect(outcomes.repair?.effects.hullPatchDelta).toBe(1);
-    expect(outcomes.glitch?.effects.reward.choiceBonus).toBe(1);
+    expect(outcomes.glitch?.effects.reward.choiceBonus).toBe(0);
     expect(outcomes.glitch?.effects.combat?.bossHullBonus).toBe(1);
     expect(outcomes.factionAmbush?.effects.salvageDelta).toBeGreaterThan(0);
     expect(outcomes.factionAmbush?.effects.combat?.bossHullBonus).toBe(1);

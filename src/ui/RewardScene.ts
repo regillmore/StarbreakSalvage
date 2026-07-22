@@ -91,6 +91,9 @@ export class RewardScene implements Scene {
 
     const rewardGrid = document.createElement('div');
     rewardGrid.className = 'reward-grid';
+    rewardGrid.dataset.testid = 'reward-grid';
+    rewardGrid.dataset.itemChoiceCount = String(rewardChoices.length);
+    rewardGrid.dataset.totalChoiceCount = String(rewardChoices.length + 2);
 
     for (const choice of rewardChoices) {
       const rewardButton = document.createElement('button');

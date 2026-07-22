@@ -158,7 +158,6 @@ export function formatInterActEffectsReadout(effects: InterActEffectSummary): st
   const parts = [
     effects.routeIntel ? 'Act intel online' : null,
     effects.shopDiscount > 0 ? `Shop discount -${effects.shopDiscount}` : null,
-    effects.rewardChoiceBonus > 0 ? `Rewards +${effects.rewardChoiceBonus} choice` : null,
     effects.rewardBiasTags.length > 0 ? `Reward bias ${effects.rewardBiasTags.join('/')}` : null,
     ...effects.riskLabels
   ].filter((part): part is string => part !== null);
@@ -274,12 +273,11 @@ function createChoiceBody(
     return {
       kind,
       label: 'Prize Manifest',
-      meta: `+1 reward choice`,
-      summary: 'A salvage broker marks one extra Act II reward crate for inspection.',
-      detail: `Act II reward screens gain 1 extra choice and bias toward ${biasTag}.`,
+      meta: `${biasTag} reward bias`,
+      summary: 'A salvage broker indexes Act II manifests around one build family.',
+      detail: `Act II reward pools lean more strongly toward ${biasTag}.`,
       effects: {
         ...createEmptyEffects(),
-        rewardChoiceBonus: 1,
         rewardBiasTags: [biasTag]
       }
     };
@@ -306,12 +304,11 @@ function createChoiceBody(
     label: 'Overburn Descent',
     meta: '+5 salvage, +1 curse',
     summary: 'A risky slingshot reaches the core layer ahead of schedule.',
-    detail: 'Gain salvage and an extra reward choice, but carry 1 curse into Act II.',
+    detail: 'Gain salvage and bias rewards toward curse and overkill, but carry 1 curse into Act II.',
     effects: {
       ...createEmptyEffects(),
       salvageDelta: 5,
       curseDelta: 1,
-      rewardChoiceBonus: 1,
       rewardBiasTags: ['curse', 'overkill'],
       riskLabel: 'Overburn risk +1 curse'
     }
@@ -364,7 +361,7 @@ function formatEffectDelta(effects: InterActChoiceEffects): string {
     effects.curseDelta === 0 ? null : `+${effects.curseDelta} curse`,
     effects.routeIntel ? 'intel' : null,
     effects.shopDiscount > 0 ? `-${effects.shopDiscount} shop` : null,
-    effects.rewardChoiceBonus > 0 ? `+${effects.rewardChoiceBonus} reward choice` : null
+    effects.rewardBiasTags.length > 0 ? `${effects.rewardBiasTags.join('/')} reward bias` : null
   ]
     .filter((part): part is string => part !== null)
     .join(', ');

@@ -1395,7 +1395,7 @@ describe('WaveDirector', () => {
                 "id": "act2_seed_shear",
                 "label": "Seed Shear",
                 "pressureHint": "high variance pressure with possible curse exposure",
-                "rewardTierHint": "extra reward choice with phase and heat bias",
+                "rewardTierHint": "strong phase and heat bias in the reward pool",
                 "tags": [
                   "seedShear",
                   "hazard",
@@ -1636,7 +1636,7 @@ describe('WaveDirector', () => {
                 "id": "act2_seed_shear",
                 "label": "Seed Shear",
                 "pressureHint": "high variance pressure with possible curse exposure",
-                "rewardTierHint": "extra reward choice with phase and heat bias",
+                "rewardTierHint": "strong phase and heat bias in the reward pool",
                 "tags": [
                   "seedShear",
                   "hazard",
@@ -1744,7 +1744,7 @@ describe('WaveDirector', () => {
                 "id": "act2_seed_shear",
                 "label": "Seed Shear",
                 "pressureHint": "high variance pressure with possible curse exposure",
-                "rewardTierHint": "extra reward choice with phase and heat bias",
+                "rewardTierHint": "strong phase and heat bias in the reward pool",
                 "tags": [
                   "seedShear",
                   "hazard",
@@ -1853,7 +1853,7 @@ describe('WaveDirector', () => {
                 "id": "act2_seed_shear",
                 "label": "Seed Shear",
                 "pressureHint": "high variance pressure with possible curse exposure",
-                "rewardTierHint": "extra reward choice with phase and heat bias",
+                "rewardTierHint": "strong phase and heat bias in the reward pool",
                 "tags": [
                   "seedShear",
                   "hazard",
@@ -1974,7 +1974,7 @@ describe('WaveDirector', () => {
                 "id": "act2_seed_shear",
                 "label": "Seed Shear",
                 "pressureHint": "high variance pressure with possible curse exposure",
-                "rewardTierHint": "extra reward choice with phase and heat bias",
+                "rewardTierHint": "strong phase and heat bias in the reward pool",
                 "tags": [
                   "seedShear",
                   "hazard",
@@ -2190,7 +2190,7 @@ describe('WaveDirector', () => {
                 "id": "act2_seed_shear",
                 "label": "Seed Shear",
                 "pressureHint": "high variance pressure with possible curse exposure",
-                "rewardTierHint": "extra reward choice with phase and heat bias",
+                "rewardTierHint": "strong phase and heat bias in the reward pool",
                 "tags": [
                   "seedShear",
                   "hazard",

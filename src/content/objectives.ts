@@ -124,7 +124,7 @@ export interface MissionContractDefinition {
 }
 
 const SUCCESS_STANDARD: MissionRewardRule = {
-  choiceBonus: 1,
+  choiceBonus: 0,
   creditBonus: 2,
   salvageBonus: 1,
   biasTags: ['overkill']

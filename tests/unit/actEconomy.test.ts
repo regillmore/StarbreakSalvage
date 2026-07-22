@@ -5,7 +5,7 @@ import {
   createDefaultSaveData,
   type SaveData
 } from '../../src/core/saveData';
-import { createActEconomyProfile, getActEconomyRewardChoiceBonus } from '../../src/game/ActEconomy';
+import { createActEconomyProfile } from '../../src/game/ActEconomy';
 import { generateRunSkeleton, type RunSkeleton } from '../../src/game/Generation';
 import {
   createInterActChoiceRecord,
@@ -27,13 +27,11 @@ describe('Act II economy tuning', () => {
 
     expect(actOne.escalated).toBe(false);
     expect(actOne.shopStockBonus).toBe(0);
-    expect(getActEconomyRewardChoiceBonus(actOne, 'elite', 'combat', false)).toBe(0);
 
     expect(actTwo.escalated).toBe(true);
     expect(actTwo.shopStockBonus).toBe(1);
     expect(actTwo.shopPriceAdjustment).toBe(1);
     expect(actTwo.repairCreditSurcharge).toBe(2);
-    expect(getActEconomyRewardChoiceBonus(actTwo, 'elite', 'combat', false)).toBe(1);
 
     expect(finale.finale).toBe(true);
     expect(finale.rewardCreditBonus).toBeGreaterThan(actTwo.rewardCreditBonus);
@@ -47,8 +45,8 @@ describe('Act II economy tuning', () => {
     expect(snapshot).toEqual(repeated);
     expect(snapshot).toMatchSnapshot('fresh act II economy');
     expect(snapshot.shop.count).toBe(5);
-    expect(snapshot.eliteRewards).toHaveLength(5);
-    expect(snapshot.vaultRewards).toHaveLength(5);
+    expect(snapshot.eliteRewards).toHaveLength(3);
+    expect(snapshot.vaultRewards).toHaveLength(3);
     expect(snapshot.rerollCosts).toEqual([3, 4]);
   });
 

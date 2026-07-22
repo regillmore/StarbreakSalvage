@@ -334,6 +334,13 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('command-deck')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Choose Reward' })).toBeVisible();
   await expect(page.locator('.reward-panel')).toHaveAttribute('data-contract-theme', 'redline');
+  await expect(page.getByTestId('reward-grid')).toHaveAttribute('data-item-choice-count', '3');
+  await expect(page.getByTestId('reward-grid')).toHaveAttribute('data-total-choice-count', '5');
+  await expect(page.locator('.reward-card')).toHaveCount(5);
+  await expect(page.locator('.reward-panel')).toHaveJSProperty('scrollTop', 0);
+  expect(
+    await page.locator('.reward-panel').evaluate((panel) => panel.scrollHeight <= panel.clientHeight + 1)
+  ).toBe(true);
   await expect(page.locator('.reward-card').first()).toContainText('Build fit:');
   await expect(
     page

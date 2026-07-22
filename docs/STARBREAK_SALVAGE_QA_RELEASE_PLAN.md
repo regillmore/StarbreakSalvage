@@ -478,6 +478,7 @@ Phase 10 accessibility checks should also cover mission briefings and branch foc
 - [x] Themed HUD and ship previews preserve text contrast in automated smoke coverage.
 - [x] Mouse controls do not trap or steal menu focus.
 - [x] Sector rewards and shops expose keyboard-readable primary weapon identity, circuit capacity, mounted comparison, finite armory depletion, and reroll restocking.
+- [x] Required-sector rewards expose three ordinary circuit choices, five total cards with weapon/credits, and at most six total after a permanent option unlock; the complete desktop manifest has no panel or page scroll.
 
 ## Release checklist
 

@@ -64,8 +64,47 @@ describe('reward generation', () => {
 
     expect(count(baselineRun, baseline, baselineContract)).toBe(3);
     expect(count(upgradedRun, permanent, upgradedContract)).toBe(4);
-    expect(count(baselineRun, restored, baselineContract)).toBe(4);
+    expect(count(baselineRun, restored, baselineContract)).toBe(3);
     expect(count(upgradedRun, stacked, upgradedContract)).toBe(4);
+  });
+
+  it('keeps late-run and fitted-circuit reward manifests at the permanent-upgrade budget', () => {
+    const baselineRun = generateRunSkeleton('REWARD-MANIFEST-BUDGET');
+    const upgradedRun = generateRunSkeleton('REWARD-MANIFEST-BUDGET', {
+      purchasedUpgradeIds: ['upgrade_relic_pattern_dossier']
+    });
+    const baselineContract = getFirstContract(baselineRun);
+    const upgradedContract = getFirstContract(upgradedRun);
+    const baseline = createRunSession(baselineRun, baselineContract);
+    const upgraded = createRunSession(upgradedRun, upgradedContract);
+    const baselineFinale = baselineRun.acts.at(-1)?.endSectorIndex;
+    const upgradedFinale = upgradedRun.acts.at(-1)?.endSectorIndex;
+
+    if (baselineFinale === undefined || upgradedFinale === undefined) {
+      throw new Error('Expected a generated finale sector.');
+    }
+
+    baseline.currentSectorIndex = baselineFinale;
+    upgraded.currentSectorIndex = upgradedFinale;
+    expect(addItemToSession(baseline, 'item_relic_ash_compass').socket).not.toBeNull();
+    expect(addItemToSession(upgraded, 'item_relic_ash_compass').socket).not.toBeNull();
+
+    expect(
+      generateSectorRewardChoices({
+        run: baselineRun,
+        session: baseline,
+        contract: baselineContract,
+        routeKind: 'vault'
+      })
+    ).toHaveLength(3);
+    expect(
+      generateSectorRewardChoices({
+        run: upgradedRun,
+        session: upgraded,
+        contract: upgradedContract,
+        routeKind: 'vault'
+      })
+    ).toHaveLength(4);
   });
 
   it('migrates Mining Laser Transit reward bias without doubling a restored fitted copy', () => {

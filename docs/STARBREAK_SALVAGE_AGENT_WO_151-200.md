@@ -1138,3 +1138,29 @@ Status: implemented. `Foundry.generateComponentSalvage` now filters out primary 
 The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/` at 1280 x 720 with seed `PRIMARY-ARMORY-193`. The shop separated its Weapon Rack from Hull Repair and the four item cards, showed a 12-credit tuned Pulse Cannon with five compact P/H/M/C/S metrics and mounted delta, changed to a semantic empty cradle after purchase, and refilled with a different tuned Kinetic Popgun after reroll. The browser host lease ended before the second managed reward-layout pass; the reward card's identity, comparison, and cargo action remain covered by the release Chromium flow. The tab finalized and the restarted authenticated smoke host stopped cleanly.
 
 Verification: focused Foundry, component-offer, shop, and two player-flow Chromium checks pass. `npm run verify:release` passes typecheck, ESLint, all 115 Vitest files and 738 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits `1,022.15 kB` minified / `280.32 kB` gzip initial JavaScript and `99.72 kB` / `19.94 kB` CSS, increases of `5.83 kB` / `1.56 kB` JavaScript and `2.35 kB` / `0.38 kB` CSS over work order 192. The existing Vite large-chunk advisory remains; no dependency, actor/projectile/effect cap, save/snapshot version, route topology, ordinary shop stock schema, static base path, or warning threshold changed.
+
+## Work order 194 - Bounded reward manifests
+
+Goal: stop ordinary run progression from passively widening circuit reward manifests, preserving permanent scrap unlocks as the deliberate source of additional options while keeping the complete reward decision visible on one desktop page.
+
+Prompt:
+
+> Fix circuit item rewards at three ordinary choices. Permit only the existing permanent reward-option upgrades to increase that count, while route, objective, act, carrier, junction, curse, and fitted-item effects may still bias the contents without widening the manifest. Keep the separate primary weapon and credit fallback, and compact the reward presentation so the normal five-card and upgraded six-card manifests fit without desktop scrolling.
+
+Acceptance criteria:
+
+- A required-sector reward offers exactly three circuit items before permanent upgrades, regardless of act, objective performance, optional success, route effect, carrier state, junction choice, curse, or fitted circuit items.
+- Relic Pattern Dossier and the permanent Market Echo Locator retain their authored context-specific extra circuit option; their bonuses remain bounded and restored legacy item copies cannot add another option.
+- Removed count bonuses become deterministic reward-pool biases or ordinary economy effects where their identity remains useful; no run-local hook may mutate the final choice count.
+- The separately generated compatible primary weapon and credit fallback remain present, producing five normal cards and at most six cards when one permanent option bonus applies.
+- Reward count authority is centralized in `SectorRewards`; the existing named reward RNG stream, ordering, save shape, and explicit weapon-offer stream remain intact.
+- At 1280 x 720, both two-row manifests fit inside the reward panel without page or panel scrolling; keyboard focus, semantic item copy, and narrow responsive stacking remain available.
+- Focused reward, hook, route, objective, economy, E2E, managed-browser, production-preview, and release checks remain coherent.
+
+Status: implemented. `SectorRewards` now computes one bounded manifest count from the authored base plus only the two permanent context bonuses. Run-local objective, route, act, carrier, junction, curse, and fitted-item paths retain their meaningful bias or economy behavior but cannot widen the result. Market Echo's permanent option survives restored-item compatibility while its duplicate bias remains suppressed, and historical junction/save fields remain readable without influencing the new policy.
+
+`RewardScene` exposes semantic item and total card counts for regression coverage. Its desktop panel and card grid were tightened around the bounded two-row presentation, while the existing single-column responsive breakpoint remains untouched. The compatible primary weapon and credit fallback continue to sit beside the circuit choices rather than entering their RNG pool.
+
+The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/` at 1280 x 720 with seed `REWARD-MANIFEST-194`. The first required-sector reward showed three circuit items, one recovered primary weapon, and one credit fallback. All five cards fit in two rows; the panel reported equal 542 px client and scroll heights, the document matched the 720 px viewport, and warning/error logs were empty.
+
+Verification: focused reward and modifier coverage passes. `npm run verify:release` passes typecheck, ESLint, all 115 Vitest files and 739 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,021.90 kB` minified / `280.30 kB` gzip initial JavaScript and `100.24 kB` / `20.07 kB` CSS. The existing Vite large-chunk advisory remains; no dependency, actor/projectile/effect cap, save/snapshot version, route topology, named RNG stream, static base path, or warning threshold changed.

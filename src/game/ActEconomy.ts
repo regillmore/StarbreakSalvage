@@ -1,7 +1,6 @@
-import type { ItemRarity, ItemSource, ItemTag, RewardPoolId } from '../content/items';
+import type { ItemRarity, ItemSource, ItemTag } from '../content/items';
 import type { RouteKind, SectorRoute } from './Generation';
 import type { CombatRunResult } from './CombatState';
-import type { RewardContextKind } from './Rewards';
 
 export interface ActEconomyProfile {
   readonly actId: string;
@@ -113,27 +112,6 @@ export function createActEconomyProfile(sector: SectorRoute): ActEconomyProfile 
     },
     debugLabel: `${sector.act.actShortLabel} escalated economy${finale ? ' finale' : ''}`
   };
-}
-
-export function getActEconomyRewardChoiceBonus(
-  profile: ActEconomyProfile | undefined,
-  routeKind: RewardContextKind,
-  poolId: RewardPoolId,
-  bossGate: boolean
-): number {
-  if (!profile?.escalated) {
-    return 0;
-  }
-
-  if (profile.finale || bossGate) {
-    return 1;
-  }
-
-  if (poolId === 'vault' || routeKind === 'elite' || routeKind === 'factionAmbush') {
-    return 1;
-  }
-
-  return 0;
 }
 
 export function getActEconomyRouteCreditBonus(

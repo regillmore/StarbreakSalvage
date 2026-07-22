@@ -2746,3 +2746,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 193. `Foundry` separates non-primary automatic salvage from stable explicit primary offers; `ComponentOffers` owns reward/shop projections and shop depletion, while `RewardScene`, `ShopScene`, and `GameApp` own explicit choice, validation, cargo, and timeline presentation.
+
+### BL59 - Bounded reward manifests
+
+Acceptance:
+
+- Fix ordinary required-sector circuit rewards at three choices and prevent act depth, objective performance, optional success, route effects, carrier state, junction choices, curse, or fitted run items from passively increasing that count.
+- Preserve Relic Pattern Dossier and permanent Market Echo Locator as the only context-specific extra-option sources, without allowing restored legacy copies to stack another option.
+- Retain worthwhile removed mechanics as reward-pool biases or economy effects while making `SectorRewards` the sole final count authority.
+- Keep the explicit compatible primary weapon and credit fallback outside the circuit pool, yielding five normal cards and a bounded six-card permanent-upgrade ceiling.
+- Fit both desktop manifests in two rows without page or panel scrolling while preserving semantic copy, keyboard operation, and narrow responsive stacking.
+- Preserve named reward RNG, explicit weapon generation, save compatibility, route topology, static hosting, and managed smoke tooling.
+
+Status:
+
+- Implemented in work order 194. `SectorRewards` derives the bounded circuit manifest from its base plus permanent context upgrades only; run-local systems now influence contents rather than breadth. `RewardScene` exposes count diagnostics and a compact two-row desktop layout for the five- or six-card complete decision.

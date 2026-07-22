@@ -822,12 +822,13 @@ describe('item synergies', () => {
     expect(sectorPayload.specialChargeBonus).toBeGreaterThan(0.1);
     expect(routePayload.salvageDelta).toBe(2);
     expect(routePayload.curseDelta).toBe(1);
-    expect(routePayload.rewardChoiceBonus).toBe(1);
+    expect(routePayload.rewardChoiceBonus).toBe(0);
+    expect(routePayload.rewardBiasTags).toEqual(['curse', 'relic']);
     expect(routePayload.rewardCreditBonus).toBe(1);
     expect(shopPayload.itemCount).toBe(5);
     expect(shopPayload.priceDiscount).toBe(1);
     expect(shopPayload.biasTags).toContain('drone');
-    expect(rewardPayload.choiceCount).toBe(5);
+    expect(rewardPayload.choiceCount).toBe(4);
     expect(rewardPayload.biasTags).toEqual(['relic', 'phase', 'laser', 'plasma']);
   });
 

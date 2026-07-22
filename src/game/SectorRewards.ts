@@ -17,7 +17,7 @@ import {
   getRewardUpgradeBiasTags,
   getRewardUpgradeChoiceBonus
 } from './UpgradeEffects';
-import { createActEconomyProfile, getActEconomyRewardChoiceBonus } from './ActEconomy';
+import { createActEconomyProfile } from './ActEconomy';
 import { createCarrierInfluence } from './CarrierCommand';
 import { getActiveFittedItems } from './ItemSockets';
 
@@ -40,7 +40,6 @@ export function generateSectorRewardChoices(options: {
     .reverse()
     .find((modifier) => modifier.poolIdOverride)?.poolIdOverride;
   const poolId = poolOverride ?? (rewardContext === 'vault' ? 'vault' : 'combat');
-  const choiceBonus = modifiers.reduce((total, modifier) => total + modifier.choiceBonus, 0);
   const modifierBiasTags = modifiers.flatMap((modifier) => modifier.biasTags);
   const upgradeChoiceBonus = getRewardUpgradeChoiceBonus(options.run.upgradeEffects, rewardContext);
   const upgradeBiasTags = getRewardUpgradeBiasTags(options.run.upgradeEffects, rewardContext);
@@ -69,14 +68,12 @@ export function generateSectorRewardChoices(options: {
     rewardContext,
     legacyMiningLaserTransitActive
   );
-  const actRewardChoiceBonus = getActEconomyRewardChoiceBonus(
-    actEconomy,
-    rewardContext,
-    poolId,
-    sector.objective.bossRequired
-  );
   const engineering = createEngineeringCombatProfile(options.session.engineering);
   const carrier = createCarrierInfluence(options.run.carrierPlan, options.session.carrier);
+  const rewardChoiceCount = Math.max(
+    1,
+    Math.floor((options.count ?? 3) + upgradeChoiceBonus + marketEchoChoiceBonus)
+  );
   const rewardPayload = applyCombinedHooks(
     'onRewardGenerated',
     fittedItems,
@@ -85,14 +82,7 @@ export function generateSectorRewardChoices(options: {
       routeKind: rewardContext,
       sectorIndex: sector.index,
       poolId,
-      choiceCount:
-        (options.count ??
-          3 +
-            choiceBonus +
-            upgradeChoiceBonus +
-            interActEffects.rewardChoiceBonus +
-            actRewardChoiceBonus +
-            carrier.rewardChoiceBonus) + marketEchoChoiceBonus,
+      choiceCount: rewardChoiceCount,
       biasTags: [
         ...options.contract.itemBias,
         ...getRouteBiasTags(rewardContext),
@@ -115,7 +105,9 @@ export function generateSectorRewardChoices(options: {
     seed: `${sector.rewardPoolSeed}:sector-${sector.index}:${rewardSeedSuffix}`,
     poolId: rewardPayload.poolId,
     poolProfileId,
-    count: Math.max(1, Math.floor(rewardPayload.choiceCount)),
+    // Choice breadth is a permanent-progression affordance. Run-local systems may
+    // still bias the manifest through this hook, but cannot passively widen it.
+    count: rewardChoiceCount,
     biasTags: rewardPayload.biasTags,
     excludeItemIds: getOwnedItemIds(options.session),
     unlockedIds: options.run.unlockedIds,

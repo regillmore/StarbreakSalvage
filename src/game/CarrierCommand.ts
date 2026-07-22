@@ -95,7 +95,6 @@ export interface CarrierCommandResult {
 
 export interface CarrierInfluence {
   readonly foundrySalvageBonus: number;
-  readonly rewardChoiceBonus: number;
   readonly rewardBiasTags: readonly string[];
   readonly shopDiscount: number;
   readonly crewRecoveryAdvance: number;
@@ -371,7 +370,6 @@ export function createCarrierInfluence(plan: CarrierPlan, state: CarrierState): 
   } satisfies Record<FactionId, boolean>;
   return {
     foundrySalvageBonus: Math.min(3, foundry),
-    rewardChoiceBonus: vault >= 2 ? 1 : 0,
     rewardBiasTags: vault > 0 ? ['relic'] : foundry > 0 ? ['scrap'] : [],
     shopDiscount: liaison > 0 ? Math.min(3, liaison) : 0,
     crewRecoveryAdvance: medbay > 0 ? 1 : 0,

@@ -334,7 +334,7 @@ describe('objective grammar and mission anthology', () => {
     expect(session.objectiveHistory).toHaveLength(1);
     expect(session.salvage).toBe(startingSalvage + 1);
     expect(getRewardModifiersForSector(session, 0)).toContainEqual(
-      expect.objectContaining({ choiceBonus: 1, creditBonus: 2 })
+      expect.objectContaining({ choiceBonus: 0, creditBonus: 2 })
     );
 
     recordMissionObjectiveOutcome(session, schedule, {
@@ -362,7 +362,7 @@ describe('objective grammar and mission anthology', () => {
       })
     );
     expect(getRewardModifiersForSector(session, targetSectorIndex)).toContainEqual(
-      expect.objectContaining({ choiceBonus: 2, creditBonus: 3 })
+      expect.objectContaining({ choiceBonus: 0, creditBonus: 3 })
     );
   });
 

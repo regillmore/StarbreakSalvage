@@ -182,7 +182,7 @@ export const ACT_ROUTE_CONTRACTS: readonly ActRouteContractDefinition[] = [
     label: 'Seed Shear',
     routeCardCopy: 'bend the Act II route seed for strange rewards and unstable pacing',
     environmentalPressureHint: 'hazard timing may feel less regular after the shear',
-    rewardTierHint: 'extra reward choice with phase and heat bias',
+    rewardTierHint: 'strong phase and heat bias in the reward pool',
     pressureHint: 'high variance pressure with possible curse exposure',
     tags: ['seedShear', 'hazard', 'pressure'],
     sectorFit: {
