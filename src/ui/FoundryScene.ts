@@ -7,6 +7,7 @@ import {
 } from '../content/engineering';
 import { getShipFrameById, getShipModuleById } from '../content/shipModules';
 import { getItemById } from '../content/items';
+import { getWeaponById } from '../content/weapons';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import type { ItemInstance } from '../game/Rewards';
 import {
@@ -23,10 +24,9 @@ import {
   commitFoundryDraft,
   createEngineeringDebugState,
   formatComponentName,
-  getCargoComponents,
   getInstalledComponent,
+  getPrimaryWeaponCargoComponents,
   planInstallComponent,
-  planRemoveComponent,
   planScrapComponent,
   resolveEngineeringSnapshot,
   undoFoundryDraft,
@@ -42,12 +42,10 @@ import {
   getContractThemeOptions
 } from './ContractTheme';
 import {
-  compareFoundryComponents,
   createFoundryComponentStatModel,
   createFoundryDashboardModel,
   type FoundryAttackStatModel,
-  type FoundryDashboardModel,
-  type FoundryMeterModel
+  type FoundryDashboardModel
 } from './FoundryPresentation';
 import { createAttackSimulationPreviewElement } from './AttackSimulationPreview';
 import { createShipPreviewModel } from './ShipPreview';
@@ -87,7 +85,7 @@ export class FoundryScene implements Scene {
   public enter(): void {
     const frame = getShipFrameById(this.state.draft.frameId);
     const resolution = resolveEngineeringSnapshot(this.state.draft);
-    const cargo = getCargoComponents(this.state.draft);
+    const cargo = getPrimaryWeaponCargoComponents(this.state.draft);
     this.itemInstances = reconcileItemSockets(this.itemInstances, this.state.draft);
     const dashboard = createFoundryDashboardModel(
       this.state,
@@ -107,12 +105,12 @@ export class FoundryScene implements Scene {
     const eyebrow = document.createElement('p');
     eyebrow.className = 'eyebrow';
     eyebrow.textContent = `Sector ${this.sectorIndex} / ${frame.name} / ${
-      this.view === 'cargo' ? 'Cargo Bay' : 'Salvage Foundry'
+      this.view === 'cargo' ? 'Primary Reserve' : 'Salvage Foundry'
     }`;
 
     const title = document.createElement('h1');
     title.id = 'foundry-title';
-    title.textContent = this.view === 'cargo' ? 'Cargo Management' : 'Hardpoint Control';
+    title.textContent = this.view === 'cargo' ? 'Primary Cargo' : 'Hardpoint Control';
 
     const menu = this.createEngineeringMenu(cargo.length);
 
@@ -121,26 +119,16 @@ export class FoundryScene implements Scene {
     boundary.dataset.testid = 'foundry-boundary';
     boundary.textContent = `${
       this.view === 'cargo'
-        ? 'SHARED DRAFT // Loose hardware only. Assignments remain in Hardpoint Control.'
-        : 'DRAFT BAY // Assign at each hardpoint. Commit launches. Undo restores.'
+        ? 'PRIMARY RESERVE // Loose weapons only. Mount from Hardpoint Control or scrap here.'
+        : 'PRIMARY DRAFT // Choose one weapon, shape its signal circuit, then commit. Undo restores.'
     }${this.crewAssist ? ` Crew: ${this.crewAssist}` : ''}`;
-
-    const grid = document.createElement('div');
-    grid.className = `foundry-grid-readout ${resolution.valid ? '' : 'foundry-grid-invalid'}`;
-    grid.dataset.testid = 'foundry-grid-readout';
-    grid.setAttribute('aria-live', 'polite');
-    const gridState = document.createElement('strong');
-    gridState.textContent = resolution.valid ? 'LEGAL DRAFT' : 'INVALID DRAFT';
-    const gridCount = document.createElement('span');
-    gridCount.textContent = `${this.state.pendingActions.length} pending / ${dashboard.mountedModuleCount} mounted`;
-    grid.append(gridState, gridCount);
 
     const issueList = document.createElement('div');
     issueList.className = 'foundry-issues';
     issueList.dataset.testid = 'foundry-issues';
     if (resolution.issues.length === 0) {
       issueList.hidden = true;
-      issueList.textContent = 'All hardpoints and resource envelopes pass.';
+      issueList.textContent = 'The mounted primary passes structural checks.';
     } else {
       issueList.classList.add('foundry-issues-invalid');
       const issueTitle = document.createElement('strong');
@@ -158,10 +146,9 @@ export class FoundryScene implements Scene {
       this.view === 'cargo'
         ? [issueList, this.createCargoSection()]
         : [
-            this.createCommandConsole(dashboard),
+            this.createCommandConsole(dashboard, frame),
             issueList,
-            this.createUpgradeCircuitSection(dashboard),
-            this.createInstalledSection(frame)
+            this.createUpgradeCircuitSection(dashboard)
           ];
     const pending = document.createElement('section');
     pending.className = 'foundry-history';
@@ -231,7 +218,6 @@ export class FoundryScene implements Scene {
       title,
       menu,
       boundary,
-      grid,
       ...content,
       pending,
       status,
@@ -258,7 +244,7 @@ export class FoundryScene implements Scene {
     if (action === 'back' || action === 'pause') {
       if (this.view === 'cargo') {
         this.view = 'hardpoints';
-        this.status = 'Cargo draft retained. Hardpoint assignments restored to view.';
+        this.status = 'Primary reserve retained. Weapon control restored to view.';
         this.enter();
         return;
       }
@@ -276,11 +262,17 @@ export class FoundryScene implements Scene {
     };
   }
 
-  private createCommandConsole(dashboard: FoundryDashboardModel): HTMLElement {
+  private createCommandConsole(
+    dashboard: FoundryDashboardModel,
+    frame: ReturnType<typeof getShipFrameById>
+  ): HTMLElement {
     const console = document.createElement('section');
     console.className = 'foundry-command-console';
     console.dataset.testid = 'foundry-command-console';
-    console.setAttribute('aria-label', dashboard.ariaLabel);
+    console.setAttribute(
+      'aria-label',
+      `Primary weapon workbench. ${dashboard.weaponName} ${dashboard.weaponPattern}. Live attack simulation and mounted weapon selector.`
+    );
 
     const attack = document.createElement('div');
     attack.className = 'foundry-attack-console';
@@ -336,53 +328,105 @@ export class FoundryScene implements Scene {
     }
     attack.append(attackHeader, previewFrame, miniHud, attackStats, traits);
 
-    const resources = document.createElement('div');
-    resources.className = 'foundry-resource-console';
-    const resourceHeader = document.createElement('header');
-    const resourceTitle = document.createElement('h2');
-    resourceTitle.textContent = 'Grid Envelope';
-    const validity = document.createElement('span');
-    validity.className = 'foundry-validity-light';
-    validity.dataset.valid = String(dashboard.valid);
-    validity.textContent = dashboard.valid ? 'NOMINAL' : `${dashboard.issueCount} BLOCKED`;
-    resourceHeader.append(resourceTitle, validity);
-    const meterList = document.createElement('div');
-    meterList.className = 'foundry-meter-list';
-    for (const meter of dashboard.meters) meterList.append(this.createResourceMeter(meter));
-    resources.append(resourceHeader, meterList);
-
-    console.append(attack, resources);
+    console.append(attack, this.createPrimaryWeaponConsole(frame));
     return console;
   }
 
-  private createResourceMeter(meter: FoundryMeterModel): HTMLElement {
-    const row = document.createElement('div');
-    row.className = 'foundry-meter';
-    row.dataset.tone = meter.tone;
-    row.dataset.testid = `foundry-meter-${meter.id}`;
-    row.setAttribute('aria-label', meter.ariaLabel);
-    const heading = document.createElement('div');
-    heading.className = 'foundry-meter-heading';
-    const label = document.createElement('span');
-    label.innerHTML = `<b>${meter.glyph}</b>${meter.label}`;
-    const value = document.createElement('span');
-    value.className = 'foundry-meter-value';
-    value.textContent = `${meter.value}/${meter.capacity}`;
-    const delta = document.createElement('span');
-    delta.className = 'foundry-comparison-delta';
-    delta.textContent = formatFoundryDelta(meter.delta);
-    heading.append(label, delta, value);
-    const track = document.createElement('span');
-    track.className = 'foundry-meter-track';
-    track.setAttribute('role', 'meter');
-    track.setAttribute('aria-valuemin', '0');
-    track.setAttribute('aria-valuemax', String(meter.capacity));
-    track.setAttribute('aria-valuenow', String(meter.value));
-    const fill = document.createElement('span');
-    fill.style.width = `${Math.round(meter.ratio * 100)}%`;
-    track.append(fill);
-    row.append(heading, track);
-    return row;
+  private createPrimaryWeaponConsole(frame: ReturnType<typeof getShipFrameById>): HTMLElement {
+    const panel = document.createElement('div');
+    panel.className = 'foundry-primary-console';
+    panel.dataset.testid = 'foundry-primary-selector';
+    const hardpoint = frame.hardpoints.find((candidate) => candidate.slot === 'primary');
+    const installed = hardpoint ? getInstalledComponent(this.state.draft, hardpoint.id) : null;
+    const reserve = getPrimaryWeaponCargoComponents(this.state.draft).filter((component) =>
+      hardpoint?.required
+        ? component.compatibility.compatibleHardpointIds.includes(hardpoint.id)
+        : true
+    );
+    const candidates = installed ? [installed, ...reserve] : reserve;
+
+    const header = document.createElement('header');
+    const title = document.createElement('h2');
+    title.textContent = 'Primary Arsenal';
+    const count = document.createElement('span');
+    count.className = 'foundry-primary-count';
+    count.textContent = `${candidates.length} READY`;
+    header.append(title, count);
+    panel.append(header);
+
+    if (!hardpoint || !installed) {
+      const empty = document.createElement('p');
+      empty.className = 'foundry-empty';
+      empty.textContent = 'No mounted primary weapon is available.';
+      panel.append(empty);
+      return panel;
+    }
+
+    const module = getShipModuleById(installed.moduleId);
+    if (module.behavior.kind !== 'weaponAdapter') return panel;
+    const weapon = getWeaponById(module.behavior.weaponId);
+    const quality = getComponentQuality(installed.qualityId);
+    panel.style.setProperty('--component-quality', quality.presentation.color);
+
+    const mountLabel = document.createElement('p');
+    mountLabel.className = 'foundry-primary-mount';
+    mountLabel.textContent = `MOUNTED // ${hardpoint.label}`;
+    const identity = document.createElement('div');
+    identity.className = 'foundry-primary-identity';
+    const name = document.createElement('h3');
+    name.textContent = formatComponentName(installed);
+    const pattern = this.createBadge(weapon.pattern, 'foundry-badge-quality');
+    identity.append(name, pattern);
+    const summary = document.createElement('p');
+    summary.className = 'foundry-primary-summary';
+    summary.textContent = module.presentation.summary;
+    const badges = document.createElement('div');
+    badges.className = 'foundry-badge-row';
+    badges.append(this.createBadge(quality.label), this.createBadge(installed.sourceLabel));
+    for (const tag of weapon.tags.slice(0, 4)) badges.append(this.createBadge(tag));
+
+    const field = document.createElement('label');
+    field.className = 'foundry-primary-assignment';
+    const fieldLabel = document.createElement('span');
+    fieldLabel.textContent = 'Mounted weapon';
+    const select = document.createElement('select');
+    select.dataset.testid = 'foundry-primary-assignment';
+    select.setAttribute('aria-label', `Choose primary weapon for ${hardpoint.label}`);
+    for (const component of candidates) {
+      const candidateModule = getShipModuleById(component.moduleId);
+      if (candidateModule.behavior.kind !== 'weaponAdapter') continue;
+      const candidateWeapon = getWeaponById(candidateModule.behavior.weaponId);
+      const circuit = createFoundryComponentStatModel(component).circuit;
+      const option = document.createElement('option');
+      option.value = component.id;
+      option.selected = component.id === installed.id;
+      option.textContent = `${component.id === installed.id ? 'MOUNTED' : 'RESERVE'} - ${formatComponentName(component)} - ${candidateWeapon.pattern.toUpperCase()} / S${circuit}`;
+      select.append(option);
+    }
+    select.addEventListener('change', () => {
+      const component = this.state.draft.components.find(
+        (candidate) => candidate.id === select.value
+      );
+      if (!component || component.id === installed.id) return;
+      this.state = planInstallComponent(this.state, component.id, hardpoint.id, this.sectorIndex);
+      this.status = `${formatComponentName(component)} mounted. ${formatComponentName(installed)} moved to the primary reserve.`;
+      this.enter();
+    });
+    const fieldNote = document.createElement('small');
+    fieldNote.textContent =
+      candidates.length > 1
+        ? 'Selecting a reserve weapon updates the live attack simulation immediately.'
+        : 'Acquire primary weapons from operation rewards and shops to expand this list.';
+    field.append(fieldLabel, select, fieldNote);
+    panel.append(
+      mountLabel,
+      identity,
+      summary,
+      badges,
+      this.createPrimaryWeaponStatStrip(installed),
+      field
+    );
+    return panel;
   }
 
   private createAttackStat(stat: FoundryAttackStatModel): HTMLElement {
@@ -407,27 +451,32 @@ export class FoundryScene implements Scene {
     return item;
   }
 
-  private createComponentStatStrip(component: FoundryComponentInstance): HTMLElement {
-    const stats = createFoundryComponentStatModel(component);
+  private createPrimaryWeaponStatStrip(component: FoundryComponentInstance): HTMLElement {
+    const module = getShipModuleById(component.moduleId);
+    if (module.behavior.kind !== 'weaponAdapter') return document.createElement('div');
+    const weapon = getWeaponById(module.behavior.weaponId);
+    const circuit = createFoundryComponentStatModel(component).circuit;
     const strip = document.createElement('div');
-    strip.className = `foundry-component-stats${stats.slot === 'primary' ? ' foundry-component-stats-primary' : ''}`;
-    const circuitAria = stats.slot === 'primary' ? `, primary weapon circuit ${stats.circuit}` : '';
+    strip.className = 'foundry-component-stats foundry-primary-weapon-stats';
     strip.setAttribute(
       'aria-label',
-      `Power ${stats.power}, heat ${stats.heat}, mass ${stats.mass}, command ${stats.command}, instability ${stats.instability}${circuitAria}`
+      `Impact ${weapon.damage}, cadence ${Number((1 / weapon.fireCooldownSeconds).toFixed(1))} volleys per second, velocity ${weapon.projectileSpeed}, primary weapon circuit ${circuit}`
     );
-    const values: (readonly [string, string, number])[] = [
-      ['power', 'P', stats.power],
-      ['heat', 'H', stats.heat],
-      ['mass', 'M', stats.mass],
-      ['command', 'C', stats.command],
-      ['instability', '!', stats.instability]
+    const values: (readonly [string, string, string | number, string])[] = [
+      ['impact', 'IMP', Number(weapon.damage.toFixed(2)), 'Projectile impact'],
+      [
+        'cadence',
+        'RTE',
+        Number((1 / weapon.fireCooldownSeconds).toFixed(1)),
+        'Base volleys per second'
+      ],
+      ['velocity', 'VEL', weapon.projectileSpeed, 'Projectile velocity'],
+      ['circuit', 'S', circuit, 'Primary weapon circuit slots']
     ];
-    if (stats.slot === 'primary') values.push(['circuit', 'S', stats.circuit]);
-    for (const [id, glyph, value] of values) {
+    for (const [id, glyph, value, title] of values) {
       const stat = document.createElement('span');
       stat.dataset.stat = id;
-      if (id === 'circuit') stat.title = 'Primary weapon circuit slots';
+      stat.title = title;
       stat.innerHTML = `<b>${glyph}</b>${value}`;
       strip.append(stat);
     }
@@ -462,7 +511,7 @@ export class FoundryScene implements Scene {
     cargo.className = 'secondary-button foundry-menu-button';
     cargo.type = 'button';
     cargo.dataset.testid = 'foundry-open-cargo';
-    cargo.textContent = `Cargo Management / ${cargoCount}`;
+    cargo.textContent = `Primary Cargo / ${cargoCount}`;
     cargo.disabled = this.view === 'cargo';
     if (this.view === 'cargo') cargo.setAttribute('aria-current', 'page');
     cargo.addEventListener('click', () => {
@@ -472,141 +521,6 @@ export class FoundryScene implements Scene {
 
     menu.append(hardpoints, cargo);
     return menu;
-  }
-
-  private createInstalledSection(frame: ReturnType<typeof getShipFrameById>): HTMLElement {
-    const section = document.createElement('section');
-    section.className = 'foundry-section foundry-hardpoint-section';
-    section.dataset.testid = 'foundry-hardpoint-assignments';
-    const sectionHeader = document.createElement('header');
-    sectionHeader.className = 'foundry-section-header';
-    const title = document.createElement('h2');
-    title.textContent = 'Hardpoint Assignments';
-    const copy = document.createElement('p');
-    copy.textContent =
-      'Choose mounted, loose, or transferable hardware at the mount itself. Empty assignments remain reversible until commit.';
-    sectionHeader.append(title, copy);
-    const list = document.createElement('div');
-    list.className = 'foundry-card-grid foundry-hardpoint-grid';
-
-    for (const hardpoint of frame.hardpoints) {
-      const component = getInstalledComponent(this.state.draft, hardpoint.id);
-      const card = document.createElement('article');
-      card.className = 'foundry-card foundry-installed-card';
-      card.dataset.testid = `foundry-hardpoint-${hardpoint.id}`;
-      card.dataset.state = component ? 'assigned' : 'empty';
-      const header = document.createElement('header');
-      header.className = 'foundry-card-header';
-      const heading = document.createElement('h3');
-      heading.textContent = hardpoint.label;
-      const badges = document.createElement('div');
-      badges.className = 'foundry-badge-row';
-      badges.append(
-        this.createBadge(hardpoint.slot.toUpperCase()),
-        this.createBadge(hardpoint.size.toUpperCase())
-      );
-      if (hardpoint.required) badges.append(this.createBadge('CORE', 'foundry-badge-required'));
-      header.append(heading, badges);
-      card.append(header, this.createHardpointAssignmentSelect(frame, hardpoint, component));
-
-      if (component) {
-        card.append(this.createComponentStatStrip(component));
-      } else {
-        const empty = document.createElement('strong');
-        empty.className = 'foundry-hardpoint-empty';
-        empty.textContent = hardpoint.required ? 'EMPTY / REQUIRED' : 'EMPTY / OPTIONAL';
-        card.append(empty);
-      }
-      list.append(card);
-    }
-    section.append(sectionHeader, list);
-    return section;
-  }
-
-  private createHardpointAssignmentSelect(
-    frame: ReturnType<typeof getShipFrameById>,
-    hardpoint: ReturnType<typeof getShipFrameById>['hardpoints'][number],
-    installed: FoundryComponentInstance | null
-  ): HTMLElement {
-    const field = document.createElement('label');
-    field.className = 'foundry-hardpoint-assignment';
-    const fieldLabel = document.createElement('span');
-    fieldLabel.textContent = 'Assignment';
-    const select = document.createElement('select');
-    select.dataset.testid = `foundry-hardpoint-assignment-${hardpoint.id}`;
-    select.setAttribute('aria-label', `Assign hardware to ${hardpoint.label}`);
-
-    const empty = document.createElement('option');
-    empty.value = '';
-    empty.textContent = 'EMPTY - Move assignment to cargo';
-    empty.selected = installed === null;
-    select.append(empty);
-
-    const mountByComponent = new Map(
-      this.state.draft.mounts.map((mount) => [mount.componentId, mount.hardpointId])
-    );
-    const hardpointNameById = new Map(
-      frame.hardpoints.map((candidate) => [candidate.id, candidate.label])
-    );
-    const candidates = this.state.draft.components
-      .filter((component) => component.compatibility.compatibleHardpointIds.includes(hardpoint.id))
-      .sort((left, right) => {
-        const rank = (component: FoundryComponentInstance): number => {
-          if (component.id === installed?.id) return 0;
-          return mountByComponent.has(component.id) ? 2 : 1;
-        };
-        return rank(left) - rank(right) || left.acquisitionOrder - right.acquisitionOrder;
-      });
-
-    for (const component of candidates) {
-      const option = document.createElement('option');
-      const mountedHardpointId = mountByComponent.get(component.id);
-      const source =
-        component.id === installed?.id
-          ? 'MOUNTED'
-          : mountedHardpointId
-            ? `MOVE FROM ${hardpointNameById.get(mountedHardpointId) ?? mountedHardpointId}`
-            : 'CARGO';
-      option.value = component.id;
-      option.selected = component.id === installed?.id;
-      option.textContent =
-        component.id === installed?.id
-          ? `${source} - ${formatComponentName(component)}`
-          : `${source} - ${formatComponentName(component)} - ${compareFoundryComponents(component, installed).label}`;
-      select.append(option);
-    }
-
-    select.addEventListener('change', () => {
-      const previous = getInstalledComponent(this.state.draft, hardpoint.id);
-      if (select.value === '') {
-        this.state = planRemoveComponent(this.state, hardpoint.id, this.sectorIndex);
-        this.status = previous
-          ? `${formatComponentName(previous)} moved from ${hardpoint.label} to cargo.`
-          : `${hardpoint.label} remains empty.`;
-        this.enter();
-        return;
-      }
-
-      const component = this.state.draft.components.find(
-        (candidate) => candidate.id === select.value
-      );
-      if (!component) return;
-      const sourceMount = this.state.draft.mounts.find(
-        (mount) => mount.componentId === component.id
-      );
-      this.state = planInstallComponent(this.state, component.id, hardpoint.id, this.sectorIndex);
-      const displacement =
-        previous && previous.id !== component.id
-          ? ` ${formatComponentName(previous)} returned to cargo.`
-          : sourceMount && sourceMount.hardpointId !== hardpoint.id
-            ? ` Its former mount is now empty.`
-            : '';
-      this.status = `${formatComponentName(component)} assigned to ${hardpoint.label}.${displacement}`;
-      this.enter();
-    });
-
-    field.append(fieldLabel, select);
-    return field;
   }
 
   private createUpgradeCircuitSection(dashboard: FoundryDashboardModel): HTMLElement {
@@ -815,14 +729,14 @@ export class FoundryScene implements Scene {
     const section = document.createElement('section');
     section.className = 'foundry-section foundry-cargo-management';
     section.dataset.testid = 'foundry-cargo-menu';
-    const cargo = getCargoComponents(this.state.draft);
+    const cargo = getPrimaryWeaponCargoComponents(this.state.draft);
     const header = document.createElement('header');
     header.className = 'foundry-section-header';
     const title = document.createElement('h2');
-    title.textContent = `Loose Hardware / ${cargo.length}`;
+    title.textContent = `Primary Reserve / ${cargo.length}`;
     const copy = document.createElement('p');
     copy.textContent =
-      'Inspect recovered components, preserve future options, or mark hardware for scrap. Assignments are made in Hardpoint Control.';
+      'Inspect or scrap loose primary weapons. Mount one from the Primary Arsenal in Hardpoint Control.';
     header.append(title, copy);
     const list = document.createElement('div');
     list.className = 'foundry-card-grid foundry-cargo-grid';
@@ -830,7 +744,7 @@ export class FoundryScene implements Scene {
     if (cargo.length === 0) {
       const empty = document.createElement('p');
       empty.className = 'foundry-empty';
-      empty.textContent = 'No loose hardware.';
+      empty.textContent = 'No loose primary weapons.';
       list.append(empty);
     }
 
@@ -877,15 +791,9 @@ export class FoundryScene implements Scene {
     }
     if (modifiers.childElementCount === 0) modifiers.append(this.createBadge('CLEAN'));
 
-    const frame = getShipFrameById(this.state.draft.frameId);
-    const compatibleHardpoints = frame.hardpoints.filter((hardpoint) =>
-      component.compatibility.compatibleHardpointIds.includes(hardpoint.id)
-    );
-    const fit = document.createElement('p');
-    fit.className = 'foundry-cargo-fit';
-    fit.innerHTML = `<strong>FITS</strong><span>${
-      compatibleHardpoints.map((hardpoint) => hardpoint.label).join(' / ') || 'No current mount'
-    }</span>`;
+    const summary = document.createElement('p');
+    summary.className = 'foundry-primary-summary';
+    summary.textContent = module.presentation.summary;
 
     const actions = document.createElement('div');
     actions.className = 'foundry-card-actions';
@@ -898,9 +806,9 @@ export class FoundryScene implements Scene {
     card.append(
       header,
       identity,
-      this.createComponentStatStrip(component),
+      summary,
+      this.createPrimaryWeaponStatStrip(component),
       modifiers,
-      fit,
       actions
     );
     return card;

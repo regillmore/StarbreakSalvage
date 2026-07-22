@@ -21,6 +21,7 @@ import {
   generateComponentSalvage,
   generatePrimaryWeaponOffer,
   getFusionOptions,
+  getPrimaryWeaponCargoComponents,
   planFuseComponents,
   planInstallComponent,
   planOverclockComponent,
@@ -115,6 +116,46 @@ describe('salvage foundry', () => {
     expect(commit.ok).toBe(false);
     expect(undoFoundryDraft(removed).draft).toEqual(state.committed);
     expect(undoFoundryDraft(removed).pendingActions).toEqual([]);
+  });
+
+  it('keeps foundry resource and instability quotas informational while preserving structural checks', () => {
+    const initial = createDebtEngineering();
+    const overloaded = {
+      ...initial,
+      draft: {
+        ...initial.draft,
+        components: initial.draft.components.map((component) =>
+          component.id === 'component-contract-nose-primary'
+            ? { ...component, overclockLevel: 20, instability: 99 }
+            : component
+        )
+      }
+    };
+    const resolution = resolveEngineeringSnapshot(overloaded.draft);
+    const commit = commitFoundryDraft(overloaded);
+
+    expect(resolution.resources?.powerHeadroom).toBeLessThan(0);
+    expect(resolution.resources?.heatHeadroom).toBeLessThan(0);
+    expect(resolution.instability).toBeGreaterThan(resolution.instabilityCapacity);
+    expect(resolution.issues).toEqual([]);
+    expect(resolution.valid).toBe(true);
+    expect(commit.ok).toBe(true);
+    expect(createEngineeringCombatProfile(commit.state).weaponId).toBe('weapon_light_needle_laser');
+  });
+
+  it('exposes only loose primary weapons to the player-facing cargo reserve', () => {
+    const state = createFoundryDebugFixture(createDebtEngineering(), {
+      seed: 'PRIMARY-RESERVE-FIXTURE'
+    });
+    const primaryCargo = getPrimaryWeaponCargoComponents(state.draft);
+
+    expect(primaryCargo).toHaveLength(1);
+    expect(
+      primaryCargo.every(
+        (component) =>
+          SHIP_MODULES.find((module) => module.id === component.moduleId)?.slot === 'primary'
+      )
+    ).toBe(true);
   });
 
   it('installs, reroutes, overclocks, scraps, and commits explicit resource tradeoffs', () => {

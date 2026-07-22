@@ -961,6 +961,14 @@ seed + permanent save fingerprint
 - The utility column is presentation-only: desktop flex alignment places its action at the top-right and resources at the bottom-right, while the existing narrow header breakpoint stacks the column in normal flow. Footer guidance, action semantics, callback identity, and `handleAction` Escape/pause dispatch are unchanged.
 - The move adds no reducer, save/snapshot field, route transition, service state, generation pass, RNG draw, timer, actor, projectile, effect, or fixed-step work.
 
+### Work order 196 primary-arsenal engineering boundary
+
+- `FoundryScene` projects only two player-facing engineering inventories: the one mounted primary plus `getPrimaryWeaponCargoComponents` in reserve. Fixed secondary, defense, engine, utility, drone, and experimental mounts remain committed simulation inputs but no longer expose independent assignment controls.
+- Primary Arsenal dispatches the existing `planInstallComponent` action against the frame's sole primary hardpoint. That reducer atomically removes the chosen component from cargo, displaces the previous primary into cargo, preserves acquisition identity, and lets the existing item-socket reconciliation contract or expand the ordered circuit after redraw.
+- `ShipLoadoutValidationOptions.enforceResourceEnvelope` defaults to true. Foundry resolution alone supplies false, retaining frame/module/hardpoint/tag/unique/exact-primary checks and complete resource calculation while omitting resource-overload issues; engineered deltas and instability remain readable debug/profile data but are not commit blockers.
+- Primary Cargo is a filtered presentation over the unchanged engineering snapshot, not a second inventory. Non-primary components remain available to carrier/fleetcraft and restored-state consumers, and scrapping a visible primary still uses the existing reversible action, salvage payout, history, undo, and commit boundary.
+- The change adds no save/snapshot field, migration, component-generation pass, RNG draw, route mutation, combat actor, projectile, effect, or fixed-step branch.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

@@ -1187,3 +1187,27 @@ Status: implemented. `SectorTransitionScene` now groups the unchanged suspend bu
 The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/` with seed `STARBREAK-SMOKE`. At 1280 x 720 the opening navigation screen placed the 128 x 51 px action at the header's right edge, directly above the 384 x 47 px resource strip, while the 662 px panel had equal client and scroll heights. The footer contained no button and browser warning/error logs were empty. The route-choice regression separately verifies the reported tall desktop composition and zero panel overflow.
 
 Verification: the focused Chromium navigation flow passes. `npm run verify:release` passes typecheck, ESLint, all 115 Vitest files and 739 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,021.99 kB` minified / `280.34 kB` gzip initial JavaScript and `100.48 kB` / `20.11 kB` CSS. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, route topology, RNG stream, static base path, or warning threshold changed.
+
+## Work order 196 - Primary arsenal hardpoint control
+
+Goal: reduce Hardpoint Control to the build decisions that still matter by making the mounted primary weapon and its ordered circuit the complete player-facing engineering surface.
+
+Prompt:
+
+> Remove the multi-hardpoint assignment board and replace Grid Envelope with one compact Primary Arsenal beside the live attack simulation. Let that selector mount the current weapon or any compatible loose primary, move the displaced weapon into a primary-only reserve, and keep Primary Cargo for inspecting or scrapping those reserve weapons. Suppress resource-quota presentation and enforcement while retaining structural primary compatibility, the reversible draft, circuit reconciliation, undo, commit, and deterministic acquisition.
+
+Acceptance criteria:
+
+- Hardpoint Control renders no fixed-module assignment cards, Grid Envelope readout, resource meters, or power/heat/mass/command/instability component cells.
+- Primary Arsenal names the mounted weapon and hardpoint, presents pattern, source, quality, tags, impact, cadence, velocity, and circuit capacity, and offers one native select containing the mounted primary plus compatible reserve primaries.
+- Selecting a reserve weapon immediately swaps it into the sole primary mount, sends the displaced weapon to reserve, redraws the authoritative live-fire preview, reconciles circuit capacity, records one reversible engineering action, and does not commit.
+- Primary Cargo counts and renders only loose primary weapons. Its cards expose weapon identity, the four player-facing weapon metrics, modifiers, and Scrap; non-primary cargo remains valid internal engineering/fleetcraft state but is absent from this menu.
+- Foundry resolution treats power, heat, mass, command, and instability limits as informational. Structural frame, mount, compatibility, and exactly-one-primary checks remain authoritative; ordinary contract/loadout validation remains strict.
+- The navigation service detail reports primary reserve size and describes the new workbench instead of generic installed-module management.
+- Keyboard focus, narrow responsive layout, attack-preview scaling, snapshots, deterministic offers, static hosting, and release checks remain coherent.
+
+Status: implemented. `FoundryScene` now places a Primary Arsenal in the former Grid Envelope column and removes the lower assignment board. `getPrimaryWeaponCargoComponents` supplies both the selector reserve and the dedicated Primary Cargo view, whose cards use combat-facing weapon metrics rather than engineering quotas. `Foundry.resolveEngineeringSnapshot` requests structurally strict but resource-relaxed loadout resolution, while `ShipLoadout` keeps strict quota enforcement as its default for contracts and other callers.
+
+Managed-browser inspection at `1280x720` confirms the Primary Arsenal occupies the former Grid Envelope column beside the live-fire preview, the circuit remains below, and the debug fixture can swap its reserve primary into the mount while sending the former weapon back to Primary Cargo. The authoritative selector, mounted/reserve labels, four weapon metrics, and displaced-weapon status remain readable without the assignment board or quota meters.
+
+Verification: focused Foundry, loadout, presentation, Scenario Lab, and Chromium navigation checks pass. `npm run verify:release` passes typecheck, ESLint, all 115 Vitest files and 741 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,019.43 kB` minified / `279.74 kB` gzip initial JavaScript and `102.05 kB` / `20.36 kB` CSS. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, route topology, RNG stream, static base path, or warning threshold changed.

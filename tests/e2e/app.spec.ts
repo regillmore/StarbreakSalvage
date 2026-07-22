@@ -339,7 +339,9 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.locator('.reward-card')).toHaveCount(5);
   await expect(page.locator('.reward-panel')).toHaveJSProperty('scrollTop', 0);
   expect(
-    await page.locator('.reward-panel').evaluate((panel) => panel.scrollHeight <= panel.clientHeight + 1)
+    await page
+      .locator('.reward-panel')
+      .evaluate((panel) => panel.scrollHeight <= panel.clientHeight + 1)
   ).toBe(true);
   await expect(page.locator('.reward-card').first()).toContainText('Build fit:');
   await expect(
@@ -464,12 +466,12 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.setViewportSize({ width: 1600, height: 1200 });
   const navigationSuspend = page.getByTestId('suspend-navigation');
   await expect(navigationSuspend).toBeVisible();
-  await expect(page.locator('.navigation-hub-header').getByTestId('suspend-navigation')).toHaveCount(
-    1
-  );
-  await expect(page.locator('.navigation-hub-footer').getByTestId('suspend-navigation')).toHaveCount(
-    0
-  );
+  await expect(
+    page.locator('.navigation-hub-header').getByTestId('suspend-navigation')
+  ).toHaveCount(1);
+  await expect(
+    page.locator('.navigation-hub-footer').getByTestId('suspend-navigation')
+  ).toHaveCount(0);
   const navigationHeaderGeometry = await page
     .locator('.navigation-hub-header')
     .evaluate((header) => {
@@ -522,11 +524,15 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByRole('button', { name: /^Route \// })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /^Clock \// })).toHaveCount(0);
   await expect(page.getByTestId('foundry-boundary')).toContainText(/Undo restores/i);
-  await expect(page.getByTestId('foundry-hardpoint-assignments')).toBeVisible();
-  await expect(page.locator('[data-testid^="foundry-hardpoint-assignment-"]')).toHaveCount(3);
+  await expect(page.getByTestId('foundry-hardpoint-assignments')).toHaveCount(0);
+  await expect(page.getByTestId('foundry-primary-selector')).toBeVisible();
+  await expect(page.getByTestId('foundry-primary-assignment')).toHaveValue(
+    'component-contract-nose-primary'
+  );
+  await expect(page.getByTestId('foundry-primary-assignment').locator('option')).toHaveCount(1);
   await expect(page.getByTestId('foundry-cargo-menu')).toHaveCount(0);
-  await expect(page.getByTestId('foundry-open-cargo')).toContainText('Cargo Management / 0');
-  await expect(page.getByTestId('foundry-grid-readout')).toContainText('LEGAL DRAFT');
+  await expect(page.getByTestId('foundry-open-cargo')).toContainText('Primary Cargo / 0');
+  await expect(page.getByTestId('foundry-grid-readout')).toHaveCount(0);
   await expect(page.getByTestId('foundry-command-console')).toBeVisible();
   const attackPreview = page.getByTestId('foundry-attack-preview');
   await expect(attackPreview.getByRole('img')).toBeVisible();
@@ -541,10 +547,13 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
     /[1-9]\d*/
   );
   await expect(page.getByTestId('foundry-mini-hud')).toContainText(/BASELINE|DRAFT DELTA/);
-  await expect(page.getByTestId('foundry-meter-power').getByRole('meter')).toBeVisible();
-  await expect(page.getByTestId('foundry-meter-circuit')).toContainText('Weapon circuit');
-  await expect(page.getByTestId('foundry-meter-circuit').getByRole('meter')).toBeVisible();
-  await expect(page.locator('.foundry-installed-card [data-stat="circuit"]')).toHaveCount(1);
+  await expect(page.locator('[data-testid^="foundry-meter-"]')).toHaveCount(0);
+  await expect(
+    page.getByTestId('foundry-primary-selector').locator('[data-stat="circuit"]')
+  ).toHaveCount(1);
+  await expect(
+    page.getByTestId('foundry-primary-selector').locator('[data-stat="power"]')
+  ).toHaveCount(0);
   await expect(page.locator('.foundry-circuit-contribution')).toHaveCount(0);
   await expect(page.getByTestId('foundry-attack-impact')).toBeVisible();
   const upgradeCircuit = page.getByTestId('foundry-upgrade-circuit');
@@ -1371,36 +1380,28 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('salvage-foundry')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Hardpoint Control' })).toBeVisible();
-  await expect(page.getByTestId('foundry-hardpoint-assignments')).toBeVisible();
+  await expect(page.getByTestId('foundry-hardpoint-assignments')).toHaveCount(0);
+  await expect(page.getByTestId('foundry-primary-selector')).toBeVisible();
   await expect(page.getByTestId('foundry-cargo-menu')).toHaveCount(0);
   await expect(page.locator('.foundry-cargo-card')).toHaveCount(0);
 
-  const assignmentSelects = page.locator('[data-testid^="foundry-hardpoint-assignment-"]');
-  const assignmentIndex = await assignmentSelects.evaluateAll((selects) =>
-    selects.findIndex((select) =>
-      Array.from((select as HTMLSelectElement).options).some((option) =>
-        option.textContent?.startsWith('CARGO -')
-      )
-    )
-  );
-  expect(assignmentIndex).toBeGreaterThanOrEqual(0);
-  const assignment = assignmentSelects.nth(assignmentIndex);
-  const cargoOption = await assignment
+  const assignment = page.getByTestId('foundry-primary-assignment');
+  const reserveOption = await assignment
     .locator('option')
     .evaluateAll(
       (options) =>
         (
-          options.find((option) => option.textContent?.startsWith('CARGO -')) as
+          options.find((option) => option.textContent?.startsWith('RESERVE -')) as
             HTMLOptionElement | undefined
         )?.value ?? ''
     );
-  expect(cargoOption).not.toBe('');
-  await assignment.selectOption(cargoOption);
-  await expect(page.getByTestId('foundry-status')).toContainText(/assigned to/i);
-  await expect(assignmentSelects.nth(assignmentIndex)).toHaveValue(cargoOption);
+  expect(reserveOption).not.toBe('');
+  await assignment.selectOption(reserveOption);
+  await expect(page.getByTestId('foundry-status')).toContainText(/mounted/i);
+  await expect(assignment).toHaveValue(reserveOption);
 
   await page.getByTestId('foundry-open-cargo').click();
-  await expect(page.getByRole('heading', { name: 'Cargo Management' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Primary Cargo' })).toBeVisible();
   await expect(page.getByTestId('foundry-cargo-menu')).toBeVisible();
   await expect(page.getByTestId('foundry-hardpoint-assignments')).toHaveCount(0);
   await expect(page.getByTestId('foundry-command-console')).toHaveCount(0);
@@ -1410,7 +1411,7 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
     .toBe(true);
   const cargoCards = page.locator('.foundry-cargo-card');
   const cargoCount = await cargoCards.count();
-  expect(cargoCount).toBeGreaterThan(0);
+  expect(cargoCount).toBe(1);
   const primaryCargoCount = await cargoCards.evaluateAll(
     (cards) =>
       cards.filter((card) =>
@@ -1419,17 +1420,22 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
         )
       ).length
   );
-  await expect(cargoCards.locator('[data-stat="circuit"]')).toHaveCount(primaryCargoCount);
+  expect(primaryCargoCount).toBe(cargoCount);
+  await expect(cargoCards.locator('[data-stat="impact"]')).toHaveCount(cargoCount);
+  await expect(cargoCards.locator('[data-stat="cadence"]')).toHaveCount(cargoCount);
+  await expect(cargoCards.locator('[data-stat="velocity"]')).toHaveCount(cargoCount);
+  await expect(cargoCards.locator('[data-stat="circuit"]')).toHaveCount(cargoCount);
+  await expect(cargoCards.locator('[data-stat="power"]')).toHaveCount(0);
   await expect(cargoCards.locator('[data-stat="salvage"]')).toHaveCount(0);
   await expect(cargoCards.getByRole('button', { name: /^Route \// })).toHaveCount(0);
   await expect(cargoCards.getByRole('button', { name: /^Clock \// })).toHaveCount(0);
   await expect(cargoCards.getByRole('button', { name: /^Install \// })).toHaveCount(0);
   await expect(cargoCards.getByRole('button', { name: /^Scrap \+/ })).toHaveCount(cargoCount);
-  await expect(cargoCards.locator('.foundry-cargo-fit')).toHaveCount(cargoCount);
+  await expect(cargoCards.locator('.foundry-cargo-fit')).toHaveCount(0);
   await expect(page.getByTestId('foundry-boundary')).toContainText('Scenario Lab fixture');
   await page.keyboard.press('Escape');
   await expect(page.getByRole('heading', { name: 'Hardpoint Control' })).toBeVisible();
-  await expect(assignmentSelects.nth(assignmentIndex)).toHaveValue(cargoOption);
+  await expect(page.getByTestId('foundry-primary-assignment')).toHaveValue(reserveOption);
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('scenario-lab')).toBeVisible();
 

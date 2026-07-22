@@ -154,6 +154,10 @@ export interface ShipLoadoutValidationResult {
   readonly resources: ShipLoadoutResources | null;
 }
 
+export interface ShipLoadoutValidationOptions {
+  readonly enforceResourceEnvelope?: boolean;
+}
+
 interface ResolvedMountInternal {
   readonly hardpoint: ShipHardpointDefinition;
   readonly module: ShipModuleDefinition;
@@ -190,9 +194,10 @@ export class ShipLoadoutValidationError extends Error {
 
 export function validateShipLoadout(
   spec: ShipLoadoutSpec,
-  catalog: ShipLoadoutCatalog = DEFAULT_CATALOG
+  catalog: ShipLoadoutCatalog = DEFAULT_CATALOG,
+  options: ShipLoadoutValidationOptions = {}
 ): ShipLoadoutValidationResult {
-  const inspection = inspectShipLoadout(spec, catalog);
+  const inspection = inspectShipLoadout(spec, catalog, options);
   return {
     valid: inspection.issues.length === 0,
     issues: inspection.issues,
@@ -202,9 +207,10 @@ export function validateShipLoadout(
 
 export function resolveShipLoadout(
   spec: ShipLoadoutSpec,
-  catalog: ShipLoadoutCatalog = DEFAULT_CATALOG
+  catalog: ShipLoadoutCatalog = DEFAULT_CATALOG,
+  options: ShipLoadoutValidationOptions = {}
 ): ResolvedShipLoadout {
-  const inspection = inspectShipLoadout(spec, catalog);
+  const inspection = inspectShipLoadout(spec, catalog, options);
 
   if (
     inspection.issues.length > 0 ||
@@ -322,7 +328,8 @@ export function formatShipLoadoutDebug(loadout: ResolvedShipLoadout): string {
 
 function inspectShipLoadout(
   spec: ShipLoadoutSpec,
-  catalog: ShipLoadoutCatalog
+  catalog: ShipLoadoutCatalog,
+  options: ShipLoadoutValidationOptions
 ): ShipLoadoutInspection {
   const issues: ShipLoadoutIssue[] = [];
   const frame = catalog.frames.find((candidate) => candidate.id === spec.frameId) ?? null;
@@ -439,7 +446,9 @@ function inspectShipLoadout(
   }
 
   const resources = calculateResources(frame, resolvedMounts);
-  validateResourceEnvelope(issues, frame, resources);
+  if (options.enforceResourceEnvelope !== false) {
+    validateResourceEnvelope(issues, frame, resources);
+  }
 
   return {
     frame,

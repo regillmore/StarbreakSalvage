@@ -32,7 +32,7 @@ import { createCrewDebugState } from '../game/CrewCommand';
 import { createCrewArcDebugState, createCrewArcRosterReadModel } from '../game/CrewArc';
 import { createFleetDebugState, formatFleetSummary } from '../game/Fleetcraft';
 import { createApexCampaignReadModel, createApexDebugState } from '../game/ApexHunt';
-import { getCargoComponents } from '../game/Foundry';
+import { getPrimaryWeaponCargoComponents } from '../game/Foundry';
 import { getActiveFittedItems } from '../game/ItemSockets';
 import {
   createSectorNavigationPlan,
@@ -745,13 +745,16 @@ export class SectorTransitionScene implements Scene {
       return;
     }
     if (destination.id === 'hardpoint') {
-      const cargo = getCargoComponents(this.session.engineering.committed);
+      const cargo = getPrimaryWeaponCargoComponents(this.session.engineering.committed);
       const fitted = getActiveFittedItems(
         this.session.itemInstances,
         this.session.engineering.committed
       );
       body.append(
-        this.createDetailMetric('Recovered hardware', `${cargo.length} in cargo`),
+        this.createDetailMetric(
+          'Primary reserve',
+          `${cargo.length} weapon${cargo.length === 1 ? '' : 's'}`
+        ),
         this.createDetailMetric(
           'Installed modules',
           `${this.session.engineering.committed.mounts.length}`
@@ -762,8 +765,8 @@ export class SectorTransitionScene implements Scene {
         ),
         this.createDetailCopy(
           cargo.length > 0
-            ? 'Assign compatible hardware from each mount. Cargo Management keeps loose-component inspection and scrapping in a separate shared-draft menu.'
-            : 'Mount assignments, the ordered signal circuit, attack simulation, and separate Cargo Management remain available even with no loose hardware.'
+            ? 'Compare the mounted primary with reserve weapons beside the live attack simulation. Primary Cargo keeps inspection and scrapping in the same reversible draft.'
+            : 'The mounted primary, ordered signal circuit, and attack simulation remain available even with no reserve weapons.'
         )
       );
       return;

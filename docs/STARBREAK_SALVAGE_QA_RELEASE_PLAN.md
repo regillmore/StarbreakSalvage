@@ -480,6 +480,7 @@ Phase 10 accessibility checks should also cover mission briefings and branch foc
 - [x] Sector rewards and shops expose keyboard-readable primary weapon identity, circuit capacity, mounted comparison, finite armory depletion, and reroll restocking.
 - [x] Required-sector rewards expose three ordinary circuit choices, five total cards with weapon/credits, and at most six total after a permanent option unlock; the complete desktop manifest has no panel or page scroll.
 - [x] Constellation `Suspend & Exit` is keyboard-readable in the top-right header above run resources, absent from the footer, and does not force tall desktop navigation to scroll.
+- [x] Hardpoint Control exposes one keyboard-readable mounted-primary selector beside the live preview, omits Grid Envelope and the fixed-module board, swaps reserve weapons reversibly, and limits Primary Cargo cards to player-facing weapon metrics.
 
 ## Release checklist
 

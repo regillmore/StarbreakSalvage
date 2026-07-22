@@ -615,3 +615,11 @@ The two-row desktop treatment changes only reward-scene CSS and semantic count a
 The suspend action remains one existing DOM button and callback. Moving it from the footer into a flex utility column adds one wrapper but eliminates the footer's button-height row; resource cards, constellation nodes, destination details, and focus targets are unchanged. Layout work occurs only during ordinary browser style resolution and introduces no animation, retained history, reducer, actor, projectile, effect, timer, fixed-step branch, or RNG draw.
 
 The checked build emits `1,021.99 kB` minified / `280.34 kB` gzip initial JavaScript and `100.48 kB` / `20.11 kB` CSS, increases of `0.09 kB` / `0.04 kB` JavaScript and `0.24 kB` / `0.04 kB` CSS over work order 194. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, route topology, static base path, or warning threshold changed.
+
+## Work order 196 primary-arsenal workbench budgets
+
+Hardpoint entry performs one bounded scan of the small engineering component array to collect compatible primary reserve choices. A swap reuses the existing mount reducer, dashboard projection, and socket reconciliation; it adds no generation work or combat-loop branch. Primary Cargo renders only loose primaries, reducing ordinary DOM volume by suppressing fixed-module assignment cards, resource meters, and non-primary cargo cards.
+
+Resource capacity values are still calculated for combat/debug compatibility, but their four comparisons and instability threshold no longer create foundry issues or presentation nodes. The change adds no dependency, save/snapshot field, RNG draw, actor, projectile, effect, timer, collision path, or fixed-step work.
+
+The checked build emits `1,019.43 kB` minified / `279.74 kB` gzip initial JavaScript and `102.05 kB` / `20.36 kB` CSS, changes of `-2.56 kB` / `-0.60 kB` JavaScript and `+1.57 kB` / `+0.25 kB` CSS over work order 195. The existing Vite large-chunk advisory remains; no warning threshold changed.

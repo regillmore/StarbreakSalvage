@@ -280,9 +280,7 @@ export function generatePrimaryWeaponOffer(options: {
     (options.routeKind
       ? getComponentSourceForRoute(options.routeKind, options.sectorId, options.bossRequired)
       : getDefaultComponentOfferSource(options.sectorId, options.bossRequired));
-  const offerKey = toComponentOfferKey(
-    `${options.offerKey}-${options.routeKind ?? source}`
-  );
+  const offerKey = toComponentOfferKey(`${options.offerKey}-${options.routeKind ?? source}`);
   return generateComponentInstance({
     ...options,
     source,
@@ -430,7 +428,26 @@ export function createFoundryDebugFixture(
     });
     fixture = acquireComponent(fixture, component);
   }
-  return fixture;
+  const primary = generatePrimaryWeaponOffer({
+    seed,
+    saveFingerprint: 'debug-save',
+    sectorIndex: sectorIndex + 3,
+    source: 'combat',
+    sectorId: 'sector_trade_war_corridor',
+    bossRequired: false,
+    offerKey: 'debug-primary-reserve',
+    state: fixture
+  });
+  const committed = {
+    ...fixture.committed,
+    components: [...fixture.committed.components, primary]
+  };
+  return {
+    ...fixture,
+    committed,
+    draft: committed,
+    nextComponentSequence: Math.max(fixture.nextComponentSequence + 1, primary.acquisitionOrder + 1)
+  };
 }
 
 export function planInstallComponent(
@@ -645,13 +662,14 @@ export function resolveEngineeringSnapshot(snapshot: EngineeringSnapshot): Engin
       return component ? [{ hardpointId: mount.hardpointId, moduleId: component.moduleId }] : [];
     })
   };
-  const baseValidation = validateShipLoadout(spec);
+  const validationOptions = { enforceResourceEnvelope: false } as const;
+  const baseValidation = validateShipLoadout(spec, undefined, validationOptions);
   const issues: EngineeringResolution['issues'][number][] = baseValidation.issues.map((issue) => ({
     code: issue.code,
     message: issue.message
   }));
   let loadout: ResolvedShipLoadout | null = null;
-  if (baseValidation.valid) loadout = resolveShipLoadout(spec);
+  if (baseValidation.valid) loadout = resolveShipLoadout(spec, undefined, validationOptions);
   const installed = getInstalledComponents(snapshot);
   const resourceDelta = installed.reduce<EngineeringResourceDelta>(
     (total, component) => addResourceDelta(total, getComponentResourceDelta(component)),
@@ -660,16 +678,9 @@ export function resolveEngineeringSnapshot(snapshot: EngineeringSnapshot): Engin
   const resources = baseValidation.resources
     ? applyResourceDelta(baseValidation.resources, resourceDelta)
     : null;
-  if (resources) validateEngineeringResources(issues, resources);
   const frame = getFrame(snapshot.frameId);
   const instability = installed.reduce((total, component) => total + component.instability, 0);
   const instabilityCapacity = 12 + frame.stats.heatRouting + frame.stats.commandCapacity;
-  if (instability > instabilityCapacity) {
-    issues.push({
-      code: 'instability',
-      message: `Instability ${instability} exceeds frame tolerance ${instabilityCapacity}`
-    });
-  }
   const hooks = createEngineeringHooks(snapshot);
   const effects = summarizeEngineeringEffects(installed);
   const signature = createEngineeringSignature(snapshot);
@@ -740,6 +751,14 @@ export function createEngineeringDebugState(state: EngineeringState): Engineerin
 export function getCargoComponents(snapshot: EngineeringSnapshot): FoundryComponentInstance[] {
   const installed = new Set(snapshot.mounts.map((mount) => mount.componentId));
   return snapshot.components.filter((component) => !installed.has(component.id));
+}
+
+export function getPrimaryWeaponCargoComponents(
+  snapshot: EngineeringSnapshot
+): FoundryComponentInstance[] {
+  return getCargoComponents(snapshot).filter(
+    (component) => getModule(component.moduleId).slot === 'primary'
+  );
 }
 
 export function consumeCargoComponent(
@@ -1005,33 +1024,6 @@ export function getComponentResourceDelta(
   });
 }
 
-function validateEngineeringResources(
-  issues: EngineeringResolution['issues'][number][],
-  resources: ShipLoadoutResources
-): void {
-  const checks: readonly [number, string][] = [
-    [
-      resources.powerHeadroom,
-      `Engineered power draw ${resources.powerDraw} exceeds reactor ${resources.reactorOutput}`
-    ],
-    [
-      resources.massHeadroom,
-      `Engineered mass ${resources.totalMass} exceeds capacity ${resources.massCapacity}`
-    ],
-    [
-      resources.heatHeadroom,
-      `Engineered heat ${resources.heatLoad} exceeds thermal capacity ${resources.thermalCapacity}`
-    ],
-    [
-      resources.commandHeadroom,
-      `Engineered command draw ${resources.commandDraw} exceeds capacity ${resources.commandCapacity}`
-    ]
-  ];
-  for (const [headroom, message] of checks) {
-    if (headroom < 0) issues.push({ code: 'engineeringResource', message });
-  }
-}
-
 function applyResourceDelta(
   resources: ShipLoadoutResources,
   delta: EngineeringResourceDelta
@@ -1238,10 +1230,7 @@ function getComponentSourceForRoute(
   return 'combat';
 }
 
-function getDefaultComponentOfferSource(
-  sectorId: string,
-  bossRequired: boolean
-): ComponentSource {
+function getDefaultComponentOfferSource(sectorId: string, bossRequired: boolean): ComponentSource {
   if (bossRequired) return 'boss';
   if (sectorId === 'sector_lunar_surface') return 'lunar';
   return 'combat';

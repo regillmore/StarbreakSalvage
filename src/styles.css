@@ -837,7 +837,8 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
 }
 
 .foundry-attack-console,
-.foundry-resource-console {
+.foundry-resource-console,
+.foundry-primary-console {
   display: grid;
   min-width: 0;
   align-content: start;
@@ -850,7 +851,8 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
 }
 
 .foundry-attack-console > header,
-.foundry-resource-console > header {
+.foundry-resource-console > header,
+.foundry-primary-console > header {
   display: flex;
   min-width: 0;
   align-items: center;
@@ -859,7 +861,8 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
 }
 
 .foundry-attack-console h2,
-.foundry-resource-console h2 {
+.foundry-resource-console h2,
+.foundry-primary-console h2 {
   margin: 0;
   color: #f8fbff;
   font-size: 0.82rem;
@@ -868,7 +871,8 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
 }
 
 .foundry-pattern-badge,
-.foundry-validity-light {
+.foundry-validity-light,
+.foundry-primary-count {
   padding: 0.24rem 0.45rem;
   border: 1px solid color-mix(in srgb, var(--screen-engine, #ffd166) 58%, transparent);
   border-radius: 999px;
@@ -877,6 +881,77 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   font-size: 0.65rem;
   font-weight: 900;
   letter-spacing: 0.08em;
+}
+
+.foundry-primary-console {
+  border-color: color-mix(in srgb, var(--screen-engine, #ffd166) 34%, transparent);
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, var(--component-quality, #7cf7ff) 12%, transparent),
+      transparent 44%
+    ),
+    linear-gradient(145deg, rgba(12, 15, 34, 0.94), rgba(3, 5, 14, 0.9));
+}
+
+.foundry-primary-count {
+  border-color: color-mix(in srgb, var(--component-quality, #7cf7ff) 64%, transparent);
+  color: var(--component-quality, #7cf7ff);
+}
+
+.foundry-primary-mount {
+  margin: 0;
+  color: var(--screen-primary, #7cf7ff);
+  font:
+    850 0.6rem/1.2 'Cascadia Mono',
+    'Consolas',
+    monospace;
+  letter-spacing: 0.08em;
+}
+
+.foundry-primary-identity {
+  display: flex;
+  min-width: 0;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.55rem;
+}
+
+.foundry-primary-identity h3 {
+  margin: 0;
+  color: #f8fbff;
+  font-size: 1rem;
+}
+
+.foundry-primary-summary {
+  margin: 0;
+  color: #c6d7de !important;
+  font-size: 0.7rem !important;
+  line-height: 1.42 !important;
+}
+
+.foundry-primary-assignment {
+  display: grid;
+  gap: 0.28rem;
+  margin-top: 0.1rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(124, 247, 255, 0.14);
+}
+
+.foundry-primary-assignment > span {
+  color: var(--screen-engine, #ffd166);
+  font:
+    900 0.57rem/1.2 'Cascadia Mono',
+    'Consolas',
+    monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.foundry-primary-assignment > small {
+  color: #8eb8c5;
+  font-size: 0.58rem;
+  line-height: 1.35;
 }
 
 .foundry-validity-light[data-valid='true'] {
@@ -1745,7 +1820,8 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   text-transform: uppercase;
 }
 
-.foundry-hardpoint-assignment select {
+.foundry-hardpoint-assignment select,
+.foundry-primary-assignment select {
   width: 100%;
   min-width: 0;
   min-height: 2.35rem;
@@ -1760,7 +1836,8 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   text-overflow: ellipsis;
 }
 
-.foundry-hardpoint-assignment select:focus-visible {
+.foundry-hardpoint-assignment select:focus-visible,
+.foundry-primary-assignment select:focus-visible {
   border-color: var(--screen-engine, #ffd166);
   outline: 2px solid color-mix(in srgb, var(--screen-primary, #7cf7ff) 58%, white);
   outline-offset: 2px;
@@ -1816,6 +1893,10 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
 
 .foundry-component-stats-primary {
   grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.foundry-primary-weapon-stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .foundry-component-stats > span {
@@ -3010,7 +3091,11 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
   overflow: hidden;
   border-color: color-mix(in srgb, var(--component-accent, #ffd166) 58%, transparent);
   background:
-    linear-gradient(120deg, color-mix(in srgb, var(--component-accent, #ffd166) 11%, transparent), transparent 48%),
+    linear-gradient(
+      120deg,
+      color-mix(in srgb, var(--component-accent, #ffd166) 11%, transparent),
+      transparent 48%
+    ),
     rgba(7, 11, 27, 0.94);
 }
 
@@ -6068,6 +6153,10 @@ html[data-bullet-contrast='high'] .hud-meter-track {
 
   .foundry-component-stats {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .foundry-primary-weapon-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .foundry-controls {

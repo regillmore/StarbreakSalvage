@@ -2775,3 +2775,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 195. `SectorTransitionScene` owns one header utility group containing the unchanged action and resource strip, while responsive CSS keeps the group aligned and the footer compact.
+
+### BL61 - Primary-only hardpoint workbench
+
+Acceptance:
+
+- Replace Grid Envelope and the multi-module assignment board with one Primary Arsenal paired with the live attack simulation.
+- Limit player-facing cargo management to loose primary weapons while preserving internal non-primary component state for compatibility and fleetcraft consumers.
+- Make primary selection a reversible immediate swap that moves the displaced weapon to reserve and refreshes attack/circuit projections.
+- Present impact, cadence, velocity, and circuit capacity instead of power, heat, mass, command, instability, fit, route, clock, or evolution bookkeeping.
+- Remove foundry resource and instability quota blockers without weakening structural mount, frame, compatibility, or exactly-one-primary validation elsewhere.
+- Preserve explicit weapon rewards/shops, deterministic offers, circuit reconciliation, undo/commit, saves, responsive accessibility, and static hosting.
+
+Status:
+
+- Implemented in work order 196. `FoundryScene` owns one mounted-primary selector and a primary-only reserve page; `Foundry` exposes the filtered cargo projection and resolves drafts without hidden resource ceilings, while strict `ShipLoadout` validation remains the default outside the foundry.
