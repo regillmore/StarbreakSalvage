@@ -492,6 +492,15 @@ function createCircuitStageCondition(
       label: `CONDITION MET · ${plasmaShots.length} PLASMA SHOT${plasmaShots.length === 1 ? '' : 'S'} · +${bonusPercent}% IMPACT · BEAM LASER`
     };
   }
+  if (itemId === 'item_claimant_arc_seal') {
+    const overkillShots = incoming.filter((projectile) => projectile.tags.includes('overkill'));
+    return overkillShots.length > 0
+      ? {
+          met: true,
+          label: `CONDITION MET · ${overkillShots.length} OVERKILL SHOT${overkillShots.length === 1 ? '' : 'S'} · STANDARD ARC TO SECOND TARGET`
+        }
+      : { met: false, label: 'CONDITION NOT MET · NEEDS AN EARLIER OVERKILL SOURCE' };
+  }
 
   return null;
 }

@@ -179,6 +179,7 @@ export type ItemId =
   | 'item_route_ledger_spool'
   | 'item_forkline_dynamo'
   | 'item_ambush_insurance_stamp'
+  | 'item_claimant_arc_seal'
   | 'item_exit_toll_transponder'
   | 'item_coastdown_capacitor'
   | 'item_convoy_receipt_printer'
@@ -1285,8 +1286,26 @@ export const ITEMS: readonly ItemDefinition[] = [
       sources: ['combat', 'route', 'elite', 'faction'],
       unlockTier: 'baseline',
       implementationStatus: 'live',
+      retired: true,
       stacking: 'unique',
       uiTags: ['route', 'armor']
+    }
+  },
+  {
+    id: 'item_claimant_arc_seal',
+    name: 'Claimant Arc Seal',
+    rarity: 'uncommon',
+    tags: ['arc', 'overkill'],
+    hooks: ['onProjectileSpawn'],
+    effect: 'upstream overkill shots carry a standard arc claim into a second target',
+    weight: 7,
+    metadata: {
+      family: 'missile-overkill',
+      sources: ['combat', 'route', 'elite', 'faction'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['overkill', 'arc']
     }
   },
   {
@@ -1643,7 +1662,7 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_strata_bore_collimator',
       'item_gangue_compression_die',
       'item_forkline_dynamo',
-      'item_ambush_insurance_stamp',
+      'item_claimant_arc_seal',
       'item_coastdown_capacitor',
       'item_rebound_freight_seal',
       'item_harmonic_fork_loom',

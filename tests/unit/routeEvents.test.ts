@@ -244,6 +244,58 @@ describe('route events', () => {
     );
   });
 
+  it('applies permanent Ambush Insurance claims without doubling a restored item copy', () => {
+    const run = generateRunSkeleton('AMBUSH-INSURANCE-ROUTE', {
+      purchasedUpgradeIds: ['upgrade_ambush_insurance_stamp']
+    });
+    const contract = getFirstContract(run);
+    const sector = getCurrentSector(run, createRunSession(run, contract));
+    const route = makeRoute('factionAmbush');
+    const outcome = generateRouteOutcome({
+      run,
+      sector,
+      route,
+      availableCredits: contract.startingCredits
+    });
+    const upgraded = createRunSession(run, contract);
+    const restored = createRunSession(run, contract);
+    const stacked = createRunSession(run, contract);
+
+    expect(addItemToSession(restored, 'item_ambush_insurance_stamp').socket).not.toBeNull();
+    expect(addItemToSession(stacked, 'item_ambush_insurance_stamp').socket).not.toBeNull();
+
+    applyRouteOutcome(
+      upgraded,
+      sector,
+      route,
+      outcome,
+      undefined,
+      undefined,
+      run.upgradeEffects.routeChosen
+    );
+    applyRouteOutcome(restored, sector, route, outcome);
+    applyRouteOutcome(
+      stacked,
+      sector,
+      route,
+      outcome,
+      undefined,
+      undefined,
+      run.upgradeEffects.routeChosen
+    );
+
+    const expectedSalvage = outcome.effects.salvageDelta + 1;
+    for (const session of [upgraded, restored, stacked]) {
+      expect(session.routeOutcomes[0]?.effects.salvageDelta).toBe(expectedSalvage);
+      expect(session.routeOutcomes[0]?.effects.reward.biasTags).toEqual(
+        expect.arrayContaining(['armor', 'credit'])
+      );
+    }
+    expect(stacked.routeOutcomes[0]?.details).toContain(
+      'Ambush Insurance Stamp pays 1 salvage and favors armor / credit rewards.'
+    );
+  });
+
   it('uses route outcomes to alter rewards and next-sector combat', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
     const contract = getFirstContract(run);

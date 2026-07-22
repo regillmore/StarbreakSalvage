@@ -16,7 +16,7 @@ describe('createUpgradeBayViewModel', () => {
     const surveyRig = getCard(model, 'upgrade_contract_survey_rig');
     const escrowIndex = getCard(model, 'upgrade_salvage_escrow_index');
 
-    expect(model.summaryText).toBe('Bank 4 kg | Installed 0/15 | Ready 2');
+    expect(model.summaryText).toBe('Bank 4 kg | Installed 0/16 | Ready 2');
     expect(model.availableCount).toBe(2);
     expect(surveyRig.categoryLabel).toBe('Hangar');
     expect(surveyRig.iconKey).toBe('contract-scope');
@@ -38,7 +38,7 @@ describe('createUpgradeBayViewModel', () => {
     const relicDossier = getCard(model, 'upgrade_relic_pattern_dossier');
     const marketEcho = getCard(model, 'upgrade_market_echo_locator');
 
-    expect(model.summaryText).toBe('Bank 12 kg | Installed 1/15 | Ready 2');
+    expect(model.summaryText).toBe('Bank 12 kg | Installed 1/16 | Ready 2');
     expect(surveyRig.state).toBe('purchased');
     expect(surveyRig.actionLabel).toBe('Installed');
     expect(surveyRig.canPurchase).toBe(false);
@@ -56,6 +56,10 @@ describe('createUpgradeBayViewModel', () => {
     expect(miningTransit.categoryLabel).toBe('Archive');
     expect(miningTransit.prerequisiteLabel).toBe('Requires Relic Pattern Dossier');
     expect(miningTransit.missingPrerequisiteNames).toEqual(['Relic Pattern Dossier']);
+    const ambushInsurance = getCard(model, 'upgrade_ambush_insurance_stamp');
+    expect(ambushInsurance.categoryLabel).toBe('Navigation');
+    expect(ambushInsurance.prerequisiteLabel).toBe('Requires Route Ledger Uplink');
+    expect(ambushInsurance.missingPrerequisiteNames).toEqual(['Route Ledger Uplink']);
   });
 
   it('keeps unaffordable upgrades distinct from prerequisite locks', () => {

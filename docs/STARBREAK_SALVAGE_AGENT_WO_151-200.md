@@ -1002,3 +1002,31 @@ Strata-Bore Collimator occupies the released rare combat/vault/lunar slot as a b
 The managed browser pass used `http://10.25.250.13:4175/StarbreakSalvage/` at 390 x 700. It rendered all fifteen permanent Upgrade Bay cards and confirmed Mining Laser Transit's Archive category, 13 kg cost, Relic Pattern Dossier prerequisite, and exact Vault/Faction Ambush laser-plasma bias copy. The 314.41 px card remained within the 390 px document without horizontal overflow, and the browser recorded no warnings or errors. The viewport was restored, the tab finalized, and the work order 175 smoke host was no longer running after its lease ended.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 114 Vitest files and 727 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits `1,008.19 kB` minified / `276.29 kB` gzip initial JavaScript and `95.61 kB` / `19.25 kB` CSS, increases of `1.94 kB` / `0.46 kB` JavaScript over refined work order 187 with unchanged CSS. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, route topology, RNG stream, static base path, or warning threshold changed.
+
+## Work order 189 - Permanent Ambush Insurance and claimant arc chain
+
+Goal: move Ambush Insurance Stamp's dependable contested-route claim into permanent progression and refill its uncommon slot with an order-sensitive overkill-to-arc circuit bridge.
+
+Prompt:
+
+> Retire Ambush Insurance Stamp from active run rewards and move its Elite/Faction Ambush salvage claim and armor-credit bias into the permanent scrap Upgrade Bay. Preserve restored-run behavior without allowing the item and upgrade to double-apply. Add an uncommon replacement whose standard arc charge depends on overkill prepared earlier in the ordered weapon chain. Keep route settlement deterministic, previews honest, active catalog breadth stable, and the managed smoke-host lifecycle reliable.
+
+Acceptance criteria:
+
+- Ambush Insurance Stamp is absent from active discovery and reward pools and appears as a 10 kg permanent Navigation upgrade gated by Route Ledger Uplink.
+- Permanent and restored-item forms each add exactly 1 salvage plus armor/credit reward bias to Elite and Faction Ambush routes; owning both applies the claim once.
+- The route-local permanent flag is explicit input to route settlement and excluded from the expedition-wide generation fingerprint, so it cannot reshuffle contracts, routes, sectors, shops, rewards, or duration.
+- Uncommon Claimant Arc Seal replaces the same combat/route/elite/faction slot and activates only on projectiles carrying overkill before its ordered `onProjectileSpawn` stage.
+- Linked overkill shots retain their primary impact and traits, gain the existing standard arc charge, and attempt the established 55%-impact secondary discharge when consumed.
+- The Seal can feed downstream Faraday phase, plasma, heavy-arc, and multi-trait stages without adding a projectile, RNG draw, timer, counter, collision rule, or persistent state.
+- Hardpoint cumulative cards state the exact missing overkill prerequisite or linked shot count and standard second-target arc payoff; live fire uses the same production hook path.
+- The active catalog remains at 60 items, the compatibility catalog rises to 73 with thirteen retired definitions, and the 29-item stress fixture covers both the legacy route hook and the new transform.
+- Upgrade Bay totals, deterministic source-weighted fixtures, restored snapshots, saves, accessibility modes, static hosting, dependencies, and work order 175 smoke tooling remain coherent.
+
+Status: implemented. Ambush Insurance Stamp remains a retired catalog record and `onRouteChosen` hook solely for restored run snapshots. `RunUpgradeEffects.routeChosen.ambushInsuranceStamp` exposes the permanent flag; `RunSession.applyRouteOutcome` gives an active restored copy precedence and otherwise adds the same salvage and reward bias after the ordinary combined-hook pipeline. The flag is deliberately omitted from the global generation fingerprint.
+
+Claimant Arc Seal occupies the released uncommon combat/route/elite/faction slot as a bounded ordered projectile transform. It reads only upstream overkill and attaches the shared standard `ArcCharge` profile. Rebound Freight Seal before Claimant therefore activates it and can feed Faraday, Plasma Seed, Arc Window, or other later stages; the reverse order remains explicitly unmet. Primary impact is unchanged, and combat plus Foundry preview share the existing production arc path.
+
+The managed browser pass used `http://10.25.250.13:4175/StarbreakSalvage/` at 1280 x 720. It rendered all sixteen permanent Upgrade Bay cards and confirmed Ambush Insurance Stamp's Navigation category, 10 kg cost, Route Ledger Uplink prerequisite, and exact Elite/Faction Ambush salvage and armor-credit copy. The 465.5 px card sat inside the 1040 px panel with a 1280 px document and no horizontal overflow. The tab closed and the authenticated work order 175 smoke host stopped cleanly with its owner shell returning exit code 0.
+
+Verification: focused circuit, route, reward, upgrade, catalog, and presentation coverage passes 132 tests; `npm run verify:release` passes typecheck, ESLint, all 114 Vitest files and 731 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits `1,010.01 kB` minified / `276.75 kB` gzip initial JavaScript and unchanged `95.61 kB` / `19.25 kB` CSS, increases of `1.82 kB` / `0.46 kB` JavaScript over work order 188. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, route topology, RNG stream, static base path, or warning threshold changed.

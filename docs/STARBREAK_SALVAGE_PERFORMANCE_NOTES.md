@@ -567,3 +567,11 @@ Mining Laser Transit's permanent contribution adds one boolean projection and at
 Strata-Bore Collimator is one ordered projectile transform over the already-bounded volley. Each projectile performs one plasma membership check and, only when linked, a capped six-tag trait count plus constant-time velocity, impact, radius, and presentation rewrites. It creates no projectile, actor, timer, effect, counter, collision rule, or persistent state. Hardpoint presentation uses the same prefix-resolution pipeline and adds only one bounded condition summary per card.
 
 The release build emits `1,008.19 kB` minified / `276.29 kB` gzip initial JavaScript and unchanged `95.61 kB` / `19.25 kB` CSS, increases of `1.94 kB` / `0.46 kB` JavaScript over refined work order 187. The existing Vite large-chunk advisory remains; no dependency, simulation cap, save/snapshot schema, route topology, RNG stream, static base path, or warning threshold changed.
+
+## Work order 189 permanent insurance and claimant-arc budgets
+
+Ambush Insurance Stamp's permanent contribution adds one boolean to the existing route-upgrade projection, one fitted-item compatibility scan at settlement, and at most two reward-bias tags plus one salvage. It runs only when a route outcome is committed. The flag is excluded from the expedition-wide generation fingerprint and adds no generation pass, route mutation, save field, RNG draw, gameplay actor, or fixed-step work.
+
+Claimant Arc Seal is one ordered projectile tag check over the already-bounded volley. Eligible overkill projectiles reuse the existing constant-time standard `ArcCharge` attachment; their eventual consuming hit uses the already-bounded nearest-secondary scan introduced in work order 180. The Seal adds no projectile, actor, timer, effect type, counter, collision rule, RNG draw, or persistent state. Hardpoint presentation adds one bounded condition summary per card through the existing prefix-resolution pipeline.
+
+The release build emits `1,010.01 kB` minified / `276.75 kB` gzip initial JavaScript and unchanged `95.61 kB` / `19.25 kB` CSS, increases of `1.82 kB` / `0.46 kB` JavaScript over work order 188. The existing Vite large-chunk advisory remains; no dependency, simulation cap, save/snapshot schema, route topology, RNG stream, static base path, or warning threshold changed.

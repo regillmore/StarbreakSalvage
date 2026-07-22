@@ -744,12 +744,12 @@ test('opens the Upgrade Bay and purchases an upgrade from banked scrap', async (
 
   await expect(page.getByRole('heading', { name: 'Upgrade Bay' })).toBeVisible();
   await expect(page.locator('.debug-overlay')).toContainText(
-    'Progress Bank 8kg Upgrades 0/15 Ready 2'
+    'Progress Bank 8kg Upgrades 0/16 Ready 2'
   );
   await expect(page.getByTestId('upgrade-bay-summary')).toContainText(
-    'Bank 8 kg | Installed 0/15 | Ready 2'
+    'Bank 8 kg | Installed 0/16 | Ready 2'
   );
-  await expect(page.locator('[data-testid^="upgrade-card-"]')).toHaveCount(15);
+  await expect(page.locator('[data-testid^="upgrade-card-"]')).toHaveCount(16);
   await expect(page.getByTestId('upgrade-card-upgrade_exit_toll_transponder')).toContainText(
     'Each sector begins with a 1-3 credit refund'
   );
@@ -764,6 +764,9 @@ test('opens the Upgrade Bay and purchases an upgrade from banked scrap', async (
   );
   await expect(page.getByTestId('upgrade-card-upgrade_market_echo_locator')).toContainText(
     'Shop and Repair rewards gain one extra credit/magnet-biased choice'
+  );
+  await expect(page.getByTestId('upgrade-card-upgrade_ambush_insurance_stamp')).toContainText(
+    'Elite and Faction Ambush routes pay 1 salvage'
   );
 
   const bayBox = await page.locator('.upgrade-bay-panel').boundingBox();
@@ -782,10 +785,10 @@ test('opens the Upgrade Bay and purchases an upgrade from banked scrap', async (
     'Purchased Contract Survey Rig.'
   );
   await expect(page.getByTestId('upgrade-bay-summary')).toContainText(
-    'Bank 4 kg | Installed 1/15 | Ready 1'
+    'Bank 4 kg | Installed 1/16 | Ready 1'
   );
   await expect(page.locator('.debug-overlay')).toContainText(
-    'Progress Bank 4kg Upgrades 1/15 Ready 1'
+    'Progress Bank 4kg Upgrades 1/16 Ready 1'
   );
   await expect(surveyRig).toContainText('Installed in the archive.');
 

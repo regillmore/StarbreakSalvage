@@ -507,6 +507,40 @@ describe('foundry visual presentation', () => {
     });
   });
 
+  it('shows Claimant Arc Seal linking only after an earlier overkill source', () => {
+    const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
+      (candidate) => candidate.shipId === 'ship_debt_runner'
+    );
+    if (!contract) throw new Error('Expected a single-projectile contract.');
+    const linked = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+      { itemId: 'item_split_prism', acquisitionOrder: 0 },
+      { itemId: 'item_ricochet_branch_coupler', acquisitionOrder: 1 },
+      { itemId: 'item_rebound_freight_seal', acquisitionOrder: 2 },
+      { itemId: 'item_claimant_arc_seal', acquisitionOrder: 3 }
+    ]);
+    const unmet = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+      { itemId: 'item_split_prism', acquisitionOrder: 0 },
+      { itemId: 'item_claimant_arc_seal', acquisitionOrder: 1 },
+      { itemId: 'item_ricochet_branch_coupler', acquisitionOrder: 2 },
+      { itemId: 'item_rebound_freight_seal', acquisitionOrder: 3 }
+    ]);
+
+    expect(linked.circuitStages[3]).toMatchObject({
+      name: 'Claimant Arc Seal',
+      outputLabel: 'CONDITION MET · 2 OVERKILL SHOTS · STANDARD ARC TO SECOND TARGET',
+      conditionMet: true,
+      addedTags: ['arc'],
+      changed: true
+    });
+    expect(unmet.circuitStages[1]).toMatchObject({
+      name: 'Claimant Arc Seal',
+      outputLabel: 'CONDITION NOT MET · NEEDS AN EARLIER OVERKILL SOURCE',
+      conditionMet: false,
+      addedTags: [],
+      changed: false
+    });
+  });
+
   it('projects prototype-vent cadence shifts onto affected earlier circuit cards', () => {
     const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
       (candidate) => candidate.shipId === 'ship_debt_runner'

@@ -254,6 +254,7 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_ricochet_branch_coupler',
     'item_rebound_freight_seal',
     'item_strata_bore_collimator',
+    'item_claimant_arc_seal',
     'item_crossfeed_detonator',
     'item_faraday_phase_shunt'
   ],
@@ -669,6 +670,12 @@ function applyOnProjectileSpawn(
         tags: addTags(payload.projectile.tags, ['laser']),
         laserKind: 'beam'
       }
+    };
+  }
+
+  if (itemId === 'item_claimant_arc_seal' && payload.projectile.tags.includes('overkill')) {
+    return {
+      projectile: attachArcCharge(payload.projectile)
     };
   }
 

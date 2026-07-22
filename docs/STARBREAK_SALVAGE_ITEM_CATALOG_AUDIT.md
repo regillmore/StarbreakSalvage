@@ -1,12 +1,12 @@
 # Starbreak Salvage - Item Catalog Audit
 
-Work orders 051-056 baseline, refreshed by work orders 156, 169, 170, 176, 177, 179, 180, 181, and 183. This document records the active item catalog after the Noita-style circuit pivot retired Boss Pressure from live rotation, moved five economy passives into permanent progression, refilled their active slots, converted Prototype Vent Script into an ordered stored-heat modifier, and made arc a projectile-carried secondary discharge. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
+Work orders 051-056 baseline, refreshed through work order 189. This document records the active item catalog after the Noita-style circuit pivot retired Boss Pressure from live rotation, moved eight passive items into permanent progression, refilled their active slots, converted Prototype Vent Script into an ordered stored-heat modifier, and made arc a projectile-carried secondary discharge. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
 
 ## Current Shape
 
 | Measure                 | Current | Phase 6 target                                                                             |
 | ----------------------- | ------- | ------------------------------------------------------------------------------------------ |
-| Active item definitions | 60      | Ten retired definitions remain for legacy-save compatibility                               |
+| Active item definitions | 60      | Thirteen retired definitions remain for legacy-save compatibility                          |
 | Candidate reward pools  | 4       | Starter, ignition core, combat, and vault remain the broad candidate buckets               |
 | Weight profiles         | 9       | Starter, combat, shop, vault, elite, boss, faction, lunar, and route contexts are weighted |
 | Hook names              | 14      | Includes environment-object destruction alongside combat, route, and economy hooks         |
@@ -42,7 +42,7 @@ Validation requires every active item to appear in a compatible reward pool and 
 | Hook                           | Item count | Current role                                                                             |
 | ------------------------------ | ---------- | ---------------------------------------------------------------------------------------- |
 | `onFire`                       | 18         | Volley shaping, drones, split shots, missiles, phase/heat variants, and ordered cadence. |
-| `onProjectileSpawn`            | 11         | Projectile traits, arc charge, size, damage, TTL, and drift shaping.                     |
+| `onProjectileSpawn`            | 14         | Projectile traits, arc charge, size, damage, TTL, and drift shaping.                     |
 | `onEnemyKilled`                | 10         | Salvage payouts, compact blasts, and overkill/relic rewards.                             |
 | `onPlayerHit`                  | 6          | Shield, revenge, armor, and curse retaliation.                                           |
 | `onPickupCollected`            | 6          | Credit/salvage pickup shared-reservoir charge.                                           |
@@ -50,9 +50,9 @@ Validation requires every active item to appear in a compatible reward pool and 
 | `onSpecialUsed`                | 0          | Reserved hook surface; Prototype Vent Script moved to ordered volley cadence.            |
 | `onBombUsed`                   | 1          | Bomb damage, radius, and boss-ratio shaping.                                             |
 | `onSectorStart`                | 2          | Lunar entry and sector-start resource effects.                                           |
-| `onRouteChosen`                | 2          | Curse-interest and ambush-insurance effects; retired economy hooks remain compatible.    |
-| `onShopEntered`                | 1          | Rerolled-shop stock and bias effects.                                                    |
-| `onRewardGenerated`            | 2          | Reward choice and tag-bias effects; retired Market Echo remains compatible.              |
+| `onRouteChosen`                | 1          | Curse-interest remains active; retired economy hooks remain compatible.                  |
+| `onShopEntered`                | 0          | Retired reroll effects remain available only to restored snapshots.                      |
+| `onRewardGenerated`            | 1          | Relic reward bias remains active; retired reward hooks remain compatible.                |
 | `onBossPhaseChanged`           | 1          | One remaining active circuit hook; permanent counterplay moved to the Upgrade Bay.       |
 | `onEnvironmentObjectDestroyed` | 1          | Salvage payout from eligible world-object destruction.                                   |
 
@@ -105,7 +105,7 @@ Known-seed tests now sample shop, elite, vault, and lunar reward surfaces, and u
 
 | Tag        | Count |
 | ---------- | ----- |
-| `credit`   | 10    |
+| `credit`   | 8     |
 | `phase`    | 10    |
 | `scrap`    | 5     |
 | `drone`    | 8     |
@@ -113,12 +113,12 @@ Known-seed tests now sample shop, elite, vault, and lunar reward surfaces, and u
 | `shield`   | 5     |
 | `curse`    | 5     |
 | `heat`     | 7     |
-| `armor`    | 4     |
-| `arc`      | 7     |
+| `armor`    | 3     |
+| `arc`      | 8     |
 | `laser`    | 5     |
 | `magnet`   | 3     |
 | `missile`  | 5     |
-| `overkill` | 5     |
+| `overkill` | 7     |
 | `ricochet` | 4     |
 | `bomb`     | 3     |
 | `revenge`  | 3     |
@@ -132,7 +132,7 @@ Known-seed tests now sample shop, elite, vault, and lunar reward surfaces, and u
 | Family           | Count | Phase 6 note                                                                                                  |
 | ---------------- | ----- | ------------------------------------------------------------------------------------------------------------- |
 | Laser/Split      | 8     | Forkline Dynamo charges only the two outer branches that already exist at its ordered stage.                  |
-| Missile/Overkill | 8     | Boreline Crimper converts an already-built fan's spread into forward speed, impact, and overkill.             |
+| Missile/Overkill | 9     | Claimant Arc Seal converts upstream overkill into standard second-target arc charge.                          |
 | Drone/Copy       | 7     | Crossfeed Detonator charges upstream projectiles that carry two distinct circuit traits.                      |
 | Shield/Revenge   | 5     | Reached the first expansion target; defensive balance should avoid rewarding intentional damage too strongly. |
 | Credit/Shop      | 5     | Coastdown Capacitor turns broad pickup play into a conserved shared-haste reserve.                            |
@@ -140,7 +140,7 @@ Known-seed tests now sample shop, elite, vault, and lunar reward surfaces, and u
 | Phase/Graze      | 7     | Faraday Phase Shunt lets an upstream arc charge survive one phase traversal before discharge.                 |
 | Heat/Prototype   | 6     | Plasma Seed Crucible converts an earlier circuit trait into plasma/heat scaling.                              |
 | Lunar/Surface    | 5     | Gangue Compression Die converts upstream light branches into denser plasma.                                   |
-| Route/Economy    | 3     | Five former economy passives now live in permanent scrap progression.                                         |
+| Route/Economy    | 1     | Six former economy passives now live in permanent scrap progression.                                          |
 
 The five Boss Pressure definitions and their original hook implementations remain readable to restored snapshots, but they are absent from pools, unlock gates, discovery, stress fixtures, and the active audit. Boss Warning Lattice and Capital Relief Protocol preserve the worthwhile telegraph, delay, charge, and late-phase-clear mechanics as permanent scrap upgrades.
 
@@ -149,10 +149,10 @@ The five Boss Pressure definitions and their original hook implementations remai
 | Archetype        | Rewarded count |
 | ---------------- | -------------- |
 | Laser/Split      | 17             |
-| Missile/Overkill | 9              |
+| Missile/Overkill | 10             |
 | Drone/Copy       | 13             |
 | Shield/Revenge   | 5              |
-| Credit/Shop      | 11             |
+| Credit/Shop      | 10             |
 | Curse/Relic      | 6              |
 | Phase/Graze      | 12             |
 | Heat/Prototype   | 14             |
@@ -219,6 +219,12 @@ Uncommon Rebound Freight Seal replaces the released active slot. As an ordered p
 Mining Laser Transit is now a 13 kg Archive upgrade gated by Relic Pattern Dossier. Its retired catalog record and `onRewardGenerated` reducer remain only for restored snapshots; reward generation gives a fitted legacy copy precedence over the permanent flag, so either representation adds the same laser/plasma bias to Vault and Faction Ambush rewards exactly once. The reward-local flag is excluded from the expedition-wide generation fingerprint and supplied only to the existing named reward roll.
 
 Rare Strata-Bore Collimator replaces the released combat/vault/lunar slot. At its ordered `onProjectileSpawn` stage it requires upstream plasma, adds the shared `beam` laser presentation and laser trait, raises velocity by 12%, and raises impact by 14% plus 4% for each of at most three carried arc/drone/missile/phase/ricochet/split traits. It preserves every upstream trait for downstream stages and creates no projectile, RNG draw, timer, counter, state field, or alternate preview path. The active catalog remains at 60 items; the compatibility catalog now contains 72 definitions, twelve of them retired.
+
+## Permanent Ambush Insurance and claimant arc chain in Work Order 189
+
+Ambush Insurance Stamp is now a 10 kg Navigation upgrade gated by Route Ledger Uplink. Its retired catalog record and `onRouteChosen` reducer remain only for restored snapshots; route settlement gives a fitted legacy copy precedence over the permanent flag, so either representation adds exactly one salvage and armor/credit bias on Elite and Faction Ambush choices. The route-local flag is excluded from the expedition-wide generation fingerprint and supplied only to the existing settlement boundary.
+
+Uncommon Claimant Arc Seal replaces the released combat/route/elite/faction slot. At its ordered `onProjectileSpawn` stage it requires upstream overkill and attaches the shared standard arc profile without changing body impact. A consuming hit can therefore discharge 55% impact, minimum 0.35, within 180 units into a distinct second target; downstream Faraday, Plasma Seed, Arc Window, and multi-trait effects receive the charge normally. It creates no projectile, RNG draw, timer, counter, collision rule, state field, or alternate preview path. The active catalog remains at 60 items; the compatibility catalog now contains 73 definitions, thirteen of them retired.
 
 ## Risks For 057-060
 

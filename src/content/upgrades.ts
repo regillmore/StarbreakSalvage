@@ -24,7 +24,8 @@ export const UPGRADE_EFFECT_KINDS = [
   'routeLedgerSpool',
   'marketEchoLocator',
   'convoyReceiptPrinter',
-  'miningLaserTransit'
+  'miningLaserTransit',
+  'ambushInsuranceStamp'
 ] as const;
 
 export type UpgradeCategory = (typeof UPGRADE_CATEGORIES)[number];
@@ -46,7 +47,8 @@ export type UpgradeId =
   | 'upgrade_route_ledger_spool'
   | 'upgrade_market_echo_locator'
   | 'upgrade_convoy_receipt_printer'
-  | 'upgrade_mining_laser_transit';
+  | 'upgrade_mining_laser_transit'
+  | 'upgrade_ambush_insurance_stamp';
 
 export interface UpgradeDefinition {
   readonly id: UpgradeId;
@@ -225,6 +227,17 @@ export const UPGRADES: readonly UpgradeDefinition[] = [
     effect: 'Vault and Faction Ambush rewards favor laser and plasma circuit tools.',
     cost: 13,
     prerequisites: ['upgrade_relic_pattern_dossier']
+  },
+  {
+    id: 'upgrade_ambush_insurance_stamp',
+    category: 'navigation',
+    iconKey: 'route-radar',
+    effectKind: 'ambushInsuranceStamp',
+    name: 'Ambush Insurance Stamp',
+    summary: 'a standing indemnity seal honored on the most contested carrier routes',
+    effect: 'Elite and Faction Ambush routes pay 1 salvage and favor armor and credit rewards.',
+    cost: 10,
+    prerequisites: ['upgrade_route_ledger_uplink']
   }
 ];
 

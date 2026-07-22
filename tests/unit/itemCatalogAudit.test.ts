@@ -22,7 +22,7 @@ describe('item catalog audit', () => {
     });
     expect(audit.hookCounts).toEqual({
       onFire: 18,
-      onProjectileSpawn: 13,
+      onProjectileSpawn: 14,
       onEnemyKilled: 10,
       onPlayerHit: 6,
       onPickupCollected: 6,
@@ -30,22 +30,22 @@ describe('item catalog audit', () => {
       onSpecialUsed: 0,
       onBombUsed: 1,
       onSectorStart: 2,
-      onRouteChosen: 2,
+      onRouteChosen: 1,
       onShopEntered: 0,
       onRewardGenerated: 1,
       onBossPhaseChanged: 1,
       onEnvironmentObjectDestroyed: 1
     });
     expect(audit.tagCounts).toMatchObject({
-      credit: 9,
+      credit: 8,
       phase: 10,
       plasma: 10,
-      overkill: 6,
+      overkill: 7,
       relic: 2
     });
     expect(audit.familyCounts).toEqual({
       'laser-split': 8,
-      'missile-overkill': 8,
+      'missile-overkill': 9,
       'drone-copy': 7,
       'shield-revenge': 5,
       'credit-shop': 5,
@@ -53,7 +53,7 @@ describe('item catalog audit', () => {
       'phase-graze': 8,
       'heat-prototype': 6,
       'lunar-surface': 5,
-      'route-economy': 2,
+      'route-economy': 1,
       'boss-pressure': 0
     });
     expect(audit.implementationStatusCounts).toEqual({
@@ -156,5 +156,6 @@ describe('item catalog audit', () => {
     expect(getImplementedHookItemIds('onFire')).toContain('item_gangue_compression_die');
     expect(getImplementedHookItemIds('onFire')).toContain('item_forkline_dynamo');
     expect(getImplementedHookItemIds('onProjectileSpawn')).toContain('item_strata_bore_collimator');
+    expect(getImplementedHookItemIds('onProjectileSpawn')).toContain('item_claimant_arc_seal');
   });
 });

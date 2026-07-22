@@ -16,6 +16,7 @@ export interface SectorStartUpgradeEffects {
 export interface RouteChosenUpgradeEffects {
   readonly lowOrbitOreRefund: boolean;
   readonly routeLedgerRewardCredit: boolean;
+  readonly ambushInsuranceStamp: boolean;
 }
 
 export interface RunUpgradeEffects {
@@ -74,7 +75,8 @@ export function resolveRunUpgradeEffects(
     },
     routeChosen: {
       lowOrbitOreRefund: hasUpgrade('upgrade_low_orbit_ore_scrip'),
-      routeLedgerRewardCredit: hasUpgrade('upgrade_route_ledger_spool')
+      routeLedgerRewardCredit: hasUpgrade('upgrade_route_ledger_spool'),
+      ambushInsuranceStamp: hasUpgrade('upgrade_ambush_insurance_stamp')
     },
     bossPhase: {
       attackCooldownSeconds: hasBossWarning ? 0.15 : 0,
@@ -140,6 +142,10 @@ export function getRunUpgradeDebugLabels(effects: RunUpgradeEffects): string[] {
     labels.push('route ledger cash-out');
   }
 
+  if (effects.routeChosen.ambushInsuranceStamp) {
+    labels.push('ambush insurance');
+  }
+
   if (effects.bossPhase.telegraphSeconds > 0) {
     labels.push('boss warning');
   }
@@ -169,6 +175,28 @@ export function getRouteLedgerSpoolRewardCreditBonus(
   effects: RouteChosenUpgradeEffects | null
 ): number {
   return effects?.routeLedgerRewardCredit ? 1 : 0;
+}
+
+export function getAmbushInsuranceStampSalvageClaim(
+  effects: RouteChosenUpgradeEffects | null,
+  routeKind: RewardContextKind,
+  legacyItemActive = false
+): number {
+  return effects?.ambushInsuranceStamp &&
+    !legacyItemActive &&
+    (routeKind === 'elite' || routeKind === 'factionAmbush')
+    ? 1
+    : 0;
+}
+
+export function getAmbushInsuranceStampRewardBiasTags(
+  effects: RouteChosenUpgradeEffects | null,
+  routeKind: RewardContextKind,
+  legacyItemActive = false
+): readonly ItemTag[] {
+  return getAmbushInsuranceStampSalvageClaim(effects, routeKind, legacyItemActive) > 0
+    ? ['armor', 'credit']
+    : [];
 }
 
 export function getMarketDecoderReadout(effects: RunUpgradeEffects): string | null {

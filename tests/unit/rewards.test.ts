@@ -251,7 +251,7 @@ describe('reward generation', () => {
     }).toEqual({
       shop: [
         {
-          id: 'item_forkline_dynamo',
+          id: 'item_gangue_compression_die',
           sourceHint: 'route source',
           price: 4
         },
@@ -261,19 +261,19 @@ describe('reward generation', () => {
           price: 5
         },
         {
-          id: 'item_arc_welder_drone',
+          id: 'item_magnetized_tithe_box',
           sourceHint: 'Shop pool',
-          price: 7
+          price: 5
         },
         {
-          id: 'item_regolith_scoop_array',
+          id: 'item_crater_shadow_lens',
           sourceHint: 'Shop pool',
-          price: 6
+          price: 4
         }
       ],
       eliteRewards: [
         {
-          id: 'item_excess_warhead_clause',
+          id: 'item_boreline_crimper',
           profile: 'elite',
           sourceHint: 'Elite pool'
         },
@@ -283,7 +283,7 @@ describe('reward generation', () => {
           sourceHint: 'Elite pool'
         },
         {
-          id: 'item_boreline_crimper',
+          id: 'item_prototype_vent_script',
           profile: 'elite',
           sourceHint: 'Elite pool'
         }
@@ -307,7 +307,7 @@ describe('reward generation', () => {
       ],
       lunarRewards: [
         {
-          id: 'item_ambush_insurance_stamp',
+          id: 'item_coastdown_capacitor',
           profile: 'lunar',
           sourceHint: 'route source'
         },

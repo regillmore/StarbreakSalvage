@@ -11,16 +11,16 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
   },
   "eliteRewards": [
     [
-      "item_surface_beacon_drone",
-      "lunar source",
+      "item_forkline_dynamo",
+      "route source",
     ],
     [
-      "item_plasma_bloom_filter",
-      "vault source",
+      "item_lane_splitter_chisel",
+      "Elite pool",
     ],
     [
-      "item_strata_bore_collimator",
-      "lunar source",
+      "item_claimant_arc_seal",
+      "elite source",
     ],
     [
       "item_rebound_freight_seal",
@@ -49,9 +49,9 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
         "boss source",
       ],
       [
-        "item_shield_revenge_contract",
-        20,
-        "vault source",
+        "item_scrap_saints_relay",
+        15,
+        "Shop pool",
       ],
       [
         "item_laser_tax_stamp",
@@ -101,16 +101,16 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
   },
   "eliteRewards": [
     [
-      "item_surface_beacon_drone",
-      "lunar source",
+      "item_forkline_dynamo",
+      "route source",
     ],
     [
-      "item_plasma_bloom_filter",
-      "vault source",
+      "item_lane_splitter_chisel",
+      "Elite pool",
     ],
     [
-      "item_strata_bore_collimator",
-      "lunar source",
+      "item_claimant_arc_seal",
+      "elite source",
     ],
     [
       "item_rebound_freight_seal",
@@ -129,9 +129,9 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
     "count": 6,
     "items": [
       [
-        "item_coastdown_capacitor",
-        20,
-        "route source",
+        "item_rebound_freight_seal",
+        17,
+        "shop source",
       ],
       [
         "item_crossfeed_detonator",
@@ -144,19 +144,19 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
         "Shop pool",
       ],
       [
-        "item_laser_tax_stamp",
+        "item_coin_operated_cannon",
         18,
         "Shop pool",
       ],
       [
-        "item_arc_welder_drone",
-        18,
+        "item_salvage_dividend_chip",
+        16,
         "Shop pool",
       ],
       [
-        "item_scrap_saints_relay",
-        14,
-        "Shop pool",
+        "item_phase_anchor_spool",
+        16,
+        "vault source",
       ],
     ],
   },

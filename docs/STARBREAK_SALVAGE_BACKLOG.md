@@ -2671,3 +2671,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 188. `UpgradeEffects` and `SectorRewards` own the permanent reward bias with restored-item precedence. `ItemHooks` owns Strata-Bore Collimator's bounded upstream-plasma transform, which automatically feeds combat and shared live-fire previews. The active catalog remains at 60 items and the global run fingerprint excludes the reward-local upgrade.
+
+### BL54 - Permanent Ambush Insurance and claimant arc chain
+
+Acceptance:
+
+- Ambush Insurance Stamp leaves active rewards and becomes a 10 kg permanent Navigation upgrade gated by Route Ledger Uplink.
+- Its one-salvage Elite/Faction Ambush claim and armor/credit bias remain deterministic, restored snapshots retain the retired item behavior, and the two representations cannot stack.
+- Uncommon Claimant Arc Seal replaces the active combat/route/elite/faction slot and attaches standard arc charge only to overkill carried into its ordered projectile stage.
+- Circuit order is material and visible: an earlier overkill source links the Seal and reports charged shots, while Seal before overkill reports the missing prerequisite and cannot rewrite later shots.
+- The transform changes no primary impact and adds no projectile, RNG draw, timer, counter, collision rule, or persistent state; downstream phase, plasma, and heavy-arc effects receive the shared charge through production hooks.
+- Global generation fingerprints, active breadth, Upgrade Bay totals, item-storm hook coverage, route/reward snapshots, saves, accessibility, performance limits, static hosting, and smoke tooling remain coherent.
+
+Status:
+
+- Implemented in work order 189. `UpgradeEffects` and `RunSession` own the permanent route claim with restored-item precedence. `ItemHooks` owns Claimant Arc Seal's bounded upstream-overkill transform, which automatically feeds combat and shared live-fire previews. The active catalog remains at 60 items and the global run fingerprint excludes the route-local upgrade.

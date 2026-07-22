@@ -10,6 +10,8 @@ import { createRunSession, getCurrentSector } from '../../src/game/RunSession';
 import { generateSectorRewardChoices } from '../../src/game/SectorRewards';
 import { generateShopInventory } from '../../src/game/Shops';
 import {
+  getAmbushInsuranceStampRewardBiasTags,
+  getAmbushInsuranceStampSalvageClaim,
   getMarketEchoLocatorRewardBiasTags,
   getMarketEchoLocatorRewardChoiceBonus,
   getMiningLaserTransitRewardBiasTags,
@@ -86,14 +88,14 @@ describe('run upgrade effects', () => {
           "discount": 1,
           "itemIds": [
             "item_magnetized_tithe_box",
-            "item_ambush_insurance_stamp",
+            "item_gangue_compression_die",
             "item_laser_tax_stamp",
             "item_coastdown_capacitor",
             "item_salvage_magnet",
           ],
           "prices": [
             4,
-            5,
+            3,
             5,
             8,
             5,
@@ -173,7 +175,8 @@ describe('run upgrade effects', () => {
 
     expect(oreScrip.routeChosen).toEqual({
       lowOrbitOreRefund: true,
-      routeLedgerRewardCredit: false
+      routeLedgerRewardCredit: false,
+      ambushInsuranceStamp: false
     });
     expect(createRunGenerationSaveFingerprint([], oreScrip)).toBe(
       createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
@@ -185,7 +188,8 @@ describe('run upgrade effects', () => {
 
     expect(routeLedger.routeChosen).toEqual({
       lowOrbitOreRefund: false,
-      routeLedgerRewardCredit: true
+      routeLedgerRewardCredit: true,
+      ambushInsuranceStamp: false
     });
     expect(createRunGenerationSaveFingerprint([], routeLedger)).toBe(
       createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
@@ -230,6 +234,27 @@ describe('run upgrade effects', () => {
     expect(getMiningLaserTransitRewardBiasTags(transit, 'shop')).toEqual([]);
     expect(getMiningLaserTransitRewardBiasTags(transit, 'vault', true)).toEqual([]);
     expect(createRunGenerationSaveFingerprint([], transit)).toBe(
+      createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
+    );
+  });
+
+  it('projects Ambush Insurance Stamp without perturbing unrelated expedition generation', () => {
+    const insurance = resolveRunUpgradeEffects(['upgrade_ambush_insurance_stamp']);
+
+    expect(insurance.routeChosen).toEqual({
+      lowOrbitOreRefund: false,
+      routeLedgerRewardCredit: false,
+      ambushInsuranceStamp: true
+    });
+    expect(getAmbushInsuranceStampSalvageClaim(insurance.routeChosen, 'elite')).toBe(1);
+    expect(getAmbushInsuranceStampSalvageClaim(insurance.routeChosen, 'factionAmbush')).toBe(1);
+    expect(getAmbushInsuranceStampRewardBiasTags(insurance.routeChosen, 'elite')).toEqual([
+      'armor',
+      'credit'
+    ]);
+    expect(getAmbushInsuranceStampSalvageClaim(insurance.routeChosen, 'shop')).toBe(0);
+    expect(getAmbushInsuranceStampSalvageClaim(insurance.routeChosen, 'elite', true)).toBe(0);
+    expect(createRunGenerationSaveFingerprint([], insurance)).toBe(
       createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
     );
   });

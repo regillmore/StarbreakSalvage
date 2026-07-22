@@ -58,6 +58,8 @@ import { generateStartingItemLoadout, type ItemInstance } from './Rewards';
 import { autoFitItemSocket, autoFitItemSockets, getActiveFittedItems } from './ItemSockets';
 import type { ShopStockLedger } from './ShopStock';
 import {
+  getAmbushInsuranceStampRewardBiasTags,
+  getAmbushInsuranceStampSalvageClaim,
   getLowOrbitOreScripCreditRefund,
   getRouteLedgerSpoolRewardCreditBonus,
   type RouteChosenUpgradeEffects
@@ -1298,6 +1300,9 @@ function applyRouteChosenHooks(
   const hasLegacyRouteLedger = activeItems.some(
     (instance) => instance.itemId === 'item_route_ledger_spool'
   );
+  const hasLegacyAmbushInsurance = activeItems.some(
+    (instance) => instance.itemId === 'item_ambush_insurance_stamp'
+  );
   const payload = applyCombinedHooks(
     'onRouteChosen',
     activeItems,
@@ -1326,14 +1331,38 @@ function applyRouteChosenHooks(
   const permanentRouteLedgerCredit = hasLegacyRouteLedger
     ? 0
     : getRouteLedgerSpoolRewardCreditBonus(routeUpgradeEffects ?? null);
+  const permanentAmbushSalvage = getAmbushInsuranceStampSalvageClaim(
+    routeUpgradeEffects ?? null,
+    route.kind,
+    hasLegacyAmbushInsurance
+  );
+  const permanentAmbushBiasTags = getAmbushInsuranceStampRewardBiasTags(
+    routeUpgradeEffects ?? null,
+    route.kind,
+    hasLegacyAmbushInsurance
+  );
   const oreRefundApplied =
     permanentOreRefund > 0 ||
     (hasLegacyOreScrip &&
       getLowOrbitOreScripCreditRefund(
-        { lowOrbitOreRefund: true, routeLedgerRewardCredit: false },
+        {
+          lowOrbitOreRefund: true,
+          routeLedgerRewardCredit: false,
+          ambushInsuranceStamp: false
+        },
         route.kind
       ) > 0);
   const routeLedgerCreditApplied = hasLegacyRouteLedger || permanentRouteLedgerCredit > 0;
+  const ambushInsuranceApplied =
+    permanentAmbushSalvage > 0 ||
+    getAmbushInsuranceStampSalvageClaim(
+      {
+        lowOrbitOreRefund: false,
+        routeLedgerRewardCredit: false,
+        ambushInsuranceStamp: hasLegacyAmbushInsurance
+      },
+      route.kind
+    ) > 0;
   const hasShopPayload =
     outcome.effects.shop !== null ||
     payload.shopDiscount !== 0 ||
@@ -1347,19 +1376,22 @@ function applyRouteChosenHooks(
       ...(oreRefundApplied ? ['Low-Orbit Ore Scrip refunds 1 credit.'] : []),
       ...(routeLedgerCreditApplied
         ? ['Route Ledger Spool adds 1 credit to the reward cash-out.']
+        : []),
+      ...(ambushInsuranceApplied
+        ? ['Ambush Insurance Stamp pays 1 salvage and favors armor / credit rewards.']
         : [])
     ],
     effects: {
       ...outcome.effects,
       creditsDelta: payload.creditsDelta + permanentOreRefund,
-      salvageDelta: payload.salvageDelta,
+      salvageDelta: payload.salvageDelta + permanentAmbushSalvage,
       hullPatchDelta: payload.hullPatchDelta,
       curseDelta: payload.curseDelta,
       relicDelta: payload.relicDelta,
       reward: {
         choiceBonus: payload.rewardChoiceBonus,
         creditBonus: payload.rewardCreditBonus + permanentRouteLedgerCredit,
-        biasTags: payload.rewardBiasTags,
+        biasTags: [...new Set([...payload.rewardBiasTags, ...permanentAmbushBiasTags])],
         poolIdOverride: payload.rewardPoolIdOverride
       },
       shop: hasShopPayload

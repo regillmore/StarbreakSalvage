@@ -286,6 +286,32 @@ describe('item synergies', () => {
     expect(latePlasma.laserKind).toBeUndefined();
   });
 
+  it('lets Claimant Arc Seal charge only overkill prepared earlier in the chain', () => {
+    const claimed: ItemInstance[] = [
+      { itemId: 'item_ricochet_branch_coupler', acquisitionOrder: 0 },
+      { itemId: 'item_rebound_freight_seal', acquisitionOrder: 1 },
+      { itemId: 'item_claimant_arc_seal', acquisitionOrder: 2 }
+    ];
+    const lateOverkill: ItemInstance[] = [
+      { itemId: 'item_ricochet_branch_coupler', acquisitionOrder: 0 },
+      { itemId: 'item_claimant_arc_seal', acquisitionOrder: 1 },
+      { itemId: 'item_rebound_freight_seal', acquisitionOrder: 2 }
+    ];
+    const branch = { ...baseProjectile, tags: ['laser', 'split'] as const };
+    const charged = applyItemHooks('onProjectileSpawn', claimed, {
+      projectile: branch
+    }).projectile;
+    const missed = applyItemHooks('onProjectileSpawn', lateOverkill, {
+      projectile: branch
+    }).projectile;
+
+    expect(charged.tags).toEqual(expect.arrayContaining(['ricochet', 'overkill', 'arc']));
+    expect(charged.arcChargeKind).toBe('standard');
+    expect(missed.tags).toEqual(expect.arrayContaining(['ricochet', 'overkill']));
+    expect(missed.tags).not.toContain('arc');
+    expect(missed.arcChargeKind).toBeUndefined();
+  });
+
   it('uses fitted circuit order to build materially different projectile chains', () => {
     const phaseSplitClone: ItemInstance[] = [
       {
