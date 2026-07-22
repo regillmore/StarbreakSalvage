@@ -170,7 +170,20 @@ export class SectorTransitionScene implements Scene {
       this.createResource('Hull', `${hull.current}/${hull.max}`, 'navigation-hull', hull.state),
       this.createResource('Curse', this.session.curse)
     );
-    header.append(headingGroup, resources);
+    const headerUtility = document.createElement('div');
+    headerUtility.className = 'navigation-hub-utility';
+    if (this.onSuspendAndExit) {
+      const suspend = document.createElement('button');
+      suspend.className = 'secondary-button navigation-suspend-action';
+      suspend.type = 'button';
+      suspend.dataset.testid = 'suspend-navigation';
+      suspend.textContent = 'Suspend & Exit';
+      suspend.setAttribute('aria-label', 'Suspend expedition and exit to main menu');
+      suspend.addEventListener('click', this.onSuspendAndExit);
+      headerUtility.append(suspend);
+    }
+    headerUtility.append(resources);
+    header.append(headingGroup, headerUtility);
 
     const workspace = document.createElement('div');
     workspace.className = 'navigation-hub-workspace';
@@ -192,16 +205,6 @@ export class SectorTransitionScene implements Scene {
         ? 'POST-SECTOR HOLD // Optional challenge remains on the cleared node · The active destination continues the expedition.'
         : 'ACT CHART // Future sectors resolve only when travel opens · Unlinked carrier services remain locally available.';
     footer.append(footerCopy);
-    if (this.onSuspendAndExit) {
-      const suspend = document.createElement('button');
-      suspend.className = 'secondary-button navigation-suspend-action';
-      suspend.type = 'button';
-      suspend.dataset.testid = 'suspend-navigation';
-      suspend.textContent = 'Suspend & Exit';
-      suspend.setAttribute('aria-label', 'Suspend expedition and exit to main menu');
-      suspend.addEventListener('click', this.onSuspendAndExit);
-      footer.append(suspend);
-    }
 
     shell.append(
       header,

@@ -461,6 +461,39 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('contract-theme-strip')).toContainText(
     'REDLINE CONTRACT | Debt Runner'
   );
+  await page.setViewportSize({ width: 1600, height: 1200 });
+  const navigationSuspend = page.getByTestId('suspend-navigation');
+  await expect(navigationSuspend).toBeVisible();
+  await expect(page.locator('.navigation-hub-header').getByTestId('suspend-navigation')).toHaveCount(
+    1
+  );
+  await expect(page.locator('.navigation-hub-footer').getByTestId('suspend-navigation')).toHaveCount(
+    0
+  );
+  const navigationHeaderGeometry = await page
+    .locator('.navigation-hub-header')
+    .evaluate((header) => {
+      const suspend = header.querySelector<HTMLElement>('[data-testid="suspend-navigation"]');
+      const resources = header.querySelector<HTMLElement>('.navigation-resource-strip');
+      const suspendRect = suspend?.getBoundingClientRect();
+      const resourceRect = resources?.getBoundingClientRect();
+      return {
+        suspendBottom: suspendRect?.bottom ?? Number.POSITIVE_INFINITY,
+        suspendRight: suspendRect?.right ?? Number.NEGATIVE_INFINITY,
+        resourceTop: resourceRect?.top ?? Number.NEGATIVE_INFINITY,
+        resourceRight: resourceRect?.right ?? Number.POSITIVE_INFINITY
+      };
+    });
+  expect(navigationHeaderGeometry.suspendBottom).toBeLessThanOrEqual(
+    navigationHeaderGeometry.resourceTop
+  );
+  expect(
+    Math.abs(navigationHeaderGeometry.suspendRight - navigationHeaderGeometry.resourceRight)
+  ).toBeLessThanOrEqual(1);
+  const navigationPanelOverflow = await page
+    .getByTestId('mission-briefing')
+    .evaluate((panel) => panel.scrollHeight - panel.clientHeight);
+  expect(navigationPanelOverflow).toBeLessThanOrEqual(1);
   await page.getByTestId('suspend-navigation').click();
   await expect(page.getByRole('heading', { name: 'Starbreak Salvage' })).toBeVisible();
   await expect(page.getByTestId('run-snapshot-summary')).toContainText(

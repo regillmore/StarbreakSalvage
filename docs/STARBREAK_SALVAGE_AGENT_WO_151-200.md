@@ -1164,3 +1164,26 @@ Status: implemented. `SectorRewards` now computes one bounded manifest count fro
 The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/` at 1280 x 720 with seed `REWARD-MANIFEST-194`. The first required-sector reward showed three circuit items, one recovered primary weapon, and one credit fallback. All five cards fit in two rows; the panel reported equal 542 px client and scroll heights, the document matched the 720 px viewport, and warning/error logs were empty.
 
 Verification: focused reward and modifier coverage passes. `npm run verify:release` passes typecheck, ESLint, all 115 Vitest files and 739 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,021.90 kB` minified / `280.30 kB` gzip initial JavaScript and `100.24 kB` / `20.07 kB` CSS. The existing Vite large-chunk advisory remains; no dependency, actor/projectile/effect cap, save/snapshot version, route topology, named RNG stream, static base path, or warning threshold changed.
+
+## Work order 195 - Header-mounted navigation suspension
+
+Goal: keep constellation navigation compact by moving its persistent suspend action out of the footer and into the unused top-right header space above run resources.
+
+Prompt:
+
+> Move `Suspend & Exit` to the navigation header's top-right corner above Credits, Salvage, Hull, and Curse. Preserve its existing save-and-return behavior and keyboard shortcut, keep the footer guidance compact, and avoid introducing menu scrolling at ordinary desktop sizes.
+
+Acceptance criteria:
+
+- Navigation renders one `Suspend & Exit` action in a dedicated header utility column, aligned to the right edge directly above the four-card resource strip.
+- The navigation footer contains only its existing contextual guidance and no button-height row.
+- The action retains its callback, accessible label, test id, keyboard focusability, and Escape/pause shortcut behavior.
+- Desktop navigation fits without panel overflow at the tall layout represented by the reported issue; the ordinary 1280 x 720 opening briefing also remains scroll-free.
+- At narrow widths, the header utility stays in document flow with the button above the full-width resource strip rather than overlapping the title or resources.
+- Route selection, constellation state, services, saves, snapshots, and seeded generation remain unchanged.
+
+Status: implemented. `SectorTransitionScene` now groups the unchanged suspend button and run-resource strip in a header utility column. Desktop layout uses the existing heading height to place the action at the upper-right and keeps resources bottom-aligned; responsive layout stacks the same column below the identity copy. The footer is again a low-profile guidance line.
+
+The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/` with seed `STARBREAK-SMOKE`. At 1280 x 720 the opening navigation screen placed the 128 x 51 px action at the header's right edge, directly above the 384 x 47 px resource strip, while the 662 px panel had equal client and scroll heights. The footer contained no button and browser warning/error logs were empty. The route-choice regression separately verifies the reported tall desktop composition and zero panel overflow.
+
+Verification: the focused Chromium navigation flow passes. `npm run verify:release` passes typecheck, ESLint, all 115 Vitest files and 739 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,021.99 kB` minified / `280.34 kB` gzip initial JavaScript and `100.48 kB` / `20.11 kB` CSS. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, route topology, RNG stream, static base path, or warning threshold changed.

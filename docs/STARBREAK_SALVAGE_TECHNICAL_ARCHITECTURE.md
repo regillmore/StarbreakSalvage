@@ -955,6 +955,12 @@ seed + permanent save fingerprint
 - `RewardScene` appends the work order 193 primary weapon and the credit fallback after circuit generation. Normal manifests therefore contain five cards and a context-upgraded manifest contains at most six; neither auxiliary choice participates in item weighting or advances the circuit-item stream.
 - The existing reward seed names, deterministic item ordering, explicit weapon-offer stream, save/snapshot shape, route topology, and combat budgets are unchanged. A lower requested count intentionally exposes a shorter prefix of the same deterministic reward sequence.
 
+### Work order 195 navigation header utility boundary
+
+- `SectorTransitionScene` remains the sole owner of constellation suspension. It creates the existing `onSuspendAndExit` button once, but mounts it before the resource strip inside `navigation-hub-utility` instead of appending it to `navigation-hub-footer`.
+- The utility column is presentation-only: desktop flex alignment places its action at the top-right and resources at the bottom-right, while the existing narrow header breakpoint stacks the column in normal flow. Footer guidance, action semantics, callback identity, and `handleAction` Escape/pause dispatch are unchanged.
+- The move adds no reducer, save/snapshot field, route transition, service state, generation pass, RNG draw, timer, actor, projectile, effect, or fixed-step work.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

@@ -2761,3 +2761,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 194. `SectorRewards` derives the bounded circuit manifest from its base plus permanent context upgrades only; run-local systems now influence contents rather than breadth. `RewardScene` exposes count diagnostics and a compact two-row desktop layout for the five- or six-card complete decision.
+
+### BL60 - Header-mounted navigation suspension
+
+Acceptance:
+
+- Move the single `Suspend & Exit` action from the navigation footer into a top-right header utility column directly above Credits, Salvage, Hull, and Curse.
+- Preserve the existing suspend callback, accessible label, test id, keyboard focus, Escape shortcut, save checkpoint, and title-screen return.
+- Leave the footer as compact contextual guidance and eliminate the button-height row that caused the reported desktop overflow.
+- Keep the action and resource strip aligned at desktop sizes and stacked in normal document flow on narrow screens without overlap.
+- Preserve constellation layout, route decisions, carrier services, snapshots, deterministic generation, and static hosting.
+
+Status:
+
+- Implemented in work order 195. `SectorTransitionScene` owns one header utility group containing the unchanged action and resource strip, while responsive CSS keeps the group aligned and the footer compact.

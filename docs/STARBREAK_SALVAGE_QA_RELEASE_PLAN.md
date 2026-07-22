@@ -479,6 +479,7 @@ Phase 10 accessibility checks should also cover mission briefings and branch foc
 - [x] Mouse controls do not trap or steal menu focus.
 - [x] Sector rewards and shops expose keyboard-readable primary weapon identity, circuit capacity, mounted comparison, finite armory depletion, and reroll restocking.
 - [x] Required-sector rewards expose three ordinary circuit choices, five total cards with weapon/credits, and at most six total after a permanent option unlock; the complete desktop manifest has no panel or page scroll.
+- [x] Constellation `Suspend & Exit` is keyboard-readable in the top-right header above run resources, absent from the footer, and does not force tall desktop navigation to scroll.
 
 ## Release checklist
 
