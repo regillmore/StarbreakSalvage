@@ -13,6 +13,7 @@ import { generateRewardChoices, type RewardChoice, type RewardContextKind } from
 import {
   getMarketEchoLocatorRewardBiasTags,
   getMarketEchoLocatorRewardChoiceBonus,
+  getMiningLaserTransitRewardBiasTags,
   getRewardUpgradeBiasTags,
   getRewardUpgradeChoiceBonus
 } from './UpgradeEffects';
@@ -50,6 +51,9 @@ export function generateSectorRewardChoices(options: {
   const legacyMarketEchoActive = fittedItems.some(
     (instance) => instance.itemId === 'item_market_echo_locator'
   );
+  const legacyMiningLaserTransitActive = fittedItems.some(
+    (instance) => instance.itemId === 'item_mining_laser_transit'
+  );
   const marketEchoChoiceBonus = getMarketEchoLocatorRewardChoiceBonus(
     options.run.upgradeEffects,
     rewardContext,
@@ -59,6 +63,11 @@ export function generateSectorRewardChoices(options: {
     options.run.upgradeEffects,
     rewardContext,
     legacyMarketEchoActive
+  );
+  const miningLaserTransitBiasTags = getMiningLaserTransitRewardBiasTags(
+    options.run.upgradeEffects,
+    rewardContext,
+    legacyMiningLaserTransitActive
   );
   const actRewardChoiceBonus = getActEconomyRewardChoiceBonus(
     actEconomy,
@@ -90,6 +99,7 @@ export function generateSectorRewardChoices(options: {
         ...modifierBiasTags,
         ...upgradeBiasTags,
         ...marketEchoBiasTags,
+        ...miningLaserTransitBiasTags,
         ...interActEffects.rewardBiasTags,
         ...actEconomy.rewardBiasTags,
         ...carrier.rewardBiasTags

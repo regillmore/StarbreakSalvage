@@ -12,6 +12,7 @@ import { generateShopInventory } from '../../src/game/Shops';
 import {
   getMarketEchoLocatorRewardBiasTags,
   getMarketEchoLocatorRewardChoiceBonus,
+  getMiningLaserTransitRewardBiasTags,
   resolveRunUpgradeEffects
 } from '../../src/game/UpgradeEffects';
 
@@ -213,6 +214,22 @@ describe('run upgrade effects', () => {
     expect(receipts.shopStockBonus).toBe(0);
     expect(receipts.shopBiasTags).toEqual([]);
     expect(createRunGenerationSaveFingerprint([], receipts)).toBe(
+      createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
+    );
+  });
+
+  it('projects Mining Laser Transit without doubling a restored fitted copy', () => {
+    const transit = resolveRunUpgradeEffects(['upgrade_mining_laser_transit']);
+
+    expect(transit.miningLaserTransit).toBe(true);
+    expect(getMiningLaserTransitRewardBiasTags(transit, 'vault')).toEqual(['laser', 'plasma']);
+    expect(getMiningLaserTransitRewardBiasTags(transit, 'factionAmbush')).toEqual([
+      'laser',
+      'plasma'
+    ]);
+    expect(getMiningLaserTransitRewardBiasTags(transit, 'shop')).toEqual([]);
+    expect(getMiningLaserTransitRewardBiasTags(transit, 'vault', true)).toEqual([]);
+    expect(createRunGenerationSaveFingerprint([], transit)).toBe(
       createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
     );
   });

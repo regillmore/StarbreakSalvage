@@ -559,3 +559,11 @@ Each routine meteor storm derives one rounded world pocket and exactly twelve de
 Canvas rendering remains in the established under-bullet hazard layer. One pocket plus currently visible telegraph/impact/afterglow circles replace the squall's full-height lanes and wreckage field. The pre-entry phase draws nothing, and removing the route line, direction arrow, trail ellipses, and forecast circles reduces ornament despite the longer 600-640 unit lifetime. `salvage_squall` remains a content definition and pure model for future authored encounters but is absent from routine choice arrays and therefore adds no live encounter density.
 
 The refined release build emits `1,006.25 kB` minified / `275.83 kB` gzip initial JavaScript and unchanged `95.61 kB` / `19.25 kB` CSS, reductions of `1.00 kB` / `0.20 kB` JavaScript from the initially deployed work order 187 path-line version. The existing 500 kB chunk advisory remains; no dependency, simulation cap, save/snapshot schema, RNG stream, or warning threshold changed.
+
+## Work order 188 permanent Transit and strata-bore budgets
+
+Mining Laser Transit's permanent contribution adds one boolean projection and at most two reward-bias tags at the existing bounded reward-scene boundary. Restored-item precedence is one scan of the already-projected fitted circuit. The flag is excluded from the expedition-wide generation fingerprint and introduces no generation pass, RNG draw, route mutation, save field, or gameplay-frame work.
+
+Strata-Bore Collimator is one ordered projectile transform over the already-bounded volley. Each projectile performs one plasma membership check and, only when linked, a capped six-tag trait count plus constant-time velocity, impact, radius, and presentation rewrites. It creates no projectile, actor, timer, effect, counter, collision rule, or persistent state. Hardpoint presentation uses the same prefix-resolution pipeline and adds only one bounded condition summary per card.
+
+The release build emits `1,008.19 kB` minified / `276.29 kB` gzip initial JavaScript and unchanged `95.61 kB` / `19.25 kB` CSS, increases of `1.94 kB` / `0.46 kB` JavaScript over refined work order 187. The existing Vite large-chunk advisory remains; no dependency, simulation cap, save/snapshot schema, route topology, RNG stream, static base path, or warning threshold changed.

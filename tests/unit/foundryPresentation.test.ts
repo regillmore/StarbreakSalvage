@@ -476,6 +476,37 @@ describe('foundry visual presentation', () => {
     });
   });
 
+  it('shows Strata-Bore Collimator linking only after an earlier plasma source', () => {
+    const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
+      (candidate) => candidate.shipId === 'ship_debt_runner'
+    );
+    if (!contract) throw new Error('Expected a single-projectile contract.');
+    const linked = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+      { itemId: 'item_chain_arc_capacitor', acquisitionOrder: 0 },
+      { itemId: 'item_plasma_seed_crucible', acquisitionOrder: 1 },
+      { itemId: 'item_strata_bore_collimator', acquisitionOrder: 2 }
+    ]);
+    const unmet = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+      { itemId: 'item_strata_bore_collimator', acquisitionOrder: 0 },
+      { itemId: 'item_chain_arc_capacitor', acquisitionOrder: 1 },
+      { itemId: 'item_plasma_seed_crucible', acquisitionOrder: 2 }
+    ]);
+
+    expect(linked.circuitStages[2]).toMatchObject({
+      name: 'Strata-Bore Collimator',
+      outputLabel: 'CONDITION MET · 1 PLASMA SHOT · +18% IMPACT · BEAM LASER',
+      conditionMet: true,
+      changed: true
+    });
+    expect(linked.attackSimulation.projectiles[0]).toMatchObject({ laserKind: 'beam' });
+    expect(unmet.circuitStages[0]).toMatchObject({
+      name: 'Strata-Bore Collimator',
+      outputLabel: 'CONDITION NOT MET · NEEDS AN EARLIER PLASMA SOURCE',
+      conditionMet: false,
+      changed: false
+    });
+  });
+
   it('projects prototype-vent cadence shifts onto affected earlier circuit cards', () => {
     const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
       (candidate) => candidate.shipId === 'ship_debt_runner'

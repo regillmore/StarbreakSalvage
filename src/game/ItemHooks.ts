@@ -253,6 +253,7 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_plasma_seed_crucible',
     'item_ricochet_branch_coupler',
     'item_rebound_freight_seal',
+    'item_strata_bore_collimator',
     'item_crossfeed_detonator',
     'item_faraday_phase_shunt'
   ],
@@ -654,6 +655,21 @@ function applyOnProjectileSpawn(
         }
       };
     }
+  }
+
+  if (itemId === 'item_strata_bore_collimator' && payload.projectile.tags.includes('plasma')) {
+    const supportingTraits = Math.min(3, getCircuitTraitCount(payload.projectile.tags));
+    return {
+      projectile: {
+        ...payload.projectile,
+        vx: payload.projectile.vx * 1.12,
+        vy: payload.projectile.vy * 1.12,
+        damage: payload.projectile.damage * (1.14 + supportingTraits * 0.04),
+        radius: payload.projectile.radius + 0.5,
+        tags: addTags(payload.projectile.tags, ['laser']),
+        laserKind: 'beam'
+      }
+    };
   }
 
   return payload;

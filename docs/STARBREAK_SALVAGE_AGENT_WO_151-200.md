@@ -974,3 +974,31 @@ The former `salvage_storm` values and `SalvageStorm` model remain available unde
 The refined managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/` and launched the deterministic `H` fixture during a stopped set-piece engagement. The rounded pocket entered already active along the top camera edge with overlapping aim-point warnings, an impact flash, and `MARKED` / `IMPACTING` text. No path line, direction arrow, pre-entry pocket, or pre-entry meteor warning appeared; the browser recorded no warnings or errors.
 
 Verification: the refined `npm run verify:release` passes (114 Vitest files / 723 tests, production build, 17/17 Chromium E2E tests, and Pages preview asset smoke). The focused meteor behavior suite passes 12 tests, and the isolated environmental-stress Chromium path passes. The build emits `1,006.25 kB` minified / `275.83 kB` gzip initial JavaScript and unchanged `95.61 kB` / `19.25 kB` CSS, reductions of `1.00 kB` / `0.20 kB` JavaScript from the initially deployed work order 187 path-line version. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, projectile/actor cap, RNG stream, static base path, or warning threshold changed.
+
+## Work order 188 - Permanent Mining Transit and strata-bore chain
+
+Goal: move Mining Laser Transit's dependable reward bias into permanent progression and refill its rare slot with an order-sensitive plasma-to-laser circuit finisher.
+
+Prompt:
+
+> Retire Mining Laser Transit from active run rewards and move its Vault/Faction Ambush laser-plasma bias into the permanent scrap Upgrade Bay. Preserve restored-run behavior without allowing the item and upgrade to double-apply. Add a rare replacement that rewards plasma and other traits prepared earlier in the ordered weapon chain. Keep reward generation deterministic, previews honest, active catalog breadth stable, and the managed smoke-host lifecycle reliable.
+
+Acceptance criteria:
+
+- Mining Laser Transit is absent from active discovery and reward pools and appears as a 13 kg permanent Archive upgrade gated by Relic Pattern Dossier.
+- Permanent and restored-item forms each add the same laser/plasma bias to Vault and Faction Ambush rewards; owning both applies it once.
+- The reward-local permanent flag is explicit input to reward generation and excluded from the expedition-wide generation fingerprint, so it cannot reshuffle contracts, routes, sectors, shops, or duration.
+- Rare Strata-Bore Collimator replaces the same combat/vault/lunar slot and activates only on projectiles carrying plasma before its ordered `onProjectileSpawn` stage.
+- Linked plasma becomes a bright `beam` laser, travels 12% faster, and gains 14% impact plus 4% for each of at most three earlier arc/drone/missile/phase/ricochet/split traits.
+- The Collimator retains plasma, adds laser, and can therefore feed downstream laser/arc stages without adding a projectile, counter, timer, RNG draw, or persistent state.
+- Hardpoint cumulative cards state the exact missing plasma prerequisite or linked shot count and bounded impact tier; live fire uses the same production hook path.
+- The active catalog remains at 60 items, the compatibility catalog rises to 72 with twelve retired definitions, and the 29-item stress fixture covers both the legacy reward hook and the new transform.
+- Upgrade Bay totals, deterministic source-weighted fixtures, restored snapshots, saves, accessibility modes, static hosting, dependencies, and work order 175 smoke tooling remain coherent.
+
+Status: implemented. Mining Laser Transit remains a retired catalog record and `onRewardGenerated` hook solely for restored run snapshots. `RunUpgradeEffects.miningLaserTransit` exposes the permanent flag; `SectorRewards` gives an active restored copy precedence and otherwise supplies the same laser/plasma bias before the ordinary combined-hook pipeline. The flag is deliberately omitted from the global generation fingerprint.
+
+Strata-Bore Collimator occupies the released rare combat/vault/lunar slot as a bounded ordered projectile transform. It reads only already-authored projectile traits, preserves upstream plasma, adds the shared beam-laser presentation, and scales impact from a capped six-trait vocabulary. Plasma before Collimator therefore activates and can feed later laser/arc stages; Collimator before a plasma source remains explicitly unmet. Combat and Foundry preview share the existing production hook path.
+
+The managed browser pass used `http://10.25.250.13:4175/StarbreakSalvage/` at 390 x 700. It rendered all fifteen permanent Upgrade Bay cards and confirmed Mining Laser Transit's Archive category, 13 kg cost, Relic Pattern Dossier prerequisite, and exact Vault/Faction Ambush laser-plasma bias copy. The 314.41 px card remained within the 390 px document without horizontal overflow, and the browser recorded no warnings or errors. The viewport was restored, the tab finalized, and the work order 175 smoke host was no longer running after its lease ended.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 114 Vitest files and 727 tests, the production build, all 17 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The build emits `1,008.19 kB` minified / `276.29 kB` gzip initial JavaScript and `95.61 kB` / `19.25 kB` CSS, increases of `1.94 kB` / `0.46 kB` JavaScript over refined work order 187 with unchanged CSS. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, route topology, RNG stream, static base path, or warning threshold changed.

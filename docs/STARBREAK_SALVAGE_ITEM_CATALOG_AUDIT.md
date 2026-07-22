@@ -214,6 +214,12 @@ Convoy Receipt Printer is now a 12 kg Market upgrade gated by Market Decoder. It
 
 Uncommon Rebound Freight Seal replaces the released active slot. As an ordered projectile transform, it requires an upstream `ricochetBounces` value, adds 14% impact for each of at most two prepared bounces, and attaches the existing overkill trait without creating or consuming a projectile or bounce. The active catalog remains at 60 items; the compatibility catalog now contains 71 definitions, eleven of them retired.
 
+## Permanent Mining Transit and strata-bore chain in Work Order 188
+
+Mining Laser Transit is now a 13 kg Archive upgrade gated by Relic Pattern Dossier. Its retired catalog record and `onRewardGenerated` reducer remain only for restored snapshots; reward generation gives a fitted legacy copy precedence over the permanent flag, so either representation adds the same laser/plasma bias to Vault and Faction Ambush rewards exactly once. The reward-local flag is excluded from the expedition-wide generation fingerprint and supplied only to the existing named reward roll.
+
+Rare Strata-Bore Collimator replaces the released combat/vault/lunar slot. At its ordered `onProjectileSpawn` stage it requires upstream plasma, adds the shared `beam` laser presentation and laser trait, raises velocity by 12%, and raises impact by 14% plus 4% for each of at most three carried arc/drone/missile/phase/ricochet/split traits. It preserves every upstream trait for downstream stages and creates no projectile, RNG draw, timer, counter, state field, or alternate preview path. The active catalog remains at 60 items; the compatibility catalog now contains 72 definitions, twelve of them retired.
+
 ## Risks For 057-060
 
 - New hook surfaces can create runaway proc chains unless proc order and budgets stay tested as item count grows.

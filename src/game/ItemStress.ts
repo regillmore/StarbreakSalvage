@@ -45,8 +45,8 @@ export const ITEM_STORM_ITEM_IDS: readonly ItemId[] = [
   'item_rebound_freight_seal',
   'item_plasma_seed_crucible',
   'item_mining_laser_transit',
-  'item_warhead_echo_chamber',
-  'item_crossfeed_detonator'
+  'item_strata_bore_collimator',
+  'item_warhead_echo_chamber'
 ];
 
 export interface ItemHookPressureEntry {

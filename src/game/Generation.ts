@@ -355,7 +355,8 @@ export function createRunGenerationSaveFingerprint(
     'upgrade_low_orbit_ore_scrip',
     'upgrade_route_ledger_spool',
     'upgrade_market_echo_locator',
-    'upgrade_convoy_receipt_printer'
+    'upgrade_convoy_receipt_printer',
+    'upgrade_mining_laser_transit'
   ]);
   const upgrades =
     upgradeEffects.activeUpgradeIds
@@ -927,6 +928,7 @@ export function summarizeRunSkeleton(run: RunSkeleton): unknown {
             shopDiscount: run.upgradeEffects.shopDiscount,
             shopCouponCascade: run.upgradeEffects.shopCouponCascade,
             convoyReceiptPrinter: run.upgradeEffects.convoyReceiptPrinter,
+            miningLaserTransit: run.upgradeEffects.miningLaserTransit,
             rewardChoiceBonus: run.upgradeEffects.rewardChoiceBonus,
             seedSurvey: run.seedSurvey
           }

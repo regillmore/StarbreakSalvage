@@ -87,7 +87,7 @@ describe('validateContent', () => {
       )
     );
 
-    expect(ITEMS).toHaveLength(71);
+    expect(ITEMS).toHaveLength(72);
     expect(ACTIVE_ITEMS).toHaveLength(60);
     expect(ACT_DEFINITIONS).toHaveLength(3);
     expect(ACT_ROUTE_CONTRACTS.length).toBeGreaterThanOrEqual(13);

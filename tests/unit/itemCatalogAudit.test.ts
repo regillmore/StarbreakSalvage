@@ -22,7 +22,7 @@ describe('item catalog audit', () => {
     });
     expect(audit.hookCounts).toEqual({
       onFire: 18,
-      onProjectileSpawn: 12,
+      onProjectileSpawn: 13,
       onEnemyKilled: 10,
       onPlayerHit: 6,
       onPickupCollected: 6,
@@ -32,7 +32,7 @@ describe('item catalog audit', () => {
       onSectorStart: 2,
       onRouteChosen: 2,
       onShopEntered: 0,
-      onRewardGenerated: 2,
+      onRewardGenerated: 1,
       onBossPhaseChanged: 1,
       onEnvironmentObjectDestroyed: 1
     });
@@ -155,5 +155,6 @@ describe('item catalog audit', () => {
     expect(getImplementedHookItemIds('onFire')).toContain('item_boreline_crimper');
     expect(getImplementedHookItemIds('onFire')).toContain('item_gangue_compression_die');
     expect(getImplementedHookItemIds('onFire')).toContain('item_forkline_dynamo');
+    expect(getImplementedHookItemIds('onProjectileSpawn')).toContain('item_strata_bore_collimator');
   });
 });

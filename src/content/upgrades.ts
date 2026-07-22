@@ -23,7 +23,8 @@ export const UPGRADE_EFFECT_KINDS = [
   'routeOreScrip',
   'routeLedgerSpool',
   'marketEchoLocator',
-  'convoyReceiptPrinter'
+  'convoyReceiptPrinter',
+  'miningLaserTransit'
 ] as const;
 
 export type UpgradeCategory = (typeof UPGRADE_CATEGORIES)[number];
@@ -44,7 +45,8 @@ export type UpgradeId =
   | 'upgrade_low_orbit_ore_scrip'
   | 'upgrade_route_ledger_spool'
   | 'upgrade_market_echo_locator'
-  | 'upgrade_convoy_receipt_printer';
+  | 'upgrade_convoy_receipt_printer'
+  | 'upgrade_mining_laser_transit';
 
 export interface UpgradeDefinition {
   readonly id: UpgradeId;
@@ -212,6 +214,17 @@ export const UPGRADES: readonly UpgradeDefinition[] = [
     effect: 'Rerolled shops gain one extra stock slot biased toward credit and drone items.',
     cost: 12,
     prerequisites: ['upgrade_market_decoder']
+  },
+  {
+    id: 'upgrade_mining_laser_transit',
+    category: 'archive',
+    iconKey: 'vault-index',
+    effectKind: 'miningLaserTransit',
+    name: 'Mining Laser Transit',
+    summary: 'permanent excavation manifests routed through every deep-field reward claim',
+    effect: 'Vault and Faction Ambush rewards favor laser and plasma circuit tools.',
+    cost: 13,
+    prerequisites: ['upgrade_relic_pattern_dossier']
   }
 ];
 

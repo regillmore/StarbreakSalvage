@@ -477,8 +477,29 @@ function createCircuitStageCondition(
         }
       : { met: false, label: 'CONDITION NOT MET · NEEDS AN EARLIER RICOCHET SOURCE' };
   }
+  if (itemId === 'item_strata_bore_collimator') {
+    const plasmaShots = incoming.filter((projectile) => projectile.tags.includes('plasma'));
+    if (plasmaShots.length === 0) {
+      return { met: false, label: 'CONDITION NOT MET · NEEDS AN EARLIER PLASMA SOURCE' };
+    }
+    const maxSupportingTraits = plasmaShots.reduce(
+      (maximum, projectile) => Math.max(maximum, countCircuitTraits(projectile.tags)),
+      0
+    );
+    const bonusPercent = 14 + Math.min(3, maxSupportingTraits) * 4;
+    return {
+      met: true,
+      label: `CONDITION MET · ${plasmaShots.length} PLASMA SHOT${plasmaShots.length === 1 ? '' : 'S'} · +${bonusPercent}% IMPACT · BEAM LASER`
+    };
+  }
 
   return null;
+}
+
+function countCircuitTraits(tags: readonly string[]): number {
+  return new Set(
+    tags.filter((tag) => ['arc', 'drone', 'missile', 'phase', 'ricochet', 'split'].includes(tag))
+  ).size;
 }
 
 function hasDroneArcFeed(

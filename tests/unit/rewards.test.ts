@@ -68,6 +68,40 @@ describe('reward generation', () => {
     expect(count(upgradedRun, stacked, upgradedContract)).toBe(4);
   });
 
+  it('migrates Mining Laser Transit reward bias without doubling a restored fitted copy', () => {
+    let changedSeedCount = 0;
+
+    for (let index = 0; index < 10; index += 1) {
+      const seed = `MINING-TRANSIT-REWARD-${index}`;
+      const baselineRun = generateRunSkeleton(seed);
+      const upgradedRun = generateRunSkeleton(seed, {
+        purchasedUpgradeIds: ['upgrade_mining_laser_transit']
+      });
+      const baselineContract = getFirstContract(baselineRun);
+      const upgradedContract = getFirstContract(upgradedRun);
+      const baseline = createRunSession(baselineRun, baselineContract);
+      const permanent = createRunSession(upgradedRun, upgradedContract);
+      const restored = createRunSession(baselineRun, baselineContract);
+      const stacked = createRunSession(upgradedRun, upgradedContract);
+
+      expect(addItemToSession(restored, 'item_mining_laser_transit').socket).not.toBeNull();
+      expect(addItemToSession(stacked, 'item_mining_laser_transit').socket).not.toBeNull();
+
+      const ids = (run: typeof baselineRun, session: typeof baseline, contract: StartingContract) =>
+        generateSectorRewardChoices({ run, session, contract, routeKind: 'vault' }).map(
+          (choice) => choice.item.id
+        );
+      const baselineIds = ids(baselineRun, baseline, baselineContract);
+      const permanentIds = ids(upgradedRun, permanent, upgradedContract);
+
+      expect(ids(baselineRun, restored, baselineContract)).toEqual(permanentIds);
+      expect(ids(upgradedRun, stacked, upgradedContract)).toEqual(permanentIds);
+      if (baselineIds.join('|') !== permanentIds.join('|')) changedSeedCount += 1;
+    }
+
+    expect(changedSeedCount).toBeGreaterThan(0);
+  });
+
   it('creates one deterministic contract-biased ignition core', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
     const contract = run.contracts[0];

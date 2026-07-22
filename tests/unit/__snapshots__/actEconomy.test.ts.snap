@@ -19,7 +19,7 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
       "vault source",
     ],
     [
-      "item_mining_laser_transit",
+      "item_strata_bore_collimator",
       "lunar source",
     ],
     [
@@ -75,7 +75,7 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
       "vault source",
     ],
     [
-      "item_mining_laser_transit",
+      "item_strata_bore_collimator",
       "vault source",
     ],
     [
@@ -109,7 +109,7 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
       "vault source",
     ],
     [
-      "item_mining_laser_transit",
+      "item_strata_bore_collimator",
       "lunar source",
     ],
     [
@@ -170,7 +170,7 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
       "vault source",
     ],
     [
-      "item_mining_laser_transit",
+      "item_strata_bore_collimator",
       "vault source",
     ],
     [

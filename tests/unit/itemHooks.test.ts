@@ -261,6 +261,31 @@ describe('item synergies', () => {
     expect(missed.tags).not.toContain('overkill');
   });
 
+  it('lets Strata-Bore Collimator focus only plasma prepared earlier in the chain', () => {
+    const plasmaThenCollimator: ItemInstance[] = [
+      { itemId: 'item_plasma_seed_crucible', acquisitionOrder: 0 },
+      { itemId: 'item_strata_bore_collimator', acquisitionOrder: 1 }
+    ];
+    const collimatorThenPlasma: ItemInstance[] = [
+      { itemId: 'item_strata_bore_collimator', acquisitionOrder: 0 },
+      { itemId: 'item_plasma_seed_crucible', acquisitionOrder: 1 }
+    ];
+    const chargedShot = { ...baseProjectile, tags: ['laser', 'arc'] as const };
+    const focused = applyItemHooks('onProjectileSpawn', plasmaThenCollimator, {
+      projectile: chargedShot
+    }).projectile;
+    const latePlasma = applyItemHooks('onProjectileSpawn', collimatorThenPlasma, {
+      projectile: chargedShot
+    }).projectile;
+
+    expect(focused.tags).toEqual(expect.arrayContaining(['arc', 'plasma', 'heat', 'laser']));
+    expect(focused.damage).toBeCloseTo(baseProjectile.damage * 1.16 * 1.18);
+    expect(focused.vy).toBeCloseTo(baseProjectile.vy * 1.12);
+    expect(focused.laserKind).toBe('beam');
+    expect(latePlasma.damage).toBeCloseTo(baseProjectile.damage * 1.16);
+    expect(latePlasma.laserKind).toBeUndefined();
+  });
+
   it('uses fitted circuit order to build materially different projectile chains', () => {
     const phaseSplitClone: ItemInstance[] = [
       {

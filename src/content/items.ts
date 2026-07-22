@@ -173,6 +173,7 @@ export type ItemId =
   | 'item_regolith_scoop_array'
   | 'item_surface_beacon_drone'
   | 'item_mining_laser_transit'
+  | 'item_strata_bore_collimator'
   | 'item_low_orbit_ore_scrip'
   | 'item_gangue_compression_die'
   | 'item_route_ledger_spool'
@@ -1176,6 +1177,25 @@ export const ITEMS: readonly ItemDefinition[] = [
       sources: ['combat', 'vault', 'lunar'],
       unlockTier: 'baseline',
       implementationStatus: 'live',
+      retired: true,
+      stacking: 'unique',
+      uiTags: ['lunar', 'laser']
+    }
+  },
+  {
+    id: 'item_strata_bore_collimator',
+    name: 'Strata-Bore Collimator',
+    rarity: 'rare',
+    tags: ['laser', 'plasma'],
+    hooks: ['onProjectileSpawn'],
+    effect:
+      'plasma prepared earlier is focused into a beam-laser; other circuit traits deepen its impact',
+    weight: 5,
+    metadata: {
+      family: 'lunar-surface',
+      sources: ['combat', 'vault', 'lunar'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
       stacking: 'unique',
       uiTags: ['lunar', 'laser']
     }
@@ -1620,7 +1640,7 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_crater_shadow_lens',
       'item_regolith_scoop_array',
       'item_surface_beacon_drone',
-      'item_mining_laser_transit',
+      'item_strata_bore_collimator',
       'item_gangue_compression_die',
       'item_forkline_dynamo',
       'item_ambush_insurance_stamp',
@@ -1653,7 +1673,7 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_curse_interest_bond',
       'item_phase_wake_suture',
       'item_prototype_vent_script',
-      'item_mining_laser_transit',
+      'item_strata_bore_collimator',
       'item_warhead_echo_chamber',
       'item_plasma_seed_crucible'
     ]

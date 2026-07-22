@@ -16,7 +16,7 @@ describe('createUpgradeBayViewModel', () => {
     const surveyRig = getCard(model, 'upgrade_contract_survey_rig');
     const escrowIndex = getCard(model, 'upgrade_salvage_escrow_index');
 
-    expect(model.summaryText).toBe('Bank 4 kg | Installed 0/14 | Ready 2');
+    expect(model.summaryText).toBe('Bank 4 kg | Installed 0/15 | Ready 2');
     expect(model.availableCount).toBe(2);
     expect(surveyRig.categoryLabel).toBe('Hangar');
     expect(surveyRig.iconKey).toBe('contract-scope');
@@ -38,7 +38,7 @@ describe('createUpgradeBayViewModel', () => {
     const relicDossier = getCard(model, 'upgrade_relic_pattern_dossier');
     const marketEcho = getCard(model, 'upgrade_market_echo_locator');
 
-    expect(model.summaryText).toBe('Bank 12 kg | Installed 1/14 | Ready 2');
+    expect(model.summaryText).toBe('Bank 12 kg | Installed 1/15 | Ready 2');
     expect(surveyRig.state).toBe('purchased');
     expect(surveyRig.actionLabel).toBe('Installed');
     expect(surveyRig.canPurchase).toBe(false);
@@ -52,6 +52,10 @@ describe('createUpgradeBayViewModel', () => {
     const convoyReceipts = getCard(model, 'upgrade_convoy_receipt_printer');
     expect(convoyReceipts.prerequisiteLabel).toBe('Requires Market Decoder');
     expect(convoyReceipts.missingPrerequisiteNames).toEqual(['Market Decoder']);
+    const miningTransit = getCard(model, 'upgrade_mining_laser_transit');
+    expect(miningTransit.categoryLabel).toBe('Archive');
+    expect(miningTransit.prerequisiteLabel).toBe('Requires Relic Pattern Dossier');
+    expect(miningTransit.missingPrerequisiteNames).toEqual(['Relic Pattern Dossier']);
   });
 
   it('keeps unaffordable upgrades distinct from prerequisite locks', () => {

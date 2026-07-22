@@ -33,6 +33,7 @@ export interface RunUpgradeEffects {
   readonly rewardChoiceBonus: number;
   readonly rewardBiasTags: readonly ItemTag[];
   readonly marketEchoLocator: boolean;
+  readonly miningLaserTransit: boolean;
   readonly seedSurvey: boolean;
   readonly sectorStart: SectorStartUpgradeEffects;
   readonly routeChosen: RouteChosenUpgradeEffects;
@@ -66,6 +67,7 @@ export function resolveRunUpgradeEffects(
     rewardChoiceBonus: hasRelicDossier ? 1 : 0,
     rewardBiasTags: hasRelicDossier ? ['relic', 'curse', 'phase'] : [],
     marketEchoLocator: hasUpgrade('upgrade_market_echo_locator'),
+    miningLaserTransit: hasUpgrade('upgrade_mining_laser_transit'),
     seedSurvey: hasUpgrade('upgrade_seed_cartographer'),
     sectorStart: {
       exitTollRefund: hasUpgrade('upgrade_exit_toll_transponder')
@@ -116,6 +118,10 @@ export function getRunUpgradeDebugLabels(effects: RunUpgradeEffects): string[] {
 
   if (effects.marketEchoLocator) {
     labels.push('market echo');
+  }
+
+  if (effects.miningLaserTransit) {
+    labels.push('mining laser transit');
   }
 
   if (effects.seedSurvey) {
@@ -229,5 +235,17 @@ export function getMarketEchoLocatorRewardBiasTags(
 ): readonly ItemTag[] {
   return getMarketEchoLocatorRewardChoiceBonus(effects, routeKind, legacyItemActive) > 0
     ? ['credit', 'magnet']
+    : [];
+}
+
+export function getMiningLaserTransitRewardBiasTags(
+  effects: RunUpgradeEffects,
+  routeKind: RewardContextKind,
+  legacyItemActive = false
+): readonly ItemTag[] {
+  return effects.miningLaserTransit &&
+    !legacyItemActive &&
+    (routeKind === 'vault' || routeKind === 'factionAmbush')
+    ? ['laser', 'plasma']
     : [];
 }

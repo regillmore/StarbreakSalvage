@@ -2655,3 +2655,19 @@ Acceptance:
 Status:
 
 - Implemented and refined in work order 187. `MeteorStorm` owns the bounded world-scroll pocket and twelve-impact model. Routine generation still emits `salvage_storm` without another RNG draw, while the retired routine squall remains available only through the separately authored `salvage_squall` identity.
+
+### BL53 - Permanent Mining Transit and strata-bore chain
+
+Acceptance:
+
+- Mining Laser Transit leaves active rewards and becomes a 13 kg permanent Archive upgrade gated by Relic Pattern Dossier.
+- Its laser/plasma bias remains deterministic for Vault and Faction Ambush rewards, restored snapshots retain the retired item behavior, and the two representations cannot stack.
+- Rare Strata-Bore Collimator replaces the active combat/vault/lunar slot and activates only on plasma carried into its ordered projectile stage.
+- Linked shots gain beam-laser presentation, 12% velocity, and 14% impact plus 4% per additional earlier circuit trait up to three; plasma and the upstream traits remain available to later stages.
+- Circuit order is material and visible: plasma before the Collimator reports linked shots and the bounded impact tier, while Collimator before plasma reports the missing prerequisite and cannot rewrite later shots.
+- The transform adds no projectile, RNG draw, timer, counter, or persistent state, and the production hook remains authoritative for combat and Hardpoint live fire.
+- Global generation fingerprints, active breadth, Upgrade Bay totals, item-storm hook coverage, reward snapshots, saves, accessibility, performance limits, static hosting, and smoke tooling remain coherent.
+
+Status:
+
+- Implemented in work order 188. `UpgradeEffects` and `SectorRewards` own the permanent reward bias with restored-item precedence. `ItemHooks` owns Strata-Bore Collimator's bounded upstream-plasma transform, which automatically feeds combat and shared live-fire previews. The active catalog remains at 60 items and the global run fingerprint excludes the reward-local upgrade.
