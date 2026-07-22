@@ -2489,6 +2489,25 @@ html[data-bullet-contrast='high'] .attack-simulation-heat-exhaust {
   letter-spacing: 0.05em;
 }
 
+.contract-live-fire-caption .contract-live-fire-weapon {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.42rem;
+  color: #f8fbff;
+  font-size: 0.66rem;
+  letter-spacing: 0;
+}
+
+.contract-live-fire-weapon .weapon-icon {
+  width: 1.9rem;
+  height: 1.9rem;
+}
+
+.contract-live-fire-weapon strong {
+  overflow-wrap: anywhere;
+}
+
 .contract-selected-copy {
   display: grid;
   min-width: 0;
@@ -2632,7 +2651,7 @@ html[data-bullet-contrast='high'] .attack-simulation-heat-exhaust {
 
 .contract-card-weapon {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.42rem;
   padding: 0.36rem 0.44rem;
@@ -2640,6 +2659,11 @@ html[data-bullet-contrast='high'] .attack-simulation-heat-exhaust {
   color: #f8fbff;
   background: rgba(124, 247, 255, 0.055);
   font-size: 0.68rem;
+}
+
+.contract-card-weapon .weapon-icon {
+  width: 2rem;
+  height: 2rem;
 }
 
 .contract-card-weapon > span,

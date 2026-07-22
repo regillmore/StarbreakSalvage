@@ -483,6 +483,7 @@ Phase 10 accessibility checks should also cover mission briefings and branch foc
 - [x] Hardpoint Control exposes one keyboard-readable mounted-primary selector beside the live preview, omits Grid Envelope and the fixed-module board, swaps reserve weapons reversibly, and limits Primary Cargo cards to player-facing weapon metrics.
 - [x] Reward and shop circuit cards omit prospective Build Fit scores while preserving keyboard-readable authored effects, tags, sources, prices, and live-state badges; owned-build HUD/debrief identity remains descriptive only.
 - [x] Every primary weapon base has a distinct non-color SVG silhouette, and reward, shop, mounted Primary Arsenal, and Primary Cargo expose the matching accessible weapon-icon label through acquisition and selector swaps.
+- [x] Choose Contract shows the shared accessible primary-weapon glyph in every choice card and the highlighted live-fire caption; selection changes the highlighted identity without narrow horizontal overflow.
 
 ## Release checklist
 

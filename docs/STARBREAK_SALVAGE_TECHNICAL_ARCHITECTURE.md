@@ -983,6 +983,13 @@ seed + permanent save fingerprint
 - `ComponentOfferCard` supplies that renderer to both reward and shop offers, while `FoundryScene` supplies it to the mounted Primary Arsenal and filtered Primary Cargo. These consumers continue to resolve their existing authoritative `weaponId` from the component adapter rather than storing presentation state.
 - Icons add no asset request, canvas frame work, simulation branch, item hook, acquisition mutation, save/snapshot field, migration, generation pass, RNG draw, actor, projectile, effect, or dependency.
 
+### Work order 199 contract-board weapon-glyph boundary
+
+- `StartingContract.startingWeaponId` remains the sole primary-weapon identity authority on Choose Contract. `ContractSelectScene` resolves that id through `getWeaponById` only while constructing the compact cards and selected comparison.
+- Both placements call the same `WeaponIcon.createWeaponIcon` boundary used by rewards, shops, Primary Arsenal, and Primary Cargo. The contract scene owns no glyph paths, icon-kind mapping, fallback vocabulary, or copied presentation state.
+- Selecting a contract redraws the highlighted glyph from the newly selected contract alongside the existing live-fire pattern. It does not mutate the contract, weapon definition, starting loadout, ignition, or preview simulation.
+- The change adds four bounded static SVG nodes to the contract menu and no asset request, canvas-frame branch, save/snapshot field, migration, generation pass, RNG draw, actor, projectile, effect, or dependency.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

@@ -1260,3 +1260,27 @@ Status: implemented. `weapons.ts` now authors and types an eight-entry icon voca
 The managed browser pass used `http://192.168.1.2:4175/StarbreakSalvage/` with seed `WEAPON-ICONS-198`. At the 1280 x 720 Hardpoint Control fixture, the mounted Kinetic Popgun showed a twin-breech glyph; selecting the reserve Basic Blaster replaced it with the orb-and-rail glyph and moved the kinetic identity to Primary Cargo. The first navigation shop showed the same kinetic base glyph on its independently generated Prototype weapon offer. Both compositions remained legible at their compact card scale, and the authenticated smoke host stopped cleanly. Reward placement and accessible labels are covered by the complete Chromium first-sector flow.
 
 Verification: focused content-validation, weapon-identity, Foundry, and Foundry-presentation coverage passes 84 tests; focused reward, Scenario Lab, and shop Chromium paths pass. `npm run verify:release` passes typecheck, ESLint, all 115 Vitest files and 741 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,022.66 kB` minified / `280.64 kB` gzip initial JavaScript and `103.23 kB` / `20.65 kB` CSS, increases of `3.93 kB` / `1.12 kB` JavaScript and `1.20 kB` / `0.30 kB` CSS over work order 197. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, route topology, RNG stream, static base path, or warning threshold changed.
+
+## Work order 199 - Contract-board weapon glyphs
+
+Goal: carry the primary-weapon icon vocabulary into contract selection so the opening comparison communicates each ship's actual weapon base at both overview and detail scales.
+
+Prompt:
+
+> Incorporate the new primary-weapon glyphs into Choose Contract. Show the selected weapon beside the highlighted live-fire identity and show each contract's weapon beside its compact Primary row without replacing the authoritative weapon name or pattern.
+
+Acceptance criteria:
+
+- Each of the three contract cards displays the shared glyph for its authoritative `startingWeaponId` beside the Primary weapon name and pattern.
+- The highlighted live-fire caption displays the same glyph and weapon name for the currently selected contract.
+- Changing the selected contract updates the highlighted glyph synchronously without creating a second weapon-identity state.
+- Choose Contract reuses `WeaponIcon`; it does not duplicate silhouettes, add raster assets, or introduce a contract-specific icon vocabulary.
+- Textual weapon name and pattern remain present as non-color comparison cues and accessible icon labels retain the underlying weapon name.
+- The compact cards and highlighted comparison remain readable at desktop width and avoid horizontal overflow at the existing 390 px narrow regression width.
+- Contract generation, starting loadouts, ignition selection, saves, combat, and seeded determinism remain unchanged.
+
+Status: implemented. `ContractSelectScene` resolves each existing contract `startingWeaponId` through the authoritative weapon table and supplies the shared `WeaponIcon` renderer to both the compact Primary row and highlighted live-fire caption. Selection redraws both from the newly selected contract; no presentation model or stored identity field was added.
+
+The managed browser pass used seed `CONTRACT-GLYPHS-199`. The highlighted Pulse Cannon rendered its twin-cell glyph while the three contract cards showed Pulse Cannon, Basic Blaster, and Light Needle Laser identities. Selecting Relic Thief immediately changed the highlighted glyph and accessible label to Basic Blaster. The desktop composition remained compact and browser warning/error logs were empty; the focused Chromium regression separately covers the 390 x 844 layout and selection synchronization.
+
+Verification: the focused Choose Contract Chromium path passes. `npm run verify:release` passes typecheck, ESLint, all 115 Vitest files and 741 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,022.87 kB` minified / `280.59 kB` gzip initial JavaScript and `103.58 kB` / `20.70 kB` CSS, changes of `+0.21 kB` / `-0.05 kB` JavaScript and `+0.35 kB` / `+0.05 kB` CSS over work order 198. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, contract generation, loadout rule, RNG stream, static base path, or warning threshold changed.

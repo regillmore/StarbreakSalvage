@@ -2818,3 +2818,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 198. `weapons.ts` owns the eight-kind identity table, `WeaponIcon` owns the shared accessible SVG vocabulary, and the reward/shop offer card plus Primary Arsenal/Cargo consume that one renderer.
+
+### BL64 - Contract-board weapon glyphs
+
+Acceptance:
+
+- Render the shared primary-weapon glyph beside the weapon name and pattern on every Choose Contract choice card.
+- Render the selected contract's matching glyph and weapon name in the highlighted live-fire caption.
+- Derive both placements directly from each contract's authoritative `startingWeaponId` and update the highlighted identity when selection changes.
+- Reuse `WeaponIcon` and retain accessible textual identity instead of creating contract-specific art or presentation state.
+- Preserve compact desktop hierarchy and the existing 390 px responsive no-overflow contract regression.
+- Preserve contract generation, starting loadouts, ignition selection, combat behavior, saves, deterministic streams, static hosting, and dependency count.
+
+Status:
+
+- Implemented in work order 199. `ContractSelectScene` now carries the shared accessible base-weapon glyph into both contract-card Primary rows and the selected live-fire caption, with selection driven solely by the existing `startingWeaponId`.

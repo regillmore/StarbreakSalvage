@@ -1860,6 +1860,22 @@ test('keeps contract live-fire comparison responsive and updates the seeded igni
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
   await expect(page.locator('[data-testid^="contract-ignition-ship_"]')).toHaveCount(3);
+  const contractWeaponIcons = page.locator('.contract-card-weapon .weapon-icon');
+  await expect(contractWeaponIcons).toHaveCount(3);
+  expect(
+    await contractWeaponIcons.evaluateAll((icons) =>
+      icons.every(
+        (icon) =>
+          icon.getAttribute('aria-label')?.endsWith(' weapon icon') === true &&
+          Boolean(icon.getAttribute('data-weapon-id'))
+      )
+    )
+  ).toBe(true);
+  const initialSelectedWeaponId = await page
+    .getByTestId('selected-contract-weapon')
+    .locator('.weapon-icon')
+    .getAttribute('data-weapon-id');
+  expect(initialSelectedWeaponId).toBeTruthy();
 
   const readPreviewGeometry = () =>
     page.evaluate(() => {
@@ -1884,6 +1900,14 @@ test('keeps contract live-fire comparison responsive and updates the seeded igni
     .getByTestId('contract-card-ship_drone_chaplain')
     .getByRole('button', { name: 'Select' })
     .click();
+  const droneWeaponId = await page
+    .getByTestId('contract-card-ship_drone_chaplain')
+    .locator('.weapon-icon')
+    .getAttribute('data-weapon-id');
+  expect(droneWeaponId).toBeTruthy();
+  await expect(
+    page.getByTestId('selected-contract-weapon').locator('.weapon-icon')
+  ).toHaveAttribute('data-weapon-id', droneWeaponId!);
   await expect(page.getByTestId('selected-contract-ignition')).toContainText('Signal Clone Stamp');
   await expect(page.getByTestId('contract-attack-projectile-layer')).toHaveAttribute(
     'data-volley-size',

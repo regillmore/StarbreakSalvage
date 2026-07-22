@@ -1,5 +1,6 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene } from '../app/Scene';
+import { getWeaponById } from '../content/weapons';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
 import { getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import type { InputAction } from '../systems/InputSystem';
@@ -11,6 +12,7 @@ import {
 } from './ContractSelectionPresentation';
 import { createItemIcon } from './ItemCard';
 import { createShipPreviewElement, createShipPreviewModel } from './ShipPreview';
+import { createWeaponIcon } from './WeaponIcon';
 
 type ContractSelectionDirection = -1 | 1;
 
@@ -163,13 +165,19 @@ export class ContractSelectScene implements Scene {
 
     const weapon = document.createElement('div');
     weapon.className = 'contract-card-weapon';
+    const weaponDefinition = getWeaponById(contract.startingWeaponId);
     const weaponLabel = document.createElement('span');
     weaponLabel.textContent = 'PRIMARY';
     const weaponName = document.createElement('strong');
     weaponName.textContent = contract.startingWeaponName;
     const weaponPattern = document.createElement('small');
     weaponPattern.textContent = contract.startingWeaponPattern.toUpperCase();
-    weapon.append(weaponLabel, weaponName, weaponPattern);
+    weapon.append(
+      createWeaponIcon(document, weaponDefinition),
+      weaponLabel,
+      weaponName,
+      weaponPattern
+    );
 
     const ignition = this.createIgnitionPanel(choice, 'compact');
     const metrics = this.createMetricGrid(choice.metrics.slice(0, 3), 'compact');
@@ -269,11 +277,18 @@ export class ContractSelectScene implements Scene {
     });
     const liveFireCaption = document.createElement('div');
     liveFireCaption.className = 'contract-live-fire-caption';
+    const weaponIdentity = document.createElement('span');
+    weaponIdentity.className = 'contract-live-fire-weapon';
+    weaponIdentity.dataset.testid = 'selected-contract-weapon';
     const weapon = document.createElement('strong');
     weapon.textContent = contract.startingWeaponName;
+    weaponIdentity.append(
+      createWeaponIcon(document, getWeaponById(contract.startingWeaponId)),
+      weapon
+    );
     const ignition = document.createElement('span');
     ignition.textContent = `IGNITION // ${choice.ignition.name}`;
-    liveFireCaption.append(weapon, ignition);
+    liveFireCaption.append(weaponIdentity, ignition);
     liveFire.append(preview, liveFireCaption);
 
     const dossier = document.createElement('div');
