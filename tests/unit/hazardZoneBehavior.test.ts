@@ -153,7 +153,7 @@ describe('HazardZoneBehavior', () => {
     });
   });
 
-  it('moves a rounded meteor pocket while continuously cycling small impact markers', () => {
+  it('scrolls an already-active rounded meteor pocket through the arena without a path forecast', () => {
     const hazard = createHazard('salvage_storm', {
       telegraphDistance: 20,
       startDistance: 170,
@@ -161,38 +161,47 @@ describe('HazardZoneBehavior', () => {
       xRatio: 0.25
     });
     const plan = createPlan(hazard);
-    const forecast = getActiveSectorHazards(plan, 120)[0];
+    const hiddenApproach = getActiveSectorHazards(plan, 120)[0];
     const early = getActiveSectorHazards(plan, 182)[0];
     const firstImpact = getActiveSectorHazards(plan, 198)[0];
     const late = getActiveSectorHazards(plan, 530)[0];
-    if (!forecast || !early || !firstImpact || !late) {
-      throw new Error('Expected meteor storm forecast and active phases.');
+    if (!hiddenApproach || !early || !firstImpact || !late) {
+      throw new Error('Expected meteor storm approach and active phases.');
     }
 
     const rect = getSectorHazardCollisionRect(hazard, bounds);
-    const forecastGeometry = createMeteorStormGeometry(forecast, rect);
+    const approachGeometry = createMeteorStormGeometry(hiddenApproach, rect);
     const earlyGeometry = createMeteorStormGeometry(early, rect);
     const impactGeometry = createMeteorStormGeometry(firstImpact, rect);
     const lateGeometry = createMeteorStormGeometry(late, rect);
 
-    expect(forecastGeometry.impacts).toHaveLength(3);
-    expect(forecastGeometry.impacts.every((impact) => impact.phase === 'forecast')).toBe(true);
-    expect(forecastGeometry.damageImpacts).toEqual([]);
+    expect(approachGeometry.impacts).toEqual([]);
+    expect(approachGeometry.damageImpacts).toEqual([]);
+    expect(approachGeometry.pocket.centerY + approachGeometry.pocket.radiusY).toBeLessThan(
+      rect.top
+    );
     expect(earlyGeometry.impacts.some((impact) => impact.phase === 'telegraph')).toBe(true);
     expect(impactGeometry.damageImpacts).toHaveLength(1);
     expect(getSectorHazardDamageRects(firstImpact, bounds)[0]?.width).toBeLessThan(70);
     expect(lateGeometry.pocket.centerY).toBeGreaterThan(earlyGeometry.pocket.centerY);
-    expect(lateGeometry.pocket.centerX).toBeGreaterThan(earlyGeometry.pocket.centerX);
-    expect(formatMeteorStormWarning(forecast)).toContain('TRACK LEFT TO RIGHT');
+    expect(lateGeometry.pocket.centerX).toBe(earlyGeometry.pocket.centerX);
+    expect(formatMeteorStormWarning(hiddenApproach)).toBe('METEOR STORM | INBOUND');
     expect(formatMeteorStormWarning(early)).toMatch(/\d+ MARKED \| \d+ IMPACTING/);
 
-    const reverse = getActiveSectorHazards(
-      createPlan({ ...hazard, id: 'test_reverse_meteors', xRatio: 0.75 }),
-      182
-    )[0];
-    if (!reverse) throw new Error('Expected reverse meteor storm.');
-    const reverseGeometry = createMeteorStormGeometry(reverse, rect);
-    expect(reverseGeometry.pocket.startX).toBeGreaterThan(reverseGeometry.pocket.endX);
+    const runtimeAdvanced = getActiveSectorHazards(plan, 260, {
+      distanceOverrides: { [hazard.id]: 350 }
+    })[0];
+    const worldPosition = getActiveSectorHazards(plan, 260)[0];
+    if (!runtimeAdvanced || !worldPosition) throw new Error('Expected anchored meteor storm.');
+    expect(runtimeAdvanced.phaseProgress).toBeGreaterThan(worldPosition.phaseProgress);
+    const runtimeGeometry = createMeteorStormGeometry(runtimeAdvanced, rect);
+    const worldGeometry = createMeteorStormGeometry(worldPosition, rect);
+    const effectivePosition = getActiveSectorHazards(plan, 350)[0];
+    if (!effectivePosition) throw new Error('Expected effective meteor position.');
+    expect(Math.abs(runtimeGeometry.pocket.centerY - worldGeometry.pocket.centerY)).toBeLessThan(5);
+    expect(runtimeGeometry.pocket.centerY).toBeLessThan(
+      createMeteorStormGeometry(effectivePosition, rect).pocket.centerY
+    );
   });
 
   it('provides one deterministic route-meteor browser inspection fixture', () => {
@@ -210,6 +219,7 @@ describe('HazardZoneBehavior', () => {
     });
     expect(first.targetDistance).toBeGreaterThan(first.hazard.startDistance);
     expect(first.targetDistance).toBeLessThan(first.hazard.endDistance);
+    expect(first.targetDistance - first.hazard.startDistance).toBeGreaterThan(190);
 
     const lateFixture = createMeteorStormDebugFixture(source, 1800, 1200);
     expect(lateFixture.hazard.startDistance).toBe(1200);

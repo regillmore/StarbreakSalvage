@@ -528,14 +528,19 @@ function createHazards(
       const kind = choices[index] ?? 'debris_lane';
       const metrics = getHazardZoneMetrics(kind, 'sector');
       const definition = getHazardZoneDefinition(kind);
+      const startDistanceJitter = rng.int(-80, 85);
+      const activeSpan = metrics.activeSpan + rng.int(-20, 35);
+      const maximumStartDistance =
+        kind === 'salvage_storm'
+          ? Math.max(MIN_HAZARD_DISTANCE, scroll.length - activeSpan - 35)
+          : Math.max(MIN_HAZARD_DISTANCE, scroll.length - 220);
       const startDistance = roundFeatureValue(
         clamp(
-          scroll.length * slot + rng.int(-80, 85),
+          scroll.length * slot + startDistanceJitter,
           MIN_HAZARD_DISTANCE,
-          Math.max(MIN_HAZARD_DISTANCE, scroll.length - 220)
+          maximumStartDistance
         )
       );
-      const activeSpan = metrics.activeSpan + rng.int(-20, 35);
       const endDistance = roundFeatureValue(
         clamp(
           startDistance + activeSpan,

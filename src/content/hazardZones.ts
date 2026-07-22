@@ -299,11 +299,11 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     telegraphShape: 'impactScatter',
     activeDamageShape: 'impactCircles',
     metrics: {
-      sector: { widthRatio: 0.48, activeSpan: 320, telegraphLead: 165 },
-      condition: { widthRatio: 0.48, activeSpan: 315, telegraphLead: 165 },
-      pacing: { widthRatio: 0.46, activeSpan: 300, telegraphLead: 170 }
+      sector: { widthRatio: 0.48, activeSpan: 640, telegraphLead: 165 },
+      condition: { widthRatio: 0.48, activeSpan: 620, telegraphLead: 165 },
+      pacing: { widthRatio: 0.46, activeSpan: 600, telegraphLead: 170 }
     },
-    phase: { minTelegraphLead: 140, minActiveSpan: 220 },
+    phase: { minTelegraphLead: 140, minActiveSpan: 480 },
     damage: 1,
     damageCooldownSeconds: 0.45,
     safeLane: { policy: 'avoidMarkedLane', minSafeWidthRatio: 0.5 },
@@ -318,11 +318,11 @@ export const HAZARD_ZONE_DEFINITIONS: readonly HazardZoneDefinition[] = [
     ),
     behavior: createBehavior(
       'meteorStorm',
-      'storm-track forecast',
+      'offscreen meteor pocket',
       'meteor impact scatter',
       0.72,
       0.2,
-      10,
+      12,
       1,
       0.56
     )

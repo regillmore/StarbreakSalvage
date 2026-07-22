@@ -2223,14 +2223,12 @@ export class GameplayScene implements Scene {
       return 'Hint Arena released; push to the sector exit.';
     }
 
-    const activeHazard = this.getActiveHazards()[0];
+    const activeHazard = this.getActiveHazards().find(isHazardPresentationVisible);
 
     if (activeHazard) {
       if (activeHazard.hazard.kind === 'salvage_storm') {
         const warning = formatMeteorStormWarning(activeHazard);
-        return activeHazard.phase === 'telegraph'
-          ? `Hint ${warning}. Clear the rounded storm track before impacts begin.`
-          : `Hint ${warning}. Move between the small marked circles; the storm pocket itself is safe.`;
+        return `Hint ${warning}. Move between the small marked circles; the storm pocket itself is safe.`;
       }
       if (activeHazard.hazard.kind === 'salvage_squall') {
         const warning = formatSalvageStormWarning(activeHazard);
@@ -2391,7 +2389,7 @@ function formatActiveHazardWarning(activeHazard: ActiveSectorHazard | undefined)
   }
 
   if (activeHazard.hazard.kind === 'salvage_storm') {
-    return formatMeteorStormWarning(activeHazard);
+    return activeHazard.phase === 'active' ? formatMeteorStormWarning(activeHazard) : null;
   }
 
   if (activeHazard.hazard.kind === 'salvage_squall') {
@@ -2407,6 +2405,12 @@ function formatActiveHazardWarning(activeHazard: ActiveSectorHazard | undefined)
       ? `BOLT ${Math.round(activeHazard.phaseProgress * 100)}%`
       : 'TRACKING';
   return `${activeHazard.hazard.label} ${phase} | ${formatBeamHazardTrack(activeHazard.hazard.beam)}`;
+}
+
+function isHazardPresentationVisible(activeHazard: ActiveSectorHazard): boolean {
+  return !(
+    activeHazard.hazard.kind === 'salvage_storm' && activeHazard.phase === 'telegraph'
+  );
 }
 
 function getDebugLongScrollDistance(sectorLength: number): number {

@@ -7,19 +7,16 @@ import type {
   SectorHazardPlan
 } from './SectorFeatures';
 
-export type MeteorStormTravelDirection = -1 | 1;
-export type MeteorImpactPhase = 'forecast' | 'telegraph' | 'impact' | 'afterglow';
+export type MeteorImpactPhase = 'telegraph' | 'impact' | 'afterglow';
 
 export interface MeteorStormPocket {
   readonly centerX: number;
   readonly centerY: number;
   readonly radiusX: number;
   readonly radiusY: number;
-  readonly startX: number;
-  readonly startY: number;
-  readonly endX: number;
-  readonly endY: number;
-  readonly travelDirection: MeteorStormTravelDirection;
+  readonly spawnY: number;
+  readonly despawnY: number;
+  readonly worldProgress: number;
 }
 
 export interface MeteorStormImpact {
@@ -50,7 +47,6 @@ const METEOR_IMPACT_PROGRESS = 0.035;
 const METEOR_AFTERGLOW_PROGRESS = 0.045;
 const FIRST_IMPACT_PROGRESS = 0.07;
 const LAST_IMPACT_PROGRESS = 0.93;
-const FORECAST_IMPACT_COUNT = 3;
 
 export function createMeteorStormGeometry(
   activeHazard: ActiveSectorHazard,
@@ -58,30 +54,23 @@ export function createMeteorStormGeometry(
 ): MeteorStormGeometry {
   const definition = getHazardZoneDefinition('salvage_storm');
   const impactCount = Math.max(6, Math.min(12, Math.floor(definition.behavior.activePulseCount)));
-  const travelDirection: MeteorStormTravelDirection = activeHazard.hazard.xRatio <= 0.5 ? 1 : -1;
   const radiusX = clamp(stormRect.width * 0.32, 86, 132);
   const radiusY = clamp(radiusX * 0.82, 74, 112);
-  const startX =
-    travelDirection > 0 ? stormRect.left + radiusX : stormRect.right - radiusX;
-  const endX = travelDirection > 0 ? stormRect.right - radiusX : stormRect.left + radiusX;
-  const startY = stormRect.top + radiusY + 18;
-  const endY = stormRect.bottom - radiusY - 18;
-  const travelProgress =
-    activeHazard.phase === 'active' ? clamp(activeHazard.phaseProgress, 0, 1) : 0;
+  const spawnY = stormRect.top - radiusY - 36;
+  const despawnY = stormRect.bottom + radiusY + 36;
+  const worldProgress = getMeteorStormWorldProgress(activeHazard);
   const pocket: MeteorStormPocket = {
-    centerX: roundMeteorValue(lerp(startX, endX, travelProgress)),
-    centerY: roundMeteorValue(lerp(startY, endY, travelProgress)),
+    centerX: roundMeteorValue(stormRect.centerX),
+    centerY: roundMeteorValue(lerp(spawnY, despawnY, worldProgress)),
     radiusX: roundMeteorValue(radiusX),
     radiusY: roundMeteorValue(radiusY),
-    startX: roundMeteorValue(startX),
-    startY: roundMeteorValue(startY),
-    endX: roundMeteorValue(endX),
-    endY: roundMeteorValue(endY),
-    travelDirection
+    spawnY: roundMeteorValue(spawnY),
+    despawnY: roundMeteorValue(despawnY),
+    worldProgress: roundMeteorValue(worldProgress)
   };
   const impacts =
     activeHazard.phase === 'telegraph'
-      ? createForecastImpacts(activeHazard, pocket, impactCount)
+      ? []
       : createActiveImpacts(activeHazard, pocket, impactCount);
 
   return {
@@ -118,9 +107,8 @@ export function isMeteorStormDamageWindowOpen(activeHazard: ActiveSectorHazard):
 }
 
 export function formatMeteorStormWarning(activeHazard: ActiveSectorHazard): string {
-  const direction = activeHazard.hazard.xRatio <= 0.5 ? 'LEFT TO RIGHT' : 'RIGHT TO LEFT';
   if (activeHazard.phase === 'telegraph') {
-    return `${activeHazard.hazard.label} | TRACK ${direction}`;
+    return `${activeHazard.hazard.label} | INBOUND`;
   }
 
   const timings = createImpactTimings(activeHazard, getMeteorImpactCount());
@@ -138,9 +126,8 @@ export function createMeteorStormDebugFixture(
   const metrics = getHazardZoneMetrics('salvage_storm', 'condition');
   const safeLength = Math.max(720, scrollLength);
   const minimumStart = metrics.telegraphLead + 60;
-  const maximumStart = Math.max(minimumStart, safeLength - metrics.activeSpan - 120);
   const startDistance = roundMeteorValue(
-    clamp(Math.max(safeLength * 0.38, currentDistance), minimumStart, maximumStart)
+    Math.max(safeLength * 0.38, currentDistance, minimumStart)
   );
   const hazard: SectorHazardPlan = {
     id: 'debug_route_meteor_storm',
@@ -157,18 +144,8 @@ export function createMeteorStormDebugFixture(
   return {
     features: { ...features, hazards: [hazard] },
     hazard,
-    targetDistance: roundMeteorValue(startDistance + metrics.activeSpan * 0.03)
+    targetDistance: roundMeteorValue(startDistance + metrics.activeSpan * 0.32)
   };
-}
-
-function createForecastImpacts(
-  activeHazard: ActiveSectorHazard,
-  pocket: MeteorStormPocket,
-  impactCount: number
-): MeteorStormImpact[] {
-  return Array.from({ length: Math.min(FORECAST_IMPACT_COUNT, impactCount) }, (_value, index) =>
-    createImpact(activeHazard, pocket, impactCount, index, 'forecast', activeHazard.phaseProgress)
-  );
 }
 
 function createActiveImpacts(
@@ -260,12 +237,10 @@ function createImpact(
   phaseProgress: number
 ): MeteorStormImpact {
   const arrivalProgress = getImpactArrivalProgress(index, impactCount);
-  const pocketX = lerp(pocket.startX, pocket.endX, arrivalProgress);
-  const pocketY = lerp(pocket.startY, pocket.endY, arrivalProgress);
   const angle = deterministicUnit(activeHazard.hazard.id, index, 1) * Math.PI * 2;
   const radial = 0.18 + deterministicUnit(activeHazard.hazard.id, index, 2) * 0.58;
-  const x = pocketX + Math.cos(angle) * pocket.radiusX * radial;
-  const y = pocketY + Math.sin(angle) * pocket.radiusY * radial;
+  const x = pocket.centerX + Math.cos(angle) * pocket.radiusX * radial;
+  const y = pocket.centerY + Math.sin(angle) * pocket.radiusY * radial;
   const radius = 20 + deterministicUnit(activeHazard.hazard.id, index, 3) * 11;
 
   return {
@@ -277,6 +252,25 @@ function createImpact(
     phase,
     phaseProgress: roundMeteorValue(clamp(phaseProgress, 0, 1))
   };
+}
+
+function getMeteorStormWorldProgress(activeHazard: ActiveSectorHazard): number {
+  if (activeHazard.phase !== 'active') {
+    return 0;
+  }
+
+  const activeSpan = Math.max(
+    1,
+    activeHazard.hazard.endDistance - activeHazard.hazard.startDistance
+  );
+  const worldDistance =
+    activeHazard.worldDistance ??
+    activeHazard.hazard.startDistance + activeHazard.phaseProgress * activeSpan;
+  return clamp(
+    (worldDistance - activeHazard.hazard.startDistance) / activeSpan,
+    0,
+    1
+  );
 }
 
 function getImpactArrivalProgress(index: number, impactCount: number): number {

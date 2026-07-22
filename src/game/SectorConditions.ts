@@ -578,8 +578,12 @@ function createConditionHazard(
     0.32,
     0.84
   );
+  const maximumStartDistance =
+    kind === 'salvage_storm'
+      ? Math.max(190, scroll.length - metrics.activeSpan - 35)
+      : Math.max(190, scroll.length - 220);
   const startDistance = roundConditionValue(
-    clamp(scroll.length * distanceRatio, 190, Math.max(190, scroll.length - 220))
+    clamp(scroll.length * distanceRatio, 190, maximumStartDistance)
   );
   const endDistance = roundConditionValue(
     clamp(startDistance + metrics.activeSpan, startDistance + 70, scroll.length - 35)

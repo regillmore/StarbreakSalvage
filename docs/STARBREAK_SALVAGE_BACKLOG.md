@@ -2644,12 +2644,14 @@ Status:
 Acceptance:
 
 - Preserve the work order 186 squall as a special-only `salvage_squall` definition and remove it from routine director choices.
-- Reuse the stable `salvage_storm` schedule identity for a rounded traveling meteor pocket with deterministic direction and impact scatter.
+- Reuse the stable `salvage_storm` schedule identity for a rounded world-anchored meteor pocket with deterministic placement and impact scatter.
 - Treat the pocket as travel and warning presentation only; damage is confined to sparse, brief, small circular impacts that vigilant players can weave between.
 - Share impact timing and geometry across Canvas art, player collision, combat-actor damage, environment damage, warning text, and the deterministic debug fixture.
-- Forecast, telegraph, impact, and afterglow states remain legible without color, while reduced-motion and performance modes bound ornament without altering collision.
+- Long-lived storms spawn completely above the camera, enter already cycling local impact telegraphs, retain a fixed world X, and reserve their full active span in ordinary feature and condition generation.
+- No route line, direction arrow, whole-pocket forecast, or pre-entry HUD warning reveals the approach; telegraph, impact, and afterglow states remain legible without color.
+- Runtime pause compensation advances impact timing without moving the world-anchored pocket, while reduced-motion and performance modes bound ornament without altering collision.
 - Seeded schedules, pause behavior, boss settlement, save compatibility, static hosting, dependencies, and simulation caps remain coherent.
 
 Status:
 
-- Implemented in work order 187. `MeteorStorm` owns the bounded pocket and ten-impact model. Routine generation still emits `salvage_storm` without another RNG draw, while the retired routine squall remains available only through the separately authored `salvage_squall` identity.
+- Implemented and refined in work order 187. `MeteorStorm` owns the bounded world-scroll pocket and twelve-impact model. Routine generation still emits `salvage_storm` without another RNG draw, while the retired routine squall remains available only through the separately authored `salvage_squall` identity.

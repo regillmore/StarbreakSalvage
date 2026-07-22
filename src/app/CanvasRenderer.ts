@@ -3054,46 +3054,20 @@ export class CanvasRenderer {
     color: string,
     style: SectorHazardVisualState
   ): void {
+    if (activeHazard.phase !== 'active') {
+      return;
+    }
+
     const context = this.context;
     const geometry = createMeteorStormGeometry(activeHazard, rect);
     const pocket = geometry.pocket;
-    const active = activeHazard.phase === 'active';
     const highContrast = this.settings.bulletContrast === 'high';
     const markerColor = highContrast ? '#ffffff' : '#ffd166';
     const impactColor = highContrast ? '#fff36b' : '#ff784f';
 
     context.save();
-    context.strokeStyle = color;
-    context.lineWidth = Math.max(1, style.lineWidth * 0.72);
-    context.globalAlpha = style.strokeAlpha * (active ? 0.26 : 0.46);
-    context.setLineDash(active ? [3, 16] : [10, 10]);
-    context.beginPath();
-    context.moveTo(pocket.startX, pocket.startY);
-    context.lineTo(pocket.endX, pocket.endY);
-    context.stroke();
-    context.setLineDash([]);
-
-    if (!this.settings.performanceMode) {
-      const trailCount = this.settings.reducedMotion ? 1 : 2;
-      for (let index = trailCount; index >= 1; index -= 1) {
-        const offset = active ? index * 18 : index * 12;
-        context.globalAlpha = style.strokeAlpha * (0.1 + index * 0.035);
-        context.beginPath();
-        context.ellipse(
-          pocket.centerX - pocket.travelDirection * offset,
-          pocket.centerY - offset * 1.45,
-          pocket.radiusX,
-          pocket.radiusY,
-          0,
-          0,
-          Math.PI * 2
-        );
-        context.stroke();
-      }
-    }
-
     context.fillStyle = color;
-    context.globalAlpha = style.fillAlpha * (active ? 0.42 : 0.22);
+    context.globalAlpha = style.fillAlpha * 0.42;
     context.beginPath();
     context.ellipse(
       pocket.centerX,
@@ -3107,38 +3081,16 @@ export class CanvasRenderer {
     context.fill();
     context.strokeStyle = color;
     context.lineWidth = style.lineWidth;
-    context.globalAlpha = style.strokeAlpha * (active ? 0.62 : 0.78);
-    context.setLineDash(active ? [7, 11] : [15, 9]);
+    context.globalAlpha = style.strokeAlpha * 0.62;
+    context.setLineDash([7, 11]);
     context.stroke();
     context.setLineDash([]);
 
-    this.paintMeteorStormDirection(pocket, markerColor, style);
     for (const impact of geometry.impacts) {
       this.paintMeteorStormImpact(impact, markerColor, impactColor, style);
     }
 
     context.restore();
-  }
-
-  private paintMeteorStormDirection(
-    pocket: ReturnType<typeof createMeteorStormGeometry>['pocket'],
-    color: string,
-    style: SectorHazardVisualState
-  ): void {
-    const context = this.context;
-    const direction = pocket.travelDirection;
-    const x = pocket.centerX - direction * 16;
-    const y = pocket.centerY - pocket.radiusY + 18;
-    context.strokeStyle = color;
-    context.lineWidth = 1.4;
-    context.globalAlpha = style.strokeAlpha * 0.7;
-    context.beginPath();
-    context.moveTo(x - direction * 12, y);
-    context.lineTo(x + direction * 12, y);
-    context.lineTo(x + direction * 5, y - 6);
-    context.moveTo(x + direction * 12, y);
-    context.lineTo(x + direction * 5, y + 6);
-    context.stroke();
   }
 
   private paintMeteorStormImpact(
@@ -3148,16 +3100,15 @@ export class CanvasRenderer {
     style: SectorHazardVisualState
   ): void {
     const context = this.context;
-    const telegraphing = impact.phase === 'telegraph' || impact.phase === 'forecast';
+    const telegraphing = impact.phase === 'telegraph';
 
     if (telegraphing) {
-      const progress = impact.phase === 'forecast' ? 0.25 + impact.phaseProgress * 0.3 : impact.phaseProgress;
+      const progress = impact.phaseProgress;
       const outerRadius = impact.radius * (1.48 - progress * 0.38);
       context.strokeStyle = markerColor;
       context.lineWidth = Math.max(1.4, style.lineWidth * 0.9);
-      context.globalAlpha =
-        style.strokeAlpha * (impact.phase === 'forecast' ? 0.46 : 0.72 + progress * 0.2);
-      context.setLineDash(impact.phase === 'forecast' ? [5, 8] : [8, 5]);
+      context.globalAlpha = style.strokeAlpha * (0.72 + progress * 0.2);
+      context.setLineDash([8, 5]);
       context.beginPath();
       context.arc(impact.x, impact.y, outerRadius, 0, Math.PI * 2);
       context.stroke();
