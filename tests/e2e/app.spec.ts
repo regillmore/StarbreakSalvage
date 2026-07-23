@@ -563,6 +563,11 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   ).toHaveCount(0);
   await expect(page.locator('.foundry-circuit-contribution')).toHaveCount(0);
   await expect(page.getByTestId('foundry-attack-impact')).toBeVisible();
+  await expect(page.getByTestId('foundry-attack-baseDps')).toBeVisible();
+  await expect(page.getByTestId('foundry-attack-baseDps')).toContainText(/\d+\.\d/);
+  await expect(page.getByTestId('foundry-attack-dps-note')).toHaveText(
+    /^[1-9]\d*-VOLLEY MEASURE · DIRECT PROJECTILE DAMAGE · HIT PROCS EXCLUDED$/
+  );
   const upgradeCircuit = page.getByTestId('foundry-upgrade-circuit');
   await expect(
     upgradeCircuit.getByRole('heading', { name: 'Primary Weapon Circuit' })
@@ -1782,6 +1787,9 @@ test('keeps hardpoint live-fire geometry on one combat scale across viewport wid
     'VENT SCRIPT · EVERY 4TH -> 5TH VOLLEY · +1 HEAT SHOT · SPENDS 32% HEAT · COOL = EXHAUST'
   );
   await expect(page.getByTestId('attack-simulation-heat-exhaust')).toHaveCount(1);
+  await expect(page.getByTestId('foundry-attack-dps-note')).toHaveText(
+    '5-VOLLEY MEASURE · DIRECT PROJECTILE DAMAGE · HIT PROCS EXCLUDED'
+  );
   await page
     .getByRole('button', { name: 'Move Prototype Vent Script earlier in the circuit' })
     .click();

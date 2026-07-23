@@ -318,6 +318,10 @@ export class FoundryScene implements Scene {
     for (const stat of dashboard.attackStats) {
       attackStats.append(this.createAttackStat(stat));
     }
+    const damageSample = document.createElement('p');
+    damageSample.className = 'foundry-attack-dps-note';
+    damageSample.dataset.testid = 'foundry-attack-dps-note';
+    damageSample.textContent = `${dashboard.attackSimulation.damageSampleVolleys}-VOLLEY MEASURE · DIRECT PROJECTILE DAMAGE · HIT PROCS EXCLUDED`;
 
     const traits = document.createElement('div');
     traits.className = 'foundry-trait-row';
@@ -327,7 +331,7 @@ export class FoundryScene implements Scene {
       chip.innerHTML = `<b>${trait.glyph}</b><span>${trait.label}</span><strong>${trait.value}</strong>`;
       traits.append(chip);
     }
-    attack.append(attackHeader, previewFrame, miniHud, attackStats, traits);
+    attack.append(attackHeader, previewFrame, miniHud, attackStats, damageSample, traits);
 
     console.append(attack, this.createPrimaryWeaponConsole(frame));
     return console;

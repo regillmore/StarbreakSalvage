@@ -41,10 +41,16 @@ describe('foundry visual presentation', () => {
       delta: 0,
       tone: 'same'
     });
-    expect(baseline.attackStats).toHaveLength(5);
+    expect(baseline.attackStats).toHaveLength(6);
     expect(baseline.attackSimulation.volleySize).toBe(
       baseline.attackStats.find((stat) => stat.id === 'volley')?.value
     );
+    expect(baseline.attackSimulation.damageSampleVolleys).toBe(1);
+    expect(baseline.attackStats.find((stat) => stat.id === 'baseDps')).toMatchObject({
+      value: baseline.attackSimulation.baseDps,
+      delta: 0,
+      tone: 'same'
+    });
     expect(baseline.attackSimulation.projectiles.length).toBeLessThanOrEqual(48);
     expect(baseline.attackSimulation.projectiles.every((projectile) => projectile.vy < 0)).toBe(
       true
@@ -102,6 +108,9 @@ describe('foundry visual presentation', () => {
       -71.4
     );
     expect(dashboard.attackStats.find((stat) => stat.id === 'volley')?.value).toBe(2);
+    expect(dashboard.attackStats.find((stat) => stat.id === 'baseDps')?.value).toBeCloseTo(
+      dashboard.attackSimulation.baseDps
+    );
   });
 
   it('matches combat when owned item hooks reshape the loadout volley', () => {
@@ -151,6 +160,9 @@ describe('foundry visual presentation', () => {
     expect(previewVolley).toHaveLength(7);
     expect(previewVolley).toEqual(combatVolley);
     expect(dashboard.attackSimulation.ariaLabel).toContain('owned item hooks');
+    expect(dashboard.attackSimulation.ariaLabel).toContain(
+      'measured across 1 consecutive volley at baseline cadence'
+    );
   });
 
   it('keeps the known-seed Drone Chaplain distinct from the universal six-shot fan', () => {
@@ -606,6 +618,7 @@ describe('foundry visual presentation', () => {
       cadenceShiftLabel: null
     });
     expect(dashboard.attackSimulation.waveCopies).toBeGreaterThanOrEqual(5);
+    expect(dashboard.attackSimulation.damageSampleVolleys).toBe(5);
     expect(
       dashboard.attackSimulation.projectiles.some((projectile) => projectile.tags.includes('heat'))
     ).toBe(false);
@@ -638,6 +651,58 @@ describe('foundry visual presentation', () => {
       name: 'Phase Grazer',
       cadenceShiftLabel: null
     });
+    expect(unmetDashboard.attackSimulation.damageSampleVolleys).toBe(4);
+  });
+
+  it('measures the least common cycle of mixed periodic circuit stages', () => {
+    const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
+      (candidate) => candidate.shipId === 'ship_debt_runner'
+    );
+    if (!contract) throw new Error('Expected a single-projectile contract.');
+    const dashboard = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+      {
+        itemId: 'item_signal_clone_stamp',
+        acquisitionOrder: 0,
+        socket: { componentId: 'clone', socketIndex: 0, circuitOrder: 0 }
+      },
+      {
+        itemId: 'item_phase_grazer',
+        acquisitionOrder: 1,
+        socket: { componentId: 'phase', socketIndex: 0, circuitOrder: 1 }
+      },
+      {
+        itemId: 'item_prototype_vent_script',
+        acquisitionOrder: 2,
+        socket: { componentId: 'vent', socketIndex: 0, circuitOrder: 2 }
+      }
+    ]);
+
+    expect(dashboard.attackSimulation.damageSampleVolleys).toBe(20);
+    expect(dashboard.attackSimulation.baseDps).toBeCloseTo(
+      dashboard.attackSimulation.damageSampleTotal /
+        (20 * dashboard.attackSimulation.fireCooldownSeconds)
+    );
+    expect(dashboard.attackSimulation.projectiles.length).toBeLessThanOrEqual(48);
+
+    const ventFirst = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+      {
+        itemId: 'item_prototype_vent_script',
+        acquisitionOrder: 2,
+        socket: { componentId: 'vent', socketIndex: 0, circuitOrder: 0 }
+      },
+      {
+        itemId: 'item_signal_clone_stamp',
+        acquisitionOrder: 0,
+        socket: { componentId: 'clone', socketIndex: 0, circuitOrder: 1 }
+      },
+      {
+        itemId: 'item_phase_grazer',
+        acquisitionOrder: 1,
+        socket: { componentId: 'phase', socketIndex: 0, circuitOrder: 2 }
+      }
+    ]);
+    expect(ventFirst.attackSimulation.damageSampleVolleys).toBe(12);
+    expect(ventFirst.attackSimulation.baseDps).not.toBeCloseTo(dashboard.attackSimulation.baseDps);
   });
 
   it('distinguishes deployed, linked, and idle drone circuit stages', () => {
@@ -685,6 +750,9 @@ describe('foundry visual presentation', () => {
     const preview = createFoundryAttackPreviewModel('Budget Test', 0.05, volley);
 
     expect(preview.volleySize).toBe(12);
+    expect(preview.damageSampleVolleys).toBe(1);
+    expect(preview.damageSampleTotal).toBe(12);
+    expect(preview.baseDps).toBe(240);
     expect(preview.waveCopies).toBe(4);
     expect(preview.projectiles).toHaveLength(48);
     expect(preview.cameraWidth).toBe(640);
@@ -695,6 +763,24 @@ describe('foundry visual presentation', () => {
     expect(preview.projectiles[0]?.delaySeconds).toBeCloseTo(0);
     expect(preview.projectiles[12]?.delaySeconds).toBeCloseTo(-0.05);
     expect(preview.ariaLabel).toContain('12 projectiles per volley');
+    expect(preview.ariaLabel).toContain('Base direct damage is 240.0 per second');
+  });
+
+  it('measures direct projectile DPS without adding conditional arc discharge damage', () => {
+    const preview = createFoundryAttackPreviewModel('Measured Arc', 0.2, [
+      {
+        ...projectile(0, 0, -500),
+        damage: 2,
+        tags: ['laser', 'arc'],
+        arcChargeKind: 'heavy'
+      },
+      { ...projectile(8, 0, -500), damage: 3 }
+    ]);
+
+    expect(preview.damageSampleTotal).toBe(5);
+    expect(preview.baseDps).toBe(25);
+    expect(preview.ariaLabel).toContain('hit-dependent damage is excluded');
+    expect(preview.ariaLabel).toContain('Arc-charged shots store');
   });
 
   it('normalizes combat radius and lane spacing into one responsive camera scale', () => {

@@ -1532,7 +1532,7 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
 
 .foundry-attack-stats {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0.4rem;
 }
 
@@ -1597,6 +1597,25 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
 .foundry-attack-stat[data-tone='declined'] > small,
 .foundry-meter[data-tone='declined'] .foundry-comparison-delta {
   color: #ffd166;
+}
+
+.foundry-attack-stat[data-testid='foundry-attack-baseDps'] {
+  border-color: color-mix(in srgb, var(--screen-primary, #7cf7ff) 46%, transparent);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--screen-primary, #7cf7ff) 10%, rgba(5, 8, 22, 0.82)),
+    rgba(5, 8, 22, 0.75)
+  );
+}
+
+.foundry-attack-dps-note {
+  margin: -0.08rem 0 0;
+  color: #80909c;
+  font-family: 'Cascadia Mono', 'Consolas', monospace;
+  font-size: 0.56rem;
+  font-weight: 850;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
 }
 
 .foundry-meter[data-tone='danger'] .foundry-comparison-delta,

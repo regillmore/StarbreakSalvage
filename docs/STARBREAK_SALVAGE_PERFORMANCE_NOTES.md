@@ -651,3 +651,11 @@ Surface Beacon adds one permanent-effect flag projection and one lunar-sector id
 Parallax Echo Lattice maps the already-bounded current volley once when its fire hook resolves. It changes tags and TTL on eligible existing projectiles but creates no projectile, actor, effect, timer, retained history, target scan, collision branch, or new phase system. Foundry condition copy reuses the bounded attack-preview reducer.
 
 The checked build emits `1,024.53 kB` minified / `280.95 kB` gzip initial JavaScript and unchanged `103.58 kB` / `20.70 kB` CSS, increases of `1.66 kB` / `0.36 kB` JavaScript over work order 199. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, route topology, generation pass, RNG stream, static base path, simulation cap, or warning threshold changed.
+
+## Work order 201 cadence-cycle DPS budgets
+
+Hardpoint entry and event-driven redraws perform one numeric damage sample for the draft and one for the committed comparison. Sample length is the least common multiple of the at-most-six fitted periodic circuit cadences and is hard-capped at 420 volleys; ordinary non-periodic builds require one. Each sampled volley reuses the existing bounded hook application budget and projectile transforms, then discards its blueprints after accumulating body damage.
+
+The visual model slices only the first six sampled volleys and retains the existing 48-projectile DOM limit. No damage sample enters combat, animation frames, collision, target scans, saves, generation, or RNG. The menu adds one stat card and one static explanatory line.
+
+The checked build emits `1,025.47 kB` minified / `281.35 kB` gzip initial JavaScript and `104.01 kB` / `20.77 kB` CSS, increases of `0.94 kB` / `0.40 kB` JavaScript and `0.43 kB` / `0.07 kB` CSS over work order 200. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, generation pass, RNG stream, static base path, visual actor cap, or warning threshold changed.

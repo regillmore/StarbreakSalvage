@@ -999,6 +999,14 @@ seed + permanent save fingerprint
 - Parallax is an ordered `onFire` modifier. It maps the already-bounded volley, applies phase plus 0.30 seconds of TTL only when `procDepth > 0`, and creates no projectile. The established phase collision consumer supplies visible one-target pierce.
 - `FoundryPresentation` derives the met/unmet condition and phased-shot count from the same ordered preview reducer used by combat. No second circuit interpretation or persisted presentation state is introduced.
 
+### Work order 201 cadence-cycle DPS boundary
+
+- `FoundryPresentation.createFoundryAttackSimulationModel` remains the authoritative noncombat fire projection. Base DPS reuses its resolved weapon, engineering hooks, fitted ordered items, Micro-Choir transform, projectile-spawn hooks, heat reserve, and effective periodic-cadence registry rather than maintaining a second weapon formula.
+- The damage sample length is the least common multiple of fitted effective periodic cadences, capped at 420 volleys. Prototype Vent therefore changes both the authored trigger schedule and measurement cycle through the existing cadence profile.
+- Base DPS sums projectile body damage and divides by sampled volleys times baseline weapon cooldown. Arc discharge, phase continuation, ricochet, blast/AOE, target geometry, haste reservoir, special windows, and other collision- or state-dependent outcomes remain outside the base measurement.
+- Damage sampling and visual sampling are separate. The complete cadence cycle feeds only bounded numeric reduction; the DOM preview still selects at most six waves and 48 projectiles.
+- The dashboard supplies both draft and committed Base DPS through the existing attack-stat comparison model. Weapon selection and circuit edits redraw that pure model and introduce no persistent UI state, combat mutation, save field, or RNG draw.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

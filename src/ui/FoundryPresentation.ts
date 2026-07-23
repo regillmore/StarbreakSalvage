@@ -61,7 +61,7 @@ export interface FoundryMeterModel {
 }
 
 export interface FoundryAttackStatModel {
-  readonly id: 'volley' | 'impact' | 'cadence' | 'velocity' | 'shotHeat';
+  readonly id: 'volley' | 'impact' | 'cadence' | 'baseDps' | 'velocity' | 'shotHeat';
   readonly glyph: string;
   readonly label: string;
   readonly value: number;
@@ -131,6 +131,9 @@ export interface FoundryAttackSimulationModel {
   readonly cameraHeight: number;
   readonly volleySize: number;
   readonly volleysPerSecond: number;
+  readonly baseDps: number;
+  readonly damageSampleVolleys: number;
+  readonly damageSampleTotal: number;
   readonly fireCooldownSeconds: number;
   readonly waveCopies: number;
   readonly projectiles: readonly FoundryAttackProjectileModel[];
@@ -197,6 +200,7 @@ const ATTACK_CAPS = {
   volley: 5,
   impact: 3,
   cadence: 10,
+  baseDps: 80,
   velocity: 1_000,
   shotHeat: 0.6
 } as const;
@@ -205,6 +209,7 @@ const ATTACK_PREVIEW_TRAVEL_DISTANCE = 250;
 const ATTACK_PREVIEW_SEQUENCE_DISTANCE = 560;
 const MAX_ATTACK_PREVIEW_WAVE_COPIES = 6;
 const MAX_ATTACK_PREVIEW_PROJECTILES = 48;
+const MAX_ATTACK_DAMAGE_SAMPLE_VOLLEYS = 420;
 
 export function createFoundryDashboardModel(
   state: EngineeringState,
@@ -298,6 +303,15 @@ export function createFoundryDashboardModel(
       'Cadence',
       1 / draftWeapon.fireCooldownSeconds,
       1 / committedWeapon.fireCooldownSeconds,
+      false,
+      1
+    ),
+    createAttackStat(
+      'baseDps',
+      'Σ',
+      'Base DPS',
+      attackSimulation.baseDps,
+      committedAttackSimulation.baseDps,
       false,
       1
     ),
@@ -702,7 +716,8 @@ function createFoundryAttackSimulationModel(
     resolution.effects.heatVentMultiplier *
     (items.some((item) => item.itemId === 'item_heat_sink_saint') ? 1.35 : 1);
   const sourceHeatEvents: (readonly HeatShotEvent[])[] = [];
-  const volleys = Array.from({ length: MAX_ATTACK_PREVIEW_WAVE_COPIES }, (_value, index) => {
+  const damageSampleVolleys = getAttackDamageSampleVolleyCount(items);
+  const volleys = Array.from({ length: damageSampleVolleys }, (_value, index) => {
     if (index > 0) {
       storedWeaponHeat = Math.max(
         0,
@@ -766,8 +781,16 @@ function createFoundryAttackPatternPreviewModel(
   droneSpecs: readonly DroneFollowerSpec[] = []
 ): FoundryAttackSimulationModel {
   const safeCooldown = Math.max(0.05, fireCooldownSeconds);
-  const safeVolleys = sourceVolleys.map((volley) => volley.slice(0, 12));
-  const safeProjectiles = safeVolleys.flat();
+  const damageSample = sourceVolleys.length > 0 ? sourceVolleys : [[]];
+  const damageSampleVolleys = damageSample.length;
+  const damageSampleTotal = damageSample.reduce(
+    (cycleDamage, volley) => cycleDamage + sumProjectileImpact(volley),
+    0
+  );
+  const baseDps = damageSampleTotal / (damageSampleVolleys * safeCooldown);
+  const safeVolleys = damageSample.map((volley) => volley.slice(0, 12));
+  const previewVolleys = safeVolleys.slice(0, MAX_ATTACK_PREVIEW_WAVE_COPIES);
+  const safeProjectiles = previewVolleys.flat();
   const flightSeconds = safeProjectiles.reduce(
     (longest, projectile) =>
       Math.max(
@@ -801,7 +824,7 @@ function createFoundryAttackPatternPreviewModel(
   let projectileCount = 0;
 
   for (let waveIndex = 0; waveIndex < desiredWaveCopies; waveIndex += 1) {
-    const volley = safeVolleys[waveIndex % Math.max(1, safeVolleys.length)] ?? [];
+    const volley = previewVolleys[waveIndex % Math.max(1, previewVolleys.length)] ?? [];
     if (
       selectedVolleys.length > 0 &&
       projectileCount + volley.length > MAX_ATTACK_PREVIEW_PROJECTILES
@@ -901,13 +924,40 @@ function createFoundryAttackPatternPreviewModel(
     cameraHeight: FOUNDRY_ATTACK_PREVIEW_WORLD_HEIGHT,
     volleySize,
     volleysPerSecond,
+    baseDps,
+    damageSampleVolleys,
+    damageSampleTotal,
     fireCooldownSeconds: safeCooldown,
     waveCopies,
     projectiles,
     drones,
     heatExhausts,
-    ariaLabel: `${weaponName} live-fire preview. ${volleyDescription} at ${volleysPerSecond.toFixed(1)} volleys per second.${missileDescription}${laserDescription}${phaseDescription}${arcDescription}${heatDescription}${droneDescription} Projectile paths use the draft loadout's combat velocity, spread, radius, damage, engineering hooks, and owned item hooks.`
+    ariaLabel: `${weaponName} live-fire preview. ${volleyDescription} at ${volleysPerSecond.toFixed(1)} volleys per second. Base direct damage is ${baseDps.toFixed(1)} per second, measured across ${damageSampleVolleys} consecutive ${damageSampleVolleys === 1 ? 'volley' : 'volleys'} at baseline cadence; hit-dependent damage is excluded.${missileDescription}${laserDescription}${phaseDescription}${arcDescription}${heatDescription}${droneDescription} Projectile paths use the draft loadout's combat velocity, spread, radius, damage, engineering hooks, and owned item hooks.`
   };
+}
+
+function getAttackDamageSampleVolleyCount(items: readonly ItemInstance[]): number {
+  const cadenceCycle = getOrderedItemInstances(items).reduce((cycle, instance) => {
+    const cadence = getItemVolleyCadenceProfile(instance.itemId, items)?.effectiveCadence;
+    if (!cadence) return cycle;
+    return Math.min(MAX_ATTACK_DAMAGE_SAMPLE_VOLLEYS, getLeastCommonMultiple(cycle, cadence));
+  }, 1);
+  return Math.max(1, cadenceCycle);
+}
+
+function getLeastCommonMultiple(left: number, right: number): number {
+  return Math.abs(left * right) / getGreatestCommonDivisor(left, right);
+}
+
+function getGreatestCommonDivisor(left: number, right: number): number {
+  let a = Math.max(1, Math.floor(Math.abs(left)));
+  let b = Math.max(1, Math.floor(Math.abs(right)));
+  while (b !== 0) {
+    const remainder = a % b;
+    a = b;
+    b = remainder;
+  }
+  return a;
 }
 
 function createFoundryAttackProjectileModel(

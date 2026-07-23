@@ -2848,3 +2848,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 200. Surface Beacon now lives in Archive progression with restored-item precedence, while Parallax Echo Lattice turns upstream-generated branches into longer-lived one-hit phase projectiles and reports its ordering condition in the signal circuit.
+
+### BL66 - Cadence-cycle base DPS
+
+Acceptance:
+
+- Add one Base DPS comparison to Hardpoint Control's Attack Simulation stat strip.
+- Measure direct projectile damage after the current weapon, engineering, ordered fire hooks, Micro-Choir, and projectile-spawn hooks across the shortest complete effective periodic cadence cycle.
+- Exclude target-dependent arc, pierce, ricochet, explosion, geometry, special, and temporary-haste outcomes; expose that boundary in text and accessibility copy.
+- Keep the damage sample independent from the six-wave/48-projectile visual actor budget and bound pathological mixed cycles.
+- Recompute immediately after primary-weapon swaps and circuit reordering, including Prototype Vent cadence changes and draft comparison deltas.
+- Preserve combat behavior, saves, deterministic generation, narrow layout, static hosting, and dependency count.
+
+Status:
+
+- Implemented in work order 201. `FoundryPresentation` measures direct body-damage throughput over a bounded least-common cadence cycle, while `FoundryScene` presents the one-decimal result and explicit sample boundary as a sixth responsive attack stat.
