@@ -1016,6 +1016,14 @@ seed + permanent save fingerprint
 - `CanvasRenderer` uses the full track only before ignition. Active rendering uses a flat-clipped luminous body, a physical head flare when its center overlaps the arena margin, and optional markers/reticle only on the forward guide. Once the head leaves, no guide geometry remains during the two-second dwell or clearing tail.
 - The change introduces no beam actor, authored hazard field, RNG draw, save/snapshot field, generation fingerprint, damage branch, target scan, or alternate collision path.
 
+### Work order 203 permanent-crater/penumbra boundary
+
+- `item_crater_shadow_lens` remains hook-readable but retired. Active pools substitute `item_penumbra_crown_aperture` at the same common starter/combat/lunar positions, while compatibility snapshots can still resolve the former id.
+- `SectorStartUpgradeEffects.craterShadowLens` is the only new runtime projection. `getCraterShadowLensSpecialChargeBonus` resolves the exact 8% Lunar / 2% ordinary reading and returns zero whenever a fitted legacy item is present; combat then combines that result with the existing entry-hook payload before the usual capped special-charge mutation.
+- `upgrade_crater_shadow_lens` uses the existing purchased-upgrade save list and is excluded from `createRunGenerationSaveFingerprint`. It changes neither contract, route, sector, reward, shop, duration, nor weapon-selection streams.
+- Penumbra's ordered `onFire` reducer requires at least two already-built projectiles, computes their mean projected horizontal position at 0.12 seconds, and chooses the nearest stable input index. It changes one shot to 92% velocity, +1 radius, +0.18 seconds TTL, `phase`, and `plasma`, without changing damage or array length.
+- `FoundryPresentation` calls the same production reducer and contributes only a met/unmet condition label. No preview-only projectile formula, new visual kind, combat state field, target scan, proc counter, or RNG draw is introduced.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

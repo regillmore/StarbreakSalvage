@@ -808,12 +808,12 @@ test('opens the Upgrade Bay and purchases an upgrade from banked scrap', async (
 
   await expect(page.getByRole('heading', { name: 'Upgrade Bay' })).toBeVisible();
   await expect(page.locator('.debug-overlay')).toContainText(
-    'Progress Bank 8kg Upgrades 0/17 Ready 2'
+    'Progress Bank 8kg Upgrades 0/18 Ready 2'
   );
   await expect(page.getByTestId('upgrade-bay-summary')).toContainText(
-    'Bank 8 kg | Installed 0/17 | Ready 2'
+    'Bank 8 kg | Installed 0/18 | Ready 2'
   );
-  await expect(page.locator('[data-testid^="upgrade-card-"]')).toHaveCount(17);
+  await expect(page.locator('[data-testid^="upgrade-card-"]')).toHaveCount(18);
   await expect(page.getByTestId('upgrade-card-upgrade_exit_toll_transponder')).toContainText(
     'Each sector begins with a 1-3 credit refund'
   );
@@ -835,6 +835,9 @@ test('opens the Upgrade Bay and purchases an upgrade from banked scrap', async (
   await expect(page.getByTestId('upgrade-card-upgrade_surface_beacon_drone')).toContainText(
     'Lunar sectors begin with 1 salvage and 5% special charge'
   );
+  await expect(page.getByTestId('upgrade-card-upgrade_crater_shadow_lens')).toContainText(
+    'Lunar sectors begin with 8% instead'
+  );
 
   const bayBox = await page.locator('.upgrade-bay-panel').boundingBox();
   if (!bayBox) {
@@ -852,10 +855,10 @@ test('opens the Upgrade Bay and purchases an upgrade from banked scrap', async (
     'Purchased Contract Survey Rig.'
   );
   await expect(page.getByTestId('upgrade-bay-summary')).toContainText(
-    'Bank 4 kg | Installed 1/17 | Ready 1'
+    'Bank 4 kg | Installed 1/18 | Ready 1'
   );
   await expect(page.locator('.debug-overlay')).toContainText(
-    'Progress Bank 4kg Upgrades 1/17 Ready 1'
+    'Progress Bank 4kg Upgrades 1/18 Ready 1'
   );
   await expect(surveyRig).toContainText('Installed in the archive.');
 
@@ -966,7 +969,7 @@ test('exposes item-heavy hook storm debug instrumentation', async ({ page }) => 
   );
   await expect(page.getByTestId('weapon-readout')).toContainText('HASTE');
   await expect(page.getByTestId('weapon-readout')).toContainText('COAST');
-  await expect(page.locator('.debug-overlay')).toContainText(/Hooks 13\/14 \d+ apps/);
+  await expect(page.locator('.debug-overlay')).toContainText(/Hooks 12\/14 \d+ apps/);
   await expect(page.locator('.debug-overlay')).toContainText(/Proc on[A-Za-z]+ \d+\/48 skip 0/);
   await expect(page.locator('.debug-overlay')).toContainText(/Build .+ \| 29 items/);
   await expect(page.locator('.debug-overlay')).toContainText('Projectiles 30 (P0/E30)');

@@ -21,7 +21,7 @@ describe('item catalog audit', () => {
       cursed: 3
     });
     expect(audit.hookCounts).toEqual({
-      onFire: 19,
+      onFire: 20,
       onProjectileSpawn: 14,
       onEnemyKilled: 10,
       onPlayerHit: 6,
@@ -29,7 +29,7 @@ describe('item catalog audit', () => {
       onGraze: 2,
       onSpecialUsed: 0,
       onBombUsed: 1,
-      onSectorStart: 1,
+      onSectorStart: 0,
       onRouteChosen: 1,
       onShopEntered: 0,
       onRewardGenerated: 1,
@@ -155,6 +155,7 @@ describe('item catalog audit', () => {
     expect(getImplementedHookItemIds('onFire')).toContain('item_boreline_crimper');
     expect(getImplementedHookItemIds('onFire')).toContain('item_gangue_compression_die');
     expect(getImplementedHookItemIds('onFire')).toContain('item_forkline_dynamo');
+    expect(getImplementedHookItemIds('onFire')).toContain('item_penumbra_crown_aperture');
     expect(getImplementedHookItemIds('onProjectileSpawn')).toContain('item_strata_bore_collimator');
     expect(getImplementedHookItemIds('onProjectileSpawn')).toContain('item_claimant_arc_seal');
   });

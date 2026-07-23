@@ -1,12 +1,12 @@
 # Starbreak Salvage - Item Catalog Audit
 
-Work orders 051-056 baseline, refreshed through work order 189. This document records the active item catalog after the Noita-style circuit pivot retired Boss Pressure from live rotation, moved eight passive items into permanent progression, refilled their active slots, converted Prototype Vent Script into an ordered stored-heat modifier, and made arc a projectile-carried secondary discharge. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
+Work orders 051-056 baseline, refreshed through work order 203. This document records the active item catalog after the Noita-style circuit pivot retired Boss Pressure from live rotation, moved ten passive items into permanent progression, refilled their active slots, converted Prototype Vent Script into an ordered stored-heat modifier, and made arc a projectile-carried secondary discharge. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
 
 ## Current Shape
 
 | Measure                 | Current | Phase 6 target                                                                             |
 | ----------------------- | ------- | ------------------------------------------------------------------------------------------ |
-| Active item definitions | 60      | Thirteen retired definitions remain for legacy-save compatibility                          |
+| Active item definitions | 60      | Fifteen retired definitions remain for legacy-save compatibility                           |
 | Candidate reward pools  | 4       | Starter, ignition core, combat, and vault remain the broad candidate buckets               |
 | Weight profiles         | 9       | Starter, combat, shop, vault, elite, boss, faction, lunar, and route contexts are weighted |
 | Hook names              | 14      | Includes environment-object destruction alongside combat, route, and economy hooks         |
@@ -41,7 +41,7 @@ Validation requires every active item to appear in a compatible reward pool and 
 
 | Hook                           | Item count | Current role                                                                             |
 | ------------------------------ | ---------- | ---------------------------------------------------------------------------------------- |
-| `onFire`                       | 18         | Volley shaping, drones, split shots, missiles, phase/heat variants, and ordered cadence. |
+| `onFire`                       | 20         | Volley shaping, drones, split shots, missiles, phase/heat variants, and ordered cadence. |
 | `onProjectileSpawn`            | 14         | Projectile traits, arc charge, size, damage, TTL, and drift shaping.                     |
 | `onEnemyKilled`                | 10         | Salvage payouts, compact blasts, and overkill/relic rewards.                             |
 | `onPlayerHit`                  | 6          | Shield, revenge, armor, and curse retaliation.                                           |
@@ -49,7 +49,7 @@ Validation requires every active item to appear in a compatible reward pool and 
 | `onGraze`                      | 2          | Near-miss charge/rate/radius effects.                                                    |
 | `onSpecialUsed`                | 0          | Reserved hook surface; Prototype Vent Script moved to ordered volley cadence.            |
 | `onBombUsed`                   | 1          | Bomb damage, radius, and boss-ratio shaping.                                             |
-| `onSectorStart`                | 2          | Lunar entry and sector-start resource effects.                                           |
+| `onSectorStart`                | 0          | Retired entry effects remain available only to restored snapshots.                       |
 | `onRouteChosen`                | 1          | Curse-interest remains active; retired economy hooks remain compatible.                  |
 | `onShopEntered`                | 0          | Retired reroll effects remain available only to restored snapshots.                      |
 | `onRewardGenerated`            | 1          | Relic reward bias remains active; retired reward hooks remain compatible.                |
@@ -233,6 +233,12 @@ Rare Strata-Bore Collimator replaces the released combat/vault/lunar slot. At it
 Ambush Insurance Stamp is now a 10 kg Navigation upgrade gated by Route Ledger Uplink. Its retired catalog record and `onRouteChosen` reducer remain only for restored snapshots; route settlement gives a fitted legacy copy precedence over the permanent flag, so either representation adds exactly one salvage and armor/credit bias on Elite and Faction Ambush choices. The route-local flag is excluded from the expedition-wide generation fingerprint and supplied only to the existing settlement boundary.
 
 Uncommon Claimant Arc Seal replaces the released combat/route/elite/faction slot. At its ordered `onProjectileSpawn` stage it requires upstream overkill and attaches the shared standard arc profile without changing body impact. A consuming hit can therefore discharge 55% impact, minimum 0.35, within 180 units into a distinct second target; downstream Faraday, Plasma Seed, Arc Window, and multi-trait effects receive the charge normally. It creates no projectile, RNG draw, timer, counter, collision rule, state field, or alternate preview path. The active catalog remains at 60 items; the compatibility catalog now contains 73 definitions, thirteen of them retired.
+
+## Permanent Crater Shadow and Penumbra centerline in Work Order 203
+
+Crater Shadow Lens is now a 9 kg Archive upgrade gated by Relic Pattern Dossier. Its retired catalog record and `onSectorStart` reducer remain only for restored snapshots; combat gives a fitted legacy copy precedence over the permanent flag, so either representation supplies the exact 8% Lunar / 2% ordinary special-charge reading once. The flag is omitted from the expedition-wide generation fingerprint and adds no new save schema.
+
+Common Penumbra Crown Aperture replaces the released starter/combat/lunar slot. At its ordered `onFire` stage it requires at least two upstream shots, finds the stable shot nearest their projected horizontal center, and gives that shot phase, plasma, 92% velocity, +1 radius, and +0.18 seconds TTL without changing impact. Later-created shots remain untouched. It adds no projectile, RNG draw, timer, counter, state field, or alternate preview path. The active catalog remains at 60 items; the compatibility catalog now contains 75 definitions, fifteen of them retired.
 
 ## Risks For 057-060
 

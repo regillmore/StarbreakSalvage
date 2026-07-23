@@ -170,6 +170,7 @@ export type ItemId =
   | 'item_heat_signature_loop'
   | 'item_prototype_vent_script'
   | 'item_crater_shadow_lens'
+  | 'item_penumbra_crown_aperture'
   | 'item_regolith_scoop_array'
   | 'item_surface_beacon_drone'
   | 'item_parallax_echo_lattice'
@@ -1128,8 +1129,27 @@ export const ITEMS: readonly ItemDefinition[] = [
       sources: ['starter', 'combat', 'lunar'],
       unlockTier: 'baseline',
       implementationStatus: 'live',
+      retired: true,
       stacking: 'unique',
       uiTags: ['lunar', 'phase']
+    }
+  },
+  {
+    id: 'item_penumbra_crown_aperture',
+    name: 'Penumbra Crown Aperture',
+    rarity: 'common',
+    tags: ['phase', 'plasma'],
+    hooks: ['onFire'],
+    effect:
+      'an earlier multi-shot volley turns its centerline shot into a slower, longer-lived phased plasma round',
+    weight: 10,
+    metadata: {
+      family: 'lunar-surface',
+      sources: ['starter', 'combat', 'lunar'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['lunar', 'phase', 'plasma', 'split']
     }
   },
   {
@@ -1625,7 +1645,7 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_reactive_plating_grid',
       'item_boreline_crimper',
       'item_near_miss_tachometer',
-      'item_crater_shadow_lens',
+      'item_penumbra_crown_aperture',
       'item_gangue_compression_die',
       'item_forkline_dynamo',
       'item_harmonic_fork_loom'
@@ -1676,7 +1696,7 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_phase_wake_suture',
       'item_heat_signature_loop',
       'item_prototype_vent_script',
-      'item_crater_shadow_lens',
+      'item_penumbra_crown_aperture',
       'item_regolith_scoop_array',
       'item_parallax_echo_lattice',
       'item_strata_bore_collimator',

@@ -210,7 +210,7 @@ describe('reward generation', () => {
     const baselineCombatItem = getItemById('item_split_prism');
     const cursedVaultItem = getItemById('item_cursed_hull_plate');
     const starterVaultItem = getItemById('item_revenge_beam');
-    const lunarItem = getItemById('item_crater_shadow_lens');
+    const lunarItem = getItemById('item_penumbra_crown_aperture');
     const nonLunarItem = getItemById('item_heat_sink_saint');
     const lunarContext = {
       routeKind: 'factionAmbush' as const,
@@ -305,7 +305,7 @@ describe('reward generation', () => {
           price: 5
         },
         {
-          id: 'item_crater_shadow_lens',
+          id: 'item_penumbra_crown_aperture',
           sourceHint: 'Shop pool',
           price: 4
         }
@@ -356,7 +356,7 @@ describe('reward generation', () => {
           sourceHint: 'Lunar pool'
         },
         {
-          id: 'item_crater_shadow_lens',
+          id: 'item_penumbra_crown_aperture',
           profile: 'lunar',
           sourceHint: 'lunar source'
         }

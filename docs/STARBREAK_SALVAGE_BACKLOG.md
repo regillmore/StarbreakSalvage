@@ -2878,3 +2878,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 202. Runtime records a transient launch anchor, `BeamHazard` separates the scrolling indicator from immutable projectile presentation geometry, and `CanvasRenderer` renders only a forward guide plus the true moving beam body.
+
+### BL68 - Permanent crater reading and Penumbra centerline
+
+Acceptance:
+
+- Retire Crater Shadow Lens from active run pools and promote its 8% Lunar / 2% ordinary sector-entry charge to a 9 kg Archive upgrade gated by Relic Pattern Dossier.
+- Preserve restored legacy items, prevent legacy/permanent double application, and exclude the permanent flag from generation fingerprints.
+- Replace the common lunar slot with Penumbra Crown Aperture while preserving active catalog breadth and deterministic weighted reward surfaces.
+- Require an upstream multi-shot volley, select one deterministic projected-centerline shot, and attach phase/plasma while trading 8% velocity for one radius unit and 0.18 seconds of flight.
+- Leave body impact, projectile count, later-created shots, RNG, counters, and proc budgets unchanged.
+- Expose explicit met/unmet ordered-chain condition copy in Hardpoint Control and preserve accessibility, saves, static hosting, and managed-smoke behavior.
+
+Status:
+
+- Implemented in work order 203. Crater Shadow Lens now lives in Archive progression with restored-item precedence, while Penumbra Crown Aperture turns one upstream multi-shot centerline into a longer-lived phased plasma round through the shared fire-hook and Foundry paths.

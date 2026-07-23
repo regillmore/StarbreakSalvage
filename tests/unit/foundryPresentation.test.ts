@@ -332,6 +332,45 @@ describe('foundry visual presentation', () => {
     ).not.toHaveLength(0);
   });
 
+  it('shows Penumbra Crown Aperture waiting for and transforming an upstream multi-shot volley', () => {
+    const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
+      (candidate) => candidate.shipId === 'ship_debt_runner'
+    );
+    if (!contract) throw new Error('Expected a single-projectile contract.');
+    const splitThenCrown = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+      { itemId: 'item_split_prism', acquisitionOrder: 0 },
+      { itemId: 'item_penumbra_crown_aperture', acquisitionOrder: 1 }
+    ]);
+    const crownThenSplit = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+      { itemId: 'item_penumbra_crown_aperture', acquisitionOrder: 0 },
+      { itemId: 'item_split_prism', acquisitionOrder: 1 }
+    ]);
+
+    expect(splitThenCrown.circuitStages[1]).toMatchObject({
+      name: 'Penumbra Crown Aperture',
+      incomingProjectiles: 3,
+      outgoingProjectiles: 3,
+      conditionMet: true,
+      addedTags: ['phase', 'plasma'],
+      changed: true
+    });
+    expect(splitThenCrown.circuitStages[1]?.outputLabel).toContain('CENTERLINE PHASE / PLASMA');
+    expect(crownThenSplit.circuitStages[0]).toMatchObject({
+      name: 'Penumbra Crown Aperture',
+      conditionMet: false,
+      addedTags: [],
+      changed: false
+    });
+    expect(crownThenSplit.circuitStages[0]?.outputLabel).toContain(
+      'NEEDS AN EARLIER MULTI-SHOT STAGE'
+    );
+    expect(
+      splitThenCrown.attackSimulation.projectiles.filter(
+        (projectile) => projectile.tags.includes('phase') && projectile.tags.includes('plasma')
+      )
+    ).not.toHaveLength(0);
+  });
+
   it('shows Forkline Dynamo charging only branches that already exist upstream', () => {
     const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
       (candidate) => candidate.shipId === 'ship_debt_runner'

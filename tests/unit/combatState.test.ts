@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { SHIPS } from '../../src/content/ships';
 import {
   createCombatState,
   forceCombatEnd,
@@ -99,7 +100,8 @@ describe('CombatState', () => {
   it('applies the permanent Exit Toll refund without doubling a restored item copy', () => {
     const sectorStartUpgradeEffects = {
       exitTollRefund: true,
-      surfaceBeaconDrone: false
+      surfaceBeaconDrone: false,
+      craterShadowLens: false
     } as const;
     const upgraded = createCombatState(bounds, 'EXIT-TOLL-UPGRADE', {
       sectorIndex: 4,
@@ -120,7 +122,8 @@ describe('CombatState', () => {
   it('applies the permanent lunar beacon ping without doubling a restored item copy', () => {
     const sectorStartUpgradeEffects = {
       exitTollRefund: false,
-      surfaceBeaconDrone: true
+      surfaceBeaconDrone: true,
+      craterShadowLens: false
     } as const;
     const upgraded = createCombatState(bounds, 'SURFACE-BEACON-UPGRADE', {
       sectorId: 'sector_lunar_surface',
@@ -142,6 +145,38 @@ describe('CombatState', () => {
     expect(upgraded.player.salvage).toBe(1);
     expect(restored.player.salvage).toBe(1);
     expect(nonLunar.player.salvage).toBe(0);
+  });
+
+  it('applies the permanent Crater Shadow reading without doubling a restored item copy', () => {
+    const sectorStartUpgradeEffects = {
+      exitTollRefund: false,
+      surfaceBeaconDrone: false,
+      craterShadowLens: true
+    } as const;
+    const shipStats = { ...SHIPS[0]!.stats, specialInitialCharge: 0 };
+    const upgraded = createCombatState(bounds, 'CRATER-SHADOW-UPGRADE', {
+      sectorId: 'sector_lunar_surface',
+      sectorStartUpgradeEffects,
+      shipStats,
+      skipEnemyWaves: true
+    });
+    const restored = createCombatState(bounds, 'CRATER-SHADOW-RESTORED', {
+      sectorId: 'sector_lunar_surface',
+      sectorStartUpgradeEffects,
+      shipStats,
+      items: [{ itemId: 'item_crater_shadow_lens', acquisitionOrder: 0 }],
+      skipEnemyWaves: true
+    });
+    const nonLunar = createCombatState(bounds, 'CRATER-SHADOW-NON-LUNAR', {
+      sectorId: 'sector_trade_war_corridor',
+      sectorStartUpgradeEffects,
+      shipStats,
+      skipEnemyWaves: true
+    });
+
+    expect(upgraded.player.specialCharge).toBeCloseTo(0.08);
+    expect(restored.player.specialCharge).toBeCloseTo(0.08);
+    expect(nonLunar.player.specialCharge).toBeCloseTo(0.02);
   });
 
   it('spends stored heat on a Vent shot and exhausts visibly when the reserve is cool', () => {

@@ -61,3 +61,31 @@ Status: implemented. `SectorHazardRuntime` now captures one transient launch-wor
 Focused coverage pins immutable launch geometry across large post-launch world-distance changes, the top-origin endpoint regression, exact bolt/guide joins during entry, absent guide and head during clearing, visible moving tail, runtime launch capture, pause-safe timing, piercing collisions, and the existing timing contract. The managed browser loaded the current build, entered gameplay, and exposed the seeded directional route `LEFT 23% to BOTTOM 41%`; the live lifecycle capture was interrupted when the task-length host expired during a disposable profile reset and the protected network-error tab then blocked re-entry. The host stopped cleanly, and no alternate browser surface was used.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 115 Vitest files and 748 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,026.55 kB` minified / `281.72 kB` gzip initial JavaScript and unchanged `104.01 kB` / `20.77 kB` CSS, an increase of `1.08 kB` / `0.37 kB` JavaScript over work order 201. The existing Vite large-chunk advisory remains; no dependency, authored hazard plan, RNG stream, save/snapshot schema, static base path, damage value, velocity, duration, actor/projectile cap, or warning threshold changed.
+
+## Work order 203 - Permanent Crater Shadow and Penumbra Crown
+
+Goal: move Crater Shadow Lens's passive sector-entry charge into permanent progression and refill its common lunar slot with a readable ordered-chain bridge into phase and plasma builds.
+
+Prompt:
+
+> Retire Crater Shadow Lens from active run rewards and move its sector-entry special-charge reading into the permanent scrap Upgrade Bay. Preserve restored-run behavior without allowing the old item and new upgrade to stack. Add a common replacement whose benefit depends on a multi-shot volley already existing earlier in the ordered weapon chain. Keep entry settlement and weapon generation deterministic, previews honest, active catalog breadth stable, and the managed smoke-host lifecycle reliable.
+
+Acceptance criteria:
+
+- Crater Shadow Lens is absent from active discovery and reward pools and appears as a 9 kg permanent Archive upgrade gated by Relic Pattern Dossier.
+- The permanent and restored-item forms each grant 8% special charge on Lunar entry and 2% elsewhere; owning both applies exactly one reading.
+- The permanent flag is excluded from the expedition generation fingerprint and adds no save/snapshot schema field or RNG draw.
+- Common Penumbra Crown Aperture replaces the same starter/combat/lunar pool position, rarity, weight, source profile, family, and phase/plasma identity.
+- Aperture remains inert until an earlier circuit stage has created at least two shots. It deterministically selects the shot nearest the current volley's projected centerline.
+- The selected shot retains body impact, travels at 92% velocity, gains one radius unit and 0.18 seconds of life, and gains both `phase` and `plasma`; every other current shot and every later-created shot remains unchanged.
+- Hardpoint cumulative output reports the met/unmet multi-shot condition, transformed traits, geometry, and flight tradeoff through the production hook path.
+- The active catalog remains at 60 items, the complete compatibility catalog grows to 75 definitions, and the bounded stress fixture replaces the retired entry without increasing item count, projectile count, RNG, or proc budgets.
+- Deterministic weighted rewards, Upgrade Bay semantics, restored snapshots, accessibility settings, static hosting, dependencies, and managed browser tooling remain coherent.
+
+Status: implemented. Crater Shadow Lens remains a retired content record and `onSectorStart` hook solely for restored run snapshots. `SectorStartUpgradeEffects.craterShadowLens` carries the permanent form to combat, where a fitted legacy copy takes precedence before the exact 8% Lunar / 2% ordinary charge reading is applied. The upgrade is deliberately omitted from the generation fingerprint and uses the existing save-v5 purchased-upgrade list.
+
+Penumbra Crown Aperture occupies the released common lunar slot as a bounded ordered `onFire` transform. It computes the current volley's projected horizontal center, modifies one nearest shot, and leaves damage and projectile count unchanged. Upstream Split, Clone, Drone, Missile, and native multi-shot stages can feed it; downstream plasma, phase, arc, ricochet, laser, and trait-count stages consume its output normally. The Hardpoint card states when no earlier multi-shot exists and shows the live phase/plasma conversion when the order is satisfied.
+
+Focused coverage protects permanent/restored precedence, Lunar and ordinary charge values, generation-fingerprint neutrality, active/compatibility breadth, source-weighted reward snapshots, exact centerline selection, reverse-order neutrality, Hardpoint condition copy, the unchanged 29-item stress fixture, and the 18-card Upgrade Bay. The managed in-app browser loaded the documented host, rendered Crater Shadow Lens beside the existing Archive upgrades with correct cost/prerequisite/effect copy, reported 18 cards, and remained inside the established responsive scrolling panel. The authenticated stop command closed the host and its original shell returned exit code 0.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 115 Vitest files and 752 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,028.34 kB` minified / `282.16 kB` gzip initial JavaScript and unchanged `104.01 kB` / `20.77 kB` CSS, an increase of `1.79 kB` / `0.44 kB` JavaScript over work order 202. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, generation stream, route topology, static base path, actor/projectile/effect cap, or warning threshold changed.

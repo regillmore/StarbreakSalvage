@@ -77,6 +77,7 @@ import {
 } from './HasteReservoir';
 import type { MissionObjectiveResultSnapshot } from './ObjectiveDirector';
 import {
+  getCraterShadowLensSpecialChargeBonus,
   getExitTollCreditRefund,
   getSurfaceBeaconSectorStartBonus,
   type BossPhaseUpgradeEffects,
@@ -3218,6 +3219,11 @@ function applySectorStartHooks(
     context.sectorId,
     hasItem(state.items, 'item_surface_beacon_drone')
   );
+  const craterShadowBonus = getCraterShadowLensSpecialChargeBonus(
+    state.sectorStartUpgradeEffects,
+    context.sectorId,
+    hasItem(state.items, 'item_crater_shadow_lens')
+  );
 
   if (payload.creditsBonus + upgradeCredits > 0) {
     state.player.credits += Math.floor(payload.creditsBonus + upgradeCredits);
@@ -3227,8 +3233,10 @@ function applySectorStartHooks(
     state.player.salvage += Math.floor(payload.salvageBonus + surfaceBeaconBonus.salvageBonus);
   }
 
-  if (payload.specialChargeBonus + surfaceBeaconBonus.specialChargeBonus > 0) {
-    gainSpecialCharge(state, payload.specialChargeBonus + surfaceBeaconBonus.specialChargeBonus);
+  const specialChargeBonus =
+    payload.specialChargeBonus + surfaceBeaconBonus.specialChargeBonus + craterShadowBonus;
+  if (specialChargeBonus > 0) {
+    gainSpecialCharge(state, specialChargeBonus);
   }
 }
 

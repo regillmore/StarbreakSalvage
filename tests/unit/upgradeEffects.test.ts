@@ -10,6 +10,7 @@ import { createRunSession, getCurrentSector } from '../../src/game/RunSession';
 import { generateSectorRewardChoices } from '../../src/game/SectorRewards';
 import { generateShopInventory } from '../../src/game/Shops';
 import {
+  getCraterShadowLensSpecialChargeBonus,
   getAmbushInsuranceStampRewardBiasTags,
   getAmbushInsuranceStampSalvageClaim,
   getMarketEchoLocatorRewardBiasTags,
@@ -156,7 +157,8 @@ describe('run upgrade effects', () => {
 
     expect(toll.sectorStart).toEqual({
       exitTollRefund: true,
-      surfaceBeaconDrone: false
+      surfaceBeaconDrone: false,
+      craterShadowLens: false
     });
     expect(createRunGenerationSaveFingerprint([], toll)).toBe(
       createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
@@ -168,7 +170,8 @@ describe('run upgrade effects', () => {
 
     expect(beacon.sectorStart).toEqual({
       exitTollRefund: false,
-      surfaceBeaconDrone: true
+      surfaceBeaconDrone: true,
+      craterShadowLens: false
     });
     expect(getSurfaceBeaconSectorStartBonus(beacon.sectorStart, 'sector_lunar_surface')).toEqual({
       salvageBonus: 1,
@@ -182,6 +185,26 @@ describe('run upgrade effects', () => {
       getSurfaceBeaconSectorStartBonus(beacon.sectorStart, 'sector_lunar_surface', true)
     ).toEqual({ salvageBonus: 0, specialChargeBonus: 0 });
     expect(createRunGenerationSaveFingerprint([], beacon)).toBe(
+      createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
+    );
+  });
+
+  it('projects Crater Shadow Lens as a non-generation sector reading with legacy precedence', () => {
+    const lens = resolveRunUpgradeEffects(['upgrade_crater_shadow_lens']);
+
+    expect(lens.sectorStart).toEqual({
+      exitTollRefund: false,
+      surfaceBeaconDrone: false,
+      craterShadowLens: true
+    });
+    expect(getCraterShadowLensSpecialChargeBonus(lens.sectorStart, 'sector_lunar_surface')).toBe(
+      0.08
+    );
+    expect(getCraterShadowLensSpecialChargeBonus(lens.sectorStart, 'sector_trade_war')).toBe(0.02);
+    expect(
+      getCraterShadowLensSpecialChargeBonus(lens.sectorStart, 'sector_lunar_surface', true)
+    ).toBe(0);
+    expect(createRunGenerationSaveFingerprint([], lens)).toBe(
       createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
     );
   });

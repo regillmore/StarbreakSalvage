@@ -667,3 +667,11 @@ Each currently active warning beam stores one transient numeric launch distance 
 Active rendering removes the full-track trail and source emitter. It draws at most one dashed forward guide, four luminous strokes, one physical head flare, one forward endpoint marker, and four guide ticks; the marker/ticks disappear with the guide after the head exits. Reduced motion and performance mode retain their existing lower marker/glow budgets.
 
 The checked build emits `1,026.55 kB` minified / `281.72 kB` gzip initial JavaScript and unchanged `104.01 kB` / `20.77 kB` CSS, an increase of `1.08 kB` / `0.37 kB` JavaScript over work order 201. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, authored plan, generation pass, RNG stream, static base path, simulation cap, or warning threshold changed.
+
+## Work order 203 permanent-crater/penumbra budgets
+
+Crater Shadow adds one boolean to the already-created sector-start upgrade projection and one constant-time legacy-precedence check at combat creation. The entry bonus uses the existing capped special-charge path and adds no fixed-step work, actor, projectile, effect, target scan, or persistent combat field.
+
+Penumbra runs once per fitted `onFire` dispatch. It performs one bounded mean reduction, one nearest-center reduction, and one array map across the already-capped current volley; it creates no additional projectile, RNG draw, timer, counter, visual kind, collision branch, or effect. Foundry reuses that reducer inside its existing bounded preview and DPS samples.
+
+The checked build emits `1,028.34 kB` minified / `282.16 kB` gzip initial JavaScript and unchanged `104.01 kB` / `20.77 kB` CSS, an increase of `1.79 kB` / `0.44 kB` JavaScript over work order 202. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, generation pass, RNG stream, static base path, simulation cap, or warning threshold changed.

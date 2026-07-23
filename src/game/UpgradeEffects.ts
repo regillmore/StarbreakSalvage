@@ -12,6 +12,7 @@ export interface BossPhaseUpgradeEffects {
 export interface SectorStartUpgradeEffects {
   readonly exitTollRefund: boolean;
   readonly surfaceBeaconDrone: boolean;
+  readonly craterShadowLens: boolean;
 }
 
 export interface SurfaceBeaconSectorStartBonus {
@@ -78,7 +79,8 @@ export function resolveRunUpgradeEffects(
     seedSurvey: hasUpgrade('upgrade_seed_cartographer'),
     sectorStart: {
       exitTollRefund: hasUpgrade('upgrade_exit_toll_transponder'),
-      surfaceBeaconDrone: hasUpgrade('upgrade_surface_beacon_drone')
+      surfaceBeaconDrone: hasUpgrade('upgrade_surface_beacon_drone'),
+      craterShadowLens: hasUpgrade('upgrade_crater_shadow_lens')
     },
     routeChosen: {
       lowOrbitOreRefund: hasUpgrade('upgrade_low_orbit_ore_scrip'),
@@ -145,6 +147,10 @@ export function getRunUpgradeDebugLabels(effects: RunUpgradeEffects): string[] {
     labels.push('surface beacon');
   }
 
+  if (effects.sectorStart.craterShadowLens) {
+    labels.push('crater shadow lens');
+  }
+
   if (effects.routeChosen.lowOrbitOreRefund) {
     labels.push('ore scrip refund');
   }
@@ -184,6 +190,15 @@ export function getSurfaceBeaconSectorStartBonus(
   return active
     ? { salvageBonus: 1, specialChargeBonus: 0.05 }
     : { salvageBonus: 0, specialChargeBonus: 0 };
+}
+
+export function getCraterShadowLensSpecialChargeBonus(
+  effects: SectorStartUpgradeEffects | null,
+  sectorId: string,
+  legacyItemActive = false
+): number {
+  if (!effects?.craterShadowLens || legacyItemActive) return 0;
+  return sectorId.includes('lunar') ? 0.08 : 0.02;
 }
 
 export function getLowOrbitOreScripCreditRefund(

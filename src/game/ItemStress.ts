@@ -35,7 +35,7 @@ export const ITEM_STORM_ITEM_IDS: readonly ItemId[] = [
   'item_salvage_dividend_chip',
   'item_shield_revenge_contract',
   'item_regolith_scoop_array',
-  'item_crater_shadow_lens',
+  'item_penumbra_crown_aperture',
   'item_forkline_dynamo',
   'item_gangue_compression_die',
   'item_faraday_phase_shunt',

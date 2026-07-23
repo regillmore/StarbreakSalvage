@@ -26,7 +26,8 @@ export const UPGRADE_EFFECT_KINDS = [
   'convoyReceiptPrinter',
   'miningLaserTransit',
   'ambushInsuranceStamp',
-  'surfaceBeaconDrone'
+  'surfaceBeaconDrone',
+  'craterShadowLens'
 ] as const;
 
 export type UpgradeCategory = (typeof UPGRADE_CATEGORIES)[number];
@@ -50,7 +51,8 @@ export type UpgradeId =
   | 'upgrade_convoy_receipt_printer'
   | 'upgrade_mining_laser_transit'
   | 'upgrade_ambush_insurance_stamp'
-  | 'upgrade_surface_beacon_drone';
+  | 'upgrade_surface_beacon_drone'
+  | 'upgrade_crater_shadow_lens';
 
 export interface UpgradeDefinition {
   readonly id: UpgradeId;
@@ -250,6 +252,17 @@ export const UPGRADES: readonly UpgradeDefinition[] = [
     summary: 'a standing lunar survey drone assigned to every expedition manifest',
     effect: 'Lunar sectors begin with 1 salvage and 5% special charge from a beacon ping.',
     cost: 14,
+    prerequisites: ['upgrade_relic_pattern_dossier']
+  },
+  {
+    id: 'upgrade_crater_shadow_lens',
+    category: 'archive',
+    iconKey: 'vault-index',
+    effectKind: 'craterShadowLens',
+    name: 'Crater Shadow Lens',
+    summary: 'a permanent shadow-reading lens fitted to every expedition sensor crown',
+    effect: 'Each sector begins with 2% special charge; Lunar sectors begin with 8% instead.',
+    cost: 9,
     prerequisites: ['upgrade_relic_pattern_dossier']
   }
 ];

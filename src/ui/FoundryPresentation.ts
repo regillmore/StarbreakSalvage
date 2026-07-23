@@ -527,6 +527,17 @@ function createCircuitStageCondition(
           label: 'CONDITION NOT MET · NEEDS AN EARLIER SHOT-CREATING STAGE'
         };
   }
+  if (itemId === 'item_penumbra_crown_aperture') {
+    return incoming.length >= 2
+      ? {
+          met: true,
+          label: `CONDITION MET · ${incoming.length}-SHOT VOLLEY · CENTERLINE PHASE / PLASMA · +1 RADIUS · +0.18S FLIGHT · -8% VELOCITY`
+        }
+      : {
+          met: false,
+          label: 'CONDITION NOT MET Â· NEEDS AN EARLIER MULTI-SHOT STAGE'
+        };
+  }
 
   return null;
 }

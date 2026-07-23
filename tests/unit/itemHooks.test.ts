@@ -181,6 +181,43 @@ describe('item synergies', () => {
     expect(laterBranches.every((projectile) => !projectile.tags.includes('plasma'))).toBe(true);
   });
 
+  it('lets Penumbra Crown Aperture phase only an upstream multi-shot centerline', () => {
+    const splitThenCrown: ItemInstance[] = [
+      { itemId: 'item_split_prism', acquisitionOrder: 0 },
+      { itemId: 'item_penumbra_crown_aperture', acquisitionOrder: 1 }
+    ];
+    const crownThenSplit: ItemInstance[] = [
+      { itemId: 'item_penumbra_crown_aperture', acquisitionOrder: 0 },
+      { itemId: 'item_split_prism', acquisitionOrder: 1 }
+    ];
+
+    const crowned = applyItemHooks('onFire', splitThenCrown, {
+      volleyIndex: 1,
+      projectiles: [baseProjectile]
+    });
+    const uncrowned = applyItemHooks('onFire', crownThenSplit, {
+      volleyIndex: 1,
+      projectiles: [baseProjectile]
+    });
+    const crownShots = crowned.projectiles.filter(
+      (projectile) => projectile.tags.includes('phase') && projectile.tags.includes('plasma')
+    );
+
+    expect(crowned.projectiles).toHaveLength(3);
+    expect(crownShots).toHaveLength(1);
+    expect(crownShots[0]).toMatchObject({
+      vx: 0,
+      vy: -644,
+      radius: baseProjectile.radius + 1,
+      ttl: baseProjectile.ttl + 0.18,
+      damage: baseProjectile.damage
+    });
+    expect(uncrowned.projectiles).toHaveLength(3);
+    expect(uncrowned.projectiles.every((projectile) => !projectile.tags.includes('phase'))).toBe(
+      true
+    );
+  });
+
   it('lets Parallax Echo Lattice phase only secondary shots created earlier in the chain', () => {
     const splitThenLattice: ItemInstance[] = [
       { itemId: 'item_split_prism', acquisitionOrder: 0 },

@@ -226,6 +226,7 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_split_prism',
     'item_boreline_crimper',
     'item_gangue_compression_die',
+    'item_penumbra_crown_aperture',
     'item_parallax_echo_lattice',
     'item_forkline_dynamo',
     'item_drone_uplink',
@@ -766,6 +767,37 @@ function applyOnFire(
           tags: addTags(projectile.tags, ['plasma'])
         };
       })
+    };
+  }
+
+  if (itemId === 'item_penumbra_crown_aperture' && payload.projectiles.length >= 2) {
+    const projectedCenter =
+      payload.projectiles.reduce(
+        (sum, projectile) => sum + projectile.x + projectile.vx * 0.12,
+        0
+      ) / payload.projectiles.length;
+    const centerlineIndex = payload.projectiles.reduce((closestIndex, projectile, index) => {
+      const closest = payload.projectiles[closestIndex];
+      if (!closest) return index;
+      const distance = Math.abs(projectile.x + projectile.vx * 0.12 - projectedCenter);
+      const closestDistance = Math.abs(closest.x + closest.vx * 0.12 - projectedCenter);
+      return distance < closestDistance ? index : closestIndex;
+    }, 0);
+
+    return {
+      ...payload,
+      projectiles: payload.projectiles.map((projectile, index) =>
+        index === centerlineIndex
+          ? {
+              ...projectile,
+              vx: projectile.vx * 0.92,
+              vy: projectile.vy * 0.92,
+              radius: projectile.radius + 1,
+              ttl: projectile.ttl + 0.18,
+              tags: addTags(projectile.tags, ['phase', 'plasma'])
+            }
+          : projectile
+      )
     };
   }
 
