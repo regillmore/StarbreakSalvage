@@ -82,6 +82,7 @@ import type {
 } from '../game/MissionDirector';
 import { createMissionObjectiveResultSnapshot } from '../game/ObjectiveDirector';
 import { getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
+import { createArenaHudFrameModel } from './ArenaHudFrame';
 import { createHudMeterModel, createHudThemeModel, type HudThemeOptions } from './HudTheme';
 import { createContractThemeDebugState } from './ContractTheme';
 import type { GameplayPauseDossier } from './PauseDossier';
@@ -289,6 +290,8 @@ export class GameplayScene implements Scene {
   private readonly heatMeter: HudMeterElements;
   private readonly confinedEnvironment: ConfinedEnvironmentPlan | null;
   private hudRoot: HTMLElement | null = null;
+  private arenaHudRoot: HTMLElement | null = null;
+  private arenaHudLayoutKey = '';
   private apexContactBanner: HTMLElement | null = null;
   private readonly apexEncounterPresentation: ApexEncounterReadModel | null;
   private exitSequence: SectorExitSequenceState | null = null;
@@ -442,15 +445,6 @@ export class GameplayScene implements Scene {
     themeReadout.dataset.testid = 'hud-theme-readout';
     themeReadout.textContent = `${hudTheme.label} | ${this.contract.shipName}`;
 
-    const meterStrip = ownerDocument.createElement('div');
-    meterStrip.className = 'hud-meter-strip';
-    meterStrip.append(
-      this.hullMeter.root,
-      this.specialMeter.root,
-      this.bombMeter.root,
-      this.heatMeter.root
-    );
-
     const sector = document.createElement('p');
     sector.className = 'hud-pill hud-pill-context';
     sector.dataset.testid = 'expedition-readout';
@@ -511,21 +505,81 @@ export class GameplayScene implements Scene {
       apex.hidden = true;
     }
 
-    const readoutStrip = ownerDocument.createElement('div');
-    readoutStrip.className = 'hud-readout-strip';
-    readoutStrip.append(
-      sector,
-      this.distanceReadout,
-      this.hullReadout,
-      this.verbReadout,
-      this.weaponReadout,
-      this.objectiveReadout,
-      this.warningReadout,
-      this.hintReadout,
-      this.bossReadout,
-      apex
+    const frameModel = createArenaHudFrameModel(
+      this.getViewportLayout(),
+      this.contract.shipAppearance.hudThemeKey
     );
-    chrome.append(themeReadout, meterStrip);
+    const arenaFrame = ownerDocument.createElement('section');
+    arenaFrame.className = 'arena-hud-frame';
+    arenaFrame.dataset.testid = 'arena-hud-frame';
+    arenaFrame.dataset.exitState = 'idle';
+    arenaFrame.dataset.hudTheme = frameModel.themeKey;
+    arenaFrame.dataset.viewportClass = frameModel.viewportClass;
+    arenaFrame.dataset.railMode = frameModel.railMode;
+    arenaFrame.setAttribute(
+      'aria-label',
+      `${this.contract.shipName} ${frameModel.designation.toLowerCase()} combat frame`
+    );
+    for (const [property, value] of Object.entries({
+      ...hudTheme.cssVariables,
+      ...frameModel.cssVariables
+    })) {
+      arenaFrame.style.setProperty(property, value);
+    }
+
+    const frameBoundary = ownerDocument.createElement('div');
+    frameBoundary.className = 'arena-hud-boundary';
+    frameBoundary.setAttribute('aria-hidden', 'true');
+    for (const corner of ['north-west', 'north-east', 'south-west', 'south-east']) {
+      const bracket = ownerDocument.createElement('span');
+      bracket.className = `arena-hud-corner arena-hud-corner-${corner}`;
+      frameBoundary.append(bracket);
+    }
+
+    const frameDesignator = ownerDocument.createElement('header');
+    frameDesignator.className = 'arena-hud-designator';
+    frameDesignator.dataset.testid = 'arena-hud-designator';
+    const frameMark = ownerDocument.createElement('span');
+    frameMark.className = 'arena-hud-contract-mark';
+    frameMark.textContent = frameModel.contractMark;
+    const frameIdentity = ownerDocument.createElement('span');
+    frameIdentity.className = 'arena-hud-contract-identity';
+    const frameTitle = ownerDocument.createElement('strong');
+    frameTitle.textContent = this.contract.shipName;
+    const frameSponsor = ownerDocument.createElement('span');
+    frameSponsor.textContent = `${frameModel.designation} // ${this.contract.sponsor}`;
+    frameIdentity.append(frameTitle, frameSponsor);
+    frameDesignator.append(frameMark, frameIdentity);
+
+    const leftMeters = ownerDocument.createElement('div');
+    leftMeters.className = 'arena-hud-meter-bank arena-hud-meter-bank-left';
+    leftMeters.dataset.testid = 'arena-hud-left-meters';
+    leftMeters.append(this.hullMeter.root, this.specialMeter.root);
+    const rightMeters = ownerDocument.createElement('div');
+    rightMeters.className = 'arena-hud-meter-bank arena-hud-meter-bank-right';
+    rightMeters.dataset.testid = 'arena-hud-right-meters';
+    rightMeters.append(this.bombMeter.root, this.heatMeter.root);
+
+    const navigationRail = ownerDocument.createElement('div');
+    navigationRail.className = 'arena-hud-rail arena-hud-navigation-rail';
+    navigationRail.append(this.distanceReadout, this.hullReadout, this.verbReadout);
+    const weaponRail = ownerDocument.createElement('div');
+    weaponRail.className = 'arena-hud-rail arena-hud-weapon-rail';
+    weaponRail.append(this.weaponReadout, this.bossReadout, apex);
+    const missionRail = ownerDocument.createElement('div');
+    missionRail.className = 'arena-hud-rail arena-hud-mission-rail';
+    missionRail.append(this.objectiveReadout, this.warningReadout, this.hintReadout);
+
+    arenaFrame.append(
+      frameBoundary,
+      frameDesignator,
+      leftMeters,
+      rightMeters,
+      navigationRail,
+      weaponRail,
+      missionRail
+    );
+    chrome.append(themeReadout, sector);
     const dossierSource = ownerDocument.createElement('div');
     dossierSource.className = 'hud-dossier-source';
     dossierSource.hidden = true;
@@ -539,7 +593,7 @@ export class GameplayScene implements Scene {
       boarding,
       contract
     );
-    hud.append(chrome, readoutStrip, dossierSource, this.positionReadout);
+    hud.append(chrome, dossierSource, this.positionReadout);
     const contactBanner = ownerDocument.createElement('aside');
     contactBanner.className = 'apex-contact-banner';
     contactBanner.dataset.testid = 'apex-contact-banner';
@@ -557,7 +611,14 @@ export class GameplayScene implements Scene {
     }
     this.apexContactBanner = contactBanner;
     this.hudRoot = hud;
-    this.uiRoot.replaceChildren(hud, contactBanner, this.exitToast, this.destructionToast);
+    this.arenaHudRoot = arenaFrame;
+    this.uiRoot.replaceChildren(
+      hud,
+      arenaFrame,
+      contactBanner,
+      this.exitToast,
+      this.destructionToast
+    );
     this.syncExitSequenceUi();
     this.syncPlayerDestructionUi();
     this.syncReadouts();
@@ -833,7 +894,7 @@ export class GameplayScene implements Scene {
       renderer.paintSectorExitTransition(exitPresentation, bounds);
     }
     renderer.endGameplayLayer();
-    renderer.paintGameplayFrame();
+    renderer.paintGameplayFrame(this.contract.shipAppearance);
   }
 
   public handleAction(action: InputAction): void {
@@ -1566,6 +1627,9 @@ export class GameplayScene implements Scene {
       if (this.hudRoot) {
         this.hudRoot.dataset.exitState = 'idle';
       }
+      if (this.arenaHudRoot) {
+        this.arenaHudRoot.dataset.exitState = 'idle';
+      }
       return;
     }
 
@@ -1577,6 +1641,9 @@ export class GameplayScene implements Scene {
     this.exitToast.textContent = presentation.announcement;
     if (this.hudRoot) {
       this.hudRoot.dataset.exitState = 'active';
+    }
+    if (this.arenaHudRoot) {
+      this.arenaHudRoot.dataset.exitState = 'active';
     }
   }
 
@@ -2014,6 +2081,7 @@ export class GameplayScene implements Scene {
 
   private syncReadouts(): void {
     const state = this.getCombatState();
+    this.syncArenaHudLayout();
     if (this.apexContactBanner) {
       this.apexContactBanner.hidden = !this.apexEncounter || state.timeSeconds > 6;
     }
@@ -2405,6 +2473,28 @@ export class GameplayScene implements Scene {
     }
 
     return this.viewportLayout;
+  }
+
+  private syncArenaHudLayout(): void {
+    if (!this.arenaHudRoot) {
+      return;
+    }
+
+    const layout = this.getViewportLayout();
+    const frame = layout.gameplaySafeFrame;
+    const layoutKey = `${layout.viewportClass}:${frame.x},${frame.y},${frame.width},${frame.height}`;
+
+    if (this.arenaHudLayoutKey === layoutKey) {
+      return;
+    }
+
+    const model = createArenaHudFrameModel(layout, this.contract.shipAppearance.hudThemeKey);
+    this.arenaHudRoot.dataset.viewportClass = model.viewportClass;
+    this.arenaHudRoot.dataset.railMode = model.railMode;
+    for (const [property, value] of Object.entries(model.cssVariables)) {
+      this.arenaHudRoot.style.setProperty(property, value);
+    }
+    this.arenaHudLayoutKey = layoutKey;
   }
 
   private getActiveHazards(

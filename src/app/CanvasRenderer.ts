@@ -885,7 +885,7 @@ export class CanvasRenderer {
     context.restore();
   }
 
-  public paintGameplayFrame(): void {
+  public paintGameplayFrame(appearance: ShipAppearance = DEFAULT_PLAYER_SHIP_APPEARANCE): void {
     const { width } = this.size;
     const frame = this.viewportLayout.gameplaySafeFrame;
     const context = this.context;
@@ -893,11 +893,13 @@ export class CanvasRenderer {
 
     context.save();
     context.globalAlpha = velocityCues.frameAlpha;
-    context.strokeStyle = '#7cf7ff';
+    context.strokeStyle = appearance.primaryColor;
     context.lineWidth = 1;
+    context.setLineDash(appearance.hudThemeKey === 'phase' ? [8, 5] : []);
     context.strokeRect(frame.x, frame.y, frame.width, frame.height);
+    context.setLineDash([]);
     context.globalAlpha = velocityCues.frameRailAlpha;
-    context.strokeStyle = '#ffd166';
+    context.strokeStyle = appearance.engineColor;
 
     for (let y = frame.y + frame.height - 42; y > frame.y + 42; y -= 72) {
       context.beginPath();
@@ -909,11 +911,11 @@ export class CanvasRenderer {
     if (velocityCues.frameRailAlpha > 0.08) {
       const railWidth = Math.min(42, Math.max(18, frame.x + 22));
       const leftRail = context.createLinearGradient(0, 0, railWidth, 0);
-      leftRail.addColorStop(0, 'rgba(124, 247, 255, 0.24)');
+      leftRail.addColorStop(0, `${appearance.primaryColor}3d`);
       leftRail.addColorStop(1, 'rgba(124, 247, 255, 0)');
 
       const rightRail = context.createLinearGradient(width, 0, width - railWidth, 0);
-      rightRail.addColorStop(0, 'rgba(255, 209, 102, 0.2)');
+      rightRail.addColorStop(0, `${appearance.engineColor}33`);
       rightRail.addColorStop(1, 'rgba(255, 209, 102, 0)');
 
       context.globalAlpha = velocityCues.frameRailAlpha;

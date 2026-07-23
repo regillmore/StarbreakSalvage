@@ -675,3 +675,11 @@ Crater Shadow adds one boolean to the already-created sector-start upgrade proje
 Penumbra runs once per fitted `onFire` dispatch. It performs one bounded mean reduction, one nearest-center reduction, and one array map across the already-capped current volley; it creates no additional projectile, RNG draw, timer, counter, visual kind, collision branch, or effect. Foundry reuses that reducer inside its existing bounded preview and DPS samples.
 
 The checked build emits `1,028.34 kB` minified / `282.16 kB` gzip initial JavaScript and unchanged `104.01 kB` / `20.77 kB` CSS, an increase of `1.79 kB` / `0.44 kB` JavaScript over work order 202. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, generation pass, RNG stream, static base path, simulation cap, or warning threshold changed.
+
+## Work order 204 contract-frame budgets
+
+Gameplay creates one arena-frame subtree per sector: one boundary, four corner spans, one two-line designator, two meter-bank wrappers, and three readout-rail wrappers. The four meters and all tactical paragraphs are existing persistent nodes moved out of the former top strip, not duplicated. Text and meter updates remain the existing constant-size mutations.
+
+Safe-frame CSS coordinates are recalculated only after the cached viewport layout key changes; the ordinary fixed-step path performs one string-key equality and returns. Canvas frame theming replaces two constant colors and adds one empty-or-dashed line-style call. CSS scan glints affect one pseudo-element and stop entirely in reduced-motion or performance mode. No actor, projectile, effect, target scan, RNG draw, save field, retained history, or dependency is added.
+
+The checked build emits `1,031.51 kB` minified / `283.19 kB` gzip initial JavaScript and `113.05 kB` / `22.25 kB` CSS, increases of `3.17 kB` / `1.03 kB` JavaScript and `9.04 kB` / `1.48 kB` CSS over work order 203. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, generation pass, RNG stream, static base path, simulation cap, or warning threshold changed.

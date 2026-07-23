@@ -1024,6 +1024,14 @@ seed + permanent save fingerprint
 - Penumbra's ordered `onFire` reducer requires at least two already-built projectiles, computes their mean projected horizontal position at 0.12 seconds, and chooses the nearest stable input index. It changes one shot to 92% velocity, +1 radius, +0.18 seconds TTL, `phase`, and `plasma`, without changing damage or array length.
 - `FoundryPresentation` calls the same production reducer and contributes only a met/unmet condition label. No preview-only projectile formula, new visual kind, combat state field, target scan, proc counter, or RNG draw is introduced.
 
+### Work order 204 contract-frame boundary
+
+- `ArenaHudFrame` is a pure viewport/theme projection. It accepts the authoritative `ViewportLayout.gameplaySafeFrame` and `ShipHudThemeKey`, then returns exact CSS coordinates, the side-or-stacked rail mode, and one contract dialect. It owns no DOM, combat state, timers, input, or resize listener.
+- `GameplayScene` creates the persistent frame DOM once per sector. Existing meter/readout elements are reparented into two meter banks plus navigation, weapon, and mission rails; the WO178 hidden dossier source remains unchanged. Per-frame synchronization mutates existing text/meters and returns early from layout work unless the safe-frame key changes.
+- Wide rails occupy the viewport gutters outside the fixed arena. Standard/narrow rails occupy only the HUD reserves already produced by `ViewportLayout`; neither path changes `COMBAT_ARENA_WIDTH`, `COMBAT_ARENA_HEIGHT`, canvas transforms, camera clipping, or `viewportPointToCombatPoint`.
+- `CanvasRenderer.paintGameplayFrame` receives the selected `ShipAppearance` strictly for primary/engine colors and the Phase dashed boundary. It still draws the same bounded arena rectangle, diagonal rails, and two gutter gradients after the clipped gameplay layer.
+- Reduced-motion/performance/high-contrast behavior is CSS-only and changes no HUD data. Exit state is mirrored to the top strip and arena frame so both disappear during the existing departure handoff.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

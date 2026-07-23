@@ -78,6 +78,7 @@ Phase 4 introduces display/input/identity polish. Add tests closest to the risk:
 - contract selection preview state for keyboard focus, pointer selection, and narrow layouts; work order 034 adds pure preview-model coverage and Playwright preview-selection assertions, with manual contrast/narrow browser checks still useful;
 - themed HUD readability for hull, economy, objective, warnings, boss, weapon, special, bomb, and build state; work order 035 adds semantic meter/readout coverage, with manual cross-theme checks still useful;
 - live-HUD urgency boundaries and pause-dossier completeness; work order 178 moves economy/build/route/sector/ledger/support detail behind pause, suppresses ally command controls, caps the narrow HUD at 156 px, and adds desktop/narrow Chromium checks for all four dossier sections plus sticky navigation controls;
+- safe-frame cockpit geometry and contract dialects; work order 204 pins exact 1280 x 720 side-console and 390 x 700 stacked-rail placement, keeps the top strip under the existing narrow ceiling, and exercises themed/reduced-motion/high-contrast frame output through unit, Chromium, and managed-browser checks;
 - non-combat contract theme propagation for route choice, route event, shop, reward, sector transition, run summary, and debug overlay; work order 038 adds pure theme-model coverage plus Playwright assertions through the route/shop/reward/transition/summary path;
 - viewport/input/HUD debug smoke for DPR, canvas pixel size, safe-frame origin/size, active input mode, HUD mode, contract preview, and selected contract theme; work order 039 adds Playwright assertions for narrow viewport launch, pointer input, high-contrast HUD mode, and preview/HUD theme state;
 - reduced motion, high contrast, and performance mode interactions with ship previews, ship wake/damage cues, and contract HUD themes; work order 036 simplifies preview/HUD treatment under those settings and work order 037 adds cue-state coverage for ship wake, damage, readiness, and heat stress.
@@ -492,6 +493,7 @@ Phase 10 accessibility checks should also cover mission briefings and branch foc
 - [x] Upgrade Bay exposes the permanent Surface Beacon's lunar entry effect and prerequisite, while Parallax Echo Lattice reports a text-based met/unmet upstream-secondary condition and phase output in Hardpoint Control.
 - [x] Hardpoint Control exposes Base DPS with a text description of its cadence-cycle sample and direct-projectile boundary; draft deltas and sample length remain readable without color at desktop and narrow widths.
 - [x] Directional warning beams retain a non-color pre-fire route and forward guide, while the launched body has no misleading trailing telegraph or stationary edge head in reduced-motion, performance, and high-contrast modes.
+- [x] The combat HUD surrounds the exact safe frame with contract-themed identity, semantic meters, navigation/weapon/mission rails, responsive side-or-stacked placement, and non-color high-contrast/reduced-motion fallbacks.
 
 ## Release checklist
 

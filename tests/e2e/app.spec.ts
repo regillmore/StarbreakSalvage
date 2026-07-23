@@ -248,6 +248,19 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('pickup-readout')).toContainText(/Credits .* Salvage/);
   await expect(page.getByTestId('cockpit-hud')).toHaveAttribute('data-hud-theme', 'redline');
   await expect(page.getByTestId('hud-theme-readout')).toContainText('REDLINE COCKPIT');
+  await expect(page.getByTestId('arena-hud-frame')).toHaveAttribute('data-hud-theme', 'redline');
+  await expect(page.getByTestId('arena-hud-frame')).toHaveAttribute('data-rail-mode', 'side');
+  await expect(page.getByTestId('arena-hud-designator')).toContainText('PURSUIT VECTOR');
+  await expect(page.getByTestId('arena-hud-designator')).toContainText('Debt Runner');
+  const arenaFrameBox = await page.getByTestId('arena-hud-frame').boundingBox();
+  const arenaLeftMetersBox = await page.getByTestId('arena-hud-left-meters').boundingBox();
+  const arenaRightMetersBox = await page.getByTestId('arena-hud-right-meters').boundingBox();
+  if (!arenaFrameBox || !arenaLeftMetersBox || !arenaRightMetersBox) {
+    throw new Error('Expected the wide contract frame and both meter consoles.');
+  }
+  expect(arenaFrameBox).toMatchObject({ x: 381, y: 94, width: 519, height: 584 });
+  expect(arenaLeftMetersBox.x + arenaLeftMetersBox.width).toBeLessThan(arenaFrameBox.x);
+  expect(arenaRightMetersBox.x).toBeGreaterThan(arenaFrameBox.x + arenaFrameBox.width);
   await expect(page.getByTestId('hull-meter')).toHaveAttribute('aria-valuenow', '100');
   await expect(page.getByTestId('special-meter')).toHaveAttribute('aria-valuenow', '100');
   await expect(page.getByTestId('bomb-meter')).toHaveAttribute('aria-valuenow', '100');
@@ -1755,6 +1768,11 @@ test('keeps the gameplay HUD and safe frame readable in a narrow viewport', asyn
   await expect(page.locator('.debug-overlay')).toContainText('HUD standard');
   await expect(page.getByTestId('objective-readout')).toBeVisible();
   await expect(page.getByTestId('expedition-readout')).toBeVisible();
+  await expect(page.getByTestId('arena-hud-frame')).toHaveAttribute(
+    'data-viewport-class',
+    'narrow'
+  );
+  await expect(page.getByTestId('arena-hud-frame')).toHaveAttribute('data-rail-mode', 'stacked');
   await expect(page.getByTestId('pickup-readout')).toBeHidden();
   await expect(page.locator('.crew-command-bar')).toHaveCount(0);
 
@@ -1765,6 +1783,17 @@ test('keeps the gameplay HUD and safe frame readable in a narrow viewport', asyn
 
   expect(hudBox.width).toBeLessThanOrEqual(390);
   expect(hudBox.y + hudBox.height).toBeLessThanOrEqual(156);
+
+  const arenaFrameBox = await page.getByTestId('arena-hud-frame').boundingBox();
+  const meterBankBox = await page.getByTestId('arena-hud-left-meters').boundingBox();
+  const missionRailBox = await page.locator('.arena-hud-mission-rail').boundingBox();
+  if (!arenaFrameBox || !meterBankBox || !missionRailBox) {
+    throw new Error('Expected the stacked narrow contract frame and its surrounding rails.');
+  }
+  expect(arenaFrameBox).toMatchObject({ x: 14, y: 204, width: 362, height: 407 });
+  expect(meterBankBox.y + meterBankBox.height).toBeLessThan(arenaFrameBox.y);
+  expect(missionRailBox.y).toBeGreaterThan(arenaFrameBox.y + arenaFrameBox.height);
+  expect(missionRailBox.y + missionRailBox.height).toBeLessThanOrEqual(700);
 
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('pause-dossier')).toBeVisible();

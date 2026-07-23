@@ -2893,3 +2893,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 203. Crater Shadow Lens now lives in Archive progression with restored-item precedence, while Penumbra Crown Aperture turns one upstream multi-shot centerline into a longer-lived phased plasma round through the shared fire-hook and Foundry paths.
+
+### BL69 - Contract arena command frame
+
+Acceptance:
+
+- Align one contract-themed HUD frame to the exact fixed gameplay safe frame without changing combat geometry or pointer mapping.
+- Use wide side consoles when gutters exist and stacked top/bottom rails when they do not, keeping maneuvering space clear.
+- Move hull, special, bombs, heat, distance, reserves, weapon state, objective state, warnings, and boss state close to the action while retaining only identity/context in the page-top strip.
+- Give all eight contract HUD themes distinct code-native marks, designations, border treatments, and contract-color canvas rails.
+- Retain semantic meter/text cues, pause-dossier ownership of low-urgency detail, high contrast, reduced motion, performance mode, and exit fading.
+- Protect 1280 x 720 and 390 x 700 geometry, narrow viewport containment, clean browser logs, and static Pages output.
+
+Status:
+
+- Implemented in work order 204. `ArenaHudFrame` owns safe-frame geometry and theme dialects, `GameplayScene` owns the persistent surrounding DOM rails, and `CanvasRenderer` colors the existing arena linework from the selected ship appearance.

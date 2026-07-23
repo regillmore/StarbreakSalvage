@@ -89,3 +89,32 @@ Penumbra Crown Aperture occupies the released common lunar slot as a bounded ord
 Focused coverage protects permanent/restored precedence, Lunar and ordinary charge values, generation-fingerprint neutrality, active/compatibility breadth, source-weighted reward snapshots, exact centerline selection, reverse-order neutrality, Hardpoint condition copy, the unchanged 29-item stress fixture, and the 18-card Upgrade Bay. The managed in-app browser loaded the documented host, rendered Crater Shadow Lens beside the existing Archive upgrades with correct cost/prerequisite/effect copy, reported 18 cards, and remained inside the established responsive scrolling panel. The authenticated stop command closed the host and its original shell returned exit code 0.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 115 Vitest files and 752 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,028.34 kB` minified / `282.16 kB` gzip initial JavaScript and unchanged `104.01 kB` / `20.77 kB` CSS, an increase of `1.79 kB` / `0.44 kB` JavaScript over work order 202. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, generation stream, route topology, static base path, actor/projectile/effect cap, or warning threshold changed.
+
+## Work order 204 - Contract arena command frame
+
+Goal: make the fixed combat arena feel like the selected ship's cockpit display and move essential status from a detached page header onto a readable frame surrounding the action.
+
+Prompt:
+
+> Rebuild the live combat HUD around the exact gameplay safe frame. Give every contract theme its own code-native frame dialect, keep the arena itself unobstructed where viewport space permits, and place hull, special, bombs, heat, distance, reserves, weapon state, objective progress, immediate warnings, and boss state close to the playfield. Preserve the WO178 pause-dossier boundary, fixed combat geometry, responsive input mapping, accessibility settings, and deterministic simulation.
+
+Acceptance criteria:
+
+- A persistent DOM frame is aligned to the exact `gameplaySafeFrame` rectangle and updates when viewport class or dimensions change.
+- Wide viewports place contract identity, meters, weapon state, and mission state in side consoles outside the arena; standard and narrow viewports stack the same rails in the reserved space above and below it.
+- The page-top cockpit strip is reduced to ship identity plus compact act/sector/stage context instead of duplicating the action HUD.
+- Hull, special, bombs, and heat retain their semantic meters and live values. Distance, exact hull/reserves, weapon state, objectives, warnings, urgent hints, boss state, and apex state retain text cues.
+- Redline, Parish, Ledger, Phase, Aegis, Scrap, Warranty, and Relic themes each expose a distinct mark/designation and frame treatment derived from the selected contract.
+- The canvas boundary and motion rails use the selected ship's primary and engine colors; the Phase boundary keeps a non-color dashed cue.
+- Frame rails remain noninteractive, do not alter arena size or pointer mapping, and fade with the existing sector-exit sequence.
+- Reduced-motion and performance modes stop frame scanning and remove heavy glow. High contrast uses white boundaries, yellow corners, and opaque panels.
+- Narrow 390 x 700 layout keeps meter banks above the arena, mission/weapon rails below it, the top strip within its prior 156 px ceiling, and all visible rails within the viewport.
+- Saves, snapshots, route/sector generation, fixed-step combat, actor/projectile/effect caps, pause dossier, static hosting, and dependency count remain unchanged.
+
+Status: implemented. `ArenaHudFrame` derives the exact CSS geometry, side-versus-stacked rail mode, and eight contract dialects from the existing viewport and ship-theme authorities. `GameplayScene` mounts one persistent boundary, four corners, a contract designator, two meter banks, and navigation/weapon/mission rails. Layout synchronization is cached by the safe-frame rectangle, while ordinary meter and readout mutation continues through the existing live HUD path.
+
+`CanvasRenderer.paintGameplayFrame` now accepts the selected ship appearance so its arena outline, motion rails, and gutter fades agree with the DOM cockpit. No gameplay layer, collision boundary, camera transform, or input mapping changed. The slim top strip retains contract and mission context; low-urgency economy, build, route, ledger, and support detail remain in the WO178 pause dossier.
+
+Focused coverage protects all eight dialects, exact 1280 x 720 and 390 x 700 frame geometry, side-console placement outside the wide arena, stacked meter/mission placement around the narrow arena, and the previous narrow top-HUD ceiling. The managed in-app browser rendered a Relic Thief `VAULT SIGHT` frame at the documented host with themed border glow, contract-colored canvas rails, meters flanking the action, and lower weapon/mission consoles. The tab, authenticated host, and original host shell closed cleanly.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 116 Vitest files and 755 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,031.51 kB` minified / `283.19 kB` gzip initial JavaScript and `113.05 kB` / `22.25 kB` CSS, increases of `3.17 kB` / `1.03 kB` JavaScript and `9.04 kB` / `1.48 kB` CSS over work order 203. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, generation stream, route topology, static base path, simulation cap, or warning threshold changed.
