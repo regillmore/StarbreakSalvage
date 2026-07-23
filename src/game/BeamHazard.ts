@@ -20,6 +20,18 @@ export interface BeamHazardSegment {
   readonly length: number;
 }
 
+export interface BeamHazardPoint {
+  readonly x: number;
+  readonly y: number;
+}
+
+export interface ActiveBeamHazardPresentation {
+  readonly bolt: BeamHazardSegment | null;
+  readonly leadingTelegraph: BeamHazardSegment | null;
+  readonly head: BeamHazardPoint | null;
+  readonly tail: BeamHazardPoint | null;
+}
+
 export interface BeamHazardRect {
   readonly left: number;
   readonly top: number;
@@ -50,6 +62,7 @@ interface ActiveBeamHazard {
   readonly phaseProgress: number;
   readonly worldProgress?: number;
   readonly worldDistance?: number;
+  readonly launchWorldDistance?: number;
   readonly elapsedSeconds?: number;
 }
 
@@ -134,17 +147,7 @@ function getDistantWorldBeamTrack(
   activeHazard: ActiveBeamHazard,
   bounds: BeamBounds
 ): BeamHazardSegment {
-  const arenaSegment = getBeamHazardSegment(activeHazard.hazard, bounds);
-  const overscan = Math.max(bounds.width, bounds.height) * BEAM_WORLD_OVERSCAN_RATIO;
-  const directionX = Math.cos(arenaSegment.angle);
-  const directionY = Math.sin(arenaSegment.angle);
-  const segment = createBeamSegment(
-    arenaSegment.startX - directionX * overscan,
-    arenaSegment.startY - directionY * overscan,
-    arenaSegment.endX + directionX * overscan,
-    arenaSegment.endY + directionY * overscan,
-    arenaSegment.radius
-  );
+  const segment = createDistantBeamTrack(activeHazard.hazard, bounds);
   const totalSpan = Math.max(
     1,
     activeHazard.hazard.endDistance - activeHazard.hazard.telegraphDistance
@@ -164,15 +167,39 @@ function getDistantWorldBeamTrack(
   return translateBeamSegment(segment, 0, worldOffsetY);
 }
 
+function getLaunchedBeamTrack(
+  activeHazard: ActiveBeamHazard,
+  bounds: BeamBounds
+): BeamHazardSegment {
+  const segment = createDistantBeamTrack(activeHazard.hazard, bounds);
+  const launchWorldDistance = activeHazard.launchWorldDistance ?? activeHazard.hazard.startDistance;
+  const launchOffsetY = roundBeamValue(
+    (launchWorldDistance - activeHazard.hazard.startDistance) * BEAM_WORLD_SCROLL_SCALE
+  );
+  return translateBeamSegment(segment, 0, launchOffsetY);
+}
+
 export function getActiveBeamBoltSegment(
   activeHazard: ActiveBeamHazard,
   bounds: BeamBounds
 ): BeamHazardSegment | null {
+  return getActiveBeamHazardPresentation(activeHazard, bounds).bolt;
+}
+
+export function getActiveBeamHazardPresentation(
+  activeHazard: ActiveBeamHazard,
+  bounds: BeamBounds
+): ActiveBeamHazardPresentation {
   if (activeHazard.phase !== 'active') {
-    return null;
+    return {
+      bolt: null,
+      leadingTelegraph: null,
+      head: null,
+      tail: null
+    };
   }
 
-  const worldTrack = getDistantWorldBeamTrack(activeHazard, bounds);
+  const worldTrack = getLaunchedBeamTrack(activeHazard, bounds);
   const timing = getBeamHazardTiming(activeHazard.hazard, bounds);
   const elapsedSeconds = clamp(
     activeHazard.elapsedSeconds ?? activeHazard.phaseProgress * timing.totalSeconds,
@@ -191,16 +218,27 @@ export function getActiveBeamBoltSegment(
     worldTrack.length
   );
 
-  if (headDistance - tailDistance <= 0.001) {
-    return null;
-  }
+  const headProgress = headDistance / worldTrack.length;
+  const tailProgress = tailDistance / worldTrack.length;
+  const head = getPointOnBeamSegment(worldTrack, headProgress);
+  const tail = getPointOnBeamSegment(worldTrack, tailProgress);
+  const worldBolt =
+    headDistance - tailDistance <= 0.001
+      ? null
+      : sliceBeamSegment(worldTrack, tailProgress, headProgress);
+  const leadingWorldSegment =
+    headDistance >= worldTrack.length - 0.001
+      ? null
+      : sliceBeamSegment(worldTrack, headProgress, 1);
 
-  const worldBolt = sliceBeamSegment(
-    worldTrack,
-    tailDistance / worldTrack.length,
-    headDistance / worldTrack.length
-  );
-  return clipBeamSegmentToArena(worldBolt, bounds);
+  return {
+    bolt: worldBolt ? clipBeamSegmentToArena(worldBolt, bounds) : null,
+    leadingTelegraph: leadingWorldSegment
+      ? clipBeamSegmentToArena(leadingWorldSegment, bounds)
+      : null,
+    head: isBeamPointVisible(head, worldTrack.radius, bounds) ? head : null,
+    tail: tailDistance > 0.001 && isBeamPointVisible(tail, worldTrack.radius, bounds) ? tail : null
+  };
 }
 
 export function getBeamHazardTiming(
@@ -301,6 +339,40 @@ function getEdgePoint(
   }
   if (edge === 'left') return { x: 0, y: bounds.height * ratio };
   return { x: bounds.width, y: bounds.height * ratio };
+}
+
+function createDistantBeamTrack(
+  hazard: ActiveBeamHazard['hazard'],
+  bounds: BeamBounds
+): BeamHazardSegment {
+  const arenaSegment = getBeamHazardSegment(hazard, bounds);
+  const overscan = Math.max(bounds.width, bounds.height) * BEAM_WORLD_OVERSCAN_RATIO;
+  const directionX = Math.cos(arenaSegment.angle);
+  const directionY = Math.sin(arenaSegment.angle);
+  return createBeamSegment(
+    arenaSegment.startX - directionX * overscan,
+    arenaSegment.startY - directionY * overscan,
+    arenaSegment.endX + directionX * overscan,
+    arenaSegment.endY + directionY * overscan,
+    arenaSegment.radius
+  );
+}
+
+function getPointOnBeamSegment(segment: BeamHazardSegment, progress: number): BeamHazardPoint {
+  return {
+    x: roundBeamValue(segment.startX + (segment.endX - segment.startX) * progress),
+    y: roundBeamValue(segment.startY + (segment.endY - segment.startY) * progress)
+  };
+}
+
+function isBeamPointVisible(point: BeamHazardPoint, radius: number, bounds: BeamBounds): boolean {
+  const margin = radius * 1.2;
+  return (
+    point.x >= -margin &&
+    point.x <= bounds.width + margin &&
+    point.y >= -margin &&
+    point.y <= bounds.height + margin
+  );
 }
 
 function translateBeamSegment(

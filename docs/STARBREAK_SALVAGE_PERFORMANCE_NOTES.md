@@ -659,3 +659,11 @@ Hardpoint entry and event-driven redraws perform one numeric damage sample for t
 The visual model slices only the first six sampled volleys and retains the existing 48-projectile DOM limit. No damage sample enters combat, animation frames, collision, target scans, saves, generation, or RNG. The menu adds one stat card and one static explanatory line.
 
 The checked build emits `1,025.47 kB` minified / `281.35 kB` gzip initial JavaScript and `104.01 kB` / `20.77 kB` CSS, increases of `0.94 kB` / `0.40 kB` JavaScript and `0.43 kB` / `0.07 kB` CSS over work order 200. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, generation pass, RNG stream, static base path, visual actor cap, or warning threshold changed.
+
+## Work order 202 launched-beam budgets
+
+Each currently active warning beam stores one transient numeric launch distance beside its elapsed-time clock. Frame projection still performs bounded line slicing and arena clipping: one visible bolt, at most one forward guide, and constant-time point visibility for the physical head and tail. Collision and at-most-24 environment damage samples reuse the same clipped bolt and add no target scan.
+
+Active rendering removes the full-track trail and source emitter. It draws at most one dashed forward guide, four luminous strokes, one physical head flare, one forward endpoint marker, and four guide ticks; the marker/ticks disappear with the guide after the head exits. Reduced motion and performance mode retain their existing lower marker/glow budgets.
+
+The checked build emits `1,026.55 kB` minified / `281.72 kB` gzip initial JavaScript and unchanged `104.01 kB` / `20.77 kB` CSS, an increase of `1.08 kB` / `0.37 kB` JavaScript over work order 201. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, authored plan, generation pass, RNG stream, static base path, simulation cap, or warning threshold changed.

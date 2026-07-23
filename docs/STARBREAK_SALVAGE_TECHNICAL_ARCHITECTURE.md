@@ -1007,6 +1007,15 @@ seed + permanent save fingerprint
 - Damage sampling and visual sampling are separate. The complete cadence cycle feeds only bounded numeric reduction; the DOM preview still selects at most six waves and 48 projectiles.
 - The dashboard supplies both draft and committed Base DPS through the existing attack-stat comparison model. Weapon selection and circuit edits redraw that pure model and introduce no persistent UI state, combat mutation, save field, or RNG draw.
 
+### Work order 202 launched-beam boundary
+
+- `getWorldAnchoredBeamTrack` remains the pre-fire indicator authority. It projects the distant authored vector against current scroll and clips only the resulting entrance/exit copy to true arena edges.
+- `SectorHazardRuntimeState.beamLaunchWorldDistances` captures actual scroll distance exactly once when a warning beam becomes active. It is transient, clears with sector runtime and boss suspension, and is projected through `SectorHazardActivationOptions` without entering snapshots or authored plans.
+- `getActiveBeamHazardPresentation` builds one distant trajectory from the captured launch offset. Elapsed time advances head and tail along that immutable vector at the established 960 units/second, so later scroll cannot translate, rotate, or reintroduce an endpoint.
+- The presentation exposes the clipped bolt, its clipped head-to-target guide, and true visible head/tail points separately. Collision and continuous environment damage retain `getActiveBeamBoltSegment` as a compatibility projection of that same bolt.
+- `CanvasRenderer` uses the full track only before ignition. Active rendering uses a flat-clipped luminous body, a physical head flare when its center overlaps the arena margin, and optional markers/reticle only on the forward guide. Once the head leaves, no guide geometry remains during the two-second dwell or clearing tail.
+- The change introduces no beam actor, authored hazard field, RNG draw, save/snapshot field, generation fingerprint, damage branch, target scan, or alternate collision path.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

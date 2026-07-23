@@ -56,6 +56,7 @@ describe('SectorHazardRuntime', () => {
     }
 
     expect(state.effectiveDistances).toEqual({});
+    expect(state.beamLaunchWorldDistances).toEqual({});
     expect(state.pausedAdvanceSeconds).toBe(0);
     expect(getActiveSectorHazards(plan, 120)).toEqual([]);
   });
@@ -159,7 +160,16 @@ describe('SectorHazardRuntime', () => {
 
     expect(slow.beamElapsedSeconds[beam.id]).toBe(1);
     expect(fast.beamElapsedSeconds[beam.id]).toBe(1);
+    expect(slow.beamLaunchWorldDistances[beam.id]).toBe(160);
+    expect(fast.beamLaunchWorldDistances[beam.id]).toBe(160);
     expect(slow.effectiveDistances[beam.id]).toBe(fast.effectiveDistances[beam.id]);
+
+    const launched = getActiveSectorHazards(plan, 160, {
+      distanceOverrides: slow.effectiveDistances,
+      beamLaunchWorldDistanceOverrides: slow.beamLaunchWorldDistances,
+      elapsedSecondsOverrides: slow.beamElapsedSeconds
+    })[0];
+    expect(launched?.launchWorldDistance).toBe(160);
 
     const timing = getBeamHazardTiming(beam);
     for (let step = 0; step < Math.ceil(timing.totalSeconds * 10); step += 1) {

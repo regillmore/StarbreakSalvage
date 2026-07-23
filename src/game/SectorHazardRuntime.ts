@@ -10,6 +10,7 @@ export interface SectorHazardRuntimeState {
   lastScrollDistance: number;
   readonly effectiveDistances: Record<string, number>;
   readonly beamElapsedSeconds: Record<string, number>;
+  readonly beamLaunchWorldDistances: Record<string, number>;
   pausedAdvanceSeconds: number;
   pausedAdvanceDistance: number;
 }
@@ -30,6 +31,7 @@ export function createSectorHazardRuntimeState(
     lastScrollDistance: roundRuntimeValue(Math.max(0, initialScrollDistance)),
     effectiveDistances: {},
     beamElapsedSeconds: {},
+    beamLaunchWorldDistances: {},
     pausedAdvanceSeconds: 0,
     pausedAdvanceDistance: 0
   };
@@ -51,6 +53,9 @@ export function advanceSectorHazardRuntime(
     }
     for (const hazardId of Object.keys(state.beamElapsedSeconds)) {
       delete state.beamElapsedSeconds[hazardId];
+    }
+    for (const hazardId of Object.keys(state.beamLaunchWorldDistances)) {
+      delete state.beamLaunchWorldDistances[hazardId];
     }
     state.lastScrollDistance = scrollDistance;
     return;
@@ -100,6 +105,7 @@ export function advanceSectorHazardRuntime(
 
   for (const { hazard } of beamActive) {
     state.beamElapsedSeconds[hazard.id] ??= 0;
+    state.beamLaunchWorldDistances[hazard.id] ??= scrollDistance;
   }
 
   const hazardById = new Map(plan.hazards.map((hazard) => [hazard.id, hazard]));
@@ -107,6 +113,7 @@ export function advanceSectorHazardRuntime(
     const hazard = hazardById.get(hazardId);
     if (!hazard || hazard.kind !== 'warning_beam') {
       delete state.beamElapsedSeconds[hazardId];
+      delete state.beamLaunchWorldDistances[hazardId];
       continue;
     }
     if (

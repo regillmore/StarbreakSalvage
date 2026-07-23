@@ -2863,3 +2863,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 201. `FoundryPresentation` measures direct body-damage throughput over a bounded least-common cadence cycle, while `FoundryScene` presents the one-decimal result and explicit sample boundary as a sixth responsive attack stat.
+
+### BL67 - Launched directional beam lifecycle
+
+Acceptance:
+
+- Preserve the scrolling, world-anchored pre-fire route while freezing the physical beam trajectory at its actual ignition position.
+- Draw an active dashed guide only ahead of the physical head; remove every trailing guide, emitter, reticle, and marker after the bolt passes.
+- Keep the physical head flare attached to the true moving head and use flat arena cuts once that head is outside line of sight.
+- Carry the clipped luminous body and shared collision capsule through entry, the exact two-second full-span dwell, and complete tail departure.
+- Prevent top-origin and other offscreen endpoints from scrolling or detaching back into view during clearing.
+- Preserve shared velocity, indiscriminate piercing damage, pause-safe runtime, deterministic plans, accessibility modes, static hosting, and dependency count.
+
+Status:
+
+- Implemented in work order 202. Runtime records a transient launch anchor, `BeamHazard` separates the scrolling indicator from immutable projectile presentation geometry, and `CanvasRenderer` renders only a forward guide plus the true moving beam body.

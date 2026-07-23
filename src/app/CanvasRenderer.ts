@@ -39,8 +39,9 @@ import { generateStarfield, type Star, starCountForViewport } from '../core/star
 import { createDefaultCombatBounds } from '../game/CombatGeometry';
 import type { CombatBounds } from '../game/CombatState';
 import {
-  getActiveBeamBoltSegment,
+  getActiveBeamHazardPresentation,
   getWorldAnchoredBeamTrack,
+  type BeamHazardPoint,
   type BeamHazardSegment
 } from '../game/BeamHazard';
 import { getPlayerShipCueState, type PlayerShipCueState } from './ShipCombatCues';
@@ -3377,23 +3378,31 @@ export class CanvasRenderer {
     style: SectorHazardVisualState
   ): void {
     const context = this.context;
-    const track = getWorldAnchoredBeamTrack(activeHazard, bounds);
-    const bolt = getActiveBeamBoltSegment(activeHazard, bounds);
-    if (!track) {
-      return;
-    }
     const active = activeHazard.phase === 'active';
+    const track = active ? null : getWorldAnchoredBeamTrack(activeHazard, bounds);
+    const presentation = active ? getActiveBeamHazardPresentation(activeHazard, bounds) : null;
+    const bolt = presentation?.bolt ?? null;
+    const leadingTelegraph = presentation?.leadingTelegraph ?? track;
+    if (!bolt && !leadingTelegraph) return;
+
     const highContrast = this.settings.bulletContrast === 'high';
     const coreColor = highContrast ? '#ffffff' : '#fffbd6';
 
     context.save();
-    context.lineCap = 'round';
+    context.lineCap = active ? 'butt' : 'round';
     context.lineJoin = 'round';
 
     if (active) {
-      context.setLineDash([3, 15]);
-      this.strokeBeamSegment(track, color, Math.max(1.4, style.lineWidth * 0.72), 0.24);
-      context.setLineDash([]);
+      if (leadingTelegraph) {
+        context.setLineDash([3, 15]);
+        this.strokeBeamSegment(
+          leadingTelegraph,
+          color,
+          Math.max(1.4, style.lineWidth * 0.72),
+          0.24
+        );
+        context.setLineDash([]);
+      }
       context.globalCompositeOperation = highContrast ? 'source-over' : 'lighter';
       context.shadowColor = color;
       context.shadowBlur = this.settings.performanceMode ? 0 : 18;
@@ -3407,27 +3416,35 @@ export class CanvasRenderer {
           highContrast ? 1 : 0.96
         );
         this.strokeBeamSegment(bolt, '#ffffff', Math.max(1.2, bolt.radius * 0.18), 1);
-        this.paintBeamBoltHead(bolt, color, coreColor);
+        if (presentation?.head) {
+          this.paintBeamBoltHead(bolt, presentation.head, color, coreColor);
+        }
       }
-    } else {
+    } else if (track) {
       context.setLineDash([12, 10]);
       this.strokeBeamSegment(track, color, Math.max(2, style.lineWidth), style.strokeAlpha);
       context.setLineDash([]);
       this.strokeBeamSegment(track, coreColor, 1, 0.26 + activeHazard.phaseProgress * 0.34);
     }
 
-    this.paintBeamSourceEmitter(track, color, coreColor, active, style);
-    this.paintBeamEndpoint(track, color, coreColor, active, style);
+    if (!active && track) {
+      this.paintBeamSourceEmitter(track, color, coreColor, false, style);
+    }
+    if (leadingTelegraph) {
+      this.paintBeamEndpoint(leadingTelegraph, color, coreColor, active, style);
+    }
 
-    if (!this.settings.performanceMode) {
+    if (!this.settings.performanceMode && leadingTelegraph) {
       const markerCount = this.settings.reducedMotion ? 2 : 4;
       for (let index = 1; index <= markerCount; index += 1) {
         const progress = index / (markerCount + 1);
-        const x = track.startX + (track.endX - track.startX) * progress;
-        const y = track.startY + (track.endY - track.startY) * progress;
-        const normalX = -Math.sin(track.angle);
-        const normalY = Math.cos(track.angle);
-        const halfWidth = active ? track.radius * 0.82 : 7;
+        const x =
+          leadingTelegraph.startX + (leadingTelegraph.endX - leadingTelegraph.startX) * progress;
+        const y =
+          leadingTelegraph.startY + (leadingTelegraph.endY - leadingTelegraph.startY) * progress;
+        const normalX = -Math.sin(leadingTelegraph.angle);
+        const normalY = Math.cos(leadingTelegraph.angle);
+        const halfWidth = active ? leadingTelegraph.radius * 0.82 : 7;
         context.globalAlpha = active ? 0.24 : 0.34;
         context.strokeStyle = color;
         context.lineWidth = 1;
@@ -3441,7 +3458,12 @@ export class CanvasRenderer {
     context.restore();
   }
 
-  private paintBeamBoltHead(bolt: BeamHazardSegment, color: string, coreColor: string): void {
+  private paintBeamBoltHead(
+    bolt: BeamHazardSegment,
+    head: BeamHazardPoint,
+    color: string,
+    coreColor: string
+  ): void {
     const context = this.context;
     const normalX = -Math.sin(bolt.angle);
     const normalY = Math.cos(bolt.angle);
@@ -3452,11 +3474,11 @@ export class CanvasRenderer {
     context.strokeStyle = color;
     context.lineWidth = 2;
     context.beginPath();
-    context.arc(bolt.endX, bolt.endY, Math.max(4, bolt.radius * 0.52), 0, Math.PI * 2);
+    context.arc(head.x, head.y, Math.max(4, bolt.radius * 0.52), 0, Math.PI * 2);
     context.fill();
     context.beginPath();
-    context.moveTo(bolt.endX - normalX * flareRadius, bolt.endY - normalY * flareRadius);
-    context.lineTo(bolt.endX + normalX * flareRadius, bolt.endY + normalY * flareRadius);
+    context.moveTo(head.x - normalX * flareRadius, head.y - normalY * flareRadius);
+    context.lineTo(head.x + normalX * flareRadius, head.y + normalY * flareRadius);
     context.stroke();
     context.restore();
   }

@@ -2427,6 +2427,9 @@ export class GameplayScene implements Scene {
       distanceOverrides: includeRuntime
         ? this.sectorHazardRuntimeState?.effectiveDistances
         : undefined,
+      beamLaunchWorldDistanceOverrides: includeRuntime
+        ? this.sectorHazardRuntimeState?.beamLaunchWorldDistances
+        : undefined,
       elapsedSecondsOverrides: includeRuntime
         ? this.sectorHazardRuntimeState?.beamElapsedSeconds
         : undefined

@@ -7,6 +7,7 @@ import {
   createBeamHazardGeometry,
   createBeamSegmentDamageRects,
   getActiveBeamBoltSegment,
+  getActiveBeamHazardPresentation,
   getBeamHazardTiming,
   getBeamHazardSegment,
   getWorldAnchoredBeamTrack
@@ -265,6 +266,67 @@ describe('BeamHazard', () => {
     );
     expect(timing.fullyLitSeconds).toBe(2);
     expect(timing.totalSeconds).toBeCloseTo(timing.endTravelSeconds * 2 + 2, 3);
+  });
+
+  it('freezes the launched projectile track and exposes no telegraph behind its head', () => {
+    const hazard = {
+      id: 'top-launched-projectile',
+      kind: 'warning_beam' as const,
+      telegraphDistance: 20,
+      startDistance: 190,
+      endDistance: 330,
+      xRatio: 0.5,
+      widthRatio: 0.12,
+      damage: 1,
+      label: 'TOP LAUNCHED PROJECTILE',
+      beam: {
+        sourceEdge: 'top' as const,
+        sourceOffsetRatio: 0.3,
+        targetEdge: 'bottom' as const,
+        targetOffsetRatio: 0.7
+      }
+    };
+    const timing = getBeamHazardTiming(hazard, bounds);
+    const makeActive = (elapsedSeconds: number, worldDistance: number) => ({
+      hazard,
+      phase: 'active' as const,
+      progress: 0.8,
+      phaseProgress: elapsedSeconds / timing.totalSeconds,
+      elapsedSeconds,
+      worldDistance,
+      launchWorldDistance: hazard.startDistance
+    });
+    const entering = getActiveBeamHazardPresentation(makeActive(0.4, 210), bounds);
+    const enteringAfterWorldScroll = getActiveBeamHazardPresentation(makeActive(0.4, 310), bounds);
+
+    expect(enteringAfterWorldScroll).toEqual(entering);
+    expect(entering.bolt).not.toBeNull();
+    expect(entering.leadingTelegraph).not.toBeNull();
+    expect(entering.head).not.toBeNull();
+    expect(entering.tail).toBeNull();
+    if (!entering.bolt || !entering.leadingTelegraph || !entering.head) {
+      throw new Error('Expected an entering bolt with a forward-only telegraph.');
+    }
+    expect(entering.leadingTelegraph.startX).toBeCloseTo(entering.head.x, 3);
+    expect(entering.leadingTelegraph.startY).toBeCloseTo(entering.head.y, 3);
+    expect(entering.bolt.endX).toBeCloseTo(entering.head.x, 3);
+    expect(entering.bolt.endY).toBeCloseTo(entering.head.y, 3);
+    expect(entering.leadingTelegraph.endY).toBe(bounds.height);
+
+    const clearingElapsed = timing.endTravelSeconds + BEAM_FULLY_LIT_DURATION_SECONDS + 0.4;
+    const clearing = getActiveBeamHazardPresentation(makeActive(clearingElapsed, 230), bounds);
+    const clearingAfterWorldScroll = getActiveBeamHazardPresentation(
+      makeActive(clearingElapsed, 330),
+      bounds
+    );
+
+    expect(clearingAfterWorldScroll).toEqual(clearing);
+    expect(clearing.bolt).not.toBeNull();
+    expect(clearing.leadingTelegraph).toBeNull();
+    expect(clearing.head).toBeNull();
+    expect(clearing.tail).not.toBeNull();
+    expect(clearing.bolt?.endY).toBe(bounds.height);
+    expect(clearing.bolt?.startY).toBeGreaterThan(0);
   });
 
   it('rejects malformed authored beam endpoints', () => {

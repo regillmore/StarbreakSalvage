@@ -95,12 +95,14 @@ export interface ActiveSectorHazard {
   readonly phaseProgress: number;
   readonly worldProgress?: number;
   readonly worldDistance?: number;
+  readonly launchWorldDistance?: number;
   readonly elapsedSeconds?: number;
 }
 
 export interface SectorHazardActivationOptions {
   readonly allowedHazardIds?: readonly string[];
   readonly distanceOverrides?: Readonly<Record<string, number>>;
+  readonly beamLaunchWorldDistanceOverrides?: Readonly<Record<string, number>>;
   readonly elapsedSecondsOverrides?: Readonly<Record<string, number>>;
 }
 
@@ -225,6 +227,7 @@ export function getActiveSectorHazards(
     );
     const hasDistanceOverride = Math.abs(hazardDistance - distance) > 0.001;
     const elapsedSeconds = options.elapsedSecondsOverrides?.[hazard.id];
+    const launchWorldDistance = options.beamLaunchWorldDistanceOverrides?.[hazard.id];
     active.push({
       hazard,
       phase,
@@ -233,6 +236,7 @@ export function getActiveSectorHazards(
       ),
       phaseProgress: roundFeatureValue(clamp((hazardDistance - phaseStart) / phaseSpan, 0, 1)),
       ...(hasDistanceOverride ? { worldProgress, worldDistance: distance } : {}),
+      ...(launchWorldDistance === undefined ? {} : { launchWorldDistance }),
       ...(elapsedSeconds === undefined ? {} : { elapsedSeconds })
     });
   }

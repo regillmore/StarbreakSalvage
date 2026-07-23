@@ -147,6 +147,7 @@ Phase 8 enriches environmental pressure and loose salvage flow. Add tests closes
 
 - hazard-zone metadata validation for family, sector/faction fit, telegraph timing, active damage shape, damage cooldown, safe-lane expectation, accessibility metadata, and boss-arena suppression behavior;
 - richer hazard behavior tests for phase timing, warning lead, active collision windows, damage cooldowns, frame-catchup order, cleanup, reduced-motion/high-contrast/performance render state, and pre-lock boss-approach settlement;
+- work order 202 adds launched-beam regressions for ignition-anchor capture, post-launch scroll independence, top-origin endpoint retention, forward-only guide joins, no clearing trail, physical head/tail visibility, the exact two-second full span, and collision/render segment parity;
 - hazard director snapshots for route pressure, relief-window spacing, lunar/background context, formation-cluster interaction, boss approach/release state, and known-seed schedule reproducibility;
 - destructible and obstacle schema validation for collision shape, hull, damage interactions, objective policy, reward policy, chain behavior, placement constraints, rendering cues, audio/VFX cue names, and debug labels;
 - destructible runtime tests for weapon/special/bomb/hazard damage, deterministic rewards, bounded chain reactions, item-hook dispatch, cleanup, and objective safety;
@@ -488,6 +489,7 @@ Phase 10 accessibility checks should also cover mission briefings and branch foc
 - [x] Choose Contract shows the shared accessible primary-weapon glyph in every choice card and the highlighted live-fire caption; selection changes the highlighted identity without narrow horizontal overflow.
 - [x] Upgrade Bay exposes the permanent Surface Beacon's lunar entry effect and prerequisite, while Parallax Echo Lattice reports a text-based met/unmet upstream-secondary condition and phase output in Hardpoint Control.
 - [x] Hardpoint Control exposes Base DPS with a text description of its cadence-cycle sample and direct-projectile boundary; draft deltas and sample length remain readable without color at desktop and narrow widths.
+- [x] Directional warning beams retain a non-color pre-fire route and forward guide, while the launched body has no misleading trailing telegraph or stationary edge head in reduced-motion, performance, and high-contrast modes.
 
 ## Release checklist
 
