@@ -7,7 +7,6 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
     "label": "Act II",
     "priceAdjustment": 1,
     "rewardTier": "escalated",
-    "stockBonus": 1,
   },
   "eliteRewards": [
     [
@@ -28,7 +27,7 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
     4,
   ],
   "shop": {
-    "count": 4,
+    "count": 3,
     "items": [
       [
         "item_rebound_freight_seal",
@@ -43,11 +42,6 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
       [
         "item_scrap_saints_relay",
         15,
-        "Shop pool",
-      ],
-      [
-        "item_laser_tax_stamp",
-        19,
         "Shop pool",
       ],
     ],
@@ -76,7 +70,6 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
     "label": "Act II",
     "priceAdjustment": 1,
     "rewardTier": "escalated",
-    "stockBonus": 1,
   },
   "eliteRewards": [
     [
@@ -97,7 +90,7 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
     4,
   ],
   "shop": {
-    "count": 5,
+    "count": 4,
     "items": [
       [
         "item_rebound_freight_seal",
@@ -117,11 +110,6 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
       [
         "item_coin_operated_cannon",
         18,
-        "Shop pool",
-      ],
-      [
-        "item_salvage_dividend_chip",
-        16,
         "Shop pool",
       ],
     ],

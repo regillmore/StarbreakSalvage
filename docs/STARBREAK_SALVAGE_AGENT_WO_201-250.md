@@ -172,3 +172,29 @@ The shop grid falls through to the shared three-column reward grid and shared si
 Managed-browser inspection at 1280 x 720 rendered three equal-width circuit dossiers beneath the independent primary-weapon rack, each with the reward-style trigger/effect split. The live DOM reported three shop cards and three signal strips, the navigation hub reported `3+ seeded offers`, browser logs contained only Vite connection diagnostics, and the authenticated smoke host stopped cleanly.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 116 Vitest files and 757 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,033.03 kB` minified / `283.53 kB` gzip initial JavaScript and `116.53 kB` / `22.78 kB` CSS, changes of `0.00 kB` / `-0.01 kB` JavaScript and `-0.31 kB` / `-0.05 kB` CSS from work order 205. The existing Vite large-chunk advisory remains; no dependency, item definition, pool, price, reward/shop RNG stream, save/snapshot schema, static base path, or warning threshold changed.
+
+## Work order 207 - Upgrade-owned market capacity
+
+Goal: remove passive act and route growth from the circuit market so additional shop slots are an explicit permanent-progression benefit.
+
+Prompt:
+
+> Suppress the Act II bonus shop slot and its `market +stock` readout. Make permanent scrap upgrades the only live source of circuit-rack expansion while preserving useful shop-route terms, deterministic stock, restored-run compatibility, and the three-slot presentation established in work order 206.
+
+Acceptance criteria:
+
+- Fresh Act I, Act II, finale, and frontier markets all begin from the shared three-circuit baseline; act escalation never adds a slot.
+- Act II retains its authored price, reroll, repair, reward, and loose-currency pressure, but its market readout contains no stock modifier.
+- Shop-route outcomes retain their deterministic price discount and inventory bias without adding capacity or claiming an extra slot.
+- Market Decoder remains the permanent always-on stock expansion, while Convoy Receipt Printer remains the permanent reroll-only expansion.
+- A restored retired Convoy Receipt Printer item remains a compatibility equivalent and cannot stack with its permanent upgrade. Already materialized saved shop rolls retain their stable slots and depletion state.
+- The navigation market dossier states that routes affect price and inventory focus, while Upgrade Bay effects own additional slots.
+- Removing a fourth passive choice preserves the first three seeded items, prices, source hints, isolated RNG streams, saves, static hosting, and dependency count.
+
+Status: implemented. `ActEconomyProfile` no longer carries shop capacity, and `generateShopInventory` no longer adds act stock. `RouteShopModifier` and the route-hook payload no longer expose a stock field; shop routes now supply only discount and deterministic bias. `ShopScene` constructs new racks from `SHOP_BASE_CIRCUIT_STOCK` plus the permanent Upgrade Bay projection, while the existing permanent Convoy reroll path and restored-item precedence remain intact.
+
+Fresh Act II snapshots now contain three circuits instead of four, and the progressed Market Decoder snapshot contains four instead of five. The omitted former final choices leave each retained deterministic prefix unchanged. Focused coverage also pins the stock-neutral route result, exact Act II price/reroll readout, permanent expansion, and restored market hooks.
+
+Managed-browser inspection used the authenticated smoke host and a clean disposable tab. The navigation dossier advertised `3+ seeded offers` and explicitly assigned slot growth to the Upgrade Bay. The live market rendered three equal `305.7 px` circuit cards with no `market +1 stock` copy, no horizontal overflow, and no warning or error logs. The browser tab finalized; both bounded host leases reached their task timeout, and the required authenticated stop confirmed that no project-owned host remained.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 116 Vitest files and 757 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,032.78 kB` minified / `283.46 kB` gzip initial JavaScript and unchanged `116.53 kB` / `22.78 kB` CSS, reductions of `0.25 kB` / `0.07 kB` JavaScript from work order 206. The existing Vite large-chunk advisory remains; no dependency, item definition, pool, price formula, save/snapshot schema, static base path, or warning threshold changed.

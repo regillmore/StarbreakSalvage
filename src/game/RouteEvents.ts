@@ -25,7 +25,6 @@ export interface RouteRewardModifier {
 
 export interface RouteShopModifier {
   readonly discount: number;
-  readonly stockBonus: number;
   readonly biasTags: readonly ItemTag[];
 }
 
@@ -92,14 +91,13 @@ export function generateRouteOutcome(options: {
         summary: 'A licensed salvage broker unlocks controlled inventory for this stop.',
         details: [
           `Shop prices reduced by ${discount}.`,
-          `Shop inventory gains 1 extra slot biased toward ${focusTag}.`,
+          `Shop inventory is biased toward ${focusTag}.`,
           ...actDetails
         ],
         effects: {
           ...createEmptyEffects(),
           shop: {
             discount,
-            stockBonus: 1,
             biasTags: ['credit', focusTag]
           }
         }

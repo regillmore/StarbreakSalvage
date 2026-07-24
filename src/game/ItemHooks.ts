@@ -133,7 +133,6 @@ export interface RouteChosenPayload {
   readonly rewardBiasTags: readonly ItemTag[];
   readonly rewardPoolIdOverride: RewardPoolDefinition['id'] | null;
   readonly shopDiscount: number;
-  readonly shopStockBonus: number;
   readonly shopBiasTags: readonly ItemTag[];
 }
 

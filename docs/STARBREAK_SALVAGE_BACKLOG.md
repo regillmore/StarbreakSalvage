@@ -2937,3 +2937,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 206. Neutral Act I markets now expose three circuit dossiers, explicit stock bonuses expand from that baseline, and the hub, shop generator, deterministic projections, CSS grid, and depletion smoke flow share the same rule.
+
+### BL72 - Upgrade-owned market capacity
+
+Acceptance:
+
+- Remove the passive Act II/finale stock slot and omit stock from the escalated market readout while retaining price, reroll, repair, reward, and loose-currency pressure.
+- Remove route-owned capacity; shop routes retain deterministic discounts and inventory bias without adding or advertising a slot.
+- Build new shop racks from the shared three-slot baseline plus permanent Upgrade Bay stock effects only.
+- Preserve Market Decoder's always-on slot, Convoy Receipt Printer's reroll slot, restored-item precedence, and already materialized saved shop rolls.
+- Keep retained seeded choices, prices, sources, isolated RNG streams, accessibility, static hosting, and dependency count stable.
+- Update the navigation market dossier so its stock-source explanation matches the live rule.
+
+Status:
+
+- Implemented in work order 207. Act economy and route outcomes no longer expose shop capacity; `ShopScene` adds only permanent progression stock to the shared baseline, and the navigation dossier assigns extra slots exclusively to Upgrade Bay effects.

@@ -740,7 +740,7 @@ export class SectorTransitionScene implements Scene {
         this.createDetailMetric('Tender', `${this.session.credits} credits`),
         this.createDetailMetric('Local stock', `${SHOP_BASE_CIRCUIT_STOCK}+ seeded offers`),
         this.createDetailCopy(
-          'Market access is a carrier service. A shop route can still improve terms or stock, but no longer decides whether the market exists.'
+          'Market access is a carrier service. A shop route can still improve prices and inventory focus, but only Upgrade Bay effects add slots.'
         )
       );
       return;

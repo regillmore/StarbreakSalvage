@@ -133,19 +133,20 @@ describe('route events', () => {
 
     const shopModifiers = getShopModifiersForSector(session, sector.index);
     const discount = shopModifiers.reduce((total, modifier) => total + modifier.discount, 0);
-    const stockBonus = shopModifiers.reduce((total, modifier) => total + modifier.stockBonus, 0);
     const inventory = generateShopInventory({
       seed: sector.shopSeed,
       sectorIndex: sector.index,
       rerollCount: 0,
       biasTags: shopModifiers.flatMap((modifier) => modifier.biasTags),
       priceDiscount: discount,
-      count: SHOP_BASE_CIRCUIT_STOCK + stockBonus
+      count: SHOP_BASE_CIRCUIT_STOCK
     });
 
-    expect(inventory).toHaveLength(SHOP_BASE_CIRCUIT_STOCK + 1);
+    expect(inventory).toHaveLength(SHOP_BASE_CIRCUIT_STOCK);
     expect(Math.min(...inventory.map((item) => item.price))).toBeGreaterThanOrEqual(2);
     expect(discount).toBeGreaterThan(0);
+    expect(shopModifiers[0]?.biasTags.length).toBeGreaterThan(0);
+    expect(outcome.details.join(' ')).not.toContain('extra slot');
   });
 
   it('applies permanent Low-Orbit Ore Scrip refunds without doubling a restored item copy', () => {

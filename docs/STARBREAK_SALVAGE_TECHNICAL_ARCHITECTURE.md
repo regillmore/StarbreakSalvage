@@ -992,6 +992,15 @@ seed + permanent save fingerprint
 - The primary-weapon offer retains its separate deterministic roll and saved depletion record. It is not included in the circuit baseline.
 - The change removes one neutral menu card and adds no item definition, pool mutation, price formula, save/snapshot field, migration, generation pass, RNG draw, combat actor, projectile, effect, hook, or fixed-step branch.
 
+### Work order 207 permanent market-capacity boundary
+
+- `ActEconomyProfile` no longer contains shop capacity. Escalated acts continue to own price adjustment, reroll surcharge, repair/vault scarcity, reward weighting, and loose-currency value, but `Shops.generateShopInventory` has no act-stock branch and its UI readout cannot advertise one.
+- `RouteShopModifier` now contains only discount and bias. The route outcome and `onRouteChosen` payload no longer transport capacity, preventing later route items or engineering hooks from silently reintroducing non-permanent slots.
+- `ShopScene` resolves new circuit-rack width as `SHOP_BASE_CIRCUIT_STOCK + run.upgradeEffects.shopStockBonus`. Market Decoder is the permanent always-on addition; the explicit Convoy Receipt Printer flag adds its permanent reroll-only slot inside `generateShopInventory`.
+- The retired Convoy Receipt Printer hook remains only for restored snapshot compatibility and takes precedence over the permanent flag. `ShopStock` remains authoritative for a roll that was already materialized before the rule changed, preserving slot depletion and save recovery without making legacy items discoverable.
+- Shop routes still improve discount and weighted inventory focus. `SectorTransitionScene` identifies Upgrade Bay effects as the only slot-growth source, while its `3+` estimate continues to acknowledge purchased permanent capacity.
+- The narrower Act II result is the same deterministic three-choice prefix of the former four-choice roll. No new draw, save field, migration, content definition, static-hosting rule, or dependency is introduced.
+
 ### Work order 198 primary-weapon icon boundary
 
 - `WeaponDefinition.iconKind` is the sole authored visual-identity key for a primary weapon base. `WEAPON_ICON_KINDS` types and validates the eight-entry vocabulary; quality, source, affix, component instance, and route data never select a different glyph.

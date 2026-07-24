@@ -5,7 +5,10 @@ import {
   createDefaultSaveData,
   type SaveData
 } from '../../src/core/saveData';
-import { createActEconomyProfile } from '../../src/game/ActEconomy';
+import {
+  createActEconomyProfile,
+  getActEconomyShopReadout
+} from '../../src/game/ActEconomy';
 import { generateRunSkeleton, type RunSkeleton } from '../../src/game/Generation';
 import {
   createInterActChoiceRecord,
@@ -30,12 +33,12 @@ describe('Act II economy tuning', () => {
     const finale = createActEconomyProfile(getRequiredSector(run, run.acts[1]!.endSectorIndex));
 
     expect(actOne.escalated).toBe(false);
-    expect(actOne.shopStockBonus).toBe(0);
+    expect(getActEconomyShopReadout(actOne)).toBeNull();
 
     expect(actTwo.escalated).toBe(true);
-    expect(actTwo.shopStockBonus).toBe(1);
     expect(actTwo.shopPriceAdjustment).toBe(1);
     expect(actTwo.repairCreditSurcharge).toBe(2);
+    expect(getActEconomyShopReadout(actTwo)).toBe('Act II market +1 prices, reroll +1');
 
     expect(finale.finale).toBe(true);
     expect(finale.rewardCreditBonus).toBeGreaterThan(actTwo.rewardCreditBonus);
@@ -48,7 +51,7 @@ describe('Act II economy tuning', () => {
 
     expect(snapshot).toEqual(repeated);
     expect(snapshot).toMatchSnapshot('fresh act II economy');
-    expect(snapshot.shop.count).toBe(4);
+    expect(snapshot.shop.count).toBe(SHOP_BASE_CIRCUIT_STOCK);
     expect(snapshot.eliteRewards).toHaveLength(3);
     expect(snapshot.vaultRewards).toHaveLength(3);
     expect(snapshot.rerollCosts).toEqual([3, 4]);
@@ -213,7 +216,6 @@ function createActEconomySnapshot(saveData: SaveData) {
       id: actEconomy.actId,
       label: actEconomy.actShortLabel,
       rewardTier: actEconomy.rewardTier,
-      stockBonus: actEconomy.shopStockBonus,
       priceAdjustment: actEconomy.shopPriceAdjustment
     },
     shop: {

@@ -91,9 +91,7 @@ export class ShopScene implements Scene {
       this.run.upgradeEffects.shopDiscount +
       campaign.shopDiscount +
       (carrierAccess ? carrier.shopDiscount : -3);
-    const stockBonus =
-      shopModifiers.reduce((total, modifier) => total + modifier.stockBonus, 0) +
-      this.run.upgradeEffects.shopStockBonus;
+    const permanentStockBonus = this.run.upgradeEffects.shopStockBonus;
     const shopBiasTags = [
       ...shopModifiers.flatMap((modifier) => modifier.biasTags),
       ...interActEffects.rewardBiasTags,
@@ -115,7 +113,7 @@ export class ShopScene implements Scene {
           biasTags: [...this.contract.itemBias, ...shopBiasTags],
           excludeItemIds: getOwnedItemIds(this.session),
           priceDiscount,
-          count: SHOP_BASE_CIRCUIT_STOCK + stockBonus,
+          count: SHOP_BASE_CIRCUIT_STOCK + permanentStockBonus,
           unlockedIds: this.run.unlockedIds,
           itemInstances: getActiveFittedItems(
             this.session.itemInstances,

@@ -15,7 +15,6 @@ export interface ActEconomyProfile {
   readonly rewardCreditBonus: number;
   readonly combatCreditBonus: number;
   readonly combatSalvageBonus: number;
-  readonly shopStockBonus: number;
   readonly shopPriceAdjustment: number;
   readonly rerollCostBonus: number;
   readonly repeatRerollSurcharge: number;
@@ -51,7 +50,6 @@ export function createActEconomyProfile(sector: SectorRoute): ActEconomyProfile 
       rewardCreditBonus: 0,
       combatCreditBonus: 0,
       combatSalvageBonus: 0,
-      shopStockBonus: 0,
       shopPriceAdjustment: 0,
       rerollCostBonus: 0,
       repeatRerollSurcharge: 0,
@@ -79,7 +77,6 @@ export function createActEconomyProfile(sector: SectorRoute): ActEconomyProfile 
     rewardCreditBonus: 2 + (finale ? 2 : 0),
     combatCreditBonus: 2 + depthStep + (finale ? 2 : 0),
     combatSalvageBonus: (lateAct ? 1 : 0) + (finale ? 1 : 0),
-    shopStockBonus: 1,
     shopPriceAdjustment: 1 + (lateAct ? 1 : 0),
     rerollCostBonus: 1,
     repeatRerollSurcharge: 1,
@@ -188,5 +185,5 @@ export function getActEconomyShopReadout(profile: ActEconomyProfile | undefined)
     return null;
   }
 
-  return `${profile.actShortLabel} market +${profile.shopStockBonus} stock, +${profile.shopPriceAdjustment} prices, reroll +${profile.rerollCostBonus}`;
+  return `${profile.actShortLabel} market +${profile.shopPriceAdjustment} prices, reroll +${profile.rerollCostBonus}`;
 }

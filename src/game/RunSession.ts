@@ -1328,7 +1328,6 @@ function applyRouteChosenHooks(
       rewardBiasTags: outcome.effects.reward.biasTags,
       rewardPoolIdOverride: outcome.effects.reward.poolIdOverride,
       shopDiscount: outcome.effects.shop?.discount ?? 0,
-      shopStockBonus: outcome.effects.shop?.stockBonus ?? 0,
       shopBiasTags: outcome.effects.shop?.biasTags ?? []
     },
     { maxApplications: engineering.procBudget }
@@ -1374,7 +1373,6 @@ function applyRouteChosenHooks(
   const hasShopPayload =
     outcome.effects.shop !== null ||
     payload.shopDiscount !== 0 ||
-    payload.shopStockBonus !== 0 ||
     payload.shopBiasTags.length > 0;
 
   return {
@@ -1405,7 +1403,6 @@ function applyRouteChosenHooks(
       shop: hasShopPayload
         ? {
             discount: payload.shopDiscount,
-            stockBonus: payload.shopStockBonus,
             biasTags: payload.shopBiasTags
           }
         : null

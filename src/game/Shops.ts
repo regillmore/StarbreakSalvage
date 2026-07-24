@@ -50,7 +50,6 @@ export function generateShopInventory(options: {
 }): ShopInventoryItem[] {
   const shopSeed = `${options.seed}:sector-${options.sectorIndex}:reroll-${options.rerollCount}`;
   const priceRng = createRng(shopSeed).fork('prices');
-  const actStockBonus = options.actEconomy?.shopStockBonus ?? 0;
   const actPriceAdjustment = options.actEconomy?.shopPriceAdjustment ?? 0;
   const hasLegacyCouponCascade = (options.itemInstances ?? []).some(
     (instance) => instance.itemId === 'item_coupon_cascade_fuse'
@@ -73,7 +72,6 @@ export function generateShopInventory(options: {
       rerollCount: options.rerollCount,
       itemCount:
         (options.count ?? SHOP_BASE_CIRCUIT_STOCK) +
-        actStockBonus +
         (applyPermanentConvoyReceiptPrinter ? 1 : 0),
       priceDiscount: (options.priceDiscount ?? 0) + (applyPermanentCouponCascade ? 1 : 0),
       biasTags: [

@@ -854,7 +854,6 @@ describe('item synergies', () => {
         rewardBiasTags: [],
         rewardPoolIdOverride: null,
         shopDiscount: 0,
-        shopStockBonus: 0,
         shopBiasTags: []
       }
     );
