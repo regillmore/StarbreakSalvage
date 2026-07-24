@@ -291,6 +291,67 @@ describe('foundry visual presentation', () => {
     ).toBeCloseTo(70.528);
   });
 
+  it('shows shield retaliation pressure feeding downstream beam and deflector stages', () => {
+    const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
+      (candidate) => candidate.shipId === 'ship_debt_runner'
+    );
+    if (!contract) throw new Error('Expected a single-projectile contract.');
+    const linked = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+      { itemId: 'item_shield_dynamo', acquisitionOrder: 0 },
+      { itemId: 'item_revenge_beam', acquisitionOrder: 1 },
+      { itemId: 'item_oathbound_deflector', acquisitionOrder: 2 }
+    ]);
+    const reversed = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+      { itemId: 'item_revenge_beam', acquisitionOrder: 0 },
+      { itemId: 'item_oathbound_deflector', acquisitionOrder: 1 },
+      { itemId: 'item_shield_dynamo', acquisitionOrder: 2 }
+    ]);
+
+    expect(linked.circuitStages[0]).toMatchObject({
+      name: 'Shield Dynamo',
+      conditionMet: true,
+      addedTags: ['shield', 'revenge'],
+      changed: true
+    });
+    expect(linked.circuitStages[0]?.outputLabel).toContain('PRESSURE CYCLE');
+    expect(linked.circuitStages[1]).toMatchObject({
+      name: 'Revenge Beam',
+      conditionMet: true,
+      incomingProjectiles: 1,
+      outgoingProjectiles: 2,
+      changed: true
+    });
+    expect(linked.circuitStages[2]).toMatchObject({
+      name: 'Oathbound Deflector',
+      conditionMet: true,
+      addedTags: ['ricochet'],
+      changed: true
+    });
+    expect(
+      linked.attackSimulation.projectiles.some(
+        (projectile) =>
+          projectile.tags.includes('revenge') &&
+          projectile.tags.includes('ricochet') &&
+          projectile.laserKind === 'beam'
+      )
+    ).toBe(true);
+    expect(reversed.circuitStages[0]).toMatchObject({
+      name: 'Revenge Beam',
+      conditionMet: false,
+      changed: false
+    });
+    expect(reversed.circuitStages[1]).toMatchObject({
+      name: 'Oathbound Deflector',
+      conditionMet: false,
+      changed: false
+    });
+    expect(reversed.circuitStages[2]).toMatchObject({
+      name: 'Shield Dynamo',
+      conditionMet: true,
+      changed: true
+    });
+  });
+
   it('shows Gangue Compression Die converting only upstream light branches into plasma', () => {
     const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
       (candidate) => candidate.shipId === 'ship_debt_runner'

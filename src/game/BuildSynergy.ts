@@ -77,9 +77,9 @@ export const BUILD_SYNERGY_CLUSTERS: readonly BuildSynergyClusterDefinition[] = 
   },
   {
     id: 'revengeBulwark',
-    label: 'Revenge Bulwark',
-    shortLabel: 'Bulwark',
-    summary: 'shield, armor, and revenge items convert hits into counterfire',
+    label: 'Aegis Retaliation',
+    shortLabel: 'Aegis',
+    summary: 'shield, armor, and revenge stages pressurize periodic counter-volleys',
     families: ['shield-revenge'],
     tags: ['shield', 'armor', 'revenge'],
     minimumScore: 5

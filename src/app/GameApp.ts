@@ -3009,7 +3009,6 @@ export class GameApp {
     try {
       const restored = this.runSnapshotCoordinator.restore(this.runSnapshot);
       this.currentSeedLabel = restored.run.seed;
-      this.seedEntryInput = restored.run.seed;
       this.currentRun = restored.run;
       this.selectedContract = restored.contract;
       this.runSession = restored.session;

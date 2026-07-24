@@ -2952,3 +2952,34 @@ Acceptance:
 Status:
 
 - Implemented in work order 207. Act economy and route outcomes no longer expose shop capacity; `ShopScene` adds only permanent progression stock to the shared baseline, and the navigation dossier assigns extra slots exclusively to Upgrade Bay effects.
+
+### BL73 - Aegis retaliation circuits
+
+Acceptance:
+
+- Replace shield/revenge self-damage triggers with bounded ordered `onFire` pressure sources and downstream consumers.
+- Make Shield Dynamo and Reactive Plating Grid useful proactive sources with distinct fourth- and third-volley cadence.
+- Require earlier retaliation pressure for Counterclaim Repeater, Revenge Beam, Oathbound Deflector, and the Cursed Hull Plate cross-family payoff.
+- Show met/unmet order, cadence, and affected output on Hardpoint circuit cards and include periodic results in Base DPS.
+- Let shield/revenge count toward generic multi-trait chain consumers and retain natural split, clone, laser, ricochet, curse, and Prototype Vent interactions.
+- Give retaliation shots a distinct accessible code-native field in combat and Attack Simulation.
+- Refresh Shield Bruiser and family copy while preserving shared ignition selection, ids, pools, determinism, saves, budgets, and static hosting.
+
+Status:
+
+- Implemented in work order 208. Aegis Retaliation now grows through proactive periodic weapon-chain pressure, downstream cards expose their order requirements, and ordinary player damage no longer triggers the family.
+
+### BL74 - Seed-neutral title restoration
+
+Acceptance:
+
+- Keep snapshot run identity separate from the title expedition-code input; resume must never copy a generated run seed into menu presentation state.
+- Give blank and prefilled launches one heading, explanation, status, and `Start Expedition` label.
+- Retain URL seed prefill and the automatically opened code drawer without maintaining a separate seeded-title mode.
+- Preserve deterministic resume, manual code launch, Retry Last Seed, debrief share links, and completed-run URL cleanup.
+- Prove that a fresh random run stays seed-neutral across two consecutive suspend/resume cycles and a page reload.
+- Leave saves, snapshot schemas, RNG streams, accessibility, static hosting, and dependencies unchanged.
+
+Status:
+
+- Implemented in work order 209. Restored snapshots no longer populate title code-entry state, and all launch contexts now share one contract-channel presentation while URL codes remain explicit prefill.

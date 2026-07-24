@@ -438,6 +438,63 @@ function createCircuitStageCondition(
   const ventCondition = createPrototypeVentCircuitStageCondition(itemId, ordered);
   if (ventCondition) return ventCondition;
 
+  if (itemId === 'item_shield_dynamo') {
+    return {
+      met: incoming.length > 0,
+      label:
+        incoming.length > 0
+          ? `PRESSURE CYCLE · EVERY 4TH VOLLEY · ${incoming.length} EARLIER SHOT${incoming.length === 1 ? '' : 'S'} ARMORED + RETALIATION`
+          : 'CONDITION NOT MET · NEEDS AN EARLIER SHOT'
+    };
+  }
+  if (itemId === 'item_reactive_plating_grid') {
+    const copiedShots = Math.min(2, incoming.length);
+    return {
+      met: copiedShots > 0,
+      label:
+        copiedShots > 0
+          ? `PLATING CYCLE · EVERY 3RD VOLLEY · ${copiedShots} OUTER SHOT${copiedShots === 1 ? '' : 'S'} COPIED AS RETALIATION PLATES`
+          : 'CONDITION NOT MET · NEEDS AN EARLIER SHOT'
+    };
+  }
+  if (itemId === 'item_shield_revenge_contract') {
+    const retaliationShots = incoming.filter((projectile) => projectile.tags.includes('revenge'));
+    const copiedShots = Math.min(2, retaliationShots.length);
+    return copiedShots > 0
+      ? {
+          met: true,
+          label: `CONDITION MET · EVERY 6TH VOLLEY · ${copiedShots} RETALIATION SHOT${copiedShots === 1 ? '' : 'S'} REISSUED`
+        }
+      : { met: false, label: 'CONDITION NOT MET · NEEDS EARLIER RETALIATION PRESSURE' };
+  }
+  if (itemId === 'item_revenge_beam') {
+    const retaliationShots = incoming.filter((projectile) => projectile.tags.includes('revenge'));
+    return retaliationShots.length > 0
+      ? {
+          met: true,
+          label: `CONDITION MET · HEAVIEST OF ${retaliationShots.length} RETALIATION SHOT${retaliationShots.length === 1 ? '' : 'S'} RELEASES A BEAM`
+        }
+      : { met: false, label: 'CONDITION NOT MET · NEEDS EARLIER RETALIATION PRESSURE' };
+  }
+  if (itemId === 'item_oathbound_deflector') {
+    const retaliationShots = incoming.filter((projectile) => projectile.tags.includes('revenge'));
+    return retaliationShots.length > 0
+      ? {
+          met: true,
+          label: `CONDITION MET · ${retaliationShots.length} RETALIATION SHOT${retaliationShots.length === 1 ? '' : 'S'} GAIN 1 REBOUND + 0.28S FLIGHT`
+        }
+      : { met: false, label: 'CONDITION NOT MET · NEEDS EARLIER RETALIATION PRESSURE' };
+  }
+  if (itemId === 'item_cursed_hull_plate') {
+    const retaliationShots = incoming.filter((projectile) => projectile.tags.includes('revenge'));
+    return retaliationShots.length > 0
+      ? {
+          met: true,
+          label: `CONDITION MET · ${retaliationShots.length} RETALIATION SHOT${retaliationShots.length === 1 ? '' : 'S'} AMPLIFIED · +3 CURSED RUPTURE SHOTS`
+        }
+      : { met: false, label: 'CONDITION NOT MET · NEEDS EARLIER RETALIATION PRESSURE' };
+  }
+
   if (itemId === 'item_drone_uplink') {
     return { met: true, label: '2 FOLLOWERS DEPLOYED · COPY EVERY 3RD VOLLEY' };
   }
@@ -544,7 +601,9 @@ function createCircuitStageCondition(
 
 function countCircuitTraits(tags: readonly string[]): number {
   return new Set(
-    tags.filter((tag) => ['arc', 'drone', 'missile', 'phase', 'ricochet', 'split'].includes(tag))
+    tags.filter((tag) =>
+      ['arc', 'drone', 'missile', 'phase', 'revenge', 'ricochet', 'shield', 'split'].includes(tag)
+    )
   ).size;
 }
 

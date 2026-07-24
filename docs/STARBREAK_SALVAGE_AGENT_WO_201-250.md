@@ -198,3 +198,61 @@ Fresh Act II snapshots now contain three circuits instead of four, and the progr
 Managed-browser inspection used the authenticated smoke host and a clean disposable tab. The navigation dossier advertised `3+ seeded offers` and explicitly assigned slot growth to the Upgrade Bay. The live market rendered three equal `305.7 px` circuit cards with no `market +1 stock` copy, no horizontal overflow, and no warning or error logs. The browser tab finalized; both bounded host leases reached their task timeout, and the required authenticated stop confirmed that no project-owned host remained.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 116 Vitest files and 757 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,032.78 kB` minified / `283.46 kB` gzip initial JavaScript and unchanged `116.53 kB` / `22.78 kB` CSS, reductions of `0.25 kB` / `0.07 kB` JavaScript from work order 206. The existing Vite large-chunk advisory remains; no dependency, item definition, pool, price formula, save/snapshot schema, static base path, or warning threshold changed.
+
+## Work order 208 - Aegis retaliation circuits
+
+Goal: preserve the Shield Bruiser fantasy while replacing its situational self-damage counterfire with a proactive, ordered weapon-chain archetype.
+
+Prompt:
+
+> Overhaul Shield Bruiser and the shield/revenge item family for the signal-circuit model. Build retaliation pressure through normal firing cadence, let downstream cards visibly consume earlier shield/revenge shots, and remove hull damage as the family trigger. Preserve the shared seeded ignition pool, deterministic combat, bounded projectile output, compatibility ids, and honest Hardpoint preview.
+
+Acceptance criteria:
+
+- Shield Dynamo is a viable opening core: every fourth volley pressurizes all shots already built before it, increasing direct impact and adding shield/revenge identity without requiring damage.
+- Reactive Plating Grid provides a common independent pressure source by copying at most two earlier outer shots into armored retaliation plates every third volley.
+- Counterclaim Repeater, Revenge Beam, and Oathbound Deflector remain inert until retaliation pressure exists earlier in circuit order, then respectively reissue bounded paired slugs, add one focused beam, or grant one wall rebound and longer flight.
+- Cursed Hull Plate becomes a cross-family downstream payoff that amplifies earlier retaliation shots and emits one bounded cursed rupture fan.
+- Moving a consumer before its pressure source visibly disables it; Hardpoint cards state the met/unmet condition, affected shot count, cadence, and output.
+- Shield/revenge tags count as circuit traits for Crossfeed and related trait-count consumers. Split, clone, laser, ricochet, curse/overkill, and Prototype Vent stages retain natural ordered interactions.
+- Retaliation shots carry a distinct code-native hex shield and amber pressure wake in combat and Attack Simulation, with reduced-motion, performance, and high-contrast treatments.
+- Shield/revenge items no longer dispatch from `onPlayerHit`; taking hull damage alone produces no family counterfire. Curse-Eater remains an explicit curse/relic reactive exception.
+- Shield Bruiser, unlock, archive, circuit-family, and debrief copy describe proactive Aegis Retaliation rather than damage-triggered revenge.
+- Item ids, active pool breadth, shared ignition selection policy, saves, snapshots, generation streams, proc/projectile caps, dependencies, and static hosting remain compatible.
+
+Status: implemented. Shield Dynamo and Reactive Plating Grid now establish bounded periodic retaliation pressure through ordered `onFire` stages. Counterclaim Repeater, Revenge Beam, Oathbound Deflector, and Cursed Hull Plate consume only pressure already present before their circuit position. The family no longer listens to player-hit or boss-phase events; the surviving Curse-Eater hit response remains in the separate curse/relic lane.
+
+`FoundryPresentation` runs these items through the same production reducer used by combat and adds exact pressure-source and downstream condition copy. Periodic stages participate in the existing complete-cadence DPS sample and Prototype Vent cadence shift. Shield plus revenge now satisfy two-trait circuit consumers, allowing Crossfeed to recognize the new chain without a special bridge.
+
+`RetaliationProjectile` derives one deterministic repeating visual profile from projectile age, radius, and velocity. `CanvasRenderer` paints a green hex pressure shell and amber return wake behind any revenge-tagged projectile; Attack Simulation uses a matching nested field, while accessibility modes bound or stop the animation.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 117 Vitest files and 761 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,037.35 kB` minified / `284.47 kB` gzip initial JavaScript and `117.57 kB` / `23.00 kB` CSS, increases of `4.57 kB` / `1.01 kB` JavaScript and `1.04 kB` / `0.22 kB` CSS over work order 207. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, generation RNG stream, active item count, or static-hosting rule changed.
+
+The managed in-app browser reached the seeded title and contract comparison without an application warning. Its first longer inspection outlived the authenticated host lease, and the browser declined the subsequent local reload under its URL policy, so no manual retaliation-visual claim is recorded. The independent release Chromium suite completed the gameplay, item-storm, Hardpoint, responsive, accessibility, and production-preview paths cleanly.
+
+## Work order 209 - Seed-neutral title restoration
+
+Goal: keep suspended-run identity inside the snapshot while returning every exit to one consistent title-screen launch experience.
+
+Prompt:
+
+> Fix the sequence where resuming a random expedition and suspending it a second time turns the title into seeded mode. A saved expedition seed must never impersonate a URL-loaded seed. Flatten the unnecessary seeded/random title differences while retaining URL code prefill, deterministic resume, manual code entry, and Retry Last Seed.
+
+Acceptance criteria:
+
+- Restoring a run snapshot restores its generated seed, run skeleton, contract, and session without copying that seed into the title's expedition-code input state.
+- A fresh random launch followed by Suspend & Exit presents the common title, an empty code field, and no `seed` URL parameter.
+- Resuming that snapshot and immediately suspending a second time produces the same common title state; repeating the cycle cannot progressively convert the menu into seeded presentation.
+- The launch panel uses one heading, explanation, status line, and `Start Expedition` label whether the code field is blank or prefilled.
+- A `seed` URL parameter still prefills and opens the expedition-code drawer, and the common start action still launches that deterministic code.
+- Manually entered codes, Retry Last Seed, debrief share links, random seed generation, snapshot summaries, and resume determinism remain available.
+- Suspension does not rewrite browser history or add/remove URL parameters. The established completed-run return continues to remove an authored `seed` parameter.
+- Save and snapshot schemas, migrations, run-generation streams, static hosting, accessibility, and dependencies remain unchanged.
+
+Status: implemented. `GameApp.resumeRunSnapshot` now restores gameplay identity without mutating `seedEntryInput`, which remains title-entry state rather than a mirror of the active run. Random snapshot restoration therefore cannot manufacture a seeded title or populate the code field.
+
+`MainMenuScene` uses one contract-channel presentation and one `Start Expedition` action for blank, URL-prefilled, manually entered, and restored contexts. A prefilled value still opens the existing code drawer and determines the launch seed; it no longer changes the masthead copy, button label, or status language. Retry Last Seed remains a neighboring explicit action whenever a completed-run seed exists.
+
+Focused Chromium coverage reproduces the reported fresh-save sequence: launch random, suspend at the initial constellation, resume, immediately suspend again, resume into gameplay, suspend, reload, and resume once more. Every intervening title retains an empty code field and a URL without `seed`, while the snapshot continues restoring the same generated expedition.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 117 Vitest files and 761 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,037.13 kB` minified / `284.38 kB` gzip initial JavaScript and unchanged `117.57 kB` / `23.00 kB` CSS, reductions of `0.22 kB` / `0.09 kB` JavaScript from work order 208. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, generation stream, URL-sharing path, or static-hosting rule changed.

@@ -75,28 +75,23 @@ export class MainMenuScene implements Scene {
     const launchCopy = document.createElement('div');
     const launchHeading = document.createElement('h2');
     launchHeading.id = 'title-launch-heading';
-    launchHeading.textContent = explicitSeed ? 'Route signal acquired' : 'Your next wreck is unknown';
+    launchHeading.textContent = 'Open the contract channel';
     const launchDetail = document.createElement('p');
-    launchDetail.textContent = explicitSeed
-      ? 'A shared expedition code is loaded. Launching will reproduce its contract board and route.'
-      : 'A fresh expedition code will be generated when you launch. Random is the intended first choice.';
+    launchDetail.textContent =
+      'A blank expedition code generates a fresh route; a loaded code reproduces its contract board and route.';
     launchCopy.append(launchHeading, launchDetail);
 
     const startButton = document.createElement('button');
     startButton.className = 'primary-button title-start-button';
     startButton.type = 'button';
     startButton.dataset.testid = 'start-expedition';
-    startButton.textContent = explicitSeed
-      ? 'Start Seeded Expedition'
-      : 'Start Random Expedition';
+    startButton.textContent = 'Start Expedition';
 
     const launchStatus = document.createElement('p');
     launchStatus.className = 'title-launch-status';
     launchStatus.dataset.testid = 'launch-status';
     launchStatus.setAttribute('aria-live', 'polite');
-    launchStatus.textContent = explicitSeed
-      ? `Loaded code ${previewSeedEntry(this.seedInput).seed}`
-      : 'New route, contracts, rewards, and threats on every launch.';
+    launchStatus.textContent = 'Random remains the default. Shared and challenge codes are optional.';
 
     startButton.addEventListener('click', () => {
       this.beginLaunch(explicitSeed ? this.seedInput : 'RANDOM', shell, startButton, launchStatus);
@@ -106,7 +101,7 @@ export class MainMenuScene implements Scene {
     launchActions.className = 'title-launch-actions';
     launchActions.append(startButton);
 
-    const retrySeed = !explicitSeed ? this.lastSavedSeed?.trim() : null;
+    const retrySeed = this.lastSavedSeed?.trim() || null;
     if (retrySeed) {
       const retryButton = document.createElement('button');
       retryButton.className = 'secondary-button title-retry-button';

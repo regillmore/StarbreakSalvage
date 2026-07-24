@@ -366,9 +366,10 @@ export const ITEMS: readonly ItemDefinition[] = [
     id: 'item_shield_dynamo',
     name: 'Shield Dynamo',
     rarity: 'uncommon',
-    tags: ['shield'],
-    hooks: ['onPlayerHit'],
-    effect: 'shield damage primes retaliation effects',
+    tags: ['shield', 'revenge'],
+    hooks: ['onFire'],
+    effect:
+      'every fourth volley pressurizes the entire earlier chain into heavier shield retaliation shots',
     weight: 10,
     metadata: {
       family: 'shield-revenge',
@@ -435,8 +436,9 @@ export const ITEMS: readonly ItemDefinition[] = [
     name: 'Cursed Hull Plate',
     rarity: 'cursed',
     tags: ['curse', 'armor'],
-    hooks: ['onPlayerHit'],
-    effect: 'turns existing retaliation shots into amplified cursed overkill, then adds a fan',
+    hooks: ['onFire'],
+    effect:
+      'earlier retaliation shots become amplified cursed overkill and throw a three-shot rupture fan',
     weight: 4,
     metadata: {
       family: 'curse-relic',
@@ -537,8 +539,8 @@ export const ITEMS: readonly ItemDefinition[] = [
     name: 'Revenge Beam',
     rarity: 'rare',
     tags: ['revenge', 'shield'],
-    hooks: ['onPlayerHit'],
-    effect: 'taking shield damage fires a bright retaliation beam',
+    hooks: ['onFire'],
+    effect: 'the heaviest earlier retaliation shot releases a fast focused revenge beam',
     weight: 7,
     metadata: {
       family: 'shield-revenge',
@@ -619,11 +621,11 @@ export const ITEMS: readonly ItemDefinition[] = [
   },
   {
     id: 'item_shield_revenge_contract',
-    name: 'Shield Revenge Contract',
+    name: 'Counterclaim Repeater',
     rarity: 'rare',
     tags: ['shield', 'revenge'],
-    hooks: ['onPlayerHit'],
-    effect: 'shield damage launches paired retaliation slugs',
+    hooks: ['onFire'],
+    effect: 'every sixth volley reissues up to two earlier retaliation shots as fast paired slugs',
     weight: 6,
     metadata: {
       family: 'shield-revenge',
@@ -913,8 +915,9 @@ export const ITEMS: readonly ItemDefinition[] = [
     name: 'Reactive Plating Grid',
     rarity: 'common',
     tags: ['armor', 'shield'],
-    hooks: ['onPlayerHit'],
-    effect: 'hull plating spits two small shield shards when hit',
+    hooks: ['onFire'],
+    effect:
+      'every third volley copies up to two outer shots into flanking armored retaliation plates',
     weight: 11,
     metadata: {
       family: 'shield-revenge',
@@ -930,8 +933,8 @@ export const ITEMS: readonly ItemDefinition[] = [
     name: 'Oathbound Deflector',
     rarity: 'uncommon',
     tags: ['shield', 'revenge'],
-    hooks: ['onBossPhaseChanged'],
-    effect: 'boss phase breaks feed the deflector a little special charge',
+    hooks: ['onFire'],
+    effect: 'earlier retaliation shots gain one wall rebound and a longer shielded flight',
     weight: 7,
     metadata: {
       family: 'shield-revenge',

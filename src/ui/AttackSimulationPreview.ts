@@ -124,6 +124,12 @@ export function createAttackSimulationPreviewElement(
       arcCharge.setAttribute('aria-hidden', 'true');
       shot.append(arcCharge);
     }
+    if (projectile.tags.includes('revenge')) {
+      const retaliationField = ownerDocument.createElement('span');
+      retaliationField.className = 'attack-simulation-retaliation-field';
+      retaliationField.setAttribute('aria-hidden', 'true');
+      shot.append(retaliationField);
+    }
     projectileLayer.append(shot);
   }
 

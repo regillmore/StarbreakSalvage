@@ -68,6 +68,10 @@ import {
 import { getPhaseProjectilePresentation, isPhaseProjectile } from '../game/PhaseProjectile';
 import { getHeatShotPresentation, type ProjectileVisualKind } from '../game/HeatShot';
 import {
+  getRetaliationProjectilePresentation,
+  isRetaliationProjectile
+} from '../game/RetaliationProjectile';
+import {
   getLaserProjectileKind,
   getLaserProjectilePresentation,
   type LaserProjectileKind
@@ -1836,6 +1840,10 @@ export class CanvasRenderer {
     context.shadowColor = projectileColor;
     context.shadowBlur = velocityCues.highContrastProjectiles ? 14 : 10;
 
+    if (isRetaliationProjectile(projectile.tags)) {
+      this.paintRetaliationProjectileField(projectile, velocityCues.highContrastProjectiles);
+    }
+
     if (projectile.visualKind === 'heatShot') {
       if (phased) {
         this.paintPhaseProjectileWake(
@@ -2071,6 +2079,53 @@ export class CanvasRenderer {
       context.lineTo(outerX, outerY);
       context.stroke();
     }
+    context.restore();
+  }
+
+  private paintRetaliationProjectileField(
+    projectile: ProjectileRenderState,
+    highContrast: boolean
+  ): void {
+    const context = this.context;
+    const presentation = getRetaliationProjectilePresentation({
+      ageSeconds: this.settings.reducedMotion ? 0.16 : projectile.ageSeconds,
+      radius: projectile.radius,
+      vx: projectile.vx,
+      vy: projectile.vy
+    });
+    const shieldColor = highContrast ? '#ffffff' : '#62ffcb';
+    const pressureColor = highContrast ? '#ffef5f' : '#ffd166';
+
+    context.save();
+    context.rotate(presentation.headingRadians);
+    context.globalAlpha = highContrast ? 0.94 : presentation.pulse;
+    context.strokeStyle = shieldColor;
+    context.lineWidth = highContrast ? 2.2 : Math.max(1.2, projectile.radius * 0.25);
+    context.shadowColor = shieldColor;
+    context.shadowBlur = this.settings.reducedMotion ? 0 : 12;
+    context.rotate(presentation.shellRotation);
+    context.beginPath();
+    for (let index = 0; index < 6; index += 1) {
+      const angle = -Math.PI / 2 + (index / 6) * Math.PI * 2;
+      const x = Math.cos(angle) * presentation.shellRadius;
+      const y = Math.sin(angle) * presentation.shellRadius;
+      if (index === 0) context.moveTo(x, y);
+      else context.lineTo(x, y);
+    }
+    context.closePath();
+    context.stroke();
+    context.rotate(-presentation.shellRotation);
+
+    context.globalAlpha = highContrast ? 0.9 : 0.7;
+    context.strokeStyle = pressureColor;
+    context.lineWidth = highContrast ? 2 : Math.max(1, projectile.radius * 0.2);
+    context.beginPath();
+    context.moveTo(-presentation.shoulderWidth, projectile.radius * 0.55);
+    context.lineTo(-presentation.shoulderWidth * 0.55, presentation.wakeLength);
+    context.lineTo(0, presentation.wakeLength * 0.72);
+    context.lineTo(presentation.shoulderWidth * 0.55, presentation.wakeLength);
+    context.lineTo(presentation.shoulderWidth, projectile.radius * 0.55);
+    context.stroke();
     context.restore();
   }
 

@@ -544,20 +544,84 @@ describe('item synergies', () => {
     expect(payload.blastDamage).toBeGreaterThan(0);
   });
 
-  it('applies shield plus revenge synergy', () => {
-    const instances: ItemInstance[] = [
+  it('builds proactive shield retaliation in circuit order without taking damage', () => {
+    const linked: ItemInstance[] = [
       { itemId: 'item_shield_dynamo', acquisitionOrder: 0 },
-      { itemId: 'item_revenge_beam', acquisitionOrder: 1 }
+      { itemId: 'item_revenge_beam', acquisitionOrder: 1 },
+      { itemId: 'item_oathbound_deflector', acquisitionOrder: 2 }
     ];
-    const payload = applyItemHooks('onPlayerHit', instances, {
-      damage: 1,
+    const reversed: ItemInstance[] = [
+      { itemId: 'item_revenge_beam', acquisitionOrder: 0 },
+      { itemId: 'item_oathbound_deflector', acquisitionOrder: 1 },
+      { itemId: 'item_shield_dynamo', acquisitionOrder: 2 }
+    ];
+    const fire = (instances: readonly ItemInstance[]) =>
+      applyItemHooks('onFire', instances, {
+        volleyIndex: 4,
+        projectiles: [baseProjectile]
+      });
+
+    const payload = fire(linked);
+    const latePressure = fire(reversed);
+    const hitPayload = applyItemHooks('onPlayerHit', linked, {
+      damage: 2,
       revengeProjectiles: []
     });
 
-    expect(payload.revengeProjectiles.length).toBeGreaterThanOrEqual(2);
+    expect(payload.projectiles).toHaveLength(2);
+    expect(payload.projectiles.every((projectile) => projectile.tags.includes('revenge'))).toBe(
+      true
+    );
+    expect(payload.projectiles.every((projectile) => projectile.tags.includes('ricochet'))).toBe(
+      true
+    );
+    expect(payload.projectiles.some((projectile) => projectile.laserKind === 'beam')).toBe(true);
+    expect(latePressure.projectiles).toHaveLength(1);
+    expect(latePressure.projectiles[0]?.tags).toEqual(
+      expect.arrayContaining(['shield', 'revenge'])
+    );
+    expect(latePressure.projectiles[0]?.tags).not.toContain('ricochet');
+    expect(hitPayload.revengeProjectiles).toEqual([]);
+  });
+
+  it('treats shield retaliation as a two-trait Crossfeed source', () => {
+    const pressure = applyItemHooks(
+      'onFire',
+      [{ itemId: 'item_shield_dynamo', acquisitionOrder: 0 }],
+      { volleyIndex: 4, projectiles: [baseProjectile] }
+    );
+    const payload = applyItemHooks(
+      'onProjectileSpawn',
+      [{ itemId: 'item_crossfeed_detonator', acquisitionOrder: 1 }],
+      { projectile: pressure.projectiles[0]! }
+    );
+
+    expect(payload.projectile.tags).toEqual(expect.arrayContaining(['shield', 'revenge']));
+    expect(payload.projectile.arcChargeKind).toBe('heavy');
+  });
+
+  it('chains plating, paired retaliation, and cursed rupture on shared cadence', () => {
+    const payload = applyItemHooks(
+      'onFire',
+      [
+        { itemId: 'item_split_prism', acquisitionOrder: 0 },
+        { itemId: 'item_reactive_plating_grid', acquisitionOrder: 1 },
+        { itemId: 'item_shield_revenge_contract', acquisitionOrder: 2 },
+        { itemId: 'item_cursed_hull_plate', acquisitionOrder: 3 }
+      ],
+      { volleyIndex: 6, projectiles: [baseProjectile] }
+    );
+
+    expect(payload.projectiles).toHaveLength(10);
     expect(
-      payload.revengeProjectiles.some((projectile) => projectile.tags.includes('revenge'))
-    ).toBe(true);
+      payload.projectiles.filter((projectile) => projectile.tags.includes('revenge'))
+    ).toHaveLength(7);
+    expect(
+      payload.projectiles.filter((projectile) => projectile.tags.includes('curse'))
+    ).toHaveLength(7);
+    expect(
+      payload.projectiles.filter((projectile) => projectile.tags.includes('overkill'))
+    ).toHaveLength(7);
   });
 
   it('deploys the uplink pair without an undocumented mirror prerequisite', () => {
@@ -683,7 +747,7 @@ describe('item synergies', () => {
       'item_credit_reroute_fuse',
       'item_magnetized_tithe_box'
     ]);
-    expect(hitPayload.revengeProjectiles.length).toBeGreaterThanOrEqual(2);
+    expect(hitPayload.revengeProjectiles).toHaveLength(1);
     expect(
       hitPayload.revengeProjectiles.some((projectile) => projectile.tags.includes('relic'))
     ).toBe(true);
@@ -917,15 +981,14 @@ describe('item synergies', () => {
     expect(payload.creditsBonus).toBe(3);
   });
 
-  it('applies first expansion boss phase pressure hooks', () => {
+  it('applies the remaining boss phase pressure hooks after Oathbound joins the circuit', () => {
     const payload = applyItemHooks(
       'onBossPhaseChanged',
       [
-        { itemId: 'item_oathbound_deflector', acquisitionOrder: 0 },
-        { itemId: 'item_phase_breaker_subpoena', acquisitionOrder: 1 },
-        { itemId: 'item_warning_siren_lattice', acquisitionOrder: 2 },
-        { itemId: 'item_capital_wound_ledger', acquisitionOrder: 3 },
-        { itemId: 'item_telegraph_rewrite_quill', acquisitionOrder: 4 }
+        { itemId: 'item_phase_breaker_subpoena', acquisitionOrder: 0 },
+        { itemId: 'item_warning_siren_lattice', acquisitionOrder: 1 },
+        { itemId: 'item_capital_wound_ledger', acquisitionOrder: 2 },
+        { itemId: 'item_telegraph_rewrite_quill', acquisitionOrder: 3 }
       ],
       {
         bossId: 'boss_auditor_drone_xl',
@@ -941,7 +1004,7 @@ describe('item synergies', () => {
 
     expect(payload.attackCooldownSeconds).toBeGreaterThan(1.3);
     expect(payload.telegraphSeconds).toBeGreaterThan(1);
-    expect(payload.specialChargeGain).toBeGreaterThan(0.35);
+    expect(payload.specialChargeGain).toBeCloseTo(0.3);
     expect(payload.clearEnemyProjectiles).toBe(true);
   });
 

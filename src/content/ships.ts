@@ -268,9 +268,9 @@ export const SHIPS: readonly ShipDefinition[] = [
       startingCredits: 12,
       startingSalvage: 1
     },
-    perk: 'shield damage charges retaliation weapons',
+    perk: 'strong affinity for proactive shield-retaliation circuits',
     drawback: 'large hitbox and slow movement',
-    contractSummary: 'Tank hull that converts bad decisions into revenge beams.',
+    contractSummary: 'Tank hull that turns firing cadence into armored counter-volley pressure.',
     sponsors: ['Impact Compliance LLC', 'Aegis Claims Department'],
     itemBias: ['shield', 'armor', 'revenge']
   },

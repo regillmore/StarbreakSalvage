@@ -1409,6 +1409,47 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   filter: drop-shadow(0 0 0.34rem rgba(255, 107, 214, 0.9));
 }
 
+.attack-simulation-projectile[data-tags~='revenge'] {
+  filter: drop-shadow(0 0 0.28rem rgba(98, 255, 203, 0.82));
+}
+
+.attack-simulation-retaliation-field {
+  position: absolute;
+  inset: -62%;
+  border: 1px solid rgba(98, 255, 203, 0.92);
+  content: '';
+  clip-path: polygon(50% 0, 94% 24%, 94% 76%, 50% 100%, 6% 76%, 6% 24%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 209, 102, 0.42),
+    0 0 7px rgba(98, 255, 203, 0.72);
+  animation: attack-retaliation-pressure 640ms ease-in-out infinite;
+  pointer-events: none;
+}
+
+.attack-simulation-retaliation-field::after {
+  position: absolute;
+  top: 72%;
+  left: 16%;
+  width: 68%;
+  height: 170%;
+  content: '';
+  background: linear-gradient(rgba(255, 209, 102, 0.8), transparent);
+  clip-path: polygon(0 0, 34% 28%, 50% 8%, 66% 28%, 100% 0, 68% 100%, 50% 64%, 32% 100%);
+}
+
+@keyframes attack-retaliation-pressure {
+  0%,
+  100% {
+    opacity: 0.62;
+    transform: rotate(0deg) scale(0.9);
+  }
+
+  50% {
+    opacity: 0.96;
+    transform: rotate(30deg) scale(1.08);
+  }
+}
+
 .attack-simulation-arc-charge {
   position: absolute;
   inset: -48%;
@@ -2333,7 +2374,9 @@ html[data-performance-mode='true'] .attack-simulation-drone {
 html[data-reduced-motion='true'] .attack-simulation-phase-shell,
 html[data-performance-mode='true'] .attack-simulation-phase-shell,
 html[data-reduced-motion='true'] .attack-simulation-arc-charge,
-html[data-performance-mode='true'] .attack-simulation-arc-charge {
+html[data-performance-mode='true'] .attack-simulation-arc-charge,
+html[data-reduced-motion='true'] .attack-simulation-retaliation-field,
+html[data-performance-mode='true'] .attack-simulation-retaliation-field {
   opacity: 0.72;
   transform: rotate(45deg);
   animation: none;
@@ -2408,6 +2451,12 @@ html[data-bullet-contrast='high'] .attack-simulation-projectile {
   border: 2px solid #03050d;
   background: #ffffff;
   box-shadow: 0 0 7px #ffffff;
+}
+
+html[data-bullet-contrast='high'] .attack-simulation-retaliation-field {
+  border-width: 2px;
+  border-color: #ffef5f;
+  box-shadow: 0 0 0 1px #03050d;
 }
 
 html[data-bullet-contrast='high'] .attack-simulation-drone {

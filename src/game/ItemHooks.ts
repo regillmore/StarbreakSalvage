@@ -185,6 +185,9 @@ export type ItemHookName = keyof ItemHookPayloadByName;
 export const DEFAULT_ITEM_HOOK_APPLICATION_LIMIT = 48;
 
 const PERIODIC_VOLLEY_CADENCES = {
+  item_shield_dynamo: 4,
+  item_reactive_plating_grid: 3,
+  item_shield_revenge_contract: 6,
   item_drone_uplink: 3,
   item_phase_grazer: 4,
   item_signal_clone_stamp: 3,
@@ -228,6 +231,12 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_penumbra_crown_aperture',
     'item_parallax_echo_lattice',
     'item_forkline_dynamo',
+    'item_shield_dynamo',
+    'item_reactive_plating_grid',
+    'item_shield_revenge_contract',
+    'item_revenge_beam',
+    'item_oathbound_deflector',
+    'item_cursed_hull_plate',
     'item_drone_uplink',
     'item_heat_sink_saint',
     'item_phase_grazer',
@@ -272,14 +281,7 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_boss_bounty_stamp',
     'item_crossfeed_detonator'
   ],
-  onPlayerHit: [
-    'item_shield_dynamo',
-    'item_cursed_hull_plate',
-    'item_revenge_beam',
-    'item_shield_revenge_contract',
-    'item_curse_eater_gasket',
-    'item_reactive_plating_grid'
-  ],
+  onPlayerHit: ['item_curse_eater_gasket'],
   onPickupCollected: [
     'item_coin_operated_cannon',
     'item_salvage_magnet',
@@ -309,7 +311,6 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_mining_laser_transit'
   ],
   onBossPhaseChanged: [
-    'item_oathbound_deflector',
     'item_phase_breaker_subpoena',
     'item_warning_siren_lattice',
     'item_capital_wound_ledger',
@@ -832,6 +833,170 @@ function applyOnFire(
     };
   }
 
+  if (
+    itemId === 'item_shield_dynamo' &&
+    isItemVolleyCycle(itemId, instances, payload.volleyIndex)
+  ) {
+    return addPrototypeVentCycleShot(itemId, instances, payload, {
+      ...payload,
+      projectiles: payload.projectiles.map((projectile) => ({
+        ...projectile,
+        vx: projectile.vx * 0.94,
+        vy: projectile.vy * 0.94,
+        radius: projectile.radius + 1,
+        damage: projectile.damage * 1.35,
+        ttl: projectile.ttl + 0.16,
+        tags: addTags(projectile.tags, ['shield', 'revenge'])
+      }))
+    });
+  }
+
+  if (
+    itemId === 'item_reactive_plating_grid' &&
+    isItemVolleyCycle(itemId, instances, payload.volleyIndex)
+  ) {
+    const outerShots = [...payload.projectiles]
+      .map((projectile, index) => ({
+        projectile,
+        index,
+        projectedX: projectile.x + projectile.vx * 0.12
+      }))
+      .sort(
+        (left, right) =>
+          Math.abs(right.projectedX) - Math.abs(left.projectedX) || left.index - right.index
+      )
+      .slice(0, 2);
+
+    return addPrototypeVentCycleShot(itemId, instances, payload, {
+      ...payload,
+      projectiles: [
+        ...payload.projectiles,
+        ...outerShots.map(({ projectile }, index) => {
+          const side =
+            outerShots.length === 1
+              ? payload.volleyIndex % 2 === 0
+                ? -1
+                : 1
+              : index === 0
+                ? -1
+                : 1;
+          return {
+            ...projectile,
+            x: projectile.x + side * 16,
+            vx: projectile.vx + side * 72,
+            vy: projectile.vy * 0.88,
+            radius: Math.max(4, projectile.radius * 0.92),
+            damage: Math.max(0.42, projectile.damage * 0.46),
+            ttl: projectile.ttl + 0.24,
+            tags: addTags(projectile.tags, ['armor', 'shield', 'revenge']),
+            procDepth: projectile.procDepth + 1
+          };
+        })
+      ]
+    });
+  }
+
+  if (
+    itemId === 'item_shield_revenge_contract' &&
+    isItemVolleyCycle(itemId, instances, payload.volleyIndex)
+  ) {
+    const retaliationShots = getRetaliationProjectiles(payload.projectiles).slice(0, 2);
+    if (retaliationShots.length === 0) return payload;
+
+    return addPrototypeVentCycleShot(itemId, instances, payload, {
+      ...payload,
+      projectiles: [
+        ...payload.projectiles,
+        ...retaliationShots.map((projectile, index) => {
+          const side = retaliationShots.length === 1 ? 0 : index === 0 ? -1 : 1;
+          return {
+            ...projectile,
+            x: projectile.x + side * 18,
+            vx: projectile.vx * 0.62 + side * 54,
+            vy: projectile.vy * 1.18,
+            radius: Math.max(4, projectile.radius * 0.82),
+            damage: Math.max(0.58, projectile.damage * 0.7),
+            ttl: projectile.ttl * 0.9,
+            tags: addTags(projectile.tags, ['shield', 'revenge']),
+            procDepth: projectile.procDepth + 1
+          };
+        })
+      ]
+    });
+  }
+
+  if (itemId === 'item_revenge_beam') {
+    const seedProjectile = getHeaviestRetaliationProjectile(payload.projectiles);
+    if (!seedProjectile) return payload;
+
+    return {
+      ...payload,
+      projectiles: [
+        ...payload.projectiles,
+        {
+          ...seedProjectile,
+          vx: seedProjectile.vx * 0.18,
+          vy: seedProjectile.vy * 1.28,
+          radius: Math.max(5, seedProjectile.radius * 0.88),
+          damage: Math.max(0.9, seedProjectile.damage * 1.2),
+          ttl: Math.max(0.72, seedProjectile.ttl * 0.82),
+          tags: addTags(seedProjectile.tags, ['laser', 'shield', 'revenge']),
+          procDepth: seedProjectile.procDepth + 1,
+          laserKind: 'beam'
+        }
+      ]
+    };
+  }
+
+  if (itemId === 'item_oathbound_deflector') {
+    return {
+      ...payload,
+      projectiles: payload.projectiles.map((projectile) =>
+        isRetaliationProjectile(projectile)
+          ? {
+              ...projectile,
+              vx: projectile.vx * 1.08,
+              ttl: projectile.ttl + 0.28,
+              tags: addTags(projectile.tags, ['ricochet']),
+              ricochetBounces: Math.max(1, projectile.ricochetBounces ?? 0)
+            }
+          : projectile
+      )
+    };
+  }
+
+  if (itemId === 'item_cursed_hull_plate') {
+    const retaliationShots = getRetaliationProjectiles(payload.projectiles);
+    const seedProjectile = getHeaviestRetaliationProjectile(retaliationShots);
+    if (!seedProjectile) return payload;
+
+    const amplified = payload.projectiles.map((projectile) =>
+      isRetaliationProjectile(projectile)
+        ? {
+            ...projectile,
+            damage: projectile.damage * 1.25,
+            tags: addTags(projectile.tags, ['curse', 'overkill'])
+          }
+        : projectile
+    );
+    return {
+      ...payload,
+      projectiles: [
+        ...amplified,
+        ...[-118, 0, 118].map((vx) => ({
+          ...seedProjectile,
+          vx: seedProjectile.vx * 0.2 + vx,
+          vy: seedProjectile.vy * 0.92,
+          radius: Math.max(4, seedProjectile.radius * 0.8),
+          damage: Math.max(0.55, seedProjectile.damage * 0.5),
+          ttl: seedProjectile.ttl + 0.12,
+          tags: addTags(seedProjectile.tags, ['armor', 'curse', 'overkill', 'revenge']),
+          procDepth: seedProjectile.procDepth + 1
+        }))
+      ]
+    };
+  }
+
   if (itemId === 'item_drone_uplink' && isItemVolleyCycle(itemId, instances, payload.volleyIndex)) {
     return addPrototypeVentCycleShot(itemId, instances, payload, {
       ...payload,
@@ -1163,6 +1328,26 @@ function applyOnFire(
   return payload;
 }
 
+function isRetaliationProjectile(projectile: ProjectileBlueprint): boolean {
+  return projectile.tags.includes('revenge');
+}
+
+function getRetaliationProjectiles(
+  projectiles: readonly ProjectileBlueprint[]
+): ProjectileBlueprint[] {
+  return projectiles.filter(isRetaliationProjectile);
+}
+
+function getHeaviestRetaliationProjectile(
+  projectiles: readonly ProjectileBlueprint[]
+): ProjectileBlueprint | null {
+  return getRetaliationProjectiles(projectiles).reduce<ProjectileBlueprint | null>(
+    (heaviest, projectile) =>
+      !heaviest || projectile.damage > heaviest.damage ? projectile : heaviest,
+    null
+  );
+}
+
 function isItemVolleyCycle(
   itemId: ItemId,
   instances: readonly ItemInstance[],
@@ -1344,7 +1529,9 @@ function applyOnEnemyKilled(
 
 function getCircuitTraitCount(tags: readonly ItemTag[]): number {
   return new Set(
-    tags.filter((tag) => ['arc', 'drone', 'missile', 'phase', 'ricochet', 'split'].includes(tag))
+    tags.filter((tag) =>
+      ['arc', 'drone', 'missile', 'phase', 'revenge', 'ricochet', 'shield', 'split'].includes(tag)
+    )
   ).size;
 }
 
@@ -1377,91 +1564,6 @@ function applyOnPlayerHit(
   instances: readonly ItemInstance[],
   payload: PlayerHitPayload
 ): PlayerHitPayload {
-  if (itemId === 'item_shield_dynamo') {
-    return {
-      ...payload,
-      revengeProjectiles: [
-        ...payload.revengeProjectiles,
-        {
-          x: 0,
-          y: -4,
-          vx: 0,
-          vy: -520,
-          radius: 4,
-          damage: Math.max(0.5, payload.damage * 0.45),
-          ttl: 0.65,
-          tags: ['shield'],
-          procDepth: 1
-        }
-      ]
-    };
-  }
-
-  if (itemId === 'item_cursed_hull_plate') {
-    const amplified = payload.revengeProjectiles.map((projectile) => ({
-      ...projectile,
-      damage: projectile.damage * 1.35,
-      tags: addTags(projectile.tags, ['curse', 'overkill'])
-    }));
-    return {
-      ...payload,
-      revengeProjectiles: [
-        ...amplified,
-        ...[-120, 0, 120].map((vx) => ({
-          x: 0,
-          y: 0,
-          vx,
-          vy: -570,
-          radius: 5,
-          damage: Math.max(0.75, payload.damage * 0.7),
-          ttl: 0.8,
-          tags: ['curse', 'armor', 'overkill'] as const,
-          procDepth: 1
-        }))
-      ]
-    };
-  }
-
-  if (itemId === 'item_revenge_beam' && hasItem(instances, 'item_shield_dynamo')) {
-    return {
-      ...payload,
-      revengeProjectiles: [
-        ...payload.revengeProjectiles,
-        {
-          x: 0,
-          y: 0,
-          vx: 0,
-          vy: -680,
-          radius: 6,
-          damage: Math.max(1, payload.damage),
-          ttl: 0.9,
-          tags: ['shield', 'revenge'],
-          procDepth: 1
-        }
-      ]
-    };
-  }
-
-  if (itemId === 'item_shield_revenge_contract') {
-    return {
-      ...payload,
-      revengeProjectiles: [
-        ...payload.revengeProjectiles,
-        ...[-78, 78].map((vx) => ({
-          x: 0,
-          y: -2,
-          vx,
-          vy: -610,
-          radius: 5,
-          damage: Math.max(0.85, payload.damage * 0.72),
-          ttl: 0.85,
-          tags: ['shield', 'revenge'] as const,
-          procDepth: 1
-        }))
-      ]
-    };
-  }
-
   if (
     itemId === 'item_curse_eater_gasket' &&
     (hasItem(instances, 'item_cursed_hull_plate') ||
@@ -1483,26 +1585,6 @@ function applyOnPlayerHit(
           tags: ['curse', 'relic'],
           procDepth: 1
         }
-      ]
-    };
-  }
-
-  if (itemId === 'item_reactive_plating_grid') {
-    return {
-      ...payload,
-      revengeProjectiles: [
-        ...payload.revengeProjectiles,
-        ...[-52, 52].map((vx) => ({
-          x: 0,
-          y: -2,
-          vx,
-          vy: -560,
-          radius: 4,
-          damage: Math.max(0.4, payload.damage * 0.35),
-          ttl: 0.7,
-          tags: ['shield', 'armor'] as const,
-          procDepth: 1
-        }))
       ]
     };
   }
@@ -1708,14 +1790,6 @@ function applyOnBossPhaseChanged(
   itemId: ItemId,
   payload: BossPhaseChangedPayload
 ): BossPhaseChangedPayload {
-  if (itemId === 'item_oathbound_deflector') {
-    return {
-      ...payload,
-      attackCooldownSeconds: payload.attackCooldownSeconds + 0.05,
-      specialChargeGain: payload.specialChargeGain + 0.08
-    };
-  }
-
   if (itemId === 'item_phase_breaker_subpoena') {
     return {
       ...payload,

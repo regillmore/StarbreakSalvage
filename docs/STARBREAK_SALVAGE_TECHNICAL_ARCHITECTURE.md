@@ -1001,6 +1001,23 @@ seed + permanent save fingerprint
 - Shop routes still improve discount and weighted inventory focus. `SectorTransitionScene` identifies Upgrade Bay effects as the only slot-growth source, while its `3+` estimate continues to acknowledge purchased permanent capacity.
 - The narrower Act II result is the same deterministic three-choice prefix of the former four-choice roll. No new draw, save field, migration, content definition, static-hosting rule, or dependency is introduced.
 
+### Work order 208 Aegis-retaliation boundary
+
+- `ItemHooks.applyOnFire` is the sole retaliation-chain mutation boundary. Shield Dynamo, Reactive Plating Grid, and Counterclaim Repeater use the shared periodic cadence registry; Revenge Beam, Oathbound Deflector, and Cursed Hull Plate inspect only projectile state built earlier in the ordered hook dispatch.
+- `revenge` is the runtime pressure marker and `shield` is its defensive circuit trait. No persistent charge reservoir, player-hit counter, target scan, or contract-specific combat branch is introduced. Shield/revenge items are absent from `onPlayerHit`; Curse-Eater remains the only compatibility hit hook in that surface.
+- The established 48-application combined-hook budget bounds every stage. Pressure sources map the current volley or append at most two shots, Revenge Beam appends one, and Cursed Hull Plate appends one three-shot fan. Existing projectile and effect caps remain authoritative.
+- `FoundryPresentation` calls the production reducers at the shared representative cadence and owns only explanatory met/unmet labels. Its complete-cycle DPS sampler already consumes the extended cadence registry, including Prototype Vent shifts; no preview-only retaliation formula exists.
+- `RetaliationProjectile` is a pure presentation projection. Canvas and DOM preview consumers derive their hex shell and wake from existing projectile tags and age; there is no new actor, projectile field, collision rule, save field, or asset request.
+- Shield Bruiser retains the WO150 shared weighted ignition pool. The stronger shield/revenge affinity improves thematic odds without hard-locking the contract or advancing a new RNG stream.
+
+### Work order 209 seed-neutral title boundary
+
+- `GameApp.seedEntryInput` is title-entry state, initialized from the current URL and changed only by an explicit menu launch. `resumeRunSnapshot` restores `currentSeedLabel`, the generated run, contract, and session without projecting snapshot identity back into that input.
+- `RunSnapshotV12` remains the authority for suspended expedition identity. Its seed stays visible in the resume summary and deterministic restore, but it owns no browser URL or title-presentation mutation.
+- `MainMenuScene` has one launch-panel presentation. A nonblank input still selects the existing deterministic start path and opens the code drawer; blank input still resolves through the existing random-seed path.
+- Suspend paths checkpoint and switch scenes without rewriting browser history. The completed-run debrief path retains its explicit URL-seed cleanup, and seed-sharing continues to create an opt-in `seed` query parameter.
+- The change adds no save/snapshot field, migration, generation draw, run-content mutation, DOM persistence mechanism, dependency, or static-hosting rule.
+
 ### Work order 198 primary-weapon icon boundary
 
 - `WeaponDefinition.iconKind` is the sole authored visual-identity key for a primary weapon base. `WEAPON_ICON_KINDS` types and validates the eight-entry vocabulary; quality, source, affix, component instance, and route data never select a different glyph.

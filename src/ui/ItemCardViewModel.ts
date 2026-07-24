@@ -36,7 +36,7 @@ const FAMILY_LABELS: Readonly<Record<ItemFamily, string>> = {
   'laser-split': 'Laser Split',
   'missile-overkill': 'Missile Overkill',
   'drone-copy': 'Drone Copy',
-  'shield-revenge': 'Shield Revenge',
+  'shield-revenge': 'Aegis Retaliation',
   'credit-shop': 'Credit Shop',
   'curse-relic': 'Curse Relic',
   'phase-graze': 'Phase Graze',

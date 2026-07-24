@@ -38,7 +38,7 @@ export const UNLOCKS: readonly UnlockDefinition[] = [
     id: 'unlock_ship_shield_bruiser',
     kind: 'ship',
     name: 'Shield Bruiser',
-    summary: 'a defensive starter contract that turns hits into counterplay',
+    summary: 'a defensive starter contract biased toward armored retaliation circuits',
     effect: 'Adds Shield Bruiser to future contract boards.',
     grants: ['Ship: Shield Bruiser']
   },
