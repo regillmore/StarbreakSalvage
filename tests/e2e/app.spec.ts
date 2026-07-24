@@ -363,7 +363,11 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
       .first()
       .getByRole('img', { name: /item icon/ })
   ).toBeVisible();
-  await expect(page.locator('.reward-card').first()).toContainText(/Live effect|Bridge effect/);
+  await expect(page.locator('.reward-card').first()).toContainText('Trigger');
+  await expect(page.locator('.reward-card').first()).toContainText('Take circuit');
+  await expect(
+    page.locator('.reward-card .item-badge-status[data-effect-state="live"]')
+  ).toHaveCount(0);
   await expect(page.getByTestId('reward-primary-weapon')).toContainText('Primary Weapon');
   const rewardWeaponIcon = page.getByTestId('reward-primary-weapon').locator('.weapon-icon');
   await expect(rewardWeaponIcon).toHaveCount(1);
@@ -714,7 +718,8 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.getByRole('button', { name: 'Unlock Archive' }).click();
   await expect(page.getByRole('heading', { name: 'Unlock Archive' })).toBeVisible();
   await expect(page.getByTestId('discovered-item-list')).toContainText('Prototype Vent Script');
-  await expect(page.getByTestId('discovered-item-list')).toContainText('Live effect');
+  await expect(page.getByTestId('discovered-item-list')).toContainText('Trigger');
+  await expect(page.locator('.archive-item-card .item-badge-status')).toHaveCount(0);
 
   await page.getByRole('button', { name: 'Export Save' }).click();
   const exportedSave = await page.getByTestId('save-import-box').inputValue();

@@ -4,7 +4,7 @@ import { getItemById, type ItemDefinition } from '../../src/content/items';
 import { createItemCardViewModel } from '../../src/ui/ItemCardViewModel';
 
 describe('item card view model', () => {
-  it('formats reward item cards with rarity, family, source, tags, and effect state', () => {
+  it('formats reward item cards with a compact identity and authored circuit trigger', () => {
     const model = createItemCardViewModel(getItemById('item_split_prism'), {
       sourceLabel: 'Starter pool'
     });
@@ -16,6 +16,7 @@ describe('item card view model', () => {
         rarityLabel: 'Uncommon',
         familyLabel: 'Laser Split',
         sourceLabel: 'Starter pool',
+        triggerLabel: 'Volley',
         effectStateLabel: 'Live effect',
         effectStateKind: 'live',
         iconKind: 'laser-split',
@@ -23,7 +24,6 @@ describe('item card view model', () => {
       })
     );
     expect(model.badges).toEqual(['Split']);
-    expect(model.metaLine).toBe('Uncommon | Laser Split | Starter pool | Live effect');
   });
 
   it('includes shop price and run acquisition labels when present', () => {
@@ -35,7 +35,7 @@ describe('item card view model', () => {
 
     expect(model.priceLabel).toBe('9 credits');
     expect(model.acquisitionLabel).toBe('Slot 4');
-    expect(model.metaLine).toBe('Rare | Curse Relic | vault source | Live effect | 9 credits');
+    expect(model.triggerLabel).toBe('Reward roll');
     expect(model.badges).toEqual(['Relic', 'Vault']);
   });
 
@@ -61,5 +61,11 @@ describe('item card view model', () => {
     expect(bridge.effectStateKind).toBe('bridge');
     expect(planned.effectStateLabel).toBe('Planned effect');
     expect(planned.effectStateKind).toBe('planned');
+  });
+
+  it('joins multiple activation hooks into one compact trigger readout', () => {
+    const model = createItemCardViewModel(getItemById('item_salvage_dividend_chip'));
+
+    expect(model.triggerLabel).toBe('Enemy kill + Object break');
   });
 });

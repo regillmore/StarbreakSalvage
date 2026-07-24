@@ -121,7 +121,7 @@ Phase 6 expands the item catalog and hook surface. Add tests closest to the risk
 - known-seed snapshots for reward, shop, vault, boss, faction, lunar, and unlock-gated item pools under fresh and progressed saves;
 - item unlock and discovery migration/import/export/corruption repair if save shape changes;
 - synergy cluster detection, tie-breaking, HUD/summary copy, and narrow-layout build identity presentation; work order 057 adds unit coverage and E2E smoke assertions for HUD plus reward/shop build-fit lines;
-- item card view models for reward, shop, vault, archive, and summary surfaces, including high-contrast and keyboard focus state; work order 058 adds shared model coverage and E2E checks for shop, reward, summary, and archive item cards;
+- item card view models for reward, shop, vault, archive, and summary surfaces, including high-contrast and keyboard focus state; work order 058 adds shared model coverage and E2E checks, while work order 205 protects hook-derived triggers, non-live compatibility badges, stable action/price footers, the one-page reward manifest, and four-column shop readability;
 - item-heavy stress helpers for forced hook-heavy combat, fresh/unlocked reward-shop-vault pool previews, active hook pressure, proc cap reporting, and build identity; work order 059 adds pure coverage plus a `HOOK-STORM-SMOKE` Playwright debug path;
 - browser smoke for at least one item-heavy reward/shop/vault path and one dense synergy combat/debug path.
 

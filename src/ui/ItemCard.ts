@@ -6,6 +6,8 @@ export interface ItemCardRenderOptions {
   readonly titleTag?: 'span' | 'h2';
   readonly includeEffect?: boolean;
   readonly compact?: boolean;
+  readonly actionLabel?: string;
+  readonly showLiveState?: boolean;
 }
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -18,6 +20,11 @@ export function appendItemCardContent(
   parent.dataset.rarity = model.rarity;
   parent.dataset.family = model.family;
   parent.dataset.effectState = model.effectStateKind;
+  parent.dataset.itemId = model.itemId;
+
+  if (options.compact) {
+    parent.dataset.compact = 'true';
+  }
 
   const usesHeading = options.titleTag === 'h2';
   const header = parent.ownerDocument.createElement(usesHeading ? 'div' : 'span');
@@ -27,24 +34,48 @@ export function appendItemCardContent(
   title.className = 'choice-title item-card-title';
   title.textContent = `${options.titlePrefix ?? ''}${model.name}`;
 
-  const meta = parent.ownerDocument.createElement('span');
-  meta.className = 'choice-meta item-card-meta';
-  meta.textContent = model.metaLine;
+  const kicker = parent.ownerDocument.createElement('span');
+  kicker.className = 'choice-meta item-card-meta';
+  const rarity = parent.ownerDocument.createElement('span');
+  rarity.className = 'item-card-rarity';
+  rarity.textContent = model.rarityLabel;
+  const source = parent.ownerDocument.createElement('span');
+  source.className = 'item-card-source';
+  source.textContent = model.sourceLabel;
+  kicker.append(rarity, source);
+
+  const family = parent.ownerDocument.createElement('span');
+  family.className = 'item-card-family';
+  family.textContent = `${model.familyLabel} circuit`;
 
   const copy = parent.ownerDocument.createElement(usesHeading ? 'div' : 'span');
   copy.className = 'item-card-title-copy';
-  copy.append(title, meta);
+  copy.append(kicker, title, family);
 
   header.append(createItemIcon(parent.ownerDocument, model), copy);
   parent.append(header);
 
   if (options.includeEffect !== false) {
+    const signal = parent.ownerDocument.createElement('span');
+    signal.className = 'item-card-signal';
+
+    const trigger = parent.ownerDocument.createElement('span');
+    trigger.className = 'item-card-trigger';
+    const triggerCaption = parent.ownerDocument.createElement('small');
+    triggerCaption.textContent = 'Trigger';
+    const triggerValue = parent.ownerDocument.createElement('strong');
+    triggerValue.textContent = model.triggerLabel;
+    trigger.append(triggerCaption, triggerValue);
+
     const body = parent.ownerDocument.createElement('span');
     body.className = 'choice-body item-card-effect';
     body.textContent = model.effectText;
-    parent.append(body);
+    signal.append(trigger, body);
+    parent.append(signal);
   }
 
+  const footer = parent.ownerDocument.createElement('span');
+  footer.className = 'item-card-footer';
   const badges = parent.ownerDocument.createElement('span');
   badges.className = 'item-badge-row';
 
@@ -55,11 +86,13 @@ export function appendItemCardContent(
     badges.append(badge);
   }
 
-  const status = parent.ownerDocument.createElement('span');
-  status.className = 'item-badge item-badge-status';
-  status.dataset.effectState = model.effectStateKind;
-  status.textContent = model.effectStateLabel;
-  badges.append(status);
+  if (model.effectStateKind !== 'live' || options.showLiveState) {
+    const status = parent.ownerDocument.createElement('span');
+    status.className = 'item-badge item-badge-status';
+    status.dataset.effectState = model.effectStateKind;
+    status.textContent = model.effectStateLabel;
+    badges.append(status);
+  }
 
   if (model.acquisitionLabel) {
     const acquisition = parent.ownerDocument.createElement('span');
@@ -68,11 +101,27 @@ export function appendItemCardContent(
     badges.append(acquisition);
   }
 
-  parent.append(badges);
+  footer.append(badges);
 
-  if (options.compact) {
-    parent.dataset.compact = 'true';
+  if (model.priceLabel) {
+    const price = parent.ownerDocument.createElement('span');
+    price.className = 'item-card-price';
+    price.textContent = model.priceLabel;
+    footer.append(price);
   }
+
+  if (options.actionLabel) {
+    const action = parent.ownerDocument.createElement('span');
+    action.className = 'item-card-action';
+    action.textContent = options.actionLabel;
+    const arrow = parent.ownerDocument.createElement('span');
+    arrow.setAttribute('aria-hidden', 'true');
+    arrow.textContent = '\u2192';
+    action.append(arrow);
+    footer.append(action);
+  }
+
+  parent.append(footer);
 }
 
 export function createItemIcon(document: Document, model: ItemCardViewModel): SVGSVGElement {

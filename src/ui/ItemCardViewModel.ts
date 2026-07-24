@@ -1,6 +1,7 @@
 import type {
   ItemDefinition,
   ItemFamily,
+  ItemHook,
   ItemImplementationStatus,
   ItemRarity,
   ItemUiTag
@@ -14,8 +15,8 @@ export interface ItemCardViewModel {
   readonly family: ItemFamily;
   readonly familyLabel: string;
   readonly sourceLabel: string;
+  readonly triggerLabel: string;
   readonly effectText: string;
-  readonly effectState: ItemImplementationStatus;
   readonly effectStateLabel: string;
   readonly effectStateKind: ItemImplementationStatus;
   readonly badges: readonly string[];
@@ -23,7 +24,6 @@ export interface ItemCardViewModel {
   readonly iconLabel: string;
   readonly priceLabel: string | null;
   readonly acquisitionLabel: string | null;
-  readonly metaLine: string;
 }
 
 export interface ItemCardViewModelOptions {
@@ -52,6 +52,23 @@ const EFFECT_STATE_LABELS: Readonly<Record<ItemImplementationStatus, string>> = 
   planned: 'Planned effect'
 };
 
+const HOOK_LABELS: Readonly<Record<ItemHook, string>> = {
+  onFire: 'Volley',
+  onProjectileSpawn: 'Projectile launch',
+  onEnemyKilled: 'Enemy kill',
+  onPlayerHit: 'Player hit',
+  onPickupCollected: 'Pickup',
+  onGraze: 'Graze',
+  onSpecialUsed: 'Special burst',
+  onBombUsed: 'Bomb',
+  onSectorStart: 'Sector entry',
+  onRouteChosen: 'Route choice',
+  onShopEntered: 'Shop entry',
+  onRewardGenerated: 'Reward roll',
+  onBossPhaseChanged: 'Boss phase',
+  onEnvironmentObjectDestroyed: 'Object break'
+};
+
 export function createItemCardViewModel(
   item: ItemDefinition,
   options: ItemCardViewModelOptions = {}
@@ -63,13 +80,7 @@ export function createItemCardViewModel(
   const acquisitionLabel =
     options.acquisitionOrder === undefined ? null : `Slot ${options.acquisitionOrder + 1}`;
   const badges = item.metadata.uiTags.map(formatUiTagLabel);
-  const metaLabels = [
-    rarityLabel,
-    familyLabel,
-    sourceLabel,
-    EFFECT_STATE_LABELS[item.metadata.implementationStatus],
-    priceLabel
-  ].filter((label): label is string => Boolean(label));
+  const triggerLabel = item.hooks.map((hook) => HOOK_LABELS[hook]).join(' + ');
 
   return {
     itemId: item.id,
@@ -79,16 +90,15 @@ export function createItemCardViewModel(
     family: item.metadata.family,
     familyLabel,
     sourceLabel,
+    triggerLabel,
     effectText: item.effect,
-    effectState: item.metadata.implementationStatus,
     effectStateLabel: EFFECT_STATE_LABELS[item.metadata.implementationStatus],
     effectStateKind: item.metadata.implementationStatus,
     badges,
     iconKind: item.metadata.family,
     iconLabel: `${familyLabel} item icon`,
     priceLabel,
-    acquisitionLabel,
-    metaLine: metaLabels.join(' | ')
+    acquisitionLabel
   };
 }
 

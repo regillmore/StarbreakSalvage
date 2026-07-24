@@ -2908,3 +2908,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 204. `ArenaHudFrame` owns safe-frame geometry and theme dialects, `GameplayScene` owns the persistent surrounding DOM rails, and `CanvasRenderer` colors the existing arena linework from the selected ship appearance.
+
+### BL70 - Circuit acquisition dossiers
+
+Acceptance:
+
+- Replace pipe-delimited item metadata with separate rarity/source, name, family, trigger, effect, tag, and action hierarchy on shared acquisition cards.
+- Derive activation labels from authoritative item hooks and join multi-hook activations without adding presentation metadata to item definitions.
+- Suppress redundant live-status badges while retaining explicit bridge/planned compatibility states.
+- Give shops stable price and buy footers, rewards a stable take footer, archives full trigger/effect context, and summaries their compact no-effect form.
+- Keep the bounded reward manifest on one page and the four-column shop row readable without horizontal overflow.
+- Retain text rarity cues, high-contrast trigger boundaries, keyboard semantics, deterministic pools/prices, saves, static hosting, and dependency count.
+
+Status:
+
+- Implemented in work order 205. `ItemCardViewModel` derives compact hook labels and `ItemCard` renders one shared circuit-dossier hierarchy, while shop and reward scenes contribute only their local action wording.

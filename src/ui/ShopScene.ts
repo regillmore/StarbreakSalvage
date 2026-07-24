@@ -252,7 +252,8 @@ export class ShopScene implements Scene {
         createItemCardViewModel(item, {
           sourceLabel: stockItem.sourceHint,
           price: stockItem.price
-        })
+        }),
+        { actionLabel: 'Buy circuit' }
       );
       shopGrid.append(buyButton);
     }

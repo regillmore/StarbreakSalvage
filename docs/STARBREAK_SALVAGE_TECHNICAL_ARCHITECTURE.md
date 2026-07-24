@@ -973,6 +973,13 @@ seed + permanent save fingerprint
 
 - `RewardScene` and `ShopScene` pass authored source and price context directly into `ItemCardViewModel`; neither scene constructs a hypothetical acquisition nor asks `BuildSynergy` to score one.
 - `ItemCardViewModel` contains only durable authored/acquired item presentation. `ItemCard` has no optional prospective-synergy row, preventing other menus from reviving an implication that family scores are upgrade effects.
+
+### Work order 205 circuit-card presentation boundary
+
+- `ItemCardViewModel` maps the bounded `ItemDefinition.hooks` list to human activation labels. It does not add an authored display field, inspect combat state, score synergy, or alter the item definition.
+- `ItemCard` owns the shared identity, trigger/effect signal strip, tags, compatibility state, price, acquisition slot, and optional local action. It suppresses only the redundant visual badge for `live`; bridge and planned records remain explicit.
+- `ShopScene` and `RewardScene` pass `Buy circuit` or `Take circuit` as presentation context. Archive and summary consumers retain their established effect/compact switches, so no consumer forks item identity or activation semantics.
+- Price, reward source, acquisition order, and implementation status remain inputs from their existing authorities. The renderer writes no run/session state and advances no generation stream.
 - `BuildSynergy.createBuildSynergyModel` remains a read-only classifier over owned item instances for HUD and debrief identity. Its scores are not consumed by `ItemHooks`, `CombatState`, reward generation, shops, engineering, or run progression.
 - The change removes presentation-only work and adds no save/snapshot field, migration, item definition, RNG draw, route mutation, combat actor, projectile, effect, hook, or fixed-step branch.
 

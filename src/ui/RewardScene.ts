@@ -102,7 +102,7 @@ export class RewardScene implements Scene {
         createItemCardViewModel(choice.item, {
           sourceLabel: choice.sourceHint
         }),
-        { titlePrefix: 'Take ' }
+        { actionLabel: 'Take circuit' }
       );
       rewardGrid.append(rewardButton);
     }

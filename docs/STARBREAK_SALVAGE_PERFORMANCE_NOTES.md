@@ -112,6 +112,9 @@ Phase 6 expands the item catalog and hook surface. Keep the first larger catalog
 - Work order 059 adds item-stress instrumentation without adding runtime dependencies: `src/game/ItemStress.ts` builds a deterministic hook-heavy loadout, fresh/unlocked reward-shop-vault pool previews, and an overlay read model for item count, active hook surfaces, hook applications, peak proc pressure, skipped proc applications, and build identity.
 - Prefer generation-time pool sampling over per-frame item filtering. Reward, shop, vault, boss, faction, lunar, and unlock-gated pools should be derived from seed plus save state when the relevant screen or encounter is created.
 - Large reward/shop/archive item card surfaces should use stable DOM nodes or compact render passes rather than rebuilding excessive nested markup on hover.
+
+Work order 205 keeps circuit-card work scene-bound. Each visible item receives one bounded hook-label fold, one identity header, one trigger/effect strip, and one footer when the owning DOM scene enters or redraws after an explicit purchase/reroll. No card projection or DOM mutation enters fixed-step simulation, hover, animation-frame, reward weighting, or shop generation paths.
+
 - Item icons should stay inline SVG, CSS, or canvas primitives with high-contrast fallbacks; avoid image assets.
 - Item discovery and archive filtering should remain local-only and save-safe. Do not add telemetry or network calls.
 - Dense synergy combat should expose enough debug state to inspect active item count, hook count, build identity, and proc budget before increasing projectile or particle density.

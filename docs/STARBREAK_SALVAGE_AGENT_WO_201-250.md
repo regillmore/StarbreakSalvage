@@ -118,3 +118,30 @@ Status: implemented. `ArenaHudFrame` derives the exact CSS geometry, side-versus
 Focused coverage protects all eight dialects, exact 1280 x 720 and 390 x 700 frame geometry, side-console placement outside the wide arena, stacked meter/mission placement around the narrow arena, and the previous narrow top-HUD ceiling. The managed in-app browser rendered a Relic Thief `VAULT SIGHT` frame at the documented host with themed border glow, contract-colored canvas rails, meters flanking the action, and lower weapon/mission consoles. The tab, authenticated host, and original host shell closed cleanly.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 116 Vitest files and 755 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,031.51 kB` minified / `283.19 kB` gzip initial JavaScript and `113.05 kB` / `22.25 kB` CSS, increases of `3.17 kB` / `1.03 kB` JavaScript and `9.04 kB` / `1.48 kB` CSS over work order 203. The existing Vite large-chunk advisory remains; no dependency, save/snapshot schema, generation stream, route topology, static base path, simulation cap, or warning threshold changed.
+
+## Work order 205 - Circuit acquisition dossiers
+
+Goal: make circuit upgrades easy to compare at acquisition time without repeating rarity, source, family, implementation state, tags, price, and prose as one dense text stack.
+
+Prompt:
+
+> Distill and refresh the shared circuit-upgrade card used by the shop, sector rewards, archive, and run summary. Give each card a clear identity, activation trigger, effect, role tags, and context action while preserving authored item meaning, keyboard access, responsive fit, and deterministic acquisition.
+
+Acceptance criteria:
+
+- Shared cards separate rarity/source, item name, circuit family, activation trigger, authored effect, role tags, and contextual footer instead of emitting a pipe-delimited metadata sentence.
+- Trigger copy is derived from authoritative item hooks, including a compact combined readout for the small number of multi-hook items.
+- Fully implemented items do not spend a badge on the redundant `Live effect` label; bridge and planned compatibility states remain visibly identified.
+- Shop cards expose price and `Buy circuit` as stable footer elements and use a stacked trigger/effect strip at the four-column card width.
+- Sector rewards use the same shared hierarchy with a `Take circuit` action and retain the bounded one-page five-choice manifest.
+- Archive cards retain effect and trigger context; run-summary cards retain their compact no-effect form and acquisition location.
+- Rarity remains explicit text as well as a visual accent. High contrast supplies opaque signal panels and non-color trigger boundaries.
+- Existing item icons, item definitions, effects, hooks, weights, prices, pools, ownership, saves, reward/shop RNG, static hosting, and dependencies remain unchanged.
+
+Status: implemented. `ItemCardViewModel` now translates the authoritative hook list into a bounded activation label while retaining authored rarity, source, family, effect, tags, price, and acquisition context as separate fields. `ItemCard` renders those fields as a compact circuit dossier: identity header, trigger-to-effect signal strip, restrained role-tag rail, price, and contextual action. The common live-status badge is suppressed, while non-live compatibility states remain explicit.
+
+`ShopScene` and `RewardScene` supply only their local action context. Four-column shop cards stack trigger above effect to preserve readable line length; reward, archive, and summary surfaces reuse the same renderer with their established compact/effect options. No acquisition or gameplay system consumes presentation state.
+
+Focused view-model coverage protects all hook labels, multi-hook joins, price/acquisition context, and bridge/planned states. The primary Chromium sector-loop path protects the reward one-page fit plus reward, archive, and summary consumers. Managed-browser inspection at 1280 x 720 showed four equal `226.25 x 277.77` shop cards, four trigger strips, no redundant live badges, and no horizontal page overflow.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 116 Vitest files and 756 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,033.03 kB` minified / `283.54 kB` gzip initial JavaScript and `116.84 kB` / `22.83 kB` CSS, increases of `1.52 kB` / `0.35 kB` JavaScript and `3.79 kB` / `0.58 kB` CSS over work order 204. The managed browser reported no console warnings or errors, and its tab plus authenticated smoke host closed cleanly. The existing Vite large-chunk advisory remains; no dependency, item definition, hook behavior, price, reward/shop RNG, save/snapshot schema, static base path, or warning threshold changed.

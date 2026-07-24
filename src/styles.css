@@ -762,6 +762,10 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   font-size: 0.64rem;
 }
 
+.reward-panel .item-card-signal {
+  grid-template-columns: minmax(4.25rem, 0.34fr) minmax(0, 1fr);
+}
+
 .foundry-panel {
   width: min(96vw, 1180px);
   max-height: min(95vh, 920px);
@@ -3001,6 +3005,19 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.shop-card .item-card-signal {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.shop-card .item-card-trigger {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding-block: 0.3rem;
+  border-right: 0;
+  border-bottom: 2px solid var(--item-rarity-color, var(--screen-primary, #7cf7ff));
+}
+
 .shop-repair-service {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(9rem, 0.55fr) auto;
@@ -3940,20 +3957,53 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
 .item-card-header {
   display: grid;
   grid-template-columns: 2.35rem minmax(0, 1fr);
-  align-items: start;
+  align-items: center;
   gap: 0.65rem;
 }
 
 .item-card-title-copy {
   display: grid;
-  gap: 0.22rem;
+  gap: 0.12rem;
   min-width: 0;
 }
 
 .item-card-title,
 .item-card-meta,
-.item-card-effect {
+.item-card-effect,
+.item-card-family,
+.item-card-source {
   overflow-wrap: anywhere;
+}
+
+.item-card-meta {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 0.18rem 0.4rem;
+  align-items: baseline;
+  font-size: 0.65rem;
+  line-height: 1.2;
+  letter-spacing: 0.055em;
+}
+
+.item-card-rarity::after {
+  padding-left: 0.4rem;
+  color: rgba(219, 232, 238, 0.48);
+  content: '//';
+}
+
+.item-card-source {
+  color: #a8c0cc;
+}
+
+.item-card-family {
+  color: #a8c0cc;
+  font-family: 'Cascadia Mono', 'Consolas', monospace;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  text-transform: uppercase;
 }
 
 .item-icon {
@@ -3965,6 +4015,90 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
   border-radius: 6px;
   background: rgba(2, 4, 10, 0.42);
   box-shadow: 0 0 0 1px rgba(255, 209, 102, 0.08) inset;
+}
+
+.item-card-signal {
+  display: grid;
+  grid-template-columns: minmax(4.75rem, 0.34fr) minmax(0, 1fr);
+  min-width: 0;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--screen-primary, #7cf7ff) 18%, transparent);
+  border-radius: 5px;
+  background: rgba(2, 6, 16, 0.42);
+}
+
+.item-card-trigger {
+  display: grid;
+  min-width: 0;
+  align-content: center;
+  gap: 0.08rem;
+  padding: 0.38rem 0.45rem;
+  border-right: 2px solid var(--item-rarity-color, var(--screen-primary, #7cf7ff));
+  color: var(--item-rarity-color, var(--screen-primary, #7cf7ff));
+  background: color-mix(
+    in srgb,
+    var(--item-rarity-color, var(--screen-primary, #7cf7ff)) 7%,
+    transparent
+  );
+  font-family: 'Cascadia Mono', 'Consolas', monospace;
+  text-transform: uppercase;
+}
+
+.item-card-trigger small {
+  color: #7894a3;
+  font-size: 0.55rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+}
+
+.item-card-trigger strong {
+  font-size: 0.66rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.item-card-signal .item-card-effect {
+  align-self: center;
+  padding: 0.4rem 0.5rem;
+  color: #dbe8ee;
+  font-size: 0.78rem;
+  line-height: 1.34;
+}
+
+.item-card-footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-width: 0;
+  gap: 0.35rem 0.5rem;
+  align-items: center;
+  margin-top: auto;
+}
+
+.item-card-price {
+  color: var(--screen-engine, #ffd166);
+  font-family: 'Cascadia Mono', 'Consolas', monospace;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-align: right;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.item-card-action {
+  display: flex;
+  grid-column: 1 / -1;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.28rem;
+  border-top: 1px solid color-mix(in srgb, var(--screen-engine, #ffd166) 20%, transparent);
+  color: var(--screen-engine, #ffd166);
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.055em;
+  line-height: 1.2;
+  text-transform: uppercase;
 }
 
 .item-badge-row {
@@ -4005,6 +4139,64 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
   color: #dbe8ee;
   border-color: rgba(219, 232, 238, 0.34);
   background: rgba(219, 232, 238, 0.08);
+}
+
+.choice-card[data-rarity='common'],
+.summary-item-card[data-rarity='common'],
+.archive-item-card[data-rarity='common'] {
+  --item-rarity-color: #7cf7ff;
+}
+
+.choice-card[data-rarity='uncommon'],
+.summary-item-card[data-rarity='uncommon'],
+.archive-item-card[data-rarity='uncommon'] {
+  --item-rarity-color: #72f2a7;
+}
+
+.choice-card[data-rarity='rare'],
+.summary-item-card[data-rarity='rare'],
+.archive-item-card[data-rarity='rare'] {
+  --item-rarity-color: #ffd166;
+}
+
+.choice-card[data-rarity='prototype'],
+.summary-item-card[data-rarity='prototype'],
+.archive-item-card[data-rarity='prototype'] {
+  --item-rarity-color: #ff6bd6;
+}
+
+.choice-card[data-rarity='cursed'],
+.summary-item-card[data-rarity='cursed'],
+.archive-item-card[data-rarity='cursed'] {
+  --item-rarity-color: #ff9f5a;
+}
+
+.item-card-rarity,
+.item-icon {
+  color: var(--item-rarity-color, #ffd166);
+}
+
+.item-card-header + .item-card-footer {
+  padding-top: 0.15rem;
+}
+
+[data-compact='true'] .item-card-header {
+  grid-template-columns: 1.85rem minmax(0, 1fr);
+  gap: 0.45rem;
+}
+
+[data-compact='true'] .item-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0.18rem;
+}
+
+[data-compact='true'] .item-card-signal {
+  grid-template-columns: minmax(4rem, 0.3fr) minmax(0, 1fr);
+}
+
+[data-compact='true'] .item-card-family {
+  font-size: 0.58rem;
 }
 
 .choice-card[data-rarity='prototype'],
@@ -5736,6 +5928,17 @@ html[data-bullet-contrast='high'] .summary-item-card {
 html[data-bullet-contrast='high'] .item-icon {
   color: #ffef5f;
   background: rgba(248, 251, 255, 0.08);
+}
+
+html[data-bullet-contrast='high'] .item-card-signal {
+  border-color: rgba(248, 251, 255, 0.62);
+  background: #02040a;
+}
+
+html[data-bullet-contrast='high'] .item-card-trigger {
+  color: #ffef5f;
+  border-color: #ffef5f;
+  background: rgba(255, 239, 95, 0.08);
 }
 
 html[data-bullet-contrast='high'] .hud-meter-track {
