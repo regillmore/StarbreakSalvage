@@ -256,3 +256,34 @@ Status: implemented. `GameApp.resumeRunSnapshot` now restores gameplay identity 
 Focused Chromium coverage reproduces the reported fresh-save sequence: launch random, suspend at the initial constellation, resume, immediately suspend again, resume into gameplay, suspend, reload, and resume once more. Every intervening title retains an empty code field and a URL without `seed`, while the snapshot continues restoring the same generated expedition.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 117 Vitest files and 761 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,037.13 kB` minified / `284.38 kB` gzip initial JavaScript and unchanged `117.57 kB` / `23.00 kB` CSS, reductions of `0.22 kB` / `0.09 kB` JavaScript from work order 208. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, generation stream, URL-sharing path, or static-hosting rule changed.
+
+## Work order 210 - Constellation apex pursuits
+
+Goal: turn each apex from a loose itinerary encounter into a seeded act-long hunt whose route is discovered and protected through the constellation.
+
+Prompt:
+
+> Give every act one hidden seeded apex pursuit track through layers 1, 2, 3, and 4 of its route graph. Completing the marked pursuit contact in each sector reveals the correct child signal; choosing another child or leaving without securing the contact lets that act's apex escape. Spawn the apex body only at the tracked fourth-layer destination and communicate the route lock and break clearly in navigation.
+
+Acceptance criteria:
+
+- Each act deterministically assigns one distinct apex threat to one valid four-node path through constellation layers 1-4. Every adjacent step follows an authored act-route edge.
+- Trace, escort, and lieutenant contacts occupy the required gate operation on layers 1-3. The apex finale occupies the required gate operation on exactly one layer-4 node; apex bodies never spawn on another layer.
+- A later contact is unavailable until every preceding pursuit step has succeeded or partially succeeded. Failed or skipped contacts do not unlock the next contact.
+- Completing a pursuit step reveals only the next seeded node. Later route locations and all future-act tracks remain encrypted until progression reaches them.
+- Route-choice nodes distinguish the confirmed apex track from choices that break it. Their detail cards state `TRACK LOCK` or `TRACK BREAK`, and committing the latter explicitly releases the apex.
+- Advancing to the revealed child preserves the hunt. Advancing elsewhere, advancing without completing the current step, or leaving an unresolved layer-4 contact records one bounded apex escape event.
+- The current-sector briefing, Signal Vault, combat contact banner, and apex HUD readout agree on contact stage, path status, and outcome.
+- The existing apex subsystem damage, finale pressure, disposition choices, unlocks, timeline bounds, boss/projectile/effect caps, snapshots, accessibility settings, static hosting, and dependencies remain coherent.
+
+Status: implemented. `ApexPursuitTrack` now derives one four-step path per act directly from the 1-2-3-2-1 route graph using named seed forks. `ApexHunt` assigns the three threat definitions across those act tracks, binds all contacts to the guaranteed gate operation, enforces sequential completion, withholds later locations, and exposes one current-act navigation read model.
+
+`RunSession.advanceSector` checks the committed edge against the newly revealed target before resetting the next sector. A missing contact, a wrong child, or departure from an unresolved apex body records the established `escape` event once. `GameApp` now asks the state-aware encounter selector before adding any apex combat presentation, preventing an isolated later-route node from spawning a contact.
+
+The navigation constellation gives the confirmed child a cyan pursuit lock and gives every other open child an explicit track-break treatment. The selected destination dossier repeats that consequence before commitment, while the current-node briefing explains whether the local contact still needs to be secured, has revealed the next signal, has reached the apex body, or has escaped. Future steps remain `Route signal encrypted` in the Signal Vault.
+
+Focused coverage protects deterministic three-act paths, valid layer-4 finales, sequential encounter gating, one-step reveal, correct-edge continuation, off-track escape, missed-step escape, snapshot restoration, scenario fixtures, endurance bounds, and the complete first-sector Chromium flow.
+
+Managed-browser inspection followed `STARBREAK-SMOKE` through the opening contact and reward. The post-sector constellation rendered one cyan `[CHOIR] TRACK` child and one red `BREAKS TRACK` child, with matching `TRACK LOCK` detail and a tracked-destination commit action. The live DOM confirmed the two distinct signal states and their authored colors before the controlled tab finalized.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 117 Vitest files and 763 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,042.18 kB` minified / `285.78 kB` gzip initial JavaScript and `118.77 kB` / `23.20 kB` CSS, increases of `5.05 kB` / `1.40 kB` JavaScript and `1.20 kB` / `0.20 kB` CSS over work order 209. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, constellation node or edge, route choice count, projectile/effect budget, or static-hosting rule changed.

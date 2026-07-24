@@ -2983,3 +2983,19 @@ Acceptance:
 Status:
 
 - Implemented in work order 209. Restored snapshots no longer populate title code-entry state, and all launch contexts now share one contract-channel presentation while URL codes remain explicit prefill.
+
+### BL75 - Constellation apex pursuits
+
+Acceptance:
+
+- Generate one deterministic valid layer 1-4 pursuit path for each act and assign one distinct apex threat to each path.
+- Put preliminary contacts on the required gate operations for layers 1-3 and allow the apex body to spawn only at the tracked layer-4 gate.
+- Require each preceding pursuit contact before exposing or spawning the next; failed and skipped steps must not unlock later contacts.
+- Reveal only the next correct child signal after contact completion and keep later/future-act locations encrypted.
+- Mark the confirmed child and off-track choices distinctly in both constellation nodes and destination details.
+- Record a bounded escape when the player chooses off-track, leaves without the current step, or departs an unresolved apex finale.
+- Preserve apex damage/disposition depth, deterministic routes, snapshots, accessibility, combat budgets, and static hosting.
+
+Status:
+
+- Implemented in work order 210. Apex hunts now follow one seeded act-route track, navigation exposes only the next secured signal, and divergence immediately releases that act's apex.

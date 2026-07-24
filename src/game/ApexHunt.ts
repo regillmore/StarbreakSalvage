@@ -9,6 +9,12 @@ import type { BossId } from '../content/bosses';
 import type { UnlockId } from '../content/unlocks';
 import { createRng } from '../core/rng';
 import type { ExpeditionEncounterNode, ExpeditionOperationalRole } from './ExpeditionTypes';
+import type { ActRouteGraph } from './ActRouteGraph';
+import {
+  APEX_PURSUIT_STEP_COUNT,
+  createApexPursuitTracks,
+  type ApexPursuitTrackPlan
+} from './ApexPursuitTrack';
 
 export type ApexEncounterStage = 'trace' | 'ambush' | 'lieutenant' | 'finale';
 export type ApexThreatStatus =
@@ -25,12 +31,14 @@ export interface ApexEncounterPlan {
   readonly stage: ApexEncounterStage;
   readonly sectorIndex: number;
   readonly operationalRole: ExpeditionOperationalRole;
+  readonly routeNodeLabel: string;
   readonly label: string;
 }
 
 export interface ApexThreatPlan {
   readonly id: string;
   readonly definitionId: string;
+  readonly pursuit: ApexPursuitTrackPlan;
   readonly encounters: readonly ApexEncounterPlan[];
 }
 
@@ -38,6 +46,7 @@ export interface ApexHuntPlan {
   readonly id: string;
   readonly seed: string;
   readonly saveFingerprint: string;
+  readonly routeGraphId: string;
   readonly threats: readonly ApexThreatPlan[];
 }
 
@@ -250,6 +259,19 @@ export interface ApexEncounterReadModel {
   readonly waveLabel: string;
 }
 
+export interface ApexPursuitNavigationReadModel {
+  readonly threatId: string;
+  readonly threatName: string;
+  readonly mapCue: string;
+  readonly status: ApexThreatStatus;
+  readonly step: number;
+  readonly totalSteps: number;
+  readonly currentEncounter: ApexEncounterPlan | null;
+  readonly revealedNextEncounter: ApexEncounterPlan | null;
+  readonly revealedNextSectorIndex: number | null;
+  readonly summary: string;
+}
+
 export interface ApexDebugState {
   readonly planId: string;
   readonly active: number;
@@ -269,41 +291,37 @@ export const MAX_APEX_HAZARD_PRESSURE = 2;
 export function createApexHuntPlan(options: {
   readonly seed: string;
   readonly saveFingerprint: string;
-  readonly sectorCount: number;
+  readonly actRouteGraph: Pick<ActRouteGraph, 'id' | 'nodes' | 'edges'>;
 }): ApexHuntPlan {
   const rng = createRng(`${options.seed}:apex-hunts:${options.saveFingerprint}`);
   const definitions = rng.fork('threats').shuffle(APEX_THREATS);
-  const finaleIndexes = [7, 10, 13].map((index) => Math.min(options.sectorCount - 2, index));
-  const threats = definitions.map((definition, index): ApexThreatPlan => {
-    const finale = finaleIndexes[index]!;
-    const roles: readonly ExpeditionOperationalRole[][] = [
-      ['detour', 'pursuit', 'gate', 'pursuit'],
-      ['pursuit', 'detour', 'gate', 'pursuit'],
-      ['gate', 'detour', 'pursuit', 'pursuit']
-    ];
-    const stages: readonly [ApexEncounterStage, number, ExpeditionOperationalRole][] = [
-      ['trace', Math.max(1, finale - 5), roles[index]![0]!],
-      ['ambush', Math.max(2, finale - 3), roles[index]![1]!],
-      ['lieutenant', Math.max(3, finale - 1), roles[index]![2]!],
-      ['finale', finale, roles[index]![3]!]
-    ];
+  const pursuitTracks = createApexPursuitTracks(options);
+  const stages: readonly ApexEncounterStage[] = ['trace', 'ambush', 'lieutenant', 'finale'];
+  const threats = pursuitTracks.map((pursuit, index): ApexThreatPlan => {
+    const definition = definitions[index % definitions.length]!;
     return {
-      id: `hunt:${definition.id}`,
+      id: `hunt:${pursuit.actId}:${definition.id}`,
       definitionId: definition.id,
-      encounters: stages.map(([stage, sectorIndex, operationalRole]) => ({
-        id: `apex:${definition.id}:${stage}:s${sectorIndex + 1}`,
-        threatId: definition.id,
-        stage,
-        sectorIndex,
-        operationalRole,
-        label: `${definition.mapCue} ${definition.name}: ${stage}`
-      }))
+      pursuit,
+      encounters: stages.map((stage, stageIndex) => {
+        const sectorIndex = pursuit.sectorIndices[stageIndex]!;
+        return {
+          id: `apex:${definition.id}:${stage}:s${sectorIndex + 1}`,
+          threatId: definition.id,
+          stage,
+          sectorIndex,
+          operationalRole: 'gate',
+          routeNodeLabel: pursuit.nodeLabels[stageIndex]!,
+          label: `${definition.mapCue} ${definition.name}: ${stage}`
+        };
+      })
     };
   });
   return {
     id: `apex-hunts:${options.seed}:${hashLabel(options.saveFingerprint)}`,
     seed: options.seed,
     saveFingerprint: options.saveFingerprint,
+    routeGraphId: options.actRouteGraph.id,
     threats
   };
 }
@@ -349,8 +367,15 @@ export function applyApexHuntEvent(
 
   if (event.type === 'encounterOutcome') {
     const encounter = threatPlan.encounters.find((candidate) => candidate.id === event.encounterId);
+    const encounterIndex = threatPlan.encounters.findIndex(
+      (candidate) => candidate.id === event.encounterId
+    );
+    const previousEncounter = threatPlan.encounters[encounterIndex - 1];
     if (!encounter || encounter.stage !== event.stage || threat.encountersCompleted.includes(encounter.id)) {
       return rejected(state, 'Apex encounter unavailable');
+    }
+    if (previousEncounter && !threat.encountersCompleted.includes(previousEncounter.id)) {
+      return rejected(state, 'Apex pursuit track has not reached this contact');
     }
     const success = event.outcome === 'success';
     const partial = event.outcome === 'partialSuccess';
@@ -385,7 +410,10 @@ export function applyApexHuntEvent(
         0,
         threat.escapeRoutesOpen - Number(event.stage === 'ambush' && event.outcome !== 'failure')
       ),
-      encountersCompleted: [...threat.encountersCompleted, encounter.id]
+      encountersCompleted:
+        event.outcome === 'failure'
+          ? threat.encountersCompleted
+          : [...threat.encountersCompleted, encounter.id]
     };
     label = `${definition.name} ${event.stage} ${event.outcome}; integrity ${next.integrity}/${BASE_INTEGRITY}`;
   } else if (event.type === 'boardingSabotage') {
@@ -439,17 +467,119 @@ export function applyApexHuntEvent(
 
 export function getApexEncounterForNode(
   plan: ApexHuntPlan,
+  state: ApexHuntState,
   node: Pick<ExpeditionEncounterNode, 'sectorIndex' | 'operationalRole'>
 ): ApexEncounterPlan | null {
-  return (
-    plan.threats
-      .flatMap((threat) => threat.encounters)
-      .find(
-        (encounter) =>
-          encounter.sectorIndex === node.sectorIndex &&
-          encounter.operationalRole === node.operationalRole
-      ) ?? null
+  for (const threatPlan of plan.threats) {
+    const encounterIndex = threatPlan.encounters.findIndex(
+      (encounter) =>
+        encounter.sectorIndex === node.sectorIndex &&
+        encounter.operationalRole === node.operationalRole
+    );
+    if (encounterIndex < 0) continue;
+    const threat = state.threats.find(
+      (candidate) => candidate.threatId === threatPlan.definitionId
+    );
+    if (
+      !threat ||
+      threat.status === 'resolved' ||
+      threat.status === 'escaped' ||
+      threat.status === 'awaitingResolution'
+    ) {
+      return null;
+    }
+    const encounter = threatPlan.encounters[encounterIndex]!;
+    const previous = threatPlan.encounters[encounterIndex - 1];
+    if (
+      threat.encountersCompleted.includes(encounter.id) ||
+      (previous && !threat.encountersCompleted.includes(previous.id))
+    ) {
+      return null;
+    }
+    return encounter;
+  }
+  return null;
+}
+
+export function getApexPursuitRouteEscapeThreatIds(options: {
+  readonly plan: ApexHuntPlan;
+  readonly state: ApexHuntState;
+  readonly sourceSectorIndex: number;
+  readonly targetSectorIndex: number;
+}): readonly string[] {
+  return options.plan.threats.flatMap((threatPlan) => {
+    const threat = options.state.threats.find(
+      (candidate) => candidate.threatId === threatPlan.definitionId
+    );
+    if (!threat || threat.status === 'resolved' || threat.status === 'escaped') return [];
+    const encounterIndex = threatPlan.encounters.findIndex(
+      (encounter) => encounter.sectorIndex === options.sourceSectorIndex
+    );
+    if (encounterIndex < 0) return [];
+    const encounter = threatPlan.encounters[encounterIndex]!;
+    const next = threatPlan.encounters[encounterIndex + 1] ?? null;
+    const stepComplete = threat.encountersCompleted.includes(encounter.id);
+    const keptTrack = stepComplete && next?.sectorIndex === options.targetSectorIndex;
+    return keptTrack ? [] : [threatPlan.definitionId];
+  });
+}
+
+export function createApexPursuitNavigationReadModel(
+  plan: ApexHuntPlan,
+  state: ApexHuntState,
+  sectorIndex: number
+): ApexPursuitNavigationReadModel | null {
+  const threatPlan = plan.threats.find(
+    (candidate) =>
+      sectorIndex >= candidate.pursuit.actStartSectorIndex &&
+      sectorIndex <= candidate.pursuit.actEndSectorIndex
   );
+  if (!threatPlan) return null;
+  const threat = state.threats.find(
+    (candidate) => candidate.threatId === threatPlan.definitionId
+  );
+  if (!threat) return null;
+  const definition = getApexThreatDefinition(threatPlan.definitionId);
+  const currentIndex = threatPlan.encounters.findIndex(
+    (encounter) => encounter.sectorIndex === sectorIndex
+  );
+  const currentEncounter = currentIndex >= 0 ? threatPlan.encounters[currentIndex]! : null;
+  const currentComplete = Boolean(
+    currentEncounter && threat.encountersCompleted.includes(currentEncounter.id)
+  );
+  const revealedNextEncounter =
+    currentComplete && threat.status !== 'escaped' && threat.status !== 'resolved'
+      ? (threatPlan.encounters[currentIndex + 1] ?? null)
+      : null;
+  const completedSteps = countCompletedPursuitSteps(threatPlan, threat);
+  let summary: string;
+  if (threat.status === 'escaped') {
+    summary = `${definition.mapCue} ${definition.name} escaped when its seeded track was broken.`;
+  } else if (threat.status === 'resolved') {
+    summary = `${definition.mapCue} ${definition.name} pursuit resolved.`;
+  } else if (threat.status === 'awaitingResolution') {
+    summary = `${definition.mapCue} ${definition.name} neutralized; disposition is required.`;
+  } else if (currentEncounter?.stage === 'finale') {
+    summary = `${definition.mapCue} Track complete at ${currentEncounter.routeNodeLabel}; the apex body is inside this sector.`;
+  } else if (currentEncounter && currentComplete && revealedNextEncounter) {
+    summary = `${definition.mapCue} Pursuit ${currentIndex + 1}/${APEX_PURSUIT_STEP_COUNT} secured; track lock reveals ${revealedNextEncounter.routeNodeLabel}.`;
+  } else if (currentEncounter) {
+    summary = `${definition.mapCue} Pursuit ${currentIndex + 1}/${APEX_PURSUIT_STEP_COUNT} is embedded here; complete the marked contact to decrypt the next signal.`;
+  } else {
+    summary = `${definition.mapCue} ${definition.name} pursuit is no longer aligned with this signal.`;
+  }
+  return {
+    threatId: threatPlan.definitionId,
+    threatName: definition.name,
+    mapCue: definition.mapCue,
+    status: threat.status,
+    step: Math.min(APEX_PURSUIT_STEP_COUNT, Math.max(1, completedSteps + 1)),
+    totalSteps: APEX_PURSUIT_STEP_COUNT,
+    currentEncounter,
+    revealedNextEncounter,
+    revealedNextSectorIndex: revealedNextEncounter?.sectorIndex ?? null,
+    summary
+  };
 }
 
 export function createApexFinaleProfile(options: {
@@ -580,14 +710,23 @@ export function createApexThreatReadModel(
   sectorIndex: number
 ): ApexThreatReadModel {
   const definition = getApexThreatDefinition(state.threatId);
-  const contacts = plan.encounters.map((encounter): ApexContactReadModel => {
+  const completedSteps = countCompletedPursuitSteps(plan, state);
+  const actReached = sectorIndex >= plan.pursuit.actStartSectorIndex;
+  const terminal = state.status === 'resolved' || state.status === 'escaped';
+  const revealedContactIds = new Set(
+    plan.encounters
+      .filter((_, index) => terminal || (actReached && index <= completedSteps))
+      .map((encounter) => encounter.id)
+  );
+  const contacts = plan.encounters.map((encounter, index): ApexContactReadModel => {
     const cue = definition.contactCues[encounter.stage];
     const completed = state.encountersCompleted.includes(encounter.id);
+    const revealed = revealedContactIds.has(encounter.id);
     const status: ApexContactReadModel['status'] = completed
       ? 'resolved'
-      : encounter.sectorIndex < sectorIndex
+      : revealed && encounter.sectorIndex < sectorIndex
         ? 'missed'
-        : encounter.sectorIndex === sectorIndex
+        : revealed && encounter.sectorIndex === sectorIndex
           ? 'current'
           : 'ahead';
     return {
@@ -597,17 +736,25 @@ export function createApexThreatReadModel(
       label: cue.label,
       directive: cue.directive,
       payoff: cue.payoff,
-      location: `Sector ${encounter.sectorIndex + 1} · ${formatOperationalRole(encounter.operationalRole)}`,
+      location: revealed
+        ? `Signal ${encounter.routeNodeLabel} · ${formatOperationalRole(encounter.operationalRole)}`
+        : 'Route signal encrypted',
       status,
-      statusLabel: {
-        resolved: 'Contact resolved',
-        current: 'Contact in this sector',
-        ahead: 'Ahead',
-        missed: 'Contact passed'
-      }[status]
+      statusLabel: revealed
+        ? {
+            resolved: 'Contact resolved',
+            current: 'Contact in this sector',
+            ahead: 'Track revealed',
+            missed: 'Contact passed'
+          }[status]
+        : `Step ${index + 1} encrypted`
     };
   });
-  const next = contacts.find((contact) => contact.status === 'current' || contact.status === 'ahead');
+  const next = contacts.find(
+    (contact) =>
+      revealedContactIds.has(contact.id) &&
+      (contact.status === 'current' || contact.status === 'ahead')
+  );
   const subsystem = (id: keyof ApexSubsystemState): ApexSubsystemReadModel => {
     const current = state.subsystems[id];
     return {
@@ -681,16 +828,11 @@ export function createApexCampaignReadModel(
     if (!threat) throw new Error(`Missing apex threat state ${threatPlan.definitionId}.`);
     return createApexThreatReadModel(threatPlan, threat, sectorIndex);
   });
-  const nextEncounters = plan.threats.flatMap((threat) => {
-    const stateEntry = state.threats.find((candidate) => candidate.threatId === threat.definitionId)!;
-    if (stateEntry.status === 'resolved' || stateEntry.status === 'escaped') return [];
-    const next = threat.encounters.find(
-      (encounter) =>
-        encounter.sectorIndex >= sectorIndex &&
-        !stateEntry.encountersCompleted.includes(encounter.id)
-    );
-    return next ? [`${next.label} @ sector ${next.sectorIndex + 1}/${next.operationalRole}`] : [];
-  });
+  const nextEncounters = threats.flatMap((threat) =>
+    threat.status !== 'resolved' && threat.status !== 'escaped' && threat.nextEncounter
+      ? [threat.nextEncounter]
+      : []
+  );
   const activeThreats = state.threats.filter(
     (threat) => threat.status !== 'resolved' && threat.status !== 'escaped'
   ).length;
@@ -698,13 +840,23 @@ export function createApexCampaignReadModel(
   const awaitingResolution = state.threats.filter(
     (threat) => threat.status === 'awaitingResolution'
   ).length;
+  const currentThreat = plan.threats.find(
+    (threat) =>
+      sectorIndex >= threat.pursuit.actStartSectorIndex &&
+      sectorIndex <= threat.pursuit.actEndSectorIndex
+  );
+  const currentReadout = currentThreat
+    ? threats.find((threat) => threat.id === currentThreat.definitionId)
+    : null;
   return {
     activeThreats,
     resolvedThreats,
     awaitingResolution,
     threats,
     nextEncounters,
-    summary: `${activeThreats} unresolved hunts | ${resolvedThreats} resolved | ${awaitingResolution} decision${awaitingResolution === 1 ? '' : 's'} required`
+    summary: currentReadout
+      ? `Current track ${currentReadout.mapCue} ${currentReadout.name} · ${currentReadout.statusLabel} | ${resolvedThreats}/3 acts resolved`
+      : `${activeThreats} unresolved hunts | ${resolvedThreats} resolved | ${awaitingResolution} decision${awaitingResolution === 1 ? '' : 's'} required`
   };
 }
 
@@ -751,14 +903,35 @@ export function getResolvedApexUnlockIds(plan: ApexHuntPlan, state: ApexHuntStat
 
 export function validateApexHuntPlan(plan: ApexHuntPlan): string[] {
   const errors: string[] = [];
-  if (plan.threats.length < 3) errors.push('Apex campaign requires at least three threats.');
+  if (plan.threats.length !== 3) errors.push('Apex campaign requires one threat in each act.');
+  if (!plan.routeGraphId) errors.push('Apex campaign requires an act route graph.');
   const ids = new Set<string>();
+  const actIds = new Set<string>();
   for (const threat of plan.threats) {
     if (ids.has(threat.id)) errors.push(`Duplicate apex hunt ${threat.id}.`);
     ids.add(threat.id);
+    if (actIds.has(threat.pursuit.actId)) {
+      errors.push(`Duplicate apex pursuit act ${threat.pursuit.actId}.`);
+    }
+    actIds.add(threat.pursuit.actId);
     const definition = getApexThreatDefinition(threat.definitionId);
     if (!APEX_HUNT_STRUCTURES.includes(definition.structure)) errors.push(`Invalid apex structure ${definition.structure}.`);
-    if (threat.encounters.length < 4 || threat.encounters[threat.encounters.length - 1]?.stage !== 'finale') errors.push(`Apex hunt ${threat.id} requires a multi-node finale chain.`);
+    if (
+      threat.encounters.length !== APEX_PURSUIT_STEP_COUNT ||
+      threat.encounters[threat.encounters.length - 1]?.stage !== 'finale'
+    ) {
+      errors.push(`Apex hunt ${threat.id} requires a four-layer pursuit chain.`);
+    }
+    if (
+      threat.encounters.some(
+        (encounter, index) =>
+          encounter.sectorIndex !== threat.pursuit.sectorIndices[index] ||
+          encounter.routeNodeLabel !== threat.pursuit.nodeLabels[index] ||
+          encounter.operationalRole !== 'gate'
+      )
+    ) {
+      errors.push(`Apex hunt ${threat.id} is not aligned with its constellation track.`);
+    }
     for (let index = 1; index < threat.encounters.length; index += 1) {
       if (threat.encounters[index]!.sectorIndex <= threat.encounters[index - 1]!.sectorIndex) errors.push(`Apex hunt ${threat.id} encounters are not ordered.`);
     }
@@ -970,6 +1143,18 @@ function formatOperationalRole(role: ExpeditionOperationalRole): string {
 function formatSigned(value: number): string {
   if (value > 0) return `+${value}`;
   return `${value}`;
+}
+
+function countCompletedPursuitSteps(
+  plan: ApexThreatPlan,
+  state: ApexThreatState
+): number {
+  let completed = 0;
+  for (const encounter of plan.encounters) {
+    if (!state.encountersCompleted.includes(encounter.id)) break;
+    completed += 1;
+  }
+  return completed;
 }
 
 function rejected(state: ApexHuntState, label: string): ApexHuntEventResult {

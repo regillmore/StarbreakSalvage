@@ -568,7 +568,11 @@ export class GameApp {
       ? getBoardingOperationForNode(this.currentRun.boardingCampaign, operationNode)
       : null;
     const apexEncounter = operationNode
-      ? getApexEncounterForNode(this.currentRun.apexHunts, operationNode)
+      ? getApexEncounterForNode(
+          this.currentRun.apexHunts,
+          this.runSession.apexHunts,
+          operationNode
+        )
       : null;
     const apexThreat = apexEncounter
       ? this.runSession.apexHunts.threats.find(
@@ -1027,7 +1031,11 @@ export class GameApp {
       ? (this.currentRun.expedition.nodes.find((node) => node.id === completedStage.nodeId) ?? null)
       : null;
     const apexEncounter = operationNode
-      ? getApexEncounterForNode(this.currentRun.apexHunts, operationNode)
+      ? getApexEncounterForNode(
+          this.currentRun.apexHunts,
+          this.runSession.apexHunts,
+          operationNode
+        )
       : null;
     if (apexEncounter?.stage === 'finale' && result.bossesDefeated > 0) {
       const apexThreat = this.runSession.apexHunts.threats.find(
@@ -1476,7 +1484,13 @@ export class GameApp {
     const boardingOperation = node
       ? getBoardingOperationForNode(this.currentRun.boardingCampaign, node)
       : null;
-    const apexEncounter = node ? getApexEncounterForNode(this.currentRun.apexHunts, node) : null;
+    const apexEncounter = node
+      ? getApexEncounterForNode(
+          this.currentRun.apexHunts,
+          this.runSession.apexHunts,
+          node
+        )
+      : null;
     if (apexEncounter) {
       recordApexHuntEvent(this.currentRun, this.runSession, {
         id: `${stage.id}:apex-failed:${result.reason}`,

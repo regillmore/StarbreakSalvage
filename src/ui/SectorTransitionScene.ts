@@ -32,7 +32,11 @@ import {
 import { createCrewDebugState } from '../game/CrewCommand';
 import { createCrewArcDebugState, createCrewArcRosterReadModel } from '../game/CrewArc';
 import { createFleetDebugState, formatFleetSummary } from '../game/Fleetcraft';
-import { createApexCampaignReadModel, createApexDebugState } from '../game/ApexHunt';
+import {
+  createApexCampaignReadModel,
+  createApexDebugState,
+  createApexPursuitNavigationReadModel
+} from '../game/ApexHunt';
 import { getPrimaryWeaponCargoComponents } from '../game/Foundry';
 import { getActiveFittedItems } from '../game/ItemSockets';
 import {
@@ -63,6 +67,7 @@ interface NavigationBriefingContext {
   readonly crewArcSummary: string;
   readonly fleetSummary: string;
   readonly apex: ReturnType<typeof createApexCampaignReadModel>;
+  readonly apexPursuit: ReturnType<typeof createApexPursuitNavigationReadModel>;
 }
 
 export interface PostSectorNavigationOption {
@@ -188,7 +193,7 @@ export class SectorTransitionScene implements Scene {
 
     const workspace = document.createElement('div');
     workspace.className = 'navigation-hub-workspace';
-    const map = this.createNavigationMap(this.plan);
+    const map = this.createNavigationMap(this.plan, context.apexPursuit);
     this.detailRoot = document.createElement('section');
     this.detailRoot.className = 'navigation-destination-detail';
     this.detailRoot.dataset.testid = 'navigation-destination-detail';
@@ -342,6 +347,11 @@ export class SectorTransitionScene implements Scene {
         this.run.apexHunts,
         this.session.apexHunts,
         this.session.currentSectorIndex
+      ),
+      apexPursuit: createApexPursuitNavigationReadModel(
+        this.run.apexHunts,
+        this.session.apexHunts,
+        this.session.currentSectorIndex
       )
     };
   }
@@ -363,7 +373,10 @@ export class SectorTransitionScene implements Scene {
     };
   }
 
-  private createNavigationMap(plan: SectorNavigationPlan): HTMLElement {
+  private createNavigationMap(
+    plan: SectorNavigationPlan,
+    apexPursuit: NavigationBriefingContext['apexPursuit']
+  ): HTMLElement {
     const orderedRouteTargetNodeIds = this.getRouteTargetNodeIds(plan);
     const routeTargetNodeIds = new Set(orderedRouteTargetNodeIds);
     const sectorNodes: ConstellationMapNode[] = plan.constellation.nodes
@@ -378,6 +391,21 @@ export class SectorTransitionScene implements Scene {
         const routeEffect = routeTarget
           ? this.createRouteChoiceModel(node.sectorIndex).effect
           : null;
+        const apexTrack = Boolean(
+          routeTarget && apexPursuit?.revealedNextSectorIndex === node.sectorIndex
+        );
+        const apexBreak = Boolean(
+          routeTarget &&
+            apexPursuit?.revealedNextSectorIndex != null &&
+            apexPursuit?.revealedNextSectorIndex !== node.sectorIndex
+        );
+        const apexContact = Boolean(
+          current &&
+            apexPursuit?.currentEncounter &&
+            apexPursuit.revealedNextSectorIndex === null &&
+            apexPursuit.status !== 'escaped' &&
+            apexPursuit.status !== 'resolved'
+        );
         const optionalAvailable = this.postSectorChoice?.optional.available ?? true;
         return {
           id: node.id,
@@ -386,7 +414,7 @@ export class SectorTransitionScene implements Scene {
           shortLabel: resolvedSector
             ? `${node.layerIndex + 1}${String.fromCharCode(65 + node.laneIndex)} · ${resolvedSector.sectorName}`
             : node.shortLabel,
-          glyph: resolvedSector ? '◆' : node.glyph,
+          glyph: apexTrack ? '✦' : resolvedSector ? '◆' : node.glyph,
           x: node.x,
           y: node.y,
           status: routeTarget
@@ -397,7 +425,11 @@ export class SectorTransitionScene implements Scene {
                 ? 'completed'
                 : node.status,
           stateLabel: routeTarget
-            ? `${formatRouteDifficulty(node.difficulty)} · ${routeEffect?.route.label.toUpperCase() ?? 'ROUTE EFFECT'}`
+            ? apexTrack
+              ? `${apexPursuit?.mapCue ?? '[APEX]'} TRACK · ${formatRouteDifficulty(node.difficulty)} · ${routeEffect?.route.label.toUpperCase() ?? 'ROUTE EFFECT'}`
+              : apexBreak
+                ? `BREAKS TRACK · ${formatRouteDifficulty(node.difficulty)} · ${routeEffect?.route.label.toUpperCase() ?? 'ROUTE EFFECT'}`
+                : `${formatRouteDifficulty(node.difficulty)} · ${routeEffect?.route.label.toUpperCase() ?? 'ROUTE EFFECT'}`
             : current && this.postSectorChoice
               ? 'OPTIONAL'
               : routeSource
@@ -433,7 +465,14 @@ export class SectorTransitionScene implements Scene {
             ? null
             : current && this.postSectorChoice
               ? this.postSectorChoice.optional.unavailableReason
-              : null
+              : null,
+          signal: apexTrack
+            ? 'apex-track'
+            : apexBreak
+              ? 'apex-break'
+              : apexContact
+                ? 'apex-contact'
+                : undefined
         };
       });
     const serviceNodes: ConstellationMapNode[] = plan.destinations.map((destination) => {
@@ -585,6 +624,15 @@ export class SectorTransitionScene implements Scene {
         )
       );
     }
+    if (current && context.apexPursuit) {
+      body.prepend(
+        this.createDetailMetric(
+          'Apex pursuit',
+          context.apexPursuit.summary,
+          'apex-pursuit-brief'
+        )
+      );
+    }
     const action = document.createElement('button');
     action.className =
       current && this.postSectorChoice
@@ -620,6 +668,15 @@ export class SectorTransitionScene implements Scene {
     const model = this.createRouteChoiceModel(targetSectorIndex);
     const effect = model.effect;
     if (!effect) return;
+    const apexPursuit = createApexPursuitNavigationReadModel(
+      this.run.apexHunts,
+      this.session.apexHunts,
+      this.session.currentSectorIndex
+    );
+    const apexTrack = apexPursuit?.revealedNextSectorIndex === targetSectorIndex;
+    const apexBreak = Boolean(
+      apexPursuit?.revealedNextSectorIndex != null && !apexTrack
+    );
     const heading = document.createElement('div');
     heading.className = 'navigation-detail-heading';
     const identity = document.createElement('div');
@@ -647,6 +704,23 @@ export class SectorTransitionScene implements Scene {
       this.createDetailMetric('Next objective', model.objective, 'route-mission-preview'),
       this.createDetailMetric('Signal profile', model.difficultySummary, 'route-difficulty-preview')
     );
+    if (apexTrack) {
+      body.append(
+        this.createDetailMetric(
+          'Apex pursuit',
+          `${apexPursuit?.mapCue ?? '[APEX]'} TRACK LOCK · ${apexPursuit?.revealedNextEncounter?.routeNodeLabel ?? 'NEXT SIGNAL'}`,
+          'apex-pursuit-route-preview'
+        )
+      );
+    } else if (apexBreak) {
+      body.append(
+        this.createDetailMetric(
+          'Apex pursuit',
+          `${apexPursuit?.mapCue ?? '[APEX]'} TRACK BREAK · THE APEX ESCAPES`,
+          'apex-pursuit-route-preview'
+        )
+      );
+    }
     const routeEffect = document.createElement('article');
     routeEffect.className = 'navigation-route-effect';
     routeEffect.dataset.testid = 'navigation-route-effect';
@@ -680,10 +754,14 @@ export class SectorTransitionScene implements Scene {
     commit.type = 'button';
     commit.dataset.testid = 'navigation-route-commit';
     commit.dataset.routeKind = effect.route.kind;
-    commit.textContent = 'Commit Destination';
+    commit.textContent = apexTrack
+      ? 'Commit Tracked Destination'
+      : apexBreak
+        ? 'Commit & Break Pursuit'
+        : 'Commit Destination';
     commit.setAttribute(
       'aria-label',
-      `Commit ${model.edgeLabel} with ${effect.route.label}, ${effect.riskLabel} risk ${effect.route.risk}`
+      `Commit ${model.edgeLabel} with ${effect.route.label}, ${effect.riskLabel} risk ${effect.route.risk}${apexTrack ? ', apex pursuit track confirmed' : apexBreak ? ', warning: this breaks the apex pursuit track' : ''}`
     );
     commit.addEventListener('click', () =>
       this.routeChoice?.onChoose(targetSectorIndex, effect.route)

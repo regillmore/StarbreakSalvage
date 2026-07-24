@@ -304,7 +304,7 @@ export function generateRunSkeleton(
   const apexHunts = createApexHuntPlan({
     seed,
     saveFingerprint,
-    sectorCount: sectors.length
+    actRouteGraph
   });
 
   return {

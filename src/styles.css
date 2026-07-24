@@ -4583,6 +4583,51 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
     0 0 28px rgba(255, 209, 102, 0.38);
 }
 
+.constellation-node[data-node-kind='sector'][data-signal='apex-track'] {
+  --constellation-pulse-color: rgba(124, 247, 255, 0.82);
+  border-color: #7cf7ff;
+  color: #e9feff;
+  background:
+    linear-gradient(105deg, rgba(124, 247, 255, 0.11), rgba(255, 122, 224, 0.1)),
+    rgba(8, 25, 39, 0.97);
+  box-shadow:
+    0 0 0 3px rgba(5, 12, 27, 0.86),
+    0 0 30px rgba(124, 247, 255, 0.34);
+}
+
+.constellation-node[data-node-kind='sector'][data-signal='apex-track']:hover,
+.constellation-node[data-node-kind='sector'][data-signal='apex-track']:focus-visible,
+.constellation-node[data-node-kind='sector'][data-signal='apex-track'][aria-pressed='true'] {
+  border-color: #7cf7ff;
+  color: #fff;
+  background: rgba(8, 32, 49, 0.98);
+  box-shadow:
+    0 0 0 3px rgba(5, 12, 27, 0.86),
+    0 0 32px rgba(124, 247, 255, 0.42);
+}
+
+.constellation-node[data-node-kind='sector'][data-signal='apex-break'] {
+  border-color: rgba(255, 125, 118, 0.62);
+  color: #ffd4d0;
+  background: rgba(41, 17, 22, 0.94);
+}
+
+.constellation-node[data-node-kind='sector'][data-signal='apex-break']:hover,
+.constellation-node[data-node-kind='sector'][data-signal='apex-break']:focus-visible,
+.constellation-node[data-node-kind='sector'][data-signal='apex-break'][aria-pressed='true'] {
+  border-color: #ff7d76;
+  color: #fff;
+  background: rgba(55, 19, 25, 0.98);
+}
+
+.constellation-node[data-node-kind='sector'][data-signal='apex-contact'] {
+  --constellation-pulse-color: rgba(255, 122, 224, 0.72);
+  border-color: rgba(255, 122, 224, 0.82);
+  box-shadow:
+    0 0 0 3px rgba(5, 12, 27, 0.86),
+    0 0 26px rgba(255, 122, 224, 0.28);
+}
+
 .constellation-node[data-node-kind='sector'][data-constellation-status='current']::after,
 .constellation-node[data-node-kind='sector'][data-constellation-status='choice']::after {
   position: absolute;

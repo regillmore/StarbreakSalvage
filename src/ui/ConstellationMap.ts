@@ -15,6 +15,7 @@ export interface ConstellationMapNode {
   readonly testId?: string;
   readonly destinationId?: string;
   readonly unavailableReason?: string | null;
+  readonly signal?: 'apex-contact' | 'apex-track' | 'apex-break';
 }
 
 export interface ConstellationMapEdge {
@@ -159,6 +160,7 @@ export function createConstellationMap(options: {
     button.dataset.constellationStatus = node.status;
     button.dataset.available = String(node.available);
     button.dataset.visited = String(Boolean(node.visited));
+    if (node.signal) button.dataset.signal = node.signal;
     if (node.testId) button.dataset.testid = node.testId;
     button.style.setProperty('--constellation-order', String(node.revealOrder));
     button.style.setProperty('--constellation-delay', `${120 + node.revealOrder * 80}ms`);

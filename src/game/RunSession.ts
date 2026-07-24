@@ -157,6 +157,7 @@ import {
 import {
   applyApexHuntEvent,
   createApexHuntState,
+  getApexPursuitRouteEscapeThreatIds,
   type ApexHuntEvent,
   type ApexHuntEventResult,
   type ApexHuntState
@@ -1631,6 +1632,19 @@ export function advanceSector(
     );
   }
   session.currentSectorIndex = targetSectorIndex ?? routeTargets[0] ?? previousSectorIndex + 1;
+  for (const threatId of getApexPursuitRouteEscapeThreatIds({
+    plan: run.apexHunts,
+    state: session.apexHunts,
+    sourceSectorIndex: previousSectorIndex,
+    targetSectorIndex: session.currentSectorIndex
+  })) {
+    recordApexHuntEvent(run, session, {
+      id: `apex-track-break:${threatId}:s${previousSectorIndex + 1}-s${session.currentSectorIndex + 1}`,
+      type: 'escape',
+      threatId,
+      sectorIndex: session.currentSectorIndex
+    });
+  }
   for (const threat of run.apexHunts.threats) {
     const finale = threat.encounters.find((encounter) => encounter.stage === 'finale');
     const state = session.apexHunts.threats.find(

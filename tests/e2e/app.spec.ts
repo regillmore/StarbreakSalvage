@@ -242,8 +242,10 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await page.keyboard.press('Enter');
 
   await expectGameplaySector(page, 'Outer Debris Field');
-  await expect(page.getByTestId('apex-contact-banner')).toBeHidden();
-  await expect(page.getByTestId('apex-readout')).toBeHidden();
+  await expect(page.getByTestId('apex-contact-banner')).toBeVisible();
+  await expect(page.getByTestId('apex-contact-banner')).toContainText('Acquire trace');
+  await expect(page.getByTestId('apex-readout')).toBeVisible();
+  await expect(page.getByTestId('apex-readout')).toContainText('Acquire trace');
   await expect(page.getByTestId('distance-readout')).toContainText(/Distance \d+\/\d+u/);
   await expect(page.getByTestId('hull-readout')).toContainText('Hull');
   await expect(page.getByTestId('pickup-readout')).toContainText(/Credits .* Salvage/);
@@ -384,6 +386,14 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   );
   await expect(page.getByTestId('navigation-destination-route')).toContainText('EASIER');
   await expect(page.locator('.constellation-node[data-destination-id^="route:"]')).toHaveCount(2);
+  await expect(page.locator('.constellation-node[data-signal="apex-track"]')).toHaveCount(1);
+  await expect(page.locator('.constellation-node[data-signal="apex-break"]')).toHaveCount(1);
+  await expect(page.locator('.constellation-node[data-signal="apex-track"]')).toContainText(
+    'TRACK'
+  );
+  await expect(page.locator('.constellation-node[data-signal="apex-break"]')).toContainText(
+    'BREAKS TRACK'
+  );
   await expect(page.getByTestId('navigation-destination-route')).toHaveAttribute(
     'data-constellation-status',
     'choice'
@@ -437,13 +447,21 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
       .getByTestId('navigation-destination-optional')
       .evaluate((element) => getComputedStyle(element, '::after').animationName)
   ).toContain('constellation-sector-pulse');
-  for (const nodeId of ['navigation-destination-optional', 'navigation-destination-route']) {
-    expect(
-      await page.getByTestId(nodeId).evaluate((element) => getComputedStyle(element).borderTopColor)
-    ).toContain('255, 209, 102');
-  }
+  expect(
+    await page
+      .getByTestId('navigation-destination-optional')
+      .evaluate((element) => getComputedStyle(element).borderTopColor)
+  ).toContain('255, 209, 102');
+  expect(
+    await page
+      .locator('.constellation-node[data-signal="apex-track"]')
+      .evaluate((element) => getComputedStyle(element).borderTopColor)
+  ).toContain('124, 247, 255');
   await expect(page.getByTestId('navigation-route-effect')).toBeVisible();
   await expect(page.getByTestId('navigation-route-effect')).toContainText('BASE ROUTE EFFECT');
+  await expect(page.getByTestId('apex-pursuit-route-preview')).toContainText(
+    /TRACK LOCK|TRACK BREAK/
+  );
   await expect(page.getByTestId('navigation-route-commit')).toBeEnabled();
   await expect(page.locator('.navigation-route-card')).toHaveCount(0);
   const openingRouteEffect =
@@ -1245,8 +1263,7 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
   await expect(page.getByTestId('mission-objective-preview')).toContainText('SABOTAGE');
   await page.keyboard.press('N');
   await expect(page.getByTestId('objective-readout')).toContainText('SABOTAGE');
-  await expect(page.getByTestId('apex-contact-banner')).toBeVisible();
-  await expect(page.getByTestId('apex-contact-banner')).toContainText(/APEX|Grave Choir|Ambush/i);
+  await expect(page.getByTestId('apex-contact-banner')).toBeHidden();
 
   await page.keyboard.press('R');
   await expect(page.getByTestId('mission-briefing')).toBeVisible();

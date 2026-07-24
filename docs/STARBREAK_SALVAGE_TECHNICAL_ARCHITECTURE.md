@@ -1018,6 +1018,17 @@ seed + permanent save fingerprint
 - Suspend paths checkpoint and switch scenes without rewriting browser history. The completed-run debrief path retains its explicit URL-seed cleanup, and seed-sharing continues to create an opt-in `seed` query parameter.
 - The change adds no save/snapshot field, migration, generation draw, run-content mutation, DOM persistence mechanism, dependency, or static-hosting rule.
 
+### Work order 210 constellation-pursuit boundary
+
+- `ApexPursuitTrack.createApexPursuitTracks` is the sole apex route generator. It walks existing `ActRouteGraph` edges with one act-scoped RNG fork, emits exactly layers 1-4, and neither adds nor alters constellation nodes or edges.
+- `ApexThreatPlan.pursuit` binds one shuffled threat definition to one act range, ordered sector indices, and authored route-node labels. Its four `ApexEncounterPlan` records are the trace, ambush, lieutenant, and finale stages on the required gate role.
+- `ApexHunt.getApexEncounterForNode` is state-aware. It returns only the current unresolved contact whose predecessor is complete, so later route visits cannot independently spawn apex reinforcements or bodies.
+- `ApexHunt.applyApexHuntEvent` is the sequential progression authority. Success and partial success append the current encounter id; failure records pressure without advancing the track. Existing subsystem, evidence, history, event, and disposition bounds remain authoritative.
+- `RunSession.advanceSector` calls `getApexPursuitRouteEscapeThreatIds` before mission reset. The pure projection compares the completed source step and committed target; the established `escape` reducer/timeline path owns the one resulting mutation.
+- `createApexPursuitNavigationReadModel` exposes only current-act state, the local encounter, and one revealed child. `SectorTransitionScene` may decorate those already-open nodes and explain a break, but it cannot change route legality or apex state.
+- The Apex Dossier derives concealed versus revealed contact locations from the same sequential completion prefix. Future-act first contacts remain dormant until their act range is reached.
+- The change adds no save/snapshot field, migration, graph node, graph edge, route option, combat actor type, projectile/effect budget, dependency, or static-hosting rule.
+
 ### Work order 198 primary-weapon icon boundary
 
 - `WeaponDefinition.iconKind` is the sole authored visual-identity key for a primary weapon base. `WEAPON_ICON_KINDS` types and validates the eight-entry vocabulary; quality, source, affix, component instance, and route data never select a different glyph.

@@ -8,8 +8,8 @@ import {
   createApexCampaignReadModel,
   createApexEncounterReadModel,
   createApexFinaleProfile,
-  createApexHuntPlan,
   createApexHuntState,
+  createApexPursuitNavigationReadModel,
   getApexEncounterForNode,
   validateApexContent,
   validateApexHuntPlan,
@@ -17,6 +17,7 @@ import {
 } from '../../src/game/ApexHunt';
 import { generateRunSkeleton } from '../../src/game/Generation';
 import { advanceSector, createRunSession, recordApexHuntEvent } from '../../src/game/RunSession';
+import { getNextActRouteSectorIndices } from '../../src/game/ActRouteGraph';
 
 const loadedContext = {
   alliedFronts: 2,
@@ -33,18 +34,125 @@ const loadedContext = {
 
 describe('ApexHunt', () => {
   it('generates three deterministic, structurally distinct multi-node pursuits', () => {
-    const first = createApexHuntPlan({ seed: 'APEX-PLAN', saveFingerprint: 'fresh', sectorCount: 14 });
-    const second = createApexHuntPlan({ seed: 'APEX-PLAN', saveFingerprint: 'fresh', sectorCount: 14 });
+    const first = generateRunSkeleton('APEX-PLAN').apexHunts;
+    const second = generateRunSkeleton('APEX-PLAN').apexHunts;
     expect(first).toEqual(second);
     expect(first.threats).toHaveLength(3);
     expect(new Set(first.threats.map((threat) => threat.definitionId)).size).toBe(3);
     expect(first.threats.every((threat) => threat.encounters.length === 4)).toBe(true);
+    expect(first.threats.map((threat) => threat.pursuit.actId)).toEqual([
+      'act_outer_rim',
+      'act_core_descent',
+      'act_null_frontier'
+    ]);
+    expect(
+      first.threats.every(
+        (threat) =>
+          threat.encounters.at(-1)?.routeNodeLabel.startsWith('4') &&
+          threat.encounters.every((encounter) => encounter.operationalRole === 'gate')
+      )
+    ).toBe(true);
     const nodeKeys = first.threats.flatMap((threat) =>
       threat.encounters.map((encounter) => `${encounter.sectorIndex}:${encounter.operationalRole}`)
     );
     expect(new Set(nodeKeys).size).toBe(nodeKeys.length);
     expect(validateApexHuntPlan(first)).toEqual([]);
     expect(validateApexContent()).toEqual([]);
+  });
+
+  it('reveals one seeded constellation signal only after the preceding pursuit step', () => {
+    const run = generateRunSkeleton('APEX-TRACK-REVEAL');
+    const hunt = run.apexHunts.threats[0]!;
+    const [trace, ambush, lieutenant] = hunt.encounters;
+    let state = createApexHuntState(run.apexHunts);
+
+    expect(
+      createApexPursuitNavigationReadModel(run.apexHunts, state, trace!.sectorIndex)
+        ?.revealedNextSectorIndex
+    ).toBeNull();
+    expect(
+      getApexEncounterForNode(run.apexHunts, state, {
+        sectorIndex: ambush!.sectorIndex,
+        operationalRole: 'gate'
+      })
+    ).toBeNull();
+
+    state = applyApexHuntEvent(run.apexHunts, state, {
+      id: 'track-reveal:trace',
+      type: 'encounterOutcome',
+      threatId: hunt.definitionId,
+      encounterId: trace!.id,
+      stage: trace!.stage,
+      sectorIndex: trace!.sectorIndex,
+      outcome: 'success'
+    }).state;
+
+    const revealed = createApexPursuitNavigationReadModel(
+      run.apexHunts,
+      state,
+      trace!.sectorIndex
+    );
+    expect(revealed).toMatchObject({
+      revealedNextSectorIndex: ambush!.sectorIndex,
+      totalSteps: 4
+    });
+    expect(revealed?.summary).toContain(ambush!.routeNodeLabel);
+    expect(
+      getApexEncounterForNode(run.apexHunts, state, {
+        sectorIndex: ambush!.sectorIndex,
+        operationalRole: 'gate'
+      })?.id
+    ).toBe(ambush!.id);
+    expect(
+      getApexEncounterForNode(run.apexHunts, state, {
+        sectorIndex: lieutenant!.sectorIndex,
+        operationalRole: 'gate'
+      })
+    ).toBeNull();
+  });
+
+  it('keeps a completed pursuit on its revealed child and lets the apex escape off-track', () => {
+    const run = generateRunSkeleton('APEX-TRACK-BRANCH');
+    const hunt = run.apexHunts.threats[0]!;
+    const [trace, ambush] = hunt.encounters;
+    const createTrackedSession = () => {
+      const session = createRunSession(run, run.contracts[0]!);
+      recordApexHuntEvent(run, session, {
+        id: `track-branch:${session.timeline.entries.length}`,
+        type: 'encounterOutcome',
+        threatId: hunt.definitionId,
+        encounterId: trace!.id,
+        stage: trace!.stage,
+        sectorIndex: trace!.sectorIndex,
+        outcome: 'success'
+      });
+      return session;
+    };
+
+    const onTrack = createTrackedSession();
+    expect(advanceSector(run, onTrack, ambush!.sectorIndex)).toBe(true);
+    expect(
+      onTrack.apexHunts.threats.find((threat) => threat.threatId === hunt.definitionId)?.status
+    ).not.toBe('escaped');
+
+    const sibling = getNextActRouteSectorIndices(
+      run.actRouteGraph,
+      trace!.sectorIndex
+    ).find((sectorIndex) => sectorIndex !== ambush!.sectorIndex)!;
+    const offTrack = createTrackedSession();
+    expect(advanceSector(run, offTrack, sibling)).toBe(true);
+    expect(
+      offTrack.apexHunts.threats.find((threat) => threat.threatId === hunt.definitionId)?.status
+    ).toBe('escaped');
+    expect(offTrack.apexHunts.history.at(-1)?.label).toContain('escaped the pursuit corridor');
+
+    const missedStep = createRunSession(run, run.contracts[0]!);
+    expect(advanceSector(run, missedStep, ambush!.sectorIndex)).toBe(true);
+    expect(
+      missedStep.apexHunts.threats.find(
+        (threat) => threat.threatId === hunt.definitionId
+      )?.status
+    ).toBe('escaped');
   });
 
   it('carries encounter and boarding damage into a later bounded finale', () => {
@@ -74,7 +182,7 @@ describe('ApexHunt', () => {
   });
 
   it('exposes all five risk-bearing outcomes across the three finales', () => {
-    const plan = createApexHuntPlan({ seed: 'APEX-ENDINGS', saveFingerprint: 'fresh', sectorCount: 14 });
+    const plan = generateRunSkeleton('APEX-ENDINGS').apexHunts;
     const state = createApexHuntState(plan);
     const outcomes = new Set(
       plan.threats.flatMap((threat) =>
@@ -87,11 +195,7 @@ describe('ApexHunt', () => {
   });
 
   it('turns Crownless hunt evidence into explicit disposition readiness', () => {
-    const plan = createApexHuntPlan({
-      seed: 'APEX-CROWN-READINESS',
-      saveFingerprint: 'fresh',
-      sectorCount: 14
-    });
+    const plan = generateRunSkeleton('APEX-CROWN-READINESS').apexHunts;
     const hunt = plan.threats.find(
       (candidate) => candidate.definitionId === 'apex_crownless_engine'
     )!;
@@ -147,11 +251,7 @@ describe('ApexHunt', () => {
   });
 
   it('presents named contacts, plain-language state, and explained evidence', () => {
-    const plan = createApexHuntPlan({
-      seed: 'APEX-READ-MODEL',
-      saveFingerprint: 'fresh',
-      sectorCount: 14
-    });
+    const plan = generateRunSkeleton('APEX-READ-MODEL').apexHunts;
     const hunt = plan.threats[0]!;
     const encounter = hunt.encounters[0]!;
     let state = createApexHuntState(plan);
@@ -169,7 +269,7 @@ describe('ApexHunt', () => {
     const threat = campaign.threats.find((candidate) => candidate.id === hunt.definitionId)!;
     const contact = createApexEncounterReadModel(encounter);
 
-    expect(campaign.summary).toContain('unresolved hunts');
+    expect(campaign.summary).toContain('Current track');
     expect(threat.statusLabel).toBe('Hunt progressing');
     expect(threat.integrityDetail).toContain('integrity stripped');
     expect(threat.subsystems).toHaveLength(3);
@@ -183,14 +283,21 @@ describe('ApexHunt', () => {
   });
 
   it('settles a finale once and returns its variety unlock', () => {
-    const plan = createApexHuntPlan({ seed: 'APEX-RESOLVE', saveFingerprint: 'fresh', sectorCount: 14 });
+    const plan = generateRunSkeleton('APEX-RESOLVE').apexHunts;
     const hunt = plan.threats[0]!;
     const finale = hunt.encounters.at(-1)!;
     let state = createApexHuntState(plan);
-    state = applyApexHuntEvent(plan, state, {
-      id: 'finale', type: 'encounterOutcome', threatId: hunt.definitionId,
-      encounterId: finale.id, stage: 'finale', sectorIndex: finale.sectorIndex, outcome: 'success'
-    }).state;
+    for (const encounter of hunt.encounters) {
+      state = applyApexHuntEvent(plan, state, {
+        id: `resolve-track:${encounter.id}`,
+        type: 'encounterOutcome',
+        threatId: hunt.definitionId,
+        encounterId: encounter.id,
+        stage: encounter.stage,
+        sectorIndex: encounter.sectorIndex,
+        outcome: 'success'
+      }).state;
+    }
     const option = createApexFinaleProfile({
       plan, state, threatId: hunt.definitionId, context: loadedContext
     }).options.find((entry) => entry.available)!;
@@ -210,7 +317,8 @@ describe('ApexHunt', () => {
     const run = generateRunSkeleton('APEX-ESCAPE');
     const hunt = run.apexHunts.threats[0]!;
     const encounter = hunt.encounters[0]!;
-    expect(getApexEncounterForNode(run.apexHunts, {
+    const initialState = createApexHuntState(run.apexHunts);
+    expect(getApexEncounterForNode(run.apexHunts, initialState, {
       sectorIndex: encounter.sectorIndex, operationalRole: encounter.operationalRole
     })?.id).toBe(encounter.id);
 
