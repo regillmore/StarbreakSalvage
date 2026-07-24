@@ -8,7 +8,7 @@ import {
 } from '../../src/game/Generation';
 import { createRunSession, getCurrentSector } from '../../src/game/RunSession';
 import { generateSectorRewardChoices } from '../../src/game/SectorRewards';
-import { generateShopInventory } from '../../src/game/Shops';
+import { generateShopInventory, SHOP_BASE_CIRCUIT_STOCK } from '../../src/game/Shops';
 import {
   getCraterShadowLensSpecialChargeBonus,
   getAmbushInsuranceStampRewardBiasTags,
@@ -93,14 +93,12 @@ describe('run upgrade effects', () => {
             "item_gangue_compression_die",
             "item_laser_tax_stamp",
             "item_coastdown_capacitor",
-            "item_salvage_magnet",
           ],
           "prices": [
             4,
             3,
             5,
             8,
-            5,
           ],
           "stockBonus": 1,
         },
@@ -320,7 +318,7 @@ function projectUpgradedRun(run: RunSkeleton) {
     rerollCount: 0,
     biasTags: [...contract.itemBias, ...run.upgradeEffects.shopBiasTags],
     excludeItemIds: [],
-    count: 4 + run.upgradeEffects.shopStockBonus,
+    count: SHOP_BASE_CIRCUIT_STOCK + run.upgradeEffects.shopStockBonus,
     priceDiscount: run.upgradeEffects.shopDiscount,
     couponCascadeUpgrade: run.upgradeEffects.shopCouponCascade,
     unlockedIds: run.unlockedIds

@@ -115,6 +115,10 @@ Phase 6 expands the item catalog and hook surface. Keep the first larger catalog
 
 Work order 205 keeps circuit-card work scene-bound. Each visible item receives one bounded hook-label fold, one identity header, one trigger/effect strip, and one footer when the owning DOM scene enters or redraws after an explicit purchase/reroll. No card projection or DOM mutation enters fixed-step simulation, hover, animation-frame, reward weighting, or shop generation paths.
 
+Work order 206 removes one neutral shop circuit card and its associated icon, trigger fold, effect text, tag rail, and footer from ordinary market entry and reroll. Explicit stock bonuses can still restore larger racks. The three-column grid and side-by-side signal layout are static CSS; no observer, animation, frame-time branch, extra generation pass, or retained UI cache is added.
+
+The checked build emits `1,033.03 kB` minified / `283.53 kB` gzip initial JavaScript and `116.53 kB` / `22.78 kB` CSS, changes of `0.00 kB` / `-0.01 kB` JavaScript and `-0.31 kB` / `-0.05 kB` CSS from work order 205. The existing Vite large-chunk advisory remains; no dependency or warning threshold changed.
+
 - Item icons should stay inline SVG, CSS, or canvas primitives with high-contrast fallbacks; avoid image assets.
 - Item discovery and archive filtering should remain local-only and save-safe. Do not add telemetry or network calls.
 - Dense synergy combat should expose enough debug state to inspect active item count, hook count, build identity, and proc budget before increasing projectile or particle density.

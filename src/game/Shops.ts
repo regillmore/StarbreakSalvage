@@ -17,8 +17,8 @@ export interface ShopInventoryItem {
 
 export const SHOP_REROLL_COST = 2;
 export const SHOP_HULL_REPAIR_BASE_COST = 4;
+export const SHOP_BASE_CIRCUIT_STOCK = 3;
 
-const SHOP_ITEM_COUNT = 4;
 const RARITY_PRICE: Record<ItemRarity, number> = {
   common: 5,
   uncommon: 7,
@@ -72,7 +72,7 @@ export function generateShopInventory(options: {
       sectorIndex: options.sectorIndex,
       rerollCount: options.rerollCount,
       itemCount:
-        (options.count ?? SHOP_ITEM_COUNT) +
+        (options.count ?? SHOP_BASE_CIRCUIT_STOCK) +
         actStockBonus +
         (applyPermanentConvoyReceiptPrinter ? 1 : 0),
       priceDiscount: (options.priceDiscount ?? 0) + (applyPermanentCouponCascade ? 1 : 0),

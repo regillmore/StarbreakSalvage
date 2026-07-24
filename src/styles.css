@@ -3001,23 +3001,6 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
   gap: 0.75rem;
 }
 
-.shop-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.shop-card .item-card-signal {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.shop-card .item-card-trigger {
-  display: flex;
-  align-items: baseline;
-  gap: 0.4rem;
-  padding-block: 0.3rem;
-  border-right: 0;
-  border-bottom: 2px solid var(--item-rarity-color, var(--screen-primary, #7cf7ff));
-}
-
 .shop-repair-service {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(9rem, 0.55fr) auto;

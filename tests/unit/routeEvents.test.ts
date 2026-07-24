@@ -21,7 +21,7 @@ import {
 } from '../../src/game/RunSession';
 import { generateRouteOutcome } from '../../src/game/RouteEvents';
 import { generateSectorRewardChoices } from '../../src/game/SectorRewards';
-import { generateShopInventory } from '../../src/game/Shops';
+import { generateShopInventory, SHOP_BASE_CIRCUIT_STOCK } from '../../src/game/Shops';
 
 const bounds: CombatBounds = {
   width: 640,
@@ -140,10 +140,10 @@ describe('route events', () => {
       rerollCount: 0,
       biasTags: shopModifiers.flatMap((modifier) => modifier.biasTags),
       priceDiscount: discount,
-      count: 4 + stockBonus
+      count: SHOP_BASE_CIRCUIT_STOCK + stockBonus
     });
 
-    expect(inventory).toHaveLength(5);
+    expect(inventory).toHaveLength(SHOP_BASE_CIRCUIT_STOCK + 1);
     expect(Math.min(...inventory.map((item) => item.price))).toBeGreaterThanOrEqual(2);
     expect(discount).toBeGreaterThan(0);
   });

@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import { createActEconomyProfile } from '../../src/game/ActEconomy';
 import { generateRunSkeleton } from '../../src/game/Generation';
-import { generateShopInventory, getShopHullRepairCost } from '../../src/game/Shops';
+import {
+  generateShopInventory,
+  getShopHullRepairCost,
+  SHOP_BASE_CIRCUIT_STOCK
+} from '../../src/game/Shops';
 
 const baseOptions = {
   seed: 'COUPON-CASCADE-COMPATIBILITY',
@@ -12,6 +16,12 @@ const baseOptions = {
 } as const;
 
 describe('shop permanent effects', () => {
+  it('offers three base circuit slots before earned stock bonuses', () => {
+    expect(generateShopInventory({ ...baseOptions, rerollCount: 0 })).toHaveLength(
+      SHOP_BASE_CIRCUIT_STOCK
+    );
+  });
+
   it('prices repeatable hull service from the current act repair economy', () => {
     const run = generateRunSkeleton('SHOP-HULL-REPAIR-PRICE');
     const actOne = createActEconomyProfile(run.sectors[run.acts[0]!.startSectorIndex]!);
@@ -51,7 +61,7 @@ describe('shop permanent effects', () => {
   it('preserves Convoy Receipt reroll stock without doubling a restored item copy', () => {
     const authoredEquivalent = generateShopInventory({
       ...baseOptions,
-      count: 5,
+      count: SHOP_BASE_CIRCUIT_STOCK + 1,
       biasTags: ['drone', 'credit']
     });
     const permanent = generateShopInventory({

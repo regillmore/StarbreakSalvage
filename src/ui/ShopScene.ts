@@ -14,7 +14,12 @@ import {
   type RunSessionState
 } from '../game/RunSession';
 import { getShopStockForRoll, initializeShopStockForRoll } from '../game/ShopStock';
-import { generateShopInventory, getShopHullRepairCost, getShopRerollCost } from '../game/Shops';
+import {
+  generateShopInventory,
+  getShopHullRepairCost,
+  getShopRerollCost,
+  SHOP_BASE_CIRCUIT_STOCK
+} from '../game/Shops';
 import { createEngineeringCombatProfile } from '../game/Foundry';
 import {
   getCouponCascadeReadout,
@@ -110,7 +115,7 @@ export class ShopScene implements Scene {
           biasTags: [...this.contract.itemBias, ...shopBiasTags],
           excludeItemIds: getOwnedItemIds(this.session),
           priceDiscount,
-          count: 4 + stockBonus,
+          count: SHOP_BASE_CIRCUIT_STOCK + stockBonus,
           unlockedIds: this.run.unlockedIds,
           itemInstances: getActiveFittedItems(
             this.session.itemInstances,

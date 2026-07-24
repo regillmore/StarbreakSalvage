@@ -303,11 +303,6 @@ describe('reward generation', () => {
           id: 'item_magnetized_tithe_box',
           sourceHint: 'Shop pool',
           price: 5
-        },
-        {
-          id: 'item_penumbra_crown_aperture',
-          sourceHint: 'Shop pool',
-          price: 4
         }
       ],
       eliteRewards: [

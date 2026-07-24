@@ -145,3 +145,30 @@ Status: implemented. `ItemCardViewModel` now translates the authoritative hook l
 Focused view-model coverage protects all hook labels, multi-hook joins, price/acquisition context, and bridge/planned states. The primary Chromium sector-loop path protects the reward one-page fit plus reward, archive, and summary consumers. Managed-browser inspection at 1280 x 720 showed four equal `226.25 x 277.77` shop cards, four trigger strips, no redundant live badges, and no horizontal page overflow.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 116 Vitest files and 756 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,033.03 kB` minified / `283.54 kB` gzip initial JavaScript and `116.84 kB` / `22.83 kB` CSS, increases of `1.52 kB` / `0.35 kB` JavaScript and `3.79 kB` / `0.58 kB` CSS over work order 204. The managed browser reported no console warnings or errors, and its tab plus authenticated smoke host closed cleanly. The existing Vite large-chunk advisory remains; no dependency, item definition, hook behavior, price, reward/shop RNG, save/snapshot schema, static base path, or warning threshold changed.
+
+## Work order 206 - Three-slot circuit market
+
+Goal: bring the base shop circuit rack back to the same bounded three-choice scale as sector circuit rewards while keeping earned stock expansion meaningful.
+
+Prompt:
+
+> Reduce the base shop circuit inventory and desktop grid from four cards to three. Keep explicit act, route, permanent, item-hook, and reroll stock effects additive, preserve stable depleted slots and deterministic choice order, and align the wider shop dossiers with the established reward-card presentation.
+
+Acceptance criteria:
+
+- A stock-neutral Act I market generates exactly three circuit slots and rerolls exactly three replacements.
+- `SHOP_BASE_CIRCUIT_STOCK` is the single code authority used by generation, the live shop, deterministic projections, and navigation copy.
+- Act economy, route outcomes, permanent upgrades, restored item hooks, and engineering hooks can still add stock above the three-slot baseline without hidden caps.
+- Purchasing a circuit leaves its slot visibly empty; leaving and reopening preserves depletion; reroll refills the same current stock width.
+- The desktop shop grid presents three equal columns and reuses the reward-style side-by-side trigger/effect signal strip. The established narrow breakpoint still collapses to one column.
+- The primary-weapon offer remains a separate one-crate rack and is not counted as one of the three circuit slots.
+- Retained seeded offers preserve their prior order, prices, and source hints; only the former fourth base offer is omitted.
+- Saves, snapshots, item pools, weights, ownership, reroll seeds, accessibility settings, static hosting, and dependency count remain unchanged.
+
+Status: implemented. `Shops` now exports one three-slot baseline consumed by both default inventory generation and `ShopScene` before earned stock modifiers. Act economy and hook-based additions remain downstream of that baseline. The navigation service dossier reads the same constant and now advertises `3+ seeded offers`.
+
+The shop grid falls through to the shared three-column reward grid and shared side-by-side signal strip. Purchase, persistent depletion, and reroll behavior are unchanged. Focused deterministic coverage pins the three-slot default, the four-slot Act II surface, the five-slot progressed surface, route/permanent additions, and retained choice order. The primary Chromium shop path pins the hub readout, exact three-card Act I stock, separate weapon rack, depletion persistence, and reroll refill.
+
+Managed-browser inspection at 1280 x 720 rendered three equal-width circuit dossiers beneath the independent primary-weapon rack, each with the reward-style trigger/effect split. The live DOM reported three shop cards and three signal strips, the navigation hub reported `3+ seeded offers`, browser logs contained only Vite connection diagnostics, and the authenticated smoke host stopped cleanly.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 116 Vitest files and 757 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,033.03 kB` minified / `283.53 kB` gzip initial JavaScript and `116.53 kB` / `22.78 kB` CSS, changes of `0.00 kB` / `-0.01 kB` JavaScript and `-0.31 kB` / `-0.05 kB` CSS from work order 205. The existing Vite large-chunk advisory remains; no dependency, item definition, pool, price, reward/shop RNG stream, save/snapshot schema, static base path, or warning threshold changed.

@@ -2030,6 +2030,7 @@ test('carries hull into navigation and sells repeatable repair service in the sh
   await expect(page.getByTestId('navigation-hull')).toHaveAttribute('data-tone', 'critical');
 
   await page.getByTestId('open-shop').click();
+  await expect(page.getByText('3+ seeded offers', { exact: true })).toBeVisible();
   await page.getByTestId('navigation-destination-action').click();
   await expect(page.getByRole('heading', { name: 'Shop' })).toBeVisible();
   await expect(page.getByTestId('shop-repair-service')).toHaveAttribute('data-state', 'critical');
@@ -2090,7 +2091,7 @@ test('depletes fixed shop slots until reroll restocks the rack', async ({ page }
 
   const shopSlots = page.locator('[data-testid^="shop-slot-"]');
   const initialSlotCount = await shopSlots.count();
-  expect(initialSlotCount).toBeGreaterThanOrEqual(4);
+  expect(initialSlotCount).toBe(3);
   const affordableCards = page.locator('.shop-card[data-state="available"]:not(:disabled)');
   const affordablePrices = await affordableCards.evaluateAll((cards) =>
     cards.map((card) => Number(/(\d+) credits/i.exec(card.textContent ?? '')?.[1] ?? Infinity))

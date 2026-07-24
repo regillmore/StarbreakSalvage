@@ -14,6 +14,7 @@ import {
 import { applySectorConditionsToScroll, createSectorConditionPlan } from '../game/SectorConditions';
 import { applySectorPacingToScroll, createSectorPacingPlan } from '../game/SectorPacing';
 import { formatSectorObjectiveVariantDebug } from '../game/SectorObjectives';
+import { SHOP_BASE_CIRCUIT_STOCK } from '../game/Shops';
 import { getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import type { MissionDebugState, MissionReadModel } from '../game/MissionDirector';
 import type { InputAction } from '../systems/InputSystem';
@@ -737,7 +738,7 @@ export class SectorTransitionScene implements Scene {
     if (destination.id === 'shop') {
       body.append(
         this.createDetailMetric('Tender', `${this.session.credits} credits`),
-        this.createDetailMetric('Local stock', '4+ seeded offers'),
+        this.createDetailMetric('Local stock', `${SHOP_BASE_CIRCUIT_STOCK}+ seeded offers`),
         this.createDetailCopy(
           'Market access is a carrier service. A shop route can still improve terms or stock, but no longer decides whether the market exists.'
         )

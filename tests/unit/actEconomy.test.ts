@@ -14,7 +14,11 @@ import {
 import { createRunSession, getCurrentSector } from '../../src/game/RunSession';
 import { generateRouteOutcome } from '../../src/game/RouteEvents';
 import { generateSectorRewardChoices } from '../../src/game/SectorRewards';
-import { generateShopInventory, getShopRerollCost } from '../../src/game/Shops';
+import {
+  generateShopInventory,
+  getShopRerollCost,
+  SHOP_BASE_CIRCUIT_STOCK
+} from '../../src/game/Shops';
 import { formatItemSourceSummary, formatRunEconomyBreakdown } from '../../src/ui/RunSummaryScene';
 import { createRunSummaryProgressModel } from '../../src/ui/RunSummaryProgress';
 
@@ -44,7 +48,7 @@ describe('Act II economy tuning', () => {
 
     expect(snapshot).toEqual(repeated);
     expect(snapshot).toMatchSnapshot('fresh act II economy');
-    expect(snapshot.shop.count).toBe(5);
+    expect(snapshot.shop.count).toBe(4);
     expect(snapshot.eliteRewards).toHaveLength(3);
     expect(snapshot.vaultRewards).toHaveLength(3);
     expect(snapshot.rerollCosts).toEqual([3, 4]);
@@ -194,7 +198,7 @@ function createActEconomySnapshot(saveData: SaveData) {
     biasTags: [...contract.itemBias, ...run.upgradeEffects.shopBiasTags],
     excludeItemIds: [],
     priceDiscount: run.upgradeEffects.shopDiscount,
-    count: 4 + run.upgradeEffects.shopStockBonus,
+    count: SHOP_BASE_CIRCUIT_STOCK + run.upgradeEffects.shopStockBonus,
     unlockedIds: run.unlockedIds,
     itemInstances: session.itemInstances,
     sectorId: currentSector.sectorId,

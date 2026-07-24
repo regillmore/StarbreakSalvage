@@ -983,6 +983,15 @@ seed + permanent save fingerprint
 - `BuildSynergy.createBuildSynergyModel` remains a read-only classifier over owned item instances for HUD and debrief identity. Its scores are not consumed by `ItemHooks`, `CombatState`, reward generation, shops, engineering, or run progression.
 - The change removes presentation-only work and adds no save/snapshot field, migration, item definition, RNG draw, route mutation, combat actor, projectile, effect, hook, or fixed-step branch.
 
+### Work order 206 shop-stock boundary
+
+- `Shops.SHOP_BASE_CIRCUIT_STOCK` owns the neutral three-slot circuit baseline. `generateShopInventory` uses it only when no explicit count is supplied; its established act-economy, permanent, item-hook, and engineering-hook additions still apply afterward.
+- `ShopScene` starts from that constant and adds route plus run-upgrade stock before passing an explicit count. It continues to restore the authoritative saved roll from `ShopStock` when one exists, so a deployed snapshot never silently changes an already materialized market.
+- `SectorTransitionScene` imports the same constant for the market-service estimate. The navigation dossier therefore cannot drift from stock generation again.
+- `.shop-grid` now inherits the shared three-column choice grid and shop cards inherit the shared side-by-side item signal strip. Narrow layouts retain the existing one-column media rule.
+- The primary-weapon offer retains its separate deterministic roll and saved depletion record. It is not included in the circuit baseline.
+- The change removes one neutral menu card and adds no item definition, pool mutation, price formula, save/snapshot field, migration, generation pass, RNG draw, combat actor, projectile, effect, hook, or fixed-step branch.
+
 ### Work order 198 primary-weapon icon boundary
 
 - `WeaponDefinition.iconKind` is the sole authored visual-identity key for a primary weapon base. `WEAPON_ICON_KINDS` types and validates the eight-entry vocabulary; quality, source, affix, component instance, and route data never select a different glyph.

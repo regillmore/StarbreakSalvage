@@ -28,7 +28,7 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
     4,
   ],
   "shop": {
-    "count": 5,
+    "count": 4,
     "items": [
       [
         "item_rebound_freight_seal",
@@ -48,11 +48,6 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
       [
         "item_laser_tax_stamp",
         19,
-        "Shop pool",
-      ],
-      [
-        "item_magnetized_tithe_box",
-        17,
         "Shop pool",
       ],
     ],
@@ -102,7 +97,7 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
     4,
   ],
   "shop": {
-    "count": 6,
+    "count": 5,
     "items": [
       [
         "item_rebound_freight_seal",
@@ -128,11 +123,6 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
         "item_salvage_dividend_chip",
         16,
         "Shop pool",
-      ],
-      [
-        "item_phase_anchor_spool",
-        16,
-        "vault source",
       ],
     ],
   },

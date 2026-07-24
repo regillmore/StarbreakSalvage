@@ -2923,3 +2923,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 205. `ItemCardViewModel` derives compact hook labels and `ItemCard` renders one shared circuit-dossier hierarchy, while shop and reward scenes contribute only their local action wording.
+
+### BL71 - Three-slot circuit market
+
+Acceptance:
+
+- Reduce neutral base shop circuit stock from four seeded slots to three while preserving additive act, route, permanent, restored-item, and engineering-hook stock bonuses.
+- Use one exported baseline for generation, live shop construction, deterministic tests, and the navigation market readout.
+- Preserve stable empty slots after purchase, depletion across shop re-entry, and full same-width replacement after reroll.
+- Present desktop shop circuits in three equal columns with the reward-style side-by-side trigger/effect strip and retain the one-column narrow breakpoint.
+- Keep the primary-weapon crate separate from circuit stock and preserve retained choice order, price, source, saves, pools, RNG streams, and static hosting.
+
+Status:
+
+- Implemented in work order 206. Neutral Act I markets now expose three circuit dossiers, explicit stock bonuses expand from that baseline, and the hub, shop generator, deterministic projections, CSS grid, and depletion smoke flow share the same rule.
