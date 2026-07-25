@@ -183,6 +183,40 @@ describe('reward generation', () => {
     expect(changedSeedCount).toBeGreaterThan(0);
   });
 
+  it('migrates Relic Ash Compass reward bias without doubling a restored fitted copy', () => {
+    let changedSeedCount = 0;
+
+    for (let index = 0; index < 10; index += 1) {
+      const seed = `RELIC-ASH-REWARD-${index}`;
+      const baselineRun = generateRunSkeleton(seed);
+      const upgradedRun = generateRunSkeleton(seed, {
+        purchasedUpgradeIds: ['upgrade_relic_ash_compass']
+      });
+      const baselineContract = getFirstContract(baselineRun);
+      const upgradedContract = getFirstContract(upgradedRun);
+      const baseline = createRunSession(baselineRun, baselineContract);
+      const permanent = createRunSession(upgradedRun, upgradedContract);
+      const restored = createRunSession(baselineRun, baselineContract);
+      const stacked = createRunSession(upgradedRun, upgradedContract);
+
+      expect(addItemToSession(restored, 'item_relic_ash_compass').socket).not.toBeNull();
+      expect(addItemToSession(stacked, 'item_relic_ash_compass').socket).not.toBeNull();
+
+      const ids = (run: typeof baselineRun, session: typeof baseline, contract: StartingContract) =>
+        generateSectorRewardChoices({ run, session, contract, routeKind: 'vault' }).map(
+          (choice) => choice.item.id
+        );
+      const baselineIds = ids(baselineRun, baseline, baselineContract);
+      const permanentIds = ids(upgradedRun, permanent, upgradedContract);
+
+      expect(ids(baselineRun, restored, baselineContract)).toEqual(permanentIds);
+      expect(ids(upgradedRun, stacked, upgradedContract)).toEqual(permanentIds);
+      if (baselineIds.join('|') !== permanentIds.join('|')) changedSeedCount += 1;
+    }
+
+    expect(changedSeedCount).toBeGreaterThan(0);
+  });
+
   it('creates one deterministic contract-biased ignition core', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
     const contract = run.contracts[0];

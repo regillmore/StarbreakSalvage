@@ -21,7 +21,7 @@ describe('item catalog audit', () => {
       cursed: 3
     });
     expect(audit.hookCounts).toEqual({
-      onFire: 30,
+      onFire: 31,
       onProjectileSpawn: 16,
       onEnemyKilled: 10,
       onPlayerHit: 1,
@@ -32,14 +32,14 @@ describe('item catalog audit', () => {
       onSectorStart: 0,
       onRouteChosen: 1,
       onShopEntered: 0,
-      onRewardGenerated: 1,
+      onRewardGenerated: 0,
       onBossPhaseChanged: 0,
       onEnvironmentObjectDestroyed: 1
     });
     expect(audit.tagCounts).toMatchObject({
       credit: 8,
       phase: 13,
-      plasma: 11,
+      plasma: 12,
       overkill: 9,
       relic: 2
     });
@@ -122,11 +122,11 @@ describe('item catalog audit', () => {
       route: 6
     });
     expect(audit.lockedItemIds).toEqual([
+      'item_ashwake_reliquary',
       'item_curse_eater_gasket',
       'item_curse_interest_bond',
       'item_cursed_hull_plate',
       'item_overheat_oracle',
-      'item_relic_ash_compass',
       'item_relic_index_codex',
       'item_vault_parasite'
     ]);
@@ -162,6 +162,7 @@ describe('item catalog audit', () => {
     expect(getImplementedHookItemIds('onFire')).toContain('item_gangue_compression_die');
     expect(getImplementedHookItemIds('onFire')).toContain('item_forkline_dynamo');
     expect(getImplementedHookItemIds('onFire')).toContain('item_penumbra_crown_aperture');
+    expect(getImplementedHookItemIds('onFire')).toContain('item_ashwake_reliquary');
     expect(getImplementedHookItemIds('onProjectileSpawn')).toContain('item_strata_bore_collimator');
     expect(getImplementedHookItemIds('onProjectileSpawn')).toContain('item_claimant_arc_seal');
   });

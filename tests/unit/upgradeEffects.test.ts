@@ -16,6 +16,7 @@ import {
   getMarketEchoLocatorRewardBiasTags,
   getMarketEchoLocatorRewardChoiceBonus,
   getMiningLaserTransitRewardBiasTags,
+  getRelicAshCompassRewardBiasTags,
   getSurfaceBeaconSectorStartBonus,
   resolveRunUpgradeEffects
 } from '../../src/game/UpgradeEffects';
@@ -105,7 +106,7 @@ describe('run upgrade effects', () => {
         "vaultRewards": [
           "item_phase_grazer",
           "item_phase_wake_suture",
-          "item_relic_ash_compass",
+          "item_ashwake_reliquary",
           "item_cursed_hull_plate",
         ],
       }
@@ -282,6 +283,18 @@ describe('run upgrade effects', () => {
     expect(getMiningLaserTransitRewardBiasTags(transit, 'shop')).toEqual([]);
     expect(getMiningLaserTransitRewardBiasTags(transit, 'vault', true)).toEqual([]);
     expect(createRunGenerationSaveFingerprint([], transit)).toBe(
+      createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
+    );
+  });
+
+  it('projects Relic Ash Compass as a vault bias without doubling a restored fitted copy', () => {
+    const compass = resolveRunUpgradeEffects(['upgrade_relic_ash_compass']);
+
+    expect(compass.relicAshCompass).toBe(true);
+    expect(getRelicAshCompassRewardBiasTags(compass, 'vault')).toEqual(['relic', 'phase']);
+    expect(getRelicAshCompassRewardBiasTags(compass, 'combat')).toEqual([]);
+    expect(getRelicAshCompassRewardBiasTags(compass, 'vault', true)).toEqual([]);
+    expect(createRunGenerationSaveFingerprint([], compass)).toBe(
       createRunGenerationSaveFingerprint([], resolveRunUpgradeEffects())
     );
   });

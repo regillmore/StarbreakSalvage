@@ -167,6 +167,7 @@ export type ItemId =
   | 'item_market_echo_locator'
   | 'item_faraday_phase_shunt'
   | 'item_relic_ash_compass'
+  | 'item_ashwake_reliquary'
   | 'item_curse_interest_bond'
   | 'item_near_miss_tachometer'
   | 'item_phase_wake_suture'
@@ -1038,8 +1039,27 @@ export const ITEMS: readonly ItemDefinition[] = [
       sources: ['vault'],
       unlockTier: 'advanced',
       implementationStatus: 'live',
+      retired: true,
       stacking: 'unique',
       uiTags: ['relic', 'vault']
+    }
+  },
+  {
+    id: 'item_ashwake_reliquary',
+    name: 'Ashwake Reliquary',
+    rarity: 'rare',
+    tags: ['relic', 'phase', 'plasma'],
+    hooks: ['onFire'],
+    effect:
+      'up to three phase shots already in the chain cast offset ashwake echoes at reduced impact',
+    weight: 5,
+    metadata: {
+      family: 'curse-relic',
+      sources: ['vault'],
+      unlockTier: 'advanced',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['relic', 'phase', 'plasma']
     }
   },
   {
@@ -1848,7 +1868,7 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_plasma_bloom_filter',
       'item_arc_window_invoice',
       'item_excess_warhead_clause',
-      'item_relic_ash_compass',
+      'item_ashwake_reliquary',
       'item_curse_interest_bond',
       'item_phase_wake_suture',
       'item_prototype_vent_script',

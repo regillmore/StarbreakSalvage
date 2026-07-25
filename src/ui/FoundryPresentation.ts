@@ -584,6 +584,16 @@ function createCircuitStageCondition(
           label: 'CONDITION NOT MET · NEEDS AN EARLIER SHOT-CREATING STAGE'
         };
   }
+  if (itemId === 'item_ashwake_reliquary') {
+    const phaseShots = incoming.filter((projectile) => projectile.tags.includes('phase'));
+    const echoed = Math.min(3, phaseShots.length);
+    return echoed > 0
+      ? {
+          met: true,
+          label: `CONDITION MET · ${echoed} PHASE SHOT${echoed === 1 ? '' : 'S'} CAST AS ASHWAKE ECHOES · 56% IMPACT`
+        }
+      : { met: false, label: 'CONDITION NOT MET · NEEDS AN EARLIER PHASE SOURCE' };
+  }
   if (itemId === 'item_penumbra_crown_aperture') {
     return incoming.length >= 2
       ? {

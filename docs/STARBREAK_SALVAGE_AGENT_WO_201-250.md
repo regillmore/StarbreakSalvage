@@ -375,3 +375,26 @@ Status: implemented. `SectorTransitionScene` now assigns the apex glyph kind to 
 Managed-browser inspection followed `STARBREAK-SMOKE` from Signal Vault through the opening contact and first route choice, then opened the deterministic apex-hunt and apex-spoil Scenario Lab fixtures. The mark measured `21.6 px` on the service node, `12.8 px` in navigation metrics, `16 px` on the contact banner, `13.1 px` in the combat rail and reward flag, and `64 px` in the dossier masthead. Surface colors stayed local, the reward panel retained zero overflow, and the three inspected tabs reported no application errors.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 117 Vitest files and 769 tests, the production build, all 19 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,051.88 kB` minified / `288.29 kB` gzip initial JavaScript and `119.48 kB` / `23.43 kB` CSS, increases of `0.57 kB` / `0.25 kB` JavaScript and `0.86 kB` / `0.19 kB` CSS over work order 212. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, route graph mutation, reward choice, deterministic draw, gameplay system, or static-hosting rule changed.
+
+## Work order 214 - Permanent Relic Ash Compass and Ashwake chain
+
+Goal: move another passive reward-manipulation item out of run-local circuit competition and refill its rare vault slot with a powerful ordered phase payoff.
+
+Prompt:
+
+> Move Relic Ash Compass to the permanent scrap Upgrade Bay, preserve restored-run compatibility, and replace its live reward position with one rare weapon-chain upgrade that rewards deliberate ordering and broad phase synergy.
+
+Acceptance criteria:
+
+- `item_relic_ash_compass` remains readable by restored snapshots but is retired from active generation, discovery, audits, and every live reward pool.
+- A 12-salvage Archive upgrade gated by Relic Pattern Dossier restores the Compass behavior: Vault reward manifests favor relic and phase circuit tools.
+- Reward generation gives a fitted restored Compass precedence over the permanent flag, so either representation applies the same bias exactly once.
+- The permanent reward-local effect is excluded from the expedition-wide generation fingerprint and does not reshuffle contracts, routes, sectors, shops, or duration.
+- Rare Ashwake Reliquary replaces the Compass at the same vault-pool position, weight, advanced gate, and curse/relic family lane.
+- At its ordered `onFire` stage, Ashwake Reliquary copies at most three upstream phase shots as offset phase/plasma/relic echoes with 56% impact, 90% velocity, +0.24 seconds flight, bounded collision size, and incremented proc depth.
+- A Reliquary before a phase source remains inert. Hardpoint Control reports the exact met/unmet condition, affected shot count, and cumulative projectile/impact change from the production reducer.
+- Active breadth remains 66 and vault breadth remains 20; deterministic reward weighting, universal conduits, proc budgets, saves, dependencies, and static hosting remain intact.
+
+Status: implemented. Relic Ash Compass now lives in Archive progression, with legacy fitted-item precedence at the existing reward payload boundary. Ashwake Reliquary consumes only the phase state already assembled ahead of it, creating a bounded rare payoff for phase graze, split/phase, clone/phase, apex, and periodic circuits without a counter, target scan, or RNG draw.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 117 Vitest files and 773 tests, the production build, all 19 Playwright Chromium paths, and the Pages-base production-preview asset smoke. A managed in-app browser pass confirms the 19-card Upgrade Bay, the locked 12-salvage Relic Ash Compass Archive card and prerequisite copy, with no console errors. The release build emits `1,053.61 kB` minified / `288.68 kB` gzip initial JavaScript and `119.48 kB` / `23.43 kB` CSS, increases of `1.73 kB` / `0.39 kB` JavaScript with unchanged CSS over work order 213. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, route graph, active item breadth, pool breadth, or static-hosting rule changed.

@@ -3044,3 +3044,19 @@ Acceptance:
 Status:
 
 - Implemented in work order 213. The tri-vector now follows the player through discovery, routing, combat, intelligence review, and reward provenance as one restrained apex signifier.
+
+### BL79 - Permanent Relic Ash Compass and Ashwake chain
+
+Acceptance:
+
+- Retire Relic Ash Compass from live circuit generation while retaining its definition and reward hook for restored-run compatibility.
+- Add an Archive Upgrade Bay version gated by Relic Pattern Dossier that biases Vault rewards toward relic and phase exactly once.
+- Exclude the reward-local upgrade from the expedition generation fingerprint and preserve named reward-roll determinism.
+- Replace the exact rare vault slot with Ashwake Reliquary at the same weight, source, family, and advanced gate.
+- Echo at most three phase shots already present upstream as reduced-impact offset phase/plasma/relic projectiles with bounded proc depth.
+- Show explicit met/unmet upstream-phase requirements and cumulative output in Hardpoint Control.
+- Preserve 66 active items, 20 vault candidates, reward breadth, restored snapshots, combat caps, dependencies, and static hosting.
+
+Status:
+
+- Implemented in work order 214. Relic Ash Compass is now permanent Archive progression, while Ashwake Reliquary gives rare Vault rotation an order-sensitive phase-chain multiplier.

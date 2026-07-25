@@ -27,7 +27,7 @@ describe('item card view model', () => {
   });
 
   it('includes shop price and run acquisition labels when present', () => {
-    const model = createItemCardViewModel(getItemById('item_relic_ash_compass'), {
+    const model = createItemCardViewModel(getItemById('item_ashwake_reliquary'), {
       sourceLabel: 'vault source',
       price: 9,
       acquisitionOrder: 3
@@ -35,8 +35,8 @@ describe('item card view model', () => {
 
     expect(model.priceLabel).toBe('9 credits');
     expect(model.acquisitionLabel).toBe('Slot 4');
-    expect(model.triggerLabel).toBe('Reward roll');
-    expect(model.badges).toEqual(['Relic', 'Vault']);
+    expect(model.triggerLabel).toBe('Volley');
+    expect(model.badges).toEqual(['Relic', 'Phase', 'Plasma']);
   });
 
   it('distinguishes bridge and planned implementation status copy', () => {

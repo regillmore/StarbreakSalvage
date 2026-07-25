@@ -14,6 +14,7 @@ import {
   getMarketEchoLocatorRewardBiasTags,
   getMarketEchoLocatorRewardChoiceBonus,
   getMiningLaserTransitRewardBiasTags,
+  getRelicAshCompassRewardBiasTags,
   getRewardUpgradeBiasTags,
   getRewardUpgradeChoiceBonus
 } from './UpgradeEffects';
@@ -59,6 +60,9 @@ export function generateSectorRewardChoices(options: {
   const legacyMiningLaserTransitActive = fittedItems.some(
     (instance) => instance.itemId === 'item_mining_laser_transit'
   );
+  const legacyRelicAshCompassActive = fittedItems.some(
+    (instance) => instance.itemId === 'item_relic_ash_compass'
+  );
   const marketEchoChoiceBonus = getMarketEchoLocatorRewardChoiceBonus(
     options.run.upgradeEffects,
     rewardContext,
@@ -73,6 +77,11 @@ export function generateSectorRewardChoices(options: {
     options.run.upgradeEffects,
     rewardContext,
     legacyMiningLaserTransitActive
+  );
+  const relicAshCompassBiasTags = getRelicAshCompassRewardBiasTags(
+    options.run.upgradeEffects,
+    poolId,
+    legacyRelicAshCompassActive
   );
   const engineering = createEngineeringCombatProfile(options.session.engineering);
   const carrier = createCarrierInfluence(options.run.carrierPlan, options.session.carrier);
@@ -96,6 +105,7 @@ export function generateSectorRewardChoices(options: {
         ...upgradeBiasTags,
         ...marketEchoBiasTags,
         ...miningLaserTransitBiasTags,
+        ...relicAshCompassBiasTags,
         ...interActEffects.rewardBiasTags,
         ...actEconomy.rewardBiasTags,
         ...carrier.rewardBiasTags

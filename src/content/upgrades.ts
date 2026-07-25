@@ -27,7 +27,8 @@ export const UPGRADE_EFFECT_KINDS = [
   'miningLaserTransit',
   'ambushInsuranceStamp',
   'surfaceBeaconDrone',
-  'craterShadowLens'
+  'craterShadowLens',
+  'relicAshCompass'
 ] as const;
 
 export type UpgradeCategory = (typeof UPGRADE_CATEGORIES)[number];
@@ -52,7 +53,8 @@ export type UpgradeId =
   | 'upgrade_mining_laser_transit'
   | 'upgrade_ambush_insurance_stamp'
   | 'upgrade_surface_beacon_drone'
-  | 'upgrade_crater_shadow_lens';
+  | 'upgrade_crater_shadow_lens'
+  | 'upgrade_relic_ash_compass';
 
 export interface UpgradeDefinition {
   readonly id: UpgradeId;
@@ -263,6 +265,17 @@ export const UPGRADES: readonly UpgradeDefinition[] = [
     summary: 'a permanent shadow-reading lens fitted to every expedition sensor crown',
     effect: 'Each sector begins with 2% special charge; Lunar sectors begin with 8% instead.',
     cost: 9,
+    prerequisites: ['upgrade_relic_pattern_dossier']
+  },
+  {
+    id: 'upgrade_relic_ash_compass',
+    category: 'archive',
+    iconKey: 'vault-index',
+    effectKind: 'relicAshCompass',
+    name: 'Relic Ash Compass',
+    summary: 'a permanent ash-reading compass indexed against every expedition vault manifest',
+    effect: 'Vault rewards favor relic and phase circuit tools.',
+    cost: 12,
     prerequisites: ['upgrade_relic_pattern_dossier']
   }
 ];

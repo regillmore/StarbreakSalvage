@@ -234,6 +234,7 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_penumbra_crown_aperture',
     'item_parallax_echo_lattice',
     'item_forkline_dynamo',
+    'item_ashwake_reliquary',
     'item_shield_dynamo',
     'item_reactive_plating_grid',
     'item_shield_revenge_contract',
@@ -869,6 +870,35 @@ function applyOnFire(
       projectiles: payload.projectiles.map((projectile, index) =>
         chargedIndices.has(index) ? attachArcCharge(projectile) : projectile
       )
+    };
+  }
+
+  if (itemId === 'item_ashwake_reliquary') {
+    const phaseSources = payload.projectiles
+      .filter((projectile) => projectile.tags.includes('phase'))
+      .slice(0, 3);
+
+    if (phaseSources.length === 0) return payload;
+
+    return {
+      ...payload,
+      projectiles: [
+        ...payload.projectiles,
+        ...phaseSources.map((projectile, index) => {
+          const side = phaseSources.length === 1 ? 1 : index % 2 === 0 ? -1 : 1;
+          return {
+            ...projectile,
+            x: projectile.x + side * 18,
+            vx: -projectile.vx + side * 48,
+            vy: projectile.vy * 0.9,
+            damage: Math.max(0.48, projectile.damage * 0.56),
+            radius: Math.max(3.5, projectile.radius * 0.82),
+            ttl: projectile.ttl + 0.24,
+            tags: addTags(projectile.tags, ['relic', 'phase', 'plasma']),
+            procDepth: projectile.procDepth + 1
+          };
+        })
+      ]
     };
   }
 

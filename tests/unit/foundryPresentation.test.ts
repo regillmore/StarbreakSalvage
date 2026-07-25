@@ -687,6 +687,44 @@ describe('foundry visual presentation', () => {
     });
   });
 
+  it('shows Ashwake Reliquary echoing only phase shots already present upstream', () => {
+    const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
+      (candidate) => candidate.shipId === 'ship_debt_runner'
+    );
+    if (!contract) throw new Error('Expected a single-projectile contract.');
+    const linked = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+      { itemId: 'item_split_prism', acquisitionOrder: 0 },
+      { itemId: 'item_penumbra_crown_aperture', acquisitionOrder: 1 },
+      { itemId: 'item_ashwake_reliquary', acquisitionOrder: 2 }
+    ]);
+    const unmet = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+      { itemId: 'item_ashwake_reliquary', acquisitionOrder: 0 },
+      { itemId: 'item_split_prism', acquisitionOrder: 1 },
+      { itemId: 'item_penumbra_crown_aperture', acquisitionOrder: 2 }
+    ]);
+
+    expect(linked.circuitStages[2]).toMatchObject({
+      name: 'Ashwake Reliquary',
+      incomingProjectiles: 3,
+      outgoingProjectiles: 4,
+      conditionMet: true,
+      addedTags: ['relic'],
+      changed: true
+    });
+    expect(linked.circuitStages[2]?.outputLabel).toContain('1 PHASE SHOT CAST AS ASHWAKE ECHOES');
+    expect(
+      linked.attackSimulation.projectiles.some(
+        (projectile) => projectile.tags.includes('relic') && projectile.tags.includes('plasma')
+      )
+    ).toBe(true);
+    expect(unmet.circuitStages[0]).toMatchObject({
+      name: 'Ashwake Reliquary',
+      outputLabel: 'CONDITION NOT MET · NEEDS AN EARLIER PHASE SOURCE',
+      conditionMet: false,
+      changed: false
+    });
+  });
+
   it('explains whether apex circuit spoils have an upstream signal to transform', () => {
     const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
       (candidate) => candidate.shipId === 'ship_debt_runner'

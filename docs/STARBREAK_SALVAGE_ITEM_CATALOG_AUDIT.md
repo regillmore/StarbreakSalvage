@@ -1,13 +1,13 @@
 # Starbreak Salvage - Item Catalog Audit
 
-Work orders 051-056 baseline, refreshed through work order 203. This document records the active item catalog after the Noita-style circuit pivot retired Boss Pressure from live rotation, moved ten passive items into permanent progression, refilled their active slots, converted Prototype Vent Script into an ordered stored-heat modifier, and made arc a projectile-carried secondary discharge. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
+Work orders 051-056 baseline, refreshed through work order 214. This document records the active item catalog after the Noita-style circuit pivot retired Boss Pressure from live rotation, moved eleven passive items into permanent progression, added six exclusive apex spoils, refilled the retired active slots, converted Prototype Vent Script into an ordered stored-heat modifier, and made arc a projectile-carried secondary discharge. The source of truth remains `src/content/items.ts`; repeatable coverage checks live in `src/content/itemCatalogAudit.ts` and `tests/unit/itemCatalogAudit.test.ts`.
 
 ## Current Shape
 
 | Measure                 | Current | Phase 6 target                                                                             |
 | ----------------------- | ------- | ------------------------------------------------------------------------------------------ |
-| Active item definitions | 60      | Fifteen retired definitions remain for legacy-save compatibility                           |
-| Candidate reward pools  | 4       | Starter, ignition core, combat, and vault remain the broad candidate buckets               |
+| Active item definitions | 66      | Sixteen retired definitions remain for legacy-save compatibility                           |
+| Candidate reward pools  | 5       | Starter, ignition core, combat, vault, and exclusive apex buckets                          |
 | Weight profiles         | 9       | Starter, combat, shop, vault, elite, boss, faction, lunar, and route contexts are weighted |
 | Hook names              | 14      | Includes environment-object destruction alongside combat, route, and economy hooks         |
 | Locked item ids         | 7       | Direct item gates plus advanced/classified family-tier gates                               |
@@ -33,18 +33,18 @@ Validation requires every active item to appear in a compatible reward pool and 
 | --------- | ----- | --------------------------------------------------------------------------- |
 | Common    | 14    | Starter-safe bread-and-butter items now cover more families.                |
 | Uncommon  | 20    | The largest band and the main source of early variety.                      |
-| Rare      | 19    | Broadly represented in combat and vault pools.                              |
-| Prototype | 4     | Mostly vault/combat pressure, with `item_overheat_oracle` currently locked. |
+| Rare      | 22    | Broadly represented in combat, vault, and exclusive apex spoils.            |
+| Prototype | 7     | Vault/combat pressure plus three exclusive apex spoils.                     |
 | Cursed    | 3     | Vault-only and still a later risk/reward tuning lane.                       |
 
 ## Hook Coverage
 
 | Hook                           | Item count | Current role                                                                             |
 | ------------------------------ | ---------- | ---------------------------------------------------------------------------------------- |
-| `onFire`                       | 20         | Volley shaping, drones, split shots, missiles, phase/heat variants, and ordered cadence. |
-| `onProjectileSpawn`            | 14         | Projectile traits, arc charge, size, damage, TTL, and drift shaping.                     |
+| `onFire`                       | 31         | Volley shaping, drones, split shots, missiles, phase/heat variants, and ordered cadence. |
+| `onProjectileSpawn`            | 16         | Projectile traits, arc charge, size, damage, TTL, and drift shaping.                     |
 | `onEnemyKilled`                | 10         | Salvage payouts, compact blasts, and overkill/relic rewards.                             |
-| `onPlayerHit`                  | 6          | Shield, revenge, armor, and curse retaliation.                                           |
+| `onPlayerHit`                  | 1          | Legacy-compatible direct-hit reaction; Aegis retaliation moved into proactive volleys.  |
 | `onPickupCollected`            | 6          | Credit/salvage pickup shared-reservoir charge.                                           |
 | `onGraze`                      | 2          | Near-miss charge/rate/radius effects.                                                    |
 | `onSpecialUsed`                | 0          | Reserved hook surface; Prototype Vent Script moved to ordered volley cadence.            |
@@ -52,8 +52,8 @@ Validation requires every active item to appear in a compatible reward pool and 
 | `onSectorStart`                | 0          | Retired entry effects remain available only to restored snapshots.                       |
 | `onRouteChosen`                | 1          | Curse-interest remains active; retired economy hooks remain compatible.                  |
 | `onShopEntered`                | 0          | Retired reroll effects remain available only to restored snapshots.                      |
-| `onRewardGenerated`            | 1          | Relic reward bias remains active; retired reward hooks remain compatible.                |
-| `onBossPhaseChanged`           | 1          | One remaining active circuit hook; permanent counterplay moved to the Upgrade Bay.       |
+| `onRewardGenerated`            | 0          | Reward-bias hooks remain available only to restored snapshots.                           |
+| `onBossPhaseChanged`           | 0          | Boss counterplay is permanent progression; restored hooks remain compatible.             |
 | `onEnvironmentObjectDestroyed` | 1          | Salvage payout from eligible world-object destruction.                                   |
 
 Work order 054 gave the work order 053 hook surface its first live users. Item discovery is currently recorded from run inventory at summary time, so a dedicated collection hook remains optional unless future mid-run archive UI needs it.
@@ -66,6 +66,7 @@ Work order 054 gave the work order 053 hook surface its first live users. Item d
 | Ignition Core | 9     | 1 common, 4 uncommon, 3 rare, 1 cursed       | Shared one-per-family opening pool; unlock filtering gates the curse core. |
 | Combat        | 51    | 14 common, 18 uncommon, 17 rare, 2 prototype | Feeds combat, shop, elite, boss, faction, lunar, and route profiles.       |
 | Vault         | 20    | 2 uncommon, 11 rare, 4 prototype, 3 cursed   | Feeds vault plus high-pressure profiles when rare/cursed pressure fits.    |
+| Apex          | 6     | 3 rare, 3 prototype                          | Threat-specific spoils; never enters ordinary weighted rotation.           |
 
 The broad candidate pools are intentionally small in number; source identity now comes from the weight profile layer rather than separate hard-filtered lists for every surface.
 
@@ -106,23 +107,23 @@ Known-seed tests now sample shop, elite, vault, and lunar reward surfaces, and u
 | Tag        | Count |
 | ---------- | ----- |
 | `credit`   | 8     |
-| `phase`    | 10    |
+| `phase`    | 13    |
 | `scrap`    | 5     |
-| `drone`    | 8     |
-| `plasma`   | 10    |
+| `drone`    | 9     |
+| `plasma`   | 12    |
 | `shield`   | 5     |
 | `curse`    | 5     |
-| `heat`     | 7     |
+| `heat`     | 8     |
 | `armor`    | 3     |
-| `arc`      | 8     |
+| `arc`      | 10    |
 | `laser`    | 5     |
 | `magnet`   | 3     |
-| `missile`  | 5     |
-| `overkill` | 7     |
-| `ricochet` | 4     |
+| `missile`  | 6     |
+| `overkill` | 9     |
+| `ricochet` | 5     |
 | `bomb`     | 3     |
-| `revenge`  | 3     |
-| `split`    | 8     |
+| `revenge`  | 5     |
+| `split`    | 9     |
 | `relic`    | 2     |
 
 `relic`, `split`, `revenge`, and `bomb` remain thinner tags even though their broader families are now represented.
@@ -131,14 +132,14 @@ Known-seed tests now sample shop, elite, vault, and lunar reward surfaces, and u
 
 | Family           | Count | Phase 6 note                                                                                                  |
 | ---------------- | ----- | ------------------------------------------------------------------------------------------------------------- |
-| Laser/Split      | 8     | Forkline Dynamo charges only the two outer branches that already exist at its ordered stage.                  |
+| Laser/Split      | 9     | Forkline Dynamo charges only the two outer branches that already exist at its ordered stage.                  |
 | Missile/Overkill | 9     | Claimant Arc Seal converts upstream overkill into standard second-target arc charge.                          |
-| Drone/Copy       | 7     | Crossfeed Detonator charges upstream projectiles that carry two distinct circuit traits.                      |
-| Shield/Revenge   | 5     | Reached the first expansion target; defensive balance should avoid rewarding intentional damage too strongly. |
+| Drone/Copy       | 9     | Crossfeed Detonator charges upstream projectiles that carry two distinct circuit traits.                      |
+| Shield/Revenge   | 6     | Proactive pressure cycles now seed retaliation without requiring intentional damage.                          |
 | Credit/Shop      | 5     | Coastdown Capacitor turns broad pickup play into a conserved shared-haste reserve.                            |
 | Curse/Relic      | 6     | Advanced vault/route entries are locked behind the Relic Thief dossier; risk/reward tuning still needs work.  |
-| Phase/Graze      | 7     | Faraday Phase Shunt lets an upstream arc charge survive one phase traversal before discharge.                 |
-| Heat/Prototype   | 6     | Plasma Seed Crucible converts an earlier circuit trait into plasma/heat scaling.                              |
+| Phase/Graze      | 9     | Faraday Phase Shunt lets an upstream arc charge survive one phase traversal before discharge.                 |
+| Heat/Prototype   | 7     | Plasma Seed Crucible converts an earlier circuit trait into plasma/heat scaling.                              |
 | Lunar/Surface    | 5     | Gangue Compression Die converts upstream light branches into denser plasma.                                   |
 | Route/Economy    | 1     | Six former economy passives now live in permanent scrap progression.                                          |
 
@@ -148,14 +149,14 @@ The five Boss Pressure definitions and their original hook implementations remai
 
 | Archetype        | Rewarded count |
 | ---------------- | -------------- |
-| Laser/Split      | 17             |
-| Missile/Overkill | 10             |
-| Drone/Copy       | 13             |
-| Shield/Revenge   | 5              |
-| Credit/Shop      | 10             |
+| Laser/Split      | 21             |
+| Missile/Overkill | 13             |
+| Drone/Copy       | 16             |
+| Shield/Revenge   | 6              |
+| Credit/Shop      | 9              |
 | Curse/Relic      | 6              |
-| Phase/Graze      | 12             |
-| Heat/Prototype   | 14             |
+| Phase/Graze      | 16             |
+| Heat/Prototype   | 17             |
 
 ## Work Order 200: Permanent Surface Beacon / Parallax Echo Lattice
 
@@ -251,6 +252,12 @@ The active catalog expands from 60 to 66 items while the compatibility catalog e
 | Pale Convoy | Exodus Rail Switch | Passenger Coffer Manifest | The outer pair of an upstream multi-shot crosses lanes under phase; every third volley can copy two lighter branches as long-lived arc escorts. |
 
 All six are baseline-accessible only through their resolved apex replacement, unique, live, and fully implemented. They add four `onFire` and two `onProjectileSpawn` hook definitions. Periodic entries participate in the existing effective-cadence and Prototype Vent rules; generated drone/arc/phase/retaliation traits use shared runtime consumers and bounded projectile/proc budgets.
+
+## Permanent Relic Ash Compass and Ashwake Reliquary in Work Order 214
+
+Relic Ash Compass is now a 12-salvage Archive upgrade gated by Relic Pattern Dossier. Its retired catalog record and `onRewardGenerated` reducer remain only for restored snapshots; reward generation gives a fitted legacy copy precedence over the permanent flag, so either representation adds the same relic/phase bias to Vault rewards exactly once. The reward-local flag is excluded from the expedition-wide generation fingerprint and supplied only to the existing named reward roll.
+
+Rare Ashwake Reliquary replaces the released Vault slot at the same weight, family, source, advanced gate, and pool position. At its ordered `onFire` stage it takes at most three upstream phase shots and appends offset echoes at 56% impact, 90% velocity, +0.24 seconds TTL, bounded radius, and incremented proc depth while preserving upstream traits and adding relic/plasma. A Reliquary placed before its phase source remains inert. The active catalog remains at 66 items; the compatibility catalog now contains 82 definitions, sixteen of them retired.
 
 ## Risks For 057-060
 

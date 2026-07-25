@@ -18,7 +18,7 @@ describe('item discovery archive', () => {
         unlockName: 'Relic Thief'
       })
     );
-    expect(curseRelic?.hintText).not.toContain('Relic Ash Compass');
+    expect(curseRelic?.hintText).not.toContain('Ashwake Reliquary');
     expect(heatPrototype?.state).toBe('partial');
     expect(heatPrototype?.statusText).toBe(
       'Core available, classified tier locked | 0/7 discovered'
@@ -35,7 +35,7 @@ describe('item discovery archive', () => {
         'unlock_item_executive_override',
         'unlock_boss_auditor_drill'
       ],
-      discoveredItemIds: ['item_split_prism', 'item_relic_ash_compass'],
+      discoveredItemIds: ['item_split_prism', 'item_ashwake_reliquary'],
       discoveredItemFamilyIds: ['laser-split', 'curse-relic']
     });
     const curseRelic = model.entries.find((entry) => entry.family === 'curse-relic');
@@ -46,10 +46,10 @@ describe('item discovery archive', () => {
       expect.objectContaining({
         state: 'unlocked',
         statusText: 'Unlocked | 1/6 discovered',
-        discoveredItemNames: ['Relic Ash Compass']
+        discoveredItemNames: ['Ashwake Reliquary']
       })
     );
-    expect(curseRelic?.hintText).toContain('Recorded: Relic Ash Compass');
+    expect(curseRelic?.hintText).toContain('Recorded: Ashwake Reliquary');
   });
 
   it('does not count retired boss-pressure records from legacy saves', () => {

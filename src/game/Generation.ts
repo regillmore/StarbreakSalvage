@@ -359,7 +359,8 @@ export function createRunGenerationSaveFingerprint(
     'upgrade_mining_laser_transit',
     'upgrade_ambush_insurance_stamp',
     'upgrade_surface_beacon_drone',
-    'upgrade_crater_shadow_lens'
+    'upgrade_crater_shadow_lens',
+    'upgrade_relic_ash_compass'
   ]);
   const upgrades =
     upgradeEffects.activeUpgradeIds

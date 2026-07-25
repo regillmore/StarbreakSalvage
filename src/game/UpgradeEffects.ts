@@ -42,6 +42,7 @@ export interface RunUpgradeEffects {
   readonly rewardBiasTags: readonly ItemTag[];
   readonly marketEchoLocator: boolean;
   readonly miningLaserTransit: boolean;
+  readonly relicAshCompass: boolean;
   readonly seedSurvey: boolean;
   readonly sectorStart: SectorStartUpgradeEffects;
   readonly routeChosen: RouteChosenUpgradeEffects;
@@ -76,6 +77,7 @@ export function resolveRunUpgradeEffects(
     rewardBiasTags: hasRelicDossier ? ['relic', 'curse', 'phase'] : [],
     marketEchoLocator: hasUpgrade('upgrade_market_echo_locator'),
     miningLaserTransit: hasUpgrade('upgrade_mining_laser_transit'),
+    relicAshCompass: hasUpgrade('upgrade_relic_ash_compass'),
     seedSurvey: hasUpgrade('upgrade_seed_cartographer'),
     sectorStart: {
       exitTollRefund: hasUpgrade('upgrade_exit_toll_transponder'),
@@ -133,6 +135,10 @@ export function getRunUpgradeDebugLabels(effects: RunUpgradeEffects): string[] {
 
   if (effects.miningLaserTransit) {
     labels.push('mining laser transit');
+  }
+
+  if (effects.relicAshCompass) {
+    labels.push('relic ash compass');
   }
 
   if (effects.seedSurvey) {
@@ -308,5 +314,15 @@ export function getMiningLaserTransitRewardBiasTags(
     !legacyItemActive &&
     (routeKind === 'vault' || routeKind === 'factionAmbush')
     ? ['laser', 'plasma']
+    : [];
+}
+
+export function getRelicAshCompassRewardBiasTags(
+  effects: RunUpgradeEffects,
+  poolId: 'starter' | 'starterCore' | 'combat' | 'vault' | 'apex',
+  legacyItemActive = false
+): readonly ItemTag[] {
+  return effects.relicAshCompass && !legacyItemActive && poolId === 'vault'
+    ? ['relic', 'phase']
     : [];
 }

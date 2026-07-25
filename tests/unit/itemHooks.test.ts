@@ -320,6 +320,41 @@ describe('item synergies', () => {
     );
   });
 
+  it('lets Ashwake Reliquary echo only phase shots prepared earlier in the chain', () => {
+    const grazeThenReliquary: ItemInstance[] = [
+      { itemId: 'item_phase_grazer', acquisitionOrder: 0 },
+      { itemId: 'item_ashwake_reliquary', acquisitionOrder: 1 }
+    ];
+    const reliquaryThenGraze: ItemInstance[] = [
+      { itemId: 'item_ashwake_reliquary', acquisitionOrder: 0 },
+      { itemId: 'item_phase_grazer', acquisitionOrder: 1 }
+    ];
+
+    const echoed = applyItemHooks('onFire', grazeThenReliquary, {
+      volleyIndex: 4,
+      projectiles: [baseProjectile]
+    });
+    const dormant = applyItemHooks('onFire', reliquaryThenGraze, {
+      volleyIndex: 4,
+      projectiles: [baseProjectile]
+    });
+    const ashwake = echoed.projectiles.find((projectile) => projectile.tags.includes('relic'));
+
+    expect(echoed.projectiles).toHaveLength(2);
+    expect(ashwake).toMatchObject({
+      x: baseProjectile.x + 18,
+      vx: 48,
+      vy: -630,
+      procDepth: 1
+    });
+    expect(ashwake?.damage).toBeCloseTo(baseProjectile.damage * 1.2 * 0.56);
+    expect(ashwake?.tags).toEqual(expect.arrayContaining(['relic', 'phase', 'plasma']));
+    expect(ashwake?.ttl).toBeCloseTo(baseProjectile.ttl + 0.35 + 0.24);
+    expect(dormant.projectiles).toHaveLength(1);
+    expect(dormant.projectiles[0]?.tags).toContain('phase');
+    expect(dormant.projectiles[0]?.tags).not.toContain('relic');
+  });
+
   it('lets Forkline Dynamo charge only the outer branches already built upstream', () => {
     const splitThenCharge: ItemInstance[] = [
       { itemId: 'item_split_prism', acquisitionOrder: 0 },
