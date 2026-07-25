@@ -500,6 +500,7 @@ Phase 10 accessibility checks should also cover mission briefings and branch foc
 - [x] Available constellation choices share the same gold treatment; only the tracked apex child substitutes the reusable tri-vector glyph, while track/break text and accessible destination consequences remain explicit.
 - [x] Signal Vault, pursuit details, active contact HUD/banner, Apex Dossier, and apex-spoil provenance reuse the same decorative tri-vector renderer while their text remains the accessible source of meaning.
 - [x] The guaranteed first sector reports Wreckline Expedition pacing, runs four two-contact waves around the Hecaton midpoint, retains two relief windows, and keeps its paired optional hold shorter and set-piece-free.
+- [x] Each act's first/current constellation node uses the standard gold ready-sector card and pulse even while carrying an active apex-contact signal.
 
 ## Release checklist
 

@@ -1117,6 +1117,12 @@ seed + permanent save fingerprint
 - `CanvasRenderer.paintGameplayFrame` receives the selected `ShipAppearance` strictly for primary/engine colors and the Phase dashed boundary. It still draws the same bounded arena rectangle, diagonal rails, and two gutter gradients after the clipped gameplay layer.
 - Reduced-motion/performance/high-contrast behavior is CSS-only and changes no HUD data. Exit state is mirrored to the top strip and arena frame so both disappear during the existing departure handoff.
 
+### Work order 216 opening-node presentation boundary
+
+- `SectorTransitionScene` continues to mark an unresolved first-layer pursuit step as `apex-contact`; that signal remains presentation metadata for the briefing and does not select a constellation color.
+- The current `launch` destination shares the established ready-sector gold surface, border, shadow, glyph, focus, selected, and pulse selectors. It deliberately remains outside the `choice` reveal-animation selector because the opening node is already known when an act begins.
+- Removing the former purple signal selector changes no `ActConstellation` state, apex track, route graph, input behavior, save/snapshot field, RNG draw, or restored-run projection.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

@@ -226,6 +226,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
       .getByTestId('navigation-destination-launch')
       .evaluate((element) => getComputedStyle(element, '::after').animationName)
   ).toContain('constellation-sector-pulse');
+  await expectGoldLaunchNode(page);
   await expect(page.getByTestId('open-shop')).toHaveAttribute('aria-label', /available/);
   await expect(page.getByTestId('open-hardpoint-control')).toHaveAttribute(
     'aria-label',
@@ -1221,6 +1222,11 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
     'Act Act II Core Descent 1/5 escalated/elevated'
   );
   await expect(page.locator('.debug-overlay')).toContainText('Junction Core Descent choices');
+
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('mission-briefing')).toBeVisible();
+  await expect(page.locator('.debug-overlay')).toContainText('Scene sector-transition');
+  await expectGoldLaunchNode(page);
 
   await page.keyboard.press('I');
   await expectGameplaySector(page, 'Trade War Corridor', 10);
@@ -2254,6 +2260,26 @@ test('depletes fixed shop slots until reroll restocks the rack', async ({ page }
   await expect(primaryOffer).toHaveAttribute('data-state', 'available');
   await expect(primaryOffer).not.toHaveAttribute('data-component-id', firstPrimaryId!);
 });
+
+async function expectGoldLaunchNode(page: Page): Promise<void> {
+  const launchNode = page.getByTestId('navigation-destination-launch');
+  await expect(launchNode).toHaveAttribute('data-constellation-status', 'current');
+  await expect(launchNode).toHaveAttribute('data-signal', 'apex-contact');
+
+  const colors = await launchNode.evaluate((element) => ({
+    border: getComputedStyle(element).borderTopColor,
+    glyph: getComputedStyle(element.querySelector('.navigation-node-glyph')!).color,
+    pulse: getComputedStyle(element, '::after').borderTopColor,
+    shadow: getComputedStyle(element).boxShadow
+  }));
+  const serializedColors = JSON.stringify(colors);
+
+  expect(colors.border).toContain('255, 209, 102');
+  expect(colors.glyph).toContain('255, 209, 102');
+  expect(colors.pulse).toContain('255, 209, 102');
+  expect(colors.shadow).toContain('255, 209, 102');
+  expect(serializedColors).not.toContain('255, 122, 224');
+}
 
 async function forceCompleteSectorAndEnterNext(
   page: Page,

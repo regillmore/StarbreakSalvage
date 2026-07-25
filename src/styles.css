@@ -4612,11 +4612,6 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
     0 0 22px rgba(124, 247, 255, 0.28);
 }
 
-.navigation-destination-node[data-destination-id='launch'] {
-  border-color: rgba(255, 209, 102, 0.62);
-  color: #fff1b5;
-}
-
 .constellation-node[data-node-kind='sector'][data-constellation-status='completed'] {
   border-color: rgba(114, 242, 167, 0.48);
   color: #c9ffe3;
@@ -4630,7 +4625,8 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
   animation-delay: var(--constellation-delay);
 }
 
-.constellation-node[data-node-kind='sector'][data-constellation-status='choice'] {
+.constellation-node[data-node-kind='sector'][data-constellation-status='choice'],
+.navigation-destination-node[data-destination-id='launch'] {
   border-color: rgba(255, 209, 102, 0.72);
   color: #fff1b5;
   background: rgba(35, 29, 14, 0.94);
@@ -4644,27 +4640,23 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
   --constellation-pulse-color: rgba(255, 209, 102, 0.58);
 }
 
-.constellation-node[data-node-kind='sector'][data-constellation-status='choice'] {
+.constellation-node[data-node-kind='sector'][data-constellation-status='choice'],
+.navigation-destination-node[data-destination-id='launch'] {
   --constellation-pulse-color: rgba(255, 209, 102, 0.68);
 }
 
 .constellation-node[data-node-kind='sector'][data-constellation-status='choice']:hover,
 .constellation-node[data-node-kind='sector'][data-constellation-status='choice']:focus-visible,
-.constellation-node[data-node-kind='sector'][data-constellation-status='choice'][aria-pressed='true'] {
+.constellation-node[data-node-kind='sector'][data-constellation-status='choice'][aria-pressed='true'],
+.navigation-destination-node[data-destination-id='launch']:hover,
+.navigation-destination-node[data-destination-id='launch']:focus-visible,
+.navigation-destination-node[data-destination-id='launch'][aria-pressed='true'] {
   border-color: #ffd166;
   color: #fff8df;
   background: rgba(49, 39, 15, 0.98);
   box-shadow:
     0 0 0 3px rgba(5, 12, 27, 0.86),
     0 0 28px rgba(255, 209, 102, 0.38);
-}
-
-.constellation-node[data-node-kind='sector'][data-signal='apex-contact'] {
-  --constellation-pulse-color: rgba(255, 122, 224, 0.72);
-  border-color: rgba(255, 122, 224, 0.82);
-  box-shadow:
-    0 0 0 3px rgba(5, 12, 27, 0.86),
-    0 0 26px rgba(255, 122, 224, 0.28);
 }
 
 .constellation-node[data-node-kind='sector'][data-constellation-status='current']::after,

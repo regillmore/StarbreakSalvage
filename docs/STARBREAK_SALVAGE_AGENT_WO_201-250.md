@@ -425,3 +425,25 @@ The opening arc stretches conditioned travel by 1.32-1.38x, adds relief between 
 Managed-browser inspection launched `STARBREAK-SMOKE` through the production navigation and combat surfaces. Its briefing reports `Survey the wreckline`, a 2,207u baseline transit, and the Wreckline flight profile; the live Smuggler Vector projection measured 2,503.8u. The paused dossier reported four bounded hazard zones, two relief windows, three landmark beats, the preserved Hecaton set piece, no viewport overflow, and no console errors.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 117 Vitest files and 775 tests, the production build, all 19 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,054.86 kB` minified / `289.03 kB` gzip initial JavaScript and unchanged `119.48 kB` / `23.43 kB` CSS, increases of `1.25 kB` / `0.35 kB` JavaScript over work order 214. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, route graph, apex pursuit state, reward count, or static-hosting rule changed.
+
+## Work order 216 - Gold opening constellation node
+
+Goal: restore one consistent selectable-sector color at the opening of every act without hiding the active apex-pursuit state.
+
+Prompt:
+
+> Remove the residual purple apex-contact repaint from each act's first sector node. Give the current launch node the same complete gold card, focus, selected, glow, and pulse treatment as every other ready sector.
+
+Acceptance criteria:
+
+- The current first-sector launch node uses the established gold selectable-sector border, surface, glyph, shadow, and pulse in every act.
+- `apex-contact` remains available as semantic navigation metadata and continues to drive the pursuit briefing; it no longer owns a sector-card color.
+- The opening node still appears immediately without replaying the newly-revealed-node animation.
+- Focus, hover, keyboard selection, overview/focus map modes, reduced motion, performance mode, and high contrast retain their existing behavior.
+- Route topology, pursuit generation, encounter state, saves, snapshots, dependencies, and static hosting remain unchanged.
+
+Status: implemented. The launch destination now shares the same gold presentation selectors as ordinary ready choices, while the obsolete purple `apex-contact` override has been removed. The pursuit signal remains on the node for semantic and briefing logic.
+
+Managed-browser inspection opened the `STARBREAK-SMOKE` Act I constellation in focused and full-act views. The live apex-contact launch node reported `rgb(255, 209, 102)` for its border and glyph, a gold pulse and shadow, `animation-name: none` on the card, and the unchanged `apex-contact` signal. Both layouts were visually clean and the browser reported no console errors.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 117 Vitest files and 775 tests, the production build, all 19 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits unchanged `1,054.86 kB` minified / `289.03 kB` gzip initial JavaScript and `119.53 kB` / `23.43 kB` CSS, a `0.05 kB` minified CSS increase with unchanged gzip size over work order 215. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, route graph, apex pursuit state, RNG stream, or static-hosting rule changed.

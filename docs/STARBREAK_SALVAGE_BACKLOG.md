@@ -3076,3 +3076,16 @@ Acceptance:
 Status:
 
 - Implemented in work order 215. The opening is now a four-wave Wreckline Expedition built around the Hecaton breach, with an extended but bounded scroll and a distinct salvage-wake rhythm.
+
+### BL81 - Gold opening constellation node
+
+Acceptance:
+
+- Render each act's current first-sector launch node with the same gold selectable-sector card, glyph, focus, shadow, and pulse treatment as other ready nodes.
+- Retain the `apex-contact` signal for pursuit briefing and navigation semantics without assigning it a distinct card color.
+- Preserve immediate opening-node presentation without the choice-reveal animation.
+- Preserve constellation layout, focus/overview modes, route legality, pursuit state, saves, dependencies, and static hosting.
+
+Status:
+
+- Implemented in work order 216. Opening nodes now share the gold ready-sector hierarchy, and apex-contact metadata no longer repaints them purple.
