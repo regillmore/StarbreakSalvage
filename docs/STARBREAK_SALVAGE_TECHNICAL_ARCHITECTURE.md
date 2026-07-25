@@ -405,6 +405,7 @@ src/game/EnemyRolePressure.ts
 - The first implementation lives in `src/game/SectorPacing.ts`: gameplay derives route-conditioned scroll/features/arena first, then applies the pacing layer for final scroll length, encounter-pacing ratios, sparse feature beats, and boss approach scaling. Keep this layer deterministic and avoid mutating the base run skeleton.
 - Avoid per-frame random decisions. Generate the schedule once, then let fixed-step simulation consume it.
 - Final boss-operation feature plans must contain no hazard window at or beyond the arena lock. `HazardZoneDirector` owns this deterministic generation-time normalization, so runtime never carries hidden hazard debt through a boss fight.
+- The guaranteed first Outer Debris Field uses an explicit `wrecklineExpedition` arc rather than the generic early-sector fallback. It preserves all four shuffled major-wave identities, places two waves before and two after the Hecaton anchor, lengthens conditioned travel within a 1.32-1.38 bound, and supplies fixed relief/landmark/hazard ratios. Mission projection retains that objective identity while the paired optional operation applies its existing scale and set-piece suppression.
 - Summaries and debug overlays should expose length, pressure band, role/variant/formation counts, and route-conditioned reasons where useful.
 - Performance mode and reduced motion may simplify presentation, but should not change combat generation or objective requirements.
 

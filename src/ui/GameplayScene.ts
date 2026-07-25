@@ -1836,6 +1836,10 @@ export class GameplayScene implements Scene {
   }
 
   private getLooseCurrencyRouteBias(): 'none' | 'hazard' | 'elite' | 'market' | 'salvage' {
+    if (this.getSectorPacingPlan().arcKind === 'wrecklineExpedition') {
+      return 'salvage';
+    }
+
     const objectiveBias = this.missionContext?.projection.objectiveWorld?.looseCurrencyBias;
     if (objectiveBias === 'salvage' || objectiveBias === 'hazard') {
       return objectiveBias;

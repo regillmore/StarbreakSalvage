@@ -499,6 +499,7 @@ Phase 10 accessibility checks should also cover mission briefings and branch foc
 - [x] Scenario Lab exposes a resolved-apex reward fixture that verifies one apex card, three circuit choices, five total choices, a no-scroll desktop panel, and clean browser diagnostics through the production reward scene.
 - [x] Available constellation choices share the same gold treatment; only the tracked apex child substitutes the reusable tri-vector glyph, while track/break text and accessible destination consequences remain explicit.
 - [x] Signal Vault, pursuit details, active contact HUD/banner, Apex Dossier, and apex-spoil provenance reuse the same decorative tri-vector renderer while their text remains the accessible source of meaning.
+- [x] The guaranteed first sector reports Wreckline Expedition pacing, runs four two-contact waves around the Hecaton midpoint, retains two relief windows, and keeps its paired optional hold shorter and set-piece-free.
 
 ## Release checklist
 

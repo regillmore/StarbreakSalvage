@@ -3060,3 +3060,19 @@ Acceptance:
 Status:
 
 - Implemented in work order 214. Relic Ash Compass is now permanent Archive progression, while Ashwake Reliquary gives rare Vault rotation an order-sensitive phase-chain multiplier.
+
+### BL80 - Wreckline opening expedition
+
+Acceptance:
+
+- Give the guaranteed Outer Debris Field first pass its own named objective and deterministic pacing arc.
+- Expand the opening to four two-contact major waves and retain all four shuffled authored wave identities.
+- Stage two waves before the Hecaton set piece and two after it, with the capital breach acting as a midpoint centerpiece.
+- Extend conditioned first-sector travel by a bounded 32-38% and add two relief windows, three landmark beats, and two later hazard beats.
+- Keep formation clusters out of the onboarding chapter and reuse the established salvage-route loose-currency profile.
+- Preserve the shorter paired optional hold without replaying the set piece or adding a new node, menu, reward, or operation.
+- Preserve deterministic streams, saves, snapshots, route graphs, apex pursuit state, dependencies, and static hosting.
+
+Status:
+
+- Implemented in work order 215. The opening is now a four-wave Wreckline Expedition built around the Hecaton breach, with an extended but bounded scroll and a distinct salvage-wake rhythm.

@@ -3,6 +3,7 @@ import type { ActSectorContext } from './ActPlan';
 
 export type SectorObjectiveVariantId =
   | 'standardSweep'
+  | 'openingWrecklineExpedition'
   | 'act2DeepSweep'
   | 'act2LunarSkim'
   | 'act2ConvoyPursuit'
@@ -105,6 +106,21 @@ function chooseObjectiveVariant(
   sector: SectorDefinition,
   act: ActSectorContext | undefined
 ): SectorObjectiveVariantPlan {
+  if (
+    act?.actId === 'act_outer_rim' &&
+    act.actSectorIndex === 1 &&
+    sector.id === 'sector_outer_debris_field'
+  ) {
+    return {
+      id: 'openingWrecklineExpedition',
+      label: 'Wreckline expedition',
+      summary:
+        'Two opening contacts frame the Hecaton breach before a longer contested salvage wake.',
+      pressureBand: 'baseline',
+      travelGateRatio: 1
+    };
+  }
+
   if (!act || act.actId !== 'act_core_descent') {
     return STANDARD_OBJECTIVE_VARIANT;
   }

@@ -48,7 +48,7 @@ describe('generateRunSkeleton', () => {
 
     for (const sector of run.sectors) {
       expect(sector.routeOptions).toHaveLength(3);
-      expect(sector.majorWaves).toHaveLength(3);
+      expect(sector.majorWaves).toHaveLength(Math.max(3, sector.objective.requiredWaves));
       expect(sector.rewardPoolSeed).toContain(run.seed);
       expect(sector.shopSeed).toContain(run.seed);
       expect(sector.bossFactionId).toMatch(/^faction_/);

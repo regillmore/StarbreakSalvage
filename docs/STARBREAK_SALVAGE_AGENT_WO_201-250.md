@@ -398,3 +398,30 @@ Acceptance criteria:
 Status: implemented. Relic Ash Compass now lives in Archive progression, with legacy fitted-item precedence at the existing reward payload boundary. Ashwake Reliquary consumes only the phase state already assembled ahead of it, creating a bounded rare payoff for phase graze, split/phase, clone/phase, apex, and periodic circuits without a counter, target scan, or RNG draw.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 117 Vitest files and 773 tests, the production build, all 19 Playwright Chromium paths, and the Pages-base production-preview asset smoke. A managed in-app browser pass confirms the 19-card Upgrade Bay, the locked 12-salvage Relic Ash Compass Archive card and prerequisite copy, with no console errors. The release build emits `1,053.61 kB` minified / `288.68 kB` gzip initial JavaScript and `119.48 kB` / `23.43 kB` CSS, increases of `1.73 kB` / `0.39 kB` JavaScript with unchanged CSS over work order 213. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, route graph, active item breadth, pool breadth, or static-hosting rule changed.
+
+## Work order 215 - Wreckline opening expedition
+
+Goal: turn the first sector from a brief warm-up into a recognizable opening chapter with more travel, encounter variety, and room to establish the run before its first route choice.
+
+Prompt:
+
+> Reimagine and extend the guaranteed first sector. Give it a distinct pacing grammar that introduces the wreckline in readable stages, treats the existing Hecaton set piece as a midpoint centerpiece, and continues into a contested salvage wake before the recovery coast. Keep the paired optional challenge separate and scaled down.
+
+Acceptance criteria:
+
+- Every run opens with a named Wreckline Expedition objective in Outer Debris Field, without adding another constellation node, menu, reward, or required operation.
+- The first pass contains four deterministic major waves with two standard contacts each. All four authored Outer Debris Field wave identities appear once per seed instead of discarding one after the initial shuffle.
+- Two readable opening waves precede the Hecaton engagement; two later waves occupy the post-breach salvage wake. The set piece retains its seeded layouts, component rules, natural clear, and existing reward behavior.
+- Core first-sector travel grows by a bounded 32-38% after route conditions, with explicit encounter ratios rather than denser time-only spawning.
+- The pacing plan includes two natural relief windows, three landmark beats, and two later hazard beats. Formation clusters stay disabled in this onboarding chapter, while the existing hazard and combat caps remain authoritative.
+- Loose-currency placement uses the established salvage-route cache profile to reinforce the wreckline identity without changing pickup value, reward counts, or permanent economy.
+- The paired optional challenge remains a short derivative of the sector, uses fewer waves and less travel than the required first pass, and does not replay the Hecaton set piece.
+- Generation remains deterministic from the same named streams. Saves, snapshots, route graphs, apex pursuit state, act structure, dependencies, and static hosting remain compatible.
+
+Status: implemented. The guaranteed Outer Debris Field now projects `openingWrecklineExpedition` into mission combat and applies a dedicated `wrecklineExpedition` pacing arc. Its four shuffled wave identities create eight contacts at 10%, 22%, 55%, and 82% of the extended scroll, placing the first pair ahead of the Hecaton breach and the second pair beyond its anchor.
+
+The opening arc stretches conditioned travel by 1.32-1.38x, adds relief between the two encounter pairs, and seeds wreck, beacon, and repair-platform landmark opportunities alongside later hazard beats. It deliberately avoids formation clusters so the first combat screens remain legible. The existing mission projection continues to scale the optional hold down and removes the set piece there.
+
+Managed-browser inspection launched `STARBREAK-SMOKE` through the production navigation and combat surfaces. Its briefing reports `Survey the wreckline`, a 2,207u baseline transit, and the Wreckline flight profile; the live Smuggler Vector projection measured 2,503.8u. The paused dossier reported four bounded hazard zones, two relief windows, three landmark beats, the preserved Hecaton set piece, no viewport overflow, and no console errors.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 117 Vitest files and 775 tests, the production build, all 19 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,054.86 kB` minified / `289.03 kB` gzip initial JavaScript and unchanged `119.48 kB` / `23.43 kB` CSS, increases of `1.25 kB` / `0.35 kB` JavaScript over work order 214. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, route graph, apex pursuit state, reward count, or static-hosting rule changed.

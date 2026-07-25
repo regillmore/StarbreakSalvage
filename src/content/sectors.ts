@@ -57,9 +57,9 @@ export const SECTORS: readonly SectorDefinition[] = [
     majorWavePool: ['wreck_gnat_swarm', 'mine_drift', 'salvage_thief_dive', 'turret_scrap_lane'],
     objective: {
       kind: 'clearWaves',
-      label: 'Clear debris waves',
-      waveCount: 2,
-      spawnsPerWave: 1,
+      label: 'Survey the wreckline',
+      waveCount: 4,
+      spawnsPerWave: 2,
       bossGate: false
     }
   },

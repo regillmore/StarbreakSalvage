@@ -914,6 +914,7 @@ function projectObjectiveSector(
 
   const isTerminalOperation = stage.operationalRole === 'gate';
   const continuesWorld = stage.carry.scrollWorld === 'continue';
+  const preservesOpeningWreckline = sector.objective.variantId === 'openingWrecklineExpedition';
   const projectedObjective = {
     ...sector.objective,
     label: objectiveLabel,
@@ -922,14 +923,21 @@ function projectObjectiveSector(
     bossRequired:
       isTerminalOperation && world.bossPolicy === 'inherit' && sector.objective.bossRequired,
     bossSpawnAtSeconds: isTerminalOperation ? sector.objective.bossSpawnAtSeconds : null,
-    variantId: 'standardSweep' as const,
-    variantLabel: objectiveLabel,
-    variantSummary: `${
-      stage.optional ? 'Optional' : 'Required'
-    } deterministic operation carried through the sector itinerary.${
-      influence ? ` ${influence.label}` : ''
-    }`,
-    pressureBand: 'volatile' as const,
+    variantId: preservesOpeningWreckline
+      ? ('openingWrecklineExpedition' as const)
+      : ('standardSweep' as const),
+    variantLabel: preservesOpeningWreckline
+      ? (sector.objective.variantLabel ?? 'Wreckline expedition')
+      : objectiveLabel,
+    variantSummary: preservesOpeningWreckline
+      ? (sector.objective.variantSummary ??
+        'Opening contacts, capital breach, and contested salvage wake.')
+      : `${
+          stage.optional ? 'Optional' : 'Required'
+        } deterministic operation carried through the sector itinerary.${
+          influence ? ` ${influence.label}` : ''
+        }`,
+    pressureBand: preservesOpeningWreckline ? ('baseline' as const) : ('volatile' as const),
     travelGateRatio: 1
   };
   const projectedScroll = {

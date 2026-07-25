@@ -23,7 +23,7 @@ describe('ScrollState', () => {
       [
         {
           "baseSpeed": 85,
-          "length": 1442,
+          "length": 1672,
           "sectorId": "sector_outer_debris_field",
           "startOffset": 299,
         },

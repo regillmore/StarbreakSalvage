@@ -183,9 +183,10 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
     'Open the debris customs line by force.'
   );
   await expect(page.getByTestId('mission-objective-preview')).toContainText('ASSAULT');
+  await expect(page.getByTestId('mission-briefing')).toContainText('Wreckline expedition');
   const briefingMetricCount = await page.locator('.navigation-detail-body > *').count();
   expect(briefingMetricCount).toBeGreaterThanOrEqual(2);
-  expect(briefingMetricCount).toBeLessThanOrEqual(4);
+  expect(briefingMetricCount).toBeLessThanOrEqual(5);
   await expect(page.getByTestId('navigation-map')).toBeVisible();
   await expect(page.getByTestId('navigation-map')).toHaveAttribute(
     'data-constellation-view',

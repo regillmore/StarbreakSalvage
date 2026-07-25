@@ -501,7 +501,9 @@ function generateSectorRoute(
     act
   );
   const waveRng = rng.fork('major-waves');
-  const majorWaves = waveRng.shuffle(sector.majorWavePool).slice(0, 3);
+  const majorWaves = waveRng
+    .shuffle(sector.majorWavePool)
+    .slice(0, Math.max(3, sector.objective.waveCount));
   const objective = createSectorObjectivePlan(sector, majorWaves, act);
   const scroll = createSectorScrollPlan({
     sectorId: sector.id,

@@ -108,6 +108,45 @@ describe('MissionDirector', () => {
     }
   });
 
+  it('preserves the opening expedition identity while scaling its optional hold', () => {
+    const run = generateRunSkeleton('MISSION-DIRECTOR-OPENING-WRECKLINE');
+    const sector = run.sectors[0]!;
+    const schedule = createMissionSchedule(run.expedition, 0);
+    const required = createMissionCombatProjection(schedule, reachGate(schedule), sector);
+    let optionalState = reachPostSectorChoice(schedule);
+    const optional = getMissionBranchOptions(schedule, optionalState).find(
+      (option) => !option.default
+    );
+
+    optionalState = apply(schedule, optionalState, {
+      id: 'opening-optional-hold',
+      type: 'selectBranch',
+      optionId: optional?.id ?? ''
+    });
+    const optionalProjection = createMissionCombatProjection(schedule, optionalState, sector);
+
+    expect(sector.objective).toMatchObject({
+      variantId: 'openingWrecklineExpedition',
+      requiredWaves: 4,
+      requiredEnemyKills: 8
+    });
+    expect(required.sector.objective).toMatchObject({
+      variantId: 'openingWrecklineExpedition',
+      variantLabel: 'Wreckline expedition',
+      pressureBand: 'baseline'
+    });
+    expect(required.sector.objective.requiredWaves).toBe(4);
+    expect(required.sector.objective.requiredEnemyKills).toBe(
+      required.sector.objective.requiredWaves * 2
+    );
+    expect(optionalProjection.sector.objective.variantId).toBe('openingWrecklineExpedition');
+    expect(optionalProjection.sector.objective.requiredWaves).toBeLessThan(
+      required.sector.objective.requiredWaves
+    );
+    expect(optionalProjection.sector.scroll.length).toBeLessThan(required.sector.scroll.length);
+    expect(optionalProjection.sector.setPiece).toBeNull();
+  });
+
   it('advances a direct mission through every required stage exactly once', () => {
     const run = generateRunSkeleton('MISSION-DIRECTOR-DIRECT');
     const schedule = createMissionSchedule(run.expedition, 0);

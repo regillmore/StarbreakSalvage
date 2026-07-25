@@ -14,6 +14,7 @@ import type { AppliedRouteOutcome } from './RouteEvents';
 
 export type SectorPacingArcKind =
   | 'standard'
+  | 'wrecklineExpedition'
   | 'caravan'
   | 'intercept'
   | 'vaultTransit'
@@ -100,6 +101,7 @@ const STANDARD_PACING_PLAN: Omit<
 
 const ARC_LABELS: Readonly<Record<SectorPacingArcKind, string>> = {
   standard: 'Standard drift',
+  wrecklineExpedition: 'Wreckline expedition',
   caravan: 'Long caravan',
   intercept: 'Intercept run',
   vaultTransit: 'Vault transit',
@@ -112,7 +114,7 @@ const ARC_LABELS: Readonly<Record<SectorPacingArcKind, string>> = {
 };
 
 const SECTOR_LANDMARK_CHOICES: Readonly<Record<string, readonly SectorLandmarkKind[]>> = {
-  sector_outer_debris_field: ['wreck_silhouette', 'beacon_line'],
+  sector_outer_debris_field: ['wreck_silhouette', 'beacon_line', 'repair_platform'],
   sector_trade_war_corridor: ['convoy_shadow', 'beacon_line'],
   sector_bio_machine_bloom: ['core_machinery', 'repair_platform'],
   sector_corporate_kill_grid: ['beacon_line', 'core_machinery'],
@@ -169,12 +171,21 @@ export function createSectorPacingPlan(options: SectorPacingPlanOptions): Sector
   });
   const formationClusterWaveIndexes = createFormationClusterWaveIndexes(requiredWaves, arcKind);
   const landmarkBeatRatios = uniqueRatios([
-    ...reliefWindows.map((window) => midpoint(window.startRatio, window.endRatio)),
-    ...waveDistanceRatios.filter((_ratio, index) => index % 2 === 0)
+    ...(arcKind === 'wrecklineExpedition'
+      ? [0.14, 0.42, 0.7]
+      : [
+          ...reliefWindows.map((window) => midpoint(window.startRatio, window.endRatio)),
+          ...waveDistanceRatios.filter((_ratio, index) => index % 2 === 0)
+        ])
   ]).slice(0, 3);
   const hazardBeatRatios =
     options.conditions.hazardDensityDelta >= 0
-      ? uniqueRatios(waveDistanceRatios.map((ratio) => clamp(ratio + 0.07, 0.12, 0.88))).slice(0, 2)
+      ? arcKind === 'wrecklineExpedition'
+        ? [0.5, 0.77]
+        : uniqueRatios(waveDistanceRatios.map((ratio) => clamp(ratio + 0.07, 0.12, 0.88))).slice(
+            0,
+            2
+          )
       : [];
   const lengthMultiplier = getLengthMultiplier(options, arcKind);
   const spawnSpacingMultiplier = roundPacingValue(
@@ -435,6 +446,10 @@ export function summarizeSectorPacingPlan(pacing: SectorPacingPlan): unknown {
 
 function chooseArcKind(options: SectorPacingPlanOptions): SectorPacingArcKind {
   const isActTwo = options.sector.act.actId === 'act_core_descent';
+  const isOpeningWreckline =
+    options.sector.act.actId === 'act_outer_rim' &&
+    options.sector.act.actSectorIndex === 1 &&
+    options.sector.sectorId === 'sector_outer_debris_field';
   const sources = new Set(options.conditions.modifiers.map((modifier) => modifier.source));
   const routePressure =
     options.conditions.lengthMultiplier > 1.01 ||
@@ -451,6 +466,10 @@ function chooseArcKind(options: SectorPacingPlanOptions): SectorPacingArcKind {
     options.sector.sectorId === 'sector_lunar_surface' ||
     options.sector.sectorId === 'sector_core_wreck' ||
     options.sector.objective.bossRequired;
+
+  if (isOpeningWreckline) {
+    return 'wrecklineExpedition';
+  }
 
   if (!routePressure && !naturalLongSector && !isActTwo) {
     return 'standard';
@@ -490,6 +509,14 @@ function chooseArcKind(options: SectorPacingPlanOptions): SectorPacingArcKind {
 }
 
 function chooseLengthBand(options: SectorPacingPlanOptions): SectorPacingLengthBand {
+  if (
+    options.sector.act.actId === 'act_outer_rim' &&
+    options.sector.act.actSectorIndex === 1 &&
+    options.sector.sectorId === 'sector_outer_debris_field'
+  ) {
+    return 'extended';
+  }
+
   if (options.sector.act.actId !== 'act_core_descent') {
     return options.sector.index >= 4 || options.sector.objective.bossRequired
       ? 'extended'
@@ -552,6 +579,11 @@ function getLengthMultiplier(
   const bossBonus = options.sector.objective.bossRequired ? 0.04 : 0;
   const actBonus = getActTwoLengthBonus(options);
   const quietRouteOffset = getQuietRouteLengthOffset(options);
+
+  if (arcKind === 'wrecklineExpedition') {
+    return roundPacingValue(clamp(1.32 + routeBonus + hazardBonus, 1.32, 1.38));
+  }
+
   const arcBonus =
     arcKind === 'vaultTransit'
       ? 0.045
@@ -620,6 +652,10 @@ function createWaveDistanceRatios(options: {
   readonly pressureBand: SectorPacingPressureBand;
 }): readonly number[] {
   const { requiredWaves, bossRequired, arcKind, pressureBand } = options;
+
+  if (arcKind === 'wrecklineExpedition') {
+    return [0.1, 0.22, 0.55, 0.82].slice(0, requiredWaves);
+  }
 
   if (requiredWaves === 1) {
     return [bossRequired ? 0.34 : 0.48];
@@ -718,6 +754,10 @@ function createFormationClusterWaveIndexes(
   arcKind: SectorPacingArcKind
 ): readonly number[] {
   if (requiredWaves < 2) {
+    return [];
+  }
+
+  if (arcKind === 'wrecklineExpedition') {
     return [];
   }
 
@@ -917,6 +957,10 @@ function formatPacingEffects(pacing: SectorPacingPlan): string[] {
 }
 
 function getScrollCap(pacing: SectorPacingPlan): number {
+  if (pacing.arcKind === 'wrecklineExpedition') {
+    return 1.38;
+  }
+
   if (pacing.lengthBand === 'finale') {
     return 1.22;
   }

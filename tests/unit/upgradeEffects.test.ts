@@ -86,7 +86,7 @@ describe('run upgrade effects', () => {
           },
         ],
         "seed": "UPGRADE-SEED-SNAPSHOT",
-        "seedSurvey": "Seed Map: Act I Outer Debris Field | 1289u | Shop/Repair/Vault",
+        "seedSurvey": "Seed Map: Act I Outer Debris Field | 1519u | Shop/Repair/Vault",
         "shop": {
           "discount": 1,
           "itemIds": [

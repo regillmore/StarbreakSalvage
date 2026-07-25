@@ -29,10 +29,73 @@ import {
 } from '../../src/game/SectorPacing';
 import { formatSectorObjectiveVariantReadout } from '../../src/game/SectorObjectives';
 import { validateSectorFeaturePlan } from '../../src/game/SectorFeatures';
+import { getSetPieceEngagementDistance } from '../../src/game/SetPiece';
 import { createWaveDirectorPlan } from '../../src/game/WaveDirector';
 import { getNextActRouteSectorIndices } from '../../src/game/ActRouteGraph';
 
 describe('SectorPacing', () => {
+  it('stages the opening Wreckline Expedition around the Hecaton breach', () => {
+    const paced = getUnroutedPacedSector('STARBREAK-SMOKE', 0);
+    const encounterPacing = applySectorPacingToEncounterPacing(
+      paced.baseSector.encounterPacing,
+      paced.pacing
+    );
+    const plan = createWaveDirectorPlan({
+      seed: `${paced.run.seed}:combat:${paced.baseSector.sectorId}`,
+      objective: paced.baseSector.objective,
+      majorWaves: paced.baseSector.majorWaves,
+      preferredFactionId: paced.baseSector.bossFactionId,
+      availableFactionIds: paced.run.availableFactionIds,
+      scroll: paced.scroll,
+      pacing: encounterPacing,
+      sectorIndex: paced.session.currentSectorIndex,
+      routePressure: false,
+      formationClusterWaves: paced.pacing.formationClusterWaveIndexes
+    });
+    const setPiece = paced.baseSector.setPiece;
+
+    expect(paced.baseSector.sectorId).toBe('sector_outer_debris_field');
+    expect(paced.baseSector.objective).toMatchObject({
+      variantId: 'openingWrecklineExpedition',
+      requiredWaves: 4,
+      spawnsPerWave: 2,
+      requiredEnemyKills: 8
+    });
+    expect(paced.baseSector.majorWaves).toHaveLength(4);
+    expect(paced.pacing).toMatchObject({
+      arcKind: 'wrecklineExpedition',
+      lengthBand: 'extended',
+      pressureBand: 'baseline',
+      waveDistanceRatios: [0.1, 0.22, 0.55, 0.82],
+      formationClusterWaveIndexes: [],
+      landmarkBeatRatios: [0.14, 0.42, 0.7],
+      hazardBeatRatios: [0.5, 0.77]
+    });
+    expect(paced.pacing.lengthMultiplier).toBeGreaterThanOrEqual(1.32);
+    expect(paced.scroll.length).toBeGreaterThanOrEqual(paced.routeScroll.length * 1.32);
+    expect(paced.pacing.reliefWindows).toHaveLength(2);
+    expect(formatSectorPacingReadout(paced.pacing)).toContain(
+      'Sector pacing: Wreckline expedition'
+    );
+    expect(plan.waves).toHaveLength(4);
+    expect(plan.spawnSchedule).toHaveLength(8);
+    expect(
+      plan.waves.every((wave, index) => wave.label === paced.baseSector.majorWaves[index])
+    ).toBe(true);
+    expect(plan.spawnSchedule.every((spawn) => !spawn.formationId)).toBe(true);
+    expect(setPiece).not.toBeNull();
+
+    const engagementDistance = getSetPieceEngagementDistance(setPiece!);
+    const secondWaveSpawns = plan.spawnSchedule.filter((spawn) => spawn.waveIndex === 1);
+    const thirdWaveSpawns = plan.spawnSchedule.filter((spawn) => spawn.waveIndex === 2);
+    expect(Math.max(...secondWaveSpawns.map((spawn) => spawn.atDistance ?? 0))).toBeLessThan(
+      engagementDistance
+    );
+    expect(Math.min(...thirdWaveSpawns.map((spawn) => spawn.atDistance ?? 0))).toBeGreaterThan(
+      setPiece!.anchorDistance
+    );
+  });
+
   it('adds deterministic pressure and relief arcs to route-conditioned longer sectors', () => {
     const first = getPacedSectorAfterRoute('LONG-SECTOR-CARAVAN', 0, 'factionAmbush');
     const second = getPacedSectorAfterRoute('LONG-SECTOR-CARAVAN', 0, 'factionAmbush');
@@ -336,12 +399,7 @@ function getPacedSectorAfterRoute(
   kind: RouteKind,
   targetSectorIndex?: number
 ) {
-  const { run, session } = selectRouteIntoSector(
-    seed,
-    sourceSectorIndex,
-    kind,
-    targetSectorIndex
-  );
+  const { run, session } = selectRouteIntoSector(seed, sourceSectorIndex, kind, targetSectorIndex);
   const baseSector = getCurrentSector(run, session);
   const conditions = createSectorConditionPlan({
     run,

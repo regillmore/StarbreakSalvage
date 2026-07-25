@@ -32,23 +32,20 @@ describe('WaveDirector', () => {
 
   it('builds a deterministic multi-wave opening sector from run data', () => {
     const plan = getPlan('STARBREAK-SMOKE', 0);
+    const sector = generateRunSkeleton('STARBREAK-SMOKE').sectors[0]!;
 
-    expect(plan.objective.requiredEnemyKills).toBeGreaterThan(1);
+    expect(plan.objective.requiredEnemyKills).toBe(8);
     expect(plan.bossSpawnAtSeconds).toBeNull();
-    expect(
-      plan.waves.map((wave) => [
-        wave.index,
-        wave.label,
-        wave.startsAtSeconds,
-        wave.startsAtDistance
-      ])
-    ).toEqual([
-      [0, 'salvage_thief_dive', 0.45, 173.04],
-      [1, 'wreck_gnat_swarm', 1.8, 836.36]
-    ]);
-    expect(plan.spawnSchedule.map((spawn) => spawn.atSeconds)).toEqual([0.45, 1.8]);
-    expect(plan.spawnSchedule.map((spawn) => spawn.atDistance)).toEqual([173.04, 836.36]);
-    expect(plan.spawnSchedule.every((spawn) => spawn.xRatio === 0.5)).toBe(true);
+    expect(plan.waves.map((wave) => wave.label)).toEqual(sector.majorWaves);
+    expect(plan.waves).toHaveLength(4);
+    expect(plan.spawnSchedule).toHaveLength(8);
+    expect(plan.spawnSchedule.map((spawn) => spawn.waveLabel)).toEqual(
+      sector.majorWaves.flatMap((wave) => [wave, wave])
+    );
+    expect(plan.spawnSchedule.filter((_spawn, index) => index % 2 === 0)).toSatisfy(
+      (spawns: typeof plan.spawnSchedule) => spawns.every((spawn) => spawn.xRatio === 0.5)
+    );
+    expect(plan.spawnSchedule.every((spawn) => !spawn.formationId)).toBe(true);
   });
 
   it('keeps a time-based fallback when no scroll plan is provided', () => {
@@ -171,8 +168,10 @@ describe('WaveDirector', () => {
 
     expect(progress.complete).toBe(true);
     expect(progress.distanceComplete).toBe(true);
-    expect(progress.readout).toContain('targets 2/2');
-    expect(progress.readout).toContain('distance 1442/1442u');
+    expect(progress.readout).toContain(
+      `targets ${plan.objective.requiredEnemyKills}/${plan.objective.requiredEnemyKills}`
+    );
+    expect(progress.readout).toContain(`distance ${plan.sectorLength}/${plan.sectorLength}u`);
   });
 
   it('keeps boss-gated sectors open until the boss is defeated', () => {
@@ -622,14 +621,14 @@ describe('WaveDirector', () => {
               ],
               "hazardWindows": [
                 [
-                  319.6,
-                  490.6,
-                  714.6,
+                  388.6,
+                  559.6,
+                  783.6,
                 ],
                 [
-                  590.36,
-                  756.36,
-                  1381.36,
+                  723.76,
+                  889.76,
+                  1514.76,
                 ],
               ],
               "landmarkKinds": [
@@ -642,14 +641,15 @@ describe('WaveDirector', () => {
               "salvage_thief_dive",
               "wreck_gnat_swarm",
               "mine_drift",
+              "turret_scrap_lane",
             ],
             "objective": {
               "bossRequired": false,
               "bossSpawnAtSeconds": null,
               "kind": "clearWaves",
-              "requiredEnemyKills": 2,
-              "requiredWaves": 2,
-              "spawnsPerWave": 1,
+              "requiredEnemyKills": 8,
+              "requiredWaves": 4,
+              "spawnsPerWave": 2,
             },
             "routes": [
               "shop",
@@ -658,12 +658,12 @@ describe('WaveDirector', () => {
             ],
             "scroll": {
               "baseSpeed": 85,
-              "length": 1442,
+              "length": 1672,
               "startOffset": 299,
             },
             "sectorId": "sector_outer_debris_field",
             "setPiece": {
-              "anchorDistance": 606,
+              "anchorDistance": 702,
               "bossLock": "none",
               "id": "setpiece_ledger_hecaton",
               "layoutId": "starboard-ledger",
