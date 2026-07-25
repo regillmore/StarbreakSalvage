@@ -24,6 +24,7 @@ import {
 import { appendItemCardContent } from './ItemCard';
 import { createItemCardViewModel } from './ItemCardViewModel';
 import { appendPrimaryWeaponOfferCardContent } from './ComponentOfferCard';
+import { createApexGlyph } from './ApexGlyph';
 
 export class RewardScene implements Scene {
   public readonly id = 'reward';
@@ -104,7 +105,10 @@ export class RewardScene implements Scene {
         rewardButton.dataset.apexThreat = choice.apexReward.threatId;
         const apexFlag = document.createElement('span');
         apexFlag.className = 'reward-card-apex-flag';
-        apexFlag.textContent = `${choice.apexReward.mapCue} Apex Spoil`;
+        const apexGlyph = createApexGlyph(document);
+        apexGlyph.classList.add('apex-glyph-reward');
+        apexGlyph.dataset.apexSurface = 'reward-provenance';
+        apexFlag.append(apexGlyph, `${choice.apexReward.mapCue} Apex Spoil`);
         rewardButton.append(apexFlag);
         rewardButton.setAttribute(
           'aria-label',

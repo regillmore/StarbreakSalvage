@@ -3030,3 +3030,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 212. Available route nodes again share the established gold hierarchy, while the tracked apex child alone carries the reusable tri-vector silhouette.
+
+### BL78 - Shared apex visual language
+
+Acceptance:
+
+- Reuse the tri-vector renderer in the Signal Vault node and pursuit-network detail, route pursuit metrics, live contact HUD/banner, Apex Dossier masthead, and apex-spoil provenance.
+- Let each surface control only scale, placement, and inherited color; do not copy or mutate the silhouette.
+- Keep every icon decorative while existing text and accessible labels remain the semantic authority.
+- Hide live encounter placements when no apex contact exists and preserve dossier, navigation, and reward keyboard behavior.
+- Preserve pursuit state, route legality, encounter schedules, reward eligibility/counts, saves, deterministic draws, dependencies, and static hosting.
+
+Status:
+
+- Implemented in work order 213. The tri-vector now follows the player through discovery, routing, combat, intelligence review, and reward provenance as one restrained apex signifier.

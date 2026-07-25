@@ -14,6 +14,7 @@ import {
   type ApexThreatReadModel
 } from '../game/ApexHunt';
 import type { InputAction } from '../systems/InputSystem';
+import { createApexGlyph } from './ApexGlyph';
 
 export class ApexDossierScene implements Scene {
   public readonly id = 'apex-dossier';
@@ -97,6 +98,15 @@ export class ApexDossierScene implements Scene {
     title.textContent = forcedResolution
       ? `${selected.name} Neutralized`
       : 'Apex Pursuit Network';
+    const masthead = document.createElement('div');
+    masthead.className = 'apex-dossier-masthead';
+    masthead.dataset.testid = 'apex-dossier-masthead';
+    const mastheadGlyph = createApexGlyph(document);
+    mastheadGlyph.classList.add('apex-glyph-masthead');
+    mastheadGlyph.dataset.apexSurface = 'dossier-masthead';
+    const mastheadCopy = document.createElement('div');
+    mastheadCopy.append(eyebrow, title);
+    masthead.append(mastheadGlyph, mastheadCopy);
     const summary = document.createElement('p');
     summary.className = 'apex-campaign-summary';
     summary.textContent = forcedResolution
@@ -155,7 +165,7 @@ export class ApexDossierScene implements Scene {
     back.addEventListener('click', this.onBack);
     controls.append(back);
 
-    shell.append(eyebrow, title, summary, tabs, layout, dispositions, controls);
+    shell.append(masthead, summary, tabs, layout, dispositions, controls);
     this.uiRoot.replaceChildren(shell);
 
     const focusTarget = focusThreatTab || !forcedResolution

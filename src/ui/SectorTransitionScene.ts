@@ -52,6 +52,7 @@ import {
   type ConstellationMapNode,
   type ConstellationMapViewMode
 } from './ConstellationMap';
+import { createApexGlyph } from './ApexGlyph';
 import {
   createRouteNavigationReadModel,
   type RouteNavigationReadModel
@@ -484,6 +485,7 @@ export class SectorTransitionScene implements Scene {
         label: destination.label,
         shortLabel: destination.shortLabel,
         glyph: destination.glyph,
+        glyphKind: destination.id === 'apex' ? 'apex' : 'text',
         x: destination.x,
         y: destination.y,
         status: destination.available ? (visited ? 'visited' : 'service') : 'locked',
@@ -630,7 +632,8 @@ export class SectorTransitionScene implements Scene {
         this.createDetailMetric(
           'Apex pursuit',
           context.apexPursuit.summary,
-          'apex-pursuit-brief'
+          'apex-pursuit-brief',
+          'apex'
         )
       );
     }
@@ -710,7 +713,8 @@ export class SectorTransitionScene implements Scene {
         this.createDetailMetric(
           'Apex pursuit',
           `${apexPursuit?.mapCue ?? '[APEX]'} TRACK LOCK · ${apexPursuit?.revealedNextEncounter?.routeNodeLabel ?? 'NEXT SIGNAL'}`,
-          'apex-pursuit-route-preview'
+          'apex-pursuit-route-preview',
+          'apex'
         )
       );
     } else if (apexBreak) {
@@ -718,7 +722,8 @@ export class SectorTransitionScene implements Scene {
         this.createDetailMetric(
           'Apex pursuit',
           `${apexPursuit?.mapCue ?? '[APEX]'} TRACK BREAK · THE APEX ESCAPES`,
-          'apex-pursuit-route-preview'
+          'apex-pursuit-route-preview',
+          'apex'
         )
       );
     }
@@ -873,7 +878,12 @@ export class SectorTransitionScene implements Scene {
       return;
     }
     body.append(
-      this.createDetailMetric('Pursuit network', context.apex.summary),
+      this.createDetailMetric(
+        'Pursuit network',
+        context.apex.summary,
+        'apex-service-network',
+        'apex'
+      ),
       this.createDetailCopy(
         context.apex.nextEncounters.length > 0
           ? `Marked signals: ${context.apex.nextEncounters.join(' | ')}`
@@ -1024,12 +1034,23 @@ export class SectorTransitionScene implements Scene {
     return item;
   }
 
-  private createDetailMetric(label: string, value: string, testId?: string): HTMLElement {
+  private createDetailMetric(
+    label: string,
+    value: string,
+    testId?: string,
+    glyphKind: 'apex' | null = null
+  ): HTMLElement {
     const metric = document.createElement('div');
     metric.className = 'navigation-detail-metric';
     if (testId) metric.dataset.testid = testId;
     const name = document.createElement('small');
-    name.textContent = label;
+    if (glyphKind === 'apex') {
+      metric.dataset.glyphKind = 'apex';
+      name.className = 'navigation-detail-metric-label-with-glyph';
+      name.append(createApexGlyph(document), label);
+    } else {
+      name.textContent = label;
+    }
     const readout = document.createElement('strong');
     readout.textContent = value;
     metric.append(name, readout);

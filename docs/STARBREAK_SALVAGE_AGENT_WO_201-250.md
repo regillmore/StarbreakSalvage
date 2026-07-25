@@ -347,3 +347,31 @@ Status: implemented. `ApexGlyph.createApexGlyph` owns an original three-vector s
 Managed-browser inspection followed `STARBREAK-SMOKE` through its first sector reward into the live pursuit fork. Focused and full-act views kept both route cards on the shared gold treatment (`rgb(255, 209, 102)`), the tracked child alone rendered one `tri-vector` glyph at `21.6 px`, and the off-track child retained its ordinary diamond plus explicit `BREAKS TRACK` copy. No application errors appeared in the browser console.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 117 Vitest files and 769 tests, the production build, all 19 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,051.31 kB` minified / `288.04 kB` gzip initial JavaScript and `118.62 kB` / `23.24 kB` CSS, a change of `+0.93 kB` / `+0.32 kB` JavaScript and `-0.64 kB` / `-0.09 kB` CSS from work order 211. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, route graph mutation, deterministic draw, gameplay system, or static-hosting rule changed.
+
+## Work order 213 - Shared apex visual language
+
+Goal: make the tri-vector mark a consistent navigational and combat signifier across the full apex pursuit loop.
+
+Prompt:
+
+> Reuse the work order 212 apex glyph wherever the player enters, follows, encounters, studies, or claims a reward from the apex system. Preserve each surface's existing hierarchy and color language instead of introducing another global apex palette.
+
+Acceptance criteria:
+
+- The Signal Vault carrier-service node replaces its generic service glyph with the shared tri-vector, and its selected pursuit-network metric repeats the mark.
+- Current-sector and route-choice apex pursuit metrics carry the mark for both track-lock and track-break explanations without weakening their explicit text consequences.
+- Active apex combat adds the mark to both the compact weapon-rail readout and the temporary contact banner; both remain hidden when no apex encounter presentation exists.
+- The Apex Dossier masthead carries a larger mark beside its existing title while preserving its labelled heading, threat tabs, resolution state, narrow layout, and keyboard focus.
+- An apex-spoil reward flag carries the mark beside its authored threat cue, while its accessible threat/item label and the fixed reward manifest remain unchanged.
+- Every placement calls `createApexGlyph`; no consumer copies or alters the tri-vector paths. Placement may change scale and inherit the surface's current color only.
+- The decorative SVG remains hidden from assistive technology. Existing text continues to communicate service, pursuit, encounter, dossier, and reward meaning without relying on the mark.
+- Focused browser coverage exercises all five surface families and verifies the stable `tri-vector` identity.
+- No pursuit state, encounter schedule, route graph, reward eligibility, reward count, save/snapshot field, migration, RNG draw, dependency, or static-hosting change is introduced.
+
+Status: implemented. `SectorTransitionScene` now assigns the apex glyph kind to the Signal Vault service node and decorates its pursuit-network, current-contact, and route consequence metrics through the same renderer. Ordinary services, route legality, and explicit track/break copy are unchanged.
+
+`GameplayScene`, `ApexDossierScene`, and `RewardScene` reuse the renderer for the active combat rail and banner, the dossier masthead, and apex-spoil provenance. Surface-specific classes control only size, placement, and inherited color; `aria-hidden` remains owned by the shared SVG while the established text and labels retain semantic authority.
+
+Managed-browser inspection followed `STARBREAK-SMOKE` from Signal Vault through the opening contact and first route choice, then opened the deterministic apex-hunt and apex-spoil Scenario Lab fixtures. The mark measured `21.6 px` on the service node, `12.8 px` in navigation metrics, `16 px` on the contact banner, `13.1 px` in the combat rail and reward flag, and `64 px` in the dossier masthead. Surface colors stayed local, the reward panel retained zero overflow, and the three inspected tabs reported no application errors.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 117 Vitest files and 769 tests, the production build, all 19 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,051.88 kB` minified / `288.29 kB` gzip initial JavaScript and `119.48 kB` / `23.43 kB` CSS, increases of `0.57 kB` / `0.25 kB` JavaScript and `0.86 kB` / `0.19 kB` CSS over work order 212. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, route graph mutation, reward choice, deterministic draw, gameplay system, or static-hosting rule changed.

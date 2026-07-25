@@ -83,6 +83,7 @@ import type {
 import { createMissionObjectiveResultSnapshot } from '../game/ObjectiveDirector';
 import { getRunUpgradeDebugLabels } from '../game/UpgradeEffects';
 import { createArenaHudFrameModel } from './ArenaHudFrame';
+import { createApexGlyph } from './ApexGlyph';
 import { createHudMeterModel, createHudThemeModel, type HudThemeOptions } from './HudTheme';
 import { createContractThemeDebugState } from './ContractTheme';
 import type { GameplayPauseDossier } from './PauseDossier';
@@ -497,7 +498,12 @@ export class GameplayScene implements Scene {
     apex.dataset.testid = 'apex-readout';
     if (apexEncounterModel && this.apexProfile) {
       apex.dataset.stage = apexEncounterModel.stage;
-      apex.textContent = `${apexEncounterModel.hudReadout} // Lasting effect: ${apexEncounterModel.payoff}`;
+      const apexReadoutGlyph = createApexGlyph(ownerDocument);
+      apexReadoutGlyph.classList.add('apex-glyph-hud');
+      apexReadoutGlyph.dataset.apexSurface = 'combat-readout';
+      const apexReadoutCopy = ownerDocument.createElement('span');
+      apexReadoutCopy.textContent = `${apexEncounterModel.hudReadout} // Lasting effect: ${apexEncounterModel.payoff}`;
+      apex.append(apexReadoutGlyph, apexReadoutCopy);
       apex.setAttribute(
         'aria-label',
         `${apexEncounterModel.banner}. ${apexEncounterModel.directive} ${apexEncounterModel.payoff}`
@@ -601,7 +607,11 @@ export class GameplayScene implements Scene {
     contactBanner.setAttribute('aria-live', 'polite');
     if (apexEncounterModel) {
       const contactEyebrow = ownerDocument.createElement('span');
-      contactEyebrow.textContent = apexEncounterModel.banner;
+      contactEyebrow.className = 'apex-contact-eyebrow';
+      const contactGlyph = createApexGlyph(ownerDocument);
+      contactGlyph.classList.add('apex-glyph-banner');
+      contactGlyph.dataset.apexSurface = 'contact-banner';
+      contactEyebrow.append(contactGlyph, apexEncounterModel.banner);
       const contactTitle = ownerDocument.createElement('strong');
       contactTitle.textContent = apexEncounterModel.stageLabel;
       const contactDirective = ownerDocument.createElement('span');

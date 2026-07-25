@@ -231,6 +231,16 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
     /available/
   );
   await expect(page.getByTestId('open-fleet-bay')).toHaveAttribute('aria-label', /available/);
+  await expect(page.getByTestId('open-apex-dossier')).toHaveAttribute('aria-label', /available/);
+  await expect(page.getByTestId('open-apex-dossier').locator('.apex-glyph')).toHaveAttribute(
+    'data-glyph-id',
+    'tri-vector'
+  );
+  await page.getByTestId('open-apex-dossier').click();
+  await expect(page.getByTestId('apex-service-network').locator('.apex-glyph')).toHaveAttribute(
+    'data-glyph-id',
+    'tri-vector'
+  );
   await page.getByTestId('navigation-destination-launch').focus();
   await page.keyboard.press('ArrowDown');
   await expect(page.locator('.navigation-destination-node:focus')).not.toHaveAttribute(
@@ -244,8 +254,16 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expectGameplaySector(page, 'Outer Debris Field');
   await expect(page.getByTestId('apex-contact-banner')).toBeVisible();
   await expect(page.getByTestId('apex-contact-banner')).toContainText('Acquire trace');
+  await expect(page.getByTestId('apex-contact-banner').locator('.apex-glyph')).toHaveAttribute(
+    'data-apex-surface',
+    'contact-banner'
+  );
   await expect(page.getByTestId('apex-readout')).toBeVisible();
   await expect(page.getByTestId('apex-readout')).toContainText('Acquire trace');
+  await expect(page.getByTestId('apex-readout').locator('.apex-glyph')).toHaveAttribute(
+    'data-apex-surface',
+    'combat-readout'
+  );
   await expect(page.getByTestId('distance-readout')).toContainText(/Distance \d+\/\d+u/);
   await expect(page.getByTestId('hull-readout')).toContainText('Hull');
   await expect(page.getByTestId('pickup-readout')).toContainText(/Credits .* Salvage/);
@@ -494,6 +512,9 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.getByTestId('apex-pursuit-route-preview')).toContainText(
     /TRACK LOCK|TRACK BREAK/
   );
+  await expect(
+    page.getByTestId('apex-pursuit-route-preview').locator('.apex-glyph')
+  ).toHaveAttribute('data-glyph-id', 'tri-vector');
   await expect(page.getByTestId('navigation-route-commit')).toBeEnabled();
   await expect(page.locator('.navigation-route-card')).toHaveCount(0);
   const openingRouteEffect =
@@ -1412,6 +1433,10 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
   for (let index = 0; index < 11; index += 1) await page.keyboard.press('Tab');
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('apex-dossier')).toBeVisible();
+  await expect(page.getByTestId('apex-dossier-masthead').locator('.apex-glyph')).toHaveAttribute(
+    'data-apex-surface',
+    'dossier-masthead'
+  );
   await expect(page.getByTestId('apex-contact-track')).toContainText('Contact resolved');
   await expect(page.getByTestId('apex-subsystems')).toContainText(/Disabled|Breached/);
   await expect(page.getByTestId('apex-evidence')).toContainText('Trace intelligence');
@@ -1557,6 +1582,10 @@ test('shows one exclusive apex circuit spoil without widening the sector reward 
   await expect(page.getByTestId('reward-grid')).toHaveAttribute('data-apex-reward-count', '1');
   await expect(page.getByTestId('apex-reward-card')).toHaveCount(1);
   await expect(page.getByTestId('apex-reward-card')).toContainText('Apex Spoil');
+  await expect(page.getByTestId('apex-reward-card').locator('.apex-glyph')).toHaveAttribute(
+    'data-apex-surface',
+    'reward-provenance'
+  );
   await expect(page.getByTestId('apex-reward-card')).toHaveAttribute(
     'aria-label',
     /^Apex spoil from .+: .+$/

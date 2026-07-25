@@ -1049,6 +1049,16 @@ seed + permanent save fingerprint
 - Work order 213 will reuse the renderer in the Signal Vault service node, pursuit dossier, live contact HUD/banner, Apex Dossier masthead, and apex-spoil provenance. Those consumers may supply placement and scale but cannot copy or mutate the silhouette.
 - The change adds no asset request, save/snapshot field, migration, route graph mutation, route option, RNG draw, simulation branch, dependency, or static-hosting rule.
 
+### Work order 213 apex-glyph consumer boundary
+
+- `ApexGlyph.createApexGlyph` remains the only silhouette renderer. Signal Vault, pursuit metrics, combat readouts, the dossier masthead, and reward provenance add consumer classes and optional `data-apex-surface` diagnostics only.
+- `ConstellationMapNode.glyphKind` now selects the same renderer for both the tracked sector choice and the Signal Vault service destination. The service remains cyan and the ready route remains gold because color belongs to the surrounding navigation state.
+- `SectorTransitionScene.createDetailMetric` accepts an apex decoration flag solely while building an existing semantic metric. It does not inspect pursuit state, infer a consequence, or change the metric value.
+- `GameplayScene` creates combat marks only when the existing apex encounter presentation exists. The readout and banner retain their authored `aria-label` or live text; the SVG is decorative and creates no combat actor or animation state.
+- `ApexDossierScene` and `RewardScene` reuse the same renderer without changing threat selection, disposition readiness, reward substitution, item identity, or card count.
+- CSS consumers may set width, height, margin, layout, and inherited color. Vector paths, core geometry, stable glyph id, focus behavior, and assistive-technology hiding remain centralized.
+- The change adds no asset, save/snapshot field, migration, graph mutation, route option, encounter condition, reward choice, RNG draw, simulation branch, dependency, or static-hosting rule.
+
 ### Work order 198 primary-weapon icon boundary
 
 - `WeaponDefinition.iconKind` is the sole authored visual-identity key for a primary weapon base. `WEAPON_ICON_KINDS` types and validates the eight-entry vocabulary; quality, source, affix, component instance, and route data never select a different glyph.
