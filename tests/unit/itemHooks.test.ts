@@ -86,6 +86,75 @@ describe('item hook ordering', () => {
 });
 
 describe('item synergies', () => {
+  it('builds Grave Choir phased echoes and mnemonic heavy arcs in circuit order', () => {
+    const choir = applyItemHooks(
+      'onFire',
+      [
+        { itemId: 'item_split_prism', acquisitionOrder: 0 },
+        { itemId: 'item_funeral_refrain_array', acquisitionOrder: 1 }
+      ],
+      { volleyIndex: 5, projectiles: [baseProjectile] }
+    );
+    const echoes = choir.projectiles.filter(
+      (projectile) => projectile.tags.includes('phase') && projectile.tags.includes('drone')
+    );
+    const remembered = applyItemHooks(
+      'onProjectileSpawn',
+      [{ itemId: 'item_mnemonic_sepulcher_key', acquisitionOrder: 0 }],
+      { projectile: echoes[0]! }
+    ).projectile;
+
+    expect(choir.projectiles).toHaveLength(5);
+    expect(echoes).toHaveLength(2);
+    expect(remembered.ttl).toBeGreaterThan(echoes[0]!.ttl);
+    expect(remembered.arcChargeKind).toBe('heavy');
+  });
+
+  it('forges Crownless missiles and crowns periodic volleys with plasma overkill', () => {
+    const forged = applyItemHooks(
+      'onProjectileSpawn',
+      [{ itemId: 'item_claimant_mantle_press', acquisitionOrder: 0 }],
+      { projectile: { ...baseProjectile, tags: ['missile'] } }
+    ).projectile;
+    const crowned = applyItemHooks(
+      'onFire',
+      [{ itemId: 'item_empty_throne_coronation', acquisitionOrder: 0 }],
+      { volleyIndex: 4, projectiles: [forged] }
+    );
+    const crown = crowned.projectiles.at(-1)!;
+
+    expect(forged.damage).toBeGreaterThan(baseProjectile.damage);
+    expect(forged.tags).toEqual(expect.arrayContaining(['armor', 'shield', 'revenge']));
+    expect(crowned.projectiles).toHaveLength(2);
+    expect(crown.tags).toEqual(expect.arrayContaining(['heat', 'plasma', 'overkill']));
+    expect(crown.ttl).toBeGreaterThan(forged.ttl);
+  });
+
+  it('crosses Pale Convoy outer lanes and launches arc escort copies', () => {
+    const convoy = applyItemHooks(
+      'onFire',
+      [
+        { itemId: 'item_split_prism', acquisitionOrder: 0 },
+        { itemId: 'item_exodus_rail_switch', acquisitionOrder: 1 },
+        { itemId: 'item_passenger_coffer_manifest', acquisitionOrder: 2 }
+      ],
+      { volleyIndex: 3, projectiles: [baseProjectile] }
+    );
+    const switched = convoy.projectiles.filter(
+      (projectile) => projectile.procDepth === 1 && projectile.tags.includes('phase')
+    );
+    const escorts = convoy.projectiles.filter(
+      (projectile) => projectile.droneSourceId === 'item_passenger_coffer_manifest'
+    );
+
+    expect(convoy.projectiles).toHaveLength(5);
+    expect(switched).toHaveLength(2);
+    expect(switched[0]!.vx).toBeGreaterThan(0);
+    expect(switched[1]!.vx).toBeLessThan(0);
+    expect(escorts).toHaveLength(2);
+    expect(escorts.every((projectile) => projectile.arcChargeKind === 'standard')).toBe(true);
+  });
+
   it('applies split plus arc synergy', () => {
     const instances: ItemInstance[] = [
       { itemId: 'item_split_prism', acquisitionOrder: 0 },

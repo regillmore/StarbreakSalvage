@@ -304,6 +304,7 @@ export class GameplayScene implements Scene {
   private queuedBomb = false;
   private debugScenario: string | null = null;
   private scenarioLabPreset: ScenarioLabGameplayPreset | null = null;
+  private scenarioLabCaseCount = 0;
 
   public constructor(
     private readonly uiRoot: HTMLElement,
@@ -1196,10 +1197,11 @@ export class GameplayScene implements Scene {
     };
   }
 
-  public prepareScenarioLabPreset(preset: ScenarioLabGameplayPreset): void {
+  public prepareScenarioLabPreset(preset: ScenarioLabGameplayPreset, scenarioCount: number): void {
     const state = this.getCombatState();
     const feedbackBefore = createCombatFeedbackSnapshot(state);
     this.scenarioLabPreset = preset;
+    this.scenarioLabCaseCount = scenarioCount;
 
     if (preset === 'setPiece' || preset === 'combined') {
       const jumpDistance = getSetPieceDebugJumpDistance(state.setPiece?.plan ?? null);
@@ -1405,7 +1407,7 @@ export class GameplayScene implements Scene {
       runTimeline: this.runTimeline ? createRunTimelineDebugState(this.runTimeline) : undefined,
       scenarioLab: this.scenarioLabPreset
         ? {
-            scenarioCount: 16,
+            scenarioCount: this.scenarioLabCaseCount,
             activeScenario: this.scenarioLabPreset,
             systems: [
               'mission actors',

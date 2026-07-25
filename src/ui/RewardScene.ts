@@ -90,11 +90,27 @@ export class RewardScene implements Scene {
     rewardGrid.dataset.testid = 'reward-grid';
     rewardGrid.dataset.itemChoiceCount = String(rewardChoices.length);
     rewardGrid.dataset.totalChoiceCount = String(rewardChoices.length + 2);
+    rewardGrid.dataset.apexRewardCount = String(
+      rewardChoices.filter((choice) => 'apexReward' in choice).length
+    );
 
     for (const choice of rewardChoices) {
       const rewardButton = document.createElement('button');
       rewardButton.className = 'choice-card reward-card';
       rewardButton.type = 'button';
+      if ('apexReward' in choice) {
+        rewardButton.classList.add('reward-card-apex');
+        rewardButton.dataset.testid = 'apex-reward-card';
+        rewardButton.dataset.apexThreat = choice.apexReward.threatId;
+        const apexFlag = document.createElement('span');
+        apexFlag.className = 'reward-card-apex-flag';
+        apexFlag.textContent = `${choice.apexReward.mapCue} Apex Spoil`;
+        rewardButton.append(apexFlag);
+        rewardButton.setAttribute(
+          'aria-label',
+          `Apex spoil from ${choice.apexReward.threatName}: ${choice.item.name}`
+        );
+      }
       rewardButton.addEventListener('click', () => this.onSelectItem(choice.item.id));
 
       appendItemCardContent(

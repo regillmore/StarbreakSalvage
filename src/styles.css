@@ -743,6 +743,31 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   padding: 0.72rem;
 }
 
+.reward-panel .reward-card-apex {
+  border-color: rgba(255, 116, 220, 0.8);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(124, 247, 255, 0.17), transparent 44%),
+    linear-gradient(145deg, rgba(255, 116, 220, 0.16), rgba(7, 11, 30, 0.96) 58%);
+  box-shadow:
+    inset 0 0 0 1px rgba(124, 247, 255, 0.12),
+    0 0 24px rgba(255, 116, 220, 0.14);
+}
+
+.reward-card-apex-flag {
+  width: fit-content;
+  padding: 0.16rem 0.4rem;
+  border: 1px solid rgba(124, 247, 255, 0.62);
+  border-radius: 999px;
+  color: #7cf7ff;
+  background: rgba(12, 24, 48, 0.88);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
 .reward-panel .item-card-header {
   grid-template-columns: 2rem minmax(0, 1fr);
   gap: 0.48rem;

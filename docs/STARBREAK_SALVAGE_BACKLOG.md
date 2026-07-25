@@ -2999,3 +2999,19 @@ Acceptance:
 Status:
 
 - Implemented in work order 210. Apex hunts now follow one seeded act-route track, navigation exposes only the next secured signal, and divergence immediately releases that act's apex.
+
+### BL76 - Apex circuit spoils
+
+Acceptance:
+
+- Author two live, exclusive ordered circuit upgrades for Grave Choir, Crownless Engine, and Pale Convoy, for six unique apex items total.
+- Bind the pairs to the apex definitions rather than inferring identity from faction, boss, act, or presentation copy.
+- After a resolved tracked finale, deterministically select an available item from that apex pair and replace one ordinary circuit reward choice.
+- Preserve the permanent reward-choice budget, retained ordinary reward prefix, separate primary-weapon/credit choices, and one-page reward layout.
+- Keep apex items out of ordinary weighted pools while validating them through a dedicated source/profile and showing an explicit accessible apex-spoil card treatment.
+- Reuse production ordered hooks, periodic cadence, phase, arc, drone, retaliation, and preview boundaries; expose honest met/unmet Hardpoint output.
+- Preserve pursuit/disposition state, saves, snapshots, deterministic generation, combat caps, dependencies, and static hosting.
+
+Status:
+
+- Implemented in work order 211. Each apex now owns one rare/prototype circuit pair, and the resolved finale substitutes one deterministic threat-specific spoil into the existing reward manifest without increasing its size.

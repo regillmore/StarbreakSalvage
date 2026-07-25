@@ -31,7 +31,7 @@ import {
 
 const ITEM_RARITIES = ['common', 'uncommon', 'rare', 'prototype', 'cursed'] as const;
 
-export const PHASE_6_TARGET_ITEM_COUNT = 60;
+export const PHASE_6_TARGET_ITEM_COUNT = 66;
 export const PHASE_6_TARGET_ITEM_FAMILIES = ACTIVE_ITEM_FAMILIES;
 export type Phase6TargetItemFamily = ItemFamily;
 

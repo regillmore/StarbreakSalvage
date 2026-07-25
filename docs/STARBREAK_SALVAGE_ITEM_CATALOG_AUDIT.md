@@ -240,6 +240,18 @@ Crater Shadow Lens is now a 9 kg Archive upgrade gated by Relic Pattern Dossier.
 
 Common Penumbra Crown Aperture replaces the released starter/combat/lunar slot. At its ordered `onFire` stage it requires at least two upstream shots, finds the stable shot nearest their projected horizontal center, and gives that shot phase, plasma, 92% velocity, +1 radius, and +0.18 seconds TTL without changing impact. Later-created shots remain untouched. It adds no projectile, RNG draw, timer, counter, state field, or alternate preview path. The active catalog remains at 60 items; the compatibility catalog now contains 75 definitions, fifteen of them retired.
 
+## Exclusive apex circuit spoils in Work Order 211
+
+The active catalog expands from 60 to 66 items while the compatibility catalog expands from 75 to 81 definitions. The six additions occupy a dedicated `apex` source and validation pool and do not enter ordinary weighted reward rotation:
+
+| Apex | Rare spoil | Prototype spoil | Ordered identity |
+| --- | --- | --- | --- |
+| Grave Choir | Funeral Refrain Array | Mnemonic Sepulcher Key | Every fifth volley echoes up to two heavy upstream shots as phased choir drones; phase/drone shots can then gain longer flight and heavy arc. |
+| Crownless Engine | Claimant Mantle Press | Empty Throne Coronation | Missile/overkill shots become armored retaliation shells; every fourth volley can crown its heaviest upstream shot as slow plasma overkill. |
+| Pale Convoy | Exodus Rail Switch | Passenger Coffer Manifest | The outer pair of an upstream multi-shot crosses lanes under phase; every third volley can copy two lighter branches as long-lived arc escorts. |
+
+All six are baseline-accessible only through their resolved apex replacement, unique, live, and fully implemented. They add four `onFire` and two `onProjectileSpawn` hook definitions. Periodic entries participate in the existing effective-cadence and Prototype Vent rules; generated drone/arc/phase/retaliation traits use shared runtime consumers and bounded projectile/proc budgets.
+
 ## Risks For 057-060
 
 - New hook surfaces can create runaway proc chains unless proc order and budgets stay tested as item count grows.

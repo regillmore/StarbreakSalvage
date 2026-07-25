@@ -20,6 +20,12 @@ import {
 import { createActEconomyProfile } from './ActEconomy';
 import { createCarrierInfluence } from './CarrierCommand';
 import { getActiveFittedItems } from './ItemSockets';
+import {
+  createResolvedApexCircuitReward,
+  type ApexCircuitRewardChoice
+} from './ApexRewards';
+
+export type SectorRewardChoice = RewardChoice | ApexCircuitRewardChoice;
 
 export function generateSectorRewardChoices(options: {
   readonly run: RunSkeleton;
@@ -27,7 +33,7 @@ export function generateSectorRewardChoices(options: {
   readonly contract: StartingContract;
   readonly routeKind?: RouteKind;
   readonly count?: number;
-}): RewardChoice[] {
+}): SectorRewardChoice[] {
   const sector = getCurrentSector(options.run, options.session);
   const rewardContext: RewardContextKind = options.routeKind ?? 'sectorClear';
   const actEconomy = createActEconomyProfile(sector);
@@ -101,7 +107,8 @@ export function generateSectorRewardChoices(options: {
   const rewardSeedSuffix =
     rewardContext === 'sectorClear' ? 'reward-sectorClear' : `route-${rewardContext}`;
 
-  return generateRewardChoices({
+  const ownedItemIds = getOwnedItemIds(options.session);
+  const ordinaryChoices = generateRewardChoices({
     seed: `${sector.rewardPoolSeed}:sector-${sector.index}:${rewardSeedSuffix}`,
     poolId: rewardPayload.poolId,
     poolProfileId,
@@ -109,7 +116,7 @@ export function generateSectorRewardChoices(options: {
     // still bias the manifest through this hook, but cannot passively widen it.
     count: rewardChoiceCount,
     biasTags: rewardPayload.biasTags,
-    excludeItemIds: getOwnedItemIds(options.session),
+    excludeItemIds: ownedItemIds,
     unlockedIds: options.run.unlockedIds,
     context: {
       routeKind: rewardContext,
@@ -120,6 +127,17 @@ export function generateSectorRewardChoices(options: {
       actEconomy
     }
   });
+  const apexReward = createResolvedApexCircuitReward({
+    plan: options.run.apexHunts,
+    state: options.session.apexHunts,
+    sectorIndex: options.session.currentSectorIndex,
+    excludeItemIds: ownedItemIds
+  });
+  if (!apexReward || ordinaryChoices.length === 0) return ordinaryChoices;
+
+  return ordinaryChoices.map((choice, index) =>
+    index === ordinaryChoices.length - 1 ? apexReward : choice
+  );
 }
 
 function getSectorRewardPoolProfileId(

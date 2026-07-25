@@ -1,5 +1,6 @@
 import type { BossId } from './bosses';
 import type { FactionId } from './factions';
+import type { ItemId } from './items';
 import type { UnlockId } from './unlocks';
 
 export const APEX_HUNT_STRUCTURES = ['traceChain', 'siegeBreak', 'migrationNet'] as const;
@@ -38,6 +39,7 @@ export interface ApexThreatDefinition {
   >;
   readonly supportedOutcomes: readonly ApexOutcome[];
   readonly rewardUnlockId: UnlockId;
+  readonly circuitRewardItemIds: readonly [ItemId, ItemId];
   readonly mapCue: string;
 }
 
@@ -86,6 +88,10 @@ export const APEX_THREATS: readonly ApexThreatDefinition[] = [
     },
     supportedOutcomes: ['destruction', 'containment', 'bargain'],
     rewardUnlockId: 'unlock_music_apex_procession',
+    circuitRewardItemIds: [
+      'item_funeral_refrain_array',
+      'item_mnemonic_sepulcher_key'
+    ],
     mapCue: '[CHOIR]'
   },
   {
@@ -132,6 +138,10 @@ export const APEX_THREATS: readonly ApexThreatDefinition[] = [
     },
     supportedOutcomes: ['destruction', 'capture', 'containment'],
     rewardUnlockId: 'unlock_boss_apex_practice',
+    circuitRewardItemIds: [
+      'item_claimant_mantle_press',
+      'item_empty_throne_coronation'
+    ],
     mapCue: '[CROWN]'
   },
   {
@@ -178,6 +188,10 @@ export const APEX_THREATS: readonly ApexThreatDefinition[] = [
     },
     supportedOutcomes: ['destruction', 'bargain', 'evacuation'],
     rewardUnlockId: 'unlock_challenge_apex_migration',
+    circuitRewardItemIds: [
+      'item_exodus_rail_switch',
+      'item_passenger_coffer_manifest'
+    ],
     mapCue: '[PALE]'
   }
 ];

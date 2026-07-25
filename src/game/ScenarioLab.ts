@@ -1,7 +1,8 @@
 import { createDebugCrewRosterState } from './CrewCommand';
 import { createDebugCrewArcState } from './CrewArc';
 import { createDebugFleetState } from './Fleetcraft';
-import { createDebugApexHuntState } from './ApexHunt';
+import { applyApexHuntEvent, createDebugApexHuntState } from './ApexHunt';
+import { getApexThreatDefinition } from '../content/apexThreats';
 import type { UnlockId } from '../content/unlocks';
 import { createDebugFactionFrontState } from './FactionFront';
 import { createDebugFactionCampaignState } from './FactionCampaign';
@@ -36,7 +37,8 @@ export const SCENARIO_LAB_IDS = [
   'lab_carrier_command',
   'lab_frontier_endings',
   'lab_snapshot_recovery',
-  'lab_timeline_audit'
+  'lab_timeline_audit',
+  'lab_apex_spoils'
 ] as const;
 export type ScenarioLabId = (typeof SCENARIO_LAB_IDS)[number];
 export type ScenarioLabTarget =
@@ -46,6 +48,7 @@ export type ScenarioLabTarget =
   | 'crewQuarters'
   | 'fleetBay'
   | 'apexDossier'
+  | 'reward'
   | 'carrierDeck'
   | 'frontierGate'
   | 'releaseAudit'
@@ -257,6 +260,16 @@ export const SCENARIO_LAB_DEFINITIONS: readonly ScenarioLabDefinition[] = [
     'timeline',
     'none',
     { factionFixture: true, crewFixture: true, engineeringFixture: true }
+  ),
+  scenario(
+    'lab_apex_spoils',
+    'Apex Circuit Spoils',
+    'Open a resolved apex finale reward with one exclusive circuit spoil replacing the ordinary final circuit choice.',
+    ['apex', 'rewards', 'items', 'circuits'],
+    3,
+    'reward',
+    'none',
+    { apexFixture: true }
   )
 ];
 
@@ -337,6 +350,27 @@ export function createScenarioLabLaunch(options: {
   }
   if (definition.apexFixture) {
     session.apexHunts = createDebugApexHuntState(options.run.apexHunts);
+  }
+  if (definition.id === 'lab_apex_spoils') {
+    const threatPlan = options.run.apexHunts.threats[0];
+    const finale = threatPlan?.encounters.at(-1);
+    if (!threatPlan || !finale) {
+      throw new Error('Apex spoil Scenario Lab fixture requires a pursuit finale.');
+    }
+    const threatDefinition = getApexThreatDefinition(threatPlan.definitionId);
+    session.currentSectorIndex = finale.sectorIndex;
+    resetMissionForCurrentSector(options.run, session);
+    const result = applyApexHuntEvent(options.run.apexHunts, session.apexHunts, {
+      id: `scenario-lab:${definition.id}:resolve`,
+      type: 'resolve',
+      threatId: threatPlan.definitionId,
+      sectorIndex: finale.sectorIndex,
+      outcome: threatDefinition.supportedOutcomes[0]!
+    });
+    if (result.disposition !== 'applied') {
+      throw new Error(`Apex spoil Scenario Lab fixture could not resolve: ${result.label}.`);
+    }
+    session.apexHunts = result.state;
   }
   if (definition.target === 'carrierDeck') {
     const schedule = createMissionSchedule(options.run.expedition, session.currentSectorIndex);

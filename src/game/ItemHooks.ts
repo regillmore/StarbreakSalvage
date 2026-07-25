@@ -198,7 +198,10 @@ const PERIODIC_VOLLEY_CADENCES = {
   item_wake_missile_abacus: 5,
   item_sidecar_drone_bay: 4,
   item_harmonic_fork_loom: 3,
-  item_warhead_echo_chamber: 4
+  item_warhead_echo_chamber: 4,
+  item_funeral_refrain_array: 5,
+  item_empty_throne_coronation: 4,
+  item_passenger_coffer_manifest: 3
 } as const satisfies Partial<Record<ItemId, number>>;
 
 export interface ItemVolleyCadenceProfile {
@@ -250,6 +253,10 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_signal_clone_stamp',
     'item_harmonic_fork_loom',
     'item_warhead_echo_chamber',
+    'item_funeral_refrain_array',
+    'item_empty_throne_coronation',
+    'item_exodus_rail_switch',
+    'item_passenger_coffer_manifest',
     'item_prototype_vent_script'
   ],
   onProjectileSpawn: [
@@ -258,6 +265,8 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_plasma_lens_array',
     'item_phase_anchor_spool',
     'item_plasma_bloom_filter',
+    'item_mnemonic_sepulcher_key',
+    'item_claimant_mantle_press',
     'item_arc_window_invoice',
     'item_heat_signature_loop',
     'item_plasma_seed_crucible',
@@ -678,6 +687,36 @@ function applyOnProjectileSpawn(
   if (itemId === 'item_claimant_arc_seal' && payload.projectile.tags.includes('overkill')) {
     return {
       projectile: attachArcCharge(payload.projectile)
+    };
+  }
+
+  if (
+    itemId === 'item_mnemonic_sepulcher_key' &&
+    hasAnyTag(payload.projectile.tags, ['phase', 'drone'])
+  ) {
+    return {
+      projectile: attachArcCharge(
+        {
+          ...payload.projectile,
+          ttl: payload.projectile.ttl + 0.3
+        },
+        'heavy'
+      )
+    };
+  }
+
+  if (
+    itemId === 'item_claimant_mantle_press' &&
+    hasAnyTag(payload.projectile.tags, ['missile', 'overkill'])
+  ) {
+    return {
+      projectile: {
+        ...payload.projectile,
+        damage: payload.projectile.damage * 1.14,
+        radius: payload.projectile.radius + 1,
+        ttl: payload.projectile.ttl + 0.12,
+        tags: addTags(payload.projectile.tags, ['armor', 'shield', 'revenge'])
+      }
     };
   }
 
@@ -1321,6 +1360,125 @@ function applyOnFire(
           tags: addTags(seedProjectile.tags, ['missile', 'overkill']),
           procDepth: seedProjectile.procDepth + 1
         }
+      ]
+    });
+  }
+
+  if (
+    itemId === 'item_funeral_refrain_array' &&
+    isItemVolleyCycle(itemId, instances, payload.volleyIndex)
+  ) {
+    const sources = [...payload.projectiles]
+      .sort((left, right) => right.damage - left.damage)
+      .slice(0, 2);
+    if (sources.length === 0) return payload;
+
+    return addPrototypeVentCycleShot(itemId, instances, payload, {
+      ...payload,
+      projectiles: [
+        ...payload.projectiles,
+        ...sources.map((projectile, index) => {
+          const side = sources.length === 1 ? 0 : index === 0 ? -1 : 1;
+          return {
+            ...projectile,
+            x: projectile.x + side * 26,
+            vx: projectile.vx * 0.74 + side * 46,
+            vy: projectile.vy * 0.9,
+            damage: Math.max(0.52, projectile.damage * 0.58),
+            radius: Math.max(4, projectile.radius * 0.86),
+            ttl: projectile.ttl + 0.34,
+            tags: addTags(projectile.tags, ['phase', 'drone']),
+            procDepth: projectile.procDepth + 1,
+            droneSourceId: itemId
+          };
+        })
+      ]
+    });
+  }
+
+  if (
+    itemId === 'item_empty_throne_coronation' &&
+    isItemVolleyCycle(itemId, instances, payload.volleyIndex)
+  ) {
+    const seedProjectile = payload.projectiles.reduce<ProjectileBlueprint | null>(
+      (heaviest, projectile) =>
+        !heaviest || projectile.damage > heaviest.damage ? projectile : heaviest,
+      null
+    );
+    if (!seedProjectile) return payload;
+
+    return addPrototypeVentCycleShot(itemId, instances, payload, {
+      ...payload,
+      projectiles: [
+        ...payload.projectiles,
+        {
+          ...seedProjectile,
+          vx: seedProjectile.vx * 0.35,
+          vy: seedProjectile.vy * 0.68,
+          damage: Math.max(0.95, seedProjectile.damage * 0.92),
+          radius: seedProjectile.radius + 2.5,
+          ttl: seedProjectile.ttl + 0.52,
+          tags: addTags(seedProjectile.tags, ['heat', 'plasma', 'overkill']),
+          procDepth: seedProjectile.procDepth + 1
+        }
+      ]
+    });
+  }
+
+  if (itemId === 'item_exodus_rail_switch' && payload.projectiles.length >= 2) {
+    const projected = payload.projectiles
+      .map((projectile, index) => ({
+        index,
+        x: projectile.x + projectile.vx * 0.12
+      }))
+      .sort((left, right) => left.x - right.x || left.index - right.index);
+    const outerIndices = new Set([projected[0]!.index, projected.at(-1)!.index]);
+    const center = projected.reduce((sum, candidate) => sum + candidate.x, 0) / projected.length;
+
+    return {
+      ...payload,
+      projectiles: payload.projectiles.map((projectile, index) => {
+        if (!outerIndices.has(index)) return projectile;
+        const projectedX = projectile.x + projectile.vx * 0.12;
+        const crossingDirection = projectedX <= center ? 1 : -1;
+        return {
+          ...projectile,
+          vx: crossingDirection * (Math.abs(projectile.vx) + 76),
+          damage: projectile.damage * 1.12,
+          ttl: projectile.ttl + 0.34,
+          tags: addTags(projectile.tags, ['phase', 'split'])
+        };
+      })
+    };
+  }
+
+  if (
+    itemId === 'item_passenger_coffer_manifest' &&
+    isItemVolleyCycle(itemId, instances, payload.volleyIndex) &&
+    payload.projectiles.length >= 2
+  ) {
+    const sources = [...payload.projectiles]
+      .sort((left, right) => left.damage - right.damage)
+      .slice(0, 2);
+
+    return addPrototypeVentCycleShot(itemId, instances, payload, {
+      ...payload,
+      projectiles: [
+        ...payload.projectiles,
+        ...sources.map((projectile, index) =>
+          attachArcCharge({
+            ...projectile,
+            x: projectile.x + (index === 0 ? -34 : 34),
+            vx: projectile.vx + (index === 0 ? -52 : 52),
+            vy: projectile.vy * 0.88,
+            damage: Math.max(0.45, projectile.damage * 0.55),
+            radius: Math.max(3.5, projectile.radius * 0.82),
+            ttl: projectile.ttl + 0.45,
+            tags: addTags(projectile.tags, ['drone', 'arc']),
+            procDepth: projectile.procDepth + 1,
+            droneSourceId: itemId
+          })
+        )
       ]
     });
   }

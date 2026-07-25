@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { APEX_OUTCOMES } from '../../src/content/apexThreats';
+import { APEX_OUTCOMES, APEX_THREATS } from '../../src/content/apexThreats';
+import { getItemById } from '../../src/content/items';
 import {
   MAX_APEX_HAZARD_PRESSURE,
   MAX_APEX_REINFORCEMENTS,
@@ -33,6 +34,20 @@ const loadedContext = {
 };
 
 describe('ApexHunt', () => {
+  it('assigns two exclusive live circuit spoils to each apex', () => {
+    const rewardItemIds = APEX_THREATS.flatMap((threat) => threat.circuitRewardItemIds);
+
+    expect(APEX_THREATS.map((threat) => threat.circuitRewardItemIds)).toHaveLength(3);
+    expect(rewardItemIds).toHaveLength(6);
+    expect(new Set(rewardItemIds).size).toBe(6);
+    for (const itemId of rewardItemIds) {
+      const item = getItemById(itemId);
+      expect(item.metadata.sources).toEqual(['apex']);
+      expect(item.metadata.uiTags).toContain('apex');
+      expect(item.metadata.implementationStatus).toBe('live');
+    }
+  });
+
   it('generates three deterministic, structurally distinct multi-node pursuits', () => {
     const first = generateRunSkeleton('APEX-PLAN').apexHunts;
     const second = generateRunSkeleton('APEX-PLAN').apexHunts;

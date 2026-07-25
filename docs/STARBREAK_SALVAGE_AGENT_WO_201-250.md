@@ -287,3 +287,36 @@ Focused coverage protects deterministic three-act paths, valid layer-4 finales, 
 Managed-browser inspection followed `STARBREAK-SMOKE` through the opening contact and reward. The post-sector constellation rendered one cyan `[CHOIR] TRACK` child and one red `BREAKS TRACK` child, with matching `TRACK LOCK` detail and a tracked-destination commit action. The live DOM confirmed the two distinct signal states and their authored colors before the controlled tab finalized.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 117 Vitest files and 763 tests, the production build, all 18 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,042.18 kB` minified / `285.78 kB` gzip initial JavaScript and `118.77 kB` / `23.20 kB` CSS, increases of `5.05 kB` / `1.40 kB` JavaScript and `1.20 kB` / `0.20 kB` CSS over work order 209. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, constellation node or edge, route choice count, projectile/effect budget, or static-hosting rule changed.
+
+## Work order 211 - Apex circuit spoils
+
+Goal: make a completed apex pursuit leave a build-defining weapon-chain prize tied to the defeated threat rather than another generic reward roll.
+
+Prompt:
+
+> Add two exclusive circuit upgrades for each of the three apex enemies. After the player defeats and resolves an apex, deterministically select one of that threat's two upgrades and replace one ordinary sector-reward circuit choice with it. Keep the reward manifest the same size and make each pair express the apex's combat identity through ordered chain interactions.
+
+Acceptance criteria:
+
+- Grave Choir owns Funeral Refrain Array and Mnemonic Sepulcher Key: periodic phased drone echoes plus a downstream phase/drone memory transform with longer flight and heavy arc.
+- Crownless Engine owns Claimant Mantle Press and Empty Throne Coronation: missile/overkill shots forged into retaliation shells plus a periodic heavy plasma-overkill crown.
+- Pale Convoy owns Exodus Rail Switch and Passenger Coffer Manifest: outer branches cross lanes under phase plus periodic lighter-branch copies that travel as arc escorts.
+- The six definitions are live, unique, source-tagged `apex`, absent from ordinary starter/combat/vault pools, and mapped exactly two-to-one across the three apex definitions.
+- Only a resolved apex finale can inject its prize. Tracked, escaped, non-finale, and ordinary sector rewards remain unchanged.
+- Selection between the two associated spoils is deterministic for the run, save fingerprint, apex identity, and finale sector. An already-owned pair member is excluded.
+- The apex spoil replaces the final ordinary circuit option. It never adds a card, changes the permanent reward-choice budget, or affects the independent primary-weapon and credit choices.
+- The reward card carries an explicit apex-spoil flag, threat identity, accessible label, and distinct non-color boundary treatment.
+- Hardpoint circuit cards expose met/unmet upstream requirements and periodic cadence using the production hook result; combat and Attack Simulation share the same reducers.
+- Existing pursuit paths, disposition outcomes, unlocks, reward RNG prefixes, saves, snapshots, proc/projectile caps, dependencies, and static hosting remain coherent.
+
+Status: implemented. `ApexThreatDefinition` now owns the authoritative two-item spoil pair. `ApexRewards` recognizes only a resolved threat at its tracked finale, chooses one available member through a dedicated deterministic seed, and returns an apex-marked reward choice. `SectorRewards` preserves the complete ordinary roll and then replaces its final circuit choice, so choice breadth and all retained ordinary choices stay stable.
+
+The six items are exclusive to a small `apex` reward pool used for content validation and source presentation, not ordinary weighted generation. Their ordered `ItemHooks` implementations reuse phase traversal, arc charge, drone attribution, retaliation traits, periodic cadence, and Prototype Vent integration already shared by combat and previews. `FoundryPresentation` explains the upstream signal requirement and resulting output without maintaining a second mechanic.
+
+`RewardScene` adds one compact `[CUE] APEX SPOIL` flag, threat metadata, and an accessible threat-specific label while retaining the shared circuit dossier. Focused tests protect the six unique assignments, source exclusivity, all three ordered identity pairs, deterministic replacement at every apex finale, unchanged reward count/prefix, and Hardpoint condition copy.
+
+Scenario Lab now includes a disposable `Apex Circuit Spoils` case that resolves the seeded act-one apex at its tracked finale and opens the production reward scene. This keeps the reward substitution, accessible flag, one-page layout, and visual boundary reproducible without teaching the ordinary force-complete shortcut to counterfeit an apex defeat.
+
+Managed-browser inspection opened that fixture at `SCENARIO-LAB-APEX-SPOILS`. The live reward grid reported three circuit choices, five total choices, and exactly one apex reward; its Crownless Engine card had the authored spoil label and non-color boundary, the 600 px panel fit without scrolling, and the browser console contained no errors.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 117 Vitest files and 769 tests, the production build, all 19 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,050.38 kB` minified / `287.72 kB` gzip initial JavaScript and `119.26 kB` / `23.33 kB` CSS, increases of `8.20 kB` / `1.94 kB` JavaScript and `0.49 kB` / `0.13 kB` CSS over work order 210. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, route graph mutation, reward-choice count, combat budget, or static-hosting rule changed.

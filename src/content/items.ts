@@ -58,6 +58,7 @@ export const ITEM_SOURCES = [
   'vault',
   'elite',
   'boss',
+  'apex',
   'faction',
   'lunar',
   'route',
@@ -72,6 +73,7 @@ export const ITEM_POOL_PROFILE_IDS = [
   'vault',
   'elite',
   'boss',
+  'apex',
   'faction',
   'lunar',
   'route'
@@ -84,6 +86,7 @@ export const ITEM_STACKING_MODES = ['unique', 'stackable'] as const;
 export const ITEM_UI_TAGS = [
   'arc',
   'armor',
+  'apex',
   'bomb',
   'boss',
   'credit',
@@ -118,7 +121,7 @@ export type ItemImplementationStatus = (typeof ITEM_IMPLEMENTATION_STATUSES)[num
 export type ItemStackingMode = (typeof ITEM_STACKING_MODES)[number];
 export type ItemUiTag = (typeof ITEM_UI_TAGS)[number];
 export type ItemRarity = 'common' | 'uncommon' | 'rare' | 'prototype' | 'cursed';
-export type RewardPoolId = 'starter' | 'starterCore' | 'combat' | 'vault';
+export type RewardPoolId = 'starter' | 'starterCore' | 'combat' | 'vault' | 'apex';
 
 export type ItemId =
   | 'item_chain_arc_capacitor'
@@ -195,7 +198,13 @@ export type ItemId =
   | 'item_plasma_seed_crucible'
   | 'item_ricochet_branch_coupler'
   | 'item_warhead_echo_chamber'
-  | 'item_crossfeed_detonator';
+  | 'item_crossfeed_detonator'
+  | 'item_funeral_refrain_array'
+  | 'item_mnemonic_sepulcher_key'
+  | 'item_claimant_mantle_press'
+  | 'item_empty_throne_coronation'
+  | 'item_exodus_rail_switch'
+  | 'item_passenger_coffer_manifest';
 
 export interface ItemDefinition {
   readonly id: ItemId;
@@ -1598,6 +1607,114 @@ export const ITEMS: readonly ItemDefinition[] = [
       stacking: 'unique',
       uiTags: ['arc', 'overkill']
     }
+  },
+  {
+    id: 'item_funeral_refrain_array',
+    name: 'Funeral Refrain Array',
+    rarity: 'rare',
+    tags: ['phase', 'drone'],
+    hooks: ['onFire'],
+    effect:
+      'every fifth volley echoes up to two of the heaviest earlier shots as offset phased choir drones',
+    weight: 1,
+    metadata: {
+      family: 'drone-copy',
+      sources: ['apex'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['apex', 'phase', 'drone']
+    }
+  },
+  {
+    id: 'item_mnemonic_sepulcher_key',
+    name: 'Mnemonic Sepulcher Key',
+    rarity: 'prototype',
+    tags: ['phase', 'arc'],
+    hooks: ['onProjectileSpawn'],
+    effect:
+      'earlier phase and drone shots remember a longer flight and carry a heavy arc discharge',
+    weight: 1,
+    metadata: {
+      family: 'phase-graze',
+      sources: ['apex'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['apex', 'phase', 'arc']
+    }
+  },
+  {
+    id: 'item_claimant_mantle_press',
+    name: 'Claimant Mantle Press',
+    rarity: 'rare',
+    tags: ['missile', 'overkill', 'revenge'],
+    hooks: ['onProjectileSpawn'],
+    effect:
+      'earlier missile and overkill shots are forged into heavier armored retaliation shells',
+    weight: 1,
+    metadata: {
+      family: 'shield-revenge',
+      sources: ['apex'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['apex', 'overkill', 'revenge']
+    }
+  },
+  {
+    id: 'item_empty_throne_coronation',
+    name: 'Empty Throne Coronation',
+    rarity: 'prototype',
+    tags: ['plasma', 'heat', 'overkill'],
+    hooks: ['onFire'],
+    effect:
+      'every fourth volley crowns the heaviest earlier shot with a slow plasma overkill duplicate',
+    weight: 1,
+    metadata: {
+      family: 'heat-prototype',
+      sources: ['apex'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['apex', 'plasma', 'overkill']
+    }
+  },
+  {
+    id: 'item_exodus_rail_switch',
+    name: 'Exodus Rail Switch',
+    rarity: 'rare',
+    tags: ['split', 'phase'],
+    hooks: ['onFire'],
+    effect:
+      'the outer pair of an earlier multi-shot volley phase and cross toward the opposite lane',
+    weight: 1,
+    metadata: {
+      family: 'laser-split',
+      sources: ['apex'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['apex', 'split', 'phase']
+    }
+  },
+  {
+    id: 'item_passenger_coffer_manifest',
+    name: 'Passenger Coffer Manifest',
+    rarity: 'prototype',
+    tags: ['drone', 'arc'],
+    hooks: ['onFire'],
+    effect:
+      'every third volley copies two lighter earlier branches as long-lived arc-charged escort shots',
+    weight: 1,
+    metadata: {
+      family: 'drone-copy',
+      sources: ['apex'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['apex', 'drone', 'arc']
+    }
   }
 ];
 
@@ -1738,6 +1855,17 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_strata_bore_collimator',
       'item_warhead_echo_chamber',
       'item_plasma_seed_crucible'
+    ]
+  },
+  {
+    id: 'apex',
+    itemIds: [
+      'item_funeral_refrain_array',
+      'item_mnemonic_sepulcher_key',
+      'item_claimant_mantle_press',
+      'item_empty_throne_coronation',
+      'item_exodus_rail_switch',
+      'item_passenger_coffer_manifest'
     ]
   }
 ];
@@ -1922,6 +2050,22 @@ export const ITEM_POOL_WEIGHT_PROFILES: readonly ItemPoolWeightProfileDefinition
       overkill: 1.25,
       phase: 1.2
     }
+  },
+  {
+    id: 'apex',
+    label: 'Apex Spoil',
+    poolIds: ['apex'],
+    sourceWeights: {
+      apex: 4
+    },
+    rarityWeights: {
+      common: 0,
+      uncommon: 0,
+      rare: 1,
+      prototype: 1,
+      cursed: 0
+    },
+    biasWeight: 1
   },
   {
     id: 'faction',

@@ -335,10 +335,11 @@ export class GameApp {
   }
 
   private async launchScenarioLab(id: ScenarioLabId): Promise<void> {
-    const [{ createScenarioLabLaunch }, { ScenarioTimelineScene }] = await Promise.all([
+    const [{ SCENARIO_LAB_IDS, createScenarioLabLaunch }, { ScenarioTimelineScene }] =
+      await Promise.all([
       import('../game/ScenarioLab'),
       import('../ui/ScenarioTimelineScene')
-    ]);
+      ]);
     const launch = createScenarioLabLaunch({
       run: this.currentRun,
       contract: this.selectedContract,
@@ -353,6 +354,10 @@ export class GameApp {
 
     if (launch.definition.target === 'transition') {
       this.showSectorTransition();
+      return;
+    }
+    if (launch.definition.target === 'reward') {
+      this.showReward();
       return;
     }
     if (launch.definition.target === 'timeline') {
@@ -459,7 +464,10 @@ export class GameApp {
     }
 
     const gameplayScene = this.createGameplayScene();
-    gameplayScene.prepareScenarioLabPreset(launch.definition.gameplayPreset);
+    gameplayScene.prepareScenarioLabPreset(
+      launch.definition.gameplayPreset,
+      SCENARIO_LAB_IDS.length
+    );
     this.sceneManager.switchTo(gameplayScene);
   }
 

@@ -21,7 +21,7 @@ describe('item discovery archive', () => {
     expect(curseRelic?.hintText).not.toContain('Relic Ash Compass');
     expect(heatPrototype?.state).toBe('partial');
     expect(heatPrototype?.statusText).toBe(
-      'Core available, classified tier locked | 0/6 discovered'
+      'Core available, classified tier locked | 0/7 discovered'
     );
     expect(model.totalFamilyCount).toBe(10);
     expect(model.entries.some((entry) => entry.family === 'boss-pressure')).toBe(false);

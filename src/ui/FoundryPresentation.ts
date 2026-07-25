@@ -592,8 +592,65 @@ function createCircuitStageCondition(
         }
       : {
           met: false,
-          label: 'CONDITION NOT MET Â· NEEDS AN EARLIER MULTI-SHOT STAGE'
-        };
+          label: 'CONDITION NOT MET · NEEDS AN EARLIER MULTI-SHOT STAGE'
+      };
+  }
+  if (itemId === 'item_funeral_refrain_array') {
+    const echoed = Math.min(2, incoming.length);
+    return echoed > 0
+      ? {
+          met: true,
+          label: `CONDITION MET · EVERY 5TH VOLLEY · ${echoed} HEAVY SHOT${echoed === 1 ? '' : 'S'} ECHO AS PHASED CHOIR DRONES`
+        }
+      : { met: false, label: 'CONDITION NOT MET · NEEDS AN EARLIER SHOT' };
+  }
+  if (itemId === 'item_mnemonic_sepulcher_key') {
+    const remembered = incoming.filter(
+      (projectile) =>
+        projectile.tags.includes('phase') || projectile.tags.includes('drone')
+    ).length;
+    return remembered > 0
+      ? {
+          met: true,
+          label: `CONDITION MET · ${remembered} PHASE / DRONE SHOT${remembered === 1 ? '' : 'S'} · +0.30S FLIGHT · HEAVY ARC`
+        }
+      : { met: false, label: 'CONDITION NOT MET · NEEDS EARLIER PHASE OR DRONE SHOTS' };
+  }
+  if (itemId === 'item_claimant_mantle_press') {
+    const forgeable = incoming.filter(
+      (projectile) =>
+        projectile.tags.includes('missile') || projectile.tags.includes('overkill')
+    ).length;
+    return forgeable > 0
+      ? {
+          met: true,
+          label: `CONDITION MET · ${forgeable} MISSILE / OVERKILL SHOT${forgeable === 1 ? '' : 'S'} FORGED INTO RETALIATION`
+        }
+      : { met: false, label: 'CONDITION NOT MET · NEEDS EARLIER MISSILE OR OVERKILL SHOTS' };
+  }
+  if (itemId === 'item_empty_throne_coronation') {
+    return incoming.length > 0
+      ? {
+          met: true,
+          label: 'CONDITION MET · EVERY 4TH VOLLEY · HEAVIEST EARLIER SHOT CROWNED AS PLASMA OVERKILL'
+        }
+      : { met: false, label: 'CONDITION NOT MET · NEEDS AN EARLIER SHOT' };
+  }
+  if (itemId === 'item_exodus_rail_switch') {
+    return incoming.length >= 2
+      ? {
+          met: true,
+          label: `CONDITION MET · ${incoming.length}-SHOT VOLLEY · OUTER PAIR PHASES AND CROSSES LANES`
+        }
+      : { met: false, label: 'CONDITION NOT MET · NEEDS AN EARLIER MULTI-SHOT STAGE' };
+  }
+  if (itemId === 'item_passenger_coffer_manifest') {
+    return incoming.length >= 2
+      ? {
+          met: true,
+          label: 'CONDITION MET · EVERY 3RD VOLLEY · 2 LIGHTER BRANCHES COPY AS ARC ESCORTS'
+        }
+      : { met: false, label: 'CONDITION NOT MET · NEEDS AT LEAST 2 EARLIER SHOTS' };
   }
 
   return null;

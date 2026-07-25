@@ -102,6 +102,18 @@ describe('ScenarioLab', () => {
       apex.session.apexHunts.threats.some((threat) => threat.status === 'awaitingResolution')
     ).toBe(true);
 
+    const apexSpoils = launch('lab_apex_spoils');
+    const resolvedThreat = apexSpoils.session.apexHunts.threats.find(
+      (threat) => threat.status === 'resolved'
+    );
+    expect(apexSpoils.readout.target).toBe('reward');
+    expect(resolvedThreat).toBeDefined();
+    expect(apexSpoils.session.currentSectorIndex).toBe(
+      run.apexHunts.threats
+        .find((threat) => threat.definitionId === resolvedThreat?.threatId)
+        ?.encounters.at(-1)?.sectorIndex
+    );
+
     const carrier = launch('lab_carrier_command');
     expect(carrier.readout.target).toBe('carrierDeck');
     expect(carrier.session.mission.currentStageId).toContain('staging');

@@ -377,6 +377,8 @@ function formatSourceHint(source: ItemSource): string {
       return 'elite';
     case 'boss':
       return 'boss';
+    case 'apex':
+      return 'apex';
     case 'faction':
       return 'faction';
     case 'lunar':

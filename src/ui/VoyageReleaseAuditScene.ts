@@ -1,7 +1,11 @@
 import type { CanvasRenderer } from '../app/CanvasRenderer';
 import type { Scene, SceneDebugState } from '../app/Scene';
 import type { VoyageReleaseAuditReport } from '../game/VoyageReleaseAudit';
-import type { ScenarioLabDefinition, ScenarioLabSetupReadModel } from '../game/ScenarioLab';
+import {
+  SCENARIO_LAB_IDS,
+  type ScenarioLabDefinition,
+  type ScenarioLabSetupReadModel
+} from '../game/ScenarioLab';
 import type { InputAction } from '../systems/InputSystem';
 
 export class VoyageReleaseAuditScene implements Scene {
@@ -67,7 +71,7 @@ export class VoyageReleaseAuditScene implements Scene {
       seed: this.report.seed,
       entityCount: 0,
       scenarioLab: {
-        scenarioCount: 16,
+        scenarioCount: SCENARIO_LAB_IDS.length,
         activeScenario: 'release-audit',
         systems: this.definition.systems,
         budget: `${this.setup.snapshotBytes} snapshot bytes | ${this.report.summary}`

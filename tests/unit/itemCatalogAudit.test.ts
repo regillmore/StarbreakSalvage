@@ -11,18 +11,18 @@ describe('item catalog audit', () => {
   it('captures the current Phase 6 catalog by rarity, tag, and hook', () => {
     const audit = createItemCatalogAudit();
 
-    expect(audit.itemCount).toBe(60);
-    expect(audit.targetItemCount).toBe(60);
+    expect(audit.itemCount).toBe(66);
+    expect(audit.targetItemCount).toBe(66);
     expect(audit.rarityCounts).toEqual({
       common: 14,
       uncommon: 20,
-      rare: 19,
-      prototype: 4,
+      rare: 22,
+      prototype: 7,
       cursed: 3
     });
     expect(audit.hookCounts).toEqual({
-      onFire: 26,
-      onProjectileSpawn: 14,
+      onFire: 30,
+      onProjectileSpawn: 16,
       onEnemyKilled: 10,
       onPlayerHit: 1,
       onPickupCollected: 6,
@@ -38,36 +38,36 @@ describe('item catalog audit', () => {
     });
     expect(audit.tagCounts).toMatchObject({
       credit: 8,
-      phase: 10,
-      plasma: 10,
-      overkill: 7,
+      phase: 13,
+      plasma: 11,
+      overkill: 9,
       relic: 2
     });
     expect(audit.familyCounts).toEqual({
-      'laser-split': 8,
+      'laser-split': 9,
       'missile-overkill': 9,
-      'drone-copy': 7,
-      'shield-revenge': 5,
+      'drone-copy': 9,
+      'shield-revenge': 6,
       'credit-shop': 5,
       'curse-relic': 6,
-      'phase-graze': 8,
-      'heat-prototype': 6,
+      'phase-graze': 9,
+      'heat-prototype': 7,
       'lunar-surface': 5,
       'route-economy': 1,
       'boss-pressure': 0
     });
     expect(audit.implementationStatusCounts).toEqual({
-      live: 60,
+      live: 66,
       bridge: 0,
       planned: 0
     });
     expect(audit.unlockTierCounts).toEqual({
-      baseline: 53,
+      baseline: 59,
       advanced: 6,
       unlock: 1
     });
     expect(audit.stackingCounts).toEqual({
-      unique: 60,
+      unique: 66,
       stackable: 0
     });
   });
@@ -101,6 +101,11 @@ describe('item catalog audit', () => {
         id: 'vault',
         itemCount: 20,
         rarityCounts: { common: 0, uncommon: 2, rare: 11, prototype: 4, cursed: 3 }
+      },
+      {
+        id: 'apex',
+        itemCount: 6,
+        rarityCounts: { common: 0, uncommon: 0, rare: 3, prototype: 3, cursed: 0 }
       }
     ]);
     expect(audit.sourceCounts).toMatchObject({
@@ -111,6 +116,7 @@ describe('item catalog audit', () => {
       shop: 3,
       elite: 2,
       boss: 6,
+      apex: 6,
       faction: 1,
       lunar: 5,
       route: 6

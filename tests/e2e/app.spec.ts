@@ -1316,14 +1316,14 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('scenario-lab')).toBeVisible();
   await expect(page.getByTestId('scenario-lab-intro')).toContainText('deterministic session');
-  await expect(page.locator('[data-testid^="scenario-lab-lab_"]')).toHaveCount(16);
-  await expect(page.locator('.debug-overlay')).toContainText('Scenario Lab catalog 16 cases');
+  await expect(page.locator('[data-testid^="scenario-lab-lab_"]')).toHaveCount(17);
+  await expect(page.locator('.debug-overlay')).toContainText('Scenario Lab catalog 17 cases');
 
   for (let index = 0; index < 6; index += 1) await page.keyboard.press('Tab');
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('cockpit-hud')).toBeVisible();
   await expect(page.locator('.debug-overlay')).toContainText('Scenario lab:combined');
-  await expect(page.locator('.debug-overlay')).toContainText('Scenario Lab combined 16 cases');
+  await expect(page.locator('.debug-overlay')).toContainText('Scenario Lab combined 17 cases');
   await expect(page.locator('.debug-overlay')).toContainText('Set-piece');
   await expect(page.locator('.debug-overlay')).toContainText('Allies');
   await expect(page.locator('.debug-overlay')).toContainText('Combined proc');
@@ -1503,6 +1503,38 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('scenario-lab')).toBeVisible();
 
+  expect(browserErrors).toEqual([]);
+});
+
+test('shows one exclusive apex circuit spoil without widening the sector reward grid', async ({
+  page
+}) => {
+  const browserErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') browserErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => browserErrors.push(error.message));
+
+  await page.goto('./?debug=1&seed=SCENARIO-LAB-APEX-SPOILS');
+  await page.getByRole('button', { name: 'Scenario Lab [Debug]' }).click();
+  await page.getByTestId('scenario-lab-lab_apex_spoils').click();
+
+  await expect(page.getByRole('heading', { name: 'Choose Reward' })).toBeVisible();
+  await expect(page.getByTestId('reward-grid')).toHaveAttribute('data-item-choice-count', '3');
+  await expect(page.getByTestId('reward-grid')).toHaveAttribute('data-total-choice-count', '5');
+  await expect(page.getByTestId('reward-grid')).toHaveAttribute('data-apex-reward-count', '1');
+  await expect(page.getByTestId('apex-reward-card')).toHaveCount(1);
+  await expect(page.getByTestId('apex-reward-card')).toContainText('Apex Spoil');
+  await expect(page.getByTestId('apex-reward-card')).toHaveAttribute(
+    'aria-label',
+    /^Apex spoil from .+: .+$/
+  );
+  await expect(page.locator('.reward-card')).toHaveCount(5);
+  expect(
+    await page
+      .locator('.reward-panel')
+      .evaluate((panel) => panel.scrollHeight <= panel.clientHeight + 1)
+  ).toBe(true);
   expect(browserErrors).toEqual([]);
 });
 

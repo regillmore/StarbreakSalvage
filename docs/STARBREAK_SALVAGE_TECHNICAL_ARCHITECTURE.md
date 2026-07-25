@@ -1029,6 +1029,17 @@ seed + permanent save fingerprint
 - The Apex Dossier derives concealed versus revealed contact locations from the same sequential completion prefix. Future-act first contacts remain dormant until their act range is reached.
 - The change adds no save/snapshot field, migration, graph node, graph edge, route option, combat actor type, projectile/effect budget, dependency, or static-hosting rule.
 
+### Work order 211 apex-spoil boundary
+
+- `ApexThreatDefinition.circuitRewardItemIds` is the sole apex-to-item mapping authority. Each definition owns exactly two item ids; act order, faction, route labels, and UI text do not reconstruct the pair.
+- `ApexRewards.createResolvedApexCircuitReward` is a pure projection over the generated hunt plan and session hunt state. It requires the tracked finale sector and `resolved` status, excludes owned pair members, and chooses with a named seed derived from the hunt seed, save fingerprint, threat id, and zero-based finale sector index.
+- `SectorRewards.generateSectorRewardChoices` completes the established ordinary deterministic roll first. It replaces only the final ordinary choice with the projected apex spoil, preserving manifest width and the complete retained prefix without advancing the ordinary RNG stream.
+- The dedicated `apex` source, pool, and weight profile validate catalog reachability and identify presentation. Ordinary reward generation never selects that profile, so the six items cannot leak into starter, combat, vault, shop, or route rotation.
+- The six item hooks use the established ordered `onFire` / `onProjectileSpawn` reducers, effective cadence registry, Prototype Vent cycle bridge, phase tag, `ArcCharge`, drone attribution, and retaliation traits. They add no apex-specific combat dispatch or preview-only formula.
+- `RewardScene` reads optional apex metadata from the reward choice to add an accessible flag and style. The scene does not decide eligibility, identity, or selection.
+- Scenario Lab's `lab_apex_spoils` fixture advances the established debug hunt state through the real `resolve` reducer at its tracked finale, then opens `RewardScene`. It does not alter force-complete semantics or create a parallel reward projection.
+- The change adds no save/snapshot field, migration, route graph mutation, disposition outcome, combat actor type, RNG draw in simulation, dependency, or static-hosting rule.
+
 ### Work order 198 primary-weapon icon boundary
 
 - `WeaponDefinition.iconKind` is the sole authored visual-identity key for a primary weapon base. `WEAPON_ICON_KINDS` types and validates the eight-entry vocabulary; quality, source, affix, component instance, and route data never select a different glyph.

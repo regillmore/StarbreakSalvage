@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { APEX_THREATS } from '../../src/content/apexThreats';
 import { getItemById, STARTER_CORE_ITEM_IDS } from '../../src/content/items';
 import { SHIPS } from '../../src/content/ships';
 import { generateRunSkeleton, type StartingContract } from '../../src/game/Generation';
@@ -42,6 +43,47 @@ describe('reward generation', () => {
     expect(first).toEqual(replay);
     expect(first).toHaveLength(3);
     expect(first.every((choice) => choice.poolProfileId !== 'route')).toBe(true);
+  });
+
+  it('replaces one ordinary finale choice with the defeated apex spoil', () => {
+    const run = generateRunSkeleton('APEX-CIRCUIT-SPOILS');
+    const contract = getFirstContract(run);
+
+    for (const hunt of run.apexHunts.threats) {
+      const finaleSectorIndex = hunt.encounters.at(-1)?.sectorIndex;
+      if (finaleSectorIndex === undefined) throw new Error('Expected an apex finale sector.');
+
+      const session = createRunSession(run, contract);
+      session.currentSectorIndex = finaleSectorIndex;
+      const ordinary = generateSectorRewardChoices({ run, session, contract });
+      session.apexHunts = {
+        ...session.apexHunts,
+        threats: session.apexHunts.threats.map((threat) =>
+          threat.threatId === hunt.definitionId
+            ? { ...threat, status: 'resolved' as const, outcome: 'destruction' as const }
+            : threat
+        )
+      };
+
+      const rewarded = generateSectorRewardChoices({ run, session, contract });
+      const replay = generateSectorRewardChoices({ run, session, contract });
+      const apexChoices = rewarded.filter((choice) => 'apexReward' in choice);
+
+      expect(rewarded).toEqual(replay);
+      expect(rewarded).toHaveLength(ordinary.length);
+      expect(rewarded.slice(0, -1).map((choice) => choice.item.id)).toEqual(
+        ordinary.slice(0, -1).map((choice) => choice.item.id)
+      );
+      expect(apexChoices).toHaveLength(1);
+      expect(apexChoices[0]).toMatchObject({
+        poolProfileId: 'apex',
+        apexReward: { threatId: hunt.definitionId }
+      });
+      expect(hunt.definitionId).toBe(apexChoices[0]!.apexReward.threatId);
+      expect(
+        APEX_THREATS.find((threat) => threat.id === hunt.definitionId)?.circuitRewardItemIds
+      ).toContain(apexChoices[0]!.item.id);
+    }
   });
 
   it('migrates Market Echo rewards without doubling a restored fitted copy', () => {

@@ -687,6 +687,42 @@ describe('foundry visual presentation', () => {
     });
   });
 
+  it('explains whether apex circuit spoils have an upstream signal to transform', () => {
+    const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
+      (candidate) => candidate.shipId === 'ship_debt_runner'
+    );
+    if (!contract) throw new Error('Expected a single-projectile contract.');
+    const engineering = createEngineeringState(contract.loadout);
+    const crownUnmet = createFoundryDashboardModel(engineering, [
+      { itemId: 'item_claimant_mantle_press', acquisitionOrder: 0 }
+    ]);
+    const choirLinked = createFoundryDashboardModel(engineering, [
+      { itemId: 'item_split_prism', acquisitionOrder: 0 },
+      { itemId: 'item_funeral_refrain_array', acquisitionOrder: 1 }
+    ]);
+    const convoyLinked = createFoundryDashboardModel(engineering, [
+      { itemId: 'item_split_prism', acquisitionOrder: 0 },
+      { itemId: 'item_exodus_rail_switch', acquisitionOrder: 1 },
+      { itemId: 'item_passenger_coffer_manifest', acquisitionOrder: 2 }
+    ]);
+
+    expect(crownUnmet.circuitStages[0]).toMatchObject({
+      name: 'Claimant Mantle Press',
+      conditionMet: false,
+      changed: false
+    });
+    expect(crownUnmet.circuitStages[0]!.outputLabel).toContain(
+      'NEEDS EARLIER MISSILE OR OVERKILL SHOTS'
+    );
+    expect(choirLinked.circuitStages[1]).toMatchObject({
+      name: 'Funeral Refrain Array',
+      conditionMet: true
+    });
+    expect(choirLinked.circuitStages[1]!.outputLabel).toContain('EVERY 5TH VOLLEY');
+    expect(convoyLinked.circuitStages[1]!.outputLabel).toContain('OUTER PAIR');
+    expect(convoyLinked.circuitStages[2]!.outputLabel).toContain('ARC ESCORTS');
+  });
+
   it('projects prototype-vent cadence shifts onto affected earlier circuit cards', () => {
     const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
       (candidate) => candidate.shipId === 'ship_debt_runner'
