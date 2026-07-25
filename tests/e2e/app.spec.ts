@@ -394,6 +394,28 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   await expect(page.locator('.constellation-node[data-signal="apex-break"]')).toContainText(
     'BREAKS TRACK'
   );
+  await expect(
+    page.locator('.constellation-node[data-signal="apex-track"] .apex-glyph')
+  ).toHaveCount(1);
+  await expect(
+    page.locator('.constellation-node[data-signal="apex-track"] .apex-glyph')
+  ).toHaveAttribute('data-glyph-id', 'tri-vector');
+  await expect(
+    page.locator('.constellation-node[data-signal="apex-break"] .apex-glyph')
+  ).toHaveCount(0);
+  await page.getByTestId('navigation-map-view-toggle').click();
+  await expect(page.getByTestId('navigation-map')).toHaveAttribute(
+    'data-constellation-view',
+    'overview'
+  );
+  await expect(
+    page.locator('.constellation-node[data-signal="apex-track"] .apex-glyph')
+  ).toHaveCount(1);
+  await page.getByTestId('navigation-map-view-toggle').click();
+  await expect(page.getByTestId('navigation-map')).toHaveAttribute(
+    'data-constellation-view',
+    'focus'
+  );
   await expect(page.getByTestId('navigation-destination-route')).toHaveAttribute(
     'data-constellation-status',
     'choice'
@@ -456,7 +478,17 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
     await page
       .locator('.constellation-node[data-signal="apex-track"]')
       .evaluate((element) => getComputedStyle(element).borderTopColor)
-  ).toContain('124, 247, 255');
+  ).toContain('255, 209, 102');
+  expect(
+    await page
+      .locator('.constellation-node[data-signal="apex-break"]')
+      .evaluate((element) => getComputedStyle(element).borderTopColor)
+  ).toContain('255, 209, 102');
+  expect(
+    await page
+      .locator('.constellation-node[data-signal="apex-track"] .navigation-node-glyph')
+      .evaluate((element) => getComputedStyle(element).color)
+  ).toContain('255, 209, 102');
   await expect(page.getByTestId('navigation-route-effect')).toBeVisible();
   await expect(page.getByTestId('navigation-route-effect')).toContainText('BASE ROUTE EFFECT');
   await expect(page.getByTestId('apex-pursuit-route-preview')).toContainText(

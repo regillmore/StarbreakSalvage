@@ -1040,6 +1040,15 @@ seed + permanent save fingerprint
 - Scenario Lab's `lab_apex_spoils` fixture advances the established debug hunt state through the real `resolve` reducer at its tracked finale, then opens `RewardScene`. It does not alter force-complete semantics or create a parallel reward projection.
 - The change adds no save/snapshot field, migration, route graph mutation, disposition outcome, combat actor type, RNG draw in simulation, dependency, or static-hosting rule.
 
+### Work order 212 apex-glyph boundary
+
+- `ApexGlyph.createApexGlyph` is the sole tri-vector silhouette renderer. It emits one current-color inline SVG with a stable `tri-vector` identity and no route, threat, or progression lookup.
+- `ConstellationMapNode.glyphKind` selects between the established text glyph and that shared renderer. `ConstellationMap` owns DOM placement and the non-color accessible button label; it does not infer pursuit state.
+- `SectorTransitionScene` remains the sole mapping from the apex pursuit navigation read model to `apex-track`, `apex-break`, and `apex-contact` node signals. Only `apex-track` selects the apex glyph.
+- Available tracked and break nodes retain `choice` status and therefore share the exact gold choice CSS. Signal data remains for text, accessibility, tests, and future presentation, not card recoloring.
+- Work order 213 will reuse the renderer in the Signal Vault service node, pursuit dossier, live contact HUD/banner, Apex Dossier masthead, and apex-spoil provenance. Those consumers may supply placement and scale but cannot copy or mutate the silhouette.
+- The change adds no asset request, save/snapshot field, migration, route graph mutation, route option, RNG draw, simulation branch, dependency, or static-hosting rule.
+
 ### Work order 198 primary-weapon icon boundary
 
 - `WeaponDefinition.iconKind` is the sole authored visual-identity key for a primary weapon base. `WEAPON_ICON_KINDS` types and validates the eight-entry vocabulary; quality, source, affix, component instance, and route data never select a different glyph.

@@ -320,3 +320,30 @@ Scenario Lab now includes a disposable `Apex Circuit Spoils` case that resolves 
 Managed-browser inspection opened that fixture at `SCENARIO-LAB-APEX-SPOILS`. The live reward grid reported three circuit choices, five total choices, and exactly one apex reward; its Crownless Engine card had the authored spoil label and non-color boundary, the 600 px panel fit without scrolling, and the browser console contained no errors.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 117 Vitest files and 769 tests, the production build, all 19 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,050.38 kB` minified / `287.72 kB` gzip initial JavaScript and `119.26 kB` / `23.33 kB` CSS, increases of `8.20 kB` / `1.94 kB` JavaScript and `0.49 kB` / `0.13 kB` CSS over work order 210. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, route graph mutation, reward-choice count, combat budget, or static-hosting rule changed.
+
+## Work order 212 - Quiet apex constellation mark
+
+Goal: restore one consistent visual meaning for available constellation destinations while giving the apex pursuit a reusable non-color identity.
+
+Prompt:
+
+> Remove the strong cyan tracked-node and red track-break recolors from available constellation choices. Return every ready destination to the established gold card treatment, then replace the tracked sector's ordinary bullet with a new shared apex glyph whose silhouette can carry into other apex surfaces.
+
+Acceptance criteria:
+
+- Every available next-sector node uses the same gold border, background, pulse, hover, focus, and selected treatment regardless of apex alignment.
+- The confirmed apex-track child replaces its ordinary sector diamond with one original code-native tri-vector glyph. Off-track and unrelated nodes retain their ordinary glyphs.
+- The apex mark inherits the node's current color, so it remains identifiable by shape without introducing another route-status hue.
+- `TRACK` and `BREAKS TRACK` text, destination dossier warnings, accessible labels, and commit consequences remain explicit; the quieter node styling does not hide the routing decision.
+- The glyph has one reusable DOM renderer and stable identity attribute rather than copied SVG fragments or a font-dependent symbol.
+- Focused and overview constellation modes retain their existing geometry, pulse behavior, keyboard navigation, route legality, deterministic pursuit state, and responsive layout.
+- Work order 213 reuse plan: apply the same base mark to the Signal Vault service node, destination pursuit dossier, live apex-contact HUD/banner, Apex Dossier masthead, and apex-spoil reward provenance. Consumers may change scale and current color only; none should redraw the silhouette.
+- No asset request, save/snapshot field, migration, route graph change, RNG draw, gameplay mutation, dependency, or static-hosting change is introduced.
+
+Status: implemented. `ApexGlyph.createApexGlyph` owns an original three-vector signal converging on an open core. `ConstellationMap` accepts an explicit glyph kind and embeds that renderer only for a tracked apex child; its button label retains the threat cue and track state for assistive technology.
+
+`SectorTransitionScene` no longer substitutes a generic star. Both `apex-track` and `apex-break` destinations remain ordinary `choice` nodes, and their former cyan/red CSS overrides are removed. All available sector bullets now inherit the established gold, while the tracked child is differentiated by the tri-vector silhouette and the existing text/dossier consequence.
+
+Managed-browser inspection followed `STARBREAK-SMOKE` through its first sector reward into the live pursuit fork. Focused and full-act views kept both route cards on the shared gold treatment (`rgb(255, 209, 102)`), the tracked child alone rendered one `tri-vector` glyph at `21.6 px`, and the off-track child retained its ordinary diamond plus explicit `BREAKS TRACK` copy. No application errors appeared in the browser console.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 117 Vitest files and 769 tests, the production build, all 19 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,051.31 kB` minified / `288.04 kB` gzip initial JavaScript and `118.62 kB` / `23.24 kB` CSS, a change of `+0.93 kB` / `+0.32 kB` JavaScript and `-0.64 kB` / `-0.09 kB` CSS from work order 211. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, route graph mutation, deterministic draw, gameplay system, or static-hosting rule changed.

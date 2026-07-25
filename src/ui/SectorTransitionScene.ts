@@ -414,7 +414,8 @@ export class SectorTransitionScene implements Scene {
           shortLabel: resolvedSector
             ? `${node.layerIndex + 1}${String.fromCharCode(65 + node.laneIndex)} · ${resolvedSector.sectorName}`
             : node.shortLabel,
-          glyph: apexTrack ? '✦' : resolvedSector ? '◆' : node.glyph,
+          glyph: resolvedSector ? '◆' : node.glyph,
+          glyphKind: apexTrack ? 'apex' : 'text',
           x: node.x,
           y: node.y,
           status: routeTarget

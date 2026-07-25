@@ -496,6 +496,7 @@ Phase 10 accessibility checks should also cover mission briefings and branch foc
 - [x] The combat HUD surrounds the exact safe frame with contract-themed identity, semantic meters, navigation/weapon/mission rails, responsive side-or-stacked placement, and non-color high-contrast/reduced-motion fallbacks.
 - [x] Every apex owns two exclusive live circuit spoils; a resolved tracked finale substitutes exactly one deterministic associated spoil for one ordinary reward without widening the manifest, and its shared dossier identifies the apex accessibly.
 - [x] Scenario Lab exposes a resolved-apex reward fixture that verifies one apex card, three circuit choices, five total choices, a no-scroll desktop panel, and clean browser diagnostics through the production reward scene.
+- [x] Available constellation choices share the same gold treatment; only the tracked apex child substitutes the reusable tri-vector glyph, while track/break text and accessible destination consequences remain explicit.
 
 ## Release checklist
 

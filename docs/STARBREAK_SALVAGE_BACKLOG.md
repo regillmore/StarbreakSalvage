@@ -3015,3 +3015,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 211. Each apex now owns one rare/prototype circuit pair, and the resolved finale substitutes one deterministic threat-specific spoil into the existing reward manifest without increasing its size.
+
+### BL77 - Quiet apex constellation mark
+
+Acceptance:
+
+- Restore the shared gold card, pulse, hover, focus, and selected treatment for every available next-sector option.
+- Replace only the confirmed apex-track sector diamond with one original code-native tri-vector glyph that inherits current color.
+- Retain explicit track/break text, accessible labels, destination warnings, and route consequences without cyan/red node overrides.
+- Give the glyph one reusable renderer and stable identity for later apex surfaces.
+- Preserve focused/overview geometry, responsive behavior, keyboard navigation, deterministic pursuit state, saves, dependencies, and static hosting.
+- Reserve work order 213 for reuse in the Signal Vault, pursuit dossier, live contact HUD, Apex Dossier, and apex-spoil provenance.
+
+Status:
+
+- Implemented in work order 212. Available route nodes again share the established gold hierarchy, while the tracked apex child alone carries the reusable tri-vector silhouette.

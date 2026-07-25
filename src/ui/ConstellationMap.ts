@@ -1,9 +1,12 @@
+import { createApexGlyph } from './ApexGlyph';
+
 export interface ConstellationMapNode {
   readonly id: string;
   readonly kind: 'sector' | 'service' | 'approach';
   readonly label: string;
   readonly shortLabel: string;
   readonly glyph: string;
+  readonly glyphKind?: 'text' | 'apex';
   readonly x: number;
   readonly y: number;
   readonly status: string;
@@ -160,6 +163,7 @@ export function createConstellationMap(options: {
     button.dataset.constellationStatus = node.status;
     button.dataset.available = String(node.available);
     button.dataset.visited = String(Boolean(node.visited));
+    button.dataset.glyphKind = node.glyphKind ?? 'text';
     if (node.signal) button.dataset.signal = node.signal;
     if (node.testId) button.dataset.testid = node.testId;
     button.style.setProperty('--constellation-order', String(node.revealOrder));
@@ -176,7 +180,8 @@ export function createConstellationMap(options: {
 
     const glyph = options.document.createElement('span');
     glyph.className = 'navigation-node-glyph';
-    glyph.textContent = node.glyph;
+    if (node.glyphKind === 'apex') glyph.append(createApexGlyph(options.document));
+    else glyph.textContent = node.glyph;
     glyph.setAttribute('aria-hidden', 'true');
     const label = options.document.createElement('span');
     label.className = 'navigation-node-label';
