@@ -3104,3 +3104,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 217. A pure act-aware durability profile now scales the reauthored 80-145 baseline hull pool at 1x/2x/3x across the 10/20/30 DPS benchmarks.
+
+### BL83 - Settled challenge-node presentation
+
+Acceptance:
+
+- Project a source node directly as completed and `CHARTED` after its paired optional challenge is complete.
+- Use the real sector destination identity and the same check glyph and green styling as older chart history.
+- Preserve the green completed treatment through hover, focus, and selection without restoring gold launch styling.
+- Give selected settled nodes a disabled history dossier while keeping onward route children gold and actionable.
+- Preserve route topology, optional eligibility, challenge progression, saves, deterministic generation, dependencies, and static hosting.
+
+Status:
+
+- Implemented in work order 218. A completed challenge source is now ordinary chart history rather than a visually completed node that still carries launch semantics.

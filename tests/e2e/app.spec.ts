@@ -2321,6 +2321,25 @@ async function forceCompleteSectorAndEnterNext(
     await expect(page.getByTestId('mission-briefing')).toBeVisible();
     await expect(page.getByTestId('navigation-route-effect')).toBeVisible();
     await expect(page.getByTestId('navigation-route-commit')).toBeEnabled();
+
+    const chartedSource = page.getByTestId('navigation-sector-1');
+    await expect(chartedSource).toHaveAttribute('data-constellation-status', 'completed');
+    await expect(chartedSource).toHaveAttribute('data-destination-id', 'sector:0');
+    await expect(chartedSource).toContainText('CHARTED');
+    await expect(chartedSource).toContainText('✓');
+    await expect(chartedSource).not.toHaveAttribute('data-destination-id', 'launch');
+    await chartedSource.hover();
+    await expect(chartedSource).toHaveCSS('border-top-color', 'rgba(114, 242, 167, 0.48)');
+    await chartedSource.click();
+    await expect(chartedSource).toHaveAttribute('aria-pressed', 'true');
+    await expect(chartedSource).toHaveCSS('border-top-color', 'rgba(114, 242, 167, 0.48)');
+    await expect(page.getByTestId('navigation-destination-detail')).toContainText('CHARTED');
+    await expect(page.getByTestId('navigation-destination-action')).toHaveText(
+      'Operation Settled'
+    );
+    await expect(page.getByTestId('navigation-destination-action')).toBeDisabled();
+    await page.getByTestId('navigation-destination-route').click();
+    await expect(page.getByTestId('navigation-route-commit')).toBeEnabled();
   }
 
   if (options.routeDifficulty === 'harder') {

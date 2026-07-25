@@ -470,3 +470,26 @@ Status: implemented. `BossDurability` owns the 10/20/30 DPS benchmarks and resol
 Managed-browser inspection launched `STARBREAK-SMOKE`, spawned the lightest boss through the live Act I combat scene, and confirmed `Auditor Drone XL 80/80`. Its opening seven-shot fan was visibly crossing the arena while the boss remained present, with the current phase and health pool readable in the contract HUD. The smoke pass also caught and corrected the one-based act-ordinal integration before release; both inspected tabs reported no console errors.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 118 Vitest files and 789 tests, the production build, all 19 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,055.54 kB` minified / `289.26 kB` gzip initial JavaScript and unchanged `119.53 kB` / `23.43 kB` CSS, increases of `0.68 kB` / `0.23 kB` JavaScript over work order 216. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, route graph, phase threshold, attack pattern, damage rule, reward count, RNG stream, or static-hosting rule changed.
+
+## Work order 218 - Settled challenge-node presentation
+
+Goal: make a completed paired challenge collapse into ordinary green chart history so interaction can never restore the gold ready-to-launch treatment.
+
+Prompt:
+
+> After the current layer's optional challenge is complete, project its source node directly as charted rather than retaining a departed launch identity. Hovering, focusing, or selecting that historic node must preserve its completed treatment.
+
+Acceptance criteria:
+
+- Completing a paired optional challenge immediately gives its source node the ordinary green completed surface, check glyph, and `CHARTED` label used by older history.
+- The settled node exposes its real sector identity rather than the special `launch` destination identity that owns gold ready-state styling.
+- Hover, focus, and selected states preserve the completed green border and surface; none may resurrect the gold launch pulse or glow.
+- Selecting the node opens a settled history dossier with an `Operation Settled` disabled action instead of a relaunch affordance.
+- Available onward route children remain gold, selectable, and commit-ready after inspecting the settled source node.
+- Route topology, optional eligibility, challenge completion, navigation legality, saves, snapshots, RNG streams, dependencies, and static hosting remain unchanged.
+
+Status: implemented. `SectorTransitionScene` now projects the just-settled route source exactly like historic charted nodes: it uses the sector id, check glyph, `CHARTED` label, completed status, and a disabled settled dossier. The special `launch` identity is reserved for operations that can actually begin, so its gold CSS cannot leak back through hover or selection.
+
+Managed-browser inspection completed the `STARBREAK-SMOKE` first-sector challenge and measured the source node before hover, during hover, and after selection. All three states retained the completed green `rgba(114, 242, 167, 0.48)` border and green surface; selection opened the disabled `Operation Settled` dossier. The onward route retained its gold border and actionable selection, and the browser console reported no application errors.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 118 Vitest files and 789 tests, the production build, all 19 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,055.45 kB` minified / `289.23 kB` gzip initial JavaScript and unchanged `119.53 kB` / `23.43 kB` CSS, decreases of `0.09 kB` / `0.03 kB` JavaScript from work order 217. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, route graph, optional-completion rule, RNG stream, or static-hosting rule changed.

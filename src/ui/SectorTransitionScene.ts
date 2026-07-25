@@ -415,7 +415,7 @@ export class SectorTransitionScene implements Scene {
           shortLabel: resolvedSector
             ? `${node.layerIndex + 1}${String.fromCharCode(65 + node.laneIndex)} · ${resolvedSector.sectorName}`
             : node.shortLabel,
-          glyph: resolvedSector ? '◆' : node.glyph,
+          glyph: resolvedSector ? '◆' : routeSource ? '✓' : node.glyph,
           glyphKind: apexTrack ? 'apex' : 'text',
           x: node.x,
           y: node.y,
@@ -435,7 +435,7 @@ export class SectorTransitionScene implements Scene {
             : current && this.postSectorChoice
               ? 'OPTIONAL'
               : routeSource
-                ? 'DEPARTED'
+                ? 'CHARTED'
                 : node.stateLabel,
           selectable: routeTarget || routeSource || node.status !== 'hidden',
           available: routeTarget
@@ -451,18 +451,22 @@ export class SectorTransitionScene implements Scene {
             ? node.id === orderedRouteTargetNodeIds[0]
               ? 'navigation-destination-route'
               : `navigation-destination-route-${node.sectorIndex + 1}`
-            : current
-              ? this.postSectorChoice
-                ? 'navigation-destination-optional'
-                : 'navigation-destination-launch'
-              : `navigation-sector-${node.sectorIndex + 1}`,
+            : routeSource
+              ? `navigation-sector-${node.sectorIndex + 1}`
+              : current
+                ? this.postSectorChoice
+                  ? 'navigation-destination-optional'
+                  : 'navigation-destination-launch'
+                : `navigation-sector-${node.sectorIndex + 1}`,
           destinationId: routeTarget
             ? `route:${node.sectorIndex}`
-            : current
-              ? this.postSectorChoice
-                ? 'optional'
-                : 'launch'
-              : node.id,
+            : routeSource
+              ? node.id
+              : current
+                ? this.postSectorChoice
+                  ? 'optional'
+                  : 'launch'
+                : node.id,
           unavailableReason: routeTarget
             ? null
             : current && this.postSectorChoice
@@ -552,6 +556,7 @@ export class SectorTransitionScene implements Scene {
   private renderSectorDetail(context: NavigationBriefingContext, node: ActConstellationNode): void {
     if (!this.detailRoot || !this.plan) return;
     const current = node.id === this.plan.constellation.currentSectorNodeId;
+    const chartedSource = current && Boolean(this.routeChoice) && !this.postSectorChoice;
     const actSectorNumber = node.layerIndex + 1;
     const routeTarget = this.getRouteTargetNodeIds(this.plan).includes(node.id);
     if (routeTarget) {
@@ -561,8 +566,8 @@ export class SectorTransitionScene implements Scene {
     const stateLabel =
       current && this.postSectorChoice
         ? 'POST-SECTOR HOLD'
-        : current && this.routeChoice
-          ? 'DEPARTED'
+        : chartedSource
+          ? 'CHARTED'
           : node.stateLabel;
     const heading = document.createElement('div');
     heading.className = 'navigation-detail-heading';
@@ -574,7 +579,7 @@ export class SectorTransitionScene implements Scene {
     title.textContent = current
       ? this.postSectorChoice
         ? this.postSectorChoice.optional.label
-        : this.routeChoice
+        : chartedSource
           ? node.label
           : (this.mission?.stageLabel ?? `Entering ${context.sector.sectorName}`)
       : node.label;
@@ -584,7 +589,7 @@ export class SectorTransitionScene implements Scene {
     const available = current
       ? this.postSectorChoice
         ? this.postSectorChoice.optional.available
-        : this.routeChoice
+        : chartedSource
           ? false
           : true
       : false;
@@ -598,8 +603,8 @@ export class SectorTransitionScene implements Scene {
       ? this.postSectorChoice
         ? (this.postSectorChoice.optional.unavailableReason ??
           this.postSectorChoice.optional.summary)
-        : this.routeChoice
-          ? `Departure is committed. Select the highlighted next signal to choose the travel vector from ${node.label}.`
+        : chartedSource
+          ? `${node.label} is charted and settled for this run.`
           : this.createLaunchStory(context)
       : node.summary;
     const body = document.createElement('div');
@@ -609,10 +614,10 @@ export class SectorTransitionScene implements Scene {
         this.createDetailMetric('Sector state', 'Required operation cleared'),
         this.createDetailMetric('Commitment', 'One optional local challenge')
       );
-    } else if (current && this.routeChoice) {
+    } else if (chartedSource) {
       body.append(
-        this.createDetailMetric('Sector state', 'Cleared and departed'),
-        this.createDetailMetric('Navigation', 'Route choice pending at next signal')
+        this.createDetailMetric('Act layer', `${actSectorNumber}/5`),
+        this.createDetailMetric('Signal state', 'Route settled and retained on the chart')
       );
     } else if (current) {
       this.appendLaunchBriefing(body, context);
@@ -641,7 +646,7 @@ export class SectorTransitionScene implements Scene {
     action.className =
       current && this.postSectorChoice
         ? 'primary-button'
-        : current && this.routeChoice
+        : chartedSource
           ? 'secondary-button'
           : current
             ? 'primary-button'
@@ -654,8 +659,8 @@ export class SectorTransitionScene implements Scene {
         ? this.postSectorChoice.optional.available
           ? 'Stay for Optional Challenge'
           : 'Optional Challenge Unavailable'
-        : this.routeChoice
-          ? 'Inspect Destination Effects'
+        : chartedSource
+          ? 'Operation Settled'
           : 'Begin Operation'
       : node.status === 'completed'
         ? 'Operation Settled'

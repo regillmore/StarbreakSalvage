@@ -1131,6 +1131,14 @@ seed + permanent save fingerprint
 - Finale, faction, route, and apex hull modifiers remain baseline durability units and therefore retain their proportional meaning after act scaling. Phase selection continues to use hull ratios against the resolved runtime maximum.
 - The profile is pure and consumes no RNG. It adds one transient combat-state scalar but no generation field, snapshot field, migration, projectile/effect budget, damage rule, reward rule, or static-hosting dependency.
 
+### Work order 218 charted-source presentation boundary
+
+- `SectorTransitionScene` distinguishes an unresolved current operation from a settled challenge source at projection time. A source with an established route choice and no pending post-sector choice is completed chart history, not a launch destination.
+- The charted source exposes its authored sector id, check glyph, `completed` status, and `CHARTED` label. Only operations that can begin may use the reserved `launch` destination identity and its gold selectors.
+- The selected charted detail is a read-only sector-history projection with a disabled `Operation Settled` action. Inspecting it cannot change route selection, optional eligibility, or expedition state.
+- `ConstellationMap` and its interaction CSS remain state consumers. Their existing completed-node specificity now handles hover, focus, and selection consistently because the read model no longer carries contradictory launch semantics.
+- The change adds no save/snapshot field, migration, route-graph mutation, optional completion rule, RNG draw, dependency, or static-hosting rule.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.
