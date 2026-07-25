@@ -1123,6 +1123,14 @@ seed + permanent save fingerprint
 - The current `launch` destination shares the established ready-sector gold surface, border, shadow, glyph, focus, selected, and pulse selectors. It deliberately remains outside the `choice` reveal-animation selector because the opening node is already known when an act begins.
 - Removing the former purple signal selector changes no `ActConstellation` state, apex track, route graph, input behavior, save/snapshot field, RNG draw, or restored-run projection.
 
+### Work order 217 boss-durability boundary
+
+- `BossDefinition.maxHull` is the authored Act I baseline at the 10 DPS reference build. Its values describe boss identity and nominal encounter length, not a universal hull value for every act.
+- `BossDurability.createBossDurabilityProfile` is the sole act-scaling policy. It maps the route context's one-based act ordinals 1/2/3 to the 10/20/30 DPS benchmarks, applies the resulting 1x/2x/3x multiplier to baseline hull plus existing hull modifiers, and returns a rounded, minimum-one runtime maximum.
+- `GameplayScene` supplies immutable `SectorRoute.act.actIndex` when creating combat. `CombatState.spawnBoss` owns the final projection so ordinary arena delivery, finale overrides, apex substitutions, and debug spawns all share one hull path.
+- Finale, faction, route, and apex hull modifiers remain baseline durability units and therefore retain their proportional meaning after act scaling. Phase selection continues to use hull ratios against the resolved runtime maximum.
+- The profile is pure and consumes no RNG. It adds one transient combat-state scalar but no generation field, snapshot field, migration, projectile/effect budget, damage rule, reward rule, or static-hosting dependency.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

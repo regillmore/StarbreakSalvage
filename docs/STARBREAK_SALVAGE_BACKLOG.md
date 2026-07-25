@@ -3089,3 +3089,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 216. Opening nodes now share the gold ready-sector hierarchy, and apex-contact metadata no longer repaints them purple.
+
+### BL82 - Circuit-era boss durability
+
+Acceptance:
+
+- Calibrate boss baseline hull against a representative 10 DPS Act I build and keep authored nominal engagements within 8-14.5 seconds.
+- Scale boss hull to the 20 DPS Act II and 30 DPS Act III benchmarks without flattening relative boss identity.
+- Keep ordinary two-phase bosses below heavyweight finales and apex bodies in the durability band.
+- Scale existing positive and negative boss-hull modifiers with the act benchmark.
+- Guarantee the lightest boss survives benchmark pressure through arrival and its first attack.
+- Preserve phase thresholds, patterns, cadence, damage, rewards, deterministic generation, saves, dependencies, and static hosting.
+
+Status:
+
+- Implemented in work order 217. A pure act-aware durability profile now scales the reauthored 80-145 baseline hull pool at 1x/2x/3x across the 10/20/30 DPS benchmarks.

@@ -1256,6 +1256,12 @@ test('exposes Act II junction, entry, finale, and two-act summary debug paths', 
   await expect(page.locator('.debug-overlay')).toContainText(/Hazards 4 zones \+1 P4\/R\d/);
   await expect(page.locator('.debug-overlay')).toContainText(/Features L\d+\/H0/);
 
+  await page.keyboard.press('5');
+  await expect(page.getByTestId('boss-readout')).toContainText(/\d+\/\d+/);
+  const actTwoBossReadout = await page.getByTestId('boss-readout').textContent();
+  const actTwoBossHull = /\d+\/(\d+)/.exec(actTwoBossReadout ?? '');
+  expect(Number(actTwoBossHull?.[1] ?? 0)).toBeGreaterThanOrEqual(264);
+
   await page.keyboard.press('8');
   await expect(page.getByRole('heading', { name: 'Choose Reward' })).toBeVisible();
   await page.getByRole('button', { name: /Take / }).first().click();

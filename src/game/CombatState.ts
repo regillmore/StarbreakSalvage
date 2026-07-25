@@ -4,6 +4,7 @@ import {
   type BossId,
   type BossPatternId
 } from '../content/bosses';
+import { createBossDurabilityProfile } from './BossDurability';
 import {
   getEnvironmentObjectById,
   type EnvironmentObjectCollisionShape,
@@ -433,6 +434,7 @@ export interface CombatState {
   readonly enemyHullBonus: number;
   readonly enemyFireDelayMultiplier: number;
   readonly bossHullBonus: number;
+  readonly bossDurabilityActNumber: number;
   readonly sectorLength: number | null;
   timeSeconds: number;
   scrollDistance: number;
@@ -657,6 +659,7 @@ export interface CombatStateOptions {
   readonly enemyHullBonus?: number;
   readonly enemyFireDelayMultiplier?: number;
   readonly bossHullBonus?: number;
+  readonly bossDurabilityActNumber?: number;
   readonly sectorLength?: number | null;
   readonly sectorIndex?: number;
   readonly sectorId?: string;
@@ -694,6 +697,7 @@ export function createCombatState(
     enemyHullBonus: Math.max(0, Math.floor(options.enemyHullBonus ?? 0)),
     enemyFireDelayMultiplier: clamp(options.enemyFireDelayMultiplier ?? 1, 0.5, 1.5),
     bossHullBonus: Math.floor(options.bossHullBonus ?? 0),
+    bossDurabilityActNumber: Math.max(1, Math.floor(options.bossDurabilityActNumber ?? 1)),
     sectorLength: sanitizeSectorLength(options.sectorLength),
     timeSeconds: 0,
     scrollDistance: 0,
@@ -1174,7 +1178,10 @@ export function spawnBoss(
     state.nextSpawnIndex = state.spawnSchedule.length;
   }
 
-  const maxHull = Math.max(1, bossDefinition.maxHull + state.bossHullBonus);
+  const maxHull = createBossDurabilityProfile(bossDefinition, {
+    actNumber: state.bossDurabilityActNumber,
+    hullBonus: state.bossHullBonus
+  }).maxHull;
   const initialPhase = getBossPhaseForHull(bossDefinition, maxHull, maxHull).phase;
   const boss: BossState = {
     id: getNextEntityId(state),

@@ -447,3 +447,26 @@ Status: implemented. The launch destination now shares the same gold presentatio
 Managed-browser inspection opened the `STARBREAK-SMOKE` Act I constellation in focused and full-act views. The live apex-contact launch node reported `rgb(255, 209, 102)` for its border and glyph, a gold pulse and shadow, `animation-name: none` on the card, and the unchanged `apex-contact` signal. Both layouts were visually clean and the browser reported no console errors.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 117 Vitest files and 775 tests, the production build, all 19 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits unchanged `1,054.86 kB` minified / `289.03 kB` gzip initial JavaScript and `119.53 kB` / `23.43 kB` CSS, a `0.05 kB` minified CSS increase with unchanged gzip size over work order 215. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, route graph, apex pursuit state, RNG stream, or static-hosting rule changed.
+
+## Work order 217 - Circuit-era boss durability
+
+Goal: give every boss enough circuit-era durability to enter the arena, establish its attack language, and progress through its authored phases without turning later acts into disproportionately shorter encounters.
+
+Prompt:
+
+> Rebalance boss health around representative end-of-act builds of roughly 10 DPS in Act I, 20 DPS in Act II, and 30 DPS in Act III. Use a broad, maintainable durability model now while leaving deeper boss differentiation for later work.
+
+Acceptance criteria:
+
+- Boss definitions establish an Act I baseline engagement band of 8-14.5 seconds at 10 sustained direct DPS.
+- Ordinary two-phase bosses occupy the lower and middle band; heavyweight three-phase finales and apex bodies occupy the upper band.
+- Act I, II, and III apply 1x, 2x, and 3x baseline hull respectively, matching the 10/20/30 DPS benchmarks and preserving each boss's nominal engagement duration.
+- Route, faction, finale, and apex hull modifiers scale through the same act multiplier so their relative impact does not disappear later in a run.
+- The lightest boss survives benchmark damage through arena arrival and an opening attack, while phase thresholds, patterns, cadence, telegraphs, damage, projectile caps, and defeat rewards remain unchanged.
+- Debug boss spawning and restored production flows use the current sector's act context. No RNG stream, generation fingerprint, save/snapshot field, dependency, or static-hosting rule changes.
+
+Status: implemented. `BossDurability` owns the 10/20/30 DPS benchmarks and resolves act-scaled hull from each boss's authored baseline plus its existing modifiers. Baseline hull now ranges from 80 for Auditor Drone XL to 145 for Crownless Engine, giving regular bosses roughly 8-10.8 nominal seconds and finale/apex bodies roughly 12.5-14.5 seconds before build-specific damage interactions.
+
+Managed-browser inspection launched `STARBREAK-SMOKE`, spawned the lightest boss through the live Act I combat scene, and confirmed `Auditor Drone XL 80/80`. Its opening seven-shot fan was visibly crossing the arena while the boss remained present, with the current phase and health pool readable in the contract HUD. The smoke pass also caught and corrected the one-based act-ordinal integration before release; both inspected tabs reported no console errors.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 118 Vitest files and 789 tests, the production build, all 19 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,055.54 kB` minified / `289.26 kB` gzip initial JavaScript and unchanged `119.53 kB` / `23.43 kB` CSS, increases of `0.68 kB` / `0.23 kB` JavaScript over work order 216. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, route graph, phase threshold, attack pattern, damage rule, reward count, RNG stream, or static-hosting rule changed.

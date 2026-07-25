@@ -1759,6 +1759,7 @@ export class GameplayScene implements Scene {
       enemyHullBonus: this.getEnemyHullBonus(),
       enemyFireDelayMultiplier: this.getEnemyFireDelayMultiplier(),
       bossHullBonus: this.getBossHullBonus(),
+      bossDurabilityActNumber: this.getCurrentSector().act.actIndex,
       sectorLength: this.getCurrentScrollPlan().length,
       sectorIndex: this.sectorIndex,
       sectorId: this.getCurrentSector().sectorId,

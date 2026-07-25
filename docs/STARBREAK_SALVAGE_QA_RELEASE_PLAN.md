@@ -501,6 +501,7 @@ Phase 10 accessibility checks should also cover mission briefings and branch foc
 - [x] Signal Vault, pursuit details, active contact HUD/banner, Apex Dossier, and apex-spoil provenance reuse the same decorative tri-vector renderer while their text remains the accessible source of meaning.
 - [x] The guaranteed first sector reports Wreckline Expedition pacing, runs four two-contact waves around the Hecaton midpoint, retains two relief windows, and keeps its paired optional hold shorter and set-piece-free.
 - [x] Each act's first/current constellation node uses the standard gold ready-sector card and pulse even while carrying an active apex-contact signal.
+- [x] Boss hull uses the circuit-era 10/20/30 DPS act benchmarks, keeps every authored body in an 8-14.5 second nominal band, and preserves scaled finale/apex modifiers and opening attack viability.
 
 ## Release checklist
 
