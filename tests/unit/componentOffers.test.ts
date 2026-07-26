@@ -8,6 +8,7 @@ import {
 import { acquireComponent } from '../../src/game/Foundry';
 import { generateRunSkeleton } from '../../src/game/Generation';
 import { createRunSession, incrementShopRerollCount } from '../../src/game/RunSession';
+import { createPrimaryWeaponRackProfile } from '../../src/ui/ComponentOfferCard';
 
 describe('primary weapon offers', () => {
   it('creates an explicit deterministic sector reward for the current frame', () => {
@@ -38,5 +39,20 @@ describe('primary weapon offers', () => {
     const rerolled = createShopPrimaryWeaponOffer(run, session);
     expect(rerolled.component.id).not.toBe(first.component.id);
     expect(rerolled.depleted).toBe(false);
+  });
+
+  it('projects an explicit firing profile instead of hardpoint quota stats', () => {
+    const run = generateRunSkeleton('PRIMARY-SHOP-PROFILE');
+    const session = createRunSession(run, run.contracts[0]!);
+    const offer = createShopPrimaryWeaponOffer(run, session);
+    const profile = createPrimaryWeaponRackProfile(offer.component);
+
+    expect(profile).not.toBeNull();
+    expect(profile!.weaponName.length).toBeGreaterThan(0);
+    expect(profile!.volleySize).toBeGreaterThan(0);
+    expect(profile!.shotVectors).toHaveLength(profile!.volleySize);
+    expect(profile!.volleysPerSecond).toBeGreaterThan(0);
+    expect(profile!.baseDps).toBeGreaterThan(0);
+    expect(profile!.circuitCapacity).toBeGreaterThanOrEqual(2);
   });
 });

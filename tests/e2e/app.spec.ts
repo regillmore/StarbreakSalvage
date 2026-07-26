@@ -2304,6 +2304,16 @@ test('depletes fixed shop slots until reroll restocks the rack', async ({ page }
   await expect(primaryOffer).toContainText('Primary Weapon');
   await expect(primaryOffer.locator('.weapon-icon')).toHaveCount(1);
   await expect(primaryOffer.locator('.weapon-icon')).toHaveAttribute('aria-label', /weapon icon$/);
+  await expect(primaryOffer.locator('.component-offer-stats')).toHaveCount(0);
+  await expect(primaryOffer).not.toContainText('Mounted delta');
+  await expect(page.getByTestId('shop-weapon-profile')).toContainText('base DPS');
+  await expect(page.getByTestId('shop-weapon-profile')).toContainText('conduits');
+  await expect(page.getByTestId('shop-weapon-comparison')).toContainText('Mounted Comparison');
+  const shopPanelFit = await page.locator('.shop-panel').evaluate((panel) => ({
+    clientHeight: panel.clientHeight,
+    scrollHeight: panel.scrollHeight
+  }));
+  expect(shopPanelFit.scrollHeight).toBeLessThanOrEqual(shopPanelFit.clientHeight);
   const firstPrimaryId = await primaryOffer.getAttribute('data-component-id');
   await primaryOffer.click();
   await expect(primaryOffer).toHaveAttribute('data-state', 'empty');

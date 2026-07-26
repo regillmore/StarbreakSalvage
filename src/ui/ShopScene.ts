@@ -173,6 +173,10 @@ export class ShopScene implements Scene {
     title.id = 'shop-title';
     title.textContent = 'Shop';
 
+    const shopHeader = document.createElement('header');
+    shopHeader.className = 'shop-header';
+    shopHeader.append(eyebrow, title, createContractThemeStrip(this.uiRoot.ownerDocument, theme));
+
     const routeUpgradeNote = document.createElement('section');
     routeUpgradeNote.className = 'shop-route-upgrade';
     routeUpgradeNote.dataset.testid = 'shop-route-upgrade';
@@ -189,6 +193,11 @@ export class ShopScene implements Scene {
     upgradeNote.dataset.testid = 'shop-upgrade-note';
     upgradeNote.textContent = upgradeReadout ?? '';
 
+    const marketNotes = document.createElement('div');
+    marketNotes.className = 'shop-market-notes';
+    if (routeShopUpgrade) marketNotes.append(routeUpgradeNote);
+    if (upgradeReadout.length > 0) marketNotes.append(upgradeNote);
+
     const shopGrid = document.createElement('div');
     shopGrid.className = 'shop-grid';
 
@@ -197,12 +206,12 @@ export class ShopScene implements Scene {
     armory.setAttribute('aria-labelledby', 'shop-armory-title');
     const armoryHeader = document.createElement('header');
     const armoryEyebrow = document.createElement('small');
-    armoryEyebrow.textContent = 'Primary Armory // One Crate Per Roll';
+    armoryEyebrow.textContent = 'Primary Armory // Seeded Crate';
     const armoryTitle = document.createElement('h2');
     armoryTitle.id = 'shop-armory-title';
     armoryTitle.textContent = 'Weapon Rack';
     const armoryCopy = document.createElement('p');
-    armoryCopy.textContent = 'Recovered weapons enter cargo. Rerolling refills this rack.';
+    armoryCopy.textContent = 'Compare its firing profile. Purchased weapons stow in Primary Cargo.';
     armoryHeader.append(armoryEyebrow, armoryTitle, armoryCopy);
 
     const armoryButton = document.createElement('button');
@@ -239,7 +248,8 @@ export class ShopScene implements Scene {
         {
           sourceLabel: primaryWeaponOffer.component.sourceLabel,
           actionLabel: 'Buy to Cargo',
-          price: primaryWeaponOffer.price
+          price: primaryWeaponOffer.price,
+          presentation: 'shopRack'
         }
       );
     }
@@ -356,11 +366,8 @@ export class ShopScene implements Scene {
 
     controls.append(rerollButton, leaveButton);
     shell.append(
-      eyebrow,
-      createContractThemeStrip(this.uiRoot.ownerDocument, theme),
-      title,
-      ...(routeShopUpgrade ? [routeUpgradeNote] : []),
-      ...(upgradeReadout.length > 0 ? [upgradeNote] : []),
+      shopHeader,
+      ...(marketNotes.childElementCount > 0 ? [marketNotes] : []),
       repairService,
       armory,
       shopGrid,

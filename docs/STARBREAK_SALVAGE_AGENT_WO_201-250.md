@@ -578,3 +578,30 @@ The refinement pass then compared the same available route with the charted sour
 Verification: `npm run verify:release` passes typecheck, ESLint, all 118 Vitest files and 791 tests, the production build, all 20 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,051.90 kB` minified / `288.15 kB` gzip initial JavaScript and `122.59 kB` / `24.02 kB` CSS, decreases of `0.46 kB` / `0.12 kB` JavaScript and increases of `0.07 kB` / `0.05 kB` CSS from work order 220. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, route selection, route effect, reward, pressure, terrain, intel, RNG stream, or static-hosting rule changed.
 
 The selection-height refinement retains the same 791-test/20-path release result. JavaScript remains `1,051.90 kB` minified / `288.15 kB` gzip; CSS is now `123.13 kB` / `24.05 kB`, an increase of `0.54 kB` / `0.03 kB` for the bounded workspace and responsive fallback rules. The existing Vite large-chunk advisory remains.
+
+## Work order 222 - Primary armory fire profile
+
+Goal: replace the shop weapon rack's retired hardpoint-quota emphasis with a compact, useful firing-profile comparison while fitting the ordinary desktop market on one page.
+
+Prompt:
+
+> Reimagine the shop weapon rack around weapon identity, real base firing behavior, primary circuit capacity, and the currently mounted weapon. Remove the old P/H/M/C/S quota grid and raw engineering delta from this shop-only surface, then compact the surrounding market so its normal three-card inventory needs no desktop scrollbar.
+
+Acceptance criteria:
+
+- The shop weapon offer retains its authored base glyph, recovered component name, source, summary, pattern, tags, price, cargo destination, depletion, and reroll behavior.
+- A code-native volley diagram derives its shot count, spread, and direction from the same base projectile blueprints used by combat.
+- The rack reports base direct DPS, volley cadence, and primary conduit capacity instead of P/H/M/C/S component quotas.
+- The mounted comparison names the installed primary and shows signed base-DPS and conduit differences with improvement, decline, tradeoff, and neutral treatments.
+- Sector reward weapon cards retain their established full engineering comparison; the lean presentation is explicitly shop-only.
+- The shop masthead, route/permanent notes, hull repair, armory, three circuit dossiers, and controls use a compact responsive composition.
+- A stock-neutral 1280x720 desktop market has equal panel client and scroll heights. Narrow layouts remain content-driven and deliberately scrollable rather than clipping the rack.
+- Weapon generation, component quality and affixes, acquisition, prices, circuit capacity, stock, rerolls, saves, RNG streams, dependencies, and static hosting remain unchanged.
+
+Status: implemented. `ComponentOfferCard` now exposes a deterministic primary-rack profile derived from the authored weapon definition, combat projectile blueprints, cooldown, and primary circuit capacity. `ShopScene` requests that lean variant while `RewardScene` keeps the established full card. The rack replaces quota boxes and raw mounted engineering deltas with a projectile-vector scope, direct base DPS/cadence/conduit readout, and a concise mounted-primary comparison.
+
+The surrounding market now groups its masthead, pairs optional route/permanent notices, tightens hull service and armory spacing, and uses a wider bounded desktop panel. Depleted armory and circuit slots, purchase actions, rerolls, responsive stacking, and keyboard focus are unchanged.
+
+Managed-browser inspection used `http://192.168.1.2:4175/StarbreakSalvage/` at 1280x720 with seed `SHOP-DEPLETION-SMOKE`. The recovered Needle Splitter showed a three-shot split scope, `13.2 base DPS`, `7.1/s`, and `3 conduits`; the old quota grid count was zero. The complete shop measured `668px` client and scroll height inside a `670.1875px` panel, while the document remained exactly 720px high.
+
+Verification: the focused profile unit test and shop Chromium path pass. `npm run verify:release` passes typecheck, ESLint, all 118 Vitest files and 792 tests, the production build, all 20 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,054.68 kB` minified / `288.96 kB` gzip initial JavaScript and `127.60 kB` / `24.89 kB` CSS, increases of `2.78 kB` / `0.81 kB` JavaScript and `4.47 kB` / `0.84 kB` CSS from the final work order 221 refinement. The existing Vite large-chunk advisory remains; no dependency, component, weapon, price, stock, save/snapshot field, RNG stream, or static-hosting rule changed.

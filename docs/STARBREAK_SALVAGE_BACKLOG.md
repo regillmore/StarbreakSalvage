@@ -3163,3 +3163,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 221. Every destination now uses one compact base-effect card while the heavier authored route mechanics remain behind the presentation boundary. Charted and available sector selections now share a bounded desktop frame, with a short-height two-column metric treatment and stacked narrow fallback.
+
+### BL87 - Primary armory fire profile
+
+Acceptance:
+
+- Replace the shop weapon offer's P/H/M/C/S quota grid and raw mounted engineering delta with real firing-profile information.
+- Derive a compact volley scope, base direct DPS, cadence, and conduit capacity from authoritative weapon and projectile data.
+- Name the installed primary and expose signed base-DPS and conduit tradeoffs without changing reward weapon cards.
+- Fit the stock-neutral desktop shop at 1280x720 without a panel or page scrollbar.
+- Keep route/permanent market notices, hull repair, three circuit dossiers, controls, empty slots, keyboard use, and narrow responsive fallback coherent.
+- Preserve weapon/component generation, acquisition, prices, stock, rerolls, saves, deterministic streams, dependencies, and static hosting.
+
+Status:
+
+- Implemented in work order 222. The shop armory now compares combat-facing weapon output and circuit growth in a compact vector dossier, and the complete base market fits one desktop page.

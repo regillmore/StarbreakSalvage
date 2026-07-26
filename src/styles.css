@@ -721,6 +721,52 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   overflow: auto;
 }
 
+.shop-panel {
+  width: min(96vw, 1180px);
+  max-height: calc(100vh - 1rem);
+  gap: 0.5rem;
+  padding: clamp(0.72rem, 1.35vw, 1rem);
+}
+
+.shop-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.16rem 1rem;
+}
+
+.shop-header .eyebrow {
+  grid-column: 1 / -1;
+  font-size: 0.7rem;
+  line-height: 1.25;
+}
+
+.shop-header h1 {
+  font-size: clamp(2.35rem, 4.5vw, 3.65rem);
+  line-height: 0.84;
+}
+
+.shop-header .contract-theme-strip {
+  margin: 0 0 0.12rem;
+  font-size: 0.7rem;
+}
+
+.shop-market-notes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+  gap: 0.5rem;
+}
+
+.shop-market-notes .screen-upgrade-note {
+  margin: 0;
+  padding: 0.48rem 0.65rem;
+  border-left: 3px solid #7cf7ff;
+  border-radius: 5px;
+  background: rgba(7, 18, 34, 0.78);
+  font-size: 0.7rem;
+  line-height: 1.3;
+}
+
 .reward-panel {
   width: min(96vw, 1120px);
   max-height: calc(100vh - 1rem);
@@ -3120,8 +3166,8 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(9rem, 0.55fr) auto;
   align-items: center;
-  gap: 0.8rem;
-  padding: 0.72rem 0.82rem;
+  gap: 0.65rem;
+  padding: 0.55rem 0.68rem;
   border: 1px solid rgba(124, 247, 255, 0.34);
   border-radius: 8px;
   background:
@@ -3165,8 +3211,8 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
 
 .shop-repair-identity p {
   color: #b8cad3;
-  font-size: 0.72rem;
-  line-height: 1.35;
+  font-size: 0.68rem;
+  line-height: 1.28;
 }
 
 .shop-repair-gauge {
@@ -3207,10 +3253,10 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
 
 .shop-armory {
   display: grid;
-  grid-template-columns: minmax(10rem, 0.42fr) minmax(0, 1.58fr);
+  grid-template-columns: minmax(10.5rem, 0.34fr) minmax(0, 1.66fr);
   align-items: stretch;
-  gap: 0.75rem;
-  padding: 0.75rem;
+  gap: 0.62rem;
+  padding: 0.62rem;
   border: 1px solid rgba(255, 209, 102, 0.34);
   border-radius: 8px;
   background:
@@ -3245,8 +3291,8 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
 
 .shop-armory > header p {
   color: #b8cad3;
-  font-size: 0.7rem;
-  line-height: 1.35;
+  font-size: 0.67rem;
+  line-height: 1.3;
 }
 
 .component-offer-card {
@@ -3421,6 +3467,152 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
 
 .component-offer-delta[data-tone='declined'] {
   color: #ffd166;
+}
+
+.component-offer-card-rack {
+  grid-template-columns: minmax(15rem, 1.04fr) minmax(20rem, 0.96fr);
+  grid-template-areas:
+    'eyebrow profile'
+    'heading profile'
+    'copy comparison'
+    'identity action';
+  gap: 0.22rem 0.72rem;
+  padding: 0.62rem 0.72rem;
+}
+
+.component-offer-card-rack .component-offer-eyebrow {
+  grid-area: eyebrow;
+}
+
+.component-offer-card-rack .component-offer-heading {
+  grid-area: heading;
+}
+
+.component-offer-card-rack .component-offer-copy {
+  grid-area: copy;
+}
+
+.component-offer-card-rack .component-offer-identity {
+  grid-area: identity;
+}
+
+.component-offer-card-rack .component-offer-action {
+  grid-area: action;
+  align-self: end;
+}
+
+.weapon-rack-profile {
+  display: grid;
+  grid-area: profile;
+  grid-template-columns: 5.2rem minmax(0, 1fr);
+  min-width: 0;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--component-accent, #ffd166) 38%, transparent);
+  border-radius: 6px;
+  background: rgba(2, 7, 18, 0.78);
+}
+
+.weapon-rack-volley {
+  position: relative;
+  min-height: 3.8rem;
+  overflow: hidden;
+  border-right: 1px solid rgba(124, 247, 255, 0.18);
+  background:
+    linear-gradient(rgba(124, 247, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124, 247, 255, 0.07) 1px, transparent 1px), rgba(8, 18, 33, 0.64);
+  background-size: 1rem 1rem;
+}
+
+.weapon-rack-volley::before {
+  position: absolute;
+  bottom: 0.45rem;
+  left: 50%;
+  width: 1.4rem;
+  height: 0.38rem;
+  border: 1px solid var(--component-accent, #ffd166);
+  border-radius: 50% 50% 20% 20%;
+  content: '';
+  translate: -50% 0;
+  background: color-mix(in srgb, var(--component-accent, #ffd166) 18%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--component-accent, #ffd166) 34%, transparent);
+}
+
+.weapon-rack-volley i {
+  position: absolute;
+  bottom: 1.2rem;
+  left: calc(50% + var(--shot-offset));
+  width: 0.24rem;
+  height: 1.7rem;
+  border-radius: 999px;
+  translate: -50% 0;
+  rotate: var(--shot-angle);
+  transform-origin: 50% 100%;
+  background: linear-gradient(to top, transparent, #f8fbff 35%, var(--component-accent, #7cf7ff));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--component-accent, #7cf7ff) 64%, transparent);
+}
+
+.weapon-rack-profile-copy,
+.weapon-rack-comparison {
+  display: grid;
+  min-width: 0;
+  align-content: center;
+  gap: 0.1rem;
+  font-family: 'Cascadia Mono', 'Consolas', monospace;
+  text-transform: uppercase;
+}
+
+.weapon-rack-profile-copy {
+  padding: 0.45rem 0.58rem;
+}
+
+.weapon-rack-profile-copy small,
+.weapon-rack-comparison small {
+  color: #7894a3;
+  font-size: 0.52rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.weapon-rack-profile-copy strong,
+.weapon-rack-comparison strong {
+  color: #f8fbff;
+  font-size: 0.7rem;
+  line-height: 1.2;
+}
+
+.weapon-rack-profile-copy > span,
+.weapon-rack-comparison > span {
+  color: #b8cad3;
+  font-size: 0.58rem;
+  line-height: 1.25;
+}
+
+.weapon-rack-comparison {
+  grid-area: comparison;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.16rem 0.45rem;
+  align-items: baseline;
+  padding: 0.28rem 0.45rem;
+  border-left: 2px solid #7cf7ff;
+  background: rgba(7, 20, 35, 0.64);
+}
+
+.weapon-rack-comparison[data-tone='improved'] {
+  border-left-color: #87ff9a;
+}
+
+.weapon-rack-comparison[data-tone='declined'] {
+  border-left-color: #ff9b70;
+}
+
+.weapon-rack-comparison[data-tone='tradeoff'] {
+  border-left-color: #ffd166;
+}
+
+.weapon-rack-comparison > span {
+  text-align: right;
+  white-space: nowrap;
 }
 
 .component-offer-action {
@@ -6896,6 +7088,37 @@ html[data-bullet-contrast='high'] .hud-meter-track {
 
   .shop-armory {
     grid-template-columns: 1fr;
+  }
+
+  .shop-header,
+  .component-offer-card-rack {
+    grid-template-columns: 1fr;
+  }
+
+  .shop-header .eyebrow,
+  .shop-header .contract-theme-strip,
+  .component-offer-card-rack .component-offer-eyebrow,
+  .component-offer-card-rack .component-offer-heading,
+  .component-offer-card-rack .component-offer-copy,
+  .component-offer-card-rack .component-offer-identity,
+  .component-offer-card-rack .component-offer-action,
+  .component-offer-card-rack .weapon-rack-profile,
+  .component-offer-card-rack .weapon-rack-comparison {
+    grid-column: 1;
+    grid-area: auto;
+  }
+
+  .shop-header .contract-theme-strip {
+    margin-top: 0.2rem;
+  }
+
+  .weapon-rack-comparison {
+    grid-template-columns: 1fr;
+  }
+
+  .weapon-rack-comparison > span {
+    text-align: left;
+    white-space: normal;
   }
 
   .shop-repair-action {
