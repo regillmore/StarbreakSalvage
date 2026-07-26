@@ -2089,6 +2089,60 @@ test('keeps the gameplay HUD and safe frame readable in a narrow viewport', asyn
   expect(browserErrors).toEqual([]);
 });
 
+test('keeps the hardpoint scroll position steady across circuit draft refreshes', async ({
+  page
+}) => {
+  const browserErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') browserErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => browserErrors.push(error.message));
+
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto('./?debug=1&seed=FOUNDRY-SCROLL-ANCHOR');
+  await page.getByRole('button', { name: 'Scenario Lab [Debug]' }).click();
+  await page.getByTestId('scenario-lab-lab_engineering_foundry').click();
+  const panel = page.getByTestId('salvage-foundry');
+  await expect(panel).toBeVisible();
+
+  const readScroll = () =>
+    panel.evaluate((element) => ({
+      top: element.scrollTop,
+      max: element.scrollHeight - element.clientHeight
+    }));
+  const expectRefreshToHoldScroll = async (
+    action: ReturnType<typeof page.getByRole>,
+    status: RegExp
+  ) => {
+    await action.scrollIntoViewIfNeeded();
+    const before = await readScroll();
+    expect(before.top).toBeGreaterThan(0);
+    await action.click();
+    await expect(page.getByTestId('foundry-status')).toContainText(status);
+    await expect
+      .poll(async () => {
+        const after = await readScroll();
+        return Math.abs(after.top - Math.min(before.top, after.max));
+      })
+      .toBeLessThanOrEqual(1);
+  };
+
+  await expectRefreshToHoldScroll(
+    page.getByRole('button', { name: 'Move Prototype Vent Script earlier in the circuit' }),
+    /moved earlier/i
+  );
+  await expectRefreshToHoldScroll(
+    page.getByTestId('foundry-circuit-node-1').getByRole('button', { name: 'Eject' }),
+    /upgrade rack/i
+  );
+  await expectRefreshToHoldScroll(
+    page.getByRole('button', { name: 'Append Prototype Vent Script to the circuit' }),
+    /appended/i
+  );
+
+  expect(browserErrors).toEqual([]);
+});
+
 test('keeps hardpoint live-fire geometry on one combat scale across viewport widths', async ({
   page
 }) => {

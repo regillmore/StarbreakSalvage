@@ -3178,3 +3178,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 222. The shop armory now compares combat-facing weapon output and circuit growth in a compact vector dossier, and the complete base market fits one desktop page. The regression refinement isolates the Apex Bounties frame from the compact shop sizing: all three bounty states retain one stable `664px` desktop board at standard and tall viewports, while genuinely short viewports scroll instead of clipping content.
+
+### BL88 - Stable hardpoint refresh position
+
+Acceptance:
+
+- Preserve the Foundry panel's reachable scroll offset when a draft mutation rebuilds Hardpoint Control.
+- Cover primary selection, circuit reorder, eject, append, undo, rejected commit, and Primary Cargo scrap refreshes through one shared restoration boundary.
+- Keep independent positions for Hardpoint Control and Primary Cargo.
+- Restore valid control focus without allowing focus to pull the panel back to its masthead.
+- Clamp only when refreshed content becomes shorter, and retain intentional panel scrolling on desktop and narrow layouts.
+- Preserve engineering calculations, draft history, simulation output, component and item state, saves, deterministic behavior, dependencies, and static hosting.
+
+Status:
+
+- Implemented in work order 223. Foundry refreshes now preserve per-view scroll and stable focus through full DOM replacement, with a bounded fallback for content-height changes and disappearing controls.

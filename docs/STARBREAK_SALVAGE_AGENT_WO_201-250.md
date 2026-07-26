@@ -607,3 +607,26 @@ Managed-browser inspection used `http://192.168.1.2:4175/StarbreakSalvage/` at 1
 Regression refinement: the Apex Bounties board now owns an explicit `664px` bounded desktop height independent of the compact shop panel, with panel scrolling retained only as a short-viewport fallback. Managed-browser inspection selected all three bounty states at 1424x1184 and 1280x720. Every state held the same `664px` outer height; the panel, two-column workspace, target visual, and pursuit dossier each had equal client and scroll heights, and the lowest fact row remained inside the board.
 
 Verification: the focused profile unit test, shop Chromium path, and new all-status Apex geometry path pass. `npm run verify:release` passes typecheck, ESLint, all 118 Vitest files and 792 tests, the production build, all 21 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,054.68 kB` minified / `288.95 kB` gzip initial JavaScript and `127.60 kB` / `24.89 kB` CSS, increases of `2.78 kB` / `0.80 kB` JavaScript and `4.47 kB` / `0.84 kB` CSS from the final work order 221 refinement. The existing Vite large-chunk advisory remains; no dependency, component, weapon, price, stock, save/snapshot field, RNG stream, or static-hosting rule changed.
+
+## Work order 223 - Stable hardpoint refresh position
+
+Goal: keep the player's place in the intentionally scrollable Hardpoint Control workspace while draft changes rebuild its live simulation, primary weapon, circuit, rack, history, and controls.
+
+Prompt:
+
+> Preserve the Hardpoint Control menu's scroll position through build changes instead of returning to the top after every rerender. Keep the long-form engineering workspace and its scrolling behavior for now.
+
+Acceptance criteria:
+
+- Capture the active Foundry panel's scroll offset before a draft mutation replaces its DOM.
+- Restore the same reachable offset after weapon selection, circuit reorder, eject, append, undo, rejected commit, or cargo scrap refreshes.
+- Clamp restoration only when the refreshed document becomes shorter than the old offset.
+- Track Hardpoint Control and Primary Cargo positions separately so switching engineering views does not discard either place.
+- Restore a still-valid focused control without allowing focus to scroll the panel; fall back safely when the old action disappeared or became disabled.
+- Preserve the existing full panel replacement, live attack simulation, draft calculations, circuit order, component changes, cargo behavior, keyboard controls, saves, deterministic data, and static hosting.
+
+Status: implemented. `FoundryScene` now owns small per-view scroll and focus records. Every refresh captures the outgoing panel before rebuilding, restores a matching stable control with `preventScroll`, and reapplies the old offset bounded by the new maximum. Mutation controls have deterministic focus keys, while disappeared rack/circuit actions and newly disabled reorder buttons fall back without pulling the panel to the masthead.
+
+Managed-browser inspection used the Engineering Foundry fixture at 1280x720. Moving Prototype Vent Script earlier changed the panel's maximum scroll from `680px` to `662px`; the prior `663px` position restored to the new reachable maximum of `662px` rather than jumping to zero. The circuit, rack, draft log, status, and fixed controls remained visible and usable at the preserved location.
+
+Verification: the focused hardpoint scroll Chromium path passes reorder, eject, and append refreshes with at most one pixel of geometric variance and no browser errors. `npm run verify:release` passes typecheck, ESLint, all 118 Vitest files and 792 tests, the production build, all 22 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,055.86 kB` minified / `289.32 kB` gzip initial JavaScript and `127.60 kB` / `24.89 kB` CSS. The existing Vite large-chunk advisory remains; no dependency, engineering calculation, component, item, save/snapshot field, RNG stream, or static-hosting rule changed.

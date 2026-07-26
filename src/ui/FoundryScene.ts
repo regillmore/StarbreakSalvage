@@ -60,6 +60,14 @@ export class FoundryScene implements Scene {
   private readonly committedItemInstances: ItemInstance[];
   private status = 'Component secured. Draft is reversible.';
   private view: FoundryView = 'hardpoints';
+  private readonly scrollTopByView: Record<FoundryView, number> = {
+    hardpoints: 0,
+    cargo: 0
+  };
+  private readonly focusKeyByView: Record<FoundryView, string | null> = {
+    hardpoints: null,
+    cargo: null
+  };
 
   public constructor(
     private readonly uiRoot: HTMLElement,
@@ -84,6 +92,7 @@ export class FoundryScene implements Scene {
   }
 
   public enter(): void {
+    this.captureUiState();
     const frame = getShipFrameById(this.state.draft.frameId);
     const resolution = resolveEngineeringSnapshot(this.state.draft);
     const cargo = getPrimaryWeaponCargoComponents(this.state.draft);
@@ -202,6 +211,7 @@ export class FoundryScene implements Scene {
       this.status = 'Draft reset to the last committed ship.';
       this.enter();
     });
+    this.setFocusKey(undo, 'draft-undo');
 
     const skip = document.createElement('button');
     skip.className = 'secondary-button';
@@ -211,6 +221,8 @@ export class FoundryScene implements Scene {
     skip.addEventListener('click', () =>
       this.onComplete(undoFoundryDraft(this.state), this.committedItemInstances, 0)
     );
+    this.setFocusKey(commit, 'draft-commit');
+    this.setFocusKey(skip, 'foundry-exit');
     controls.append(commit, undo, skip);
 
     shell.append(
@@ -229,7 +241,24 @@ export class FoundryScene implements Scene {
       this.view === 'cargo'
         ? shell.querySelector<HTMLButtonElement>('[data-testid="foundry-open-hardpoints"]')
         : shell.querySelector<HTMLButtonElement>('[data-testid="foundry-open-cargo"]');
-    (focusTarget ?? shell.querySelector<HTMLButtonElement>('button:not(:disabled)'))?.focus();
+    const restoredFocusCandidate = this.focusKeyByView[this.view]
+      ? shell.querySelector<HTMLElement>(
+          `[data-foundry-focus-key="${this.focusKeyByView[this.view]}"]`
+        )
+      : null;
+    const restoredFocus =
+      restoredFocusCandidate instanceof HTMLButtonElement && restoredFocusCandidate.disabled
+        ? null
+        : restoredFocusCandidate;
+    (
+      restoredFocus ??
+      focusTarget ??
+      shell.querySelector<HTMLButtonElement>('button:not(:disabled)')
+    )?.focus({ preventScroll: true });
+    shell.scrollTop = Math.min(
+      this.scrollTopByView[this.view],
+      Math.max(0, shell.scrollHeight - shell.clientHeight)
+    );
   }
 
   public update(_dt: number): void {}
@@ -396,6 +425,7 @@ export class FoundryScene implements Scene {
     fieldLabel.textContent = 'Mounted weapon';
     const select = document.createElement('select');
     select.dataset.testid = 'foundry-primary-assignment';
+    this.setFocusKey(select, 'primary-assignment');
     select.setAttribute('aria-label', `Choose primary weapon for ${hardpoint.label}`);
     for (const component of candidates) {
       const candidateModule = getShipModuleById(component.moduleId);
@@ -504,6 +534,7 @@ export class FoundryScene implements Scene {
     hardpoints.className = 'secondary-button foundry-menu-button';
     hardpoints.type = 'button';
     hardpoints.dataset.testid = 'foundry-open-hardpoints';
+    this.setFocusKey(hardpoints, 'open-hardpoints');
     hardpoints.textContent = 'Hardpoint Control';
     hardpoints.disabled = this.view === 'hardpoints';
     if (this.view === 'hardpoints') hardpoints.setAttribute('aria-current', 'page');
@@ -516,6 +547,7 @@ export class FoundryScene implements Scene {
     cargo.className = 'secondary-button foundry-menu-button';
     cargo.type = 'button';
     cargo.dataset.testid = 'foundry-open-cargo';
+    this.setFocusKey(cargo, 'open-cargo');
     cargo.textContent = `Primary Cargo / ${cargoCount}`;
     cargo.disabled = this.view === 'cargo';
     if (this.view === 'cargo') cargo.setAttribute('aria-current', 'page');
@@ -621,14 +653,18 @@ export class FoundryScene implements Scene {
         this.state.draft,
         instance.acquisitionOrder
       );
-      const append = this.createActionButton('Append to chain', () => {
-        this.itemInstances = fitItemInCircuit(
-          this.itemInstances,
-          this.state.draft,
-          instance.acquisitionOrder
-        );
-        this.status = `${item.name} appended to the signal chain.`;
-      });
+      const append = this.createActionButton(
+        'Append to chain',
+        () => {
+          this.itemInstances = fitItemInCircuit(
+            this.itemInstances,
+            this.state.draft,
+            instance.acquisitionOrder
+          );
+          this.status = `${item.name} appended to the signal chain.`;
+        },
+        `rack-${instance.acquisitionOrder}-append`
+      );
       append.disabled = !canFit;
       append.setAttribute('aria-label', `Append ${item.name} to the circuit`);
       let fitNote: HTMLElement | null = null;
@@ -699,32 +735,44 @@ export class FoundryScene implements Scene {
     }
     const actions = document.createElement('div');
     actions.className = 'foundry-card-actions foundry-circuit-actions';
-    const earlier = this.createActionButton('Earlier', () => {
-      this.itemInstances = moveItemInCircuit(
-        this.itemInstances,
-        this.state.draft,
-        instance.acquisitionOrder,
-        -1
-      );
-      this.status = `${item.name} moved earlier in the signal chain.`;
-    });
+    const earlier = this.createActionButton(
+      'Earlier',
+      () => {
+        this.itemInstances = moveItemInCircuit(
+          this.itemInstances,
+          this.state.draft,
+          instance.acquisitionOrder,
+          -1
+        );
+        this.status = `${item.name} moved earlier in the signal chain.`;
+      },
+      `circuit-${instance.acquisitionOrder}-earlier`
+    );
     earlier.disabled = index === 0;
     earlier.setAttribute('aria-label', `Move ${item.name} earlier in the circuit`);
-    const later = this.createActionButton('Later', () => {
-      this.itemInstances = moveItemInCircuit(
-        this.itemInstances,
-        this.state.draft,
-        instance.acquisitionOrder,
-        1
-      );
-      this.status = `${item.name} moved later in the signal chain.`;
-    });
+    const later = this.createActionButton(
+      'Later',
+      () => {
+        this.itemInstances = moveItemInCircuit(
+          this.itemInstances,
+          this.state.draft,
+          instance.acquisitionOrder,
+          1
+        );
+        this.status = `${item.name} moved later in the signal chain.`;
+      },
+      `circuit-${instance.acquisitionOrder}-later`
+    );
     later.disabled = index === activeCount - 1;
     later.setAttribute('aria-label', `Move ${item.name} later in the circuit`);
-    const eject = this.createActionButton('Eject', () => {
-      this.itemInstances = unfitItem(this.itemInstances, instance.acquisitionOrder);
-      this.status = `${item.name} returned to the upgrade rack.`;
-    });
+    const eject = this.createActionButton(
+      'Eject',
+      () => {
+        this.itemInstances = unfitItem(this.itemInstances, instance.acquisitionOrder);
+        this.status = `${item.name} returned to the upgrade rack.`;
+      },
+      `circuit-${instance.acquisitionOrder}-eject`
+    );
     actions.append(earlier, later, eject);
     node.append(header, heading, effect, output, actions);
     return node;
@@ -812,10 +860,14 @@ export class FoundryScene implements Scene {
     const actions = document.createElement('div');
     actions.className = 'foundry-card-actions';
     actions.append(
-      this.createActionButton(`Scrap +${component.salvageValue}`, () => {
-        this.state = planScrapComponent(this.state, component.id, this.sectorIndex);
-        this.status = `+${component.salvageValue} salvage on commit.`;
-      })
+      this.createActionButton(
+        `Scrap +${component.salvageValue}`,
+        () => {
+          this.state = planScrapComponent(this.state, component.id, this.sectorIndex);
+          this.status = `+${component.salvageValue} salvage on commit.`;
+        },
+        `cargo-${component.id}-scrap`
+      )
     );
     card.append(
       header,
@@ -828,16 +880,37 @@ export class FoundryScene implements Scene {
     return card;
   }
 
-  private createActionButton(label: string, action: () => void): HTMLButtonElement {
+  private createActionButton(
+    label: string,
+    action: () => void,
+    focusKey?: string
+  ): HTMLButtonElement {
     const button = document.createElement('button');
     button.className = 'secondary-button foundry-action';
     button.type = 'button';
     button.textContent = label;
+    if (focusKey) this.setFocusKey(button, focusKey);
     button.addEventListener('click', () => {
       action();
       this.enter();
     });
     return button;
+  }
+
+  private captureUiState(): void {
+    const shell = this.uiRoot.querySelector<HTMLElement>('[data-testid="salvage-foundry"]');
+    const renderedView = shell?.dataset.foundryView;
+    if (!shell || (renderedView !== 'hardpoints' && renderedView !== 'cargo')) return;
+    this.scrollTopByView[renderedView] = shell.scrollTop;
+    const activeElement = shell.ownerDocument.activeElement;
+    this.focusKeyByView[renderedView] =
+      activeElement instanceof HTMLElement && shell.contains(activeElement)
+        ? (activeElement.dataset.foundryFocusKey ?? null)
+        : null;
+  }
+
+  private setFocusKey(element: HTMLElement, key: string): void {
+    element.dataset.foundryFocusKey = key;
   }
 
   private commit(): void {
