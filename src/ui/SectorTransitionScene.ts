@@ -765,12 +765,6 @@ export class SectorTransitionScene implements Scene {
     routeSummary.className = 'navigation-route-effect-summary';
     routeSummary.textContent = effect.summary;
     routeEffect.append(routeHeading, routeSummary);
-    for (const detail of effect.details) {
-      const routeDetail = document.createElement('span');
-      routeDetail.className = 'navigation-route-effect-detail';
-      routeDetail.textContent = detail;
-      routeEffect.append(routeDetail);
-    }
     body.append(routeEffect);
 
     const commit = document.createElement('button');

@@ -25,7 +25,7 @@ describe('route navigation presentation', () => {
     expect(first.effect).not.toBeNull();
     expect(run.sectors[1]!.routeOptions).toContain(first.effect!.route);
     expect(run.sectors[0]!.routeOptions).not.toContain(first.effect!.route);
-    expect(first.effect!.details.length).toBeLessThanOrEqual(2);
+    expect(Object.keys(first.effect!).sort()).toEqual(['riskLabel', 'route', 'summary']);
     expect(JSON.stringify(first)).not.toMatch(/Campaign:|Seed Exchange|Next mission:/);
   });
 
@@ -45,6 +45,31 @@ describe('route navigation presentation', () => {
     expect(run.sectors[4]!.act.actRouteNodeLabel).toBe('3B');
     expect(fromTwoA.effect).toEqual(fromTwoB.effect);
     expect(fromTwoA.edgeLabel).not.toBe(fromTwoB.edgeLabel);
+  });
+
+  it('projects the same terse route-effect shape throughout all three acts', () => {
+    const run = generateRunSkeleton('TERSE-ROUTE-EFFECTS');
+    const actIds = new Set<string>();
+
+    for (
+      let targetSectorIndex = 1;
+      targetSectorIndex < run.sectors.length;
+      targetSectorIndex += 1
+    ) {
+      const target = run.sectors[targetSectorIndex]!;
+      if (target.routeOptions.length === 0) continue;
+      const model = createRouteNavigationReadModel({
+        run,
+        sourceSectorIndex: targetSectorIndex - 1,
+        targetSectorIndex
+      });
+
+      expect(Object.keys(model.effect!).sort()).toEqual(['riskLabel', 'route', 'summary']);
+      expect(model.effect!.summary).not.toMatch(/^(?:Pressure|Yield|Terrain|Intel) ·/);
+      actIds.add(target.act.actId);
+    }
+
+    expect(actIds).toEqual(new Set(['act_outer_rim', 'act_core_descent', 'act_null_frontier']));
   });
 
   it('biases harder destination nodes toward the harder end of their own effect pools', () => {

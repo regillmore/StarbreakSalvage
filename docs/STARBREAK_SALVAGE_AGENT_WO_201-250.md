@@ -547,3 +547,26 @@ Selection-height refinement: the desktop board now owns a stable 612px frame, wh
 Managed-browser inspection opened the `STARBREAK-SMOKE` Apex Scenario Lab fixture at 1280x720. The claimed Crownless Engine and both active bounties each measured a 612px board and 66.625px condition card, with 610px internal scroll height, zero document horizontal overflow, and no console warnings or errors. Switching targets redrew pursuit and spoil details without moving the surrounding menu.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 118 Vitest files and 790 tests, the production build, all 20 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,052.36 kB` minified / `288.27 kB` gzip initial JavaScript and `122.52 kB` / `23.97 kB` CSS, decreases of `4.34 kB` / `1.40 kB` JavaScript and increases of `1.81 kB` / `0.35 kB` CSS from work order 219. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, pursuit graph, reward count, RNG stream, or static-hosting rule changed.
+
+## Work order 221 - Terse navigation route effects
+
+Goal: begin distilling the overfilled sector-detail panel by giving every destination one compact, act-invariant route-effect summary.
+
+Prompt:
+
+> Remove the heavier route-effect detail behavior from navigation. Preserve the important route identity and consequence in a terse shared block across all acts, including apex-heavy destination choices.
+
+Acceptance criteria:
+
+- The route-effect presentation read model exposes only the selected route, risk label, and one concise summary.
+- Pressure, yield, terrain, intel, and activation-detail rows are absent from the navigation destination panel rather than merely hidden with CSS.
+- The remaining route card consistently presents `BASE ROUTE EFFECT`, effect name, risk, and a bounded two-line summary across Acts I-III and every route difficulty.
+- Shop continues to identify its destination reservation in the concise summary without reopening the source-sector market.
+- Apex track or break consequences remain a separate explicit destination metric and commit-label warning.
+- Route generation, risk weighting, route execution, rewards, pressure, terrain, intel, saves, snapshots, RNG streams, dependencies, and static hosting remain unchanged.
+
+Status: implemented. `RouteNavigationOptionReadModel` no longer creates or exports a secondary details array, and `SectorTransitionScene` renders one shared identity/risk/summary card. CSS reserves exactly two summary lines and clamps excess copy, keeping the route-effect surface stable while later sector-detail refactors can address the surrounding briefing metrics independently.
+
+Managed-browser inspection completed Act II's first operation and compared the tracked and pursuit-breaking destination nodes at 1280x720. Both route effects measured `86.09375px`; the details body measured `312px` client and scroll height, contained zero legacy detail rows, had no document horizontal overflow, and reported no console warnings or errors.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 118 Vitest files and 791 tests, the production build, all 20 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,051.90 kB` minified / `288.15 kB` gzip initial JavaScript and `122.59 kB` / `24.02 kB` CSS, decreases of `0.46 kB` / `0.12 kB` JavaScript and increases of `0.07 kB` / `0.05 kB` CSS from work order 220. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, route selection, route effect, reward, pressure, terrain, intel, RNG stream, or static-hosting rule changed.

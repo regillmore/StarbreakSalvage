@@ -8,7 +8,6 @@ export interface RouteNavigationOptionReadModel {
   readonly route: RouteOption;
   readonly riskLabel: 'LOW' | 'GUARDED' | 'SEVERE';
   readonly summary: string;
-  readonly details: readonly string[];
 }
 
 export interface RouteNavigationReadModel {
@@ -102,18 +101,7 @@ export function createRouteNavigationReadModel(options: {
           summary:
             routeEffect.kind === 'shop'
               ? 'Reserve discounted, biased stock in the destination sector shop.'
-              : finishSentence(routeEffect.rewardHint),
-          details: [
-            routeEffect.kind === 'shop'
-              ? 'Activates after arrival; the current-sector market does not reopen.'
-              : null,
-            routeEffect.pressureHint ? `Pressure · ${routeEffect.pressureHint}` : null,
-            routeEffect.rewardTierHint ? `Yield · ${routeEffect.rewardTierHint}` : null,
-            routeEffect.environmentalHint ? `Terrain · ${routeEffect.environmentalHint}` : null,
-            routeEffect.intelHint ? finishSentence(routeEffect.intelHint) : null
-          ]
-            .filter((detail): detail is string => detail !== null)
-            .slice(0, 2)
+              : finishSentence(routeEffect.rewardHint)
         }
       : null
   };

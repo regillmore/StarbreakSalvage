@@ -505,6 +505,7 @@ Phase 10 accessibility checks should also cover mission briefings and branch foc
 - [x] A completed paired challenge projects its source node as green `CHARTED` history; hover, focus, and selection cannot restore gold launch styling, while onward routes remain actionable.
 - [x] Shop routes never reopen the source market; their destination hub and Shop show one matching route-stock discount/bias cue, and convergence nodes never roll Shop.
 - [x] The Apex Bounty Board exposes three selectable targets, one compact pursuit/visual/spoil detail, and no disposition choices; successful finales settle immediately and the desktop board has no scroll.
+- [x] Navigation route effects expose one stable name/risk/two-line summary card across all acts; no secondary pressure, yield, terrain, intel, or activation-detail rows remain.
 
 ## Release checklist
 

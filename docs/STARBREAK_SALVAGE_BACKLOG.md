@@ -3147,3 +3147,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 220. Apex is now a kill-bounty campaign whose compact Signal Vault board exposes the hunt and its exclusive circuit spoils without a second ending system.
+
+### BL86 - Terse navigation route effects
+
+Acceptance:
+
+- Reduce the navigation route-effect read model to identity, risk, and one concise summary.
+- Remove presentation-only pressure, yield, terrain, intel, and activation-detail rows from every act.
+- Give the shared effect card a stable two-line summary footprint across route difficulties and apex pursuit choices.
+- Preserve explicit apex track/break messaging outside the effect card.
+- Preserve all route selection, risk, pressure, reward, terrain, intel, save, snapshot, and deterministic generation behavior.
+
+Status:
+
+- Implemented in work order 221. Every destination now uses one compact base-effect card while the heavier authored route mechanics remain behind the presentation boundary.

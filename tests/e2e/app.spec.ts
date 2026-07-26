@@ -511,6 +511,7 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   ).toContain('255, 209, 102');
   await expect(page.getByTestId('navigation-route-effect')).toBeVisible();
   await expect(page.getByTestId('navigation-route-effect')).toContainText('BASE ROUTE EFFECT');
+  await expect(page.locator('.navigation-route-effect-detail')).toHaveCount(0);
   await expect(page.getByTestId('apex-pursuit-route-preview')).toContainText(
     /TRACK LOCK|TRACK BREAK/
   );

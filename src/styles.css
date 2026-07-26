@@ -4980,8 +4980,8 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
 
 .navigation-route-effect {
   display: grid;
-  gap: 0.3rem;
-  padding: 0.68rem 0.72rem;
+  gap: 0.24rem;
+  padding: 0.58rem 0.64rem;
   border: 1px solid rgba(255, 209, 102, 0.42);
   border-radius: 5px;
   background:
@@ -5001,7 +5001,6 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
 }
 
 .navigation-route-effect-heading small,
-.navigation-route-effect-detail,
 .navigation-route-effect-risk {
   color: #8faebb;
   font-family: 'Cascadia Mono', 'Consolas', monospace;
@@ -5023,10 +5022,15 @@ html[data-bullet-contrast='high'] .apex-contact-banner {
 }
 
 .navigation-route-effect-summary {
+  display: -webkit-box;
+  min-height: calc(2 * 1.32em);
+  overflow: hidden;
   margin: 0;
   color: #e7f4f8;
   font-size: 0.73rem;
   line-height: 1.32;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .navigation-route-commit {

@@ -1156,6 +1156,13 @@ seed + permanent save fingerprint
 - The existing `SectorRewards` substitution remains authoritative: a claimed threat can replace one ordinary circuit choice with one deterministically selected associated apex item, without changing manifest size or draws.
 - The tri-vector target scope is DOM/SVG and CSS only. No image asset, canvas-frame branch, actor, projectile, effect, RNG draw, dependency, or static-hosting request is added.
 
+### Work order 221 terse-route-presentation boundary
+
+- `RouteNavigationOptionReadModel` is the complete route-effect presentation contract: authored route identity, derived risk label, and one reward-facing summary. It no longer republishes pressure, yield, terrain, intel, or activation hints as secondary navigation rows.
+- `SectorTransitionScene` keeps apex track/break consequences in their own pursuit metric and commit label. Those consequences are destination topology, not part of the base route-effect description.
+- The route-effect CSS clamps and reserves two summary lines, so ordinary, harder, convergence, Shop, tracked, and track-breaking destinations share one compact visual footprint.
+- The underlying `RouteOption` remains intact for route execution and debug/read-model consumers. Selection weighting, route outcomes, combat modifiers, rewards, environment, intel, snapshots, and deterministic seed strings do not change.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.
