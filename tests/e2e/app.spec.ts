@@ -1075,9 +1075,7 @@ test('carries a shop route warrant forward into the destination-sector market', 
   await expect(routeShopNode).toHaveAttribute('data-signal', 'route-shop');
   await expect(routeShopNode).toContainText('ROUTE STOCK');
   await routeShopNode.click();
-  await expect(page.getByTestId('navigation-route-shop-cue')).toContainText(
-    'Route Market Upgrade'
-  );
+  await expect(page.getByTestId('navigation-route-shop-cue')).toContainText('Route Market Upgrade');
   await expect(page.getByTestId('navigation-route-shop-cue')).toContainText('stock bias');
   await expect(page.getByTestId('navigation-destination-action')).toHaveText('Visit Shop');
   await page.getByTestId('navigation-destination-action').click();
@@ -1510,6 +1508,26 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
   await expect(page.getByTestId('apex-bounty-visual')).toContainText(/TARGET|BOUNTY/);
   await expect(page.getByTestId('apex-bounty-spoils')).toContainText('Apex circuit spoils');
   await expect(page.getByTestId('apex-dossier')).not.toContainText(/Disposition|Ready|Locked/);
+  const bountyPanelHeights: number[] = [];
+  const bountyConditionHeights: number[] = [];
+  const bountyTiles = page.getByTestId('apex-bounty-tiles').locator('button');
+  for (let index = 0; index < 3; index += 1) {
+    await bountyTiles.nth(index).click();
+    bountyPanelHeights.push(
+      await page
+        .getByTestId('apex-dossier')
+        .evaluate((element) => element.getBoundingClientRect().height)
+    );
+    bountyConditionHeights.push(
+      await page
+        .locator('.apex-bounty-condition')
+        .evaluate((element) => element.getBoundingClientRect().height)
+    );
+  }
+  expect(Math.max(...bountyPanelHeights) - Math.min(...bountyPanelHeights)).toBeLessThanOrEqual(1);
+  expect(
+    Math.max(...bountyConditionHeights) - Math.min(...bountyConditionHeights)
+  ).toBeLessThanOrEqual(1);
   await expect(page.locator('.debug-overlay')).toContainText('Apex budget');
 
   await page.keyboard.press('Escape');
@@ -2389,9 +2407,7 @@ async function forceCompleteSectorAndEnterNext(
     await expect(chartedSource).toHaveAttribute('aria-pressed', 'true');
     await expect(chartedSource).toHaveCSS('border-top-color', 'rgba(114, 242, 167, 0.48)');
     await expect(page.getByTestId('navigation-destination-detail')).toContainText('CHARTED');
-    await expect(page.getByTestId('navigation-destination-action')).toHaveText(
-      'Operation Settled'
-    );
+    await expect(page.getByTestId('navigation-destination-action')).toHaveText('Operation Settled');
     await expect(page.getByTestId('navigation-destination-action')).toBeDisabled();
     await page.getByTestId('navigation-destination-route').click();
     await expect(page.getByTestId('navigation-route-commit')).toBeEnabled();
