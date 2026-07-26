@@ -3118,3 +3118,17 @@ Acceptance:
 Status:
 
 - Implemented in work order 218. A completed challenge source is now ordinary chart history rather than a visually completed node that still carries launch semantics.
+
+### BL84 - Forward market route warrant
+
+Acceptance:
+
+- Replace the immediate Shop-route detour with a route event that reserves upgraded inventory for the destination sector.
+- Apply the stored discount and stock bias only when that destination is the current sector, including rerolls, without adding a slot.
+- Mark the destination Shop service as `ROUTE STOCK` and repeat the exact reservation in its dossier and Shop banner.
+- Filter Shop from every layer-5 convergence effect pool instead of carrying it through an act handoff.
+- Preserve earlier deterministic route weighting, shared-node identity, route-component settlement, saves, snapshots, dependencies, and static hosting.
+
+Status:
+
+- Implemented in work order 219. Shop now issues a destination-bound Forward Market Warrant, while convergence nodes select from effects that can resolve inside the closing act.

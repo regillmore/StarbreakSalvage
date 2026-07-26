@@ -1139,6 +1139,14 @@ seed + permanent save fingerprint
 - `ConstellationMap` and its interaction CSS remain state consumers. Their existing completed-node specificity now handles hover, focus, and selection consistently because the read model no longer carries contradictory launch semantics.
 - The change adds no save/snapshot field, migration, route-graph mutation, optional completion rule, RNG draw, dependency, or static-hosting rule.
 
+### Work order 219 forward-market boundary
+
+- `AppliedRouteOutcome.sectorIndex` remains the destination binding for Shop. `GameApp` records the outcome and uses the ordinary route-event/component/advance pipeline; it no longer opens a market before advancing.
+- `getShopModifiersForSector` is queried with `RunSession.currentSectorIndex`, the same zero-based index stored by route outcomes. Content-facing one-based `SectorRoute.index` remains authoritative for inventory seeds, stock ledgers, labels, and prices but cannot select an incoming route modifier.
+- `RouteEvents.createRouteShopModifierReadModel` is the shared combination boundary for stacked discounts and deduplicated stock tags. `SectorTransitionScene` and `ShopScene` render that model, while Shop generation consumes its raw discount and tags.
+- `RouteNavigation.selectNodeRouteEffect` filters Shop only when `actSectorIndex === actSectorCount`, before its existing risk normalization and weighted choice. Non-finale nodes retain the same candidate arrays, seed string, and draw count.
+- The route outcome continues to persist through the existing snapshot-validated route history. No pending reservation state, consumption flag, migration, route edge, inventory slot, generation stream, dependency, or static-hosting rule is added.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

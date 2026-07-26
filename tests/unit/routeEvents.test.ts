@@ -19,7 +19,10 @@ import {
   getRewardModifiersForSector,
   getShopModifiersForSector
 } from '../../src/game/RunSession';
-import { generateRouteOutcome } from '../../src/game/RouteEvents';
+import {
+  createRouteShopModifierReadModel,
+  generateRouteOutcome
+} from '../../src/game/RouteEvents';
 import { generateSectorRewardChoices } from '../../src/game/SectorRewards';
 import { generateShopInventory, SHOP_BASE_CIRCUIT_STOCK } from '../../src/game/Shops';
 
@@ -116,36 +119,47 @@ describe('route events', () => {
     ]);
   });
 
-  it('uses shop outcomes to alter deterministic shop inventory', () => {
+  it('reserves shop outcomes for the destination sector inventory', () => {
     const run = generateRunSkeleton('STARBREAK-SMOKE');
     const contract = getFirstContract(run);
     const session = createRunSession(run, contract);
     const sector = getCurrentSector(run, session);
+    const targetSectorIndex = 1;
+    const targetSector = getRequiredSector(run, targetSectorIndex);
     const route = makeRoute('shop');
     const outcome = generateRouteOutcome({
       run,
       sector,
       route,
-      availableCredits: session.credits
+      availableCredits: session.credits,
+      targetSectorIndex
     });
 
     applyRouteOutcome(session, sector, route, outcome);
 
-    const shopModifiers = getShopModifiersForSector(session, sector.index);
-    const discount = shopModifiers.reduce((total, modifier) => total + modifier.discount, 0);
+    expect(getShopModifiersForSector(session, session.currentSectorIndex)).toEqual([]);
+    const shopModifiers = getShopModifiersForSector(session, targetSectorIndex);
+    const readModel = createRouteShopModifierReadModel(shopModifiers);
     const inventory = generateShopInventory({
-      seed: sector.shopSeed,
-      sectorIndex: sector.index,
+      seed: targetSector.shopSeed,
+      sectorIndex: targetSector.index,
       rerollCount: 0,
-      biasTags: shopModifiers.flatMap((modifier) => modifier.biasTags),
-      priceDiscount: discount,
+      biasTags: readModel?.biasTags ?? [],
+      priceDiscount: readModel?.discount ?? 0,
       count: SHOP_BASE_CIRCUIT_STOCK
     });
 
     expect(inventory).toHaveLength(SHOP_BASE_CIRCUIT_STOCK);
     expect(Math.min(...inventory.map((item) => item.price))).toBeGreaterThanOrEqual(2);
-    expect(discount).toBeGreaterThan(0);
-    expect(shopModifiers[0]?.biasTags.length).toBeGreaterThan(0);
+    expect(readModel?.discount).toBeGreaterThan(0);
+    expect(readModel?.biasTags).toContain('credit');
+    expect(readModel?.title).toBe('Route Market Upgrade');
+    expect(readModel?.summary).toContain('stock bias');
+    expect(outcome.title).toBe('Forward Market Warrant');
+    expect(outcome.summary).toContain(targetSector.sectorName);
+    expect(outcome.details).toContain(
+      'The current market remains closed; the warrant activates after arrival.'
+    );
     expect(outcome.details.join(' ')).not.toContain('extra slot');
   });
 

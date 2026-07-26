@@ -493,3 +493,29 @@ Status: implemented. `SectorTransitionScene` now projects the just-settled route
 Managed-browser inspection completed the `STARBREAK-SMOKE` first-sector challenge and measured the source node before hover, during hover, and after selection. All three states retained the completed green `rgba(114, 242, 167, 0.48)` border and green surface; selection opened the disabled `Operation Settled` dossier. The onward route retained its gold border and actionable selection, and the browser console reported no application errors.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 118 Vitest files and 789 tests, the production build, all 19 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,055.45 kB` minified / `289.23 kB` gzip initial JavaScript and unchanged `119.53 kB` / `23.43 kB` CSS, decreases of `0.09 kB` / `0.03 kB` JavaScript from work order 217. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, route graph, optional-completion rule, RNG stream, or static-hosting rule changed.
+
+## Work order 219 - Forward market route warrant
+
+Goal: turn Shop from an immediate stale-market detour into a legible promise that improves the destination sector's market.
+
+Prompt:
+
+> A Shop route should reserve discounted, biased inventory for the destination sector instead of opening the source sector's shop before departure. Make the pending benefit visible in navigation and inside the upgraded market, and remove Shop from convergence-layer effects rather than carrying it ambiguously across an act handoff.
+
+Acceptance criteria:
+
+- Committing a Shop destination opens a concise forward-market route event and then advances through the same route-component and sector-entry pipeline as every other route effect.
+- The source sector shop never opens as part of commitment. The stored modifier applies only while its destination sector is current.
+- Destination circuit stock receives the deterministic 1-2 credit discount and Credit plus one seeded family bias already authored by the Shop outcome; no inventory slot is added.
+- The destination hub marks its Shop service as `ROUTE STOCK` with a distinct gold reservation cue. Selecting it states the exact discount and bias.
+- The Shop screen repeats the same shared read model in an `Incoming Route Reservation` banner, and rerolls continue to use the reservation for that sector.
+- Shop is filtered from every layer-5 convergence destination before deterministic risk weighting. It does not bridge through the refit or into the next act.
+- Non-finale destination selection keeps its existing named seed stream, risk weighting, shared-node invariance, route graph, saves, snapshots, dependencies, and static hosting.
+
+Status: implemented. `GameApp` no longer special-cases Shop into an immediate scene. `RouteEvents` records a Forward Market Warrant against the already-authored destination index, and both navigation and `ShopScene` consume one combined route-market read model keyed to `RunSession.currentSectorIndex`. The existing route outcome remains the persistence boundary, so no new pending flag or snapshot field is required.
+
+`RouteNavigation` removes Shop only when the target is its act's convergence layer, before calculating the candidate risk span and weighted choice. Earlier nodes retain the established deterministic selector. The destination Shop service uses a gold `ROUTE STOCK` signal, while its dossier and market banner expose the same circuit-price discount and stock families.
+
+Managed-browser inspection followed `SHOP-ROUTE-1` from Outer Debris Field through its Shop destination. Commitment showed Forward Market Warrant with zero Shop headings, then entered Trade War Corridor. After that sector, the Shop node measured a gold `rgba(255, 209, 102, 0.78)` border, showed `ROUTE STOCK`, and its dossier and 941px-wide market banner agreed on `-1 circuit prices | Credit + Missile stock bias`. The navigation panel had no overflow and the browser console reported no application errors.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 118 Vitest files and 790 tests, the production build, all 20 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,056.70 kB` minified / `289.67 kB` gzip initial JavaScript and `120.71 kB` / `23.62 kB` CSS, increases of `1.25 kB` / `0.44 kB` JavaScript and `1.18 kB` / `0.19 kB` CSS over work order 218. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, route edge, inventory slot, non-finale RNG stream, or static-hosting rule changed.

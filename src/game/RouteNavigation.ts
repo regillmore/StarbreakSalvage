@@ -29,18 +29,22 @@ export function selectNodeRouteEffect(run: RunSkeleton, targetSectorIndex: numbe
   if (!target) {
     throw new Error(`Cannot select a route effect for sector ${targetSectorIndex}.`);
   }
-  if (target.routeOptions.length === 0) {
+  const routeOptions =
+    target.act.actSectorIndex === target.act.actSectorCount
+      ? target.routeOptions.filter((route) => route.kind !== 'shop')
+      : target.routeOptions;
+  if (routeOptions.length === 0) {
     throw new Error(`Sector ${targetSectorIndex} has no route effect candidates.`);
   }
 
-  const risks = target.routeOptions.map((route) => route.risk);
+  const risks = routeOptions.map((route) => route.risk);
   const minRisk = Math.min(...risks);
   const maxRisk = Math.max(...risks);
   const riskSpan = maxRisk - minRisk;
   const rng = createRng(`${run.seed}:node-route-effect:${targetSectorIndex}:${target.sectorId}`);
 
   return rng.weightedChoice(
-    target.routeOptions.map((route) => {
+    routeOptions.map((route) => {
       const riskPosition = riskSpan === 0 ? 0.5 : (route.risk - minRisk) / riskSpan;
       return {
         item: route,
@@ -95,8 +99,14 @@ export function createRouteNavigationReadModel(options: {
       ? {
           route: routeEffect,
           riskLabel: formatRouteRisk(routeEffect.risk),
-          summary: finishSentence(routeEffect.rewardHint),
+          summary:
+            routeEffect.kind === 'shop'
+              ? 'Reserve discounted, biased stock in the destination sector shop.'
+              : finishSentence(routeEffect.rewardHint),
           details: [
+            routeEffect.kind === 'shop'
+              ? 'Activates after arrival; the current-sector market does not reopen.'
+              : null,
             routeEffect.pressureHint ? `Pressure · ${routeEffect.pressureHint}` : null,
             routeEffect.rewardTierHint ? `Yield · ${routeEffect.rewardTierHint}` : null,
             routeEffect.environmentalHint ? `Terrain · ${routeEffect.environmentalHint}` : null,

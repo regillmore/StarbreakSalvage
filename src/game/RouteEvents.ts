@@ -28,6 +28,13 @@ export interface RouteShopModifier {
   readonly biasTags: readonly ItemTag[];
 }
 
+export interface RouteShopModifierReadModel {
+  readonly discount: number;
+  readonly biasTags: readonly ItemTag[];
+  readonly title: string;
+  readonly summary: string;
+}
+
 export interface RouteOutcomeEffects {
   readonly creditsDelta: number;
   readonly salvageDelta: number;
@@ -85,13 +92,18 @@ export function generateRouteOutcome(options: {
     case 'shop': {
       const discount = rng.int(1, 2);
       const focusTag = rng.choice<ItemTag>(['credit', 'drone', 'heat', 'missile']);
+      const targetSectorName =
+        targetSectorIndex === null
+          ? 'the next sector'
+          : (options.run.sectors[targetSectorIndex]?.sectorName ?? 'the next sector');
 
       return createOutcome(options, {
-        title: 'Black-Market Berth',
-        summary: 'A licensed salvage broker unlocks controlled inventory for this stop.',
+        title: 'Forward Market Warrant',
+        summary: `A salvage broker reserves upgraded inventory in ${targetSectorName}.`,
         details: [
-          `Shop prices reduced by ${discount}.`,
-          `Shop inventory is biased toward ${focusTag}.`,
+          `Destination circuit prices reduced by ${discount}.`,
+          `Destination shop inventory is biased toward credit and ${focusTag}.`,
+          'The current market remains closed; the warrant activates after arrival.',
           ...actDetails
         ],
         effects: {
@@ -319,6 +331,22 @@ export function describeRouteOutcome(outcome: AppliedRouteOutcome): string {
   return effectParts.length > 0 ? effectParts.join(' | ') : 'route modifier active';
 }
 
+export function createRouteShopModifierReadModel(
+  modifiers: readonly RouteShopModifier[]
+): RouteShopModifierReadModel | null {
+  if (modifiers.length === 0) return null;
+
+  const discount = modifiers.reduce((total, modifier) => total + modifier.discount, 0);
+  const biasTags = [...new Set(modifiers.flatMap((modifier) => modifier.biasTags))];
+  const biasLabel = biasTags.map(formatShopBiasTag).join(' + ');
+  return {
+    discount,
+    biasTags,
+    title: 'Route Market Upgrade',
+    summary: `-${discount} circuit prices | ${biasLabel} stock bias`
+  };
+}
+
 function createOutcome(
   options: {
     readonly run: RunSkeleton;
@@ -376,4 +404,11 @@ function getFactionBiasTags(factionId: FactionId): readonly ItemTag[] {
 
 function formatSigned(value: number): string {
   return value > 0 ? `+${value}` : String(value);
+}
+
+function formatShopBiasTag(tag: ItemTag): string {
+  return tag
+    .split('-')
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .join(' ');
 }

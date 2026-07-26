@@ -90,6 +90,22 @@ describe('route navigation presentation', () => {
     expect(model.objective).toBe('FINAL EXTRACTION');
     expect(model.effect).toBeNull();
   });
+
+  it('removes shop from every convergence-layer route effect pool', () => {
+    for (let index = 0; index < 128; index += 1) {
+      const run = generateRunSkeleton(`FINALE-ROUTE-EFFECT-${index}`);
+      const finaleSectorIndices = run.sectors.flatMap((sector, sectorIndex) =>
+        sector.act.actSectorIndex === sector.act.actSectorCount && sector.routeOptions.length > 0
+          ? [sectorIndex]
+          : []
+      );
+
+      expect(finaleSectorIndices.length).toBeGreaterThan(0);
+      for (const sectorIndex of finaleSectorIndices) {
+        expect(selectNodeRouteEffect(run, sectorIndex).kind).not.toBe('shop');
+      }
+    }
+  });
 });
 
 function getRiskPosition(

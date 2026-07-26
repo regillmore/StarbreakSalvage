@@ -1903,11 +1903,6 @@ export class GameApp {
       this.currentRun.upgradeEffects.routeChosen
     );
 
-    if (route.kind === 'shop') {
-      this.showShop(targetSectorIndex, route);
-      return;
-    }
-
     this.showRouteEvent(targetSectorIndex, route, outcome);
   }
 
@@ -1920,24 +1915,6 @@ export class GameApp {
       new RouteEventScene(this.uiRoot, outcome, this.selectedContract, () => {
         this.acquireRouteComponentAndAdvance(targetSectorIndex, route);
       })
-    );
-  }
-
-  private showShop(targetSectorIndex: number, route: RouteOption): void {
-    this.sceneManager.switchTo(
-      new ShopScene(
-        this.uiRoot,
-        this.currentRun,
-        this.runSession,
-        this.selectedContract,
-        (itemId, price) => this.buyShopItem(itemId, price),
-        (componentId, price) => this.buyShopPrimaryWeapon(componentId, price),
-        () => this.rerollShop(),
-        (price) => this.buyShopRepair(price),
-        () => {
-          this.acquireRouteComponentAndAdvance(targetSectorIndex, route);
-        }
-      )
     );
   }
 

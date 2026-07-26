@@ -9,6 +9,7 @@ import {
   getCurrentSector,
   getRunSessionVisitedActRouteSectorIndices,
   getShipHullReadModel,
+  getShopModifiersForSector,
   type RunSessionState
 } from '../game/RunSession';
 import { applySectorConditionsToScroll, createSectorConditionPlan } from '../game/SectorConditions';
@@ -57,6 +58,7 @@ import {
   createRouteNavigationReadModel,
   type RouteNavigationReadModel
 } from '../game/RouteNavigation';
+import { createRouteShopModifierReadModel } from '../game/RouteEvents';
 
 interface NavigationBriefingContext {
   readonly sector: ReturnType<typeof getCurrentSector>;
@@ -481,8 +483,12 @@ export class SectorTransitionScene implements Scene {
                 : undefined
         };
       });
+    const routeShopUpgrade = createRouteShopModifierReadModel(
+      getShopModifiersForSector(this.session, this.session.currentSectorIndex)
+    );
     const serviceNodes: ConstellationMapNode[] = plan.destinations.map((destination) => {
       const visited = this.session.navigation.visitedDestinationIds.includes(destination.id);
+      const routeStock = destination.id === 'shop' && routeShopUpgrade !== null;
       return {
         id: destination.id,
         kind: 'service',
@@ -493,14 +499,21 @@ export class SectorTransitionScene implements Scene {
         x: destination.x,
         y: destination.y,
         status: destination.available ? (visited ? 'visited' : 'service') : 'locked',
-        stateLabel: destination.available ? (visited ? 'VISITED' : 'OPEN') : 'LOCKED',
+        stateLabel: destination.available
+          ? routeStock
+            ? 'ROUTE STOCK'
+            : visited
+              ? 'VISITED'
+              : 'OPEN'
+          : 'LOCKED',
         selectable: true,
         available: destination.available,
         visited,
         revealOrder: destination.revealOrder,
         testId: this.getDestinationTestId(destination.id),
         destinationId: destination.id,
-        unavailableReason: destination.unavailableReason
+        unavailableReason: destination.unavailableReason,
+        signal: routeStock ? 'route-shop' : undefined
       };
     });
     const result = createConstellationMap({
@@ -797,15 +810,27 @@ export class SectorTransitionScene implements Scene {
     const status = document.createElement('span');
     status.className = 'navigation-detail-status';
     status.dataset.available = String(destination.available);
+    const routeShopUpgrade =
+      destination.id === 'shop'
+        ? createRouteShopModifierReadModel(
+            getShopModifiersForSector(this.session, this.session.currentSectorIndex)
+          )
+        : null;
     status.textContent = destination.available
-      ? this.session.navigation.visitedDestinationIds.includes(destination.id)
-        ? 'VISITED'
-        : 'AVAILABLE'
+      ? routeShopUpgrade
+        ? 'ROUTE UPGRADE'
+        : this.session.navigation.visitedDestinationIds.includes(destination.id)
+          ? 'VISITED'
+          : 'AVAILABLE'
       : 'STORY LOCK';
     heading.append(identity, status);
     const summary = document.createElement('p');
     summary.className = 'navigation-detail-summary';
-    summary.textContent = destination.unavailableReason ?? destination.summary;
+    summary.textContent =
+      destination.unavailableReason ??
+      (routeShopUpgrade
+        ? 'Your chosen approach reserved upgraded inventory for this sector market.'
+        : destination.summary);
     const body = document.createElement('div');
     body.className = 'navigation-detail-body';
     this.appendDestinationBody(body, destination, context);
@@ -825,7 +850,19 @@ export class SectorTransitionScene implements Scene {
     context: NavigationBriefingContext
   ): void {
     if (destination.id === 'shop') {
+      const routeShopUpgrade = createRouteShopModifierReadModel(
+        getShopModifiersForSector(this.session, this.session.currentSectorIndex)
+      );
       body.append(
+        ...(routeShopUpgrade
+          ? [
+              this.createDetailMetric(
+                routeShopUpgrade.title,
+                routeShopUpgrade.summary,
+                'navigation-route-shop-cue'
+              )
+            ]
+          : []),
         this.createDetailMetric('Tender', `${this.session.credits} credits`),
         this.createDetailMetric('Local stock', `${SHOP_BASE_CIRCUIT_STOCK}+ seeded offers`),
         this.createDetailCopy(

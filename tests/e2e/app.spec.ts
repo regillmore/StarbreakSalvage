@@ -1033,6 +1033,61 @@ test('reaches and instruments the deterministic lunar sector smoke path', async 
   expect(browserErrors).toEqual([]);
 });
 
+test('carries a shop route warrant forward into the destination-sector market', async ({
+  page
+}) => {
+  const browserErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') browserErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => browserErrors.push(error.message));
+
+  await page.goto('./?debug=1&seed=SHOP-ROUTE-1');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Choose Contract' })).toBeVisible();
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('mission-briefing')).toBeVisible();
+  await page.keyboard.press('Enter');
+  await expectGameplaySector(page, 'Outer Debris Field', 1);
+
+  await page.keyboard.press('8');
+  await expect(page.getByRole('heading', { name: 'Choose Reward' })).toBeVisible();
+  await page.getByRole('button', { name: /Take / }).first().click();
+  await expect(page.getByTestId('navigation-route-commit')).toHaveAttribute(
+    'data-route-kind',
+    'shop'
+  );
+  await expect(page.getByTestId('navigation-route-effect')).toContainText(
+    'Reserve discounted, biased stock in the destination sector shop.'
+  );
+
+  await page.getByTestId('navigation-route-commit').click();
+  await expect(page.getByRole('heading', { name: 'Shop' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Forward Market Warrant' })).toBeVisible();
+  await expect(page.getByText(/current market remains closed/i)).toBeVisible();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expectGameplaySector(page, 'Trade War Corridor', 2);
+
+  await page.keyboard.press('8');
+  await expect(page.getByRole('heading', { name: 'Choose Reward' })).toBeVisible();
+  await page.getByRole('button', { name: /Take / }).first().click();
+  const routeShopNode = page.getByTestId('open-shop');
+  await expect(routeShopNode).toHaveAttribute('data-signal', 'route-shop');
+  await expect(routeShopNode).toContainText('ROUTE STOCK');
+  await routeShopNode.click();
+  await expect(page.getByTestId('navigation-route-shop-cue')).toContainText(
+    'Route Market Upgrade'
+  );
+  await expect(page.getByTestId('navigation-route-shop-cue')).toContainText('stock bias');
+  await expect(page.getByTestId('navigation-destination-action')).toHaveText('Visit Shop');
+  await page.getByTestId('navigation-destination-action').click();
+  await expect(page.getByRole('heading', { name: 'Shop' })).toBeVisible();
+  await expect(page.getByTestId('shop-route-upgrade')).toContainText('Route Market Upgrade');
+  await expect(page.getByTestId('shop-route-upgrade')).toContainText('circuit prices');
+
+  expect(browserErrors).toEqual([]);
+});
+
 test('exposes item-heavy hook storm debug instrumentation', async ({ page }) => {
   const browserErrors: string[] = [];
   page.on('console', (message) => {
@@ -2371,13 +2426,13 @@ async function commitSelectedDestinationAndDepart(page: Page): Promise<void> {
 
   await commit.click();
 
+  await expect(page.getByRole('heading', { name: 'Shop' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
   if (routeKind === 'shop') {
-    await expect(page.getByRole('heading', { name: 'Shop' })).toBeVisible();
-    await page.getByRole('button', { name: 'Leave Shop' }).click();
-  } else {
-    await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
-    await page.getByRole('button', { name: 'Continue' }).click();
+    await expect(page.getByText('Forward Market Warrant')).toBeVisible();
+    await expect(page.getByText(/current market remains closed/i)).toBeVisible();
   }
+  await page.getByRole('button', { name: 'Continue' }).click();
 
   await expect(page.getByRole('heading', { name: 'Choose Reward' })).toHaveCount(0);
 }

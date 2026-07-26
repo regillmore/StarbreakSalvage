@@ -44,6 +44,7 @@ import {
 } from '../game/FactionCampaign';
 import { createCarrierInfluence } from '../game/CarrierCommand';
 import { getActiveFittedItems } from '../game/ItemSockets';
+import { createRouteShopModifierReadModel } from '../game/RouteEvents';
 
 export class ShopScene implements Scene {
   public readonly id = 'shop';
@@ -68,7 +69,9 @@ export class ShopScene implements Scene {
     const rerollCount = getShopRerollCount(this.session, sector.index);
     const primaryWeaponOffer = createShopPrimaryWeaponOffer(this.run, this.session);
     const installedPrimary = getInstalledPrimaryWeapon(this.session.engineering.committed);
-    const shopModifiers = getShopModifiersForSector(this.session, sector.index);
+    const routeShopUpgrade = createRouteShopModifierReadModel(
+      getShopModifiersForSector(this.session, this.session.currentSectorIndex)
+    );
     const interActEffects = getInterActEffectsForSector(this.session, sector);
     const upgradeReadout = [
       getMarketDecoderReadout(this.run.upgradeEffects),
@@ -86,14 +89,14 @@ export class ShopScene implements Scene {
     const carrier = createCarrierInfluence(this.run.carrierPlan, this.session.carrier);
     const carrierAccess = carrier.factionAccess[campaign.factionId] && campaign.frontCarrierAccess;
     const priceDiscount =
-      shopModifiers.reduce((total, modifier) => total + modifier.discount, 0) +
+      (routeShopUpgrade?.discount ?? 0) +
       interActEffects.shopDiscount +
       this.run.upgradeEffects.shopDiscount +
       campaign.shopDiscount +
       (carrierAccess ? carrier.shopDiscount : -3);
     const permanentStockBonus = this.run.upgradeEffects.shopStockBonus;
     const shopBiasTags = [
-      ...shopModifiers.flatMap((modifier) => modifier.biasTags),
+      ...(routeShopUpgrade?.biasTags ?? []),
       ...interActEffects.rewardBiasTags,
       ...this.run.upgradeEffects.shopBiasTags,
       ...campaign.shopBiasTags,
@@ -169,6 +172,17 @@ export class ShopScene implements Scene {
     const title = document.createElement('h1');
     title.id = 'shop-title';
     title.textContent = 'Shop';
+
+    const routeUpgradeNote = document.createElement('section');
+    routeUpgradeNote.className = 'shop-route-upgrade';
+    routeUpgradeNote.dataset.testid = 'shop-route-upgrade';
+    const routeUpgradeKicker = document.createElement('small');
+    routeUpgradeKicker.textContent = 'Incoming Route Reservation';
+    const routeUpgradeTitle = document.createElement('strong');
+    routeUpgradeTitle.textContent = routeShopUpgrade?.title ?? '';
+    const routeUpgradeSummary = document.createElement('span');
+    routeUpgradeSummary.textContent = routeShopUpgrade?.summary ?? '';
+    routeUpgradeNote.append(routeUpgradeKicker, routeUpgradeTitle, routeUpgradeSummary);
 
     const upgradeNote = document.createElement('p');
     upgradeNote.className = 'screen-upgrade-note';
@@ -345,6 +359,7 @@ export class ShopScene implements Scene {
       eyebrow,
       createContractThemeStrip(this.uiRoot.ownerDocument, theme),
       title,
+      ...(routeShopUpgrade ? [routeUpgradeNote] : []),
       ...(upgradeReadout.length > 0 ? [upgradeNote] : []),
       repairService,
       armory,

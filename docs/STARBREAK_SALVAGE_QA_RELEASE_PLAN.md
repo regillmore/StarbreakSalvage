@@ -503,6 +503,7 @@ Phase 10 accessibility checks should also cover mission briefings and branch foc
 - [x] Each act's first/current constellation node uses the standard gold ready-sector card and pulse even while carrying an active apex-contact signal.
 - [x] Boss hull uses the circuit-era 10/20/30 DPS act benchmarks, keeps every authored body in an 8-14.5 second nominal band, and preserves scaled finale/apex modifiers and opening attack viability.
 - [x] A completed paired challenge projects its source node as green `CHARTED` history; hover, focus, and selection cannot restore gold launch styling, while onward routes remain actionable.
+- [x] Shop routes never reopen the source market; their destination hub and Shop show one matching route-stock discount/bias cue, and convergence nodes never roll Shop.
 
 ## Release checklist
 

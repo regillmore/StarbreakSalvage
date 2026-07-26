@@ -18,7 +18,7 @@ export interface ConstellationMapNode {
   readonly testId?: string;
   readonly destinationId?: string;
   readonly unavailableReason?: string | null;
-  readonly signal?: 'apex-contact' | 'apex-track' | 'apex-break';
+  readonly signal?: 'apex-contact' | 'apex-track' | 'apex-break' | 'route-shop';
 }
 
 export interface ConstellationMapEdge {
