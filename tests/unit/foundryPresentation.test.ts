@@ -21,6 +21,8 @@ import {
   createFoundryDashboardModel
 } from '../../src/ui/FoundryPresentation';
 import type { ProjectileBlueprint } from '../../src/game/ItemHooks';
+import { SHIPS } from '../../src/content/ships';
+import { createLegacyStartingLoadout } from '../../src/game/ShipLoadout';
 
 describe('foundry visual presentation', () => {
   it('builds compact resource and attack comparisons against the committed ship', () => {
@@ -46,6 +48,18 @@ describe('foundry visual presentation', () => {
       baseline.attackStats.find((stat) => stat.id === 'volley')?.value
     );
     expect(baseline.attackSimulation.damageSampleVolleys).toBe(1);
+    expect(baseline.heatSimulation).toMatchObject({
+      durationSeconds: 8,
+      committedPeakRatio: baseline.heatSimulation.peakRatio,
+      peakRatioDelta: 0,
+      overheatDelta: 0
+    });
+    expect(baseline.heatSimulation.samples).toHaveLength(33);
+    expect(baseline.heatSimulation.peakHeat).toBeGreaterThan(
+      baseline.heatSimulation.samples[0]!.heat
+    );
+    expect(baseline.heatSimulation.coolingPerSecond).toBeGreaterThan(0);
+    expect(baseline.heatSimulation.ariaLabel).toContain('held-fire thermal simulation');
     expect(baseline.attackStats.find((stat) => stat.id === 'baseDps')).toMatchObject({
       value: baseline.attackSimulation.baseDps,
       delta: 0,
@@ -71,6 +85,25 @@ describe('foundry visual presentation', () => {
     expect(incomplete.valid).toBe(false);
     expect(incomplete.mountedModuleCount).toBe(baseline.mountedModuleCount - 1);
     expect(incomplete.weaponName).toBe(baseline.weaponName);
+  });
+
+  it('models sustained heat accumulation and overheat recovery independently of base DPS', () => {
+    const ship = SHIPS.find((candidate) => candidate.id === 'ship_corporate_test_pilot');
+    if (!ship) throw new Error('Expected the Corporate Test Pilot ship.');
+    const dashboard = createFoundryDashboardModel(
+      createEngineeringState(createLegacyStartingLoadout(ship))
+    );
+
+    expect(dashboard.weaponName).toBe('Prototype Beam');
+    expect(dashboard.heatSimulation.peakRatio).toBe(1);
+    expect(dashboard.heatSimulation.overheatCount).toBeGreaterThan(0);
+    expect(dashboard.heatSimulation.samples.some((sample) => sample.state === 'overheated')).toBe(
+      true
+    );
+    expect(dashboard.heatSimulation.effectiveVolleysPerSecond).toBeLessThan(
+      dashboard.attackSimulation.volleysPerSecond
+    );
+    expect(dashboard.attackSimulation.damageSampleVolleys).toBe(1);
   });
 
   it('uses production weapon and engineering hooks for the live-fire volley', () => {
@@ -766,7 +799,7 @@ describe('foundry visual presentation', () => {
       (candidate) => candidate.shipId === 'ship_debt_runner'
     );
     if (!contract) throw new Error('Expected a single-projectile contract.');
-    const dashboard = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+    const linkedItems = [
       {
         itemId: 'item_phase_grazer',
         acquisitionOrder: 0,
@@ -777,7 +810,11 @@ describe('foundry visual presentation', () => {
         acquisitionOrder: 1,
         socket: { componentId: 'vent', socketIndex: 0, circuitOrder: 1 }
       }
-    ]);
+    ] as const;
+    const dashboard = createFoundryDashboardModel(
+      createEngineeringState(contract.loadout),
+      linkedItems
+    );
 
     expect(dashboard.circuitStages[0]).toMatchObject({
       name: 'Phase Grazer',
@@ -802,6 +839,16 @@ describe('foundry visual presentation', () => {
     expect(dashboard.attackSimulation.ariaLabel).toContain(
       'spend 32% of overheat capacity; this cool-start cycle generates 0 and replaces 1 underfunded attempt with visible exhaust'
     );
+    expect(dashboard.heatSimulation.heatShotsExhausted).toBeGreaterThan(0);
+    expect(dashboard.heatSimulation.heatShotsFired).toBeGreaterThan(0);
+    expect(dashboard.heatSimulation.ariaLabel).toContain('funded heat');
+    const comparedWithEmptyCircuit = createFoundryDashboardModel(
+      createEngineeringState(contract.loadout),
+      linkedItems,
+      []
+    );
+    expect(comparedWithEmptyCircuit.heatSimulation.peakRatioDelta).toBeLessThan(0);
+    expect(comparedWithEmptyCircuit.heatSimulation.ariaLabel).toContain('Compared with committed');
 
     const unmetDashboard = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
       {

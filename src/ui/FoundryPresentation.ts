@@ -44,6 +44,11 @@ import {
   type DroneFollowerSourceId,
   type DroneFollowerSpec
 } from '../game/DroneFollowers';
+import {
+  createFoundryHeatSimulationModel,
+  getFoundryHeatRates,
+  type FoundryHeatSimulationModel
+} from './FoundryHeatSimulation';
 
 export type FoundryComparisonTone = 'improved' | 'declined' | 'same' | 'danger';
 
@@ -167,6 +172,7 @@ export interface FoundryDashboardModel {
   readonly frameName: string;
   readonly mountedModuleCount: number;
   readonly attackSimulation: FoundryAttackSimulationModel;
+  readonly heatSimulation: FoundryHeatSimulationModel;
   readonly circuitStages: readonly FoundryCircuitStageModel[];
   readonly meters: readonly FoundryMeterModel[];
   readonly attackStats: readonly FoundryAttackStatModel[];
@@ -213,7 +219,8 @@ const MAX_ATTACK_DAMAGE_SAMPLE_VOLLEYS = 420;
 
 export function createFoundryDashboardModel(
   state: EngineeringState,
-  items: readonly ItemInstance[] = []
+  items: readonly ItemInstance[] = [],
+  committedItems: readonly ItemInstance[] = items
 ): FoundryDashboardModel {
   const committed = resolveEngineeringSnapshot(state.committed);
   const draft = resolveEngineeringSnapshot(state.draft);
@@ -245,7 +252,16 @@ export function createFoundryDashboardModel(
     committedWeapon,
     committed,
     committedProcBudget,
-    items
+    committedItems
+  );
+  const heatSimulation = createFoundryHeatSimulationModel(
+    { weapon: draftWeapon, resolution: draft, procBudget, items },
+    {
+      weapon: committedWeapon,
+      resolution: committed,
+      procBudget: committedProcBudget,
+      items: committedItems
+    }
   );
   const draftCircuitCapacity = getItemSocketSlots(state.draft).length;
   const committedCircuitCapacity = getItemSocketSlots(state.committed).length;
@@ -345,13 +361,16 @@ export function createFoundryDashboardModel(
     frameName: getShipFrameById(state.draft.frameId).name,
     mountedModuleCount: state.draft.mounts.length,
     attackSimulation,
+    heatSimulation,
     circuitStages,
     meters,
     attackStats,
     traits,
     ariaLabel: `${draft.valid ? 'Legal' : 'Invalid'} draft. ${draftWeapon.name} ${draftWeapon.pattern}. ${meters
       .map((meter) => meter.ariaLabel)
-      .join('. ')}. ${attackStats.map((stat) => stat.ariaLabel).join('. ')}`
+      .join(
+        '. '
+      )}. ${attackStats.map((stat) => stat.ariaLabel).join('. ')}. ${heatSimulation.ariaLabel}`
   };
 }
 
@@ -846,20 +865,14 @@ function createFoundryAttackSimulationModel(
   const moduleIds = getResolutionModuleIds(resolution);
   const droneSpecs = createDroneFollowerSpecs(items, moduleIds);
   let storedWeaponHeat = 0;
-  const heatPerShotMultiplier =
-    resolution.effects.heatPerShotMultiplier *
-    (items.some((item) => item.itemId === 'item_heat_sink_saint') ? 0.7 : 1);
-  const heatVentMultiplier =
-    resolution.effects.heatVentMultiplier *
-    (items.some((item) => item.itemId === 'item_heat_sink_saint') ? 1.35 : 1);
+  const { heatPerVolley, coolingPerSecond } = getFoundryHeatRates(weapon, resolution, items);
   const sourceHeatEvents: (readonly HeatShotEvent[])[] = [];
   const damageSampleVolleys = getAttackDamageSampleVolleyCount(items);
   const volleys = Array.from({ length: damageSampleVolleys }, (_value, index) => {
     if (index > 0) {
       storedWeaponHeat = Math.max(
         0,
-        storedWeaponHeat -
-          weapon.heatVentPerSecond * heatVentMultiplier * weapon.fireCooldownSeconds
+        storedWeaponHeat - coolingPerSecond * weapon.fireCooldownSeconds
       );
     }
     const firePayload = applyCombinedHooks(
@@ -877,10 +890,7 @@ function createFoundryAttackSimulationModel(
       { maxApplications: procBudget }
     );
     storedWeaponHeat = Math.max(0, storedWeaponHeat - (firePayload.weaponHeatSpent ?? 0));
-    storedWeaponHeat = Math.min(
-      weapon.overheatLimit,
-      storedWeaponHeat + weapon.heatPerShot * heatPerShotMultiplier
-    );
+    storedWeaponHeat = Math.min(weapon.overheatLimit, storedWeaponHeat + heatPerVolley);
     sourceHeatEvents.push(firePayload.heatShotEvents ?? []);
     return createMicroChoirVolley(firePayload.projectiles, index + 1, moduleIds).map(
       (projectile) =>

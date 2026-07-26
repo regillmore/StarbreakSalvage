@@ -646,6 +646,14 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
     /[1-9]\d*/
   );
   await expect(page.getByTestId('foundry-mini-hud')).toContainText(/BASELINE|DRAFT DELTA/);
+  await expect(page.getByTestId('foundry-heat-simulation')).toContainText(
+    /THERMAL LOOP · 8S HELD FIRE/
+  );
+  await expect(
+    page.getByTestId('foundry-heat-simulation').locator('.foundry-heat-trace > span')
+  ).toHaveCount(33);
+  await expect(page.getByTestId('foundry-heat-peak')).toContainText(/Peak\d+%Δ [+-]?\d+PP/);
+  await expect(page.getByTestId('foundry-heat-cooling')).toContainText(/Cooling\d+\.\d+\/S/);
   await expect(page.locator('[data-testid^="foundry-meter-"]')).toHaveCount(0);
   await expect(
     page.getByTestId('foundry-primary-selector').locator('[data-stat="circuit"]')
@@ -2161,18 +2169,24 @@ test('keeps hardpoint live-fire geometry on one combat scale across viewport wid
   await expect(page.getByTestId('foundry-attack-dps-note')).toHaveText(
     '5-VOLLEY MEASURE · DIRECT PROJECTILE DAMAGE · HIT PROCS EXCLUDED'
   );
+  const thermalSimulation = page.getByTestId('foundry-heat-simulation');
+  await expect(thermalSimulation).toContainText('8S HELD FIRE');
+  await expect(page.getByTestId('foundry-heat-dumps')).toContainText(/\d+ FUNDED/);
+  await expect(page.getByTestId('foundry-heat-dumps')).toContainText(/[1-9]\d* EXHAUST/);
   await page
     .getByRole('button', { name: 'Move Prototype Vent Script earlier in the circuit' })
     .click();
   await expect(cadenceShift).toHaveCount(0);
   await expect(ventOutput).toContainText('CONDITION NOT MET · NEEDS AN EARLIER PERIODIC VOLLEY');
   await expect(ventOutput).toHaveAttribute('data-condition', 'unmet');
+  await expect(page.getByTestId('foundry-heat-dumps')).toContainText('0 FUNDED0 EXHAUST');
   await page
     .getByRole('button', { name: 'Move Prototype Vent Script later in the circuit' })
     .click();
   await expect(cadenceShift).toHaveCount(1);
   await expect(ventOutput).toContainText('CONDITION MET · 1 EARLIER PERIODIC VOLLEY LINKED');
   await expect(ventOutput).toHaveAttribute('data-condition', 'met');
+  await expect(page.getByTestId('foundry-heat-dumps')).toContainText(/[1-9]\d* EXHAUST/);
   await page.evaluate(() => {
     document.documentElement.dataset.reducedMotion = 'true';
   });

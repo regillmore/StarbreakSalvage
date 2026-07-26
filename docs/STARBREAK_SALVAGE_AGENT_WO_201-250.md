@@ -630,3 +630,27 @@ Status: implemented. `FoundryScene` now owns small per-view scroll and focus rec
 Managed-browser inspection used the Engineering Foundry fixture at 1280x720. Moving Prototype Vent Script earlier changed the panel's maximum scroll from `680px` to `662px`; the prior `663px` position restored to the new reachable maximum of `662px` rather than jumping to zero. The circuit, rack, draft log, status, and fixed controls remained visible and usable at the preserved location.
 
 Verification: the focused hardpoint scroll Chromium path passes reorder, eject, and append refreshes with at most one pixel of geometric variance and no browser errors. `npm run verify:release` passes typecheck, ESLint, all 118 Vitest files and 792 tests, the production build, all 22 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,055.86 kB` minified / `289.32 kB` gzip initial JavaScript and `127.60 kB` / `24.89 kB` CSS. The existing Vite large-chunk advisory remains; no dependency, engineering calculation, component, item, save/snapshot field, RNG stream, or static-hosting rule changed.
+
+## Work order 224 - Sustained thermal simulation
+
+Goal: make heat a visible build-comparison axis in Hardpoint Control instead of showing only per-volley heat and a cool-start projectile loop.
+
+Prompt:
+
+> Add a deterministic held-fire heat simulation to Hardpoint Control. Show weapon heat accumulating and cooling over time, include overheat stalls and Prototype Vent heat spending, and compare the draft thermal profile with the committed loadout without changing Base DPS.
+
+Acceptance criteria:
+
+- Simulate eight seconds of uninterrupted primary fire from a cold start using authored cadence, heat per volley, cooling, overheat capacity, and overheat recovery.
+- Apply engineering heat multipliers, Heat Sink Saint, ordered `onFire` hooks, heat-shot reserve spending, and funded/exhaust outcomes through the same reducers used by combat and the existing live-fire preview.
+- Render a fixed-resolution thermal trace with nominal, hot, critical, and overheated states plus peak heat, cooling, overheat stalls, and funded/exhausted heat-dump counts.
+- Show peak-heat and stall differences against the committed loadout so every reversible draft refresh gives an immediate comparison.
+- Keep Base DPS on its existing direct-damage cadence boundary; temporary overheat downtime does not silently redefine that number.
+- Keep the new scope compact and readable on desktop and narrow Hardpoint layouts, with accessible summary copy and bounded reduced-motion, performance, and high-contrast treatments.
+- Preserve combat behavior, item hooks, preview actor caps, circuit order, saves, deterministic generation, dependencies, and static hosting.
+
+Status: implemented. `FoundryHeatSimulation` now runs an independent eight-second event-driven thermal profile beside the existing damage-cycle preview. The profile vents between authored volleys, spends stored heat through ordered circuit hooks, respects recovery stalls, and resamples the result into a stable 33-point trace. Hardpoint Control presents the trace and draft deltas without changing Contract Select or Base DPS semantics.
+
+Managed-browser inspection used the Engineering Foundry fixture at 1280x720 and 390x700. The baseline Kinetic Popgun held a 7% heat peak with nine cold exhaust attempts; mounting the reserve Light Needle Laser raised the peak to 41%, funded one heat dump, and exposed a `+34PP` draft delta. Moving Prototype Vent Script ahead of its periodic source removed both dump outcomes and raised the peak to 67%, while all 33 trace samples, four metrics, and the two-column narrow layout remained inside their containers with zero document or scope horizontal overflow. The browser reported no warnings or errors, and the authenticated smoke host stopped cleanly.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 118 Vitest files and 793 tests, the production build, all 22 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,060.69 kB` minified / `290.81 kB` gzip initial JavaScript and `130.25 kB` / `25.41 kB` CSS, increases of `4.83 kB` / `1.49 kB` JavaScript and `2.65 kB` / `0.52 kB` CSS from work order 223. The existing Vite large-chunk advisory remains; no dependency, combat behavior, item hook, preview actor cap, save/snapshot field, RNG stream, or static-hosting rule changed.

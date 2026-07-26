@@ -3193,3 +3193,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 223. Foundry refreshes now preserve per-view scroll and stable focus through full DOM replacement, with a bounded fallback for content-height changes and disappearing controls.
+
+### BL89 - Sustained hardpoint thermal profile
+
+Acceptance:
+
+- Run a bounded eight-second cold-start held-fire heat simulation independently from the direct-damage cadence sample.
+- Reuse weapon cadence, heat, venting, capacity, overheat recovery, engineering multipliers, Heat Sink Saint, and ordered heat-shot spending.
+- Show a fixed thermal trace with peak heat, cooling, overheat stalls, and funded/exhausted heat dumps.
+- Compare draft peak and stall results against the committed primary loadout.
+- Keep Base DPS, combat behavior, item hooks, preview actor caps, saves, deterministic generation, dependencies, and static hosting unchanged.
+- Preserve accessible narrow, reduced-motion, performance, and high-contrast Hardpoint presentations.
+
+Status:
+
+- Implemented in work order 224. Hardpoint Control now exposes sustained heat accumulation and recovery as a deterministic comparison scope while the existing live-fire preview and Base DPS retain their original measurement boundaries.

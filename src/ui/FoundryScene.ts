@@ -47,6 +47,7 @@ import {
   type FoundryAttackStatModel,
   type FoundryDashboardModel
 } from './FoundryPresentation';
+import type { FoundryHeatSimulationModel } from './FoundryHeatSimulation';
 import { createAttackSimulationPreviewElement } from './AttackSimulationPreview';
 import { createShipPreviewModel } from './ShipPreview';
 import { createWeaponIcon } from './WeaponIcon';
@@ -99,7 +100,8 @@ export class FoundryScene implements Scene {
     this.itemInstances = reconcileItemSockets(this.itemInstances, this.state.draft);
     const dashboard = createFoundryDashboardModel(
       this.state,
-      getActiveFittedItems(this.itemInstances, this.state.draft)
+      getActiveFittedItems(this.itemInstances, this.state.draft),
+      getActiveFittedItems(this.committedItemInstances, this.state.committed)
     );
     const shell = document.createElement('main');
     shell.className = 'scene-panel scene-panel-wide foundry-panel';
@@ -341,6 +343,7 @@ export class FoundryScene implements Scene {
     change.dataset.changed = String(dashboard.changed);
     change.textContent = dashboard.changed ? 'DRAFT Δ' : 'BASELINE';
     miniHud.append(weapon, change);
+    const heatSimulation = this.createHeatSimulation(dashboard.heatSimulation);
 
     const attackStats = document.createElement('div');
     attackStats.className = 'foundry-attack-stats';
@@ -360,7 +363,15 @@ export class FoundryScene implements Scene {
       chip.innerHTML = `<b>${trait.glyph}</b><span>${trait.label}</span><strong>${trait.value}</strong>`;
       traits.append(chip);
     }
-    attack.append(attackHeader, previewFrame, miniHud, attackStats, damageSample, traits);
+    attack.append(
+      attackHeader,
+      previewFrame,
+      miniHud,
+      heatSimulation,
+      attackStats,
+      damageSample,
+      traits
+    );
 
     console.append(attack, this.createPrimaryWeaponConsole(frame));
     return console;
@@ -484,6 +495,85 @@ export class FoundryScene implements Scene {
     bar.append(fill);
     item.append(heading, value, delta, bar);
     return item;
+  }
+
+  private createHeatSimulation(model: FoundryHeatSimulationModel): HTMLElement {
+    const scope = document.createElement('section');
+    scope.className = 'foundry-heat-simulation';
+    scope.dataset.testid = 'foundry-heat-simulation';
+    scope.dataset.overheats = String(model.overheatCount);
+    scope.setAttribute('aria-label', model.ariaLabel);
+
+    const heading = document.createElement('header');
+    const title = document.createElement('strong');
+    title.textContent = `THERMAL LOOP · ${model.durationSeconds.toFixed(0)}S HELD FIRE`;
+    const cadence = document.createElement('span');
+    cadence.textContent = `${model.volleysFired} VOLLEYS · ${model.effectiveVolleysPerSecond.toFixed(1)}/S EFFECTIVE`;
+    heading.append(title, cadence);
+
+    const traceFrame = document.createElement('div');
+    traceFrame.className = 'foundry-heat-trace-frame';
+    traceFrame.setAttribute('aria-hidden', 'true');
+    const start = document.createElement('small');
+    start.textContent = '0S';
+    const trace = document.createElement('div');
+    trace.className = 'foundry-heat-trace';
+    trace.style.setProperty('--thermal-cycle', `${model.durationSeconds}s`);
+    for (const sample of model.samples) {
+      const bar = document.createElement('span');
+      bar.dataset.state = sample.state;
+      bar.style.height = `${Math.max(7, Math.round(sample.ratio * 100))}%`;
+      trace.append(bar);
+    }
+    const end = document.createElement('small');
+    end.textContent = `${model.durationSeconds.toFixed(0)}S`;
+    traceFrame.append(start, trace, end);
+
+    const metrics = document.createElement('div');
+    metrics.className = 'foundry-heat-metrics';
+    const peakDeltaPoints = Math.round(model.peakRatioDelta * 100);
+    const metricModels = [
+      {
+        id: 'peak',
+        label: 'Peak',
+        value: `${Math.round(model.peakRatio * 100)}%`,
+        delta: `Δ ${peakDeltaPoints > 0 ? '+' : ''}${peakDeltaPoints}PP`
+      },
+      {
+        id: 'cooling',
+        label: 'Cooling',
+        value: `${model.coolingPerSecond.toFixed(2)}/S`,
+        delta: `${model.heatPerVolley.toFixed(2)} / VOLLEY`
+      },
+      {
+        id: 'overheat',
+        label: 'Stalls',
+        value: String(model.overheatCount),
+        delta: `Δ ${model.overheatDelta > 0 ? '+' : ''}${model.overheatDelta}`
+      },
+      {
+        id: 'dumps',
+        label: 'Heat Dumps',
+        value: `${model.heatShotsFired} FUNDED`,
+        delta: `${model.heatShotsExhausted} EXHAUST`
+      }
+    ] as const;
+    for (const metric of metricModels) {
+      const card = document.createElement('span');
+      card.className = 'foundry-heat-metric';
+      card.dataset.testid = `foundry-heat-${metric.id}`;
+      const label = document.createElement('small');
+      label.textContent = metric.label;
+      const value = document.createElement('strong');
+      value.textContent = metric.value;
+      const delta = document.createElement('b');
+      delta.textContent = metric.delta;
+      card.append(label, value, delta);
+      metrics.append(card);
+    }
+
+    scope.append(heading, traceFrame, metrics);
+    return scope;
   }
 
   private createPrimaryWeaponStatStrip(component: FoundryComponentInstance): HTMLElement {

@@ -1656,6 +1656,143 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   color: #ffd166;
 }
 
+.foundry-heat-simulation {
+  display: grid;
+  gap: 0.36rem;
+  padding: 0.48rem 0.55rem;
+  border: 1px solid rgba(255, 107, 214, 0.28);
+  border-radius: 6px;
+  background:
+    linear-gradient(90deg, rgba(124, 247, 255, 0.04), rgba(255, 107, 214, 0.07)),
+    rgba(2, 5, 14, 0.88);
+  font-family: 'Cascadia Mono', 'Consolas', monospace;
+}
+
+.foundry-heat-simulation > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  color: #f8fbff;
+  font-size: 0.62rem;
+  letter-spacing: 0.055em;
+}
+
+.foundry-heat-simulation > header span {
+  color: #91a7b4;
+  font-size: 0.56rem;
+  font-weight: 850;
+}
+
+.foundry-heat-trace-frame {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.34rem;
+  min-height: 1.62rem;
+  color: #738995;
+  font-size: 0.5rem;
+  font-weight: 850;
+}
+
+.foundry-heat-trace {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(33, minmax(1px, 1fr));
+  align-items: end;
+  gap: 1px;
+  height: 1.55rem;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(124, 247, 255, 0.2);
+  background:
+    linear-gradient(to top, transparent 59%, rgba(255, 209, 102, 0.09) 60%, transparent 62%),
+    linear-gradient(to top, transparent 84%, rgba(255, 107, 107, 0.1) 85%, transparent 87%);
+}
+
+.foundry-heat-trace > span {
+  min-height: 0.12rem;
+  border-radius: 1px 1px 0 0;
+  background: #7cf7ff;
+  box-shadow: 0 0 4px rgba(124, 247, 255, 0.38);
+}
+
+.foundry-heat-trace > span[data-state='hot'] {
+  background: #ffd166;
+  box-shadow: 0 0 4px rgba(255, 209, 102, 0.48);
+}
+
+.foundry-heat-trace > span[data-state='critical'] {
+  background: #ff9a62;
+  box-shadow: 0 0 5px rgba(255, 154, 98, 0.55);
+}
+
+.foundry-heat-trace > span[data-state='overheated'] {
+  background: #ff6bd6;
+  box-shadow: 0 0 6px rgba(255, 107, 214, 0.65);
+}
+
+.foundry-heat-trace::after {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  content: '';
+  background: #f8fbff;
+  box-shadow: 0 0 5px #7cf7ff;
+  animation: foundry-thermal-scan var(--thermal-cycle, 8s) linear infinite;
+}
+
+@keyframes foundry-thermal-scan {
+  from {
+    left: 0;
+  }
+
+  to {
+    left: 100%;
+  }
+}
+
+.foundry-heat-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.28rem;
+}
+
+.foundry-heat-metric {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.08rem 0.24rem;
+  padding: 0.26rem 0.32rem;
+  border-left: 1px solid rgba(124, 247, 255, 0.35);
+  background: rgba(124, 247, 255, 0.035);
+}
+
+.foundry-heat-metric small {
+  color: #91a7b4;
+  font-size: 0.52rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.foundry-heat-metric strong {
+  color: #f8fbff;
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
+.foundry-heat-metric b {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  color: #7cf7ff;
+  font-size: 0.49rem;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .foundry-attack-stats {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -2483,6 +2620,13 @@ html[data-performance-mode='true'] .attack-simulation-heat-exhaust {
   transform: translateX(-50%) scaleY(0.68);
 }
 
+html[data-reduced-motion='true'] .foundry-heat-trace::after,
+html[data-performance-mode='true'] .foundry-heat-trace::after {
+  left: 100%;
+  opacity: 0.55;
+  animation: none;
+}
+
 html[data-performance-mode='true'] .attack-simulation-projectile {
   animation: none;
   bottom: calc(10% + var(--shot-performance-rise));
@@ -2526,6 +2670,11 @@ html[data-bullet-contrast='high'] .contract-ignition,
 html[data-bullet-contrast='high'] .contract-metric {
   border-color: rgba(248, 251, 255, 0.58);
   box-shadow: none;
+}
+
+html[data-bullet-contrast='high'] .foundry-heat-simulation,
+html[data-bullet-contrast='high'] .foundry-heat-metric {
+  border-color: rgba(248, 251, 255, 0.58);
 }
 
 html[data-bullet-contrast='high'] .attack-simulation-projectile {
@@ -7201,6 +7350,16 @@ html[data-bullet-contrast='high'] .hud-meter-track {
 
   .foundry-attack-stats {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .foundry-heat-simulation > header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.16rem;
+  }
+
+  .foundry-heat-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .contract-selected-preview {
