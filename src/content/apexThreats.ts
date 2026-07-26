@@ -6,15 +6,6 @@ import type { UnlockId } from './unlocks';
 export const APEX_HUNT_STRUCTURES = ['traceChain', 'siegeBreak', 'migrationNet'] as const;
 export type ApexHuntStructure = (typeof APEX_HUNT_STRUCTURES)[number];
 
-export const APEX_OUTCOMES = [
-  'destruction',
-  'capture',
-  'containment',
-  'bargain',
-  'evacuation'
-] as const;
-export type ApexOutcome = (typeof APEX_OUTCOMES)[number];
-
 export interface ApexThreatDefinition {
   readonly id: string;
   readonly name: string;
@@ -37,7 +28,6 @@ export interface ApexThreatDefinition {
       }
     >
   >;
-  readonly supportedOutcomes: readonly ApexOutcome[];
   readonly rewardUnlockId: UnlockId;
   readonly circuitRewardItemIds: readonly [ItemId, ItemId];
   readonly mapCue: string;
@@ -58,17 +48,17 @@ export const APEX_THREATS: readonly ApexThreatDefinition[] = [
       core: 'Mnemonic Sepulcher'
     },
     subsystemEffects: {
-      propulsion: 'Trace work disrupts migration and opens an evacuation route.',
-      armor: 'Escort breaks strip finale integrity and improve containment leverage.',
-      core: 'Lieutenant defeats expose the mnemonic core and improve custody control.'
+      propulsion: 'Trace work disrupts migration and lowers the finale escape pressure.',
+      armor: 'Escort breaks strip finale integrity and remove procession cover.',
+      core: 'Lieutenant defeats expose the mnemonic core to direct fire.'
     },
     structureLabel: 'Trace chain',
-    huntDoctrine: 'Follow stolen voices across several operations, then silence or negotiate with what gathered them.',
+    huntDoctrine: 'Follow stolen voices across several operations, strip the procession, and silence what gathered them.',
     contactCues: {
       trace: {
         label: 'Dead-frequency trace',
         directive: 'Hold the signal lane and recover a voiceprint from the procession wake.',
-        payoff: 'Success damages Procession Vanes and adds trace intelligence for a future compact.'
+        payoff: 'Success damages Procession Vanes and keeps the bounty signal locked.'
       },
       ambush: {
         label: 'Reliquary intercept',
@@ -82,11 +72,10 @@ export const APEX_THREATS: readonly ApexThreatDefinition[] = [
       },
       finale: {
         label: 'Silence the procession',
-        directive: 'Neutralize Grave Choir, then decide what survives the encounter.',
-        payoff: 'Prior subsystem wounds reduce its final integrity and expand disposition leverage.'
+        directive: 'Destroy Grave Choir before the procession can migrate again.',
+        payoff: 'Prior subsystem wounds reduce its final integrity and escape pressure.'
       }
     },
-    supportedOutcomes: ['destruction', 'containment', 'bargain'],
     rewardUnlockId: 'unlock_music_apex_procession',
     circuitRewardItemIds: [
       'item_funeral_refrain_array',
@@ -108,9 +97,9 @@ export const APEX_THREATS: readonly ApexThreatDefinition[] = [
       core: 'Empty Throne Reactor'
     },
     subsystemEffects: {
-      propulsion: 'Trace work disrupts migration and creates a viable redirection lane.',
-      armor: 'Escort breaks breach the mantle and improve carrier containment leverage.',
-      core: 'Lieutenant command codes improve a later boarding and capture attempt.'
+      propulsion: 'Trace work disrupts migration and lowers the finale escape pressure.',
+      armor: 'Escort breaks breach the mantle and remove claimant reinforcements.',
+      core: 'Lieutenant command codes expose the Empty Throne Reactor.'
     },
     structureLabel: 'Siege break',
     huntDoctrine: 'Peel away the foundry\'s claimant fleet, steal its command codes, and confront the body it builds from the wreckage.',
@@ -118,7 +107,7 @@ export const APEX_THREATS: readonly ApexThreatDefinition[] = [
       trace: {
         label: 'Foundry wake',
         directive: 'Cut through the pilgrim wake and lock a drive signature before it migrates.',
-        payoff: 'Success damages Pilgrim Drives and establishes a redirection vector.'
+        payoff: 'Success damages Pilgrim Drives and keeps the bounty signal locked.'
       },
       ambush: {
         label: 'Claimant escort',
@@ -127,16 +116,15 @@ export const APEX_THREATS: readonly ApexThreatDefinition[] = [
       },
       lieutenant: {
         label: 'Pretender crucible',
-        directive: 'Destroy the command crucible carrying the foundry\'s custody codes.',
-        payoff: 'Success wounds the Empty Throne Reactor and supplies capture leverage.'
+        directive: 'Destroy the command crucible coordinating the foundry screen.',
+        payoff: 'Success wounds the Empty Throne Reactor and strips its command screen.'
       },
       finale: {
         label: 'Break the empty throne',
-        directive: 'Neutralize Crownless Engine, then choose what becomes of the living foundry.',
-        payoff: 'Prior subsystem wounds reduce its final integrity and unlock safer dispositions.'
+        directive: 'Destroy Crownless Engine before it can crown another body.',
+        payoff: 'Prior subsystem wounds reduce its final integrity and escort pressure.'
       }
     },
-    supportedOutcomes: ['destruction', 'capture', 'containment'],
     rewardUnlockId: 'unlock_boss_apex_practice',
     circuitRewardItemIds: [
       'item_claimant_mantle_press',
@@ -158,17 +146,17 @@ export const APEX_THREATS: readonly ApexThreatDefinition[] = [
       core: 'Destination Oracle'
     },
     subsystemEffects: {
-      propulsion: 'Trace work slows the exodus and improves a safe redirection attempt.',
-      armor: 'Escort breaks open the coffer and improve containment leverage.',
-      core: 'Lieutenant defeats expose the oracle and improve negotiation or custody control.'
+      propulsion: 'Trace work slows the exodus and lowers the finale escape pressure.',
+      armor: 'Escort breaks open the coffer and remove stripping escorts.',
+      core: 'Lieutenant defeats expose the Destination Oracle to direct fire.'
     },
     structureLabel: 'Migration net',
-    huntDoctrine: 'Map the automated exodus, cut its stripping escorts, and decide whether its passengers deserve another destination.',
+    huntDoctrine: 'Map the automated exodus, cut its stripping escorts, and destroy the command convoy before it reaches another inhabited lane.',
     contactCues: {
       trace: {
         label: 'Exodus vector',
         directive: 'Cross the migration lane and recover a destination prediction.',
-        payoff: 'Success damages Exodus Rails and establishes a future evacuation route.'
+        payoff: 'Success damages Exodus Rails and keeps the bounty signal locked.'
       },
       ambush: {
         label: 'Passenger screen',
@@ -178,15 +166,14 @@ export const APEX_THREATS: readonly ApexThreatDefinition[] = [
       lieutenant: {
         label: 'Route adjudicator',
         directive: 'Defeat the marked adjudicator rewriting the convoy destination.',
-        payoff: 'Success wounds the Destination Oracle and supplies command leverage.'
+        payoff: 'Success wounds the Destination Oracle and strips its command screen.'
       },
       finale: {
-        label: 'Answer the evacuation decree',
-        directive: 'Neutralize Pale Convoy, then decide whether to destroy, bargain, or redirect it.',
-        payoff: 'Prior subsystem wounds reduce its final integrity and expand humane alternatives.'
+        label: 'End the evacuation decree',
+        directive: 'Destroy Pale Convoy before it strips another inhabited route.',
+        payoff: 'Prior subsystem wounds reduce its final integrity and escape pressure.'
       }
     },
-    supportedOutcomes: ['destruction', 'bargain', 'evacuation'],
     rewardUnlockId: 'unlock_challenge_apex_migration',
     circuitRewardItemIds: [
       'item_exodus_rail_switch',

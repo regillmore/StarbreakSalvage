@@ -1,8 +1,7 @@
 import { createDebugCrewRosterState } from './CrewCommand';
 import { createDebugCrewArcState } from './CrewArc';
 import { createDebugFleetState } from './Fleetcraft';
-import { applyApexHuntEvent, createDebugApexHuntState } from './ApexHunt';
-import { getApexThreatDefinition } from '../content/apexThreats';
+import { createDebugApexHuntState } from './ApexHunt';
 import type { UnlockId } from '../content/unlocks';
 import { createDebugFactionFrontState } from './FactionFront';
 import { createDebugFactionCampaignState } from './FactionCampaign';
@@ -215,8 +214,8 @@ export const SCENARIO_LAB_DEFINITIONS: readonly ScenarioLabDefinition[] = [
   scenario(
     'lab_apex_hunts',
     'Roaming Apex Hunts',
-    'Inspect three multi-sector threat chains, persistent subsystem wounds, migration pressure, ending requirements, and shared combat budgets.',
-    ['apex', 'bosses', 'persistence', 'endings', 'unlocks', 'shared-budgets'],
+    'Inspect three seeded bounty tracks, their persistent finale wounds, kill status, and exclusive circuit spoils.',
+    ['apex', 'bosses', 'persistence', 'bounties', 'unlocks', 'shared-budgets'],
     7,
     'apexDossier',
     'none',
@@ -357,20 +356,14 @@ export function createScenarioLabLaunch(options: {
     if (!threatPlan || !finale) {
       throw new Error('Apex spoil Scenario Lab fixture requires a pursuit finale.');
     }
-    const threatDefinition = getApexThreatDefinition(threatPlan.definitionId);
     session.currentSectorIndex = finale.sectorIndex;
     resetMissionForCurrentSector(options.run, session);
-    const result = applyApexHuntEvent(options.run.apexHunts, session.apexHunts, {
-      id: `scenario-lab:${definition.id}:resolve`,
-      type: 'resolve',
-      threatId: threatPlan.definitionId,
-      sectorIndex: finale.sectorIndex,
-      outcome: threatDefinition.supportedOutcomes[0]!
-    });
-    if (result.disposition !== 'applied') {
-      throw new Error(`Apex spoil Scenario Lab fixture could not resolve: ${result.label}.`);
+    if (
+      session.apexHunts.threats.find((threat) => threat.threatId === threatPlan.definitionId)
+        ?.status !== 'resolved'
+    ) {
+      throw new Error('Apex spoil Scenario Lab fixture requires a claimed bounty.');
     }
-    session.apexHunts = result.state;
   }
   if (definition.target === 'carrierDeck') {
     const schedule = createMissionSchedule(options.run.expedition, session.currentSectorIndex);

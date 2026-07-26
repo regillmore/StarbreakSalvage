@@ -3513,13 +3513,23 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
 }
 
 .apex-dossier-panel {
+  position: relative;
   width: min(96vw, 1180px);
-  max-height: min(95vh, 940px);
-  gap: 0.9rem;
-  overflow: auto;
+  max-height: 94vh;
+  gap: clamp(0.55rem, 1.3vh, 0.85rem);
+  padding: clamp(0.72rem, 1.6vh, 1.05rem);
+  overflow: hidden;
   background:
-    radial-gradient(circle at 84% 8%, rgba(255, 107, 214, 0.11), transparent 28%),
+    radial-gradient(circle at 84% 8%, rgba(255, 209, 102, 0.1), transparent 28%),
+    radial-gradient(circle at 16% 76%, rgba(124, 247, 255, 0.07), transparent 34%),
     linear-gradient(145deg, rgba(8, 18, 37, 0.92), rgba(4, 6, 18, 0.96));
+}
+
+.apex-bounty-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 1rem;
 }
 
 .apex-dossier-masthead {
@@ -3532,7 +3542,7 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
 .apex-dossier-masthead > div {
   display: grid;
   min-width: 0;
-  gap: 0.18rem;
+  gap: 0.08rem;
 }
 
 .apex-dossier-masthead .apex-glyph-masthead {
@@ -3551,22 +3561,33 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
 }
 
 .apex-campaign-summary {
-  max-width: 76rem;
-  color: #dbe8ee;
-  line-height: 1.45;
+  max-width: 64rem;
+  color: #b9cbd5;
+  font-size: clamp(0.72rem, 1.2vw, 0.86rem);
+  line-height: 1.35;
 }
 
-.apex-threat-tabs {
+.apex-dossier-panel h1 {
+  font-size: clamp(2.25rem, 5vw, 4.1rem);
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+.apex-bounty-back {
+  min-width: 6.4rem;
+}
+
+.apex-bounty-tiles {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.5rem;
 }
 
-.apex-threat-tab {
+.apex-bounty-tile {
   display: grid;
   min-width: 0;
-  gap: 0.28rem;
-  padding: 0.7rem 0.8rem;
+  gap: 0.2rem;
+  padding: clamp(0.52rem, 1.2vh, 0.72rem) 0.75rem;
   border: 1px solid rgba(124, 247, 255, 0.24);
   border-radius: 7px;
   color: #dbe8ee;
@@ -3575,416 +3596,466 @@ html[data-bullet-contrast='high'] .ship-preview-frame {
   cursor: pointer;
 }
 
-.apex-threat-tab[data-selected='true'] {
+.apex-bounty-tile[data-selected='true'] {
   border-color: rgba(255, 209, 102, 0.76);
   background: linear-gradient(135deg, rgba(255, 209, 102, 0.13), rgba(124, 247, 255, 0.08));
   box-shadow: 0 0 20px rgba(124, 247, 255, 0.1);
 }
 
-.apex-threat-tab:focus-visible,
-.apex-resolution-card:focus-visible {
+.apex-bounty-tile[data-status='resolved'] {
+  border-color: rgba(114, 242, 167, 0.42);
+  background: linear-gradient(135deg, rgba(114, 242, 167, 0.09), rgba(4, 8, 22, 0.75));
+}
+
+.apex-bounty-tile[data-status='escaped'] {
+  border-color: rgba(255, 143, 143, 0.34);
+}
+
+.apex-bounty-tile:focus-visible {
   outline: 3px solid #ff6bd6;
   outline-offset: 3px;
 }
 
-.apex-threat-tab-identity {
+.apex-bounty-tile-heading {
+  display: grid;
+  grid-template-columns: 1.05rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.34rem;
+  color: #7cf7ff;
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+}
+
+.apex-bounty-tile-heading b {
+  color: #ffd166;
+  font-size: 0.56rem;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.apex-bounty-tile[data-status='resolved'] .apex-bounty-tile-heading b {
+  color: #72f2a7;
+}
+
+.apex-bounty-tile[data-status='escaped'] .apex-bounty-tile-heading b {
+  color: #ff8f8f;
+}
+
+.apex-glyph-bounty-tile {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+}
+
+.apex-bounty-tile > strong {
   color: #f8fbff;
+  font-size: clamp(0.82rem, 1.25vw, 1rem);
   font-weight: 900;
   line-height: 1.2;
   text-transform: uppercase;
 }
 
-.apex-threat-tab-status {
-  color: #7cf7ff;
-  font-size: 0.7rem;
-  font-weight: 850;
-  letter-spacing: 0.04em;
-  line-height: 1.3;
+.apex-bounty-tile > small {
+  overflow: hidden;
+  color: #a9bbc5;
+  font-size: 0.64rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.apex-bounty-pips {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.18rem;
+  margin-top: 0.2rem;
+}
+
+.apex-bounty-pips i {
+  height: 0.22rem;
+  border-radius: 999px;
+  background: rgba(124, 247, 255, 0.16);
+}
+
+.apex-bounty-pips i[data-status='resolved'] {
+  background: #72f2a7;
+}
+
+.apex-bounty-pips i[data-status='current'] {
+  background: #ffd166;
+  box-shadow: 0 0 8px rgba(255, 209, 102, 0.5);
+}
+
+.apex-bounty-pips i[data-status='missed'] {
+  background: #ff8f8f;
+}
+
+.apex-bounty-progress-label {
+  color: #8499a5;
+  font-size: 0.58rem;
+  font-weight: 800;
   text-transform: uppercase;
 }
 
-.apex-threat-tab[data-status='awaitingResolution'] .apex-threat-tab-status {
-  color: #ffd166;
-}
-
-.apex-dossier-layout {
+.apex-bounty-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.08fr) minmax(22rem, 0.92fr);
-  align-items: start;
+  grid-template-columns: minmax(14rem, 0.68fr) minmax(0, 1.32fr);
+  min-height: 0;
+  align-items: stretch;
   gap: 0.75rem;
 }
 
-.apex-threat-sheet,
-.apex-intel-panel,
-.apex-dispositions {
+.apex-bounty-visual,
+.apex-bounty-details {
   display: grid;
   min-width: 0;
-  gap: 0.68rem;
-  padding: 0.9rem;
+  gap: clamp(0.48rem, 1.1vh, 0.72rem);
+  padding: clamp(0.62rem, 1.35vh, 0.86rem);
   border: 1px solid rgba(124, 247, 255, 0.2);
   border-radius: 8px;
   background: rgba(3, 7, 19, 0.68);
 }
 
-.apex-sheet-header,
-.apex-disposition-heading,
-.apex-resolution-header,
-.apex-integrity-card > div,
-.apex-subsystem-card > div,
-.apex-pressure-card > div,
-.apex-requirement > div,
-.apex-contact-header {
-  display: flex;
-  align-items: start;
-  justify-content: space-between;
-  gap: 0.65rem;
+.apex-bounty-visual {
+  position: relative;
+  grid-template-rows: minmax(8rem, 1fr) auto auto;
+  overflow: hidden;
+  border-color: rgba(255, 209, 102, 0.26);
+  background:
+    linear-gradient(rgba(124, 247, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124, 247, 255, 0.045) 1px, transparent 1px),
+    radial-gradient(circle at 50% 34%, rgba(255, 107, 214, 0.11), transparent 40%),
+    rgba(2, 7, 18, 0.82);
+  background-size: 2rem 2rem, 2rem 2rem, auto, auto;
 }
 
-.apex-sheet-header p,
-.apex-threat-summary,
-.apex-doctrine,
-.apex-status-detail {
-  color: #bfcdd6;
-  line-height: 1.4;
+.apex-bounty-visual[data-status='resolved'] {
+  border-color: rgba(114, 242, 167, 0.38);
 }
 
-.apex-doctrine {
-  padding-left: 0.65rem;
-  border-left: 3px solid rgba(255, 209, 102, 0.58);
-  color: #f8fbff;
+.apex-bounty-visual[data-status='escaped'] {
+  border-color: rgba(255, 143, 143, 0.32);
 }
 
-.apex-status-detail {
+.apex-bounty-radar {
+  position: relative;
+  display: grid;
+  min-height: clamp(8rem, 22vh, 12.5rem);
+  place-items: center;
+}
+
+.apex-bounty-radar-ring,
+.apex-bounty-radar-axis {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  border: 1px solid rgba(124, 247, 255, 0.18);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.apex-bounty-radar-ring-outer {
+  width: min(80%, 12rem);
+  aspect-ratio: 1;
+}
+
+.apex-bounty-radar-ring-inner {
+  width: min(48%, 7.2rem);
+  aspect-ratio: 1;
+}
+
+.apex-bounty-radar-axis {
+  width: min(94%, 14rem);
+  height: 1px;
+  border: 0;
+  border-radius: 0;
+  background: rgba(124, 247, 255, 0.16);
+}
+
+.apex-bounty-radar-axis::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1px;
+  height: min(22vh, 12rem);
+  content: '';
+  background: rgba(124, 247, 255, 0.16);
+  transform: translate(-50%, -50%);
+}
+
+.apex-bounty-radar .apex-glyph-bounty-target {
+  z-index: 1;
+  width: clamp(4.8rem, 10vw, 7.2rem);
+  height: clamp(4.8rem, 10vw, 7.2rem);
+  margin: 0;
+  color: #ffd166;
+  filter: drop-shadow(0 0 18px rgba(255, 209, 102, 0.26));
+}
+
+.apex-bounty-visual[data-status='resolved'] .apex-glyph-bounty-target {
+  color: #72f2a7;
+}
+
+.apex-bounty-visual[data-status='escaped'] .apex-glyph-bounty-target {
+  color: #ff8f8f;
+  opacity: 0.55;
+}
+
+.apex-bounty-identity {
+  display: grid;
+  gap: 0.16rem;
+}
+
+.apex-bounty-identity > span {
   color: #7cf7ff;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
 }
 
-.apex-status-badge,
-.apex-decision-state,
-.apex-readiness-badge {
-  flex: 0 0 auto;
-  padding: 0.22rem 0.45rem;
-  border: 1px solid rgba(124, 247, 255, 0.42);
+.apex-bounty-identity h2 {
+  font-size: clamp(1.35rem, 2.2vw, 1.9rem);
+  text-transform: uppercase;
+}
+
+.apex-bounty-identity p {
+  color: #aabcc6;
+  font-size: 0.7rem;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.apex-status-badge {
+  width: fit-content;
+  margin-top: 0.24rem;
+  padding: 0.2rem 0.42rem;
+  border: 1px solid rgba(124, 247, 255, 0.4);
   border-radius: 999px;
   color: #7cf7ff;
-  font-size: 0.65rem;
+  font-size: 0.58rem;
   font-weight: 900;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
-.apex-status-badge[data-status='awaitingResolution'],
-.apex-decision-state {
-  border-color: rgba(255, 209, 102, 0.58);
-  color: #ffd166;
+.apex-status-badge[data-status='resolved'] {
+  border-color: rgba(114, 242, 167, 0.48);
+  color: #72f2a7;
 }
 
-.apex-contact-track {
+.apex-status-badge[data-status='escaped'] {
+  border-color: rgba(255, 143, 143, 0.46);
+  color: #ff8f8f;
+}
+
+.apex-bounty-condition {
   display: grid;
-  gap: 0;
+  gap: 0.22rem;
+  padding: 0.55rem;
+  border: 1px solid rgba(124, 247, 255, 0.14);
+  border-radius: 6px;
+  background: rgba(3, 8, 22, 0.82);
+}
+
+.apex-bounty-condition span {
+  color: #849ba7;
+  font-size: 0.56rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+}
+
+.apex-bounty-condition strong {
+  color: #ffd166;
+  font-size: 0.9rem;
+}
+
+.apex-bounty-condition meter,
+.apex-dossier-panel meter {
+  width: 100%;
+  height: 0.5rem;
+  accent-color: #ffd166;
+}
+
+.apex-bounty-details {
+  grid-template-rows: auto auto auto auto auto;
+  align-content: start;
+}
+
+.apex-bounty-details > header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+
+.apex-bounty-details > header div {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.apex-bounty-details > header span {
+  color: #7cf7ff;
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.apex-bounty-details > header h2 {
+  font-size: clamp(1.15rem, 2vw, 1.55rem);
+  text-transform: uppercase;
+}
+
+.apex-bounty-details > header > b {
+  padding: 0.22rem 0.45rem;
+  border: 1px solid rgba(255, 209, 102, 0.44);
+  border-radius: 999px;
+  color: #ffd166;
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+}
+
+.apex-bounty-summary,
+.apex-bounty-doctrine {
+  color: #c5d4dc;
+  font-size: clamp(0.68rem, 1vw, 0.78rem);
+  line-height: 1.35;
+}
+
+.apex-bounty-doctrine {
+  padding-left: 0.58rem;
+  border-left: 3px solid rgba(255, 209, 102, 0.52);
+  color: #f8fbff;
+}
+
+.apex-bounty-track {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
   padding: 0;
   margin: 0;
   list-style: none;
 }
 
-.apex-contact {
-  position: relative;
+.apex-bounty-track li {
   display: grid;
-  grid-template-columns: 1.15rem minmax(0, 1fr);
-  gap: 0.55rem;
+  grid-template-columns: 1.6rem minmax(0, 1fr);
+  gap: 0.45rem;
   min-width: 0;
-  padding-bottom: 0.75rem;
-}
-
-.apex-contact:not(:last-child)::before {
-  position: absolute;
-  top: 0.82rem;
-  bottom: -0.08rem;
-  left: 0.36rem;
-  width: 1px;
-  content: '';
-  background: rgba(124, 247, 255, 0.26);
-}
-
-.apex-contact-marker {
-  z-index: 1;
-  width: 0.76rem;
-  height: 0.76rem;
-  margin-top: 0.18rem;
-  border: 2px solid #7cf7ff;
-  border-radius: 50%;
-  background: #07101d;
-}
-
-.apex-contact[data-status='resolved'] .apex-contact-marker {
-  border-color: #72f2a7;
-  background: #72f2a7;
-}
-
-.apex-contact[data-status='current'] .apex-contact-marker {
-  border-color: #ffd166;
-  background: #ffd166;
-  box-shadow: 0 0 12px rgba(255, 209, 102, 0.5);
-}
-
-.apex-contact[data-status='missed'] .apex-contact-marker {
-  border-color: #ff8f8f;
-}
-
-.apex-contact-header strong {
-  color: #f8fbff;
-}
-
-.apex-contact-header span,
-.apex-contact small {
-  color: #91a4b0;
-  font-size: 0.67rem;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.apex-contact p {
-  margin-top: 0.22rem;
-  color: #cbd8df;
-  font-size: 0.82rem;
-  line-height: 1.35;
-}
-
-.apex-contact .apex-contact-payoff {
-  color: #ffd166;
-  font-size: 0.7rem;
-  font-weight: 800;
-}
-
-.apex-integrity-card,
-.apex-subsystem-card,
-.apex-evidence-card,
-.apex-pressure-card {
-  display: grid;
-  min-width: 0;
-  gap: 0.35rem;
-  padding: 0.58rem;
+  padding: 0.48rem;
   border: 1px solid rgba(124, 247, 255, 0.14);
   border-radius: 6px;
   background: rgba(8, 13, 31, 0.72);
 }
 
-.apex-integrity-card p,
-.apex-subsystem-card p,
-.apex-pressure-card small,
-.apex-evidence-card small {
-  color: #9fb0bb;
-  font-size: 0.7rem;
-  line-height: 1.35;
-}
-
-.apex-subsystem-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.42rem;
-}
-
-.apex-subsystem-card > div {
-  display: grid;
-  gap: 0.14rem;
-}
-
-.apex-subsystem-card strong,
-.apex-subsystem-card span {
-  overflow-wrap: anywhere;
-}
-
-.apex-subsystem-card strong {
-  color: #f8fbff;
-  font-size: 0.72rem;
-}
-
-.apex-subsystem-card span {
-  color: #7cf7ff;
-  font-size: 0.65rem;
-  font-weight: 850;
-}
-
-.apex-subsystem-card[data-condition='disabled'],
-.apex-subsystem-card[data-condition='breached'] {
-  border-color: rgba(114, 242, 167, 0.35);
-}
-
-.apex-evidence-grid,
-.apex-pressure-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.42rem;
-}
-
-.apex-evidence-card {
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: baseline;
-}
-
-.apex-evidence-card strong {
-  color: #f8fbff;
-  font-size: 1.1rem;
-}
-
-.apex-evidence-card span {
-  color: #cbd8df;
-  font-size: 0.7rem;
-  font-weight: 850;
-  text-transform: uppercase;
-}
-
-.apex-evidence-card small {
-  grid-column: 1 / -1;
-}
-
-.apex-evidence-card[data-tone='advantage'],
-.apex-pressure-card[data-tone='advantage'] {
+.apex-bounty-track li[data-status='resolved'] {
   border-color: rgba(114, 242, 167, 0.34);
 }
 
-.apex-evidence-card[data-tone='warning'],
-.apex-pressure-card[data-tone='warning'] {
-  border-color: rgba(255, 143, 143, 0.34);
+.apex-bounty-track li[data-status='current'] {
+  border-color: rgba(255, 209, 102, 0.5);
+  background: linear-gradient(135deg, rgba(255, 209, 102, 0.08), rgba(8, 13, 31, 0.76));
 }
 
-.apex-pressure-card strong {
+.apex-bounty-track li[data-status='missed'] {
+  border-color: rgba(255, 143, 143, 0.32);
+}
+
+.apex-bounty-track li > span {
   color: #ffd166;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 900;
 }
 
-.apex-disposition-heading p {
-  margin-top: 0.25rem;
-  color: #b7c6cf;
-}
-
-.apex-disposition-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.55rem;
-}
-
-.apex-resolution-card {
+.apex-bounty-track li > div {
   display: grid;
   min-width: 0;
-  min-height: 15rem;
-  align-content: start;
-  gap: 0.55rem;
-  padding: 0.78rem;
-  border: 1px solid rgba(124, 247, 255, 0.24);
-  border-radius: 7px;
-  color: #f8fbff;
-  text-align: left;
-  text-transform: none;
-  background: rgba(7, 11, 27, 0.8);
-  font: inherit;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.06rem 0.4rem;
 }
 
-button.apex-resolution-card {
-  cursor: pointer;
-}
-
-.apex-resolution-card[data-ready='true'] {
-  border-color: rgba(114, 242, 167, 0.55);
-  background: linear-gradient(145deg, rgba(114, 242, 167, 0.08), rgba(7, 11, 27, 0.88));
-}
-
-.apex-resolution-card[data-ready='false'] {
-  border-color: rgba(255, 143, 143, 0.3);
-}
-
-button.apex-resolution-card[data-ready='false'] {
-  cursor: help;
-}
-
-button.apex-resolution-card[data-ready='true']:hover {
-  border-color: #72f2a7;
-  transform: translateY(-1px);
-}
-
-.apex-resolution-header h3 {
-  color: #f8fbff;
-  font-size: 0.9rem;
-  line-height: 1.25;
+.apex-bounty-track strong,
+.apex-bounty-track b {
+  font-size: 0.63rem;
+  line-height: 1.2;
   text-transform: uppercase;
 }
 
-.apex-resolution-card[data-ready='true'] .apex-readiness-badge {
-  border-color: rgba(114, 242, 167, 0.58);
-  color: #72f2a7;
+.apex-bounty-track strong {
+  color: #f8fbff;
 }
 
-.apex-resolution-card[data-ready='false'] .apex-readiness-badge {
-  border-color: rgba(255, 143, 143, 0.52);
-  color: #ff8f8f;
+.apex-bounty-track b {
+  color: #7cf7ff;
+  text-align: right;
 }
 
-.apex-resolution-summary {
-  color: #dbe8ee;
-  font-size: 0.8rem;
-  line-height: 1.4;
-}
-
-.apex-resolution-risk {
-  color: #ffd166;
+.apex-bounty-track li > div > span {
+  overflow: hidden;
+  color: #c2d0d7;
   font-size: 0.68rem;
-  font-weight: 800;
-  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.apex-requirement-list {
-  display: grid;
-  gap: 0.42rem;
-  margin-top: auto;
+.apex-bounty-track small {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  color: #8398a4;
+  font-size: 0.58rem;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
-.apex-requirement,
-.apex-requirement-empty {
+.apex-bounty-facts {
   display: grid;
-  gap: 0.26rem;
-  padding: 0.45rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.apex-bounty-fact {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 0.2rem;
+  padding: 0.5rem;
   border: 1px solid rgba(124, 247, 255, 0.14);
-  border-radius: 5px;
-  background: rgba(2, 5, 15, 0.6);
+  border-radius: 6px;
+  background: rgba(3, 8, 22, 0.72);
 }
 
-.apex-requirement strong,
-.apex-requirement span,
-.apex-requirement b,
-.apex-requirement small,
-.apex-requirement-empty {
+.apex-bounty-fact strong {
+  color: #7cf7ff;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.apex-bounty-fact p {
+  color: #b8c8d0;
   font-size: 0.64rem;
   line-height: 1.3;
 }
 
-.apex-requirement b,
-.apex-requirement-empty {
-  color: #72f2a7;
+.apex-bounty-fact .apex-glyph-bounty-spoil {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  width: 0.8rem;
+  height: 0.8rem;
+  margin: 0;
+  color: #ffd166;
 }
 
-.apex-requirement[data-met='false'] b {
-  color: #ff8f8f;
-}
-
-.apex-requirement small {
-  color: #aebcc5;
-}
-
-.apex-dossier-panel meter {
-  width: 100%;
-  height: 0.55rem;
-  accent-color: #7cf7ff;
-}
-
-.apex-requirement[data-met='true'] meter {
-  accent-color: #72f2a7;
-}
-
-.apex-requirement[data-met='false'] meter {
-  accent-color: #ff8f8f;
-}
-
-.apex-dossier-controls {
-  display: flex;
-  justify-content: end;
+html[data-bullet-contrast='high'] .apex-bounty-tile,
+html[data-bullet-contrast='high'] .apex-bounty-visual,
+html[data-bullet-contrast='high'] .apex-bounty-details,
+html[data-bullet-contrast='high'] .apex-bounty-track li,
+html[data-bullet-contrast='high'] .apex-bounty-fact {
+  border-color: currentColor;
 }
 
 .hud-pill-apex {
@@ -4057,9 +4128,6 @@ button.apex-resolution-card[data-ready='true']:hover {
 }
 
 html[data-bullet-contrast='high'] .apex-dossier-panel,
-html[data-bullet-contrast='high'] .apex-threat-sheet,
-html[data-bullet-contrast='high'] .apex-intel-panel,
-html[data-bullet-contrast='high'] .apex-dispositions,
 html[data-bullet-contrast='high'] .apex-contact-banner {
   border-color: rgba(248, 251, 255, 0.72);
   background: #02040a;
@@ -6815,16 +6883,21 @@ html[data-bullet-contrast='high'] .hud-meter-track {
     min-height: 22rem;
   }
 
-  .apex-dossier-layout {
+  .apex-dossier-panel {
+    overflow: auto;
+  }
+
+  .apex-bounty-layout {
     grid-template-columns: 1fr;
   }
 
-  .apex-disposition-grid {
-    grid-template-columns: 1fr;
+  .apex-bounty-visual {
+    grid-template-columns: minmax(10rem, 0.8fr) minmax(0, 1.2fr);
+    grid-template-rows: auto auto;
   }
 
-  .apex-resolution-card {
-    min-height: auto;
+  .apex-bounty-radar {
+    grid-row: 1 / -1;
   }
 
   .foundry-hardpoint-grid,
@@ -7009,19 +7082,32 @@ html[data-bullet-contrast='high'] .hud-meter-track {
     padding: 0.65rem;
   }
 
-  .apex-threat-tabs,
-  .apex-subsystem-grid {
+  .apex-bounty-header {
     grid-template-columns: 1fr;
   }
 
-  .apex-evidence-grid,
-  .apex-pressure-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .apex-bounty-back {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    min-width: 4.8rem;
+    padding: 0.35rem 0.5rem;
   }
 
-  .apex-sheet-header,
-  .apex-disposition-heading {
-    display: grid;
+  .apex-bounty-tiles,
+  .apex-bounty-track,
+  .apex-bounty-facts {
+    grid-template-columns: 1fr;
+  }
+
+  .apex-bounty-visual {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+  }
+
+  .apex-bounty-radar {
+    grid-row: auto;
+    min-height: 8rem;
   }
 
   .apex-contact-banner {

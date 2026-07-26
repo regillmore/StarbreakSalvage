@@ -18,7 +18,7 @@ import { validateBoardingCampaignState } from './BoardingOperation';
 import { validateFactionFrontState } from './FactionFront';
 import { validateCrewArcState } from './CrewArc';
 import { validateFleetState } from './Fleetcraft';
-import { validateApexHuntState } from './ApexHunt';
+import { normalizeLegacyApexBountyState, validateApexHuntState } from './ApexHunt';
 import { reconcileItemSockets } from './ItemSockets';
 import { validateSectorNavigationState } from './SectorNavigation';
 
@@ -205,11 +205,13 @@ export function restoreRunSnapshot(snapshot: RunSnapshotV12): RestoredRunSnapsho
   if (!contract)
     throw new Error(`Run snapshot contract is unavailable: ${snapshot.plan.contractId}.`);
   validateSnapshotSession(snapshot.session, run, snapshot.checkpoint.target);
+  const session = importRunSnapshot(exportRunSnapshot(snapshot)).session;
+  session.apexHunts = normalizeLegacyApexBountyState(session.apexHunts);
   return {
     snapshot,
     run,
     contract,
-    session: importRunSnapshot(exportRunSnapshot(snapshot)).session
+    session
   };
 }
 

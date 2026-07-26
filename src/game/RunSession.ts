@@ -540,7 +540,7 @@ export function recordApexHuntEvent(
     session.apexHunts = result.state;
     recordRunSessionTimelineEvent(session, {
       id: `timeline:${event.id}`,
-      category: event.type === 'resolve' ? 'decision' : 'boss',
+      category: 'boss',
       kind: `apex:${event.type}`,
       sectorIndex: event.sectorIndex,
       subjectId: event.threatId,

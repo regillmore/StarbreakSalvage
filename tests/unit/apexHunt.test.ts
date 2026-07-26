@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { APEX_OUTCOMES, APEX_THREATS } from '../../src/content/apexThreats';
+import { APEX_THREATS } from '../../src/content/apexThreats';
 import { getItemById } from '../../src/content/items';
 import {
   MAX_APEX_HAZARD_PRESSURE,
@@ -12,6 +12,7 @@ import {
   createApexHuntState,
   createApexPursuitNavigationReadModel,
   getApexEncounterForNode,
+  normalizeLegacyApexBountyState,
   validateApexContent,
   validateApexHuntPlan,
   validateApexHuntState
@@ -27,10 +28,7 @@ const loadedContext = {
   crewBonds: 2,
   crewOfficers: 1,
   carrierSupport: 2,
-  boardingCapacity: 1,
-  fleetSupport: 2,
-  fleetBoardingAssist: 1,
-  frontierDecision: 'breach' as const
+  fleetSupport: 2
 };
 
 describe('ApexHunt', () => {
@@ -196,73 +194,35 @@ describe('ApexHunt', () => {
     expect(validateApexHuntState(run.apexHunts, state)).toEqual([]);
   });
 
-  it('exposes all five risk-bearing outcomes across the three finales', () => {
-    const plan = generateRunSkeleton('APEX-ENDINGS').apexHunts;
+  it('keeps the finale profile focused on combat pressure instead of disposition routes', () => {
+    const plan = generateRunSkeleton('APEX-COMBAT-PROFILE').apexHunts;
     const state = createApexHuntState(plan);
-    const outcomes = new Set(
-      plan.threats.flatMap((threat) =>
-        createApexFinaleProfile({ plan, state, threatId: threat.definitionId, context: loadedContext })
-          .options.filter((option) => option.available)
-          .map((option) => option.outcome)
-      )
-    );
-    expect(outcomes).toEqual(new Set(APEX_OUTCOMES));
-  });
-
-  it('turns Crownless hunt evidence into explicit disposition readiness', () => {
-    const plan = generateRunSkeleton('APEX-CROWN-READINESS').apexHunts;
-    const hunt = plan.threats.find(
-      (candidate) => candidate.definitionId === 'apex_crownless_engine'
-    )!;
-    let state = createApexHuntState(plan);
-    for (const encounter of hunt.encounters) {
-      state = applyApexHuntEvent(plan, state, {
-        id: `readiness:${encounter.id}`,
-        type: 'encounterOutcome',
-        threatId: hunt.definitionId,
-        encounterId: encounter.id,
-        stage: encounter.stage,
-        sectorIndex: encounter.sectorIndex,
-        outcome: 'success'
-      }).state;
-    }
     const profile = createApexFinaleProfile({
       plan,
       state,
-      threatId: hunt.definitionId,
-      context: {
-        alliedFronts: 0,
-        hostileFronts: 0,
-        resolvedRivals: 0,
-        crewBonds: 0,
-        crewOfficers: 0,
-        carrierSupport: 0,
-        boardingCapacity: 0,
-        fleetSupport: 0,
-        fleetBoardingAssist: 0,
-        frontierDecision: 'unresolved'
-      }
+      threatId: plan.threats[0]!.definitionId,
+      context: loadedContext
     });
-    const capture = profile.options.find((option) => option.outcome === 'capture')!;
-    const containment = profile.options.find((option) => option.outcome === 'containment')!;
 
-    expect(profile.readyOptions).toBe(2);
-    expect(capture).toMatchObject({
-      available: true,
-      readinessLabel: 'Custody readiness 2/2'
-    });
-    expect(capture.requirements[0]).toMatchObject({
-      current: 2,
-      target: 2,
-      met: true,
-      sourceReadout:
-        'Carrier boarding 0 · Fleet boarding 0 · Lieutenant codes 1 · Exposed apex core 1'
-    });
-    expect(containment).toMatchObject({
-      available: false,
-      readinessLabel: 'Containment readiness 1/2'
-    });
-    expect(containment.requirement).toContain('Need 1 more');
+    expect(profile.pressure).toHaveLength(4);
+    expect(profile).not.toHaveProperty('options');
+    expect(profile).not.toHaveProperty('readyOptions');
+  });
+
+  it('settles restored pre-bounty resolution state as a claimed kill', () => {
+    const plan = generateRunSkeleton('APEX-LEGACY-SETTLEMENT').apexHunts;
+    const state = createApexHuntState(plan);
+    const legacy = {
+      ...state,
+      threats: state.threats.map((threat, index) =>
+        index === 0 ? { ...threat, status: 'awaitingResolution' as const } : threat
+      )
+    };
+
+    const normalized = normalizeLegacyApexBountyState(legacy);
+    expect(legacy.threats[0]!.status).toBe('awaitingResolution');
+    expect(normalized.threats[0]!.status).toBe('resolved');
+    expect(validateApexHuntState(plan, normalized)).toEqual([]);
   });
 
   it('presents named contacts, plain-language state, and explained evidence', () => {
@@ -290,19 +250,19 @@ describe('ApexHunt', () => {
     expect(threat.subsystems).toHaveLength(3);
     expect(threat.evidence.find((entry) => entry.id === 'traces')).toMatchObject({
       value: '1',
-      detail: 'Recovered traces count as negotiating leverage.'
+      detail: 'Recovered traces keep the pursuit locked onto the target.'
     });
     expect(threat.contacts[0]).toMatchObject({ status: 'resolved', statusLabel: 'Contact resolved' });
     expect(contact.banner).toContain('APEX CONTACT');
     expect(contact.payoff).toContain('Success');
   });
 
-  it('settles a finale once and returns its variety unlock', () => {
+  it('claims a bounty atomically at the successful finale and returns its variety unlock', () => {
     const plan = generateRunSkeleton('APEX-RESOLVE').apexHunts;
     const hunt = plan.threats[0]!;
     const finale = hunt.encounters.at(-1)!;
     let state = createApexHuntState(plan);
-    for (const encounter of hunt.encounters) {
+    for (const encounter of hunt.encounters.slice(0, -1)) {
       state = applyApexHuntEvent(plan, state, {
         id: `resolve-track:${encounter.id}`,
         type: 'encounterOutcome',
@@ -313,18 +273,16 @@ describe('ApexHunt', () => {
         outcome: 'success'
       }).state;
     }
-    const option = createApexFinaleProfile({
-      plan, state, threatId: hunt.definitionId, context: loadedContext
-    }).options.find((entry) => entry.available)!;
     const resolved = applyApexHuntEvent(plan, state, {
-      id: 'resolution', type: 'resolve', threatId: hunt.definitionId,
-      sectorIndex: finale.sectorIndex, outcome: option.outcome
+      id: 'resolution', type: 'encounterOutcome', threatId: hunt.definitionId,
+      encounterId: finale.id, stage: 'finale', sectorIndex: finale.sectorIndex, outcome: 'success'
     });
-    expect(resolved.state.threats[0]).toMatchObject({ status: 'resolved', outcome: option.outcome });
+    expect(resolved.state.threats[0]).toMatchObject({ status: 'resolved' });
+    expect(resolved.label).toContain('bounty claimed');
     expect(resolved.rewardUnlockId).toMatch(/^unlock_/);
     expect(applyApexHuntEvent(plan, resolved.state, {
-      id: 'resolution-2', type: 'resolve', threatId: hunt.definitionId,
-      sectorIndex: finale.sectorIndex, outcome: option.outcome
+      id: 'resolution-2', type: 'encounterOutcome', threatId: hunt.definitionId,
+      encounterId: finale.id, stage: 'finale', sectorIndex: finale.sectorIndex, outcome: 'success'
     }).disposition).toBe('rejected');
   });
 

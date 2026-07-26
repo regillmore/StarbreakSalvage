@@ -98,9 +98,9 @@ describe('ScenarioLab', () => {
     const apex = launch('lab_apex_hunts');
     expect(apex.readout.target).toBe('apexDossier');
     expect(apex.readout.apexEvents).toBeGreaterThan(3);
-    expect(
-      apex.session.apexHunts.threats.some((threat) => threat.status === 'awaitingResolution')
-    ).toBe(true);
+    expect(apex.session.apexHunts.threats.some((threat) => threat.status === 'resolved')).toBe(
+      true
+    );
 
     const apexSpoils = launch('lab_apex_spoils');
     const resolvedThreat = apexSpoils.session.apexHunts.threats.find(

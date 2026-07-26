@@ -1505,11 +1505,11 @@ test('opens voyage Scenario Lab fixtures under narrow accessible performance set
     'data-apex-surface',
     'dossier-masthead'
   );
+  await expect(page.getByTestId('apex-bounty-tiles').locator('button')).toHaveCount(3);
   await expect(page.getByTestId('apex-contact-track')).toContainText('Contact resolved');
-  await expect(page.getByTestId('apex-subsystems')).toContainText(/Disabled|Breached/);
-  await expect(page.getByTestId('apex-evidence')).toContainText('Trace intelligence');
-  await expect(page.getByTestId('apex-pressure')).toContainText('Escape risk');
-  await expect(page.getByTestId('apex-dispositions')).toContainText(/Ready|Locked/);
+  await expect(page.getByTestId('apex-bounty-visual')).toContainText(/TARGET|BOUNTY/);
+  await expect(page.getByTestId('apex-bounty-spoils')).toContainText('Apex circuit spoils');
+  await expect(page.getByTestId('apex-dossier')).not.toContainText(/Disposition|Ready|Locked/);
   await expect(page.locator('.debug-overlay')).toContainText('Apex budget');
 
   await page.keyboard.press('Escape');

@@ -112,8 +112,8 @@ const DESTINATIONS: ReadonlyArray<
     shortLabel: 'Apex',
     deckLabel: 'Intelligence Well',
     glyph: '△',
-    summary: 'Inspect marked apex contacts, evidence, subsystem damage, and disposition forecasts.',
-    actionLabel: 'Open Apex Dossier'
+    summary: 'Track three seeded apex bounties, their pursuit steps, finale damage, and circuit spoils.',
+    actionLabel: 'Open Bounty Board'
   }
 ];
 

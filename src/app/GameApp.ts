@@ -172,10 +172,8 @@ import {
   createApexFinaleProfile,
   getApexEncounterForNode,
   getResolvedApexUnlockIds,
-  type ApexFinaleContext,
-  type ApexFinaleProfile
+  type ApexFinaleContext
 } from '../game/ApexHunt';
-import type { ApexOutcome } from '../content/apexThreats';
 
 export class GameApp {
   private readonly canvas: HTMLCanvasElement;
@@ -381,18 +379,7 @@ export class GameApp {
       return;
     }
     if (launch.definition.target === 'apexDossier') {
-      const awaiting = launch.session.apexHunts.threats.find(
-        (threat) => threat.status === 'awaitingResolution'
-      );
-      const profile = awaiting
-        ? createApexFinaleProfile({
-            plan: this.currentRun.apexHunts,
-            state: launch.session.apexHunts,
-            threatId: awaiting.threatId,
-            context: this.createApexFinaleContext()
-          })
-        : null;
-      void this.showApexDossier(profile, null, () => void this.showScenarioLab());
+      void this.showApexDossier(() => void this.showScenarioLab());
       return;
     }
     if (launch.definition.target === 'carrierDeck') {
@@ -1049,7 +1036,7 @@ export class GameApp {
       const apexThreat = this.runSession.apexHunts.threats.find(
         (threat) => threat.threatId === apexEncounter.threatId
       );
-      if (apexThreat?.status !== 'awaitingResolution' && apexThreat?.status !== 'resolved') {
+      if (apexThreat?.status !== 'resolved') {
         recordApexHuntEvent(this.currentRun, this.runSession, {
           id: `${stageId}:apex-finale`,
           type: 'encounterOutcome',
@@ -1057,30 +1044,8 @@ export class GameApp {
           encounterId: apexEncounter.id,
           stage: apexEncounter.stage,
           sectorIndex,
-          outcome: campaignOutcome
+          outcome: 'success'
         });
-      }
-      const updatedThreat = this.runSession.apexHunts.threats.find(
-        (threat) => threat.threatId === apexEncounter.threatId
-      );
-      if (updatedThreat?.status === 'awaitingResolution') {
-        const profile = createApexFinaleProfile({
-          plan: this.currentRun.apexHunts,
-          state: this.runSession.apexHunts,
-          threatId: apexEncounter.threatId,
-          context: this.createApexFinaleContext()
-        });
-        void this.showApexDossier(profile, (outcome) => {
-          recordApexHuntEvent(this.currentRun, this.runSession, {
-            id: `${stageId}:apex-resolution:${outcome}`,
-            type: 'resolve',
-            threatId: apexEncounter.threatId,
-            sectorIndex,
-            outcome
-          });
-          this.handleMissionCombatComplete(result);
-        });
-        return;
       }
     }
 
@@ -1863,7 +1828,7 @@ export class GameApp {
         createMissionDebugState(schedule, this.runSession.mission),
         () => void this.showCrewQuarters(returnToRoutePlot),
         () => void this.showFleetBay(returnToRoutePlot, 'Return to Route Plot'),
-        () => void this.showApexDossier(null, null, returnToRoutePlot),
+        () => void this.showApexDossier(returnToRoutePlot),
         () => this.showNavigationShop(returnToRoutePlot),
         () => this.showNavigationFoundry(returnToRoutePlot, 'Return to Route Plot'),
         {},
@@ -2368,8 +2333,6 @@ export class GameApp {
   }
 
   private async showApexDossier(
-    profile: ApexFinaleProfile | null = null,
-    onResolve: ((outcome: ApexOutcome) => void) | null = null,
     onBack: () => void = () => this.showSectorTransition()
   ): Promise<void> {
     const { ApexDossierScene } = await import('../ui/ApexDossierScene');
@@ -2379,9 +2342,6 @@ export class GameApp {
         this.currentRun.apexHunts,
         this.runSession.apexHunts,
         this.runSession.currentSectorIndex,
-        this.createApexFinaleContext(),
-        profile,
-        onResolve,
         onBack
       )
     );
@@ -2407,10 +2367,7 @@ export class GameApp {
         (rank) => rank === 'officer'
       ).length,
       carrierSupport: carrier.supportCapacity,
-      boardingCapacity: carrier.boardingCapacity,
-      fleetSupport: fleet.readyCraft + fleet.pursuitControl,
-      fleetBoardingAssist: fleet.boardingAssist,
-      frontierDecision: this.runSession.frontierDecision.decision
+      fleetSupport: fleet.readyCraft + fleet.pursuitControl
     };
   }
 

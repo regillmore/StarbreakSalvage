@@ -519,3 +519,28 @@ Status: implemented. `GameApp` no longer special-cases Shop into an immediate sc
 Managed-browser inspection followed `SHOP-ROUTE-1` from Outer Debris Field through its Shop destination. Commitment showed Forward Market Warrant with zero Shop headings, then entered Trade War Corridor. After that sector, the Shop node measured a gold `rgba(255, 209, 102, 0.78)` border, showed `ROUTE STOCK`, and its dossier and 941px-wide market banner agreed on `-1 circuit prices | Credit + Missile stock bias`. The navigation panel had no overflow and the browser console reported no application errors.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 118 Vitest files and 790 tests, the production build, all 20 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,056.70 kB` minified / `289.67 kB` gzip initial JavaScript and `120.71 kB` / `23.62 kB` CSS, increases of `1.25 kB` / `0.44 kB` JavaScript and `1.18 kB` / `0.19 kB` CSS over work order 218. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, route edge, inventory slot, non-finale RNG stream, or static-hosting rule changed.
+
+## Work order 220 - Apex bounty board
+
+Goal: replace the disposition-era Apex Dossier with a compact bounty-status surface whose only finale objective is destroying the tracked apex.
+
+Prompt:
+
+> Distill Apex into a one-page bounty board. Show three selectable threat summaries and one detailed target profile with pursuit progress, finale condition, and associated circuit spoils. Remove disposition choices and their readiness mechanics; a successful apex kill should settle immediately.
+
+Acceptance criteria:
+
+- The Signal Vault opens three compact, keyboard-selectable bounty tiles with threat identity, status, and four-step pursuit progress.
+- The selected bounty projects a code-native target visual, concise hunt doctrine, four contact states, finale integrity, current order, and both associated apex circuit spoils.
+- The standard 1280x720 board has no internal or page overflow and requires no scrolling; narrow layouts may stack while retaining all controls and text.
+- Successful finale combat atomically marks the threat `resolved`, returns its permanent variety unlock, and continues through the ordinary mission/reward pipeline without a disposition scene or callback.
+- Apex reward substitution remains one deterministic threat-specific circuit spoil replacing one ordinary reward; the board adds no reward card or new draw.
+- Capture, custody, bargain, containment, evacuation, readiness meters, and disposition-route cards are absent from the live content model and presentation.
+- Restored `awaitingResolution` snapshots normalize to a claimed bounty, while existing pursuit damage, escape, reward, and save validation remain compatible.
+- The shared tri-vector remains the visual identity across the masthead, target scope, bounty tiles, and spoil provenance.
+
+Status: implemented. Apex finales now settle at the encounter reducer, and the Signal Vault presents a three-tile bounty board with one target scope, compact pursuit ledger, and explicit apex-spoil pair. The disposition option model and live resolution event were removed; restored pre-bounty pending state is normalized during snapshot restoration.
+
+Managed-browser inspection opened the `STARBREAK-SMOKE` Apex Scenario Lab fixture at 1280x720. The 1,180px board measured 609px client/scroll height, 1,178px client/scroll width, zero document horizontal overflow, three interactive bounty tiles, and a 115px shared target glyph. Switching from the claimed Crownless Engine to active Pale Convoy redrew the pursuit and spoil details; the console reported no warnings or errors.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 118 Vitest files and 790 tests, the production build, all 20 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,052.36 kB` minified / `288.27 kB` gzip initial JavaScript and `122.45 kB` / `23.94 kB` CSS, decreases of `4.34 kB` / `1.40 kB` JavaScript and increases of `1.74 kB` / `0.32 kB` CSS from work order 219. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, pursuit graph, reward count, RNG stream, or static-hosting rule changed.

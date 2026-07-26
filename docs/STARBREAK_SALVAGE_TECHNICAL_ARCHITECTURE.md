@@ -1147,6 +1147,15 @@ seed + permanent save fingerprint
 - `RouteNavigation.selectNodeRouteEffect` filters Shop only when `actSectorIndex === actSectorCount`, before its existing risk normalization and weighted choice. Non-finale nodes retain the same candidate arrays, seed string, and draw count.
 - The route outcome continues to persist through the existing snapshot-validated route history. No pending reservation state, consumption flag, migration, route edge, inventory slot, generation stream, dependency, or static-hosting rule is added.
 
+### Work order 220 apex-bounty boundary
+
+- `ApexHunt.applyApexHuntEvent` owns bounty settlement. A successful finale encounter records its fourth pursuit contact, changes the threat directly to `resolved`, returns the existing permanent variety unlock, and admits no separate resolution event.
+- `ApexFinaleProfile` retains only bounded combat pressure. Disposition options, readiness requirements, boarding/custody inputs, and frontier-outcome inputs no longer exist in its public model.
+- `ApexDossierScene` is now a read-only bounty projection over `createApexCampaignReadModel`. It owns target selection as transient scene state and resolves item names from the two already-authored apex spoil ids; it cannot mutate the hunt or reward manifest.
+- `RunSnapshot.restoreRunSnapshot` maps legacy `awaitingResolution` state to `resolved` after validation and cloning. New sessions never produce the legacy state, and the snapshot schema, extension identity, generation fingerprint, and storage key remain unchanged.
+- The existing `SectorRewards` substitution remains authoritative: a claimed threat can replace one ordinary circuit choice with one deterministically selected associated apex item, without changing manifest size or draws.
+- The tri-vector target scope is DOM/SVG and CSS only. No image asset, canvas-frame branch, actor, projectile, effect, RNG draw, dependency, or static-hosting request is added.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

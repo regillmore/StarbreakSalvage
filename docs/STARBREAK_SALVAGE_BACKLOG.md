@@ -3132,3 +3132,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 219. Shop now issues a destination-bound Forward Market Warrant, while convergence nodes select from effects that can resolve inside the closing act.
+
+### BL85 - Lean apex bounty board
+
+Acceptance:
+
+- Replace the long-form Apex Dossier with three selectable bounty tiles and one compact selected-target profile.
+- Show pursuit progress, target identity, finale integrity, current status, and the two associated circuit spoils without exposing debug evidence walls.
+- Settle a successful finale directly as a claimed kill and continue through the ordinary reward pipeline.
+- Remove live disposition routes, readiness requirements, capture/custody/bargain outcomes, and their reward-choice UI.
+- Fit the complete desktop board at 1280x720 without panel or page scroll, while preserving keyboard, narrow, reduced-motion, performance, and high-contrast behavior.
+- Normalize restored pending-disposition state to a claimed bounty and preserve deterministic pursuit, escape, spoil substitution, unlock, save, and static-hosting behavior.
+
+Status:
+
+- Implemented in work order 220. Apex is now a kill-bounty campaign whose compact Signal Vault board exposes the hunt and its exclusive circuit spoils without a second ending system.

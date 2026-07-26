@@ -1,11 +1,10 @@
 import {
   APEX_HUNT_STRUCTURES,
-  APEX_OUTCOMES,
   APEX_THREATS,
-  getApexThreatDefinition,
-  type ApexOutcome
+  getApexThreatDefinition
 } from '../content/apexThreats';
 import type { BossId } from '../content/bosses';
+import type { ItemId } from '../content/items';
 import type { UnlockId } from '../content/unlocks';
 import { createRng } from '../core/rng';
 import type { ExpeditionEncounterNode, ExpeditionOperationalRole } from './ExpeditionTypes';
@@ -67,7 +66,6 @@ export interface ApexThreatState {
   readonly migrations: number;
   readonly escapeRoutesOpen: number;
   readonly encountersCompleted: readonly string[];
-  readonly outcome: ApexOutcome | null;
 }
 
 export interface ApexHistoryEntry {
@@ -103,13 +101,6 @@ export type ApexHuntEvent =
     }
   | {
       readonly id: string;
-      readonly type: 'resolve';
-      readonly threatId: string;
-      readonly sectorIndex: number;
-      readonly outcome: ApexOutcome;
-    }
-  | {
-      readonly id: string;
       readonly type: 'escape';
       readonly threatId: string;
       readonly sectorIndex: number;
@@ -129,36 +120,7 @@ export interface ApexFinaleContext {
   readonly crewBonds: number;
   readonly crewOfficers: number;
   readonly carrierSupport: number;
-  readonly boardingCapacity: number;
   readonly fleetSupport: number;
-  readonly fleetBoardingAssist: number;
-  readonly frontierDecision: 'unresolved' | 'extract' | 'breach';
-}
-
-export interface ApexResolutionOption {
-  readonly outcome: ApexOutcome;
-  readonly label: string;
-  readonly summary: string;
-  readonly risk: string;
-  readonly available: boolean;
-  readonly requirement: string;
-  readonly readinessLabel: string;
-  readonly requirements: readonly ApexRequirementCheck[];
-}
-
-export interface ApexRequirementSource {
-  readonly label: string;
-  readonly value: number;
-}
-
-export interface ApexRequirementCheck {
-  readonly id: string;
-  readonly label: string;
-  readonly current: number;
-  readonly target: number;
-  readonly met: boolean;
-  readonly sourceReadout: string;
-  readonly missingReadout: string;
 }
 
 export interface ApexPressureReadModel {
@@ -180,9 +142,7 @@ export interface ApexFinaleProfile {
   readonly escapeRisk: number;
   readonly integrityReadout: string;
   readonly subsystemReadout: string;
-  readonly options: readonly ApexResolutionOption[];
   readonly pressure: readonly ApexPressureReadModel[];
-  readonly readyOptions: number;
   readonly budget: string;
 }
 
@@ -233,7 +193,7 @@ export interface ApexThreatReadModel {
   readonly evidence: readonly ApexEvidenceReadModel[];
   readonly contacts: readonly ApexContactReadModel[];
   readonly nextEncounter: string | null;
-  readonly outcome: ApexOutcome | null;
+  readonly circuitRewardItemIds: readonly [ItemId, ItemId];
   readonly debugLabel: string;
 }
 
@@ -339,11 +299,22 @@ export function createApexHuntState(plan: ApexHuntPlan): ApexHuntState {
       boardingSabotage: 0,
       migrations: 0,
       escapeRoutesOpen: 2,
-      encountersCompleted: [],
-      outcome: null
+      encountersCompleted: []
     })),
     processedEventIds: [],
     history: []
+  };
+}
+
+export function normalizeLegacyApexBountyState(state: ApexHuntState): ApexHuntState {
+  if (!state.threats.some((threat) => threat.status === 'awaitingResolution')) return state;
+  return {
+    ...state,
+    threats: state.threats.map((threat) =>
+      threat.status === 'awaitingResolution'
+        ? { ...threat, status: 'resolved' as const }
+        : threat
+    )
   };
 }
 
@@ -394,7 +365,7 @@ export function applyApexHuntEvent(
       ...threat,
       status:
         event.stage === 'finale' && event.outcome !== 'failure'
-          ? 'awaitingResolution'
+          ? 'resolved'
           : damage > 0
             ? 'wounded'
             : threat.status === 'untracked'
@@ -415,7 +386,12 @@ export function applyApexHuntEvent(
           ? threat.encountersCompleted
           : [...threat.encountersCompleted, encounter.id]
     };
-    label = `${definition.name} ${event.stage} ${event.outcome}; integrity ${next.integrity}/${BASE_INTEGRITY}`;
+    if (event.stage === 'finale' && event.outcome !== 'failure') {
+      rewardUnlockId = definition.rewardUnlockId;
+      label = `${definition.name} bounty claimed; target destroyed`;
+    } else {
+      label = `${definition.name} ${event.stage} ${event.outcome}; integrity ${next.integrity}/${BASE_INTEGRITY}`;
+    }
   } else if (event.type === 'boardingSabotage') {
     const amount = Math.max(0, Math.min(3, Math.floor(event.amount)));
     next = {
@@ -426,16 +402,6 @@ export function applyApexHuntEvent(
       boardingSabotage: threat.boardingSabotage + amount
     };
     label = `${definition.name} boarding sabotage ${amount}; core ${next.subsystems.core}/4`;
-  } else if (event.type === 'resolve') {
-    if (
-      threat.status !== 'awaitingResolution' ||
-      !definition.supportedOutcomes.includes(event.outcome)
-    ) {
-      return rejected(state, 'Apex resolution unavailable');
-    }
-    next = { ...threat, status: 'resolved', outcome: event.outcome };
-    rewardUnlockId = definition.rewardUnlockId;
-    label = `${definition.name} resolved by ${event.outcome}`;
   } else {
     next = {
       ...threat,
@@ -556,9 +522,9 @@ export function createApexPursuitNavigationReadModel(
   if (threat.status === 'escaped') {
     summary = `${definition.mapCue} ${definition.name} escaped when its seeded track was broken.`;
   } else if (threat.status === 'resolved') {
-    summary = `${definition.mapCue} ${definition.name} pursuit resolved.`;
+    summary = `${definition.mapCue} ${definition.name} bounty claimed.`;
   } else if (threat.status === 'awaitingResolution') {
-    summary = `${definition.mapCue} ${definition.name} neutralized; disposition is required.`;
+    summary = `${definition.mapCue} ${definition.name} kill confirmed; bounty settlement pending.`;
   } else if (currentEncounter?.stage === 'finale') {
     summary = `${definition.mapCue} Track complete at ${currentEncounter.routeNodeLabel}; the apex body is inside this sector.`;
   } else if (currentEncounter && currentComplete && revealedNextEncounter) {
@@ -608,24 +574,6 @@ export function createApexFinaleProfile(options: {
     0,
     Math.min(MAX_APEX_HAZARD_PRESSURE, threat.escapeRoutesOpen - options.context.carrierSupport)
   );
-  const option = (outcome: ApexOutcome): ApexResolutionOption => {
-    const requirements = createOutcomeRequirements(outcome, threat, options.context);
-    const available = requirements.every((requirement) => requirement.met);
-    return {
-      outcome,
-      label: outcomeLabel(outcome),
-      summary: outcomeSummary(outcome, definition.name),
-      risk: outcomeRisk(outcome),
-      available,
-      requirement: formatOutcomeRequirement(requirements),
-      readinessLabel:
-        requirements.length === 0
-          ? 'Ready after neutralization'
-          : requirements.map((requirement) => `${requirement.label} ${requirement.current}/${requirement.target}`).join(' | '),
-      requirements
-    };
-  };
-  const optionsForThreat = definition.supportedOutcomes.map(option);
   const escapeRisk = Math.max(
     0,
     Math.min(
@@ -647,7 +595,6 @@ export function createApexFinaleProfile(options: {
     escapeRisk,
     integrityReadout: `Integrity ${threat.integrity}/${BASE_INTEGRITY} | traces ${threat.traces} | lieutenants ${threat.lieutenantsDefeated} | migrations ${threat.migrations} | escape routes ${threat.escapeRoutesOpen}`,
     subsystemReadout: `${definition.subsystemLabels.propulsion} ${threat.subsystems.propulsion}/4 | ${definition.subsystemLabels.armor} ${threat.subsystems.armor}/4 | ${definition.subsystemLabels.core} ${threat.subsystems.core}/4`,
-    options: optionsForThreat,
     pressure: [
       {
         id: 'hull',
@@ -680,7 +627,6 @@ export function createApexFinaleProfile(options: {
         tone: escapeRisk > 2 ? 'warning' : escapeRisk === 0 ? 'advantage' : 'neutral'
       }
     ],
-    readyOptions: optionsForThreat.filter((candidate) => candidate.available).length,
     budget: `${reinforcementCount}/${MAX_APEX_REINFORCEMENTS} reinforcements | hazard ${hazardPressure}/${MAX_APEX_HAZARD_PRESSURE} | shared boss/projectile/effect caps`
   };
 }
@@ -786,14 +732,14 @@ export function createApexThreatReadModel(
         id: 'traces',
         label: 'Trace intelligence',
         value: `${state.traces}`,
-        detail: 'Recovered traces count as negotiating leverage.',
+        detail: 'Recovered traces keep the pursuit locked onto the target.',
         tone: state.traces > 0 ? 'advantage' : 'neutral'
       },
       {
         id: 'lieutenants',
         label: 'Command codes',
         value: `${state.lieutenantsDefeated}`,
-        detail: 'Defeated lieutenants supply custody and capture leverage.',
+        detail: 'Defeated lieutenants strip command protection from the finale.',
         tone: state.lieutenantsDefeated > 0 ? 'advantage' : 'neutral'
       },
       {
@@ -813,8 +759,8 @@ export function createApexThreatReadModel(
     ],
     contacts,
     nextEncounter: next ? `${next.stageLabel}: ${next.label} · ${next.location}` : null,
-    outcome: state.outcome,
-    debugLabel: `${definition.mapCue} ${definition.name}: ${state.status} I${state.integrity}/${BASE_INTEGRITY} P${state.subsystems.propulsion} A${state.subsystems.armor} C${state.subsystems.core} M${state.migrations} E${state.escapeRoutesOpen} ${state.outcome ?? ''}`.trim()
+    circuitRewardItemIds: definition.circuitRewardItemIds,
+    debugLabel: `${definition.mapCue} ${definition.name}: ${state.status} I${state.integrity}/${BASE_INTEGRITY} P${state.subsystems.propulsion} A${state.subsystems.armor} C${state.subsystems.core} M${state.migrations} E${state.escapeRoutesOpen}`
   };
 }
 
@@ -856,7 +802,7 @@ export function createApexCampaignReadModel(
     nextEncounters,
     summary: currentReadout
       ? `Current track ${currentReadout.mapCue} ${currentReadout.name} · ${currentReadout.statusLabel} | ${resolvedThreats}/3 acts resolved`
-      : `${activeThreats} unresolved hunts | ${resolvedThreats} resolved | ${awaitingResolution} decision${awaitingResolution === 1 ? '' : 's'} required`
+      : `${activeThreats} active bounties | ${resolvedThreats}/3 claimed`
   };
 }
 
@@ -944,7 +890,7 @@ export function validateApexHuntState(plan: ApexHuntPlan, state: ApexHuntState):
   if (state.planId !== plan.id || state.threats.length !== plan.threats.length) errors.push('Apex state plan mismatch.');
   if (state.history.length > MAX_APEX_HISTORY || state.processedEventIds.length > MAX_APEX_EVENTS || new Set(state.processedEventIds).size !== state.processedEventIds.length) errors.push('Apex history is invalid.');
   for (const threat of state.threats) {
-    if (!plan.threats.some((entry) => entry.definitionId === threat.threatId) || threat.integrity < 0 || Object.values(threat.subsystems).some((value) => value < 0 || value > 4) || (threat.outcome !== null && !APEX_OUTCOMES.includes(threat.outcome))) errors.push(`Apex threat state ${threat.threatId} is invalid.`);
+    if (!plan.threats.some((entry) => entry.definitionId === threat.threatId) || threat.integrity < 0 || Object.values(threat.subsystems).some((value) => value < 0 || value > 4)) errors.push(`Apex threat state ${threat.threatId} is invalid.`);
   }
   return errors;
 }
@@ -956,7 +902,6 @@ export function validateApexContent(): string[] {
   for (const threat of APEX_THREATS) {
     if (ids.has(threat.id)) errors.push(`Duplicate apex threat ${threat.id}.`);
     ids.add(threat.id);
-    if (threat.supportedOutcomes.length < 3) errors.push(`Apex threat ${threat.id} requires three outcomes.`);
     if (!threat.structureLabel || !threat.huntDoctrine) {
       errors.push(`Apex threat ${threat.id} requires player-facing hunt doctrine.`);
     }
@@ -976,151 +921,22 @@ export function formatApexSummary(plan: ApexHuntPlan, state: ApexHuntState): str
   return `${readout.summary}. ${readout.threats.map((threat) => `${threat.mapCue} ${threat.name}: ${threat.statusLabel}`).join(' | ')}`;
 }
 
-function createOutcomeRequirements(
-  outcome: ApexOutcome,
-  threat: ApexThreatState,
-  context: ApexFinaleContext
-): ApexRequirementCheck[] {
-  if (outcome === 'destruction') return [];
-  if (outcome === 'capture') {
-    return [
-      createRequirementCheck(
-        'custody',
-        'Custody readiness',
-        2,
-        [
-          { label: 'Carrier boarding', value: context.boardingCapacity },
-          { label: 'Fleet boarding', value: context.fleetBoardingAssist },
-          { label: 'Lieutenant codes', value: Math.min(1, threat.lieutenantsDefeated) },
-          { label: 'Exposed apex core', value: Number(threat.subsystems.core <= 1) }
-        ]
-      )
-    ];
-  }
-  if (outcome === 'containment') {
-    return [
-      createRequirementCheck(
-        'containment',
-        'Containment readiness',
-        2,
-        [
-          { label: 'Carrier support', value: context.carrierSupport },
-          { label: 'Officer chain', value: context.crewOfficers },
-          { label: 'Breached armor', value: Number(threat.subsystems.armor <= 2) }
-        ]
-      )
-    ];
-  }
-  if (outcome === 'bargain') {
-    return [
-      createRequirementCheck(
-        'leverage',
-        'Negotiating leverage',
-        2,
-        [
-          { label: 'Trace intelligence', value: threat.traces },
-          { label: 'Exposed apex core', value: Number(threat.subsystems.core <= 1) },
-          { label: 'Allied fronts', value: context.alliedFronts },
-          { label: 'Resolved rival channels', value: context.resolvedRivals },
-          { label: 'Crew bonds', value: context.crewBonds }
-        ]
-      )
-    ];
-  }
-  return [
-    createRequirementCheck(
-      'frontier',
-      'Frontier route opened',
-      1,
-      [{ label: 'Breach decision', value: Number(context.frontierDecision === 'breach') }]
-    ),
-    createRequirementCheck(
-      'route-control',
-      'Route control',
-      1,
-      [
-        { label: 'Fleet support', value: context.fleetSupport },
-        { label: 'Disrupted propulsion', value: Number(threat.subsystems.propulsion <= 2) }
-      ]
-    )
-  ];
-}
-
-function outcomeLabel(outcome: ApexOutcome): string {
-  return {
-    destruction: 'Destroy The Apex',
-    capture: 'Take The Living Prize',
-    containment: 'Seal It In Carrier Custody',
-    bargain: 'Accept A Dangerous Compact',
-    evacuation: 'Open An Exodus Corridor'
-  }[outcome];
-}
-
-function outcomeSummary(outcome: ApexOutcome, name: string): string {
-  return {
-    destruction: `End ${name} permanently and lose every future use of its systems.`,
-    capture: `Board and capture ${name} as a volatile future practice dossier.`,
-    containment: `Keep ${name} intact under expensive carrier and crew watch.`,
-    bargain: `Trade passage and information with ${name}; the frontier remembers the compromise.`,
-    evacuation: `Redirect ${name} away from inhabited lanes instead of claiming it.`
-  }[outcome];
-}
-
-function outcomeRisk(outcome: ApexOutcome): string {
-  return {
-    destruction: 'No specimen, intelligence, or diplomatic leverage survives.',
-    capture: 'Boarding teams and support craft remain exposed during custody transfer.',
-    containment: 'Carrier capacity and command attention remain tied to the prisoner.',
-    bargain: 'Allied factions may treat the compact as betrayal.',
-    evacuation: 'The threat survives and may return in a later challenge variant.'
-  }[outcome];
-}
-
-function createRequirementCheck(
-  id: string,
-  label: string,
-  target: number,
-  sources: readonly ApexRequirementSource[]
-): ApexRequirementCheck {
-  const total = sources.reduce((sum, source) => sum + Math.max(0, source.value), 0);
-  const current = Math.min(target, total);
-  return {
-    id,
-    label,
-    current,
-    target,
-    met: total >= target,
-    sourceReadout: sources.map((source) => `${source.label} ${source.value}`).join(' · '),
-    missingReadout: total >= target ? 'Requirement met.' : `Need ${target - total} more.`
-  };
-}
-
-function formatOutcomeRequirement(requirements: readonly ApexRequirementCheck[]): string {
-  if (requirements.length === 0) return 'Ready. Neutralization is the only requirement.';
-  return requirements
-    .map(
-      (requirement) =>
-        `${requirement.met ? 'Ready' : 'Locked'}: ${requirement.label} ${requirement.current}/${requirement.target}. ${requirement.missingReadout} Sources: ${requirement.sourceReadout}.`
-    )
-    .join(' ');
-}
-
 function threatStatusLabel(threat: ApexThreatState): string {
-  if (threat.status === 'resolved') return `Resolved · ${outcomeLabel(threat.outcome ?? 'destruction')}`;
+  if (threat.status === 'resolved') return 'Bounty claimed';
   return {
     untracked: 'Signal not acquired',
     tracked: 'Located',
     wounded: 'Hunt progressing',
-    awaitingResolution: 'Neutralized · decision required',
+    awaitingResolution: 'Kill confirmed',
     escaped: 'Escaped'
   }[threat.status];
 }
 
 function threatStatusDetail(threat: ApexThreatState): string {
   if (threat.status === 'awaitingResolution') {
-    return 'The apex combat is complete. Choose what the campaign keeps, destroys, or releases.';
+    return 'The apex combat is complete. This legacy record will settle as a claimed bounty.';
   }
-  if (threat.status === 'resolved') return `Campaign closed by ${threat.outcome ?? 'unknown disposition'}.`;
+  if (threat.status === 'resolved') return 'Target destroyed. Its apex circuit spoil entered the sector reward pool.';
   if (threat.status === 'escaped') return 'The final contact passed without a successful neutralization.';
   if (threat.status === 'untracked') return 'No trace has been secured yet; its first marked contact remains ahead.';
   if (threat.status === 'tracked') return 'The threat is located, but no lasting subsystem damage is confirmed.';
