@@ -1745,6 +1745,66 @@ test('launches gameplay with reduced motion and high contrast settings by keyboa
   expect(browserErrors).toEqual([]);
 });
 
+test('keeps every apex bounty inside its desktop board at standard and tall heights', async ({
+  page
+}) => {
+  const browserErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') browserErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => browserErrors.push(error.message));
+
+  await page.setViewportSize({ width: 1424, height: 1184 });
+  await page.goto('./?debug=1&seed=STARBREAK-SMOKE');
+  await page.getByTestId('open-scenario-lab').click();
+  await page.getByTestId('scenario-lab-lab_apex_hunts').click();
+  await expect(page.getByTestId('apex-dossier')).toBeVisible();
+
+  for (const viewport of [
+    { width: 1424, height: 1184 },
+    { width: 1280, height: 720 }
+  ]) {
+    await page.setViewportSize(viewport);
+    const panelHeights: number[] = [];
+    const tiles = page.getByTestId('apex-bounty-tiles').locator('button');
+    for (let index = 0; index < 3; index += 1) {
+      await tiles.nth(index).click();
+      const geometry = await page.getByTestId('apex-dossier').evaluate((panel) => {
+        const layout = panel.querySelector<HTMLElement>('.apex-bounty-layout');
+        const visual = panel.querySelector<HTMLElement>('.apex-bounty-visual');
+        const details = panel.querySelector<HTMLElement>('.apex-bounty-details');
+        const facts = panel.querySelector<HTMLElement>('.apex-bounty-facts');
+        if (!layout || !visual || !details || !facts) {
+          throw new Error('Expected the complete Apex bounty board geometry.');
+        }
+        const panelRect = panel.getBoundingClientRect();
+        return {
+          panelHeight: panelRect.height,
+          panelClientHeight: panel.clientHeight,
+          panelScrollHeight: panel.scrollHeight,
+          layoutClientHeight: layout.clientHeight,
+          layoutScrollHeight: layout.scrollHeight,
+          visualClientHeight: visual.clientHeight,
+          visualScrollHeight: visual.scrollHeight,
+          detailsClientHeight: details.clientHeight,
+          detailsScrollHeight: details.scrollHeight,
+          factsBottom: facts.getBoundingClientRect().bottom,
+          panelBottom: panelRect.bottom
+        };
+      });
+      panelHeights.push(geometry.panelHeight);
+      expect(geometry.panelScrollHeight).toBeLessThanOrEqual(geometry.panelClientHeight);
+      expect(geometry.layoutScrollHeight).toBeLessThanOrEqual(geometry.layoutClientHeight);
+      expect(geometry.visualScrollHeight).toBeLessThanOrEqual(geometry.visualClientHeight);
+      expect(geometry.detailsScrollHeight).toBeLessThanOrEqual(geometry.detailsClientHeight);
+      expect(geometry.factsBottom).toBeLessThanOrEqual(geometry.panelBottom);
+    }
+    expect(Math.max(...panelHeights) - Math.min(...panelHeights)).toBeLessThanOrEqual(1);
+  }
+
+  expect(browserErrors).toEqual([]);
+});
+
 test('supports keyboard-only start, pause, end-run, and summary flow', async ({ page }) => {
   const browserErrors: string[] = [];
   page.on('console', (message) => {

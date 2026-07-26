@@ -3177,4 +3177,4 @@ Acceptance:
 
 Status:
 
-- Implemented in work order 222. The shop armory now compares combat-facing weapon output and circuit growth in a compact vector dossier, and the complete base market fits one desktop page.
+- Implemented in work order 222. The shop armory now compares combat-facing weapon output and circuit growth in a compact vector dossier, and the complete base market fits one desktop page. The regression refinement isolates the Apex Bounties frame from the compact shop sizing: all three bounty states retain one stable `664px` desktop board at standard and tall viewports, while genuinely short viewports scroll instead of clipping content.
