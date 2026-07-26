@@ -3155,9 +3155,11 @@ Acceptance:
 - Reduce the navigation route-effect read model to identity, risk, and one concise summary.
 - Remove presentation-only pressure, yield, terrain, intel, and activation-detail rows from every act.
 - Give the shared effect card a stable two-line summary footprint across route difficulties and apex pursuit choices.
+- Hold charted and available sector dossiers in one stable desktop workspace, with the fullest apex route briefing fitting at 1280x720 without panel, detail, body, or page scroll.
+- Keep narrow navigation content-driven and scrollable rather than clipping longer service dossiers.
 - Preserve explicit apex track/break messaging outside the effect card.
 - Preserve all route selection, risk, pressure, reward, terrain, intel, save, snapshot, and deterministic generation behavior.
 
 Status:
 
-- Implemented in work order 221. Every destination now uses one compact base-effect card while the heavier authored route mechanics remain behind the presentation boundary.
+- Implemented in work order 221. Every destination now uses one compact base-effect card while the heavier authored route mechanics remain behind the presentation boundary. Charted and available sector selections now share a bounded desktop frame, with a short-height two-column metric treatment and stacked narrow fallback.

@@ -2396,6 +2396,21 @@ async function forceCompleteSectorAndEnterNext(
     await expect(page.getByTestId('navigation-route-effect')).toBeVisible();
     await expect(page.getByTestId('navigation-route-commit')).toBeEnabled();
 
+    const availableLayout = await page.getByTestId('mission-briefing').evaluate((panel) => {
+      const detail = panel.querySelector<HTMLElement>(
+        '[data-testid="navigation-destination-detail"]'
+      )!;
+      const body = detail.querySelector<HTMLElement>('.navigation-detail-body')!;
+      return {
+        detailHeight: detail.getBoundingClientRect().height,
+        panelHeight: panel.getBoundingClientRect().height,
+        panelOverflow: panel.scrollHeight - panel.clientHeight,
+        bodyOverflow: body.scrollHeight - body.clientHeight
+      };
+    });
+    expect(availableLayout.panelOverflow).toBeLessThanOrEqual(1);
+    expect(availableLayout.bodyOverflow).toBeLessThanOrEqual(1);
+
     const chartedSource = page.getByTestId('navigation-sector-1');
     await expect(chartedSource).toHaveAttribute('data-constellation-status', 'completed');
     await expect(chartedSource).toHaveAttribute('data-destination-id', 'sector:0');
@@ -2410,6 +2425,23 @@ async function forceCompleteSectorAndEnterNext(
     await expect(page.getByTestId('navigation-destination-detail')).toContainText('CHARTED');
     await expect(page.getByTestId('navigation-destination-action')).toHaveText('Operation Settled');
     await expect(page.getByTestId('navigation-destination-action')).toBeDisabled();
+    const chartedLayout = await page.getByTestId('mission-briefing').evaluate((panel) => {
+      const detail = panel.querySelector<HTMLElement>(
+        '[data-testid="navigation-destination-detail"]'
+      )!;
+      return {
+        detailHeight: detail.getBoundingClientRect().height,
+        panelHeight: panel.getBoundingClientRect().height,
+        panelOverflow: panel.scrollHeight - panel.clientHeight
+      };
+    });
+    expect(Math.abs(chartedLayout.detailHeight - availableLayout.detailHeight)).toBeLessThanOrEqual(
+      1
+    );
+    expect(Math.abs(chartedLayout.panelHeight - availableLayout.panelHeight)).toBeLessThanOrEqual(
+      1
+    );
+    expect(chartedLayout.panelOverflow).toBeLessThanOrEqual(1);
     await page.getByTestId('navigation-destination-route').click();
     await expect(page.getByTestId('navigation-route-commit')).toBeEnabled();
   }

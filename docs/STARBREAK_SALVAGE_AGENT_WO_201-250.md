@@ -563,10 +563,18 @@ Acceptance criteria:
 - The remaining route card consistently presents `BASE ROUTE EFFECT`, effect name, risk, and a bounded two-line summary across Acts I-III and every route difficulty.
 - Shop continues to identify its destination reservation in the concise summary without reopening the source-sector market.
 - Apex track or break consequences remain a separate explicit destination metric and commit-label warning.
+- Charted and available sector selections share one stable desktop detail/workspace height; the fullest apex route briefing fits without panel, detail, body, or page scroll at 1280x720.
+- Short desktop layouts may pair briefing metrics in two columns, while narrow layouts remain content-driven and retain scrolling fallbacks for longer service dossiers.
 - Route generation, risk weighting, route execution, rewards, pressure, terrain, intel, saves, snapshots, RNG streams, dependencies, and static hosting remain unchanged.
 
 Status: implemented. `RouteNavigationOptionReadModel` no longer creates or exports a secondary details array, and `SectorTransitionScene` renders one shared identity/risk/summary card. CSS reserves exactly two summary lines and clamps excess copy, keeping the route-effect surface stable while later sector-detail refactors can address the surrounding briefing metrics independently.
 
+Selection-height refinement: the desktop navigation workspace now owns a fixed 34rem frame, with a bounded viewport-relative variant below 800px height. Map and sector dossier stretch to that shared frame rather than allowing the selected dossier to resize the menu. Tighter dossier spacing fits the rich apex route case, and short desktop route metrics use a two-column grid; sub-901px layouts return to stacked, content-driven sizing and deliberate overflow fallback.
+
 Managed-browser inspection completed Act II's first operation and compared the tracked and pursuit-breaking destination nodes at 1280x720. Both route effects measured `86.09375px`; the details body measured `312px` client and scroll height, contained zero legacy detail rows, had no document horizontal overflow, and reported no console warnings or errors.
 
+The refinement pass then compared the same available route with the charted source node at 1280x720 and 1640x1360. At standard desktop both selections held a `472px` detail inside one `703.671875px` panel; the fullest route body measured `216px` client and scroll height, and panel and document scroll heights exactly matched their clients. At the taller viewport both selections held a `544px` detail inside one `838px` panel; the route body measured `278px` client and scroll height, and the document remained exactly `1360px` high.
+
 Verification: `npm run verify:release` passes typecheck, ESLint, all 118 Vitest files and 791 tests, the production build, all 20 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,051.90 kB` minified / `288.15 kB` gzip initial JavaScript and `122.59 kB` / `24.02 kB` CSS, decreases of `0.46 kB` / `0.12 kB` JavaScript and increases of `0.07 kB` / `0.05 kB` CSS from work order 220. The existing Vite large-chunk advisory remains; no dependency, save/snapshot field, migration, route selection, route effect, reward, pressure, terrain, intel, RNG stream, or static-hosting rule changed.
+
+The selection-height refinement retains the same 791-test/20-path release result. JavaScript remains `1,051.90 kB` minified / `288.15 kB` gzip; CSS is now `123.13 kB` / `24.05 kB`, an increase of `0.54 kB` / `0.03 kB` for the bounded workspace and responsive fallback rules. The existing Vite large-chunk advisory remains.
