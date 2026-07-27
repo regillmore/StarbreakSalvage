@@ -3,6 +3,12 @@ import { applyCombinedHooks } from '../game/CombinedHooks';
 import type { EngineeringResolution } from '../game/Foundry';
 import { getHeatShotCost } from '../game/HeatShot';
 import type { ItemInstance } from '../game/Rewards';
+import {
+  HEAT_SINK_GENERATION_MULTIPLIER,
+  HEAT_SINK_VENT_MULTIPLIER,
+  THERMAL_CRITICAL_RATIO,
+  THERMAL_HOT_RATIO
+} from '../game/ThermalCircuit';
 import { createWeaponProjectileBlueprints } from '../game/WeaponProjectiles';
 
 export type FoundryHeatSampleState = 'nominal' | 'hot' | 'critical' | 'overheated';
@@ -27,6 +33,9 @@ export interface FoundryHeatSimulationModel {
   readonly overheatCount: number;
   readonly heatShotsFired: number;
   readonly heatShotsExhausted: number;
+  readonly generatedHeat: number;
+  readonly spentHeat: number;
+  readonly hotVolleyCount: number;
   readonly samples: readonly FoundryHeatSampleModel[];
   readonly committedPeakRatio: number;
   readonly peakRatioDelta: number;
@@ -55,6 +64,9 @@ interface FoundryHeatProfile {
   readonly overheatCount: number;
   readonly heatShotsFired: number;
   readonly heatShotsExhausted: number;
+  readonly generatedHeat: number;
+  readonly spentHeat: number;
+  readonly hotVolleyCount: number;
   readonly samples: readonly FoundryHeatSampleModel[];
 }
 
@@ -88,6 +100,10 @@ export function createFoundryHeatSimulationModel(
     Math.abs(peakRatioDelta) < 0.001 && overheatDelta === 0
       ? ' This matches the committed thermal profile.'
       : ` Compared with committed, peak heat changes by ${formatSignedPercentPoints(peakRatioDelta)} and overheat stalls by ${overheatDelta > 0 ? '+' : ''}${overheatDelta}.`;
+  const flowDescription =
+    draft.generatedHeat + draft.spentHeat > 0
+      ? ` Circuit flow generates ${draft.generatedHeat.toFixed(2)} and spends ${draft.spentHeat.toFixed(2)} heat across ${draft.hotVolleyCount} hot ${draft.hotVolleyCount === 1 ? 'volley' : 'volleys'}.`
+      : ' No active circuit heat flow occurs.';
 
   return {
     ...draft,
@@ -95,7 +111,7 @@ export function createFoundryHeatSimulationModel(
     peakRatioDelta,
     committedOverheatCount: committed.overheatCount,
     overheatDelta,
-    ariaLabel: `${draft.durationSeconds.toFixed(0)} second held-fire thermal simulation. Peak heat ${Math.round(draft.peakRatio * 100)} percent of capacity, ending heat ${Math.round((draft.endingHeat / draft.capacity) * 100)} percent, cooling ${draft.coolingPerSecond.toFixed(2)} per second, and ${draft.overheatCount} overheat ${draft.overheatCount === 1 ? 'stall' : 'stalls'}.${heatShotDescription}${comparisonDescription}`
+    ariaLabel: `${draft.durationSeconds.toFixed(0)} second held-fire thermal simulation. Peak heat ${Math.round(draft.peakRatio * 100)} percent of capacity, ending heat ${Math.round((draft.endingHeat / draft.capacity) * 100)} percent, cooling ${draft.coolingPerSecond.toFixed(2)} per second, and ${draft.overheatCount} overheat ${draft.overheatCount === 1 ? 'stall' : 'stalls'}.${flowDescription}${heatShotDescription}${comparisonDescription}`
   };
 }
 
@@ -107,11 +123,13 @@ export function getFoundryHeatRates(
   const hasHeatSinkSaint = items.some((item) => item.itemId === 'item_heat_sink_saint');
   return {
     heatPerVolley:
-      weapon.heatPerShot * resolution.effects.heatPerShotMultiplier * (hasHeatSinkSaint ? 0.7 : 1),
+      weapon.heatPerShot *
+      resolution.effects.heatPerShotMultiplier *
+      (hasHeatSinkSaint ? HEAT_SINK_GENERATION_MULTIPLIER : 1),
     coolingPerSecond:
       weapon.heatVentPerSecond *
       resolution.effects.heatVentMultiplier *
-      (hasHeatSinkSaint ? 1.35 : 1)
+      (hasHeatSinkSaint ? HEAT_SINK_VENT_MULTIPLIER : 1)
   };
 }
 
@@ -128,6 +146,9 @@ function createFoundryHeatProfile(input: FoundryHeatSimulationInput): FoundryHea
   let peakHeat = 0;
   let heatShotsFired = 0;
   let heatShotsExhausted = 0;
+  let generatedHeat = 0;
+  let spentHeat = 0;
+  let hotVolleyCount = 0;
 
   while (nextVolleySeconds <= SIMULATION_SECONDS + 0.0001 && volleyIndex < MAX_SIMULATION_VOLLEYS) {
     if (volleyIndex > 0) {
@@ -146,13 +167,29 @@ function createFoundryHeatProfile(input: FoundryHeatSimulationInput): FoundryHea
         volleyIndex,
         projectiles: createWeaponProjectileBlueprints(weapon, { x: 0, y: 0, radius: 0 }),
         storedWeaponHeat,
+        weaponHeatCapacity: capacity,
+        weaponHeatGenerated: 0,
         heatShotCost: getHeatShotCost(capacity),
         weaponHeatSpent: 0,
-        heatShotEvents: []
+        heatShotEvents: [],
+        thermalFlowEvents: []
       },
       { maxApplications: procBudget }
     );
-    storedWeaponHeat = Math.max(0, storedWeaponHeat - (firePayload.weaponHeatSpent ?? 0));
+    storedWeaponHeat = Math.max(
+      0,
+      Math.min(
+        capacity,
+        storedWeaponHeat +
+          (firePayload.weaponHeatGenerated ?? 0) -
+          (firePayload.weaponHeatSpent ?? 0)
+      )
+    );
+    for (const event of firePayload.thermalFlowEvents ?? []) {
+      if (event.kind === 'generated') generatedHeat += event.amount;
+      else spentHeat += event.amount;
+    }
+    if (storedWeaponHeat / capacity >= THERMAL_HOT_RATIO) hotVolleyCount += 1;
     storedWeaponHeat = Math.min(capacity, storedWeaponHeat + heatPerVolley);
     for (const event of firePayload.heatShotEvents ?? []) {
       if (event.outcome === 'fired') heatShotsFired += 1;
@@ -199,9 +236,9 @@ function createFoundryHeatProfile(input: FoundryHeatSimulationInput): FoundryHea
     );
     const state: FoundryHeatSampleState = overheated
       ? 'overheated'
-      : ratio >= 0.85
+      : ratio >= THERMAL_CRITICAL_RATIO
         ? 'critical'
-        : ratio >= 0.6
+        : ratio >= THERMAL_HOT_RATIO
           ? 'hot'
           : 'nominal';
     return { timeSeconds, heat, ratio, state };
@@ -221,6 +258,9 @@ function createFoundryHeatProfile(input: FoundryHeatSimulationInput): FoundryHea
     overheatCount: overheatWindows.length,
     heatShotsFired,
     heatShotsExhausted,
+    generatedHeat,
+    spentHeat,
+    hotVolleyCount,
     samples
   };
 }

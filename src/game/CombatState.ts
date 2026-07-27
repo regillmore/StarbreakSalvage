@@ -37,7 +37,8 @@ import {
   type EnemyKilledPayload,
   type ItemHookName,
   type ItemHookPayloadByName,
-  type ProjectileBlueprint
+  type ProjectileBlueprint,
+  type ThermalFlowEvent
 } from './ItemHooks';
 import { applyCombinedHooksWithReport, type CombinedHookDispatchReport } from './CombinedHooks';
 import { BASE_COMBINED_PROC_BUDGET, type EngineeringCombatProfile } from './Foundry';
@@ -76,6 +77,11 @@ import {
   fillHasteReservoir,
   getHasteFireCooldownMultiplier
 } from './HasteReservoir';
+import {
+  HEAT_SINK_GENERATION_MULTIPLIER,
+  HEAT_SINK_VENT_MULTIPLIER,
+  getThermalRatio
+} from './ThermalCircuit';
 import type { MissionObjectiveResultSnapshot } from './ObjectiveDirector';
 import {
   getCraterShadowLensSpecialChargeBonus,
@@ -365,7 +371,9 @@ export type CombatEffectKind =
   | 'chainReaction'
   | 'phaseCollapse'
   | 'arcDischarge'
-  | 'heatExhaust';
+  | 'heatExhaust'
+  | 'thermalIntake'
+  | 'thermalSink';
 
 export interface CombatEffectState {
   readonly id: number;
@@ -3148,18 +3156,25 @@ function updatePlayer(
       volleyIndex: state.volleyIndex,
       projectiles: createWeaponProjectileBlueprints(state.weapon, state.player),
       storedWeaponHeat: player.weaponHeat,
+      weaponHeatCapacity: state.weapon.overheatLimit,
+      weaponHeatGenerated: 0,
       heatShotCost: getHeatShotCost(state.weapon.overheatLimit),
       weaponHeatSpent: 0,
-      heatShotEvents: []
+      heatShotEvents: [],
+      thermalFlowEvents: []
     });
 
-    resolveHeatShotEvents(state, firePayload);
+    resolveThermalFlowEvents(state, firePayload);
     const projectiles = createMicroChoirVolley(
       firePayload.projectiles,
       state.volleyIndex,
       state.engineering?.moduleIds
     );
-    spawnPlayerProjectiles(state, projectiles);
+    spawnPlayerProjectiles(
+      state,
+      projectiles,
+      getThermalRatio(state.player.weaponHeat, state.weapon.overheatLimit)
+    );
     addWeaponHeat(state);
 
     const specialMultiplier =
@@ -3176,9 +3191,18 @@ function updatePlayer(
   }
 }
 
-function resolveHeatShotEvents(state: CombatState, payload: ItemHookPayloadByName['onFire']): void {
-  const spent = Math.min(state.player.weaponHeat, Math.max(0, payload.weaponHeatSpent ?? 0));
-  state.player.weaponHeat = Math.max(0, state.player.weaponHeat - spent);
+function resolveThermalFlowEvents(
+  state: CombatState,
+  payload: ItemHookPayloadByName['onFire']
+): void {
+  const generated = Math.max(0, payload.weaponHeatGenerated ?? 0);
+  const availableHeat = Math.min(state.weapon.overheatLimit, state.player.weaponHeat + generated);
+  const spent = Math.min(availableHeat, Math.max(0, payload.weaponHeatSpent ?? 0));
+  state.player.weaponHeat = Math.max(0, availableHeat - spent);
+
+  for (const [eventIndex, event] of (payload.thermalFlowEvents ?? []).entries()) {
+    addThermalFlowEffect(state, event, eventIndex);
+  }
 
   let exhaustedIndex = 0;
   for (const event of payload.heatShotEvents ?? []) {
@@ -3205,6 +3229,25 @@ function resolveHeatShotEvents(state: CombatState, payload: ItemHookPayloadByNam
     });
     exhaustedIndex += 1;
   }
+}
+
+function addThermalFlowEffect(
+  state: CombatState,
+  event: ThermalFlowEvent,
+  eventIndex: number
+): void {
+  if (state.effects.length >= MAX_ENVIRONMENT_FEEDBACK_EFFECTS) return;
+  const side = eventIndex % 2 === 0 ? -1 : 1;
+  const magnitude = getThermalRatio(event.amount, state.weapon.overheatLimit);
+  state.effects.push({
+    id: getNextEntityId(state),
+    kind: event.kind === 'generated' ? 'thermalIntake' : 'thermalSink',
+    x: state.player.x + side * (8 + Math.floor(eventIndex / 2) * 6),
+    y: state.player.y - state.player.radius * 0.1,
+    radius: 18 + magnitude * 34,
+    ttl: 0.34,
+    maxTtl: 0.34
+  });
 }
 
 function applySectorStartHooks(
@@ -3269,7 +3312,9 @@ function applyPickupHaste(state: CombatState, kind: PickupKind): number {
 }
 
 function addWeaponHeat(state: CombatState): void {
-  const heatMultiplier = hasItem(state.items, 'item_heat_sink_saint') ? 0.7 : 1;
+  const heatMultiplier = hasItem(state.items, 'item_heat_sink_saint')
+    ? HEAT_SINK_GENERATION_MULTIPLIER
+    : 1;
   const engineeringMultiplier = state.engineering?.effects.heatPerShotMultiplier ?? 1;
   state.player.weaponHeat = clamp(
     state.player.weaponHeat + state.weapon.heatPerShot * heatMultiplier * engineeringMultiplier,
@@ -3287,7 +3332,9 @@ function addWeaponHeat(state: CombatState): void {
 }
 
 function ventWeaponHeat(state: CombatState, dt: number): void {
-  const ventMultiplier = hasItem(state.items, 'item_heat_sink_saint') ? 1.35 : 1;
+  const ventMultiplier = hasItem(state.items, 'item_heat_sink_saint')
+    ? HEAT_SINK_VENT_MULTIPLIER
+    : 1;
   const engineeringMultiplier = state.engineering?.effects.heatVentMultiplier ?? 1;
   state.player.weaponHeat = Math.max(
     0,
@@ -3463,11 +3510,15 @@ function cancelPendingEnemyAttacks(state: CombatState, cooldownFloorSeconds: num
 
 function spawnPlayerProjectiles(
   state: CombatState,
-  projectiles: readonly ProjectileBlueprint[]
+  projectiles: readonly ProjectileBlueprint[],
+  thermalRatio = getThermalRatio(state.player.weaponHeat, state.weapon.overheatLimit)
 ): void {
   const sourceCounts = new Map<DroneFollowerSourceId, number>();
   for (const projectile of projectiles) {
-    const spawnPayload = applyCombatHooks(state, 'onProjectileSpawn', { projectile });
+    const spawnPayload = applyCombatHooks(state, 'onProjectileSpawn', {
+      projectile,
+      thermalRatio
+    });
     const drone = getProjectileDroneFollower(state, spawnPayload.projectile, sourceCounts);
     if (drone) drone.firingPulseSeconds = 0.14;
     state.projectiles.push({

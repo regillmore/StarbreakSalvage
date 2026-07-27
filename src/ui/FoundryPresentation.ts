@@ -403,6 +403,12 @@ function createFoundryCircuitStageModels(
     ];
     const cadence = getItemVolleyCadenceProfile(instance.itemId, ordered);
     const condition = createCircuitStageCondition(instance.itemId, ordered, resolution, incoming);
+    const thermalFlowStage = [
+      'item_heat_sink_saint',
+      'item_heat_signature_loop',
+      'item_overheat_oracle',
+      'item_plasma_seed_crucible'
+    ].includes(instance.itemId);
     const changed =
       incoming.length !== outgoing.length ||
       Math.abs(incomingImpact - outgoingImpact) > 0.01 ||
@@ -410,7 +416,8 @@ function createFoundryCircuitStageModels(
       Math.abs(incomingArc.totalDamage - outgoingArc.totalDamage) > 0.01 ||
       incomingArc.maxRange !== outgoingArc.maxRange ||
       addedTags.length > 0 ||
-      cadence?.prototypeVented === true;
+      cadence?.prototypeVented === true ||
+      thermalFlowStage;
     const model: FoundryCircuitStageModel = {
       acquisitionOrder: instance.acquisitionOrder,
       position: index + 1,
@@ -456,6 +463,34 @@ function createCircuitStageCondition(
 ): CircuitStageCondition | null {
   const ventCondition = createPrototypeVentCircuitStageCondition(itemId, ordered);
   if (ventCondition) return ventCondition;
+
+  if (itemId === 'item_plasma_seed_crucible') {
+    return { met: true, label: 'THERMAL SOURCE · +8% HEAT CAPACITY EACH VOLLEY' };
+  }
+  if (itemId === 'item_heat_sink_saint') {
+    return {
+      met: true,
+      label: 'THERMAL SINK · -30% SHOT HEAT · +35% COOLING · HOT SHOTS SPEND 6%'
+    };
+  }
+  if (itemId === 'item_heat_signature_loop') {
+    return {
+      met: incoming.some((projectile) =>
+        projectile.tags.some((tag) => tag === 'heat' || tag === 'plasma')
+      ),
+      label: incoming.some((projectile) =>
+        projectile.tags.some((tag) => tag === 'heat' || tag === 'plasma')
+      )
+        ? 'THERMAL PAYOFF · HEAT / PLASMA IMPACT SCALES +5% TO +30%'
+        : 'CONDITION NOT MET · NEEDS EARLIER HEAT OR PLASMA SHOTS'
+    };
+  }
+  if (itemId === 'item_overheat_oracle') {
+    return {
+      met: true,
+      label: 'THERMOSTAT · EVERY 5TH VOLLEY · COLD +18% / HOT -18% + PLASMA OMEN'
+    };
+  }
 
   if (itemId === 'item_shield_dynamo') {
     return {
@@ -622,7 +657,7 @@ function createCircuitStageCondition(
       : {
           met: false,
           label: 'CONDITION NOT MET · NEEDS AN EARLIER MULTI-SHOT STAGE'
-      };
+        };
   }
   if (itemId === 'item_funeral_refrain_array') {
     const echoed = Math.min(2, incoming.length);
@@ -635,8 +670,7 @@ function createCircuitStageCondition(
   }
   if (itemId === 'item_mnemonic_sepulcher_key') {
     const remembered = incoming.filter(
-      (projectile) =>
-        projectile.tags.includes('phase') || projectile.tags.includes('drone')
+      (projectile) => projectile.tags.includes('phase') || projectile.tags.includes('drone')
     ).length;
     return remembered > 0
       ? {
@@ -647,8 +681,7 @@ function createCircuitStageCondition(
   }
   if (itemId === 'item_claimant_mantle_press') {
     const forgeable = incoming.filter(
-      (projectile) =>
-        projectile.tags.includes('missile') || projectile.tags.includes('overkill')
+      (projectile) => projectile.tags.includes('missile') || projectile.tags.includes('overkill')
     ).length;
     return forgeable > 0
       ? {
@@ -661,7 +694,8 @@ function createCircuitStageCondition(
     return incoming.length > 0
       ? {
           met: true,
-          label: 'CONDITION MET · EVERY 4TH VOLLEY · HEAVIEST EARLIER SHOT CROWNED AS PLASMA OVERKILL'
+          label:
+            'CONDITION MET · EVERY 4TH VOLLEY · HEAVIEST EARLIER SHOT CROWNED AS PLASMA OVERKILL'
         }
       : { met: false, label: 'CONDITION NOT MET · NEEDS AN EARLIER SHOT' };
   }
@@ -883,25 +917,38 @@ function createFoundryAttackSimulationModel(
         volleyIndex: index + 1,
         projectiles: createWeaponProjectileBlueprints(weapon, { x: 0, y: 0, radius: 0 }),
         storedWeaponHeat,
+        weaponHeatCapacity: weapon.overheatLimit,
+        weaponHeatGenerated: 0,
         heatShotCost: getHeatShotCost(weapon.overheatLimit),
         weaponHeatSpent: 0,
-        heatShotEvents: []
+        heatShotEvents: [],
+        thermalFlowEvents: []
       },
       { maxApplications: procBudget }
     );
-    storedWeaponHeat = Math.max(0, storedWeaponHeat - (firePayload.weaponHeatSpent ?? 0));
-    storedWeaponHeat = Math.min(weapon.overheatLimit, storedWeaponHeat + heatPerVolley);
+    storedWeaponHeat = Math.max(
+      0,
+      Math.min(
+        weapon.overheatLimit,
+        storedWeaponHeat +
+          (firePayload.weaponHeatGenerated ?? 0) -
+          (firePayload.weaponHeatSpent ?? 0)
+      )
+    );
     sourceHeatEvents.push(firePayload.heatShotEvents ?? []);
-    return createMicroChoirVolley(firePayload.projectiles, index + 1, moduleIds).map(
+    const thermalRatio = weapon.overheatLimit > 0 ? storedWeaponHeat / weapon.overheatLimit : 0;
+    const volley = createMicroChoirVolley(firePayload.projectiles, index + 1, moduleIds).map(
       (projectile) =>
         applyCombinedHooks(
           'onProjectileSpawn',
           items,
           resolution.hooks,
-          { projectile },
+          { projectile, thermalRatio },
           { maxApplications: procBudget }
         ).projectile
     );
+    storedWeaponHeat = Math.min(weapon.overheatLimit, storedWeaponHeat + heatPerVolley);
+    return volley;
   });
   return createFoundryAttackPatternPreviewModel(
     weapon.name,

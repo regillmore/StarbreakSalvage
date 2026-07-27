@@ -218,6 +218,32 @@ describe('CombatState', () => {
     expect(cool.player.weaponHeat).toBeCloseTo(0.2);
   });
 
+  it('applies circuit heat intake and sink flow before ordinary volley heat', () => {
+    const source = createCombatState(bounds, 'THERMAL-SOURCE', {
+      items: [{ itemId: 'item_plasma_seed_crucible', acquisitionOrder: 0 }],
+      skipEnemyWaves: true
+    });
+    updateCombatState(source, { movement: { x: 0, y: 0 }, fire: true }, 0, bounds);
+
+    expect(source.player.weaponHeat).toBeCloseTo(
+      source.weapon.overheatLimit * 0.08 + source.weapon.heatPerShot
+    );
+    expect(source.effects).toContainEqual(expect.objectContaining({ kind: 'thermalIntake' }));
+
+    const sink = createCombatState(bounds, 'THERMAL-SINK', {
+      items: [{ itemId: 'item_heat_sink_saint', acquisitionOrder: 0 }],
+      skipEnemyWaves: true
+    });
+    sink.player.weaponHeat = sink.weapon.overheatLimit * 0.7;
+    updateCombatState(sink, { movement: { x: 0, y: 0 }, fire: true }, 0, bounds);
+
+    expect(sink.player.weaponHeat).toBeCloseTo(
+      sink.weapon.overheatLimit * 0.64 + sink.weapon.heatPerShot * 0.7
+    );
+    expect(sink.effects).toContainEqual(expect.objectContaining({ kind: 'thermalSink' }));
+    expect(sink.projectiles[0]?.tags).toContain('heat');
+  });
+
   it('consumes a fitted ricochet charge when a player shot reaches a sidewall', () => {
     const state = createCombatState(bounds, 'RICOCHET-RUNTIME');
     state.projectiles.push({

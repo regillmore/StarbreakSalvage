@@ -70,6 +70,33 @@ describe('heat shot identity', () => {
     expect(context.fill).toHaveBeenCalledTimes(2);
     expect(context.stroke).toHaveBeenCalledOnce();
   });
+
+  it('renders distinct inward intake and outward sink flow cues', () => {
+    const context = createContext();
+    const renderer = createRenderer(context);
+
+    renderer.paintCombatEffect({
+      kind: 'thermalIntake',
+      x: 210,
+      y: 510,
+      radius: 26,
+      ttl: 0.24,
+      maxTtl: 0.34
+    });
+    renderer.paintCombatEffect({
+      kind: 'thermalSink',
+      x: 230,
+      y: 510,
+      radius: 28,
+      ttl: 0.18,
+      maxTtl: 0.34
+    });
+
+    expect(context.translate).toHaveBeenNthCalledWith(1, 210, 510);
+    expect(context.translate).toHaveBeenNthCalledWith(2, 230, 510);
+    expect(context.arc).toHaveBeenCalledTimes(10);
+    expect(context.fill).toHaveBeenCalledTimes(10);
+  });
 });
 
 function createRenderer(context: ReturnType<typeof createContext>): CanvasRenderer {
@@ -95,6 +122,7 @@ function createContext() {
     lineTo: vi.fn(),
     closePath: vi.fn(),
     quadraticCurveTo: vi.fn(),
+    arc: vi.fn(),
     ellipse: vi.fn(),
     fill: vi.fn(),
     stroke: vi.fn(),

@@ -77,10 +77,7 @@ import {
   type LaserProjectileKind
 } from '../game/LaserProjectile';
 import { getArcChargeProfile, type ArcChargeKind } from '../game/ArcCharge';
-import {
-  createMeteorStormGeometry,
-  type MeteorStormImpact
-} from '../game/MeteorStorm';
+import { createMeteorStormGeometry, type MeteorStormImpact } from '../game/MeteorStorm';
 import { createSalvageStormGeometry } from '../game/SalvageStorm';
 
 const BACKGROUND_SEED = 'STARBREAK-SALVAGE-SHELL';
@@ -268,7 +265,9 @@ export interface CombatEffectRenderState {
     | 'chainReaction'
     | 'phaseCollapse'
     | 'arcDischarge'
-    | 'heatExhaust';
+    | 'heatExhaust'
+    | 'thermalIntake'
+    | 'thermalSink';
   readonly x: number;
   readonly y: number;
   readonly radius: number;
@@ -1620,10 +1619,7 @@ export class CanvasRenderer {
     context.fillStyle = color;
     context.beginPath();
     context.moveTo(-drone.radius * 0.3, drone.radius * 0.7);
-    context.lineTo(
-      0,
-      drone.radius * (1.5 + Math.max(pulse * 0.35, departureThrust * 1.15))
-    );
+    context.lineTo(0, drone.radius * (1.5 + Math.max(pulse * 0.35, departureThrust * 1.15)));
     context.lineTo(drone.radius * 0.3, drone.radius * 0.7);
     context.closePath();
     context.fill();
@@ -2654,6 +2650,10 @@ export class CanvasRenderer {
       this.paintHeatExhaustEffect(effect, alpha, velocityCues.highContrastProjectiles);
       return;
     }
+    if (effect.kind === 'thermalIntake' || effect.kind === 'thermalSink') {
+      this.paintThermalFlowEffect(effect, alpha, velocityCues.highContrastProjectiles);
+      return;
+    }
     if (effect.kind === 'arcDischarge') {
       this.paintArcDischargeEffect(effect, alpha, velocityCues.highContrastProjectiles);
       return;
@@ -2858,6 +2858,55 @@ export class CanvasRenderer {
     context.beginPath();
     context.ellipse(0, plumeLength * 0.2, plumeWidth * 0.22, plumeLength * 0.3, 0, 0, Math.PI * 2);
     context.fill();
+    context.restore();
+  }
+
+  private paintThermalFlowEffect(
+    effect: CombatEffectRenderState,
+    alpha: number,
+    highContrast: boolean
+  ): void {
+    const context = this.context;
+    const isIntake = effect.kind === 'thermalIntake';
+    const progress = 1 - alpha;
+    const color = highContrast ? '#ffffff' : isIntake ? '#ff9c4a' : '#7cf7ff';
+    const accent = highContrast ? '#ffef5f' : isIntake ? '#ffd166' : '#d9ffff';
+    const segmentCount = this.settings.performanceMode ? 3 : 5;
+    const travel = isIntake ? 1 - progress : progress;
+    const radius = effect.radius * (isIntake ? 1 - travel * 0.52 : 0.48 + travel * 0.78);
+
+    context.save();
+    context.translate(effect.x, effect.y);
+    context.globalAlpha = alpha * 0.88;
+    context.strokeStyle = color;
+    context.fillStyle = accent;
+    context.lineWidth = highContrast ? 2.5 : 1.8;
+    context.lineCap = 'round';
+    context.shadowColor = color;
+    context.shadowBlur = this.settings.reducedMotion ? 0 : 10;
+
+    for (let index = 0; index < segmentCount; index += 1) {
+      const angle = -Math.PI / 2 + (index / segmentCount) * Math.PI * 2;
+      const arcWidth = Math.PI / (segmentCount * 2.2);
+      context.beginPath();
+      context.arc(0, 0, Math.max(4, radius), angle - arcWidth, angle + arcWidth);
+      context.stroke();
+
+      const tipRadius = Math.max(4, radius + (isIntake ? -3 : 3));
+      const tipX = Math.cos(angle) * tipRadius;
+      const tipY = Math.sin(angle) * tipRadius;
+      const tangentX = -Math.sin(angle) * 2.4;
+      const tangentY = Math.cos(angle) * 2.4;
+      const radialX = Math.cos(angle) * (isIntake ? -4.5 : 4.5);
+      const radialY = Math.sin(angle) * (isIntake ? -4.5 : 4.5);
+      context.beginPath();
+      context.moveTo(tipX + radialX, tipY + radialY);
+      context.lineTo(tipX + tangentX, tipY + tangentY);
+      context.lineTo(tipX - tangentX, tipY - tangentY);
+      context.closePath();
+      context.fill();
+    }
+
     context.restore();
   }
 
@@ -3319,7 +3368,13 @@ export class CanvasRenderer {
       }
     }
 
-    this.paintSalvageStormSequence(rect, geometry.calmLaneIndex, geometry.flowDirection, calmColor, style);
+    this.paintSalvageStormSequence(
+      rect,
+      geometry.calmLaneIndex,
+      geometry.flowDirection,
+      calmColor,
+      style
+    );
     context.restore();
   }
 

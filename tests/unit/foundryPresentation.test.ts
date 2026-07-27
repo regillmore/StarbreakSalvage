@@ -875,6 +875,33 @@ describe('foundry visual presentation', () => {
     expect(unmetDashboard.attackSimulation.damageSampleVolleys).toBe(4);
   });
 
+  it('models thermal sources, sinks, and stored-heat payoff conditions in held fire', () => {
+    const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
+      (candidate) => candidate.shipId === 'ship_debt_runner'
+    );
+    if (!contract) throw new Error('Expected a single-projectile contract.');
+    const dashboard = createFoundryDashboardModel(createEngineeringState(contract.loadout), [
+      { itemId: 'item_plasma_seed_crucible', acquisitionOrder: 0 },
+      { itemId: 'item_phase_grazer', acquisitionOrder: 1 },
+      { itemId: 'item_heat_signature_loop', acquisitionOrder: 2 },
+      { itemId: 'item_overheat_oracle', acquisitionOrder: 3 },
+      { itemId: 'item_heat_sink_saint', acquisitionOrder: 4 }
+    ]);
+
+    expect(dashboard.circuitStages.map((stage) => stage.outputLabel)).toEqual(
+      expect.arrayContaining([
+        'THERMAL SOURCE · +8% HEAT CAPACITY EACH VOLLEY',
+        'THERMAL PAYOFF · HEAT / PLASMA IMPACT SCALES +5% TO +30%',
+        'THERMOSTAT · EVERY 5TH VOLLEY · COLD +18% / HOT -18% + PLASMA OMEN',
+        'THERMAL SINK · -30% SHOT HEAT · +35% COOLING · HOT SHOTS SPEND 6%'
+      ])
+    );
+    expect(dashboard.heatSimulation.generatedHeat).toBeGreaterThan(0);
+    expect(dashboard.heatSimulation.spentHeat).toBeGreaterThan(0);
+    expect(dashboard.heatSimulation.hotVolleyCount).toBeGreaterThan(0);
+    expect(dashboard.heatSimulation.ariaLabel).toContain('Circuit flow generates');
+  });
+
   it('measures the least common cycle of mixed periodic circuit stages', () => {
     const contract = generateRunSkeleton('STARBREAK-SMOKE', { unlockedIds: [] }).contracts.find(
       (candidate) => candidate.shipId === 'ship_debt_runner'

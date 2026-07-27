@@ -508,7 +508,7 @@ export class FoundryScene implements Scene {
     const title = document.createElement('strong');
     title.textContent = `THERMAL LOOP · ${model.durationSeconds.toFixed(0)}S HELD FIRE`;
     const cadence = document.createElement('span');
-    cadence.textContent = `${model.volleysFired} VOLLEYS · ${model.effectiveVolleysPerSecond.toFixed(1)}/S EFFECTIVE`;
+    cadence.textContent = `${model.volleysFired} VOLLEYS · ${model.hotVolleyCount} HOT · ${model.effectiveVolleysPerSecond.toFixed(1)}/S`;
     heading.append(title, cadence);
 
     const traceFrame = document.createElement('div');
@@ -541,9 +541,9 @@ export class FoundryScene implements Scene {
       },
       {
         id: 'cooling',
-        label: 'Cooling',
-        value: `${model.coolingPerSecond.toFixed(2)}/S`,
-        delta: `${model.heatPerVolley.toFixed(2)} / VOLLEY`
+        label: 'Circuit Flow',
+        value: `+${model.generatedHeat.toFixed(2)} / -${model.spentHeat.toFixed(2)}`,
+        delta: `COOL ${model.coolingPerSecond.toFixed(2)}/S`
       },
       {
         id: 'overheat',

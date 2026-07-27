@@ -430,7 +430,8 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'uncommon',
     tags: ['heat'],
     hooks: ['onFire'],
-    effect: 'keeps prototype fire cadence stable',
+    effect:
+      'cuts volley heat 30%, vents 35% faster, and while hot spends 6% capacity to stabilize stronger long-lived shots',
     weight: 8,
     metadata: {
       family: 'heat-prototype',
@@ -737,7 +738,8 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'prototype',
     tags: ['heat', 'phase'],
     hooks: ['onFire'],
-    effect: 'every fifth volley vents a phase omen shot',
+    effect:
+      'every fifth volley routes 18% capacity: cold cycles bank heat, while hot cycles spend heat on an amplified plasma phase omen',
     weight: 5,
     metadata: {
       family: 'heat-prototype',
@@ -1119,7 +1121,8 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'uncommon',
     tags: ['heat', 'plasma'],
     hooks: ['onProjectileSpawn'],
-    effect: 'heat and plasma shots keep a little more signature energy',
+    effect:
+      'heat and plasma shots gain impact, size, and reach in proportion to stored weapon heat',
     weight: 8,
     metadata: {
       family: 'heat-prototype',
@@ -1564,8 +1567,9 @@ export const ITEMS: readonly ItemDefinition[] = [
     name: 'Plasma Seed Crucible',
     rarity: 'rare',
     tags: ['plasma', 'heat'],
-    hooks: ['onProjectileSpawn'],
-    effect: 'tagged circuit shots bloom into larger, hotter plasma bolts',
+    hooks: ['onFire', 'onProjectileSpawn'],
+    effect:
+      'each volley injects 8% heat capacity, while tagged circuit shots bloom into larger plasma bolts',
     weight: 5,
     metadata: {
       family: 'heat-prototype',
@@ -1670,8 +1674,7 @@ export const ITEMS: readonly ItemDefinition[] = [
     rarity: 'rare',
     tags: ['missile', 'overkill', 'revenge'],
     hooks: ['onProjectileSpawn'],
-    effect:
-      'earlier missile and overkill shots are forged into heavier armored retaliation shells',
+    effect: 'earlier missile and overkill shots are forged into heavier armored retaliation shells',
     weight: 1,
     metadata: {
       family: 'shield-revenge',

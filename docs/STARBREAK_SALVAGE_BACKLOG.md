@@ -3208,3 +3208,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 224. Hardpoint Control now exposes sustained heat accumulation and recovery as a deterministic comparison scope while the existing live-fire preview and Base DPS retain their original measurement boundaries.
+
+### BL90 - Shared thermal circuit
+
+Acceptance:
+
+- Give combat, item hooks, and Hardpoint Control one shared five-band thermal read model.
+- Refit the heat/prototype family around explicit heat generation, hot/cold routing, active spending, and stored-heat projectile payoff.
+- Preserve Prototype Vent Script as a large spender and allow same-volley upstream heat generation to fund it through circuit order.
+- Expose generated/spent flow and hot-volley count in the sustained Foundry simulation without changing Base DPS.
+- Add distinct combat intake/sink effects plus visible HOT/CRITICAL weapon and meter feedback.
+- Preserve catalog breadth, reward pools, deterministic ordering, saves, dependencies, actor caps, and static hosting.
+
+Status:
+
+- Implemented in work order 225. Heat/prototype is now an ordered source/thermostat/sink/payoff family sharing one thermal signal across combat and Hardpoint comparison.

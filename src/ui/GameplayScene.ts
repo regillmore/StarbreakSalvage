@@ -62,6 +62,12 @@ import { createItemLoadoutStressModel, createItemStormLoadout } from '../game/It
 import { getHeatShotCost } from '../game/HeatShot';
 import { createHasteReservoirReadModel } from '../game/HasteReservoir';
 import {
+  THERMAL_HOT_RATIO,
+  formatThermalBand,
+  getThermalBand,
+  getThermalRatio
+} from '../game/ThermalCircuit';
+import {
   createEnvironmentObjectPlacementPlan,
   type EnvironmentObjectPlacementPlan
 } from '../game/EnvironmentObjectPlacement';
@@ -119,10 +125,7 @@ import {
   type HazardZoneDirectorPlan
 } from '../game/HazardZoneDirector';
 import { resolveSectorHazardCollisions } from '../game/SectorHazards';
-import {
-  createMeteorStormDebugFixture,
-  formatMeteorStormWarning
-} from '../game/MeteorStorm';
+import { createMeteorStormDebugFixture, formatMeteorStormWarning } from '../game/MeteorStorm';
 import { formatSalvageStormWarning } from '../game/SalvageStorm';
 import {
   advanceSectorHazardRuntime,
@@ -2281,10 +2284,15 @@ export class GameplayScene implements Scene {
 
   private getWeaponReadout(state: CombatState): string {
     const heatPercent = Math.round((state.player.weaponHeat / state.weapon.overheatLimit) * 100);
+    const thermalBand = getThermalBand(
+      state.player.weaponHeat,
+      state.weapon.overheatLimit,
+      state.player.weaponOverheatSeconds
+    );
     const heatStatus =
       state.player.weaponOverheatSeconds > 0
         ? `OVERHEAT ${state.player.weaponOverheatSeconds.toFixed(1)}s`
-        : `Heat ${heatPercent}%`;
+        : `Heat ${heatPercent}% · ${formatThermalBand(thermalBand)}`;
     const haste = createHasteReservoirReadModel(state.items, state.player.hasteSeconds);
     const hasteStatus =
       haste.sourceCount > 0
@@ -2297,6 +2305,7 @@ export class GameplayScene implements Scene {
   }
 
   private syncMeters(state: CombatState): void {
+    const thermalRatio = getThermalRatio(state.player.weaponHeat, state.weapon.overheatLimit);
     syncHudMeter(
       this.hullMeter,
       createHudMeterModel(state.player.hull, state.player.maxHull),
@@ -2318,7 +2327,9 @@ export class GameplayScene implements Scene {
       state.player.weaponOverheatSeconds > 0 ||
         state.player.weaponHeat >= state.weapon.overheatLimit
         ? 'danger'
-        : 'steady'
+        : thermalRatio >= THERMAL_HOT_RATIO
+          ? 'warning'
+          : 'steady'
     );
   }
 
@@ -2569,9 +2580,7 @@ function formatActiveHazardWarning(activeHazard: ActiveSectorHazard | undefined)
 }
 
 function isHazardPresentationVisible(activeHazard: ActiveSectorHazard): boolean {
-  return !(
-    activeHazard.hazard.kind === 'salvage_storm' && activeHazard.phase === 'telegraph'
-  );
+  return !(activeHazard.hazard.kind === 'salvage_storm' && activeHazard.phase === 'telegraph');
 }
 
 function getDebugLongScrollDistance(sectorLength: number): number {

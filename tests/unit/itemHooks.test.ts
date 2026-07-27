@@ -632,6 +632,119 @@ describe('item synergies', () => {
     expect(payload.heatShotEvents?.[1]?.heatAfter).toBeCloseTo(0.2);
   });
 
+  it('routes a shared thermal signal through sources, thermostats, sinks, and payoffs', () => {
+    const source = applyItemHooks(
+      'onFire',
+      [{ itemId: 'item_plasma_seed_crucible', acquisitionOrder: 0 }],
+      {
+        volleyIndex: 1,
+        projectiles: [baseProjectile],
+        storedWeaponHeat: 0.2,
+        weaponHeatCapacity: 1,
+        weaponHeatGenerated: 0,
+        weaponHeatSpent: 0,
+        thermalFlowEvents: []
+      }
+    );
+    const sink = applyItemHooks(
+      'onFire',
+      [{ itemId: 'item_heat_sink_saint', acquisitionOrder: 0 }],
+      {
+        volleyIndex: 1,
+        projectiles: [baseProjectile],
+        storedWeaponHeat: 0.7,
+        weaponHeatCapacity: 1,
+        weaponHeatGenerated: 0,
+        weaponHeatSpent: 0,
+        thermalFlowEvents: []
+      }
+    );
+    const coldOracle = applyItemHooks(
+      'onFire',
+      [{ itemId: 'item_overheat_oracle', acquisitionOrder: 0 }],
+      {
+        volleyIndex: 5,
+        projectiles: [baseProjectile],
+        storedWeaponHeat: 0.2,
+        weaponHeatCapacity: 1,
+        weaponHeatGenerated: 0,
+        weaponHeatSpent: 0,
+        thermalFlowEvents: []
+      }
+    );
+    const hotOracle = applyItemHooks(
+      'onFire',
+      [{ itemId: 'item_overheat_oracle', acquisitionOrder: 0 }],
+      {
+        volleyIndex: 5,
+        projectiles: [baseProjectile],
+        storedWeaponHeat: 0.8,
+        weaponHeatCapacity: 1,
+        weaponHeatGenerated: 0,
+        weaponHeatSpent: 0,
+        thermalFlowEvents: []
+      }
+    );
+    const coolPayoff = applyItemHooks(
+      'onProjectileSpawn',
+      [{ itemId: 'item_heat_signature_loop', acquisitionOrder: 0 }],
+      { projectile: { ...baseProjectile, tags: ['heat'] }, thermalRatio: 0 }
+    ).projectile;
+    const hotPayoff = applyItemHooks(
+      'onProjectileSpawn',
+      [{ itemId: 'item_heat_signature_loop', acquisitionOrder: 0 }],
+      { projectile: { ...baseProjectile, tags: ['heat'] }, thermalRatio: 1 }
+    ).projectile;
+
+    expect(source.weaponHeatGenerated).toBeCloseTo(0.08);
+    expect(source.thermalFlowEvents?.[0]).toMatchObject({
+      sourceItemId: 'item_plasma_seed_crucible',
+      kind: 'generated'
+    });
+    expect(source.thermalFlowEvents?.[0]?.amount).toBeCloseTo(0.08);
+    expect(sink.weaponHeatSpent).toBeCloseTo(0.06);
+    expect(sink.projectiles[0]).toMatchObject({ damage: 1.08, tags: ['laser', 'heat'] });
+    expect(coldOracle.weaponHeatGenerated).toBeCloseTo(0.18);
+    expect(coldOracle.projectiles.at(-1)?.tags).not.toContain('plasma');
+    expect(hotOracle.weaponHeatSpent).toBeCloseTo(0.18);
+    expect(hotOracle.projectiles.at(-1)?.tags).toContain('plasma');
+    expect(hotOracle.projectiles.at(-1)?.damage).toBeGreaterThan(
+      coldOracle.projectiles.at(-1)!.damage
+    );
+    expect(hotPayoff.damage).toBeGreaterThan(coolPayoff.damage);
+    expect(hotPayoff.radius).toBeGreaterThan(coolPayoff.radius);
+    expect(hotPayoff.ttl).toBeGreaterThan(coolPayoff.ttl);
+  });
+
+  it('lets an earlier heat source fund a later periodic Vent cycle in circuit order', () => {
+    const payload = applyItemHooks(
+      'onFire',
+      [
+        { itemId: 'item_plasma_seed_crucible', acquisitionOrder: 0 },
+        { itemId: 'item_phase_grazer', acquisitionOrder: 1 },
+        { itemId: 'item_prototype_vent_script', acquisitionOrder: 2 }
+      ],
+      {
+        volleyIndex: 5,
+        projectiles: [baseProjectile],
+        storedWeaponHeat: 0.25,
+        weaponHeatCapacity: 1,
+        weaponHeatGenerated: 0,
+        heatShotCost: 0.32,
+        weaponHeatSpent: 0,
+        heatShotEvents: [],
+        thermalFlowEvents: []
+      }
+    );
+
+    expect(payload.weaponHeatGenerated).toBeCloseTo(0.08);
+    expect(payload.weaponHeatSpent).toBeCloseTo(0.32);
+    expect(payload.heatShotEvents?.[0]).toMatchObject({ outcome: 'fired' });
+    expect(payload.heatShotEvents?.[0]?.heatBefore).toBeCloseTo(0.33);
+    expect(payload.heatShotEvents?.[0]?.heatAfter).toBeCloseTo(0.01);
+    expect(payload.thermalFlowEvents?.map((event) => event.kind)).toEqual(['generated', 'spent']);
+  });
+
   it('applies missile plus overkill synergy', () => {
     const instances: ItemInstance[] = [
       { itemId: 'item_overkill_ledger', acquisitionOrder: 0 },

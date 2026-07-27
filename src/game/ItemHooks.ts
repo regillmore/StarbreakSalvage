@@ -17,6 +17,13 @@ import type { ProjectileVisualKind } from './HeatShot';
 import type { LaserProjectileKind } from './LaserProjectile';
 import { getHasteSourceDefinition, type HasteTriggerKind } from './HasteReservoir';
 import { attachArcCharge, getArcChargeProfile, type ArcChargeKind } from './ArcCharge';
+import {
+  HEAT_SINK_HOT_SPEND_RATIO,
+  OVERHEAT_ORACLE_FLOW_RATIO,
+  PLASMA_SEED_GENERATION_RATIO,
+  THERMAL_HOT_RATIO,
+  getThermalRatio
+} from './ThermalCircuit';
 
 export interface ProjectileBlueprint {
   readonly x: number;
@@ -44,13 +51,24 @@ export interface HeatShotEvent {
   readonly heatAfter: number;
 }
 
+export interface ThermalFlowEvent {
+  readonly sourceItemId: ItemId;
+  readonly kind: 'generated' | 'spent';
+  readonly amount: number;
+  readonly heatBefore: number;
+  readonly heatAfter: number;
+}
+
 export interface FirePayload {
   readonly volleyIndex: number;
   readonly projectiles: readonly ProjectileBlueprint[];
   readonly storedWeaponHeat?: number;
+  readonly weaponHeatCapacity?: number;
+  readonly weaponHeatGenerated?: number;
   readonly heatShotCost?: number;
   readonly weaponHeatSpent?: number;
   readonly heatShotEvents?: readonly HeatShotEvent[];
+  readonly thermalFlowEvents?: readonly ThermalFlowEvent[];
 }
 
 export interface EnemyKilledPayload {
@@ -62,6 +80,7 @@ export interface EnemyKilledPayload {
 
 export interface ProjectileSpawnPayload {
   readonly projectile: ProjectileBlueprint;
+  readonly thermalRatio?: number;
 }
 
 export interface PlayerHitPayload {
@@ -253,6 +272,7 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_sidecar_drone_bay',
     'item_signal_clone_stamp',
     'item_harmonic_fork_loom',
+    'item_plasma_seed_crucible',
     'item_warhead_echo_chamber',
     'item_funeral_refrain_array',
     'item_empty_throne_coronation',
@@ -613,11 +633,13 @@ function applyOnProjectileSpawn(
     itemId === 'item_heat_signature_loop' &&
     hasAnyTag(payload.projectile.tags, ['heat', 'plasma'])
   ) {
+    const thermalRatio = Math.max(0, Math.min(1, payload.thermalRatio ?? 0));
     return {
       projectile: {
         ...payload.projectile,
-        damage: payload.projectile.damage * 1.05,
-        ttl: payload.projectile.ttl + 0.18,
+        damage: payload.projectile.damage * (1.05 + thermalRatio * 0.25),
+        radius: payload.projectile.radius + thermalRatio * 1.4,
+        ttl: payload.projectile.ttl + 0.18 + thermalRatio * 0.24,
         tags: addTags(payload.projectile.tags, ['heat'])
       }
     };
@@ -1115,13 +1137,34 @@ function applyOnFire(
   }
 
   if (itemId === 'item_heat_sink_saint') {
-    return {
+    const thermalRatio = getPayloadThermalRatio(payload);
+    const stabilized = {
       ...payload,
       projectiles: payload.projectiles.map((projectile) => ({
         ...projectile,
-        ttl: projectile.ttl + 0.2
+        damage: projectile.damage * (thermalRatio >= THERMAL_HOT_RATIO ? 1.08 : 1),
+        ttl: projectile.ttl + (thermalRatio >= THERMAL_HOT_RATIO ? 0.28 : 0.14),
+        tags:
+          thermalRatio >= THERMAL_HOT_RATIO ? addTags(projectile.tags, ['heat']) : projectile.tags
       }))
     };
+    return thermalRatio >= THERMAL_HOT_RATIO
+      ? applyThermalFlow(
+          itemId,
+          stabilized,
+          'spent',
+          getPayloadHeatCapacity(payload) * HEAT_SINK_HOT_SPEND_RATIO
+        )
+      : stabilized;
+  }
+
+  if (itemId === 'item_plasma_seed_crucible') {
+    return applyThermalFlow(
+      itemId,
+      payload,
+      'generated',
+      getPayloadHeatCapacity(payload) * PLASMA_SEED_GENERATION_RATIO
+    );
   }
 
   if (itemId === 'item_phase_grazer' && isItemVolleyCycle(itemId, instances, payload.volleyIndex)) {
@@ -1199,18 +1242,29 @@ function applyOnFire(
       return payload;
     }
 
+    const isHot = getPayloadThermalRatio(payload) >= THERMAL_HOT_RATIO;
+    const routedPayload = applyThermalFlow(
+      itemId,
+      payload,
+      isHot ? 'spent' : 'generated',
+      getPayloadHeatCapacity(payload) * OVERHEAT_ORACLE_FLOW_RATIO
+    );
+
     return addPrototypeVentCycleShot(itemId, instances, payload, {
-      ...payload,
+      ...routedPayload,
       projectiles: [
-        ...payload.projectiles,
+        ...routedPayload.projectiles,
         {
           ...seedProjectile,
           vx: 0,
           vy: seedProjectile.vy * 1.16,
-          damage: Math.max(0.55, seedProjectile.damage * 0.62),
-          radius: Math.max(4, seedProjectile.radius * 0.92),
-          ttl: Math.max(1.2, seedProjectile.ttl * 0.9),
-          tags: addTags(seedProjectile.tags, ['heat', 'phase']),
+          damage: Math.max(0.55, seedProjectile.damage * (isHot ? 1.05 : 0.62)),
+          radius: Math.max(4, seedProjectile.radius * (isHot ? 1.12 : 0.92)),
+          ttl: Math.max(1.2, seedProjectile.ttl * (isHot ? 1.08 : 0.9)),
+          tags: addTags(
+            seedProjectile.tags,
+            isHot ? ['heat', 'phase', 'plasma'] : ['heat', 'phase']
+          ),
           procDepth: seedProjectile.procDepth + 1
         }
       ]
@@ -1558,11 +1612,7 @@ function addPrototypeVentCycleShot(
   }
 
   const heatCost = Math.max(0, input.heatShotCost ?? 0);
-  const storedHeat = input.storedWeaponHeat ?? Number.POSITIVE_INFINITY;
-  const alreadySpent = Math.max(0, input.weaponHeatSpent ?? 0);
-  const availableHeat = Number.isFinite(storedHeat)
-    ? Math.max(0, storedHeat - alreadySpent)
-    : heatCost;
+  const availableHeat = getPayloadAvailableHeat(output, heatCost);
   const canFire = availableHeat + 1e-9 >= heatCost;
   const event: HeatShotEvent = {
     sourceItemId: itemId,
@@ -1575,17 +1625,22 @@ function addPrototypeVentCycleShot(
   if (!canFire) {
     return {
       ...output,
-      weaponHeatSpent: alreadySpent,
-      heatShotEvents: [...(input.heatShotEvents ?? []), event]
+      heatShotEvents: [...(output.heatShotEvents ?? []), event]
     };
   }
 
+  const ventedOutput =
+    getPayloadHeatCapacity(output) > 0
+      ? applyThermalFlow(itemId, output, 'spent', heatCost)
+      : {
+          ...output,
+          weaponHeatSpent: Math.max(0, output.weaponHeatSpent ?? 0) + heatCost
+        };
   return {
-    ...output,
-    weaponHeatSpent: alreadySpent + heatCost,
-    heatShotEvents: [...(input.heatShotEvents ?? []), event],
+    ...ventedOutput,
+    heatShotEvents: [...(output.heatShotEvents ?? []), event],
     projectiles: [
-      ...output.projectiles,
+      ...ventedOutput.projectiles,
       {
         ...seedProjectile,
         vx: seedProjectile.vx * 0.28,
@@ -1598,6 +1653,56 @@ function addPrototypeVentCycleShot(
         visualKind: 'heatShot'
       }
     ]
+  };
+}
+
+function getPayloadHeatCapacity(payload: FirePayload): number {
+  return Math.max(0, payload.weaponHeatCapacity ?? 0);
+}
+
+function getPayloadAvailableHeat(payload: FirePayload, fallback = 0): number {
+  const storedHeat = payload.storedWeaponHeat;
+  if (!Number.isFinite(storedHeat)) return fallback;
+  return Math.max(
+    0,
+    (storedHeat ?? 0) +
+      Math.max(0, payload.weaponHeatGenerated ?? 0) -
+      Math.max(0, payload.weaponHeatSpent ?? 0)
+  );
+}
+
+function getPayloadThermalRatio(payload: FirePayload): number {
+  return getThermalRatio(getPayloadAvailableHeat(payload), getPayloadHeatCapacity(payload));
+}
+
+function applyThermalFlow(
+  itemId: ItemId,
+  payload: FirePayload,
+  kind: ThermalFlowEvent['kind'],
+  requestedAmount: number
+): FirePayload {
+  const capacity = getPayloadHeatCapacity(payload);
+  if (capacity <= 0 || requestedAmount <= 0) return payload;
+  const heatBefore = getPayloadAvailableHeat(payload);
+  const heatAfter =
+    kind === 'generated'
+      ? Math.min(capacity, heatBefore + requestedAmount)
+      : Math.max(0, heatBefore - requestedAmount);
+  const amount = Math.abs(heatAfter - heatBefore);
+  if (amount <= 0) return payload;
+  const event: ThermalFlowEvent = {
+    sourceItemId: itemId,
+    kind,
+    amount,
+    heatBefore,
+    heatAfter
+  };
+  return {
+    ...payload,
+    weaponHeatGenerated:
+      Math.max(0, payload.weaponHeatGenerated ?? 0) + (kind === 'generated' ? amount : 0),
+    weaponHeatSpent: Math.max(0, payload.weaponHeatSpent ?? 0) + (kind === 'spent' ? amount : 0),
+    thermalFlowEvents: [...(payload.thermalFlowEvents ?? []), event]
   };
 }
 

@@ -6022,6 +6022,10 @@ html[data-reduced-motion='true'] .game-hud[data-exit-state='active'] {
   background: linear-gradient(90deg, #ff4f6d, var(--hud-warning));
 }
 
+.hud-meter[data-state='warning'] .hud-meter-fill {
+  background: linear-gradient(90deg, #ffd166, #ff8a4c);
+}
+
 .hud-meter[data-state='ready'] .hud-meter-fill {
   background: linear-gradient(90deg, var(--hud-engine), var(--hud-cockpit));
 }

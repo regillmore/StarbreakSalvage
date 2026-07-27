@@ -653,7 +653,9 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
     page.getByTestId('foundry-heat-simulation').locator('.foundry-heat-trace > span')
   ).toHaveCount(33);
   await expect(page.getByTestId('foundry-heat-peak')).toContainText(/Peak\d+%Δ [+-]?\d+PP/);
-  await expect(page.getByTestId('foundry-heat-cooling')).toContainText(/Cooling\d+\.\d+\/S/);
+  await expect(page.getByTestId('foundry-heat-cooling')).toContainText(
+    /Circuit Flow\+\d+\.\d+ \/ -\d+\.\d+COOL \d+\.\d+\/S/
+  );
   await expect(page.locator('[data-testid^="foundry-meter-"]')).toHaveCount(0);
   await expect(
     page.getByTestId('foundry-primary-selector').locator('[data-stat="circuit"]')
