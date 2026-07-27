@@ -682,3 +682,31 @@ Status: implemented. `ThermalCircuit` now owns the shared bands and authored sou
 Managed-browser inspection used the Engineering Foundry fixture at 1280x720 and 390x700. A funded Needle Splitter profile reported `+0.00 / -1.79` circuit flow, four funded heat dumps, seven exhaust replacements, a 50% peak, and zero stalls. The 695px desktop and 316px narrow thermal scopes each had equal client and scroll dimensions, their metric grids had zero horizontal overflow, the document stayed within both viewport widths, and the browser console reported no warnings or errors. A live optional-sector fixture also exposed the new `Heat 0% · COLD` weapon-band readout.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 119 Vitest files and 799 tests, the production build, all 22 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,065.60 kB` minified / `292.44 kB` gzip initial JavaScript and `130.35 kB` / `25.42 kB` CSS, increases of `4.91 kB` / `1.63 kB` JavaScript and `0.10 kB` / `0.01 kB` CSS from work order 224. The existing Vite large-chunk advisory remains; no dependency, item count, reward pool, save/snapshot field, RNG stream, or static-hosting rule changed.
+
+## Work order 226 - Whole-hull durability
+
+Goal: make player hull, incoming damage, mitigation, repair, persistence, and every hull readout use stable integer units without discarding the protection formerly supplied by fractional Foundry Guard multipliers.
+
+Prompt:
+
+> Audit player-facing damage and mitigation. Keep hull health and incoming hits integral end to end, rebalance deliberate partial mitigation into a legible whole-point mechanic, and repair old fractional suspended runs instead of printing floating-point residue in navigation.
+
+Acceptance criteria:
+
+- Every positive player damage event resolves as at least one whole point at the player-durability boundary; enemy and player collisions, hazards, mines, environment objects, and set pieces cannot leave fractional hull.
+- Authored environment contact, proximity blast, set-piece contact, and sector-hazard damage validate as non-negative or positive integers as appropriate.
+- Foundry Guard becomes a deterministic whole-point buffer calculated from maximum hull and the authored defense multiplier, preserving approximately the same number of standard hits survived without scaling the small hull pools or rounding mitigation away.
+- Guard absorbs incoming damage before hull, still claims invulnerability and hazard-hit cooldowns, and still dispatches player-hit hooks so retaliation behavior does not silently stop working.
+- Combat and pause HUD readouts show whole hull plus Guard when present, and the ship carries a bounded code-native guard ring and hit flash.
+- Checkpoints, operational maps, combat results, aggregated damage statistics, hull patches, repair read models, and restored snapshots normalize player durability to integers.
+- A positive legacy fractional hull value rounds upward to one surviving whole hull point; zero and destroyed states remain zero.
+- Fractional projectile damage used against enemies remains available for weapon balance and circuit math; the integer contract is intentionally scoped to player hull.
+- Deterministic generation, item catalogs, health pickups, repair price, save schema version, dependencies, RNG streams, and static hosting remain unchanged.
+
+Status: implemented. All shipped player-facing damage definitions were already whole hits; the audit isolated the visible decimal leak to Foundry Guard multiplying those hits against two-to-five-point hull pools. `PlayerDurability` now owns the integer boundary and converts Guard into a finite operation buffer using the same effective standard-hit survivability. The generic damage system remains precise for weapons, bosses, and circuit-derived projectiles.
+
+Combat now consumes Guard before hull, presents its remaining capacity beside hull, and renders a segmented protection ring that flashes on absorption. Hazard contact uses the durability outcome directly, so a fully guarded hit still starts the authored cooldown. Snapshot restoration and every checkpoint/read-model boundary repair legacy fractional survivors upward rather than exposing floating-point residue or retiring a valid run.
+
+Managed-browser inspection opened the `INTEGER-GUARD` navigation fixture at 1280x720. The navigation resource card rendered `Hull 2/2`, matched the integer-only `digits/digits` contract, and the 702px menu and 1280px document each had equal client and scroll dimensions. The browser console reported no warnings or errors, and the authenticated smoke host stopped cleanly.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 120 Vitest files and 806 tests, the production build, all 22 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,067.82 kB` minified / `293.07 kB` gzip initial JavaScript and `130.35 kB` / `25.42 kB` CSS, an increase of `2.22 kB` / `0.63 kB` JavaScript with unchanged CSS from work order 225. The existing Vite large-chunk advisory remains; no dependency, item catalog, hull pickup, repair price, snapshot schema version, RNG stream, or static-hosting rule changed.

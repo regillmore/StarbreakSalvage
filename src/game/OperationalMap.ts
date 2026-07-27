@@ -6,6 +6,7 @@ import type {
   ExpeditionRiskBand
 } from './ExpeditionTypes';
 import type { MissionCheckpoint, MissionOperationalInfluence } from './MissionDirector';
+import { normalizePlayerHull } from './PlayerDurability';
 import type { FactionFrontInfluence } from './FactionFront';
 
 export type OperationalOutcome = 'success' | 'partialSuccess' | 'failure';
@@ -326,7 +327,7 @@ function getNode(graph: ExpeditionGraph, nodeId: string): ExpeditionEncounterNod
 
 function sanitizeCheckpoint(checkpoint: MissionCheckpoint): MissionCheckpoint {
   return {
-    hull: checkpoint.hull === null ? null : Math.max(0, checkpoint.hull),
+    hull: checkpoint.hull === null ? null : normalizePlayerHull(checkpoint.hull),
     scrollDistance: Math.max(0, checkpoint.scrollDistance),
     worldOffset: Math.max(0, checkpoint.worldOffset),
     credits: Math.max(0, checkpoint.credits),

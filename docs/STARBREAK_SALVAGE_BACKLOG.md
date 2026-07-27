@@ -3223,3 +3223,19 @@ Acceptance:
 Status:
 
 - Implemented in work order 225. Heat/prototype is now an ordered source/thermostat/sink/payoff family sharing one thermal signal across combat and Hardpoint comparison.
+
+### BL91 - Whole-hull durability
+
+Acceptance:
+
+- Resolve every positive player-facing damage event into whole hull units and validate authored hazard, environment, mine, and set-piece damage accordingly.
+- Replace fractional Foundry Guard damage multiplication with a deterministic integer buffer that preserves its approximate standard-hit survivability on small hull pools.
+- Consume Guard before hull while retaining invulnerability, hazard cooldown, and player-hit hook behavior.
+- Show Guard beside whole hull in combat and pause readouts, with a bounded ship-ring absorption cue.
+- Normalize checkpoints, maps, repairs, combat results, aggregate statistics, hull patches, and restored snapshots to integral durability.
+- Repair positive legacy fractional hull upward to one surviving point while retaining zero as destroyed.
+- Preserve fractional offensive damage, repair economy, save compatibility, deterministic generation, dependencies, and static hosting.
+
+Status:
+
+- Implemented in work order 226. Player durability now has one integer boundary, while Foundry defense is expressed as visible whole Guard instead of hidden fractional hull loss.

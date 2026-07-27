@@ -95,6 +95,7 @@ import {
   stowCarrierCargo,
   type RunSessionState
 } from '../game/RunSession';
+import { normalizePlayerHull } from '../game/PlayerDurability';
 import { depleteShopStockItem, getAvailableShopStockItem } from '../game/ShopStock';
 import { getSaveRecordSectorCount } from '../game/RunOutcome';
 import { getActiveFittedItems } from '../game/ItemSockets';
@@ -1282,7 +1283,7 @@ export class GameApp {
       }
     }
     const operationCheckpoint = {
-      hull: result.remainingHull ?? null,
+      hull: result.remainingHull === undefined ? null : normalizePlayerHull(result.remainingHull),
       scrollDistance: result.distanceTraveled,
       worldOffset: result.worldOffset ?? result.distanceTraveled,
       credits: this.runSession.credits + result.credits,

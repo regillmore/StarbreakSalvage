@@ -45,6 +45,12 @@ import { BASE_COMBINED_PROC_BUDGET, type EngineeringCombatProfile } from './Foun
 import type { EnvironmentObjectPlacementPlan } from './EnvironmentObjectPlacement';
 import { COMBAT_ARENA_HEIGHT } from './CombatGeometry';
 import {
+  applyPlayerDurabilityDamage,
+  createPlayerGuardCapacity,
+  normalizePlayerHull,
+  type PlayerDurabilityDamageOutcome
+} from './PlayerDurability';
+import {
   LOOSE_CURRENCY_ACTIVE_PICKUP_CAP,
   LOOSE_CURRENCY_ACTIVE_VALUE_CAP,
   createLooseCurrencyScatter,
@@ -155,6 +161,9 @@ export interface PlayerState {
   readonly pickupPullRange: number;
   hull: number;
   readonly maxHull: number;
+  guard: number;
+  readonly maxGuard: number;
+  guardFlashSeconds: number;
   fireCooldown: number;
   weaponHeat: number;
   weaponOverheatSeconds: number;
@@ -692,6 +701,11 @@ export function createCombatState(
   );
   const bossDefinition = getBossById(options.bossId ?? DEFAULT_BOSS_ID);
   const shipStats = options.shipStats ?? DEFAULT_SHIP_STATS;
+  const maxHull = Math.max(1, Math.round(shipStats.maxHull));
+  const maxGuard = createPlayerGuardCapacity(
+    maxHull,
+    options.engineering?.effects.damageTakenMultiplier ?? 1
+  );
   const maxBombs = Math.max(0, Math.floor(shipStats.bombCapacity));
   const allyCount = Math.min(
     MAX_COMBINED_ALLIES,
@@ -718,8 +732,11 @@ export function createCombatState(
       radius: shipStats.hitRadius,
       speed: shipStats.speed,
       pickupPullRange: shipStats.pickupPullRange,
-      hull: clamp(options.startingHull ?? shipStats.maxHull, 0, shipStats.maxHull),
-      maxHull: shipStats.maxHull,
+      hull: normalizePlayerHull(options.startingHull ?? maxHull, maxHull),
+      maxHull,
+      guard: maxGuard,
+      maxGuard,
+      guardFlashSeconds: 0,
       fireCooldown: 0,
       weaponHeat: 0,
       weaponOverheatSeconds: 0,
@@ -2073,8 +2090,11 @@ export function damageSetPieceComponentsInRect(
   return events.filter((event) => event.type === 'componentDestroyed').length;
 }
 
-export function applyPlayerDamage(state: CombatState, damage: number): void {
-  damagePlayer(state, damage);
+export function applyPlayerDamage(
+  state: CombatState,
+  damage: number
+): PlayerDurabilityDamageOutcome | null {
+  return damagePlayer(state, damage);
 }
 
 export function getCombatSafeFrame(bounds: CombatBounds): CombatSafeFrame {
@@ -3135,6 +3155,7 @@ function updatePlayer(
   player.weaponOverheatSeconds = Math.max(0, player.weaponOverheatSeconds - dt);
   ventWeaponHeat(state, dt);
   player.invulnerableSeconds = Math.max(0, player.invulnerableSeconds - dt);
+  player.guardFlashSeconds = Math.max(0, player.guardFlashSeconds - dt);
   const hasteProfile = createHasteReservoirProfile(state.items);
   player.hasteSeconds = drainHasteReservoir(player.hasteSeconds, dt, hasteProfile, input.fire);
   player.specialCooldown = Math.max(0, player.specialCooldown - dt);
@@ -4919,18 +4940,20 @@ function expireLooseCurrencyPickups(state: CombatState, bounds: CombatBounds): v
   }
 }
 
-function damagePlayer(state: CombatState, damage: number): void {
+function damagePlayer(state: CombatState, damage: number): PlayerDurabilityDamageOutcome | null {
   if (state.player.invulnerableSeconds > 0) {
-    return;
+    return null;
   }
 
-  const adjustedDamage = damage * (state.engineering?.effects.damageTakenMultiplier ?? 1);
-  const outcome = applyDamage(state.player.hull, adjustedDamage);
+  const outcome = applyPlayerDurabilityDamage(state.player.hull, state.player.guard, damage);
+  if (outcome.incomingDamage <= 0) return null;
   state.player.hull = outcome.hull;
+  state.player.guard = outcome.guard;
+  state.player.guardFlashSeconds = outcome.guardAbsorbed > 0 ? 0.42 : 0;
   state.player.invulnerableSeconds = PLAYER_DAMAGE_INVULNERABILITY_SECONDS;
 
   const hitPayload = applyCombatHooks(state, 'onPlayerHit', {
-    damage: outcome.damageApplied,
+    damage: outcome.incomingDamage,
     revengeProjectiles: []
   });
 
@@ -4946,9 +4969,11 @@ function damagePlayer(state: CombatState, damage: number): void {
 
   state.stats = {
     ...state.stats,
-    damageTaken: state.stats.damageTaken + outcome.damageApplied,
+    damageTaken: state.stats.damageTaken + outcome.hullDamage,
     itemTriggers: state.stats.itemTriggers + hitPayload.revengeProjectiles.length
   };
+
+  return outcome;
 }
 
 function applyCombatHooks<THook extends ItemHookName>(

@@ -21,6 +21,7 @@ import { validateFleetState } from './Fleetcraft';
 import { normalizeLegacyApexBountyState, validateApexHuntState } from './ApexHunt';
 import { reconcileItemSockets } from './ItemSockets';
 import { validateSectorNavigationState } from './SectorNavigation';
+import { normalizePlayerHull, normalizePlayerHullBonus } from './PlayerDurability';
 
 export const RUN_SNAPSHOT_SCHEMA_VERSION = 12;
 export const RUN_SNAPSHOT_STORAGE_KEY = 'starbreak.run.v12';
@@ -207,6 +208,27 @@ export function restoreRunSnapshot(snapshot: RunSnapshotV12): RestoredRunSnapsho
   validateSnapshotSession(snapshot.session, run, snapshot.checkpoint.target);
   const session = importRunSnapshot(exportRunSnapshot(snapshot)).session;
   session.apexHunts = normalizeLegacyApexBountyState(session.apexHunts);
+  session.hullPatch = normalizePlayerHullBonus(session.hullPatch);
+  session.mission = {
+    ...session.mission,
+    checkpoint: {
+      ...session.mission.checkpoint,
+      hull:
+        session.mission.checkpoint.hull === null
+          ? null
+          : normalizePlayerHull(session.mission.checkpoint.hull)
+    }
+  };
+  if (session.lastCombatResult) {
+    session.lastCombatResult = {
+      ...session.lastCombatResult,
+      damageTaken: Math.max(0, Math.round(session.lastCombatResult.damageTaken)),
+      remainingHull:
+        session.lastCombatResult.remainingHull === undefined
+          ? undefined
+          : normalizePlayerHull(session.lastCombatResult.remainingHull)
+    };
+  }
   return {
     snapshot,
     run,
@@ -356,6 +378,12 @@ function validateSnapshotSession(
   ];
   if (numericFields.some((value) => !Number.isFinite(value) || value < 0)) {
     throw new Error('Run snapshot economy or distance state is invalid.');
+  }
+  if (
+    session.mission.checkpoint.hull !== null &&
+    (!Number.isFinite(session.mission.checkpoint.hull) || session.mission.checkpoint.hull < 0)
+  ) {
+    throw new Error('Run snapshot player hull state is invalid.');
   }
   if (
     !Array.isArray(session.itemInstances) ||

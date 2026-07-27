@@ -917,6 +917,36 @@ describe('validateContent', () => {
     );
   });
 
+  it('rejects fractional player-facing object and hazard damage', () => {
+    const mine = ENVIRONMENT_OBJECT_DEFINITIONS.find(
+      (definition) => definition.id === 'proximity_mine'
+    );
+    if (!mine || !mine.proximity) throw new Error('Expected the shipped proximity mine.');
+
+    const objectErrors = validateContent({
+      environmentObjects: [
+        {
+          ...mine,
+          damageInteraction: { ...mine.damageInteraction, contactDamage: 0.5 },
+          proximity: { ...mine.proximity, blastDamage: 0.5 }
+        }
+      ]
+    });
+    const hazardErrors = validateContent({
+      hazardZones: [{ ...baseHazardZone, damage: 0.5 }]
+    });
+
+    expect(objectErrors).toContain(
+      'Environment object proximity_mine damage interaction must have non-negative contactDamage'
+    );
+    expect(objectErrors).toContain(
+      'Environment object proximity_mine proximity must have positive blastDamage'
+    );
+    expect(hazardErrors).toContain(
+      `Hazard zone ${baseHazardZone.id} must have positive damage`
+    );
+  });
+
   it('rejects invalid hazard zone definitions', () => {
     const errors = validateContent({
       hazardZones: [

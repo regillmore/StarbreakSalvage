@@ -167,6 +167,7 @@ import {
   synchronizeSectorNavigationState,
   type SectorNavigationState
 } from './SectorNavigation';
+import { normalizePlayerHull, normalizePlayerHullBonus } from './PlayerDurability';
 
 export interface RouteHistoryEntry {
   readonly sectorIndex: number;
@@ -866,7 +867,7 @@ export function aggregateCombatRunResults(
     bossesDefeated: previous.bossesDefeated + result.bossesDefeated,
     shotsFired: previous.shotsFired + result.shotsFired,
     pickupsCollected: previous.pickupsCollected + result.pickupsCollected,
-    damageTaken: previous.damageTaken + result.damageTaken,
+    damageTaken: Math.round(previous.damageTaken + result.damageTaken),
     itemTriggers: previous.itemTriggers + result.itemTriggers,
     itemNames: [...new Set([...previous.itemNames, ...result.itemNames])]
   };
@@ -1417,7 +1418,7 @@ export function getEffectiveShipStats(
 ): ShipStats {
   return {
     ...contract.shipStats,
-    maxHull: contract.shipStats.maxHull + session.hullPatch
+    maxHull: contract.shipStats.maxHull + normalizePlayerHullBonus(session.hullPatch)
   };
 }
 
@@ -1425,8 +1426,8 @@ export function getShipHullReadModel(
   contract: StartingContract,
   session: RunSessionState
 ): ShipHullReadModel {
-  const max = Math.max(1, getEffectiveShipStats(contract, session).maxHull);
-  const current = Math.min(max, Math.max(0, session.mission.checkpoint.hull ?? max));
+  const max = Math.max(1, Math.round(getEffectiveShipStats(contract, session).maxHull));
+  const current = normalizePlayerHull(session.mission.checkpoint.hull ?? max, max);
   const missing = max - current;
   return {
     current,

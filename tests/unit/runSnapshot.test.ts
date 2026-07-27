@@ -151,6 +151,25 @@ describe('RunSnapshot', () => {
     expect(storage.getItem(SAVE_STORAGE_KEY)).toBe('permanent-save-sentinel');
   });
 
+  it('repairs legacy fractional player hull when restoring a suspended run', () => {
+    const run = generateRunSkeleton('SNAPSHOT-INTEGER-HULL');
+    const contract = run.contracts[0]!;
+    const session = createRunSession(run, contract);
+    session.mission = {
+      ...session.mission,
+      checkpoint: { ...session.mission.checkpoint, hull: 0.7680000000000002 }
+    };
+    const snapshot = createRunSnapshot({
+      run,
+      contract,
+      session,
+      target: 'sectorTransition',
+      label: 'Legacy fractional hull'
+    });
+
+    expect(restoreRunSnapshot(snapshot).session.mission.checkpoint.hull).toBe(1);
+  });
+
   it('restores a settled post-sector hub choice without replaying its payout', () => {
     const run = generateRunSkeleton('SNAPSHOT-OPERATIONAL-MAP');
     const contract = run.contracts[0]!;

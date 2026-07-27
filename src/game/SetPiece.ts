@@ -683,6 +683,7 @@ export function validateSetPieceContent(
 ): SetPieceValidationResult {
   const errors: string[] = [];
   const templateUse = new Map<string, number>();
+  const validatedTemplateIds = new Set<string>();
   const definitionIds = new Set<string>();
   const factionIds = new Set(FACTIONS.map((faction) => faction.id));
   const formationIds = new Set<string>(ENEMY_FORMATION_IDS);
@@ -728,6 +729,18 @@ export function validateSetPieceContent(
 
     for (const component of definition.components) {
       templateUse.set(component.templateId, (templateUse.get(component.templateId) ?? 0) + 1);
+      if (!validatedTemplateIds.has(component.templateId)) {
+        validatedTemplateIds.add(component.templateId);
+        const template = getSetPieceComponentTemplate(component.templateId);
+        if (
+          !Number.isInteger(template.collision.contactDamage) ||
+          template.collision.contactDamage < 0
+        ) {
+          errors.push(
+            `Set-piece template ${component.templateId} contact damage must be a non-negative integer.`
+          );
+        }
+      }
       if (!stageIds.has(component.stageId)) {
         errors.push(
           `${owner} component ${component.id} references unknown stage ${component.stageId}.`

@@ -27,6 +27,7 @@ import type {
   ExpeditionOperationalRole,
   ExpeditionProgressState
 } from './ExpeditionTypes';
+import { normalizePlayerHull } from './PlayerDurability';
 import {
   createBoardingMissionObjectivePlan,
   projectSectorForBoarding,
@@ -1074,7 +1075,7 @@ function getNextStageByKind(
 
 function sanitizeCheckpoint(checkpoint: MissionCheckpoint): MissionCheckpoint {
   return {
-    hull: checkpoint.hull === null ? null : Math.max(0, checkpoint.hull),
+    hull: checkpoint.hull === null ? null : normalizePlayerHull(checkpoint.hull),
     scrollDistance: Math.max(0, checkpoint.scrollDistance),
     worldOffset: Math.max(0, checkpoint.worldOffset),
     credits: Math.max(0, checkpoint.credits),

@@ -1946,7 +1946,7 @@ function validateEnvironmentObjectDefinitions(
       errors.push(`${owner} durability must keep hull at or below 12`);
     }
 
-    validateNonNegativeNumber(
+    validateNonNegativeInteger(
       errors,
       `${owner} damage interaction`,
       'contactDamage',
@@ -2056,7 +2056,7 @@ function validateEnvironmentObjectDefinitions(
         'blastRadius',
         object.proximity.blastRadius
       );
-      validatePositiveNumber(
+      validatePositiveInteger(
         errors,
         `${owner} proximity`,
         'blastDamage',
@@ -2302,7 +2302,7 @@ function validateHazardZoneDefinitions(
       hazard.phase.minTelegraphLead
     );
     validatePositiveNumber(errors, `${owner} phase`, 'minActiveSpan', hazard.phase.minActiveSpan);
-    validatePositiveNumber(errors, owner, 'damage', hazard.damage);
+    validatePositiveInteger(errors, owner, 'damage', hazard.damage);
     validatePositiveNumber(errors, owner, 'damageCooldownSeconds', hazard.damageCooldownSeconds);
 
     if (hazard.damage > 2) {

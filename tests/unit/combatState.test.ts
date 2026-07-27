@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { SHIPS } from '../../src/content/ships';
 import {
   createCombatState,
+  applyPlayerDamage,
   forceCombatEnd,
   getCombatEntityCounts,
   getCombatEntityCount,
@@ -16,6 +17,8 @@ import {
   type CombatState,
   type EnemySpawn
 } from '../../src/game/CombatState';
+import { createEngineeringCombatProfile, createEngineeringState } from '../../src/game/Foundry';
+import { generateRunSkeleton } from '../../src/game/Generation';
 import { createWaveDirectorPlan, getObjectiveProgress } from '../../src/game/WaveDirector';
 import {
   STANDARD_HASTE_FIRE_COOLDOWN_MULTIPLIER,
@@ -30,6 +33,31 @@ const bounds: CombatBounds = {
 };
 
 describe('CombatState', () => {
+  it('converts Foundry Guard mitigation into an integer buffer ahead of hull', () => {
+    const contract = generateRunSkeleton('INTEGER-GUARD').contracts[0]!;
+    const baseline = createEngineeringCombatProfile(createEngineeringState(contract.loadout));
+    const engineering = {
+      ...baseline,
+      effects: { ...baseline.effects, damageTakenMultiplier: 0.768 }
+    };
+    const state = createCombatState(bounds, 'INTEGER-GUARD', {
+      shipStats: { ...contract.shipStats, maxHull: 4 },
+      engineering,
+      skipEnemyWaves: true
+    });
+
+    expect(state.player).toMatchObject({ hull: 4, maxHull: 4, guard: 2, maxGuard: 2 });
+    expect(applyPlayerDamage(state, 1)).toMatchObject({ guardAbsorbed: 1, hullDamage: 0 });
+    expect(state.player).toMatchObject({ hull: 4, guard: 1 });
+    expect(Number.isInteger(state.player.hull)).toBe(true);
+    expect(state.stats.damageTaken).toBe(0);
+
+    state.player.invulnerableSeconds = 0;
+    expect(applyPlayerDamage(state, 2)).toMatchObject({ guardAbsorbed: 1, hullDamage: 1 });
+    expect(state.player).toMatchObject({ hull: 3, guard: 0 });
+    expect(state.stats.damageTaken).toBe(1);
+  });
+
   it('fills one bounded haste reservoir from clustered pickups without stacking cadence', () => {
     const singleItems: ItemInstance[] = [
       { itemId: 'item_coin_operated_cannon', acquisitionOrder: 0 }

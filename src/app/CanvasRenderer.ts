@@ -107,6 +107,9 @@ export interface PlayerRenderState {
   readonly invulnerable?: boolean;
   readonly hull?: number;
   readonly maxHull?: number;
+  readonly guard?: number;
+  readonly maxGuard?: number;
+  readonly guardFlashSeconds?: number;
   readonly invulnerableSeconds?: number;
   readonly specialCharge?: number;
   readonly maxSpecialCharge?: number;
@@ -963,6 +966,35 @@ export class CanvasRenderer {
     context.save();
     context.translate(player.x, player.y);
     context.scale(Math.max(0.1, player.scale ?? 1), Math.max(0.1, player.scale ?? 1));
+
+    if (!player.departureActive && (player.maxGuard ?? 0) > 0) {
+      const guardRatio = clamp((player.guard ?? 0) / Math.max(1, player.maxGuard ?? 0), 0, 1);
+      const guardFlash = clamp((player.guardFlashSeconds ?? 0) / 0.42, 0, 1);
+      const guardRadius = player.radius * 1.38;
+      context.globalAlpha = shipAlpha * (0.16 + guardFlash * 0.28);
+      context.strokeStyle =
+        this.settings.bulletContrast === 'high' ? '#ffffff' : appearance.primaryColor;
+      context.lineWidth = Math.max(1.2, player.radius * 0.08);
+      context.setLineDash([Math.max(3, player.radius * 0.28), Math.max(2, player.radius * 0.2)]);
+      context.beginPath();
+      context.arc(0, 0, guardRadius, 0, Math.PI * 2);
+      context.stroke();
+      context.setLineDash([]);
+
+      if (guardRatio > 0) {
+        context.globalAlpha = shipAlpha * (0.54 + guardFlash * 0.36);
+        context.lineWidth = Math.max(2, player.radius * 0.13);
+        context.beginPath();
+        context.arc(
+          0,
+          0,
+          guardRadius,
+          -Math.PI / 2,
+          -Math.PI / 2 + Math.PI * 2 * guardRatio
+        );
+        context.stroke();
+      }
+    }
 
     if (departureSpeedLineAlpha > 0) {
       context.globalAlpha = departureSpeedLineAlpha;

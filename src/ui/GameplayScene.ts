@@ -885,6 +885,9 @@ export class GameplayScene implements Scene {
         invulnerable: state.player.invulnerableSeconds > 0,
         hull: state.player.hull,
         maxHull: state.player.maxHull,
+        guard: state.player.guard,
+        maxGuard: state.player.maxGuard,
+        guardFlashSeconds: state.player.guardFlashSeconds,
         invulnerableSeconds: state.player.invulnerableSeconds,
         specialCharge: state.player.specialCharge,
         maxSpecialCharge: state.player.maxSpecialCharge,
@@ -1159,8 +1162,10 @@ export class GameplayScene implements Scene {
         },
         {
           label: 'Hull',
-          value: `${state.player.hull}/${state.player.maxHull}`,
-          tone: state.player.hull <= 1 ? 'warning' : 'good'
+          value: `${state.player.hull}/${state.player.maxHull}${
+            state.player.maxGuard > 0 ? ` | Guard ${state.player.guard}/${state.player.maxGuard}` : ''
+          }`,
+          tone: state.player.hull <= 1 && state.player.guard <= 0 ? 'warning' : 'good'
         },
         { label: 'Credits', value: `${this.startingCredits + state.player.credits}` },
         { label: 'Salvage', value: `${this.startingSalvage + state.player.salvage}` }
@@ -2119,7 +2124,9 @@ export class GameplayScene implements Scene {
     this.positionReadout.textContent = `Player ${Math.round(state.player.x)},${Math.round(
       state.player.y
     )}`;
-    this.hullReadout.textContent = `Hull ${state.player.hull}/${state.player.maxHull}`;
+    this.hullReadout.textContent = `Hull ${state.player.hull}/${state.player.maxHull}${
+      state.player.maxGuard > 0 ? ` | Guard ${state.player.guard}/${state.player.maxGuard}` : ''
+    }`;
     this.distanceReadout.textContent = [
       this.missionContext?.projection.boardingOperation
         ? formatBoardingDistanceReadout(
@@ -2309,7 +2316,7 @@ export class GameplayScene implements Scene {
     syncHudMeter(
       this.hullMeter,
       createHudMeterModel(state.player.hull, state.player.maxHull),
-      state.player.hull <= 1 ? 'danger' : 'steady'
+      state.player.hull <= 1 && state.player.guard <= 0 ? 'danger' : 'steady'
     );
     syncHudMeter(
       this.specialMeter,

@@ -199,12 +199,8 @@ function applyHazardDamageToPlayer(
   activeHazard: ActiveSectorHazard,
   hitHazardIds: string[]
 ): void {
-  const previousDamageTaken = state.stats.damageTaken;
-  applyPlayerDamage(state, activeHazard.hazard.damage);
-
-  if (state.stats.damageTaken <= previousDamageTaken) {
-    return;
-  }
+  const outcome = applyPlayerDamage(state, activeHazard.hazard.damage);
+  if (!outcome) return;
 
   state.player.invulnerableSeconds = Math.max(
     state.player.invulnerableSeconds,
