@@ -710,3 +710,30 @@ Combat now consumes Guard before hull, presents its remaining capacity beside hu
 Managed-browser inspection opened the `INTEGER-GUARD` navigation fixture at 1280x720. The navigation resource card rendered `Hull 2/2`, matched the integer-only `digits/digits` contract, and the 702px menu and 1280px document each had equal client and scroll dimensions. The browser console reported no warnings or errors, and the authenticated smoke host stopped cleanly.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 120 Vitest files and 806 tests, the production build, all 22 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,067.82 kB` minified / `293.07 kB` gzip initial JavaScript and `130.35 kB` / `25.42 kB` CSS, an increase of `2.22 kB` / `0.63 kB` JavaScript with unchanged CSS from work order 225. The existing Vite large-chunk advisory remains; no dependency, item catalog, hull pickup, repair price, snapshot schema version, RNG stream, or static-hosting rule changed.
+
+## Work order 227 - Combat midpoint refits
+
+Goal: retire the ineffective route-intel midpoint reward and turn the junction into a competitive three-way combat refit choice.
+
+Prompt:
+
+> Confirm whether Plot Descent Intel still affects the live constellation navigation introduced after the standalone route menu. If it is obsolete, replace it and rebalance the midpoint refit set around combat value comparable to +1 maximum hull.
+
+Acceptance criteria:
+
+- Confirm the live consumer boundary before removal: Plot Descent Intel only feeds the retired standalone route-card preview path and is absent from current constellation navigation.
+- Fresh midpoint junctions offer exactly three clear combat identities: persistent durability, emergency ordnance, and evasive handling.
+- Patch Hull retains its existing seeded 3-5 credit price and grants +1 maximum hull without adding an unadvertised heal.
+- Deep-Cycle Magazine grants +1 bomb capacity and 25% faster special-charge gain for the rest of the run.
+- Vector Shear Vanes grants +40 movement speed and reduces the player hit radius by 2 units for the rest of the run.
+- Effective ship stats carry the selected refit into subsequent combat, refills, HUD/read-model consumers, and every later act.
+- Junction history and run-summary output identify the chosen combat refit instead of reporting obsolete route-intel or generic economy-bias text.
+- Deployed junction records that contain legacy intel, market, reward, salvage, or risk effects remain loadable and continue to resolve their old fields safely.
+- Choice generation remains deterministic for the same seed and save state; no route graph, reward pool, item catalog, dependency, save schema version, or static-hosting behavior changes.
+- The complete midpoint menu remains usable at standard desktop and narrow viewport sizes without application errors.
+
+Status: implemented. The live audit confirmed that Plot Descent Intel's only route-preview consumer is the retired `RouteScene`; current constellation dossiers never inspect it. Fresh junction generation now presents Patch Hull, Deep-Cycle Magazine, and Vector Shear Vanes as one stable combat decision, while the legacy effect shape remains optional and backward compatible for suspended runs.
+
+Managed-browser inspection opened the `STARBREAK-SMOKE` midpoint fixture at 1280x720 and 390x700. Desktop cards each measured `208px` high; the `581px` panel and 720px document had equal client and scroll dimensions. The narrow view retained a `348px` panel with no horizontal overflow and its intended single-column internal scroll. Selecting Deep-Cycle Magazine advanced directly into Act II navigation and combat, and the browser console reported no warnings or errors.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 120 Vitest files and 807 tests, the production build, all 22 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,068.08 kB` minified / `293.09 kB` gzip initial JavaScript and unchanged `130.35 kB` / `25.42 kB` CSS, increases of `0.26 kB` / `0.02 kB` JavaScript from work order 226. The existing Vite large-chunk advisory remains; no dependency, route graph, reward pool, item catalog, save schema version, or static-hosting rule changed.

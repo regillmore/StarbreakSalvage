@@ -7,7 +7,7 @@ import type { SaveData, SaveUpdateResult } from '../core/saveData';
 import { createActDebugState, createRunActSaveContext } from '../game/ActPlan';
 import type { CombatRunResult } from '../game/CombatState';
 import type { RunSkeleton, StartingContract } from '../game/Generation';
-import type { InterActChoiceRecord } from '../game/InterActJunction';
+import { formatInterActEffectDelta, type InterActChoiceRecord } from '../game/InterActJunction';
 import type { RouteHistoryEntry } from '../game/RunSession';
 import type { AppliedRouteOutcome } from '../game/RouteEvents';
 import type { ItemInstance } from '../game/Rewards';
@@ -583,28 +583,14 @@ export function formatRunEconomyBreakdown(
       rewardBiases.length > 0 ? rewardBiases.join('/') : 'standard'
     } reward bias`;
   });
-  const junctionCredits = interActChoices.reduce(
-    (total, choice) => total + choice.effects.creditsDelta,
-    0
-  );
-  const junctionSalvage = interActChoices.reduce(
-    (total, choice) => total + choice.effects.salvageDelta,
-    0
-  );
-  const junctionShopDiscount = interActChoices.reduce(
-    (total, choice) => total + choice.effects.shopDiscount,
-    0
-  );
-  const junctionRewardBiases = [
-    ...new Set(interActChoices.flatMap((choice) => choice.effects.rewardBiasTags))
-  ];
   const junctionPart =
     interActChoices.length > 0
-      ? `Junction: ${formatSignedCredits(junctionCredits)}/${formatSignedSalvage(
-          junctionSalvage
-        )}, ${junctionShopDiscount > 0 ? `-${junctionShopDiscount}` : '+0'} shop, ${
-          junctionRewardBiases.length > 0 ? junctionRewardBiases.join('/') : 'standard'
-        } reward bias`
+      ? `Junction: ${interActChoices
+          .map(
+            (choice) =>
+              `${choice.label} (${formatInterActEffectDelta(choice.effects) || 'legacy refit'})`
+          )
+          .join(' | ')}`
       : 'Junction: none';
   const recovered = result
     ? `Recovered: ${result.credits} credits/${result.salvage} kg`

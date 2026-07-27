@@ -49,6 +49,7 @@ import {
 import type { MissionObjectiveResultSnapshot } from './ObjectiveDirector';
 import {
   combineInterActEffects,
+  combineInterActShipRefitEffects,
   createInterActChoiceRecord,
   type InterActChoice,
   type InterActChoiceRecord,
@@ -1373,9 +1374,7 @@ function applyRouteChosenHooks(
       route.kind
     ) > 0;
   const hasShopPayload =
-    outcome.effects.shop !== null ||
-    payload.shopDiscount !== 0 ||
-    payload.shopBiasTags.length > 0;
+    outcome.effects.shop !== null || payload.shopDiscount !== 0 || payload.shopBiasTags.length > 0;
 
   return {
     ...outcome,
@@ -1416,9 +1415,17 @@ export function getEffectiveShipStats(
   contract: StartingContract,
   session: RunSessionState
 ): ShipStats {
+  const refit = combineInterActShipRefitEffects(session.interActChoices);
   return {
     ...contract.shipStats,
-    maxHull: contract.shipStats.maxHull + normalizePlayerHullBonus(session.hullPatch)
+    maxHull: contract.shipStats.maxHull + normalizePlayerHullBonus(session.hullPatch),
+    speed: Math.max(1, contract.shipStats.speed + refit.speedDelta),
+    hitRadius: Math.max(8, contract.shipStats.hitRadius + refit.hitRadiusDelta),
+    specialChargeMultiplier: Math.max(
+      0.1,
+      contract.shipStats.specialChargeMultiplier + refit.specialChargeMultiplierDelta
+    ),
+    bombCapacity: Math.max(0, contract.shipStats.bombCapacity + refit.bombCapacityDelta)
   };
 }
 

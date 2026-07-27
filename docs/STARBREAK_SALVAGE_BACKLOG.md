@@ -3239,3 +3239,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 226. Player durability now has one integer boundary, while Foundry defense is expressed as visible whole Guard instead of hidden fractional hull loss.
+
+### BL92 - Combat midpoint refits
+
+Acceptance:
+
+- Retire Plot Descent Intel from fresh midpoint generation after confirming it has no consumer in constellation navigation.
+- Replace the mixed economy/intel pool with three competitive combat identities: +1 maximum hull, +1 bomb plus 25% special-charge gain, or +40 speed plus -2 hit radius.
+- Carry the selected refit through effective ship stats for the rest of the run without silently healing the hull option.
+- Identify the actual combat refit in junction history and run-summary output.
+- Keep deployed legacy midpoint records readable and retain their old effects when restoring a suspended run.
+- Preserve deterministic choice construction, routes, rewards, item content, save schema version, dependencies, and static hosting.
+
+Status:
+
+- Implemented in work order 227. The junction is now a focused durability, ordnance, or evasion choice, and the obsolete route-intel reward remains only as a legacy snapshot compatibility path.

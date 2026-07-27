@@ -5,12 +5,16 @@ import type { RouteKind, RouteOption } from './Generation';
 import type { RunActPlan } from './ActPlan';
 
 export type InterActChoiceKind =
-  | 'repair'
-  | 'intel'
-  | 'market'
-  | 'reward'
-  | 'salvage'
-  | 'risk';
+  'repair' | 'ordnance' | 'vector' | 'intel' | 'market' | 'reward' | 'salvage' | 'risk';
+
+type FreshInterActChoiceKind = Extract<InterActChoiceKind, 'repair' | 'ordnance' | 'vector'>;
+
+export interface InterActShipRefitEffects {
+  readonly speedDelta: number;
+  readonly hitRadiusDelta: number;
+  readonly bombCapacityDelta: number;
+  readonly specialChargeMultiplierDelta: number;
+}
 
 export interface InterActChoiceEffects {
   readonly creditsDelta: number;
@@ -22,6 +26,8 @@ export interface InterActChoiceEffects {
   readonly rewardChoiceBonus: number;
   readonly rewardBiasTags: readonly ItemTag[];
   readonly riskLabel: string | null;
+  /** Optional only so deployed pre-WO227 records remain loadable. */
+  readonly shipRefit?: InterActShipRefitEffects;
 }
 
 export interface InterActChoice {
@@ -58,7 +64,15 @@ export interface InterActEffectSummary {
   readonly rewardChoiceBonus: number;
   readonly rewardBiasTags: readonly ItemTag[];
   readonly riskLabels: readonly string[];
+  readonly shipRefit: InterActShipRefitEffects;
 }
+
+export const EMPTY_INTER_ACT_SHIP_REFIT: InterActShipRefitEffects = {
+  speedDelta: 0,
+  hitRadiusDelta: 0,
+  bombCapacityDelta: 0,
+  specialChargeMultiplierDelta: 0
+};
 
 export const EMPTY_INTER_ACT_EFFECTS: InterActEffectSummary = {
   targetActId: 'act_core_descent',
@@ -67,7 +81,8 @@ export const EMPTY_INTER_ACT_EFFECTS: InterActEffectSummary = {
   shopDiscount: 0,
   rewardChoiceBonus: 0,
   rewardBiasTags: [],
-  riskLabels: []
+  riskLabels: [],
+  shipRefit: EMPTY_INTER_ACT_SHIP_REFIT
 };
 
 export function createInterActJunctionChoices(options: {
@@ -90,14 +105,7 @@ export function createInterActJunctionChoices(options: {
     options.saveFingerprint
   ].join(':');
   const rng = createRng(`${options.runSeed}:inter-act-junction:${stateKey}`);
-  const optionalKinds = rng.shuffle<InterActChoiceKind>([
-    'intel',
-    'market',
-    'reward',
-    'salvage',
-    'risk'
-  ]);
-  const selectedKinds: InterActChoiceKind[] = ['repair', ...optionalKinds.slice(0, 2)];
+  const selectedKinds: readonly FreshInterActChoiceKind[] = ['repair', 'ordnance', 'vector'];
 
   return selectedKinds.map((kind, index) =>
     createChoice(kind, index + 1, rng.fork(`${kind}-${index + 1}`), options)
@@ -139,10 +147,7 @@ export function combineInterActEffects(
     targetActId,
     targetActLabel,
     routeIntel: matchingRecords.some((record) => record.effects.routeIntel),
-    shopDiscount: matchingRecords.reduce(
-      (total, record) => total + record.effects.shopDiscount,
-      0
-    ),
+    shopDiscount: matchingRecords.reduce((total, record) => total + record.effects.shopDiscount, 0),
     rewardChoiceBonus: matchingRecords.reduce(
       (total, record) => total + record.effects.rewardChoiceBonus,
       0
@@ -150,8 +155,24 @@ export function combineInterActEffects(
     rewardBiasTags: [...new Set(rewardBiasTags)],
     riskLabels: matchingRecords.flatMap((record) =>
       record.effects.riskLabel ? [record.effects.riskLabel] : []
-    )
+    ),
+    shipRefit: combineInterActShipRefitEffects(matchingRecords)
   };
+}
+
+export function combineInterActShipRefitEffects(
+  records: readonly InterActChoiceRecord[]
+): InterActShipRefitEffects {
+  return records.reduce<InterActShipRefitEffects>((combined, record) => {
+    const refit = record.effects.shipRefit ?? EMPTY_INTER_ACT_SHIP_REFIT;
+    return {
+      speedDelta: combined.speedDelta + refit.speedDelta,
+      hitRadiusDelta: combined.hitRadiusDelta + refit.hitRadiusDelta,
+      bombCapacityDelta: combined.bombCapacityDelta + refit.bombCapacityDelta,
+      specialChargeMultiplierDelta:
+        combined.specialChargeMultiplierDelta + refit.specialChargeMultiplierDelta
+    };
+  }, EMPTY_INTER_ACT_SHIP_REFIT);
 }
 
 export function formatInterActEffectsReadout(effects: InterActEffectSummary): string | null {
@@ -159,6 +180,14 @@ export function formatInterActEffectsReadout(effects: InterActEffectSummary): st
     effects.routeIntel ? 'Act intel online' : null,
     effects.shopDiscount > 0 ? `Shop discount -${effects.shopDiscount}` : null,
     effects.rewardBiasTags.length > 0 ? `Reward bias ${effects.rewardBiasTags.join('/')}` : null,
+    effects.shipRefit.bombCapacityDelta > 0
+      ? `Bomb stock +${effects.shipRefit.bombCapacityDelta}`
+      : null,
+    effects.shipRefit.specialChargeMultiplierDelta > 0
+      ? `Special charge +${Math.round(effects.shipRefit.specialChargeMultiplierDelta * 100)}%`
+      : null,
+    effects.shipRefit.speedDelta > 0 ? `Speed +${effects.shipRefit.speedDelta}` : null,
+    effects.shipRefit.hitRadiusDelta < 0 ? `Hit radius ${effects.shipRefit.hitRadiusDelta}` : null,
     ...effects.riskLabels
   ].filter((part): part is string => part !== null);
 
@@ -173,9 +202,7 @@ export function formatInterActHistory(records: readonly InterActChoiceRecord[]):
   return records
     .map(
       (record) =>
-        `${record.sourceActLabel} -> ${record.targetActLabel}: ${record.label} (${formatEffectDelta(
-          record.effects
-        )})`
+        `${record.sourceActLabel} -> ${record.targetActLabel}: ${record.label} (${formatInterActEffectDelta(record.effects)})`
     )
     .join(' | ');
 }
@@ -189,7 +216,7 @@ export function createInterActRouteIntelHint(route: RouteOption): string {
 }
 
 function createChoice(
-  kind: InterActChoiceKind,
+  kind: FreshInterActChoiceKind,
   slot: number,
   rng: Rng,
   options: {
@@ -216,19 +243,23 @@ function createChoice(
 }
 
 function createChoiceBody(
-  kind: InterActChoiceKind,
+  kind: FreshInterActChoiceKind,
   rng: Rng,
   availableCredits: number
-): Omit<InterActChoice, 'id' | 'sourceActId' | 'sourceActLabel' | 'targetActId' | 'targetActLabel'> {
+): Omit<
+  InterActChoice,
+  'id' | 'sourceActId' | 'sourceActLabel' | 'targetActId' | 'targetActLabel'
+> {
   if (kind === 'repair') {
     const creditCost = Math.min(availableCredits, 3 + rng.int(0, 2));
 
     return {
       kind,
       label: 'Patch Hull',
-      meta: creditCost > 0 ? `Spend ${creditCost} credits` : 'Emergency waiver',
-      summary: 'Dock crews weld a quick brace into the hull before the descent.',
-      detail: 'Act II starts with +1 max hull from the refit.',
+      meta:
+        creditCost > 0 ? `+1 max hull | ${creditCost} credits` : '+1 max hull | emergency waiver',
+      summary: 'Dock crews weld an ablative keel into the ship before the descent.',
+      detail: 'Add +1 maximum hull for the rest of the run.',
       effects: {
         ...createEmptyEffects(),
         creditsDelta: -creditCost,
@@ -237,80 +268,37 @@ function createChoiceBody(
     };
   }
 
-  if (kind === 'intel') {
+  if (kind === 'ordnance') {
     return {
       kind,
-      label: 'Plot Descent Intel',
-      meta: 'Route previews',
-      summary: 'A borrowed survey package decrypts Act II route pressure before launch.',
-      detail: 'Act II route cards reveal pressure and reward intent.',
+      label: 'Deep-Cycle Magazine',
+      meta: '+1 bomb | +25% special charge',
+      summary: 'A deep-cycle ordnance cradle feeds both emergency weapon systems.',
+      detail: 'Carry one additional bomb and recharge special attacks 25% faster.',
       effects: {
         ...createEmptyEffects(),
-        routeIntel: true
-      }
-    };
-  }
-
-  if (kind === 'market') {
-    const discount = 1 + rng.int(0, 1);
-
-    return {
-      kind,
-      label: 'Broker Permit',
-      meta: `Act II shops -${discount}`,
-      summary: 'A market stamp follows the contract into deeper ports.',
-      detail: `Act II shop prices are reduced by ${discount}.`,
-      effects: {
-        ...createEmptyEffects(),
-        shopDiscount: discount
-      }
-    };
-  }
-
-  if (kind === 'reward') {
-    const biasTag = rng.choice<ItemTag>(['drone', 'heat', 'missile', 'shield']);
-
-    return {
-      kind,
-      label: 'Prize Manifest',
-      meta: `${biasTag} reward bias`,
-      summary: 'A salvage broker indexes Act II manifests around one build family.',
-      detail: `Act II reward pools lean more strongly toward ${biasTag}.`,
-      effects: {
-        ...createEmptyEffects(),
-        rewardBiasTags: [biasTag]
-      }
-    };
-  }
-
-  if (kind === 'salvage') {
-    const salvageDelta = 3 + rng.int(0, 2);
-
-    return {
-      kind,
-      label: 'Bank Salvage Advance',
-      meta: `Gain ${salvageDelta} salvage`,
-      summary: 'The archive authorizes a field advance against the deeper contract.',
-      detail: 'The salvage is carried into Act II and counted in the run summary.',
-      effects: {
-        ...createEmptyEffects(),
-        salvageDelta
+        shipRefit: {
+          ...EMPTY_INTER_ACT_SHIP_REFIT,
+          bombCapacityDelta: 1,
+          specialChargeMultiplierDelta: 0.25
+        }
       }
     };
   }
 
   return {
     kind,
-    label: 'Overburn Descent',
-    meta: '+5 salvage, +1 curse',
-    summary: 'A risky slingshot reaches the core layer ahead of schedule.',
-    detail: 'Gain salvage and bias rewards toward curse and overkill, but carry 1 curse into Act II.',
+    label: 'Vector Shear Vanes',
+    meta: '+40 speed | -2 hit radius',
+    summary: 'Trim vanes tighten the ship silhouette and sharpen lateral response.',
+    detail: 'Gain 40 movement speed and reduce the player hit radius by 2 units.',
     effects: {
       ...createEmptyEffects(),
-      salvageDelta: 5,
-      curseDelta: 1,
-      rewardBiasTags: ['curse', 'overkill'],
-      riskLabel: 'Overburn risk +1 curse'
+      shipRefit: {
+        ...EMPTY_INTER_ACT_SHIP_REFIT,
+        speedDelta: 40,
+        hitRadiusDelta: -2
+      }
     }
   };
 }
@@ -325,7 +313,8 @@ function createEmptyEffects(): InterActChoiceEffects {
     shopDiscount: 0,
     rewardChoiceBonus: 0,
     rewardBiasTags: [],
-    riskLabel: null
+    riskLabel: null,
+    shipRefit: EMPTY_INTER_ACT_SHIP_REFIT
   };
 }
 
@@ -353,15 +342,31 @@ function getRouteIntelNote(kind: RouteKind): string {
   return 'faction cache with escort pressure.';
 }
 
-function formatEffectDelta(effects: InterActChoiceEffects): string {
+export function formatInterActEffectDelta(effects: InterActChoiceEffects): string {
   return [
-    effects.creditsDelta === 0 ? null : `${effects.creditsDelta > 0 ? '+' : ''}${effects.creditsDelta} credits`,
-    effects.salvageDelta === 0 ? null : `${effects.salvageDelta > 0 ? '+' : ''}${effects.salvageDelta} salvage`,
+    effects.creditsDelta === 0
+      ? null
+      : `${effects.creditsDelta > 0 ? '+' : ''}${effects.creditsDelta} credits`,
+    effects.salvageDelta === 0
+      ? null
+      : `${effects.salvageDelta > 0 ? '+' : ''}${effects.salvageDelta} salvage`,
     effects.hullPatchDelta === 0 ? null : `+${effects.hullPatchDelta} hull`,
     effects.curseDelta === 0 ? null : `+${effects.curseDelta} curse`,
     effects.routeIntel ? 'intel' : null,
     effects.shopDiscount > 0 ? `-${effects.shopDiscount} shop` : null,
-    effects.rewardBiasTags.length > 0 ? `${effects.rewardBiasTags.join('/')} reward bias` : null
+    effects.rewardBiasTags.length > 0 ? `${effects.rewardBiasTags.join('/')} reward bias` : null,
+    (effects.shipRefit?.bombCapacityDelta ?? 0) === 0
+      ? null
+      : `+${effects.shipRefit?.bombCapacityDelta ?? 0} bomb`,
+    (effects.shipRefit?.specialChargeMultiplierDelta ?? 0) === 0
+      ? null
+      : `+${Math.round((effects.shipRefit?.specialChargeMultiplierDelta ?? 0) * 100)}% special charge`,
+    (effects.shipRefit?.speedDelta ?? 0) === 0
+      ? null
+      : `+${effects.shipRefit?.speedDelta ?? 0} speed`,
+    (effects.shipRefit?.hitRadiusDelta ?? 0) === 0
+      ? null
+      : `${effects.shipRefit?.hitRadiusDelta ?? 0} hit radius`
   ]
     .filter((part): part is string => part !== null)
     .join(', ');

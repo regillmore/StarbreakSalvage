@@ -9,6 +9,7 @@ import {
 } from '../../src/game/ActPlan';
 import { generateRunSkeleton } from '../../src/game/Generation';
 import {
+  combineInterActShipRefitEffects,
   createInterActJunctionChoices,
   formatInterActHistory,
   type InterActChoice
@@ -16,6 +17,7 @@ import {
 import {
   applyInterActChoice,
   createRunSession,
+  getEffectiveShipStats,
   getInterActEffectsForSector,
   hasInterActChoiceForSourceAct
 } from '../../src/game/RunSession';
@@ -45,11 +47,66 @@ describe('InterActJunction', () => {
 
     expect(first).toEqual(second);
     expect(first).toHaveLength(3);
-    expect(first[0]?.kind).toBe('repair');
+    expect(first.map((choice) => choice.kind)).toEqual(['repair', 'ordnance', 'vector']);
+    expect(first.map((choice) => choice.label)).toEqual([
+      'Patch Hull',
+      'Deep-Cycle Magazine',
+      'Vector Shear Vanes'
+    ]);
     expect(first.map((choice) => choice.label)).not.toContain('');
     expect(first.map((choice) => `${choice.summary} ${choice.detail}`).join(' ')).toContain(
-      'Act II'
+      'rest of the run'
     );
+    expect(first.map((choice) => choice.kind)).not.toContain('intel');
+  });
+
+  it('balances fresh midpoint choices around persistent combat refits', () => {
+    const run = generateRunSkeleton('STARBREAK-SMOKE');
+    const contract = run.contracts[0];
+    const sourceAct = run.acts[0];
+    const targetAct = run.acts[1];
+
+    if (!contract || !sourceAct || !targetAct) {
+      throw new Error('Expected generated run parts.');
+    }
+
+    const choices = createInterActJunctionChoices({
+      runSeed: run.seed,
+      sourceAct,
+      targetAct,
+      credits: 18,
+      salvage: 4,
+      hullPatch: 0,
+      curse: 0,
+      saveFingerprint: 'combat-refit-test'
+    });
+    const repair = choices.find((choice) => choice.kind === 'repair');
+    const ordnance = choices.find((choice) => choice.kind === 'ordnance');
+    const vector = choices.find((choice) => choice.kind === 'vector');
+
+    if (!repair || !ordnance || !vector) {
+      throw new Error('Expected the three fresh midpoint refits.');
+    }
+
+    const repairSession = createRunSession(run, contract);
+    applyInterActChoice(repairSession, repair);
+    expect(getEffectiveShipStats(contract, repairSession).maxHull).toBe(
+      contract.shipStats.maxHull + 1
+    );
+
+    const ordnanceSession = createRunSession(run, contract);
+    applyInterActChoice(ordnanceSession, ordnance);
+    expect(getEffectiveShipStats(contract, ordnanceSession)).toMatchObject({
+      bombCapacity: contract.shipStats.bombCapacity + 1,
+      specialChargeMultiplier: contract.shipStats.specialChargeMultiplier + 0.25
+    });
+
+    const vectorSession = createRunSession(run, contract);
+    applyInterActChoice(vectorSession, vector);
+    expect(getEffectiveShipStats(contract, vectorSession)).toMatchObject({
+      speed: contract.shipStats.speed + 40,
+      hitRadius: contract.shipStats.hitRadius - 2
+    });
   });
 
   it('detects the deterministic Act I to Act II handoff after the converged finale', () => {
@@ -122,9 +179,21 @@ describe('InterActJunction', () => {
         routeIntel: true,
         shopDiscount: 2,
         rewardChoiceBonus: 1,
-        rewardBiasTags: ['shield']
+        rewardBiasTags: ['shield'],
+        shipRefit: {
+          speedDelta: 0,
+          hitRadiusDelta: 0,
+          bombCapacityDelta: 0,
+          specialChargeMultiplierDelta: 0
+        }
       })
     );
+    expect(combineInterActShipRefitEffects(session.interActChoices)).toEqual({
+      speedDelta: 0,
+      hitRadiusDelta: 0,
+      bombCapacityDelta: 0,
+      specialChargeMultiplierDelta: 0
+    });
     expect(formatInterActHistory(session.interActChoices)).toContain(
       'Outer Rim Contract -> Core Descent: Test Refit'
     );

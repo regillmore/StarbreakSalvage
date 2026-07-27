@@ -5,10 +5,7 @@ import {
   createDefaultSaveData,
   type SaveData
 } from '../../src/core/saveData';
-import {
-  createActEconomyProfile,
-  getActEconomyShopReadout
-} from '../../src/game/ActEconomy';
+import { createActEconomyProfile, getActEconomyShopReadout } from '../../src/game/ActEconomy';
 import { generateRunSkeleton, type RunSkeleton } from '../../src/game/Generation';
 import {
   createInterActChoiceRecord,
@@ -173,7 +170,8 @@ describe('Act II economy tuning', () => {
 
     expect(summary).toContain('Act I:');
     expect(summary).toContain('Act II:');
-    expect(summary).toContain('Junction:');
+    expect(summary).toContain('Junction: Patch Hull');
+    expect(summary).not.toContain('standard reward bias | Recovered');
     expect(summary).toContain('Recovered: 25 credits/12 kg');
     expect(formatItemSourceSummary([{ itemId: 'item_vault_parasite', acquisitionOrder: 0 }])).toBe(
       'vault 1'
