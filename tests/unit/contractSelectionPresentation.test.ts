@@ -25,10 +25,11 @@ describe('contract selection presentation', () => {
       expect(model.metrics.map((metric) => metric.id)).toEqual([
         'hull',
         'speed',
+        'thermal',
         'bombs',
-        'credits',
-        'salvage'
+        'economy'
       ]);
+      expect(model.metrics.find((metric) => metric.id === 'thermal')?.value).toBe('100%');
       expect(model.ariaLabel).toContain(model.ignition.name);
     }
   });

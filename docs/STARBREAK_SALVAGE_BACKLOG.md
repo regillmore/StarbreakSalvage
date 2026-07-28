@@ -3254,3 +3254,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 227. The junction is now a focused durability, ordnance, or evasion choice, and the obsolete route-intel reward remains only as a legacy snapshot compatibility path.
+
+### BL93 - Compact prototype thermal envelope
+
+Acceptance:
+
+- Remove the Corporate Test Pilot's unimplemented random-malfunction promise without introducing a hidden replacement penalty.
+- Give the ship 70% weapon heat capacity, making its starting Prototype Beam and later heat-producing circuit stages easier to overheat.
+- Apply the same effective weapon profile in combat and Hardpoint Control.
+- Add a five-cell `HCAP` contract comparison metric and rewrite the contract benefit, cost, and Warranty Void Shunt copy around the explicit thermal identity.
+- Keep legacy loadouts on a safe 100% thermal profile when the new fields are absent.
+- Preserve deterministic contract generation, weapons, items, rewards, saves, dependencies, and static hosting.
+
+Status:
+
+- Implemented in work order 228. Corporate Test Pilot now trades a compact heat envelope for its rare experimental ignition, with effective capacity exposed consistently in contract and engineering comparisons.

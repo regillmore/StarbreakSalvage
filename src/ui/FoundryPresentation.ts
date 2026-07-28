@@ -37,6 +37,7 @@ import { HEAT_SHOT_COST_RATIO, getHeatShotCost } from '../game/HeatShot';
 import { getLaserProjectileKind, type LaserProjectileKind } from '../game/LaserProjectile';
 import type { HeatShotEvent } from '../game/ItemHooks';
 import { getArcChargeProfile, getArcDischargeDamage, type ArcChargeKind } from '../game/ArcCharge';
+import { applyShipThermalProfile } from '../game/ShipThermalProfile';
 import {
   createDroneFollowerSpecs,
   createMicroChoirVolley,
@@ -227,11 +228,17 @@ export function createFoundryDashboardModel(
   const committedLoadout = requireLoadout(committed);
   const committedResources = requireResources(committed);
   const draftResources = draft.resources ?? committedResources;
-  const committedWeapon = getWeaponById(committedLoadout.primaryWeaponId);
-  const draftWeapon = getWeaponById(
-    draft.loadout?.primaryWeaponId ??
-      getDraftPrimaryWeaponId(state) ??
-      committedLoadout.primaryWeaponId
+  const committedWeapon = applyShipThermalProfile(
+    getWeaponById(committedLoadout.primaryWeaponId),
+    committedLoadout.shipStats
+  );
+  const draftWeapon = applyShipThermalProfile(
+    getWeaponById(
+      draft.loadout?.primaryWeaponId ??
+        getDraftPrimaryWeaponId(state) ??
+        committedLoadout.primaryWeaponId
+    ),
+    draft.loadout?.shipStats ?? committedLoadout.shipStats
   );
   const procBudget = Math.min(
     MAX_COMBINED_PROC_BUDGET,

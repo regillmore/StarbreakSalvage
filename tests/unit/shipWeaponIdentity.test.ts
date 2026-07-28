@@ -127,11 +127,19 @@ describe('ship stats and weapon identity', () => {
   });
 
   it('builds heat and blocks fire during prototype overheat reload', () => {
+    const ship = getShip('ship_corporate_test_pilot');
+    const baseWeapon = WEAPONS.find((weapon) => weapon.id === 'weapon_prototype_beam');
+    if (!baseWeapon) throw new Error('Expected the prototype beam definition.');
     const state = createCombatState(bounds, 'PROTOTYPE-HEAT', {
       weaponId: 'weapon_prototype_beam',
-      shipStats: getShip('ship_corporate_test_pilot').stats,
+      shipStats: ship.stats,
       skipEnemyWaves: true
     });
+
+    expect(ship.stats.weaponHeatCapacityMultiplier).toBe(0.7);
+    expect(ship.drawback).not.toContain('malfunction');
+    expect(state.weapon.overheatLimit).toBeCloseTo(baseWeapon.overheatLimit * 0.7);
+    expect(state.weapon.heatPerShot).toBe(baseWeapon.heatPerShot);
 
     for (let frame = 0; frame < 40 && state.player.weaponOverheatSeconds <= 0; frame += 1) {
       updateCombatState(state, { movement: { x: 0, y: 0 }, fire: true }, 1 / 10, bounds);

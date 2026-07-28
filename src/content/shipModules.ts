@@ -881,7 +881,7 @@ export const SHIP_MODULES: readonly ShipModuleDefinition[] = [
       name: 'Warranty Void Shunt',
       shortName: 'Void Shunt',
       summary:
-        'Experimental bus adapter leaving the established beam and malfunction hooks intact.',
+        'Experimental bus adapter concentrating the established beam into a compact thermal envelope.',
       icon: 'experimental-shunt',
       accentColor: '#ffef5f'
     }

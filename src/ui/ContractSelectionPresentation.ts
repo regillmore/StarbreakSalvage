@@ -10,7 +10,7 @@ import {
 import { createItemCardViewModel, type ItemCardViewModel } from './ItemCardViewModel';
 
 export interface ContractMetricModel {
-  readonly id: 'hull' | 'speed' | 'bombs' | 'credits' | 'salvage';
+  readonly id: 'hull' | 'speed' | 'thermal' | 'bombs' | 'economy';
   readonly glyph: string;
   readonly label: string;
   readonly value: string;
@@ -55,9 +55,19 @@ export function createContractChoicePresentationModel(
   const metrics: readonly ContractMetricModel[] = [
     { id: 'hull', glyph: 'HUL', label: 'Hull', value: String(contract.shipStats.maxHull) },
     { id: 'speed', glyph: 'SPD', label: 'Speed', value: String(contract.shipStats.speed) },
+    {
+      id: 'thermal',
+      glyph: 'HCAP',
+      label: 'Heat capacity',
+      value: `${Math.round((contract.shipStats.weaponHeatCapacityMultiplier ?? 1) * 100)}%`
+    },
     { id: 'bombs', glyph: 'BMB', label: 'Bombs', value: String(contract.shipStats.bombCapacity) },
-    { id: 'credits', glyph: 'CR', label: 'Credits', value: String(contract.startingCredits) },
-    { id: 'salvage', glyph: 'SV', label: 'Salvage', value: String(contract.startingSalvage) }
+    {
+      id: 'economy',
+      glyph: 'START',
+      label: 'Credits / salvage',
+      value: `${contract.startingCredits} / ${contract.startingSalvage}`
+    }
   ];
 
   return {

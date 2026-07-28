@@ -86,6 +86,7 @@ export interface ShipStats {
   readonly speed: number;
   readonly hitRadius: number;
   readonly pickupPullRange: number;
+  readonly weaponHeatCapacityMultiplier: number;
   readonly specialChargeMultiplier: number;
   readonly specialInitialCharge: number;
   readonly bombCapacity: number;
@@ -130,6 +131,7 @@ export const SHIPS: readonly ShipDefinition[] = [
       speed: 430,
       hitRadius: 16,
       pickupPullRange: 520,
+      weaponHeatCapacityMultiplier: 1,
       specialChargeMultiplier: 1.05,
       specialInitialCharge: 1,
       bombCapacity: 2,
@@ -163,6 +165,7 @@ export const SHIPS: readonly ShipDefinition[] = [
       speed: 340,
       hitRadius: 18,
       pickupPullRange: 280,
+      weaponHeatCapacityMultiplier: 1,
       specialChargeMultiplier: 1,
       specialInitialCharge: 1,
       bombCapacity: 2,
@@ -196,6 +199,7 @@ export const SHIPS: readonly ShipDefinition[] = [
       speed: 300,
       hitRadius: 20,
       pickupPullRange: 240,
+      weaponHeatCapacityMultiplier: 1,
       specialChargeMultiplier: 0.95,
       specialInitialCharge: 1,
       bombCapacity: 3,
@@ -229,6 +233,7 @@ export const SHIPS: readonly ShipDefinition[] = [
       speed: 455,
       hitRadius: 15,
       pickupPullRange: 300,
+      weaponHeatCapacityMultiplier: 1,
       specialChargeMultiplier: 1.45,
       specialInitialCharge: 0.75,
       bombCapacity: 1,
@@ -262,6 +267,7 @@ export const SHIPS: readonly ShipDefinition[] = [
       speed: 280,
       hitRadius: 22,
       pickupPullRange: 220,
+      weaponHeatCapacityMultiplier: 1,
       specialChargeMultiplier: 0.9,
       specialInitialCharge: 1,
       bombCapacity: 3,
@@ -295,6 +301,7 @@ export const SHIPS: readonly ShipDefinition[] = [
       speed: 360,
       hitRadius: 18,
       pickupPullRange: 340,
+      weaponHeatCapacityMultiplier: 1,
       specialChargeMultiplier: 1.1,
       specialInitialCharge: 0.9,
       bombCapacity: 2,
@@ -328,6 +335,7 @@ export const SHIPS: readonly ShipDefinition[] = [
       speed: 370,
       hitRadius: 18,
       pickupPullRange: 260,
+      weaponHeatCapacityMultiplier: 0.7,
       specialChargeMultiplier: 1.2,
       specialInitialCharge: 1,
       bombCapacity: 2,
@@ -335,8 +343,8 @@ export const SHIPS: readonly ShipDefinition[] = [
       startingSalvage: 0
     },
     perk: 'starts with a rare experimental item',
-    drawback: 'random malfunction each sector',
-    contractSummary: 'Prototype hull with excellent power and suspicious warranty language.',
+    drawback: 'weapon heat capacity is reduced to 70%; overheating stalls fire',
+    contractSummary: 'High-output prototype with a compact, heat-sensitive weapon envelope.',
     sponsors: ['Warranty Void Labs', 'Forward-Looking Liability'],
     itemBias: ['prototype', 'heat', 'curse']
   },
@@ -361,6 +369,7 @@ export const SHIPS: readonly ShipDefinition[] = [
       speed: 350,
       hitRadius: 17,
       pickupPullRange: 260,
+      weaponHeatCapacityMultiplier: 1,
       specialChargeMultiplier: 1.15,
       specialInitialCharge: 0.85,
       bombCapacity: 1,

@@ -933,6 +933,12 @@ export function validateContent(input: ContentValidationInput = {}): string[] {
     validatePositiveNumber(
       errors,
       `Ship ${ship.id} stats`,
+      'weaponHeatCapacityMultiplier',
+      ship.stats.weaponHeatCapacityMultiplier
+    );
+    validatePositiveNumber(
+      errors,
+      `Ship ${ship.id} stats`,
       'specialChargeMultiplier',
       ship.stats.specialChargeMultiplier
     );

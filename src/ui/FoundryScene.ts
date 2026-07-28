@@ -506,7 +506,7 @@ export class FoundryScene implements Scene {
 
     const heading = document.createElement('header');
     const title = document.createElement('strong');
-    title.textContent = `THERMAL LOOP · ${model.durationSeconds.toFixed(0)}S HELD FIRE`;
+    title.textContent = `THERMAL LOOP · ${model.durationSeconds.toFixed(0)}S HELD FIRE · CAP ${model.capacity.toFixed(2)}`;
     const cadence = document.createElement('span');
     cadence.textContent = `${model.volleysFired} VOLLEYS · ${model.hotVolleyCount} HOT · ${model.effectiveVolleysPerSecond.toFixed(1)}/S`;
     heading.append(title, cadence);

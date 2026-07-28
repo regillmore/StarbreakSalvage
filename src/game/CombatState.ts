@@ -88,6 +88,7 @@ import {
   HEAT_SINK_VENT_MULTIPLIER,
   getThermalRatio
 } from './ThermalCircuit';
+import { applyShipThermalProfile } from './ShipThermalProfile';
 import type { MissionObjectiveResultSnapshot } from './ObjectiveDirector';
 import {
   getCraterShadowLensSpecialChargeBonus,
@@ -657,6 +658,7 @@ const DEFAULT_SHIP_STATS: ShipStats = {
   speed: 360,
   hitRadius: 18,
   pickupPullRange: 240,
+  weaponHeatCapacityMultiplier: 1,
   specialChargeMultiplier: 1,
   specialInitialCharge: 1,
   bombCapacity: BOMB_INITIAL_CHARGES,
@@ -696,11 +698,14 @@ export function createCombatState(
   seed: string,
   options: CombatStateOptions = {}
 ): CombatState {
-  const weapon = getWeaponById(
-    options.engineering?.weaponId ?? options.weaponId ?? 'weapon_light_needle_laser'
+  const shipStats = options.shipStats ?? DEFAULT_SHIP_STATS;
+  const weapon = applyShipThermalProfile(
+    getWeaponById(
+      options.engineering?.weaponId ?? options.weaponId ?? 'weapon_light_needle_laser'
+    ),
+    shipStats
   );
   const bossDefinition = getBossById(options.bossId ?? DEFAULT_BOSS_ID);
-  const shipStats = options.shipStats ?? DEFAULT_SHIP_STATS;
   const maxHull = Math.max(1, Math.round(shipStats.maxHull));
   const maxGuard = createPlayerGuardCapacity(
     maxHull,

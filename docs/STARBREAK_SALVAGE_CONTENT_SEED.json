@@ -96,7 +96,7 @@
       ],
       "weapon": "weapon_prototype_beam",
       "perk": "starts with a rare experimental item",
-      "drawback": "random malfunction each sector"
+      "drawback": "weapon heat capacity is reduced to 70%; overheating stalls fire"
     },
     {
       "id": "ship_relic_thief",

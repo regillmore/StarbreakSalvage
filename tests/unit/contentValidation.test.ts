@@ -1337,6 +1337,7 @@ describe('validateContent', () => {
           stats: {
             ...baseShip.stats,
             maxHull: 0,
+            weaponHeatCapacityMultiplier: 0,
             specialInitialCharge: 2,
             bombCapacity: -1
           }
@@ -1346,6 +1347,9 @@ describe('validateContent', () => {
 
     expect(errors).toContain(`Ship ${baseShip.id} references missing weapon: weapon_missing`);
     expect(errors).toContain(`Ship ${baseShip.id} stats must have positive maxHull`);
+    expect(errors).toContain(
+      `Ship ${baseShip.id} stats must have positive weaponHeatCapacityMultiplier`
+    );
     expect(errors).toContain(
       `Ship ${baseShip.id} stats must have specialInitialCharge between 0 and 1`
     );

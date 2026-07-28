@@ -244,8 +244,8 @@ High variance prototype gear.
 - Starting weapon: Prototype Beam.
 - Ability: Warranty Override.
 - Perk: starts with a rare experimental item.
-- Drawback: random malfunction each sector.
-- Build bias: cursed items, overheat, random procs, risk reward.
+- Drawback: weapon heat capacity is reduced to 70%; overheating stalls fire.
+- Build bias: heat sources, heat sinks, hot-band payoffs, prototype risk reward.
 
 ### Relic Thief
 

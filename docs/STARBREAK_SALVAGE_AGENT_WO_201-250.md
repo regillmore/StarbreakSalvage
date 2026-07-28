@@ -737,3 +737,28 @@ Status: implemented. The live audit confirmed that Plot Descent Intel's only rou
 Managed-browser inspection opened the `STARBREAK-SMOKE` midpoint fixture at 1280x720 and 390x700. Desktop cards each measured `208px` high; the `581px` panel and 720px document had equal client and scroll dimensions. The narrow view retained a `348px` panel with no horizontal overflow and its intended single-column internal scroll. Selecting Deep-Cycle Magazine advanced directly into Act II navigation and combat, and the browser console reported no warnings or errors.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 120 Vitest files and 807 tests, the production build, all 22 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,068.08 kB` minified / `293.09 kB` gzip initial JavaScript and unchanged `130.35 kB` / `25.42 kB` CSS, increases of `0.26 kB` / `0.02 kB` JavaScript from work order 226. The existing Vite large-chunk advisory remains; no dependency, route graph, reward pool, item catalog, save schema version, or static-hosting rule changed.
+
+## Work order 228 - Compact prototype thermal envelope
+
+Goal: replace the Corporate Test Pilot's nonexistent random-malfunction drawback with a clear, build-relevant thermal identity that remains playable in its stock configuration.
+
+Prompt:
+
+> Audit the advertised random sector malfunction, remove it if it has no gameplay implementation, and pivot the Corporate Test Pilot toward a low weapon heat capacity. Make the trade visible anywhere the contract or sustained firing profile is compared.
+
+Acceptance criteria:
+
+- Remove every player-facing promise of a random sector malfunction; do not add hidden RNG or a new per-sector penalty system.
+- Give the Corporate Test Pilot 70% standard weapon heat capacity so fixed and circuit-generated heat reaches hot, critical, and overheat bands sooner.
+- Apply the thermal profile once at the authoritative weapon boundary used by combat and the Hardpoint draft/committed simulations.
+- Show heat-capacity percentage as a standard Choose Contract metric for every ship while keeping five compact comparison cells.
+- State the Corporate benefit, cost, and heat-focused role directly in its contract dossier and replace the stale Warranty Void Shunt malfunction copy.
+- Show effective heat capacity and shot heat in Hardpoint Control, and retain the eight-second held-fire comparison behavior.
+- Treat the missing thermal field in legacy loadouts as the standard 100% capacity profile.
+- Preserve contract generation, starting weapons, circuit contents, rewards, saves, deterministic streams, dependencies, and static hosting.
+
+Status: implemented. The malfunction audit found only presentation strings; no sector malfunction reducer, event, or deterministic roll existed. Corporate Test Pilot now profiles any mounted primary through one reusable thermal adapter. Its rare experimental ignition remains the contract edge, while the smaller envelope makes the authored weapon and every later heat-producing circuit easier to overheat. Contract Select exposes `HCAP 70%`, and Hardpoint Control reports the same `0.70` capacity.
+
+Managed-browser inspection used the seeded Corporate Test Pilot contract and live Hardpoint Control at 1280x720. All three contract cards retained five metrics, the Corporate benefit/cost copy and `HCAP 70%` were visible, and the sustained scope reported `CAP 0.70`, authored `Shot Heat 0.48`, and seven stalls. The same beam reaches each thermal band earlier inside the 30% smaller envelope.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 121 Vitest files and 810 tests, the production build, all 22 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,068.83 kB` minified / `293.30 kB` gzip initial JavaScript and unchanged `130.35 kB` / `25.42 kB` CSS, increases of `0.75 kB` / `0.21 kB` JavaScript from work order 227. The existing Vite large-chunk advisory remains; no dependency, contract-generation stream, starting weapon, ignition item, reward pool, save schema version, RNG stream, or static-hosting rule changed.
