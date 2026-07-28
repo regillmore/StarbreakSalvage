@@ -11,18 +11,18 @@ describe('item catalog audit', () => {
   it('captures the current Phase 6 catalog by rarity, tag, and hook', () => {
     const audit = createItemCatalogAudit();
 
-    expect(audit.itemCount).toBe(66);
-    expect(audit.targetItemCount).toBe(66);
+    expect(audit.itemCount).toBe(69);
+    expect(audit.targetItemCount).toBe(69);
     expect(audit.rarityCounts).toEqual({
-      common: 14,
-      uncommon: 20,
-      rare: 22,
+      common: 15,
+      uncommon: 21,
+      rare: 23,
       prototype: 7,
       cursed: 3
     });
     expect(audit.hookCounts).toEqual({
-      onFire: 32,
-      onProjectileSpawn: 16,
+      onFire: 34,
+      onProjectileSpawn: 17,
       onEnemyKilled: 10,
       onPlayerHit: 1,
       onPickupCollected: 6,
@@ -52,22 +52,23 @@ describe('item catalog audit', () => {
       'curse-relic': 6,
       'phase-graze': 9,
       'heat-prototype': 7,
+      'plain-focus': 3,
       'lunar-surface': 5,
       'route-economy': 1,
       'boss-pressure': 0
     });
     expect(audit.implementationStatusCounts).toEqual({
-      live: 66,
+      live: 69,
       bridge: 0,
       planned: 0
     });
     expect(audit.unlockTierCounts).toEqual({
-      baseline: 59,
+      baseline: 62,
       advanced: 6,
       unlock: 1
     });
     expect(audit.stackingCounts).toEqual({
-      unique: 66,
+      unique: 69,
       stackable: 0
     });
   });
@@ -84,23 +85,23 @@ describe('item catalog audit', () => {
     ).toEqual([
       {
         id: 'starter',
-        itemCount: 27,
-        rarityCounts: { common: 14, uncommon: 9, rare: 4, prototype: 0, cursed: 0 }
+        itemCount: 28,
+        rarityCounts: { common: 15, uncommon: 9, rare: 4, prototype: 0, cursed: 0 }
       },
       {
         id: 'starterCore',
-        itemCount: 9,
-        rarityCounts: { common: 1, uncommon: 4, rare: 3, prototype: 0, cursed: 1 }
+        itemCount: 10,
+        rarityCounts: { common: 2, uncommon: 4, rare: 3, prototype: 0, cursed: 1 }
       },
       {
         id: 'combat',
-        itemCount: 51,
-        rarityCounts: { common: 14, uncommon: 18, rare: 17, prototype: 2, cursed: 0 }
+        itemCount: 54,
+        rarityCounts: { common: 15, uncommon: 19, rare: 18, prototype: 2, cursed: 0 }
       },
       {
         id: 'vault',
-        itemCount: 20,
-        rarityCounts: { common: 0, uncommon: 2, rare: 11, prototype: 4, cursed: 3 }
+        itemCount: 21,
+        rarityCounts: { common: 0, uncommon: 2, rare: 12, prototype: 4, cursed: 3 }
       },
       {
         id: 'apex',
@@ -109,13 +110,13 @@ describe('item catalog audit', () => {
       }
     ]);
     expect(audit.sourceCounts).toMatchObject({
-      starter: 27,
-      combat: 51,
-      vault: 20,
+      starter: 28,
+      combat: 54,
+      vault: 21,
       unlock: 1,
-      shop: 3,
+      shop: 5,
       elite: 2,
-      boss: 6,
+      boss: 7,
       apex: 6,
       faction: 1,
       lunar: 5,
@@ -135,7 +136,7 @@ describe('item catalog audit', () => {
   it('flags implementation gaps without changing item content', () => {
     const audit = createItemCatalogAudit();
 
-    expect(audit.archetypeAudits).toHaveLength(8);
+    expect(audit.archetypeAudits).toHaveLength(9);
     expect(audit.archetypeAudits.every((archetype) => archetype.rewardedItemCount > 0)).toBe(true);
     expect(audit.underrepresentedArchetypeIds).toEqual([]);
     expect(audit.bridgeEffectNotes).toEqual([]);
@@ -152,6 +153,7 @@ describe('item catalog audit', () => {
       'curse-relic',
       'phase-graze',
       'heat-prototype',
+      'plain-focus',
       'lunar-surface',
       'route-economy'
     ]);
@@ -160,6 +162,9 @@ describe('item catalog audit', () => {
     expect(getImplementedHookItemIds('onProjectileSpawn')).toContain('item_plasma_seed_crucible');
     expect(getImplementedHookItemIds('onFire')).toContain('item_boreline_crimper');
     expect(getImplementedHookItemIds('onFire')).toContain('item_gangue_compression_die');
+    expect(getImplementedHookItemIds('onFire')).toContain('item_stillpoint_flywheel');
+    expect(getImplementedHookItemIds('onProjectileSpawn')).toContain('item_unadorned_bore');
+    expect(getImplementedHookItemIds('onFire')).toContain('item_empty_hand_repeater');
     expect(getImplementedHookItemIds('onFire')).toContain('item_forkline_dynamo');
     expect(getImplementedHookItemIds('onFire')).toContain('item_penumbra_crown_aperture');
     expect(getImplementedHookItemIds('onFire')).toContain('item_ashwake_reliquary');

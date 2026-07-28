@@ -165,6 +165,11 @@ function appendIconShape(svg: SVGSVGElement, family: ItemFamily): void {
   } else if (family === 'heat-prototype') {
     appendArc(svg, 'M11 24 C8 17 14 14 14 8 C20 13 24 16 20 24');
     appendLine(svg, 13, 23, 19, 23);
+  } else if (family === 'plain-focus') {
+    appendCircle(svg, 16, 16, 8);
+    appendCircle(svg, 16, 16, 2.4);
+    appendLine(svg, 16, 5, 16, 10);
+    appendLine(svg, 16, 22, 16, 27);
   } else if (family === 'lunar-surface') {
     appendCircle(svg, 16, 16, 8);
     appendCircle(svg, 13, 14, 1.6);

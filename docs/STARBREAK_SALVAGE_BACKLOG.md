@@ -3269,3 +3269,19 @@ Acceptance:
 Status:
 
 - Implemented in work order 228. Corporate Test Pilot now trades a compact heat envelope for its rare experimental ignition, with effective capacity exposed consistently in contract and engineering comparisons.
+
+### BL94 - Scrap Monk plain focus
+
+Acceptance:
+
+- Remove the Scrap Monk's inactive bullet-conversion perk and shop-purity drawback without adding another hidden economy rule.
+- Give every natural primary weapon projectile a stable base-identity record and grant Scrap Monk 30% more damage while that identity remains unmodified.
+- Evaluate focus per projectile after the ordered circuit, so untouched shots retain the bonus while split, phase, arc, drone, ricochet, heat-shot, and other transformed branches visibly forfeit it.
+- Add a compact plain-focus item family with common, uncommon, and rare stages that improve or repeat raw shots without adding projectile traits.
+- Include the hull bonus in combat and Hardpoint Base DPS, and distinguish focused shots with bounded gold-white feedback in the attack simulation and arena.
+- Replace stale conversion language in contract, unlock, frame, and seed content while retaining the Kinetic Popgun, ship unlock, starting resources, and deterministic contract generation.
+- Preserve saves, weapon acquisition, circuit socket rules, dependencies, RNG streams, and static hosting.
+
+Status:
+
+- Implemented in work order 229. Scrap Monk is now a combat-forward raw-ballistics contract whose per-shot Plain Focus supports both disciplined pure chains and mixed circuits with deliberate transformed branches.

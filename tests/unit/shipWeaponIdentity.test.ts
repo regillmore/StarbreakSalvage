@@ -153,6 +153,17 @@ describe('ship stats and weapon identity', () => {
 
     expect(state.stats.shotsFired).toBe(shotsBefore);
   });
+
+  it('gives Scrap Monk a concrete plain-projectile edge and an explicit tradeoff', () => {
+    const ship = getShip('ship_scrap_monk');
+
+    expect(ship.stats.plainProjectileDamageMultiplier).toBe(1.3);
+    expect(ship.perk).toContain('30%');
+    expect(ship.drawback).toContain('break focus');
+    expect(ship.itemBias).toContain('plain');
+    expect(ship.perk).not.toContain('scrap motes');
+    expect(ship.drawback).not.toContain('shops offer fewer');
+  });
 });
 
 function fireOnce(weaponId: WeaponId) {

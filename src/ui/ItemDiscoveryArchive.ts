@@ -40,6 +40,7 @@ const ITEM_FAMILY_LABELS: Readonly<Record<ItemFamily, string>> = {
   'curse-relic': 'Curse Relic',
   'phase-graze': 'Phase Graze',
   'heat-prototype': 'Heat Prototype',
+  'plain-focus': 'Plain Focus',
   'lunar-surface': 'Lunar Surface',
   'route-economy': 'Route Economy',
   'boss-pressure': 'Boss Pressure'

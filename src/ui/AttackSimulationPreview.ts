@@ -74,6 +74,9 @@ export function createAttackSimulationPreviewElement(
     const shot = ownerDocument.createElement('span');
     shot.className = 'attack-simulation-projectile';
     if (projectile.waveIndex > 0) shot.classList.add('attack-simulation-projectile-echo');
+    if (projectile.tags.includes('plain')) {
+      shot.classList.add('attack-simulation-projectile-plain-focus');
+    }
     if (options.projectileTestId) shot.dataset.testid = options.projectileTestId;
     shot.dataset.projectileIndex = String(projectile.projectileIndex);
     shot.dataset.waveIndex = String(projectile.waveIndex);

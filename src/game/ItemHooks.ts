@@ -24,6 +24,7 @@ import {
   THERMAL_HOT_RATIO,
   getThermalRatio
 } from './ThermalCircuit';
+import { isPlainProjectile } from './PlainProjectile';
 
 export interface ProjectileBlueprint {
   readonly x: number;
@@ -34,6 +35,7 @@ export interface ProjectileBlueprint {
   readonly damage: number;
   readonly ttl: number;
   readonly tags: readonly ItemTag[];
+  readonly plainBaseTags?: readonly ItemTag[];
   readonly procDepth: number;
   readonly ricochetBounces?: number;
   readonly environmentDamageSource?: EnvironmentObjectDamageSource;
@@ -220,7 +222,8 @@ const PERIODIC_VOLLEY_CADENCES = {
   item_warhead_echo_chamber: 4,
   item_funeral_refrain_array: 5,
   item_empty_throne_coronation: 4,
-  item_passenger_coffer_manifest: 3
+  item_passenger_coffer_manifest: 3,
+  item_empty_hand_repeater: 4
 } as const satisfies Partial<Record<ItemId, number>>;
 
 export interface ItemVolleyCadenceProfile {
@@ -248,6 +251,7 @@ export interface ItemHookDispatchReport<THook extends ItemHookName> {
 export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly ItemId[]>> = {
   onFire: [
     'item_split_prism',
+    'item_stillpoint_flywheel',
     'item_boreline_crimper',
     'item_gangue_compression_die',
     'item_penumbra_crown_aperture',
@@ -278,10 +282,12 @@ export const ITEM_HOOK_IMPLEMENTATIONS: Readonly<Record<ItemHookName, readonly I
     'item_empty_throne_coronation',
     'item_exodus_rail_switch',
     'item_passenger_coffer_manifest',
+    'item_empty_hand_repeater',
     'item_prototype_vent_script'
   ],
   onProjectileSpawn: [
     'item_chain_arc_capacitor',
+    'item_unadorned_bore',
     'item_ricochet_license',
     'item_plasma_lens_array',
     'item_phase_anchor_spool',
@@ -543,6 +549,17 @@ function applyOnProjectileSpawn(
   itemId: ItemId,
   payload: ProjectileSpawnPayload
 ): ProjectileSpawnPayload {
+  if (itemId === 'item_unadorned_bore' && isPlainProjectile(payload.projectile)) {
+    return {
+      projectile: {
+        ...payload.projectile,
+        damage: payload.projectile.damage * 1.1,
+        radius: payload.projectile.radius + 0.75,
+        ttl: payload.projectile.ttl + 0.2
+      }
+    };
+  }
+
   if (
     itemId === 'item_chain_arc_capacitor' &&
     hasAnyTag(payload.projectile.tags, ['laser', 'plasma'])
@@ -751,6 +768,22 @@ function applyOnFire(
   instances: readonly ItemInstance[],
   payload: FirePayload
 ): FirePayload {
+  if (itemId === 'item_stillpoint_flywheel') {
+    return {
+      ...payload,
+      projectiles: payload.projectiles.map((projectile) =>
+        isPlainProjectile(projectile)
+          ? {
+              ...projectile,
+              vx: projectile.vx * 1.1,
+              vy: projectile.vy * 1.1,
+              damage: projectile.damage * 1.12
+            }
+          : projectile
+      )
+    };
+  }
+
   if (itemId === 'item_split_prism') {
     const splitProjectiles = payload.projectiles.flatMap((projectile) => {
       if (projectile.procDepth > 0) {
@@ -1442,6 +1475,36 @@ function applyOnFire(
           radius: seedProjectile.radius + 2,
           ttl: seedProjectile.ttl + 0.5,
           tags: addTags(seedProjectile.tags, ['missile', 'overkill']),
+          procDepth: seedProjectile.procDepth + 1
+        }
+      ]
+    });
+  }
+
+  if (
+    itemId === 'item_empty_hand_repeater' &&
+    isItemVolleyCycle(itemId, instances, payload.volleyIndex)
+  ) {
+    const seedProjectile = payload.projectiles
+      .filter(isPlainProjectile)
+      .reduce<ProjectileBlueprint | null>(
+        (heaviest, projectile) =>
+          !heaviest || projectile.damage > heaviest.damage ? projectile : heaviest,
+        null
+      );
+    if (!seedProjectile) return payload;
+
+    return addPrototypeVentCycleShot(itemId, instances, payload, {
+      ...payload,
+      projectiles: [
+        ...payload.projectiles,
+        {
+          ...seedProjectile,
+          x: seedProjectile.x + (payload.volleyIndex % 8 === 0 ? -12 : 12),
+          vx: seedProjectile.vx * 0.82,
+          vy: seedProjectile.vy * 0.92,
+          damage: Math.max(0.35, seedProjectile.damage * 0.72),
+          radius: Math.max(3, seedProjectile.radius * 0.9),
           procDepth: seedProjectile.procDepth + 1
         }
       ]

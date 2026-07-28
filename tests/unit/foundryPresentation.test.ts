@@ -5,7 +5,8 @@ import {
   createEngineeringState,
   getInstalledComponent,
   planOverclockComponent,
-  planRemoveComponent
+  planRemoveComponent,
+  resolveEngineeringSnapshot
 } from '../../src/game/Foundry';
 import {
   createCombatState,
@@ -23,6 +24,8 @@ import {
 import type { ProjectileBlueprint } from '../../src/game/ItemHooks';
 import { SHIPS } from '../../src/content/ships';
 import { createLegacyStartingLoadout } from '../../src/game/ShipLoadout';
+import { getWeaponById } from '../../src/content/weapons';
+import { createWeaponProjectileBlueprints } from '../../src/game/WeaponProjectiles';
 
 describe('foundry visual presentation', () => {
   it('builds compact resource and attack comparisons against the committed ship', () => {
@@ -104,6 +107,30 @@ describe('foundry visual presentation', () => {
       dashboard.attackSimulation.volleysPerSecond
     );
     expect(dashboard.attackSimulation.damageSampleVolleys).toBe(1);
+  });
+
+  it('includes Scrap Monk plain focus in the authoritative live-fire comparison', () => {
+    const ship = SHIPS.find((candidate) => candidate.id === 'ship_scrap_monk');
+    if (!ship) throw new Error('Expected the Scrap Monk ship.');
+    const loadout = createLegacyStartingLoadout(ship);
+    expect(
+      resolveEngineeringSnapshot(createEngineeringState(loadout).draft).loadout?.shipStats
+    ).toMatchObject({ plainProjectileDamageMultiplier: 1.3 });
+    const focused = createFoundryDashboardModel(createEngineeringState(loadout));
+    const weapon = getWeaponById(loadout.primaryWeaponId);
+    const rawDps =
+      createWeaponProjectileBlueprints(weapon, { x: 0, y: 0, radius: 0 }).reduce(
+        (total, shot) => total + shot.damage,
+        0
+      ) / weapon.fireCooldownSeconds;
+
+    expect(focused.attackSimulation.projectiles.every((shot) => shot.tags.includes('plain'))).toBe(
+      true
+    );
+    expect(focused.attackSimulation.baseDps).toBeCloseTo(
+      rawDps * ship.stats.plainProjectileDamageMultiplier
+    );
+    expect(focused.attackSimulation.ariaLabel).toContain('Plain Focus is active');
   });
 
   it('uses production weapon and engineering hooks for the live-fire volley', () => {

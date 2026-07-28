@@ -762,3 +762,31 @@ Status: implemented. The malfunction audit found only presentation strings; no s
 Managed-browser inspection used the seeded Corporate Test Pilot contract and live Hardpoint Control at 1280x720. All three contract cards retained five metrics, the Corporate benefit/cost copy and `HCAP 70%` were visible, and the sustained scope reported `CAP 0.70`, authored `Shot Heat 0.48`, and seven stalls. The same beam reaches each thermal band earlier inside the 30% smaller envelope.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 121 Vitest files and 810 tests, the production build, all 22 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,068.83 kB` minified / `293.30 kB` gzip initial JavaScript and unchanged `130.35 kB` / `25.42 kB` CSS, increases of `0.75 kB` / `0.21 kB` JavaScript from work order 227. The existing Vite large-chunk advisory remains; no dependency, contract-generation stream, starting weapon, ignition item, reward pool, save schema version, RNG stream, or static-hosting rule changed.
+
+## Work order 229 - Scrap Monk plain focus
+
+Goal: rebuild the Scrap Monk as a combat-forward minimalist gunship whose raw projectile branches remain competitive without forbidding expressive mixed circuits.
+
+Prompt:
+
+> Replace the inactive salvage-conversion edge and cost with a plain-projectile identity. Reward disciplined ballistic circuits, verify that enough compatible upgrades exist, and make the focus legible in contract comparison, live fire, and combat.
+
+Acceptance criteria:
+
+- Remove every player-facing promise that the Scrap Monk converts restraint into salvage; do not add a hidden economy meter or situational payout.
+- Give each still-plain Scrap Monk projectile 30% more direct impact after the complete ordered fire and projectile-spawn circuit has resolved.
+- Judge each final projectile independently, so transformed split, phase, arc, drone, heat, ricochet, missile, plasma, or other identity branches lose focus without disabling unmodified siblings in the same volley.
+- Preserve a weapon's original authored tags as its plain baseline, allowing native laser, missile, or other weapon identity while rejecting only circuit-added traits.
+- Add one common, one uncommon, and one rare plain-focus circuit item: a raw-shot flywheel, a heavier unadorned bore, and a periodic plain-shot repeater.
+- Keep neutral cadence, heat, economy, impact, and handling items compatible, giving the compact dedicated family enough surrounding circuit choices for viable runs without inflating its direct item count.
+- Use the same final-projectile classifier in combat, Contract Select live fire, Hardpoint live fire, and Base DPS measurement.
+- Telegraph focused shots with a bounded warm-white/gold field in DOM previews and canvas combat, plus accessible mixed-volley copy.
+- Preserve contract generation, starting weapons, seeded ignitions, reward widths, saves, deterministic streams, actor caps, dependencies, and static hosting.
+
+Status: implemented. Scrap Monk is now the Ascetic Salvage Trust's disciplined kinetic gunship: plain projectile branches strike 30% harder, while only branches that acquire a new circuit identity forfeit the bonus. `plainBaseTags` records each primary weapon's native vocabulary before hooks run, and the shared final classifier prevents a periodic transformed branch from turning the whole build on or off.
+
+The new Stillpoint Flywheel, Unadorned Bore, and Empty-Hand Repeater form a compact common-to-rare plain-focus family. They multiply, enlarge, extend, or repeat raw shots without adding a projectile identity; generic non-transforming cadence, heat, handling, and economy stages remain useful around them. This is enough breadth for a competitive purity path while leaving mixed circuits valid: the player can deliberately spend focus only on the branches whose added behavior is worth it.
+
+Managed-browser inspection opened seeded Scrap Monk contract `PLAIN-FOCUS-0` at 1280x720. The dossier showed the new edge and cost, focused shots carried the gold-white field, and a Phase Grazer cadence reported `6 of 8` modeled shots retaining Plain Focus rather than globally disabling the bonus. The preview's measured Base DPS included the same final classifier used by combat, the document had no horizontal overflow, and the browser console reported no warnings or errors. The authenticated smoke host stopped cleanly.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 122 Vitest files and 816 tests, the production build, all 22 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,072.92 kB` minified / `294.29 kB` gzip initial JavaScript and `130.66 kB` / `25.49 kB` CSS, increases of `4.09 kB` / `0.99 kB` JavaScript and `0.31 kB` / `0.07 kB` CSS from work order 228. The existing Vite large-chunk advisory remains; no dependency, contract-generation stream, route graph, starting weapon, seeded ignition, save schema version, RNG stream, or static-hosting rule changed.

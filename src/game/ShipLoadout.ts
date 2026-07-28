@@ -755,6 +755,7 @@ function sameShipStats(left: ShipStats, right: ShipStats): boolean {
     left.hitRadius === right.hitRadius &&
     left.pickupPullRange === right.pickupPullRange &&
     left.weaponHeatCapacityMultiplier === right.weaponHeatCapacityMultiplier &&
+    left.plainProjectileDamageMultiplier === right.plainProjectileDamageMultiplier &&
     left.specialChargeMultiplier === right.specialChargeMultiplier &&
     left.specialInitialCharge === right.specialInitialCharge &&
     left.bombCapacity === right.bombCapacity &&

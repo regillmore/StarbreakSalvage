@@ -62,6 +62,7 @@ import {
 } from './LooseCurrency';
 import { getItemNames, type ItemInstance } from './Rewards';
 import { createWeaponProjectileBlueprints } from './WeaponProjectiles';
+import { applyPlainProjectileFocus } from './PlainProjectile';
 import { getProjectileTravelDeltaSeconds, isMissileProjectile } from './MissileFlight';
 import {
   PHASE_COLLAPSE_EFFECT_SECONDS,
@@ -482,6 +483,7 @@ export interface CombatState {
   readonly looseCurrencyPlan: LooseCurrencyPlan | null;
   nextLooseCurrencyIndex: number;
   readonly weapon: WeaponDefinition;
+  readonly shipStats: ShipStats;
   items: readonly ItemInstance[];
   readonly engineering: EngineeringCombatProfile | null;
   readonly bossPhaseUpgradeEffects: BossPhaseUpgradeEffects | null;
@@ -659,6 +661,7 @@ const DEFAULT_SHIP_STATS: ShipStats = {
   hitRadius: 18,
   pickupPullRange: 240,
   weaponHeatCapacityMultiplier: 1,
+  plainProjectileDamageMultiplier: 1,
   specialChargeMultiplier: 1,
   specialInitialCharge: 1,
   bombCapacity: BOMB_INITIAL_CHARGES,
@@ -700,9 +703,7 @@ export function createCombatState(
 ): CombatState {
   const shipStats = options.shipStats ?? DEFAULT_SHIP_STATS;
   const weapon = applyShipThermalProfile(
-    getWeaponById(
-      options.engineering?.weaponId ?? options.weaponId ?? 'weapon_light_needle_laser'
-    ),
+    getWeaponById(options.engineering?.weaponId ?? options.weaponId ?? 'weapon_light_needle_laser'),
     shipStats
   );
   const bossDefinition = getBossById(options.bossId ?? DEFAULT_BOSS_ID);
@@ -851,6 +852,7 @@ export function createCombatState(
     looseCurrencyPlan: options.looseCurrencyPlan ?? null,
     nextLooseCurrencyIndex: 0,
     weapon,
+    shipStats,
     items: options.items ?? [],
     engineering: options.engineering ?? null,
     bossPhaseUpgradeEffects: options.bossPhaseUpgradeEffects ?? null,
@@ -3545,12 +3547,13 @@ function spawnPlayerProjectiles(
       projectile,
       thermalRatio
     });
-    const drone = getProjectileDroneFollower(state, spawnPayload.projectile, sourceCounts);
+    const focusedProjectile = applyPlainProjectileFocus(spawnPayload.projectile, state.shipStats);
+    const drone = getProjectileDroneFollower(state, focusedProjectile, sourceCounts);
     if (drone) drone.firingPulseSeconds = 0.14;
     state.projectiles.push({
       id: getNextEntityId(state),
       owner: 'player',
-      ...spawnPayload.projectile,
+      ...focusedProjectile,
       ...(drone
         ? {
             x: drone.x,

@@ -243,7 +243,7 @@ describe('reward generation', () => {
     ]);
     const cores = STARTER_CORE_ITEM_IDS.map((itemId) => getItemById(itemId));
 
-    expect(cores).toHaveLength(9);
+    expect(cores).toHaveLength(10);
     expect(new Set(cores.map((item) => item.metadata.family)).size).toBe(cores.length);
     expect(cores.every((item) => item.metadata.implementationStatus === 'live')).toBe(true);
     expect(cores.every((item) => item.hooks.some((hook) => frequentHooks.has(hook)))).toBe(true);
@@ -366,19 +366,19 @@ describe('reward generation', () => {
     }).toEqual({
       shop: [
         {
-          id: 'item_gangue_compression_die',
+          id: 'item_coastdown_capacitor',
           sourceHint: 'route source',
-          price: 4
+          price: 9
         },
         {
-          id: 'item_salvage_magnet',
+          id: 'item_coin_operated_cannon',
           sourceHint: 'Shop pool',
-          price: 5
+          price: 7
         },
         {
-          id: 'item_magnetized_tithe_box',
+          id: 'item_arc_welder_drone',
           sourceHint: 'Shop pool',
-          price: 5
+          price: 7
         }
       ],
       eliteRewards: [
@@ -393,7 +393,7 @@ describe('reward generation', () => {
           sourceHint: 'Elite pool'
         },
         {
-          id: 'item_prototype_vent_script',
+          id: 'item_regolith_scoop_array',
           profile: 'elite',
           sourceHint: 'Elite pool'
         }
@@ -405,7 +405,7 @@ describe('reward generation', () => {
           sourceHint: 'vault source'
         },
         {
-          id: 'item_arc_window_invoice',
+          id: 'item_excess_warhead_clause',
           profile: 'vault',
           sourceHint: 'vault source'
         },

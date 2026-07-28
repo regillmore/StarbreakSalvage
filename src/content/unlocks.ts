@@ -46,7 +46,7 @@ export const UNLOCKS: readonly UnlockDefinition[] = [
     id: 'unlock_ship_scrap_monk',
     kind: 'ship',
     name: 'Scrap Monk',
-    summary: 'a salvage-focused starter contract for pickup-heavy runs',
+    summary: 'a minimalist gunship that amplifies unmodified projectile chains',
     effect: 'Adds Scrap Monk to future contract boards.',
     grants: ['Ship: Scrap Monk']
   },

@@ -31,7 +31,7 @@ import {
 
 const ITEM_RARITIES = ['common', 'uncommon', 'rare', 'prototype', 'cursed'] as const;
 
-export const PHASE_6_TARGET_ITEM_COUNT = 66;
+export const PHASE_6_TARGET_ITEM_COUNT = 69;
 export const PHASE_6_TARGET_ITEM_FAMILIES = ACTIVE_ITEM_FAMILIES;
 export type Phase6TargetItemFamily = ItemFamily;
 
@@ -153,7 +153,10 @@ export function createItemCatalogAudit(
   });
 
   const underrepresentedArchetypeIds = archetypeAudits
-    .filter((audit) => audit.rewardedItemCount < 5)
+    .filter((audit) => {
+      const archetype = ITEM_ARCHETYPES.find((candidate) => candidate.id === audit.id);
+      return audit.rewardedItemCount < (archetype?.minimumRewardedItemCount ?? 5);
+    })
     .map((audit) => audit.id);
 
   return {

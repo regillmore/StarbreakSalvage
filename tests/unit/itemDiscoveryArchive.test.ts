@@ -23,7 +23,7 @@ describe('item discovery archive', () => {
     expect(heatPrototype?.statusText).toBe(
       'Core available, classified tier locked | 0/7 discovered'
     );
-    expect(model.totalFamilyCount).toBe(10);
+    expect(model.totalFamilyCount).toBe(11);
     expect(model.entries.some((entry) => entry.family === 'boss-pressure')).toBe(false);
   });
 

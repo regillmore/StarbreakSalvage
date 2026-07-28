@@ -1163,6 +1163,16 @@ seed + permanent save fingerprint
 - The route-effect CSS clamps and reserves two summary lines, so ordinary, harder, convergence, Shop, tracked, and track-breaking destinations share one compact visual footprint.
 - The underlying `RouteOption` remains intact for route execution and debug/read-model consumers. Selection weighting, route outcomes, combat modifiers, rewards, environment, intel, snapshots, and deterministic seed strings do not change.
 
+### Work order 229 plain-projectile boundary
+
+- `ProjectileBlueprint.plainBaseTags` records the primary weapon's authored tag set when `WeaponProjectiles` creates its base volley. Ordered item transforms preserve that immutable baseline while freely changing the final tag set.
+- `PlainProjectile.isPlainProjectile` is the sole final identity classifier. It compares final tags with the baseline and rejects explicit arc charge, drone source, special visual kind, or ricochet state; native weapon identities such as laser and missile remain eligible until a circuit adds another trait.
+- `PlainProjectile.applyPlainProjectileFocus` runs after ordered `onFire` and `onProjectileSpawn` hooks. It multiplies only qualifying Scrap Monk projectile bodies and adds the presentation-only `plain` tag, so transformed and unmodified siblings resolve independently.
+- `CombatState` owns the authoritative runtime application. `FoundryPresentation` applies the same helper after the same bounded item-hook pipeline, making Contract Select, Hardpoint live fire, and Base DPS direct-damage sampling projections of combat rather than parallel formulas.
+- Stillpoint Flywheel, Unadorned Bore, and Empty-Hand Repeater use ordinary ordered item hooks and the same classifier. Their `plain-focus` family is an explicit compact three-stage archetype; broader viability comes from existing non-transforming cadence, heat, economy, impact, and handling effects rather than duplicate plain-only items.
+- `AttackSimulationPreview` and `CanvasRenderer` consume the resolved `plain` tag only for accessible text and bounded gold-white treatment. They cannot decide eligibility or change damage.
+- Missing `plainBaseTags` and missing `plainProjectileDamageMultiplier` use neutral compatibility defaults. The change adds no save/snapshot field, migration, generation draw, simulation RNG, actor type, projectile cap, dependency, or static-hosting request.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

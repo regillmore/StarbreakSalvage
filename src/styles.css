@@ -1162,6 +1162,24 @@ html[data-bullet-contrast='high'] .contract-theme-strip::before {
   transform: translateX(-50%);
 }
 
+.attack-simulation-projectile-plain-focus {
+  border-color: rgba(255, 239, 154, 0.98);
+  background: #fffbe7;
+  box-shadow:
+    0 0 3px #ffffff,
+    0 0 9px rgba(255, 239, 154, 0.96),
+    0 0 17px rgba(217, 198, 111, 0.56);
+}
+
+.attack-simulation-projectile-plain-focus::before {
+  position: absolute;
+  inset: -55%;
+  border: 1px solid rgba(217, 198, 111, 0.78);
+  border-radius: 50%;
+  content: '';
+  box-shadow: 0 0 5px rgba(255, 239, 154, 0.56);
+}
+
 .attack-simulation-projectile:is([data-flight-kind='missile'], [data-flight-kind='phaseMissile']) {
   aspect-ratio: 0.44;
   border-radius: 52% 52% 22% 22% / 30% 30% 14% 14%;

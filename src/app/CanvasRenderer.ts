@@ -985,13 +985,7 @@ export class CanvasRenderer {
         context.globalAlpha = shipAlpha * (0.54 + guardFlash * 0.36);
         context.lineWidth = Math.max(2, player.radius * 0.13);
         context.beginPath();
-        context.arc(
-          0,
-          0,
-          guardRadius,
-          -Math.PI / 2,
-          -Math.PI / 2 + Math.PI * 2 * guardRatio
-        );
+        context.arc(0, 0, guardRadius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * guardRatio);
         context.stroke();
       }
     }
@@ -1872,6 +1866,10 @@ export class CanvasRenderer {
       this.paintRetaliationProjectileField(projectile, velocityCues.highContrastProjectiles);
     }
 
+    if (projectile.tags.includes('plain')) {
+      this.paintPlainFocusField(projectile, velocityCues.highContrastProjectiles);
+    }
+
     if (projectile.visualKind === 'heatShot') {
       if (phased) {
         this.paintPhaseProjectileWake(
@@ -2153,6 +2151,26 @@ export class CanvasRenderer {
     context.lineTo(0, presentation.wakeLength * 0.72);
     context.lineTo(presentation.shoulderWidth * 0.55, presentation.wakeLength);
     context.lineTo(presentation.shoulderWidth, projectile.radius * 0.55);
+    context.stroke();
+    context.restore();
+  }
+
+  private paintPlainFocusField(projectile: ProjectileRenderState, highContrast: boolean): void {
+    const context = this.context;
+    const radius = Math.max(4.5, projectile.radius * 1.75);
+    context.save();
+    context.shadowBlur = highContrast ? 0 : 7;
+    context.shadowColor = '#ffef9a';
+    context.strokeStyle = highContrast ? '#03050d' : 'rgba(255, 239, 154, 0.88)';
+    context.lineWidth = highContrast ? 2 : 1.15;
+    context.beginPath();
+    context.arc(0, 0, radius, 0, Math.PI * 2);
+    context.stroke();
+    context.beginPath();
+    context.moveTo(0, -radius - 2);
+    context.lineTo(0, -radius * 0.48);
+    context.moveTo(0, radius * 0.48);
+    context.lineTo(0, radius + 2);
     context.stroke();
     context.restore();
   }

@@ -28,6 +28,7 @@ export type ShipTag =
   | 'missile'
   | 'overkill'
   | 'phase'
+  | 'plain'
   | 'prototype'
   | 'relic'
   | 'scrap'
@@ -87,6 +88,7 @@ export interface ShipStats {
   readonly hitRadius: number;
   readonly pickupPullRange: number;
   readonly weaponHeatCapacityMultiplier: number;
+  readonly plainProjectileDamageMultiplier: number;
   readonly specialChargeMultiplier: number;
   readonly specialInitialCharge: number;
   readonly bombCapacity: number;
@@ -132,6 +134,7 @@ export const SHIPS: readonly ShipDefinition[] = [
       hitRadius: 16,
       pickupPullRange: 520,
       weaponHeatCapacityMultiplier: 1,
+      plainProjectileDamageMultiplier: 1,
       specialChargeMultiplier: 1.05,
       specialInitialCharge: 1,
       bombCapacity: 2,
@@ -166,6 +169,7 @@ export const SHIPS: readonly ShipDefinition[] = [
       hitRadius: 18,
       pickupPullRange: 280,
       weaponHeatCapacityMultiplier: 1,
+      plainProjectileDamageMultiplier: 1,
       specialChargeMultiplier: 1,
       specialInitialCharge: 1,
       bombCapacity: 2,
@@ -200,6 +204,7 @@ export const SHIPS: readonly ShipDefinition[] = [
       hitRadius: 20,
       pickupPullRange: 240,
       weaponHeatCapacityMultiplier: 1,
+      plainProjectileDamageMultiplier: 1,
       specialChargeMultiplier: 0.95,
       specialInitialCharge: 1,
       bombCapacity: 3,
@@ -234,6 +239,7 @@ export const SHIPS: readonly ShipDefinition[] = [
       hitRadius: 15,
       pickupPullRange: 300,
       weaponHeatCapacityMultiplier: 1,
+      plainProjectileDamageMultiplier: 1,
       specialChargeMultiplier: 1.45,
       specialInitialCharge: 0.75,
       bombCapacity: 1,
@@ -268,6 +274,7 @@ export const SHIPS: readonly ShipDefinition[] = [
       hitRadius: 22,
       pickupPullRange: 220,
       weaponHeatCapacityMultiplier: 1,
+      plainProjectileDamageMultiplier: 1,
       specialChargeMultiplier: 0.9,
       specialInitialCharge: 1,
       bombCapacity: 3,
@@ -283,7 +290,7 @@ export const SHIPS: readonly ShipDefinition[] = [
   {
     id: 'ship_scrap_monk',
     name: 'Scrap Monk',
-    tags: ['scrap'],
+    tags: ['scrap', 'plain'],
     weapon: 'weapon_kinetic_popgun',
     weaponName: 'Kinetic Popgun',
     appearance: {
@@ -302,17 +309,18 @@ export const SHIPS: readonly ShipDefinition[] = [
       hitRadius: 18,
       pickupPullRange: 340,
       weaponHeatCapacityMultiplier: 1,
+      plainProjectileDamageMultiplier: 1.3,
       specialChargeMultiplier: 1.1,
       specialInitialCharge: 0.9,
       bombCapacity: 2,
       startingCredits: 10,
       startingSalvage: 2
     },
-    perk: 'destroyed enemy bullets become scrap motes',
-    drawback: 'shops offer fewer items unless purity is broken',
-    contractSummary: 'Minimalist hull that turns restraint into salvage conversion.',
+    perk: 'plain projectiles strike 30% harder',
+    drawback: 'circuit-added projectile traits break focus on affected shots',
+    contractSummary: 'Minimalist gunship that rewards raw ballistics and disciplined circuits.',
     sponsors: ['Order of Clean Ledgers', 'Ascetic Salvage Trust'],
-    itemBias: ['scrap', 'magnet', 'purity']
+    itemBias: ['plain', 'scrap', 'magnet']
   },
   {
     id: 'ship_corporate_test_pilot',
@@ -336,6 +344,7 @@ export const SHIPS: readonly ShipDefinition[] = [
       hitRadius: 18,
       pickupPullRange: 260,
       weaponHeatCapacityMultiplier: 0.7,
+      plainProjectileDamageMultiplier: 1,
       specialChargeMultiplier: 1.2,
       specialInitialCharge: 1,
       bombCapacity: 2,
@@ -370,6 +379,7 @@ export const SHIPS: readonly ShipDefinition[] = [
       hitRadius: 17,
       pickupPullRange: 260,
       weaponHeatCapacityMultiplier: 1,
+      plainProjectileDamageMultiplier: 1,
       specialChargeMultiplier: 1.15,
       specialInitialCharge: 0.85,
       bombCapacity: 1,

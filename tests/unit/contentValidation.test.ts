@@ -87,8 +87,8 @@ describe('validateContent', () => {
       )
     );
 
-    expect(ITEMS).toHaveLength(82);
-    expect(ACTIVE_ITEMS).toHaveLength(66);
+    expect(ITEMS).toHaveLength(85);
+    expect(ACTIVE_ITEMS).toHaveLength(69);
     expect(ACT_DEFINITIONS).toHaveLength(3);
     expect(ACT_ROUTE_CONTRACTS.length).toBeGreaterThanOrEqual(13);
     expect(FACTIONS).toHaveLength(4);
@@ -942,9 +942,7 @@ describe('validateContent', () => {
     expect(objectErrors).toContain(
       'Environment object proximity_mine proximity must have positive blastDamage'
     );
-    expect(hazardErrors).toContain(
-      `Hazard zone ${baseHazardZone.id} must have positive damage`
-    );
+    expect(hazardErrors).toContain(`Hazard zone ${baseHazardZone.id} must have positive damage`);
   });
 
   it('rejects invalid hazard zone definitions', () => {
@@ -1338,6 +1336,7 @@ describe('validateContent', () => {
             ...baseShip.stats,
             maxHull: 0,
             weaponHeatCapacityMultiplier: 0,
+            plainProjectileDamageMultiplier: 0,
             specialInitialCharge: 2,
             bombCapacity: -1
           }
@@ -1349,6 +1348,9 @@ describe('validateContent', () => {
     expect(errors).toContain(`Ship ${baseShip.id} stats must have positive maxHull`);
     expect(errors).toContain(
       `Ship ${baseShip.id} stats must have positive weaponHeatCapacityMultiplier`
+    );
+    expect(errors).toContain(
+      `Ship ${baseShip.id} stats must have positive plainProjectileDamageMultiplier`
     );
     expect(errors).toContain(
       `Ship ${baseShip.id} stats must have specialInitialCharge between 0 and 1`

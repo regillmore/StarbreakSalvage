@@ -229,13 +229,13 @@ Tanky retaliation build.
 
 ### Scrap Monk
 
-Conversion and minimalist scaling.
+Disciplined raw-ballistics scaling.
 
 - Starting weapon: Kinetic Popgun.
 - Ability: Projectile Vacuum.
-- Perk: destroyed enemy bullets become scrap motes.
-- Drawback: shops offer fewer items unless purity is broken.
-- Build bias: defense-to-offense, no-shop bonuses, magnetism.
+- Perk: unmodified projectiles deal 30% more damage.
+- Drawback: circuit-added projectile identities forfeit that bonus on their affected shots.
+- Build bias: plain-focus stages, restrained circuit branches, haste, and magnetism.
 
 ### Corporate Test Pilot
 

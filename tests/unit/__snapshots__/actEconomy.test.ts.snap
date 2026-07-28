@@ -10,16 +10,16 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
   },
   "eliteRewards": [
     [
-      "item_forkline_dynamo",
-      "route source",
+      "item_claimant_arc_seal",
+      "elite source",
     ],
     [
-      "item_lane_splitter_chisel",
+      "item_salvage_dividend_chip",
       "Elite pool",
     ],
     [
-      "item_claimant_arc_seal",
-      "elite source",
+      "item_parallax_echo_lattice",
+      "lunar source",
     ],
   ],
   "rerollCosts": [
@@ -30,17 +30,17 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
     "count": 3,
     "items": [
       [
-        "item_rebound_freight_seal",
-        18,
-        "shop source",
+        "item_harmonic_fork_loom",
+        16,
+        "boss source",
       ],
       [
-        "item_crossfeed_detonator",
+        "item_empty_hand_repeater",
         22,
         "boss source",
       ],
       [
-        "item_scrap_saints_relay",
+        "item_credit_reroute_fuse",
         15,
         "Shop pool",
       ],
@@ -52,11 +52,11 @@ exports[`Act II economy tuning > generates deterministic Act II reward, vault, a
       "vault source",
     ],
     [
-      "item_excess_warhead_clause",
+      "item_phase_wake_suture",
       "vault source",
     ],
     [
-      "item_strata_bore_collimator",
+      "item_warhead_echo_chamber",
       "vault source",
     ],
   ],
@@ -73,16 +73,16 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
   },
   "eliteRewards": [
     [
-      "item_forkline_dynamo",
-      "route source",
+      "item_claimant_arc_seal",
+      "elite source",
     ],
     [
-      "item_lane_splitter_chisel",
+      "item_salvage_dividend_chip",
       "Elite pool",
     ],
     [
-      "item_claimant_arc_seal",
-      "elite source",
+      "item_parallax_echo_lattice",
+      "lunar source",
     ],
   ],
   "rerollCosts": [
@@ -93,12 +93,12 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
     "count": 4,
     "items": [
       [
-        "item_rebound_freight_seal",
-        17,
-        "shop source",
+        "item_harmonic_fork_loom",
+        15,
+        "boss source",
       ],
       [
-        "item_crossfeed_detonator",
+        "item_empty_hand_repeater",
         21,
         "boss source",
       ],
@@ -108,7 +108,7 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
         "Shop pool",
       ],
       [
-        "item_coin_operated_cannon",
+        "item_laser_tax_stamp",
         18,
         "Shop pool",
       ],
@@ -120,11 +120,11 @@ exports[`Act II economy tuning > generates deterministic progressed-save Act II 
       "vault source",
     ],
     [
-      "item_excess_warhead_clause",
+      "item_phase_wake_suture",
       "vault source",
     ],
     [
-      "item_strata_bore_collimator",
+      "item_warhead_echo_chamber",
       "vault source",
     ],
     [

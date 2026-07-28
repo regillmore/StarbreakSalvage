@@ -27,10 +27,7 @@
     {
       "id": "ship_debt_runner",
       "name": "Debt Runner",
-      "tags": [
-        "credit",
-        "speed"
-      ],
+      "tags": ["credit", "speed"],
       "weapon": "weapon_light_needle_laser",
       "perk": "credits are pulled from farther away",
       "drawback": "elite bounty ambush can replace normal elite encounters"
@@ -38,9 +35,7 @@
     {
       "id": "ship_drone_chaplain",
       "name": "Drone Chaplain",
-      "tags": [
-        "drone"
-      ],
+      "tags": ["drone"],
       "weapon": "weapon_pulse_cannon",
       "perk": "starts with two micro-drones",
       "drawback": "main weapon damage reduced until drones are active"
@@ -48,10 +43,7 @@
     {
       "id": "ship_missile_accountant",
       "name": "Missile Accountant",
-      "tags": [
-        "missile",
-        "overkill"
-      ],
+      "tags": ["missile", "overkill"],
       "weapon": "weapon_dumbfire_missile_rack",
       "perk": "overkill damage can produce bonus scrap",
       "drawback": "slower reload and lower agility"
@@ -59,10 +51,7 @@
     {
       "id": "ship_phase_courier",
       "name": "Phase Courier",
-      "tags": [
-        "phase",
-        "graze"
-      ],
+      "tags": ["phase", "graze"],
       "weapon": "weapon_needle_splitter",
       "perk": "grazing charges special ability",
       "drawback": "lower max hull"
@@ -70,9 +59,7 @@
     {
       "id": "ship_shield_bruiser",
       "name": "Shield Bruiser",
-      "tags": [
-        "shield"
-      ],
+      "tags": ["shield"],
       "weapon": "weapon_short_range_spread",
       "perk": "shield damage charges retaliation weapons",
       "drawback": "large hitbox and slow movement"
@@ -80,20 +67,15 @@
     {
       "id": "ship_scrap_monk",
       "name": "Scrap Monk",
-      "tags": [
-        "scrap"
-      ],
+      "tags": ["scrap", "plain"],
       "weapon": "weapon_kinetic_popgun",
-      "perk": "destroyed enemy bullets become scrap motes",
-      "drawback": "shops offer fewer items unless purity is broken"
+      "perk": "unmodified projectiles deal 30% more damage",
+      "drawback": "circuit-added projectile identities forfeit that bonus on affected shots"
     },
     {
       "id": "ship_corporate_test_pilot",
       "name": "Corporate Test Pilot",
-      "tags": [
-        "prototype",
-        "heat"
-      ],
+      "tags": ["prototype", "heat"],
       "weapon": "weapon_prototype_beam",
       "perk": "starts with a rare experimental item",
       "drawback": "weapon heat capacity is reduced to 70%; overheating stalls fire"
@@ -101,10 +83,7 @@
     {
       "id": "ship_relic_thief",
       "name": "Relic Thief",
-      "tags": [
-        "relic",
-        "curse"
-      ],
+      "tags": ["relic", "curse"],
       "weapon": "weapon_basic_blaster",
       "perk": "detects hidden relic rooms",
       "drawback": "lower max hull and higher curse chance"
@@ -115,112 +94,84 @@
       "id": "item_chain_arc_capacitor",
       "name": "Chain Arc Capacitor",
       "rarity": "rare",
-      "tags": [
-        "laser",
-        "plasma"
-      ],
+      "tags": ["laser", "plasma"],
       "effect": "shots can arc to nearby enemies"
     },
     {
       "id": "item_split_prism",
       "name": "Split Prism",
       "rarity": "uncommon",
-      "tags": [
-        "split"
-      ],
+      "tags": ["split"],
       "effect": "shots split into weaker child shots"
     },
     {
       "id": "item_ricochet_license",
       "name": "Ricochet License",
       "rarity": "uncommon",
-      "tags": [
-        "ricochet"
-      ],
+      "tags": ["ricochet"],
       "effect": "eligible shots bounce once off screen edges"
     },
     {
       "id": "item_drone_uplink",
       "name": "Drone Uplink",
       "rarity": "rare",
-      "tags": [
-        "drone"
-      ],
+      "tags": ["drone"],
       "effect": "drones copy a reduced primary shot"
     },
     {
       "id": "item_shield_dynamo",
       "name": "Shield Dynamo",
       "rarity": "uncommon",
-      "tags": [
-        "shield"
-      ],
+      "tags": ["shield"],
       "effect": "shield damage charges special ability"
     },
     {
       "id": "item_coin_operated_cannon",
       "name": "Coin-Operated Cannon",
       "rarity": "uncommon",
-      "tags": [
-        "credit"
-      ],
+      "tags": ["credit"],
       "effect": "credit pickups fill a shared bounded haste reservoir"
     },
     {
       "id": "item_overkill_ledger",
       "name": "Overkill Ledger",
       "rarity": "rare",
-      "tags": [
-        "overkill",
-        "scrap"
-      ],
+      "tags": ["overkill", "scrap"],
       "effect": "excess damage can become scrap"
     },
     {
       "id": "item_heat_sink_saint",
       "name": "Heat Sink Saint",
       "rarity": "uncommon",
-      "tags": [
-        "heat"
-      ],
+      "tags": ["heat"],
       "effect": "reduces heat and makes venting offensive"
     },
     {
       "id": "item_cursed_hull_plate",
       "name": "Cursed Hull Plate",
       "rarity": "cursed",
-      "tags": [
-        "curse",
-        "armor"
-      ],
+      "tags": ["curse", "armor"],
       "effect": "lower max hull; repairs grant temporary damage"
     },
     {
       "id": "item_bomb_refund_actuator",
       "name": "Bomb Refund Actuator",
       "rarity": "rare",
-      "tags": [
-        "bomb"
-      ],
+      "tags": ["bomb"],
       "effect": "bomb kills can refund bomb charge"
     },
     {
       "id": "item_phase_grazer",
       "name": "Phase Grazer",
       "rarity": "rare",
-      "tags": [
-        "phase"
-      ],
+      "tags": ["phase"],
       "effect": "grazing emits homing shards"
     },
     {
       "id": "item_vault_parasite",
       "name": "Vault Parasite",
       "rarity": "prototype",
-      "tags": [
-        "relic",
-        "curse"
-      ],
+      "tags": ["relic", "curse"],
       "effect": "stronger relics; cursed shops"
     }
   ],

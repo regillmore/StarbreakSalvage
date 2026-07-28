@@ -10,7 +10,7 @@ import type { ItemInstance } from '../../src/game/Rewards';
 
 describe('build synergy model', () => {
   it('represents legacy and Phase 6 item families', () => {
-    expect(BUILD_SYNERGY_CLUSTERS).toHaveLength(11);
+    expect(BUILD_SYNERGY_CLUSTERS).toHaveLength(12);
     expect(BUILD_SYNERGY_CLUSTERS.map((cluster) => cluster.id)).toEqual([
       'prismBattery',
       'warheadAudit',
@@ -20,6 +20,7 @@ describe('build synergy model', () => {
       'relicUndertow',
       'phaseNeedle',
       'prototypeFurnace',
+      'plainDiscipline',
       'lunarSurvey',
       'routeBroker',
       'bossPressure'

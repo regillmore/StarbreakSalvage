@@ -20,6 +20,7 @@ export function createWeaponProjectileBlueprints(
     damage: weapon.damage,
     ttl: weapon.pattern === 'beam' ? 0.85 : weapon.pattern === 'spread' ? 1.05 : 1.6,
     tags: weapon.tags,
+    plainBaseTags: weapon.tags,
     laserKind: weapon.laserKind,
     procDepth: 0,
     environmentDamageSource: 'weapon'

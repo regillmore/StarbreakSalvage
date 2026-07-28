@@ -779,11 +779,11 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
   }));
   expect(summarySize.scrollHeight).toBeLessThanOrEqual(summarySize.clientHeight);
   expect(await page.locator('.summary-item-card').count()).toBeLessThanOrEqual(3);
-  await expect(page.getByTestId('summary-item-list')).toContainText('Prototype Vent Script');
-  await expect(page.getByTestId('summary-item-list')).toContainText('Heat Prototype');
+  await expect(page.getByTestId('summary-item-list')).toContainText('Stillpoint Flywheel');
+  await expect(page.getByTestId('summary-item-list')).toContainText('Plain Focus');
   await expect(
     page.getByTestId('summary-item-list').getByRole('img', {
-      name: 'Prototype Vent Script Heat Prototype item icon'
+      name: 'Stillpoint Flywheel Plain Focus item icon'
     })
   ).toBeVisible();
   await expect(page.getByTestId('scrap-breakdown')).toContainText(
@@ -802,8 +802,8 @@ test('loads the shell, starts gameplay, moves, pauses, and enters the sector loo
 
   await page.getByRole('button', { name: 'Unlock Archive' }).click();
   await expect(page.getByRole('heading', { name: 'Unlock Archive' })).toBeVisible();
-  await expect(page.getByTestId('discovered-item-list')).toContainText('Prototype Vent Script');
-  await expect(page.getByTestId('discovered-item-list')).toContainText('Trigger');
+  await expect(page.getByTestId('discovered-item-list')).toContainText('Stillpoint Flywheel');
+  await expect(page.getByTestId('discovered-item-list')).toContainText('Plain Focus');
   await expect(page.locator('.archive-item-card .item-badge-status')).toHaveCount(0);
 
   await page.getByRole('button', { name: 'Export Save' }).click();

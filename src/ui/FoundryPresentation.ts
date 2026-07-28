@@ -38,6 +38,7 @@ import { getLaserProjectileKind, type LaserProjectileKind } from '../game/LaserP
 import type { HeatShotEvent } from '../game/ItemHooks';
 import { getArcChargeProfile, getArcDischargeDamage, type ArcChargeKind } from '../game/ArcCharge';
 import { applyShipThermalProfile } from '../game/ShipThermalProfile';
+import { applyPlainProjectileFocus, isPlainProjectile } from '../game/PlainProjectile';
 import {
   createDroneFollowerSpecs,
   createMicroChoirVolley,
@@ -805,15 +806,17 @@ function resolveCircuitPreviewVolley(
     { maxApplications: procBudget }
   );
   const moduleIds = getResolutionModuleIds(resolution);
-  return createMicroChoirVolley(firePayload.projectiles, 12, moduleIds).map(
-    (projectile) =>
+  return createMicroChoirVolley(firePayload.projectiles, 12, moduleIds).map((projectile) =>
+    applyPlainProjectileFocus(
       applyCombinedHooks(
         'onProjectileSpawn',
         items,
         resolution.hooks,
         { projectile },
         { maxApplications: procBudget }
-      ).projectile
+      ).projectile,
+      resolution.loadout?.shipStats
+    )
   );
 }
 
@@ -946,13 +949,16 @@ function createFoundryAttackSimulationModel(
     const thermalRatio = weapon.overheatLimit > 0 ? storedWeaponHeat / weapon.overheatLimit : 0;
     const volley = createMicroChoirVolley(firePayload.projectiles, index + 1, moduleIds).map(
       (projectile) =>
-        applyCombinedHooks(
-          'onProjectileSpawn',
-          items,
-          resolution.hooks,
-          { projectile, thermalRatio },
-          { maxApplications: procBudget }
-        ).projectile
+        applyPlainProjectileFocus(
+          applyCombinedHooks(
+            'onProjectileSpawn',
+            items,
+            resolution.hooks,
+            { projectile, thermalRatio },
+            { maxApplications: procBudget }
+          ).projectile,
+          resolution.loadout?.shipStats
+        )
     );
     storedWeaponHeat = Math.min(weapon.overheatLimit, storedWeaponHeat + heatPerVolley);
     return volley;
@@ -1120,6 +1126,13 @@ function createFoundryAttackPatternPreviewModel(
     drones.length > 0
       ? ` ${drones.length} formation drone${drones.length === 1 ? '' : 's'} remain visible; drone-tagged shots launch from their assigned follower.`
       : '';
+  const focusedCount = safeProjectiles
+    .filter(isPlainProjectile)
+    .filter((projectile) => projectile.tags.includes('plain')).length;
+  const plainDescription =
+    focusedCount > 0
+      ? ` Plain Focus is active on ${focusedCount} of ${safeProjectiles.length} shown shots; circuit-added identities forfeit the hull impact bonus on only their affected branches.`
+      : '';
   return {
     cameraWidth: COMBAT_ARENA_WIDTH,
     cameraHeight: FOUNDRY_ATTACK_PREVIEW_WORLD_HEIGHT,
@@ -1133,7 +1146,7 @@ function createFoundryAttackPatternPreviewModel(
     projectiles,
     drones,
     heatExhausts,
-    ariaLabel: `${weaponName} live-fire preview. ${volleyDescription} at ${volleysPerSecond.toFixed(1)} volleys per second. Base direct damage is ${baseDps.toFixed(1)} per second, measured across ${damageSampleVolleys} consecutive ${damageSampleVolleys === 1 ? 'volley' : 'volleys'} at baseline cadence; hit-dependent damage is excluded.${missileDescription}${laserDescription}${phaseDescription}${arcDescription}${heatDescription}${droneDescription} Projectile paths use the draft loadout's combat velocity, spread, radius, damage, engineering hooks, and owned item hooks.`
+    ariaLabel: `${weaponName} live-fire preview. ${volleyDescription} at ${volleysPerSecond.toFixed(1)} volleys per second. Base direct damage is ${baseDps.toFixed(1)} per second, measured across ${damageSampleVolleys} consecutive ${damageSampleVolleys === 1 ? 'volley' : 'volleys'} at baseline cadence; hit-dependent damage is excluded.${missileDescription}${laserDescription}${phaseDescription}${arcDescription}${heatDescription}${droneDescription}${plainDescription} Projectile paths use the draft loadout's combat velocity, spread, radius, damage, engineering hooks, and owned item hooks.`
   };
 }
 

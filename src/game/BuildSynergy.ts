@@ -16,6 +16,7 @@ export type BuildSynergyClusterId =
   | 'relicUndertow'
   | 'phaseNeedle'
   | 'prototypeFurnace'
+  | 'plainDiscipline'
   | 'lunarSurvey'
   | 'routeBroker'
   | 'bossPressure';
@@ -119,6 +120,15 @@ export const BUILD_SYNERGY_CLUSTERS: readonly BuildSynergyClusterDefinition[] = 
     families: ['heat-prototype'],
     tags: ['heat', 'plasma', 'phase'],
     minimumScore: 5
+  },
+  {
+    id: 'plainDiscipline',
+    label: 'Plain Discipline',
+    shortLabel: 'Plain',
+    summary: 'plain-focus items multiply the weapon base without adding projectile identities',
+    families: ['plain-focus'],
+    tags: ['plain'],
+    minimumScore: 4
   },
   {
     id: 'lunarSurvey',

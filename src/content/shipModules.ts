@@ -401,7 +401,7 @@ export const SHIP_FRAMES: readonly ShipFrameDefinition[] = [
   {
     id: 'frame_ascetic_scamp',
     name: 'Ascetic Scamp',
-    role: 'salvage converter',
+    role: 'disciplined kinetic gunship',
     legacyShipId: 'ship_scrap_monk',
     tags: ['medium', 'salvage', 'utility'],
     hardpoints: [
@@ -429,7 +429,8 @@ export const SHIP_FRAMES: readonly ShipFrameDefinition[] = [
     ],
     presentation: {
       manufacturer: 'Ascetic Salvage Trust',
-      summary: 'An efficient converter hull with low reactor demand and unusually deep cargo.',
+      summary:
+        'A restrained gunship that amplifies unmodified fire and leaves transformation optional.',
       accentColor: '#d9c66f'
     }
   },

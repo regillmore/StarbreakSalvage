@@ -11,6 +11,7 @@ export const ITEM_TAGS = [
   'missile',
   'overkill',
   'phase',
+  'plain',
   'plasma',
   'relic',
   'ricochet',
@@ -46,6 +47,7 @@ export const ITEM_FAMILIES = [
   'curse-relic',
   'phase-graze',
   'heat-prototype',
+  'plain-focus',
   'lunar-surface',
   'route-economy',
   'boss-pressure'
@@ -99,6 +101,7 @@ export const ITEM_UI_TAGS = [
   'missile',
   'overkill',
   'phase',
+  'plain',
   'plasma',
   'prototype',
   'relic',
@@ -200,6 +203,9 @@ export type ItemId =
   | 'item_ricochet_branch_coupler'
   | 'item_warhead_echo_chamber'
   | 'item_crossfeed_detonator'
+  | 'item_stillpoint_flywheel'
+  | 'item_unadorned_bore'
+  | 'item_empty_hand_repeater'
   | 'item_funeral_refrain_array'
   | 'item_mnemonic_sepulcher_key'
   | 'item_claimant_mantle_press'
@@ -255,9 +261,11 @@ export interface ItemArchetypeDefinition {
     | 'credit-shop'
     | 'curse-relic'
     | 'phase-graze'
-    | 'heat-prototype';
+    | 'heat-prototype'
+    | 'plain-focus';
   readonly label: string;
   readonly tags: readonly ItemTag[];
+  readonly minimumRewardedItemCount?: number;
 }
 
 export const ITEM_ARCHETYPES: readonly ItemArchetypeDefinition[] = [
@@ -300,6 +308,12 @@ export const ITEM_ARCHETYPES: readonly ItemArchetypeDefinition[] = [
     id: 'heat-prototype',
     label: 'Heat/Prototype',
     tags: ['heat', 'plasma']
+  },
+  {
+    id: 'plain-focus',
+    label: 'Plain Focus',
+    tags: ['plain'],
+    minimumRewardedItemCount: 3
   }
 ];
 
@@ -1633,6 +1647,58 @@ export const ITEMS: readonly ItemDefinition[] = [
     }
   },
   {
+    id: 'item_stillpoint_flywheel',
+    name: 'Stillpoint Flywheel',
+    rarity: 'common',
+    tags: ['plain'],
+    hooks: ['onFire'],
+    effect: 'plain shots leave this stage 12% harder and 10% faster without gaining a trait',
+    weight: 12,
+    metadata: {
+      family: 'plain-focus',
+      sources: ['starter', 'combat', 'shop'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['plain']
+    }
+  },
+  {
+    id: 'item_unadorned_bore',
+    name: 'Unadorned Bore',
+    rarity: 'uncommon',
+    tags: ['plain'],
+    hooks: ['onProjectileSpawn'],
+    effect: 'plain shots gain 10% impact, a wider body, and longer reach without gaining a trait',
+    weight: 8,
+    metadata: {
+      family: 'plain-focus',
+      sources: ['combat', 'shop'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['plain']
+    }
+  },
+  {
+    id: 'item_empty_hand_repeater',
+    name: 'Empty-Hand Repeater',
+    rarity: 'rare',
+    tags: ['plain'],
+    hooks: ['onFire'],
+    effect:
+      'every fourth volley repeats its heaviest plain shot at 72% impact without gaining a trait',
+    weight: 6,
+    metadata: {
+      family: 'plain-focus',
+      sources: ['combat', 'vault', 'boss'],
+      unlockTier: 'baseline',
+      implementationStatus: 'live',
+      stacking: 'unique',
+      uiTags: ['plain']
+    }
+  },
+  {
     id: 'item_funeral_refrain_array',
     name: 'Funeral Refrain Array',
     rarity: 'rare',
@@ -1758,7 +1824,8 @@ export const STARTER_CORE_ITEM_IDS: readonly ItemId[] = [
   'item_coin_operated_cannon',
   'item_salvage_dividend_chip',
   'item_prototype_vent_script',
-  'item_cursed_hull_plate'
+  'item_cursed_hull_plate',
+  'item_stillpoint_flywheel'
 ];
 
 export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
@@ -1791,7 +1858,8 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_penumbra_crown_aperture',
       'item_gangue_compression_die',
       'item_forkline_dynamo',
-      'item_harmonic_fork_loom'
+      'item_harmonic_fork_loom',
+      'item_stillpoint_flywheel'
     ]
   },
   {
@@ -1852,7 +1920,10 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_plasma_seed_crucible',
       'item_ricochet_branch_coupler',
       'item_warhead_echo_chamber',
-      'item_crossfeed_detonator'
+      'item_crossfeed_detonator',
+      'item_stillpoint_flywheel',
+      'item_unadorned_bore',
+      'item_empty_hand_repeater'
     ]
   },
   {
@@ -1877,7 +1948,8 @@ export const REWARD_POOLS: readonly RewardPoolDefinition[] = [
       'item_prototype_vent_script',
       'item_strata_bore_collimator',
       'item_warhead_echo_chamber',
-      'item_plasma_seed_crucible'
+      'item_plasma_seed_crucible',
+      'item_empty_hand_repeater'
     ]
   },
   {
@@ -1913,7 +1985,8 @@ export const ITEM_POOL_WEIGHT_PROFILES: readonly ItemPoolWeightProfileDefinition
       'laser-split': 1.15,
       'drone-copy': 1.15,
       'shield-revenge': 1.1,
-      'credit-shop': 1.1
+      'credit-shop': 1.1,
+      'plain-focus': 1.2
     }
   },
   {
@@ -1975,7 +2048,8 @@ export const ITEM_POOL_WEIGHT_PROFILES: readonly ItemPoolWeightProfileDefinition
       'credit-shop': 3,
       'route-economy': 2,
       'heat-prototype': 1.2,
-      'drone-copy': 1.15
+      'drone-copy': 1.15,
+      'plain-focus': 1.1
     },
     tagWeights: {
       credit: 2,
