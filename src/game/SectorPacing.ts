@@ -654,7 +654,8 @@ function createWaveDistanceRatios(options: {
   const { requiredWaves, bossRequired, arcKind, pressureBand } = options;
 
   if (arcKind === 'wrecklineExpedition') {
-    return [0.1, 0.22, 0.55, 0.82].slice(0, requiredWaves);
+    // Both teaching contacts must be issued before the Hecaton's first visible approach edge.
+    return [0.03, 0.08, 0.55, 0.82].slice(0, requiredWaves);
   }
 
   if (requiredWaves === 1) {

@@ -3295,8 +3295,10 @@ Acceptance:
 - Retire the long empty gap before Act II's finale set piece by moving its existing last three-ship wave to the engagement handoff.
 - Launch one additional three-ship convoy reinforcement after Court's interior stage, with an explicit one-shot trigger.
 - Keep Bloom's existing hangar launch and validate every set piece's clear/natural/combine approach and none/hangar/stage reinforcement policy.
+- Fit set-piece anchors to final route-conditioned and paced travel before combat begins.
+- Issue both opening contact waves before a layout-aware offscreen approach fence, and never move traveled distance backward when later waves arrive.
 - Preserve layouts, ordinary-wave totals, rewards, boss sequencing, deterministic generation, caps, saves, dependencies, and static hosting.
 
 Status:
 
-- Implemented in work order 230. The opening structure is now a clean teaching beat, while the Act II wreck-train combines the transferred approach contacts and midpoint escort pressure.
+- Implemented in work order 230. The opening structure is now a clean teaching beat, while the Act II wreck-train combines the transferred approach contacts and midpoint escort pressure. Regression refinement aligns Hecaton to the fully paced first-sector distance, front-loads its two ordinary contact waves ahead of the structure, and makes the clear-pressure fence strictly one-way so later waves cannot rewind sector travel.

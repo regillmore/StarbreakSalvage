@@ -183,13 +183,15 @@ import {
   formatSectorObjectiveVariantReadout
 } from '../game/SectorObjectives';
 import {
+  fitSetPiecePlanToScroll,
   getActiveSetPieceComponents,
-  getSetPieceApproachClearDistance,
+  getSetPieceApproachTravelLimit,
   getSetPieceComponentScreenState,
   getSetPieceDebugJumpDistance,
   getSetPieceEngagementDistance,
   getSetPieceReadModel,
-  isSetPieceBossLockReleased
+  isSetPieceBossLockReleased,
+  type SetPiecePlan
 } from '../game/SetPiece';
 import {
   createFactionCampaignDebugState,
@@ -266,6 +268,7 @@ export class GameplayScene implements Scene {
   private sectorCooldownPlan: SectorCooldownPlan | null = null;
   private conditionedFeatures: SectorFeaturePlan | null = null;
   private conditionedArena: BossArenaPlan | null | undefined;
+  private conditionedSetPiece: SetPiecePlan | null | undefined;
   private bossArenaState: BossArenaState | null = null;
   private bossArenaUpdate: BossArenaUpdate = {
     phase: 'none',
@@ -658,13 +661,15 @@ export class GameplayScene implements Scene {
       !state.setPiece.completed &&
       scrollState.distance >= getSetPieceEngagementDistance(state.setPiece.plan)
     );
-    const approachClearDistance = state.setPiece
-      ? getSetPieceApproachClearDistance(state.setPiece.plan)
+    const approachTravelLimit = state.setPiece
+      ? getSetPieceApproachTravelLimit(state.setPiece.plan, {
+          completed: state.setPiece.completed,
+          scrollDistance: scrollState.distance,
+          hasPressure: state.enemies.some((enemy) => enemy.countsForObjective !== false)
+        })
       : null;
     const approachClearLocked = Boolean(
-      approachClearDistance !== null &&
-      scrollState.distance >= approachClearDistance &&
-      state.enemies.some((enemy) => enemy.countsForObjective !== false)
+      approachTravelLimit !== null && scrollState.distance >= approachTravelLimit
     );
     let scrollAdvance = advanceSectorCooldownScroll(
       scrollState,
@@ -679,12 +684,11 @@ export class GameplayScene implements Scene {
     );
 
     if (
-      approachClearDistance !== null &&
-      scrollState.distance > approachClearDistance &&
-      state.enemies.some((enemy) => enemy.countsForObjective !== false)
+      approachTravelLimit !== null &&
+      scrollState.distance > approachTravelLimit
     ) {
       const previousDistance = scrollAdvance.previousDistance;
-      setScrollDistance(scrollState, approachClearDistance, 0);
+      setScrollDistance(scrollState, approachTravelLimit, 0);
       scrollAdvance = {
         previousDistance,
         distance: scrollState.distance,
@@ -1712,7 +1716,7 @@ export class GameplayScene implements Scene {
     const wavePlan = this.getWavePlan();
     const engineering = createEngineeringCombatProfile(this.engineeringState);
 
-    const setPiecePlan = this.getCurrentSector().setPiece;
+    const setPiecePlan = this.getCurrentSetPiecePlan();
     const rivalSpawn = this.campaignInfluence
       ? createRivalEnemySpawn(
           this.campaignInfluence,
@@ -2070,6 +2074,18 @@ export class GameplayScene implements Scene {
     }
 
     return this.conditionedArena;
+  }
+
+  private getCurrentSetPiecePlan(): SetPiecePlan | null {
+    if (this.conditionedSetPiece === undefined) {
+      this.conditionedSetPiece = fitSetPiecePlanToScroll(
+        this.getCurrentSector().setPiece,
+        this.getCurrentScrollPlan().length,
+        this.getCurrentArenaPlan()
+      );
+    }
+
+    return this.conditionedSetPiece;
   }
 
   private getRouteConditionedScrollPlan(): SectorScrollPlan {

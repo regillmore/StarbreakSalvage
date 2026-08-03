@@ -29,7 +29,12 @@ import {
 } from '../../src/game/SectorPacing';
 import { formatSectorObjectiveVariantReadout } from '../../src/game/SectorObjectives';
 import { validateSectorFeaturePlan } from '../../src/game/SectorFeatures';
-import { getSetPieceEngagementDistance } from '../../src/game/SetPiece';
+import { getSetPieceById } from '../../src/content/setPieces';
+import {
+  fitSetPiecePlanToScroll,
+  getSetPieceApproachClearDistance,
+  getSetPieceEngagementDistance
+} from '../../src/game/SetPiece';
 import {
   createWaveDirectorPlan,
   fitSpawnScheduleBeforeBossLock
@@ -69,7 +74,7 @@ describe('SectorPacing', () => {
       arcKind: 'wrecklineExpedition',
       lengthBand: 'extended',
       pressureBand: 'baseline',
-      waveDistanceRatios: [0.1, 0.22, 0.55, 0.82],
+      waveDistanceRatios: [0.03, 0.08, 0.55, 0.82],
       formationClusterWaveIndexes: [],
       landmarkBeatRatios: [0.14, 0.42, 0.7],
       hazardBeatRatios: [0.5, 0.77]
@@ -89,14 +94,23 @@ describe('SectorPacing', () => {
     expect(setPiece).not.toBeNull();
     expect(setPiece?.approachPressure).toBe('clear');
 
-    const engagementDistance = getSetPieceEngagementDistance(setPiece!);
+    const fittedSetPiece = fitSetPiecePlanToScroll(setPiece, paced.scroll.length);
+    const approachDistances = getSetPieceById(fittedSetPiece!.definitionId).layouts.map((layout) =>
+      getSetPieceApproachClearDistance({
+        ...fittedSetPiece!,
+        layoutId: layout.id,
+        layoutLabel: layout.label
+      })
+    );
     const secondWaveSpawns = plan.spawnSchedule.filter((spawn) => spawn.waveIndex === 1);
     const thirdWaveSpawns = plan.spawnSchedule.filter((spawn) => spawn.waveIndex === 2);
+    expect(fittedSetPiece?.anchorDistance).toBeGreaterThan(setPiece!.anchorDistance);
+    expect(approachDistances.every((distance) => distance !== null)).toBe(true);
     expect(Math.max(...secondWaveSpawns.map((spawn) => spawn.atDistance ?? 0))).toBeLessThan(
-      engagementDistance
+      Math.min(...approachDistances.map((distance) => distance!))
     );
     expect(Math.min(...thirdWaveSpawns.map((spawn) => spawn.atDistance ?? 0))).toBeGreaterThan(
-      setPiece!.anchorDistance
+      fittedSetPiece!.anchorDistance
     );
   });
 

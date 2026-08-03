@@ -123,6 +123,7 @@ const ACTIVE_TRAIL_DISTANCE = 210;
 const HAZARD_COOLDOWN_SECONDS = 0.35;
 const MIN_SAFE_LANE_WIDTH = 128;
 export const SET_PIECE_ENGAGEMENT_LEAD_DISTANCE = 80;
+export const SET_PIECE_APPROACH_CLEARANCE = 24;
 export const SET_PIECE_BOTTOM_RECOVERY_HEIGHT = 150;
 const SET_PIECE_SCROLL_LOCK_OVERSHOOT_ALLOWANCE = 16;
 const FORWARD_FIRE_PROJECTILE_RADIUS = Math.max(
@@ -164,11 +165,11 @@ export function createSetPiecePlan(options: {
     throw new Error(`Set piece ${definition.id} has no layouts.`);
   }
 
-  const ratioDistance = Math.round(options.scrollLength * definition.anchorDistanceRatio);
-  const anchorDistance =
-    definition.bossLock === 'untilComplete' && options.bossArena
-      ? Math.round(options.bossArena.lockDistance)
-      : clamp(ratioDistance, 260, Math.max(260, options.scrollLength - 360));
+  const anchorDistance = getSetPieceAnchorDistance(
+    definition,
+    options.scrollLength,
+    options.bossArena ?? null
+  );
 
   return {
     id: `${definition.id}:${layout.id}:sector-${options.sectorIndex}`,
@@ -187,6 +188,21 @@ export function createSetPiecePlan(options: {
     },
     caps: definition.caps
   };
+}
+
+export function fitSetPiecePlanToScroll(
+  plan: SetPiecePlan | null,
+  scrollLength: number,
+  bossArena: BossArenaPlan | null = null
+): SetPiecePlan | null {
+  if (!plan) {
+    return null;
+  }
+
+  const definition = getSetPieceById(plan.definitionId);
+  const anchorDistance = getSetPieceAnchorDistance(definition, scrollLength, bossArena);
+
+  return anchorDistance === plan.anchorDistance ? plan : { ...plan, anchorDistance };
 }
 
 export function createSetPieceState(
@@ -273,9 +289,45 @@ export function getSetPieceEngagementDistance(plan: SetPiecePlan): number {
 }
 
 export function getSetPieceApproachClearDistance(plan: SetPiecePlan): number | null {
-  return plan.approachPressure === 'clear'
-    ? Math.max(0, getSetPieceEngagementDistance(plan) - 12)
-    : null;
+  if (plan.approachPressure !== 'clear') {
+    return null;
+  }
+
+  const definition = getSetPieceById(plan.definitionId);
+  const layout = getSetPieceLayoutById(definition, plan.layoutId);
+  const componentById = new Map(
+    definition.components.map((component) => [component.id, component])
+  );
+  const assemblyLeadingEdge = layout.componentPlacements.reduce((leadingEdge, placement) => {
+    const component = componentById.get(placement.componentId);
+    if (!component) {
+      return leadingEdge;
+    }
+
+    const template = getSetPieceComponentTemplate(component.templateId);
+    return Math.max(leadingEdge, placement.y + getCollisionHalfHeight(template.collision));
+  }, 0);
+
+  return Math.max(
+    0,
+    Math.floor(plan.anchorDistance - assemblyLeadingEdge - SET_PIECE_APPROACH_CLEARANCE)
+  );
+}
+
+export function getSetPieceApproachTravelLimit(
+  plan: SetPiecePlan,
+  options: {
+    readonly completed: boolean;
+    readonly scrollDistance: number;
+    readonly hasPressure: boolean;
+  }
+): number | null {
+  if (options.completed || !options.hasPressure) {
+    return null;
+  }
+
+  const clearDistance = getSetPieceApproachClearDistance(plan);
+  return clearDistance !== null && options.scrollDistance <= clearDistance ? clearDistance : null;
 }
 
 export function getSetPieceLayoutBottomRecoveryHeight(
@@ -1009,6 +1061,17 @@ function isComponentDestroyed(state: SetPieceState, componentId: string): boolea
 
 function getCollisionHalfWidth(collision: SetPieceComponentTemplate['collision']): number {
   return collision.shape === 'circle' ? collision.radius : collision.width / 2;
+}
+
+function getSetPieceAnchorDistance(
+  definition: SetPieceDefinition,
+  scrollLength: number,
+  bossArena: BossArenaPlan | null
+): number {
+  const ratioDistance = Math.round(scrollLength * definition.anchorDistanceRatio);
+  return definition.bossLock === 'untilComplete' && bossArena
+    ? Math.round(bossArena.lockDistance)
+    : clamp(ratioDistance, 260, Math.max(260, scrollLength - 360));
 }
 
 function getCollisionHalfHeight(collision: SetPieceComponentTemplate['collision']): number {

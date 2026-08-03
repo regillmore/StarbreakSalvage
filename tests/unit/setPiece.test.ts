@@ -11,6 +11,8 @@ import {
   createSetPieceReinforcementSpawns,
   createSetPieceState,
   damageSetPieceComponent,
+  fitSetPiecePlanToScroll,
+  getSetPieceApproachTravelLimit,
   getSetPieceComponentRect,
   getSetPieceComponentScreenState,
   getSetPieceDebugJumpDistance,
@@ -20,6 +22,7 @@ import {
   getSetPieceLayoutBottomRecoveryHeight,
   getSetPieceReadModel,
   isSetPieceBossLockReleased,
+  SET_PIECE_APPROACH_CLEARANCE,
   SET_PIECE_BOTTOM_RECOVERY_HEIGHT,
   validateSetPieceContent
 } from '../../src/game/SetPiece';
@@ -307,8 +310,8 @@ describe('SetPiece', () => {
     const finale = createSetPiecePlan({ sectorIndex: 10, scrollLength: 3000 });
 
     expect(opening?.approachPressure).toBe('clear');
-    expect(getSetPieceApproachClearDistance(opening!)).toBe(
-      getSetPieceEngagementDistance(opening!) - 12
+    expect(getSetPieceApproachClearDistance(opening!)).toBeLessThan(
+      getSetPieceEngagementDistance(opening!)
     );
     expect(createSetPieceReinforcementSpawns(opening)).toHaveLength(0);
     expect(middle?.reinforcement.trigger).toBe('hangar');
@@ -319,6 +322,51 @@ describe('SetPiece', () => {
       trigger: 'stage',
       triggerStageId: 'train-hulks'
     });
+  });
+
+  it('fits the opening assembly to paced travel and releases its approach fence only once', () => {
+    const authored = createSetPiecePlan({
+      sectorIndex: 1,
+      scrollLength: 1600,
+      layoutId: 'inverted-audit'
+    });
+    const fitted = fitSetPiecePlanToScroll(authored, 2300);
+    const state = requireState(fitted);
+    const clearDistance = getSetPieceApproachClearDistance(fitted!);
+
+    expect(fitted?.anchorDistance).toBe(Math.round(2300 * 0.42));
+    expect(clearDistance).not.toBeNull();
+
+    for (const component of state.components) {
+      const screenComponent = getSetPieceComponentScreenState(clearDistance!, component);
+      const extent =
+        screenComponent.collisionShape === 'circle'
+          ? screenComponent.radius
+          : screenComponent.height / 2;
+      expect(screenComponent.y + extent).toBeLessThanOrEqual(-SET_PIECE_APPROACH_CLEARANCE);
+    }
+
+    expect(
+      getSetPieceApproachTravelLimit(fitted!, {
+        completed: false,
+        scrollDistance: clearDistance!,
+        hasPressure: true
+      })
+    ).toBe(clearDistance);
+    expect(
+      getSetPieceApproachTravelLimit(fitted!, {
+        completed: false,
+        scrollDistance: clearDistance! + 1,
+        hasPressure: true
+      })
+    ).toBeNull();
+    expect(
+      getSetPieceApproachTravelLimit(fitted!, {
+        completed: true,
+        scrollDistance: clearDistance!,
+        hasPressure: true
+      })
+    ).toBeNull();
   });
 });
 
