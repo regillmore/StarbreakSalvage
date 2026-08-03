@@ -3285,3 +3285,18 @@ Acceptance:
 Status:
 
 - Implemented in work order 229. Scrap Monk is now a combat-forward raw-ballistics contract whose per-shot Plain Focus supports both disciplined pure chains and mixed circuits with deliberate transformed branches.
+
+### BL95 - Set-piece pressure handoff
+
+Acceptance:
+
+- Let Act I's first set piece begin only after objective-counting ordinary contacts settle naturally; never force-clear the field.
+- Disable Hecaton's three-ship hangar launch while retaining its visual component and objective graph.
+- Retire the long empty gap before Act II's finale set piece by moving its existing last three-ship wave to the engagement handoff.
+- Launch one additional three-ship convoy reinforcement after Court's interior stage, with an explicit one-shot trigger.
+- Keep Bloom's existing hangar launch and validate every set piece's clear/natural/combine approach and none/hangar/stage reinforcement policy.
+- Preserve layouts, ordinary-wave totals, rewards, boss sequencing, deterministic generation, caps, saves, dependencies, and static hosting.
+
+Status:
+
+- Implemented in work order 230. The opening structure is now a clean teaching beat, while the Act II wreck-train combines the transferred approach contacts and midpoint escort pressure.

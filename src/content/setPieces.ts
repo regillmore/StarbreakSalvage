@@ -95,9 +95,12 @@ export interface SetPieceDefinition {
   readonly components: readonly SetPieceComponentDefinition[];
   readonly layouts: readonly SetPieceLayoutDefinition[];
   readonly stages: readonly SetPieceStageDefinition[];
+  readonly approachPressure: 'clear' | 'natural' | 'combine';
   readonly reinforcement: {
     readonly formationId: EnemyFormationId;
     readonly memberCount: number;
+    readonly trigger: 'none' | 'hangar' | 'stage';
+    readonly triggerStageId?: string;
   };
   readonly bossLock: 'none' | 'untilComplete';
   readonly completionReward: { readonly credits: number; readonly salvage: number };
@@ -372,7 +375,8 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
         reward: { credits: 4, salvage: 3 }
       }
     ],
-    reinforcement: { formationId: 'formation_screen', memberCount: 3 },
+    approachPressure: 'clear',
+    reinforcement: { formationId: 'formation_screen', memberCount: 0, trigger: 'none' },
     bossLock: 'none',
     completionReward: { credits: 6, salvage: 4 },
     caps: { reinforcementEnemies: 3, projectiles: 18, debris: 20, effects: 24, rewardPickups: 24 }
@@ -507,7 +511,8 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
         reward: { credits: 3, salvage: 4 }
       }
     ],
-    reinforcement: { formationId: 'formation_ring', memberCount: 3 },
+    approachPressure: 'natural',
+    reinforcement: { formationId: 'formation_ring', memberCount: 3, trigger: 'hangar' },
     bossLock: 'none',
     completionReward: { credits: 5, salvage: 6 },
     caps: { reinforcementEnemies: 3, projectiles: 18, debris: 20, effects: 24, rewardPickups: 24 }
@@ -652,7 +657,13 @@ export const SET_PIECES: readonly SetPieceDefinition[] = [
         reward: { credits: 4, salvage: 4 }
       }
     ],
-    reinforcement: { formationId: 'formation_convoy', memberCount: 3 },
+    approachPressure: 'combine',
+    reinforcement: {
+      formationId: 'formation_convoy',
+      memberCount: 3,
+      trigger: 'stage',
+      triggerStageId: 'train-hulks'
+    },
     bossLock: 'untilComplete',
     completionReward: { credits: 7, salvage: 7 },
     caps: { reinforcementEnemies: 3, projectiles: 18, debris: 22, effects: 26, rewardPickups: 24 }

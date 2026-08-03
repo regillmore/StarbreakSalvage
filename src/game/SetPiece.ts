@@ -34,6 +34,7 @@ export interface SetPiecePlan {
   readonly anchorDistance: number;
   readonly safeLane: SetPieceLayoutDefinition['safeLane'];
   readonly bossLock: SetPieceDefinition['bossLock'];
+  readonly approachPressure: SetPieceDefinition['approachPressure'];
   readonly reinforcement: SetPieceDefinition['reinforcement'] & {
     readonly xRatios: readonly number[];
   };
@@ -93,6 +94,7 @@ export interface SetPieceState {
   completedStageIds: string[];
   claimedEventIds: string[];
   eventLog: SetPieceRuntimeEvent[];
+  reinforcementsTriggered: boolean;
   completed: boolean;
 }
 
@@ -178,6 +180,7 @@ export function createSetPiecePlan(options: {
     anchorDistance,
     safeLane: layout.safeLane,
     bossLock: definition.bossLock,
+    approachPressure: definition.approachPressure,
     reinforcement: {
       ...definition.reinforcement,
       xRatios: layout.reinforcementXRatios
@@ -245,6 +248,7 @@ export function createSetPieceState(
     completedStageIds: [],
     claimedEventIds: [],
     eventLog: [],
+    reinforcementsTriggered: false,
     completed: false
   };
 }
@@ -268,6 +272,12 @@ export function getSetPieceEngagementDistance(plan: SetPiecePlan): number {
   return Math.max(0, plan.anchorDistance - SET_PIECE_ENGAGEMENT_LEAD_DISTANCE);
 }
 
+export function getSetPieceApproachClearDistance(plan: SetPiecePlan): number | null {
+  return plan.approachPressure === 'clear'
+    ? Math.max(0, getSetPieceEngagementDistance(plan) - 12)
+    : null;
+}
+
 export function getSetPieceLayoutBottomRecoveryHeight(
   definition: SetPieceDefinition,
   layout: SetPieceLayoutDefinition
@@ -284,15 +294,11 @@ export function getSetPieceLayoutBottomRecoveryHeight(
     const template = getSetPieceComponentTemplate(component.templateId);
     return Math.max(
       lowest,
-      placement.y -
-        SET_PIECE_ENGAGEMENT_LEAD_DISTANCE +
-        getCollisionHalfHeight(template.collision)
+      placement.y - SET_PIECE_ENGAGEMENT_LEAD_DISTANCE + getCollisionHalfHeight(template.collision)
     );
   }, 0);
 
-  return (
-    COMBAT_ARENA_HEIGHT - lowestCollisionEdge - SET_PIECE_SCROLL_LOCK_OVERSHOOT_ALLOWANCE
-  );
+  return COMBAT_ARENA_HEIGHT - lowestCollisionEdge - SET_PIECE_SCROLL_LOCK_OVERSHOOT_ALLOWANCE;
 }
 
 export function getActiveSetPieceComponents(
@@ -718,6 +724,31 @@ export function validateSetPieceContent(
       errors.push(`${owner} references unknown formation ${definition.reinforcement.formationId}.`);
     }
 
+    if (definition.reinforcement.trigger === 'none' && definition.reinforcement.memberCount !== 0) {
+      errors.push(`${owner} disabled reinforcement must have zero members.`);
+    }
+
+    if (definition.reinforcement.trigger !== 'none' && definition.reinforcement.memberCount <= 0) {
+      errors.push(`${owner} active reinforcement must have at least one member.`);
+    }
+
+    if (
+      definition.reinforcement.trigger === 'hangar' &&
+      !definition.components.some(
+        (component) => getSetPieceComponentTemplate(component.templateId).kind === 'hangar'
+      )
+    ) {
+      errors.push(`${owner} hangar reinforcement requires a hangar component.`);
+    }
+
+    if (
+      definition.reinforcement.trigger === 'stage' &&
+      (!definition.reinforcement.triggerStageId ||
+        !stageIds.has(definition.reinforcement.triggerStageId))
+    ) {
+      errors.push(`${owner} stage reinforcement references an unknown trigger stage.`);
+    }
+
     if (
       definition.stages.length !== 3 ||
       definition.stages[0]?.beat !== 'exterior' ||
@@ -824,8 +855,7 @@ export function validateSetPieceContent(
       }
 
       if (
-        getSetPieceLayoutBottomRecoveryHeight(definition, layout) <
-        SET_PIECE_BOTTOM_RECOVERY_HEIGHT
+        getSetPieceLayoutBottomRecoveryHeight(definition, layout) < SET_PIECE_BOTTOM_RECOVERY_HEIGHT
       ) {
         errors.push(
           `${layoutOwner} must retain at least ${SET_PIECE_BOTTOM_RECOVERY_HEIGHT}px of bottom recovery room at its engagement stop.`

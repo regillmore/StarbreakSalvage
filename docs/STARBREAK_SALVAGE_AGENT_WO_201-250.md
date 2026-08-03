@@ -790,3 +790,30 @@ The new Stillpoint Flywheel, Unadorned Bore, and Empty-Hand Repeater form a comp
 Managed-browser inspection opened seeded Scrap Monk contract `PLAIN-FOCUS-0` at 1280x720. The dossier showed the new edge and cost, focused shots carried the gold-white field, and a Phase Grazer cadence reported `6 of 8` modeled shots retaining Plain Focus rather than globally disabling the bonus. The preview's measured Base DPS included the same final classifier used by combat, the document had no horizontal overflow, and the browser console reported no warnings or errors. The authenticated smoke host stopped cleanly.
 
 Verification: `npm run verify:release` passes typecheck, ESLint, all 122 Vitest files and 816 tests, the production build, all 22 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,072.92 kB` minified / `294.29 kB` gzip initial JavaScript and `130.66 kB` / `25.49 kB` CSS, increases of `4.09 kB` / `0.99 kB` JavaScript and `0.31 kB` / `0.07 kB` CSS from work order 228. The existing Vite large-chunk advisory remains; no dependency, contract-generation stream, route graph, starting weapon, seeded ignition, save schema version, RNG stream, or static-hosting rule changed.
+
+## Work order 230 - Set-piece pressure handoff
+
+Goal: turn the opening Hecaton into a clean structural lesson and transfer its ordinary-contact overlap and midpoint escort pressure to the late Act II wreck-train encounter.
+
+Prompt:
+
+> Remove the standard-enemy overlap and three-ship midpoint reinforcement from the Act I sector 1 set piece. Give both pressures to the Act II sector 5 set piece before its boss instead.
+
+Acceptance criteria:
+
+- Act I's Hecaton approach stops just before structural engagement while objective-counting ordinary contacts remain, without clearing, despawning, or damaging them.
+- Scrolling resumes naturally when those contacts are gone and then enters the unchanged authored set-piece stop.
+- Hecaton's hangar remains part of its structure and dependency graph but no longer launches a reinforcement formation.
+- Act II's final ordinary three-ship wave arrives immediately before the Court wreck-train engagement so it remains live as the structure enters play.
+- Court launches one additional three-ship convoy formation after the interior wreck-hulk stage is completed and never launches it twice.
+- Bloom Spindle retains its existing hangar-triggered reinforcement behavior.
+- Set-piece approach and reinforcement triggers are authored content with validation for disabled, hangar, and stage modes.
+- Preserve total ordinary-wave counts, layouts, component health, rewards, boss lock/release behavior, actor caps, seeded layouts, save schema, dependencies, and static hosting.
+
+Status: implemented. Hecaton now owns an explicit clear-approach policy and inert hangar screen; its scroll fence waits for the field to settle naturally twelve units before structural engagement. Court owns the inverse combined-pressure policy: Act II finale pacing moves its unchanged final three-ship wave to the boss-lock handoff, and completing the interior hulks triggers one bounded three-ship convoy escort. Bloom remains the control case for component-triggered reinforcements.
+
+The managed browser pass also caught a stale absolute-sector reference in the Scenario Lab left by the expanded route graph. Set-Piece Assembly and Combined Voyage Pressure now resolve the Bloom Spindle by authored set-piece identity, restoring a real structural smoke fixture for subsequent agent passes.
+
+Managed-browser inspection opened the repaired Set-Piece Assembly fixture at 1280x720. It resolved Act II signal 3B, jumped to the live Bloom Spindle with all seven components, three simultaneous ordinary contacts, bounded mines and pickups, equal `1280px` document client/scroll width and `720px` client/scroll height, and no browser console warnings or errors. The authenticated smoke host stopped cleanly.
+
+Verification: `npm run verify:release` passes typecheck, ESLint, all 122 Vitest files and 817 tests, the production build, all 22 Playwright Chromium paths, and the Pages-base production-preview asset smoke. The release build emits `1,073.84 kB` minified / `294.54 kB` gzip initial JavaScript and unchanged `130.66 kB` / `25.49 kB` CSS, increases of `0.92 kB` / `0.25 kB` JavaScript from work order 229. The existing Vite large-chunk advisory remains; no dependency, route graph, component layout, reward table, save schema version, RNG stream, or static-hosting rule changed.

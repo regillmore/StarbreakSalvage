@@ -2314,6 +2314,15 @@ function updateSetPieceSubsystems(state: CombatState, bounds: CombatBounds): voi
     return;
   }
 
+  if (
+    setPiece.plan.reinforcement.trigger === 'stage' &&
+    !setPiece.reinforcementsTriggered &&
+    setPiece.plan.reinforcement.triggerStageId &&
+    setPiece.completedStageIds.includes(setPiece.plan.reinforcement.triggerStageId)
+  ) {
+    launchSetPieceReinforcements(state, bounds);
+  }
+
   for (const component of getActiveSetPieceComponents(setPiece, state.scrollDistance)) {
     if (!component.targetable || component.destroyed || component.subsystemCooldownSeconds > 0) {
       continue;
@@ -2321,7 +2330,11 @@ function updateSetPieceSubsystems(state: CombatState, bounds: CombatBounds): voi
 
     if (component.kind === 'turret') {
       fireSetPieceTurret(state, component.id);
-    } else if (component.kind === 'hangar' && !component.subsystemTriggered) {
+    } else if (
+      component.kind === 'hangar' &&
+      setPiece.plan.reinforcement.trigger === 'hangar' &&
+      !component.subsystemTriggered
+    ) {
       launchSetPieceReinforcements(state, bounds, component.id);
     }
   }
@@ -2374,16 +2387,25 @@ function fireSetPieceTurret(state: CombatState, componentId: string): void {
 function launchSetPieceReinforcements(
   state: CombatState,
   bounds: CombatBounds,
-  componentId: string
+  componentId?: string
 ): void {
   const setPiece = state.setPiece;
-  const component = setPiece?.components.find((candidate) => candidate.id === componentId);
+  const component = componentId
+    ? setPiece?.components.find((candidate) => candidate.id === componentId)
+    : undefined;
 
-  if (!setPiece || !component || component.subsystemTriggered) {
+  if (
+    !setPiece ||
+    setPiece.reinforcementsTriggered ||
+    (componentId !== undefined && (!component || component.subsystemTriggered))
+  ) {
     return;
   }
 
-  component.subsystemTriggered = true;
+  setPiece.reinforcementsTriggered = true;
+  if (component) {
+    component.subsystemTriggered = true;
+  }
   const spawns = createSetPieceReinforcementSpawns(setPiece.plan).slice(
     0,
     setPiece.plan.caps.reinforcementEnemies

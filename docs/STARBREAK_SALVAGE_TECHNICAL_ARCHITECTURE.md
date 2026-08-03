@@ -1173,6 +1173,15 @@ seed + permanent save fingerprint
 - `AttackSimulationPreview` and `CanvasRenderer` consume the resolved `plain` tag only for accessible text and bounded gold-white treatment. They cannot decide eligibility or change damage.
 - Missing `plainBaseTags` and missing `plainProjectileDamageMultiplier` use neutral compatibility defaults. The change adds no save/snapshot field, migration, generation draw, simulation RNG, actor type, projectile cap, dependency, or static-hosting request.
 
+### Work order 230 set-piece-pressure boundary
+
+- `SetPieceDefinition.approachPressure` is the authored handoff policy. `clear` stops travel twelve units before structural engagement while objective-counting ordinary enemies remain; `natural` and `combine` add no pre-engagement fence. `GameplayScene` clamps only scroll distance and never mutates actors.
+- `SetPieceDefinition.reinforcement.trigger` separates pressure behavior from component geometry. `none` requires zero members, `hangar` requires a hangar component, and `stage` requires a valid stage id. Content validation enforces those contracts and existing actor caps.
+- `SetPieceState.reinforcementsTriggered` is the one-shot runtime latch shared by component and stage delivery. Hecaton's hangar is therefore visually and structurally intact but inert, Bloom retains hangar delivery, and Court launches after `train-hulks` exactly once.
+- `SectorPacing` moves the unchanged final Act II finale wave to the late boss-lock fit window. `WaveDirector.fitSpawnScheduleBeforeBossLock` remains the authority for ordered, bounded delivery, so the three ordinary ships enter immediately before Court without adding a wave or changing spawn totals.
+- The change adds no layout, component-health, reward, boss-lock, save/snapshot, RNG, dependency, actor-cap, or static-hosting mutation.
+- Scenario Lab structural fixtures resolve the Bloom Spindle by `definitionId` instead of a pre-route-graph absolute sector index. Their disposable session remains deterministic while surviving future candidate-node count changes.
+
 ## GitHub Pages notes
 
 - Vite project Pages base path should be `/StarbreakSalvage/` for `https://regillmore.github.io/StarbreakSalvage/`.

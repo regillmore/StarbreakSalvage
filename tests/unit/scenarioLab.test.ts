@@ -69,6 +69,14 @@ describe('ScenarioLab', () => {
     expect(combined.session.factionCampaign.history.length).toBeGreaterThan(3);
     expect(combined.session.crewRoster.history).toHaveLength(3);
 
+    const setPiece = launch('lab_set_piece');
+    expect(run.sectors[setPiece.session.currentSectorIndex]?.setPiece?.definitionId).toBe(
+      'setpiece_bloom_spindle'
+    );
+    expect(run.sectors[combined.session.currentSectorIndex]?.setPiece?.definitionId).toBe(
+      'setpiece_bloom_spindle'
+    );
+
     const boarding = launch('lab_boarding_incursion');
     expect(boarding.session.mission.currentStageId).toContain('optional');
     expect(

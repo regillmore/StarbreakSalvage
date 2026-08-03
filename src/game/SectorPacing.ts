@@ -671,7 +671,9 @@ function createWaveDistanceRatios(options: {
 
   if (bossRequired) {
     if (pressureBand === 'finale') {
-      return [0.09, 0.28, 0.52].slice(0, requiredWaves);
+      // The final three-ship wave travels into the Act II wreck-train set piece instead of
+      // resolving in isolation several screens before the encounter.
+      return [0.09, 0.28, 0.94].slice(0, requiredWaves);
     }
 
     if (pressureBand === 'bossApproach') {

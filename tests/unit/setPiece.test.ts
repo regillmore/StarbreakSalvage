@@ -14,6 +14,7 @@ import {
   getSetPieceComponentRect,
   getSetPieceComponentScreenState,
   getSetPieceDebugJumpDistance,
+  getSetPieceApproachClearDistance,
   getSetPieceEngagementDistance,
   getSetPieceForwardFireLane,
   getSetPieceLayoutBottomRecoveryHeight,
@@ -118,6 +119,7 @@ describe('SetPiece', () => {
         ...source.layouts.slice(1)
       ],
       components: [...source.components, source.components[0]!],
+      reinforcement: { ...source.reinforcement, memberCount: 2, trigger: 'hangar' },
       caps: { ...source.caps, reinforcementEnemies: 1, projectiles: 0 }
     };
     const validation = validateSetPieceContent([broken, ...SET_PIECES.slice(1)]);
@@ -276,9 +278,7 @@ describe('SetPiece', () => {
           expect(rect.top).toBeGreaterThanOrEqual(0);
           expect(rect.bottom).toBeLessThanOrEqual(720);
           expect(engagementRect.top).toBeGreaterThanOrEqual(0);
-          expect(engagementRect.bottom).toBeLessThanOrEqual(
-            720 - SET_PIECE_BOTTOM_RECOVERY_HEIGHT
-          );
+          expect(engagementRect.bottom).toBeLessThanOrEqual(720 - SET_PIECE_BOTTOM_RECOVERY_HEIGHT);
           expect(normal).toEqual(reducedMotion);
         }
         for (const component of definition.components.filter(
@@ -299,10 +299,26 @@ describe('SetPiece', () => {
       expect(spawns.every((spawn) => spawn.formationId === plan!.reinforcement.formationId)).toBe(
         true
       );
-      expect(getSetPieceDebugJumpDistance(plan)).toBe(
-        getSetPieceEngagementDistance(plan!) - 120
-      );
+      expect(getSetPieceDebugJumpDistance(plan)).toBe(getSetPieceEngagementDistance(plan!) - 120);
     }
+
+    const opening = createSetPiecePlan({ sectorIndex: 1, scrollLength: 3000 });
+    const middle = createSetPiecePlan({ sectorIndex: 7, scrollLength: 3000 });
+    const finale = createSetPiecePlan({ sectorIndex: 10, scrollLength: 3000 });
+
+    expect(opening?.approachPressure).toBe('clear');
+    expect(getSetPieceApproachClearDistance(opening!)).toBe(
+      getSetPieceEngagementDistance(opening!) - 12
+    );
+    expect(createSetPieceReinforcementSpawns(opening)).toHaveLength(0);
+    expect(middle?.reinforcement.trigger).toBe('hangar');
+    expect(getSetPieceApproachClearDistance(middle!)).toBeNull();
+    expect(finale?.approachPressure).toBe('combine');
+    expect(finale?.reinforcement).toMatchObject({
+      memberCount: 3,
+      trigger: 'stage',
+      triggerStageId: 'train-hulks'
+    });
   });
 });
 

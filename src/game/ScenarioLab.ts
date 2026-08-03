@@ -288,16 +288,18 @@ export function createScenarioLabLaunch(options: {
   let session = createRunSession(options.run, options.contract, {
     unlockedIds: options.unlockedIds
   });
-  const boardingSectorIndex =
-    definition.id === 'lab_boarding_incursion'
-      ? (options.run.boardingCampaign.operations.find(
-          (operation) => operation.operationalRole === 'detour'
-        )?.sectorIndex ?? definition.sectorIndex)
-      : definition.id === 'lab_frontier_endings'
-        ? (options.run.acts.find((act) => act.id === 'act_core_descent')?.endSectorIndex ??
-          definition.sectorIndex)
-        : definition.sectorIndex;
-  session.currentSectorIndex = Math.min(boardingSectorIndex, options.run.sectors.length - 1);
+  const scenarioSectorIndex =
+    definition.gameplayPreset === 'setPiece' || definition.gameplayPreset === 'combined'
+      ? getScenarioSetPieceSectorIndex(options.run, definition.sectorIndex)
+      : definition.id === 'lab_boarding_incursion'
+        ? (options.run.boardingCampaign.operations.find(
+            (operation) => operation.operationalRole === 'detour'
+          )?.sectorIndex ?? definition.sectorIndex)
+        : definition.id === 'lab_frontier_endings'
+          ? (options.run.acts.find((act) => act.id === 'act_core_descent')?.endSectorIndex ??
+            definition.sectorIndex)
+          : definition.sectorIndex;
+  session.currentSectorIndex = Math.min(scenarioSectorIndex, options.run.sectors.length - 1);
   resetMissionForCurrentSector(options.run, session);
   session.credits = 48;
   session.salvage = 12;
@@ -436,6 +438,13 @@ export function createScenarioLabLaunch(options: {
     session,
     readout: createScenarioLabSetupReadModel(options.run, session, definition, snapshotBytes)
   };
+}
+
+function getScenarioSetPieceSectorIndex(run: RunSkeleton, fallback: number): number {
+  const sectorIndex = run.sectors.findIndex(
+    (sector) => sector.setPiece?.definitionId === 'setpiece_bloom_spindle'
+  );
+  return sectorIndex >= 0 ? sectorIndex : fallback;
 }
 
 export function createScenarioLabSetupReadModel(

@@ -180,7 +180,7 @@ describe('set-piece combat integration', () => {
     expect(state.stats.setPieceProjectilesFired).toBe(firedAtDestruction);
   });
 
-  it('lets a fast hangar kill cancel its bounded formation launch', () => {
+  it('keeps the opening Hecaton hangar inert so its lesson has no midpoint escort wave', () => {
     const state = createState(1);
     for (const id of ['hecaton-emitter-a', 'hecaton-emitter-b', 'hecaton-armor']) {
       const component = requireComponent(state, id);
@@ -197,8 +197,6 @@ describe('set-piece combat integration', () => {
 
     const hangar = requireComponent(state, 'hecaton-hangar');
     expect(hangar.targetable).toBe(true);
-    hangar.hull = 1;
-    damageSetPieceComponentsInRadius(state, hangar.x, hangar.y, hangar.width / 2 + 2, 'special', 4);
     updateCombatState(
       state,
       { movement: { x: 0, y: 0 }, fire: false, scrollDistance: state.scrollDistance },
@@ -206,9 +204,40 @@ describe('set-piece combat integration', () => {
       bounds
     );
 
-    expect(hangar.destroyed).toBe(true);
+    expect(hangar.destroyed).toBe(false);
+    expect(hangar.subsystemTriggered).toBe(false);
     expect(state.stats.setPieceReinforcementsSpawned).toBe(0);
     expect(state.enemies).toHaveLength(0);
+  });
+
+  it('launches the transferred three-ship escort after the Court interior stage', () => {
+    const state = createState(10);
+
+    for (const id of ['train-coupler-a', 'train-coupler-b', 'train-armor-a', 'train-armor-b']) {
+      const component = requireComponent(state, id);
+      damageSetPieceComponentsInRadius(state, component.x, component.y, 1, 'bomb', 100);
+    }
+
+    expect(state.setPiece?.completedStageIds).toContain('train-hulks');
+    updateCombatState(
+      state,
+      { movement: { x: 0, y: 0 }, fire: false, scrollDistance: state.scrollDistance },
+      0.1,
+      bounds
+    );
+
+    expect(state.setPiece?.reinforcementsTriggered).toBe(true);
+    expect(state.stats.setPieceReinforcementsSpawned).toBe(3);
+    expect(state.enemies).toHaveLength(3);
+    expect(state.enemies.every((enemy) => enemy.formationId === 'formation_convoy')).toBe(true);
+
+    updateCombatState(
+      state,
+      { movement: { x: 0, y: 0 }, fire: false, scrollDistance: state.scrollDistance },
+      0.1,
+      bounds
+    );
+    expect(state.stats.setPieceReinforcementsSpawned).toBe(3);
   });
 
   it('preserves every explicit credit and salvage reward under the actor pickup cap', () => {

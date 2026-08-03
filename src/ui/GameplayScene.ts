@@ -184,6 +184,7 @@ import {
 } from '../game/SectorObjectives';
 import {
   getActiveSetPieceComponents,
+  getSetPieceApproachClearDistance,
   getSetPieceComponentScreenState,
   getSetPieceDebugJumpDistance,
   getSetPieceEngagementDistance,
@@ -657,17 +658,40 @@ export class GameplayScene implements Scene {
       !state.setPiece.completed &&
       scrollState.distance >= getSetPieceEngagementDistance(state.setPiece.plan)
     );
-    const scrollAdvance = advanceSectorCooldownScroll(
+    const approachClearDistance = state.setPiece
+      ? getSetPieceApproachClearDistance(state.setPiece.plan)
+      : null;
+    const approachClearLocked = Boolean(
+      approachClearDistance !== null &&
+      scrollState.distance >= approachClearDistance &&
+      state.enemies.some((enemy) => enemy.countsForObjective !== false)
+    );
+    let scrollAdvance = advanceSectorCooldownScroll(
       scrollState,
       cooldownPlan,
       this.sectorCooldown !== null,
       dt,
-      setPieceTravelLocked
+      setPieceTravelLocked || approachClearLocked
         ? 0
         : this.sectorCooldown
           ? scrollState.plan.baseSpeed
           : (arenaBeforeScroll.speedOverride ?? undefined)
     );
+
+    if (
+      approachClearDistance !== null &&
+      scrollState.distance > approachClearDistance &&
+      state.enemies.some((enemy) => enemy.countsForObjective !== false)
+    ) {
+      const previousDistance = scrollAdvance.previousDistance;
+      setScrollDistance(scrollState, approachClearDistance, 0);
+      scrollAdvance = {
+        previousDistance,
+        distance: scrollState.distance,
+        delta: Math.max(0, scrollState.distance - previousDistance),
+        crossedExit: false
+      };
+    }
 
     const arenaAfterScroll = this.updateBossArena(scrollState.distance, state);
     advanceSectorHazardRuntime(this.getSectorHazardRuntimeState(), this.getCurrentFeatures(), {
@@ -1163,7 +1187,9 @@ export class GameplayScene implements Scene {
         {
           label: 'Hull',
           value: `${state.player.hull}/${state.player.maxHull}${
-            state.player.maxGuard > 0 ? ` | Guard ${state.player.guard}/${state.player.maxGuard}` : ''
+            state.player.maxGuard > 0
+              ? ` | Guard ${state.player.guard}/${state.player.maxGuard}`
+              : ''
           }`,
           tone: state.player.hull <= 1 && state.player.guard <= 0 ? 'warning' : 'good'
         },

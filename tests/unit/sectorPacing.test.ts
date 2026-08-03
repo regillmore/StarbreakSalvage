@@ -30,7 +30,10 @@ import {
 import { formatSectorObjectiveVariantReadout } from '../../src/game/SectorObjectives';
 import { validateSectorFeaturePlan } from '../../src/game/SectorFeatures';
 import { getSetPieceEngagementDistance } from '../../src/game/SetPiece';
-import { createWaveDirectorPlan } from '../../src/game/WaveDirector';
+import {
+  createWaveDirectorPlan,
+  fitSpawnScheduleBeforeBossLock
+} from '../../src/game/WaveDirector';
 import { getNextActRouteSectorIndices } from '../../src/game/ActRouteGraph';
 
 describe('SectorPacing', () => {
@@ -84,6 +87,7 @@ describe('SectorPacing', () => {
     ).toBe(true);
     expect(plan.spawnSchedule.every((spawn) => !spawn.formationId)).toBe(true);
     expect(setPiece).not.toBeNull();
+    expect(setPiece?.approachPressure).toBe('clear');
 
     const engagementDistance = getSetPieceEngagementDistance(setPiece!);
     const secondWaveSpawns = plan.spawnSchedule.filter((spawn) => spawn.waveIndex === 1);
@@ -288,10 +292,43 @@ describe('SectorPacing', () => {
 
     expect(paced.pacing.arcKind).toBe('act2Finale');
     expect(paced.pacing.pressureBand).toBe('finale');
+    expect(paced.pacing.waveDistanceRatios).toEqual([0.09, 0.28, 0.94]);
     expect(paced.pacing.bossApproachMultiplier).toBeGreaterThan(1);
     expect(pacedArena?.releaseDistance).toBe(paced.scroll.length);
     expect(pacedArena?.lockDistance ?? 0).toBeLessThan(pacedArena?.releaseDistance ?? 0);
     expect(pacedApproachDistance).toBeGreaterThan(routeApproachDistance);
+
+    const encounterPacing = applySectorPacingToEncounterPacing(
+      paced.baseSector.encounterPacing,
+      paced.pacing
+    );
+    const wavePlan = createWaveDirectorPlan({
+      seed: `${paced.run.seed}:combat:${paced.baseSector.sectorId}`,
+      objective: paced.baseSector.objective,
+      majorWaves: paced.baseSector.majorWaves,
+      preferredFactionId: paced.baseSector.bossFactionId,
+      availableFactionIds: paced.run.availableFactionIds,
+      scroll: paced.scroll,
+      pacing: encounterPacing,
+      sectorIndex: paced.session.currentSectorIndex,
+      routePressure: false,
+      formationClusterWaves: paced.pacing.formationClusterWaveIndexes
+    });
+    const fitted = fitSpawnScheduleBeforeBossLock(
+      wavePlan.spawnSchedule,
+      pacedArena?.lockDistance ?? 0
+    );
+    const finalWave = fitted.filter((spawn) => spawn.waveIndex === 2);
+    const engagementDistance = getSetPieceEngagementDistance(paced.baseSector.setPiece!);
+
+    expect(paced.baseSector.setPiece?.approachPressure).toBe('combine');
+    expect(finalWave).toHaveLength(3);
+    expect(Math.max(...finalWave.map((spawn) => spawn.atDistance ?? 0))).toBeLessThan(
+      pacedArena?.lockDistance ?? 0
+    );
+    expect(Math.max(...finalWave.map((spawn) => spawn.atDistance ?? 0))).toBeGreaterThan(
+      engagementDistance - 40
+    );
   });
 
   it('keeps Act II distance-wave spawning catchup-safe under late-frame jumps', () => {
